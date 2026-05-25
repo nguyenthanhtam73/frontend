@@ -1,0 +1,204 @@
+"use client";
+
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState, useTransition } from "react";
+
+import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
+import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth-token";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { useCurrentHash } from "@/lib/use-current-hash";
+import { cn } from "@/lib/utils";
+
+import { LocaleSwitcher } from "./locale-switcher";
+import { Logo } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
+
+function normalizePath(path: string) {
+  const trimmed = path.split("?")[0].replace(/\/$/, "");
+  return trimmed === "" ? "/" : trimmed;
+}
+
+/** Active when pathname matches route, or trailing segments (nested routes). Hash links compare `hash` (without #). */
+function isNavLinkActive(pathname: string, hash: string, href: string) {
+  if (href.includes("#")) {
+    const [pathPart, fragment] = href.split("#");
+    const base = normalizePath(pathPart === "" || pathPart === "/" ? "/" : pathPart);
+    if (!fragment) return false;
+    return normalizePath(pathname) === base && hash === fragment;
+  }
+  const routePath = normalizePath(href);
+  const p = normalizePath(pathname);
+  if (routePath === "/") return p === "/";
+  if (p === routePath) return true;
+  return p.startsWith(`${routePath}/`);
+}
+
+export function SiteHeader() {
+  const t = useTranslations("common");
+  const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [, startTransition] = useTransition();
+  const hash = useCurrentHash();
+  const { user, logout } = useAuthStore();
+  const [bootstrapped, setBootstrapped] = useState(false);
+
+  const signOut = useCallback(() => {
+    logout();
+    queryClient.clear();
+    startTransition(() => {
+      router.push("/login");
+    });
+  }, [logout, queryClient, router]);
+
+  useEffect(() => {
+    let alive = true;
+    const run = () => {
+      void useAuthStore
+        .getState()
+        .refresh()
+        .finally(() => {
+          if (alive) setBootstrapped(true);
+        });
+    };
+    run();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === AUTH_TOKEN_STORAGE_KEY || e.key === null) run();
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, run);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      alive = false;
+      window.removeEventListener(AUTH_CHANGED_EVENT, run);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
+  const accountLabel = user?.display_name?.trim() || user?.email || user?.username;
+
+  const navLinks = [
+    { href: "/onboarding" as const, label: t("nav.start") },
+    { href: "/routine" as const, label: t("nav.routine") },
+    { href: "/check-in" as const, label: t("nav.checkIn") },
+    { href: "/cabinet" as const, label: t("nav.cabinet") },
+    { href: "/progress" as const, label: t("nav.progress") },
+    { href: "/#how" as const, label: t("nav.howItWorks") },
+  ];
+
+  const linkBase =
+    "inline-flex whitespace-nowrap rounded-full px-3.5 py-2 text-base font-medium leading-snug transition-colors";
+
+  function renderNavUl(
+    ulClassName: string,
+  ) {
+    return (
+      <ul className={ulClassName}>
+        {navLinks.map((link) => {
+          const active = isNavLinkActive(pathname, hash, link.href);
+          return (
+            <li key={link.href} className="shrink-0">
+              <Link
+                href={link.href}
+                prefetch
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  linkBase,
+                  active
+                    ? "bg-primary/15 text-primary shadow-sm shadow-primary/10"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {link.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
+  const navStrip = renderNavUl("flex flex-nowrap items-center justify-start gap-1");
+  const navWrapped = renderNavUl("flex flex-wrap items-center justify-center gap-x-2 gap-y-2");
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-2 sm:gap-3 sm:px-6 lg:gap-2 lg:py-3">
+        <div className="flex min-h-12 items-center gap-2 sm:min-h-14 sm:gap-3">
+          <Link
+            href="/"
+            prefetch
+            className="shrink-0 self-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Logo />
+          </Link>
+
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 self-center sm:gap-2">
+            <LocaleSwitcher className="hidden md:inline-flex" />
+            <ThemeToggle className="hidden sm:inline-flex" />
+            {!bootstrapped ? (
+              <div
+                className="hidden h-7 min-w-22 animate-pulse rounded-md bg-muted/60 sm:block lg:min-w-44"
+                aria-hidden
+              />
+            ) : user && accountLabel ? (
+              <>
+                <span
+                  className="hidden max-w-40 truncate text-xs text-muted-foreground lg:inline"
+                  title={user.email}
+                >
+                  {accountLabel}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="inline-flex shrink-0"
+                  onClick={signOut}
+                >
+                  {t("signOut")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <ButtonLink href="/login" prefetch variant="ghost" size="sm" className="hidden lg:inline-flex">
+                  {t("signIn")}
+                </ButtonLink>
+                <ButtonLink href="/register" prefetch size="sm" className="hidden sm:inline-flex">
+                  {t("register")}
+                </ButtonLink>
+              </>
+            )}
+          </div>
+        </div>
+
+        <nav className="hidden lg:block" aria-label={t("mainNavAria")}>
+          {navWrapped}
+        </nav>
+      </div>
+
+      <nav className="border-t border-border/40 py-2 lg:hidden" aria-label={t("mainNavAria")}>
+        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 pb-0.5 [scrollbar-width:thin] sm:px-6">
+          {navStrip}
+        </div>
+      </nav>
+
+      <div className="flex flex-nowrap items-center justify-start gap-2 overflow-x-auto border-t border-border/40 px-4 py-2 [scrollbar-width:none] sm:justify-center sm:px-6 [&::-webkit-scrollbar]:hidden md:hidden">
+        <LocaleSwitcher />
+        <ThemeToggle />
+        {bootstrapped && user && accountLabel ? (
+          <>
+            <span className="max-w-[min(100%,12rem)] truncate text-xs text-muted-foreground" title={user.email}>
+              {accountLabel}
+            </span>
+            <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={signOut}>
+              {t("signOut")}
+            </Button>
+          </>
+        ) : null}
+      </div>
+    </header>
+  );
+}
