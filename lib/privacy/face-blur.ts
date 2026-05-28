@@ -199,48 +199,64 @@ type BlurRegion = {
 };
 
 /**
- * Pick which regions to blur given the (optional) detected face box.
+ * Pick which regions to blur.
  *
- * When FaceDetector is unavailable (Safari/Firefox), we estimate a centred
- * portrait face box and apply the same eye + mouth bands so coverage matches
- * the native path instead of a single thin eye strip.
+ * Two very different cases:
+ *
+ * - **Detected face** (Chromium Shape Detection API present): we know exactly
+ *   where the face is, so we blur tight eye + mouth strips inside the box and
+ *   leave the rest of the skin fully readable.
+ *
+ * - **No detector** (Safari / Firefox / Chrome without the flag — i.e. most
+ *   users): we cannot know the face size, and a single guessed box badly
+ *   misaligns between close-up selfies (face fills the frame) and arm's-length
+ *   shots (small, centred). Instead of guessing one box we blur two WIDE bands
+ *   spanning the whole plausible eye-to-mouth range. This reliably hides the
+ *   identifying features for any centred portrait while keeping the forehead,
+ *   jaw/chin and outer cheeks readable for skin analysis.
  */
 function computeBlurRegions(
   imgW: number,
   imgH: number,
   face: { x: number; y: number; width: number; height: number } | null,
 ): BlurRegion[] {
-  const bounds = face ?? estimateCenterFaceBounds(imgW, imgH);
-  const minSide = Math.min(bounds.width, bounds.height);
+  if (face) {
+    const minSide = Math.min(face.width, face.height);
+    const eye: BlurRegion = {
+      x: face.x + face.width * 0.02,
+      y: face.y + face.height * 0.16,
+      width: face.width * 0.96,
+      height: face.height * 0.32,
+      blurPx: Math.max(24, minSide * 0.24),
+    };
+    const mouth: BlurRegion = {
+      x: face.x + face.width * 0.12,
+      y: face.y + face.height * 0.58,
+      width: face.width * 0.76,
+      height: face.height * 0.26,
+      blurPx: Math.max(18, minSide * 0.18),
+    };
+    return [clampRegion(eye, imgW, imgH), clampRegion(mouth, imgW, imgH)];
+  }
 
-  const eye: BlurRegion = {
-    x: bounds.x + bounds.width * 0.02,
-    y: bounds.y + bounds.height * 0.14,
-    width: bounds.width * 0.96,
-    height: bounds.height * 0.34,
-    blurPx: Math.max(22, minSide * 0.22),
+  // Fallback: cover the full plausible eye + nose/mouth range of a centred
+  // portrait so coverage holds whether the face is near or far in the frame.
+  const minSide = Math.min(imgW, imgH);
+  const eyeBand: BlurRegion = {
+    x: imgW * 0.06,
+    y: imgH * 0.2,
+    width: imgW * 0.88,
+    height: imgH * 0.3,
+    blurPx: Math.max(28, minSide * 0.07),
   };
-  const mouth: BlurRegion = {
-    x: bounds.x + bounds.width * 0.1,
-    y: bounds.y + bounds.height * 0.56,
-    width: bounds.width * 0.8,
-    height: bounds.height * 0.28,
-    blurPx: Math.max(18, minSide * 0.18),
+  const mouthBand: BlurRegion = {
+    x: imgW * 0.12,
+    y: imgH * 0.52,
+    width: imgW * 0.76,
+    height: imgH * 0.26,
+    blurPx: Math.max(22, minSide * 0.055),
   };
-
-  return [clampRegion(eye, imgW, imgH), clampRegion(mouth, imgW, imgH)];
-}
-
-/** Typical centred selfie — used when Shape Detection API is unavailable. */
-function estimateCenterFaceBounds(imgW: number, imgH: number) {
-  const faceW = imgW * 0.68;
-  const faceH = imgH * 0.52;
-  return {
-    x: (imgW - faceW) / 2,
-    y: imgH * 0.1,
-    width: faceW,
-    height: faceH,
-  };
+  return [clampRegion(eyeBand, imgW, imgH), clampRegion(mouthBand, imgW, imgH)];
 }
 
 function clampRegion(r: BlurRegion, w: number, h: number): BlurRegion {
@@ -294,8 +310,10 @@ function blurRegion(
   ctx.clip();
 
   ctx.filter = `blur(${region.blurPx}px)`;
+  // Multiple passes compound the gaussian so features become unrecognisable
+  // (a single pass can leave ghosting of strong edges like eyes/glasses).
   ctx.drawImage(canvas, sx, sy, sw, sh, sx, sy, sw, sh);
-  // Second pass makes features unrecognisable without hiding cheek/forehead skin.
+  ctx.drawImage(canvas, sx, sy, sw, sh, sx, sy, sw, sh);
   ctx.drawImage(canvas, sx, sy, sw, sh, sx, sy, sw, sh);
   ctx.filter = "none";
   ctx.restore();
