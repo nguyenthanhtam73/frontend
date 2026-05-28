@@ -3,6 +3,7 @@
 import { ArrowRight, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { PrivacyBlurredImage } from "@/components/privacy/privacy-blurred-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiBaseUrl } from "@/lib/api";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
@@ -76,12 +77,10 @@ function PhotoSlot({
       className={`relative overflow-hidden rounded-xl border bg-muted shadow-sm ${highlight ? "ring-2 ring-primary/30" : "ring-1 ring-transparent"}`}
     >
       <div className="aspect-square w-full">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <PrivacyBlurredImage
           src={absURL(url)}
           alt={`${label} · ${date}`}
           className="size-full object-cover"
-          loading="lazy"
         />
       </div>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent px-2 py-1.5">

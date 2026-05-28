@@ -188,13 +188,7 @@ export function OnboardingFlow() {
   const step = steps[idx];
 
   /**
-   * Pulls images off the file input, blurs each one **on the device**, and
-   * then commits the *blurred* result to the onboarding store. The original
-   * file never leaves this function — even if the upload fails later, the
-   * blurred version is what `runAnalyze()` sends to the server.
-   *
-   * Failures are non-fatal per file: a corrupt JPEG won't poison the whole
-   * batch, but we surface the most recent error so the user can retake.
+   * Blur for on-screen preview only; originals are uploaded for AI analysis.
    */
   const applyFiles = useCallback(
     async (list: FileList | null) => {
@@ -209,7 +203,7 @@ export function OnboardingFlow() {
         try {
           const blurred = await blurFaceInImage(file);
           ob.addPhoto({
-            file: blurred.file,
+            file,
             preview: blurred.previewUrl,
             blurMethod: blurred.method,
           });

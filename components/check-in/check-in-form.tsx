@@ -131,13 +131,8 @@ export function CheckInForm() {
   }, []);
 
   /**
-   * Take raw files from the input, blur each one **on the device**, and only
-   * then commit it to the upload list. The original `File` instance is never
-   * appended to FormData; only the blurred result is.
-   *
-   * Errors are tracked separately from the items list so a single failed
-   * blur doesn't poison the rest of the batch — the user gets a clear "we
-   * couldn't blur that one" message and the working photos still upload.
+   * Build a blurred preview for the UI while keeping the original file for
+   * upload — the backend AI needs the full image for accurate skin analysis.
    */
   async function handleFiles(files: FileList | null) {
     if (!files) return;
@@ -164,7 +159,7 @@ export function CheckInForm() {
       try {
         const blurred = await blurFaceInImage(file);
         const newItem: UploadItem = {
-          file: blurred.file,
+          file,
           url: blurred.previewUrl,
           blurMethod: blurred.method,
         };
