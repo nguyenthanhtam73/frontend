@@ -175,32 +175,25 @@ type BlurRegion = {
 type FaceBounds = { x: number; y: number; width: number; height: number };
 
 /**
- * Blur the eye + mouth patches inside the face box.
+ * Blur a single horizontal band across the eyes — enough to anonymise while
+ * keeping forehead, nose, mouth, cheeks and jaw sharp for skin analysis.
  *
- * BlazeFace boxes are tight: eyes sit ~28–50% from the top, mouth ~64–86%.
- * We cover those bands generously (and a bit wider than the strict feature)
- * so small detection offsets still hide the identifying parts, while the
- * forehead, nose bridge, cheeks and jaw stay sharp for skin analysis.
+ * BlazeFace boxes are tight: eyes sit ~28–52% from the top. We cover that band
+ * a bit wider than the strict feature so small detection offsets still hide
+ * the eyes.
  */
 function regionsFromFaceBounds(bounds: FaceBounds, imgW: number, imgH: number): BlurRegion[] {
   const minSide = Math.min(bounds.width, bounds.height);
 
-  const eye: BlurRegion = {
-    x: bounds.x - bounds.width * 0.04,
+  const eyeBand: BlurRegion = {
+    x: bounds.x - bounds.width * 0.06,
     y: bounds.y + bounds.height * 0.26,
-    width: bounds.width * 1.08,
+    width: bounds.width * 1.12,
     height: bounds.height * 0.26,
     blurPx: Math.max(22, minSide * 0.22),
   };
-  const mouth: BlurRegion = {
-    x: bounds.x + bounds.width * 0.18,
-    y: bounds.y + bounds.height * 0.66,
-    width: bounds.width * 0.64,
-    height: bounds.height * 0.2,
-    blurPx: Math.max(16, minSide * 0.16),
-  };
 
-  return [clampRegion(eye, imgW, imgH), clampRegion(mouth, imgW, imgH)];
+  return [clampRegion(eyeBand, imgW, imgH)];
 }
 
 function computeBlurRegions(
