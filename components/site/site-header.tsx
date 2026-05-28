@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
-import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth-token";
+import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useCurrentHash } from "@/lib/use-current-hash";
@@ -36,6 +36,78 @@ function isNavLinkActive(pathname: string, hash: string, href: string) {
   return p.startsWith(`${routePath}/`);
 }
 
+function authUiReady() {
+  if (typeof window === "undefined") return false;
+  const { user } = useAuthStore.getState();
+  return Boolean(user) || !getAccessToken();
+}
+
+function AuthSkeleton() {
+  return (
+    <div
+      className="hidden h-9 min-w-[11rem] animate-pulse rounded-md bg-muted/60 sm:block"
+      aria-hidden
+    />
+  );
+}
+
+function SignedInActions({
+  accountLabel,
+  email,
+  onSignOut,
+  signOutLabel,
+  className,
+  accountClassName,
+}: {
+  accountLabel: string;
+  email: string;
+  onSignOut: () => void;
+  signOutLabel: string;
+  className?: string;
+  accountClassName?: string;
+}) {
+  return (
+    <div className={cn("flex shrink-0 items-center gap-1.5", className)}>
+      <span
+        className={cn("max-w-40 truncate text-xs text-muted-foreground", accountClassName)}
+        title={email}
+      >
+        {accountLabel}
+      </span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="inline-flex min-w-[5.75rem] shrink-0 justify-center"
+        onClick={onSignOut}
+      >
+        {signOutLabel}
+      </Button>
+    </div>
+  );
+}
+
+function GuestActions({
+  signInLabel,
+  registerLabel,
+  className,
+}: {
+  signInLabel: string;
+  registerLabel: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex shrink-0 items-center gap-1.5", className)}>
+      <ButtonLink href="/login" prefetch variant="ghost" size="sm" className="hidden min-w-[4.5rem] lg:inline-flex">
+        {signInLabel}
+      </ButtonLink>
+      <ButtonLink href="/register" prefetch size="sm" className="hidden min-w-[5.5rem] sm:inline-flex">
+        {registerLabel}
+      </ButtonLink>
+    </div>
+  );
+}
+
 export function SiteHeader() {
   const t = useTranslations("common");
   const pathname = usePathname();
@@ -44,7 +116,7 @@ export function SiteHeader() {
   const [, startTransition] = useTransition();
   const hash = useCurrentHash();
   const { user, logout } = useAuthStore();
-  const [bootstrapped, setBootstrapped] = useState(false);
+  const [authReady, setAuthReady] = useState(authUiReady);
 
   const signOut = useCallback(() => {
     logout();
@@ -61,7 +133,7 @@ export function SiteHeader() {
         .getState()
         .refresh()
         .finally(() => {
-          if (alive) setBootstrapped(true);
+          if (alive) setAuthReady(true);
         });
     };
     run();
@@ -78,6 +150,38 @@ export function SiteHeader() {
   }, []);
 
   const accountLabel = user?.display_name?.trim() || user?.email || user?.username;
+  const showAuthSkeleton = !authReady && Boolean(getAccessToken()) && !user;
+
+  const desktopAuth =
+    showAuthSkeleton ? (
+      <AuthSkeleton />
+    ) : user && accountLabel ? (
+      <SignedInActions
+        className="hidden sm:flex"
+        accountClassName="hidden lg:inline"
+        accountLabel={accountLabel}
+        email={user.email}
+        onSignOut={signOut}
+        signOutLabel={t("signOut")}
+      />
+    ) : authReady ? (
+      <GuestActions
+        className="hidden sm:flex"
+        signInLabel={t("signIn")}
+        registerLabel={t("register")}
+      />
+    ) : null;
+
+  const mobileAuth =
+    user && accountLabel ? (
+      <SignedInActions
+        accountClassName="max-w-[min(100%,12rem)]"
+        accountLabel={accountLabel}
+        email={user.email}
+        onSignOut={signOut}
+        signOutLabel={t("signOut")}
+      />
+    ) : null;
 
   const navLinks = [
     { href: "/onboarding" as const, label: t("nav.start") },
@@ -135,42 +239,10 @@ export function SiteHeader() {
             <Logo />
           </Link>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 self-center sm:gap-2">
+          <div className="ml-auto flex min-h-9 shrink-0 items-center gap-1.5 self-center sm:gap-2">
             <LocaleSwitcher className="hidden md:inline-flex" />
             <ThemeToggle className="hidden sm:inline-flex" />
-            {!bootstrapped ? (
-              <div
-                className="hidden h-7 min-w-22 animate-pulse rounded-md bg-muted/60 sm:block lg:min-w-44"
-                aria-hidden
-              />
-            ) : user && accountLabel ? (
-              <>
-                <span
-                  className="hidden max-w-40 truncate text-xs text-muted-foreground lg:inline"
-                  title={user.email}
-                >
-                  {accountLabel}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="inline-flex shrink-0"
-                  onClick={signOut}
-                >
-                  {t("signOut")}
-                </Button>
-              </>
-            ) : (
-              <>
-                <ButtonLink href="/login" prefetch variant="ghost" size="sm" className="hidden lg:inline-flex">
-                  {t("signIn")}
-                </ButtonLink>
-                <ButtonLink href="/register" prefetch size="sm" className="hidden sm:inline-flex">
-                  {t("register")}
-                </ButtonLink>
-              </>
-            )}
+            {desktopAuth}
           </div>
         </div>
 
@@ -185,19 +257,10 @@ export function SiteHeader() {
         </div>
       </nav>
 
-      <div className="flex flex-nowrap items-center justify-start gap-2 overflow-x-auto border-t border-border/40 px-4 py-2 [scrollbar-width:none] sm:justify-center sm:px-6 [&::-webkit-scrollbar]:hidden md:hidden">
+      <div className="flex min-h-9 flex-nowrap items-center justify-start gap-2 overflow-x-auto border-t border-border/40 px-4 py-2 [scrollbar-width:none] sm:justify-center sm:px-6 [&::-webkit-scrollbar]:hidden md:hidden">
         <LocaleSwitcher />
         <ThemeToggle />
-        {bootstrapped && user && accountLabel ? (
-          <>
-            <span className="max-w-[min(100%,12rem)] truncate text-xs text-muted-foreground" title={user.email}>
-              {accountLabel}
-            </span>
-            <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={signOut}>
-              {t("signOut")}
-            </Button>
-          </>
-        ) : null}
+        {mobileAuth}
       </div>
     </header>
   );
