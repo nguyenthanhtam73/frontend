@@ -75,7 +75,8 @@ export async function blurFaceInImage(file: File): Promise<BlurredImage> {
 
     ctx.drawImage(decoded.source, 0, 0, width, height);
 
-    const faceBox = await detectPrimaryFace(decoded.source);
+    // Detect on the same scaled canvas we blur — coordinates must match pixel space.
+    const faceBox = await detectPrimaryFace(canvas);
     const regions = computeBlurRegions(width, height, faceBox);
 
     for (const region of regions) {
@@ -200,47 +201,46 @@ type BlurRegion = {
 /**
  * Pick which regions to blur given the (optional) detected face box.
  *
- * - With a detected face: blur an upper "eye strip" (~25% of face height,
- *   from 20% down) and a lower "mouth strip" (~25%, starting at 60% down).
- * - Without a face: heuristic — the eye band is centred horizontally, ~30%
- *   of image width, sitting between 22% and 42% from the top. Selfies and
- *   onboarding portraits land here >95% of the time, and even imperfect
- *   alignment still removes one of the two most identifying facial regions.
+ * When FaceDetector is unavailable (Safari/Firefox), we estimate a centred
+ * portrait face box and apply the same eye + mouth bands so coverage matches
+ * the native path instead of a single thin eye strip.
  */
 function computeBlurRegions(
   imgW: number,
   imgH: number,
   face: { x: number; y: number; width: number; height: number } | null,
 ): BlurRegion[] {
-  if (face) {
-    const eye: BlurRegion = {
-      x: face.x + face.width * 0.05,
-      y: face.y + face.height * 0.18,
-      width: face.width * 0.9,
-      height: face.height * 0.28,
-      blurPx: Math.max(18, Math.min(face.width, face.height) * 0.18),
-    };
-    const mouth: BlurRegion = {
-      x: face.x + face.width * 0.18,
-      y: face.y + face.height * 0.6,
-      width: face.width * 0.64,
-      height: face.height * 0.22,
-      blurPx: Math.max(14, Math.min(face.width, face.height) * 0.14),
-    };
-    return [clampRegion(eye, imgW, imgH), clampRegion(mouth, imgW, imgH)];
-  }
-  // Heuristic: a centred horizontal band that covers the eye region of a
-  // typical centred portrait. We deliberately keep it WIDE (so off-centre
-  // faces still get partial coverage) but not full-width — leaving the
-  // forehead, cheeks, and chin readable for skin-texture analysis.
-  const heuristic: BlurRegion = {
-    x: imgW * 0.12,
-    y: imgH * 0.22,
-    width: imgW * 0.76,
-    height: imgH * 0.2,
-    blurPx: Math.max(22, Math.min(imgW, imgH) * 0.05),
+  const bounds = face ?? estimateCenterFaceBounds(imgW, imgH);
+  const minSide = Math.min(bounds.width, bounds.height);
+
+  const eye: BlurRegion = {
+    x: bounds.x + bounds.width * 0.02,
+    y: bounds.y + bounds.height * 0.14,
+    width: bounds.width * 0.96,
+    height: bounds.height * 0.34,
+    blurPx: Math.max(22, minSide * 0.22),
   };
-  return [clampRegion(heuristic, imgW, imgH)];
+  const mouth: BlurRegion = {
+    x: bounds.x + bounds.width * 0.1,
+    y: bounds.y + bounds.height * 0.56,
+    width: bounds.width * 0.8,
+    height: bounds.height * 0.28,
+    blurPx: Math.max(18, minSide * 0.18),
+  };
+
+  return [clampRegion(eye, imgW, imgH), clampRegion(mouth, imgW, imgH)];
+}
+
+/** Typical centred selfie — used when Shape Detection API is unavailable. */
+function estimateCenterFaceBounds(imgW: number, imgH: number) {
+  const faceW = imgW * 0.68;
+  const faceH = imgH * 0.52;
+  return {
+    x: (imgW - faceW) / 2,
+    y: imgH * 0.1,
+    width: faceW,
+    height: faceH,
+  };
 }
 
 function clampRegion(r: BlurRegion, w: number, h: number): BlurRegion {
@@ -295,12 +295,14 @@ function blurRegion(
 
   ctx.filter = `blur(${region.blurPx}px)`;
   ctx.drawImage(canvas, sx, sy, sw, sh, sx, sy, sw, sh);
+  // Second pass makes features unrecognisable without hiding cheek/forehead skin.
+  ctx.drawImage(canvas, sx, sy, sw, sh, sx, sy, sw, sh);
   ctx.filter = "none";
   ctx.restore();
 }
 
 async function detectPrimaryFace(
-  source: ImageBitmap | HTMLImageElement,
+  source: HTMLCanvasElement | ImageBitmap | HTMLImageElement,
 ): Promise<{ x: number; y: number; width: number; height: number } | null> {
   const Ctor = (window as WindowWithFaceDetector).FaceDetector;
   if (!Ctor) return null;
