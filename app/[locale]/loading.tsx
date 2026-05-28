@@ -1,15 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 /**
- * Suspense fallback for any navigation inside `/[locale]`.
- *
- * Renders an instant, ultra-thin progress bar pinned to the top of the viewport
- * (above the sticky header at `z-30`). Gives immediate feedback when the user
- * clicks a Link, even if the new page's RSC payload hasn't streamed yet.
- *
- * Avoids replacing existing layout content with a heavy skeleton — for prefetched
- * routes the swap happens within a frame or two, so a content skeleton would just
- * flash and feel jankier than nothing.
+ * Only show the progress bar when navigation takes longer than a beat.
+ * Prefetched locale swaps and fast route changes finish within ~1–2 frames;
+ * showing the bar immediately on every transition felt janky (especially
+ * combined with the old locale veil).
  */
+const SHOW_AFTER_MS = 280;
+
 export default function LocaleLoading() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setVisible(true), SHOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
   return (
     <div
       role="status"

@@ -4,7 +4,6 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 
 import { LocaleHtmlAttributes } from "@/components/site/locale-html-attributes";
-import { LocaleNavigationBridge } from "@/components/site/locale-navigation-bridge";
 import { OfflineIndicator } from "@/components/site/offline-indicator";
 import { PwaRegister } from "@/components/site/pwa-register";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -43,15 +42,13 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
       <LocaleHtmlAttributes />
-      <LocaleNavigationBridge>
-        <AppProviders>
-          <OfflineIndicator />
-          <SiteHeader />
-          <main className="flex flex-1 flex-col">{children}</main>
-          <SiteFooter />
-          <PwaRegister />
-        </AppProviders>
-      </LocaleNavigationBridge>
+      <AppProviders>
+        <OfflineIndicator />
+        <SiteHeader />
+        <main className="flex flex-1 flex-col">{children}</main>
+        <SiteFooter />
+        <PwaRegister />
+      </AppProviders>
     </NextIntlClientProvider>
   );
 }
