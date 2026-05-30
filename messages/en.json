@@ -303,6 +303,7 @@
       "processing": "Processing…",
       "failedTitle": "Buddy notes unavailable",
       "failedUnknown": "The reading step didn't work. Try again later or check your AI configuration.",
+      "pollTimeout": "Analysis is taking longer than usual. Check the backend (AI timeout, API keys) and try submitting again.",
       "retry": "Try again",
       "modelLine": "Pipeline: {model}",
       "coachPromptVersion": "Buddy prompt v{v}",

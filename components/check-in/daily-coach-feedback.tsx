@@ -13,11 +13,13 @@ import {
   Sparkles,
   Sun,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
+import { fetchSkinCheck, isAnalysisSettled } from "@/lib/api/skin-check";
 import { getAccessToken } from "@/lib/auth-token";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
@@ -74,15 +76,82 @@ export function DailyCoachFeedback({
   onRetry?: () => void;
 }) {
   const t = useTranslations("checkIn.coach");
-  const a = payload.analysis;
+  const [livePayload, setLivePayload] = useState(payload);
+  const [pollTimedOut, setPollTimedOut] = useState(false);
+
+  useEffect(() => {
+    setLivePayload(payload);
+    setPollTimedOut(false);
+  }, [payload]);
+
+  const checkId = payload.check.id;
+  const analysisStatus = livePayload.analysis.status;
+
+  useEffect(() => {
+    if (isAnalysisSettled(analysisStatus)) return;
+
+    let cancelled = false;
+    const started = Date.now();
+    const maxMs = 12 * 60 * 1000;
+    const intervalMs = 3000;
+
+    const tick = async () => {
+      if (cancelled || Date.now() - started > maxMs) {
+        if (!cancelled) setPollTimedOut(true);
+        return;
+      }
+      const next = await fetchSkinCheck(checkId);
+      if (cancelled || !next) return;
+      setLivePayload(next);
+      if (!isAnalysisSettled(next.analysis.status)) {
+        window.setTimeout(tick, intervalMs);
+      }
+    };
+
+    void tick();
+    return () => {
+      cancelled = true;
+    };
+  }, [checkId, analysisStatus]);
+
+  const a = livePayload.analysis;
   const c = a.coach;
 
-  if (a.status === "pending" || a.status === "processing") {
+  if (
+    !pollTimedOut &&
+    (a.status === "pending" || a.status === "processing")
+  ) {
     return (
       <Card className="border-dashed">
         <CardContent className="flex items-center gap-3 py-8 text-muted-foreground" role="status">
           <Loader2 className="size-6 shrink-0 animate-spin text-primary" aria-hidden />
           <p className="text-sm">{t("processing")}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (
+    pollTimedOut &&
+    (a.status === "pending" || a.status === "processing")
+  ) {
+    return (
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardContent className="space-y-3 pt-6">
+          <div
+            className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200"
+            role="alert"
+          >
+            <AlertTriangle className="size-4 shrink-0" aria-hidden />
+            {t("failedTitle")}
+          </div>
+          <p className="text-sm text-muted-foreground">{t("pollTimeout")}</p>
+          {onRetry ? (
+            <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onRetry}>
+              <RefreshCw className="size-4" aria-hidden />
+              {t("retry")}
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
     );

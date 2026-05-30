@@ -303,6 +303,7 @@
       "processing": "Đang xử lý…",
       "failedTitle": "Chưa tạo được lời khuyên",
       "failedUnknown": "Có lỗi khi đọc ảnh. Thử lại sau hoặc kiểm tra cấu hình AI.",
+      "pollTimeout": "Phân tích mất lâu hơn bình thường. Kiểm tra backend (timeout AI, API key) rồi thử gửi lại.",
       "retry": "Thử lại",
       "modelLine": "Pipeline: {model}",
       "coachPromptVersion": "Phiên bản lời khuyên v{v}",
