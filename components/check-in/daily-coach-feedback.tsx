@@ -92,8 +92,8 @@ export function DailyCoachFeedback({
 
     let cancelled = false;
     const started = Date.now();
-    const maxMs = 12 * 60 * 1000;
-    const intervalMs = 3000;
+    const maxMs = 5 * 60 * 1000;
+    const intervalMs = 2000;
 
     const tick = async () => {
       if (cancelled || Date.now() - started > maxMs) {
@@ -123,9 +123,12 @@ export function DailyCoachFeedback({
   ) {
     return (
       <Card className="border-dashed">
-        <CardContent className="flex items-center gap-3 py-8 text-muted-foreground" role="status">
-          <Loader2 className="size-6 shrink-0 animate-spin text-primary" aria-hidden />
-          <p className="text-sm">{t("processing")}</p>
+        <CardContent className="flex flex-col gap-2 py-8 text-muted-foreground" role="status">
+          <div className="flex items-center gap-3">
+            <Loader2 className="size-6 shrink-0 animate-spin text-primary" aria-hidden />
+            <p className="text-sm font-medium text-foreground">{t("processing")}</p>
+          </div>
+          <p className="text-xs pl-9">{t("processingHint")}</p>
         </CardContent>
       </Card>
     );
