@@ -91,17 +91,37 @@ function GuestActions({
   signInLabel,
   registerLabel,
   className,
+  compact = false,
 }: {
   signInLabel: string;
   registerLabel: string;
   className?: string;
+  /** When true, both CTAs show on narrow screens (mobile header row). */
+  compact?: boolean;
 }) {
   return (
     <div className={cn("flex shrink-0 items-center gap-1.5", className)}>
-      <ButtonLink href="/login" prefetch variant="ghost" size="sm" className="hidden min-w-[4.5rem] lg:inline-flex">
+      <ButtonLink
+        href="/login"
+        prefetch
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "min-h-9 justify-center",
+          compact ? "inline-flex px-2.5" : "hidden min-w-[4.5rem] lg:inline-flex",
+        )}
+      >
         {signInLabel}
       </ButtonLink>
-      <ButtonLink href="/register" prefetch size="sm" className="hidden min-w-[5.5rem] sm:inline-flex">
+      <ButtonLink
+        href="/register"
+        prefetch
+        size="sm"
+        className={cn(
+          "min-h-9 justify-center",
+          compact ? "inline-flex px-2.5" : "hidden min-w-[5.5rem] sm:inline-flex",
+        )}
+      >
         {registerLabel}
       </ButtonLink>
     </div>
@@ -180,6 +200,12 @@ export function SiteHeader() {
         email={user.email}
         onSignOut={signOut}
         signOutLabel={t("signOut")}
+      />
+    ) : authReady ? (
+      <GuestActions
+        compact
+        signInLabel={t("signIn")}
+        registerLabel={t("register")}
       />
     ) : null;
 

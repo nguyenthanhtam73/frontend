@@ -1,8 +1,18 @@
 import { Camera, ShieldCheck, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { CheckInForm } from "@/components/check-in/check-in-form";
+import dynamic from "next/dynamic";
+
+import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
 import { OfflineNotice } from "@/components/site/offline-notice";
+
+const CheckInForm = dynamic(
+  () =>
+    import("@/components/check-in/check-in-form").then((m) => ({
+      default: m.CheckInForm,
+    })),
+  { loading: () => <CheckInFormSkeleton /> },
+);
 
 type Props = { params: Promise<{ locale: string }> };
 

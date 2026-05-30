@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Camera,
   Loader2,
+  RefreshCw,
   Sparkles,
   Sun as SunIcon,
 } from "lucide-react";
@@ -35,40 +36,39 @@ export function CheckInContextCard() {
     "loading" | "ready" | "anon" | "empty" | "error"
   >("loading");
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!getAccessToken()) {
       setStatus("anon");
       return;
     }
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(
-          `${apiBaseUrl}/api/v1/progress?range=30&limit=1`,
-          { headers: authHeaders() },
-        );
-        if (!res.ok) {
-          if (!cancelled) setStatus("error");
-          return;
-        }
-        const json = await res.json().catch(() => ({}));
-        if (cancelled) return;
-        const list = (json?.data?.entries ?? []) as ProgressEntry[];
-        const top = list[0];
-        if (!top) {
-          setStatus("empty");
-        } else {
-          setEntry(top);
-          setStatus("ready");
-        }
-      } catch {
-        if (!cancelled) setStatus("error");
+    setStatus("loading");
+    try {
+      const res = await fetch(
+        `${apiBaseUrl}/api/v1/progress?range=30&limit=1`,
+        { headers: authHeaders() },
+      );
+      if (!res.ok) {
+        setStatus("error");
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+      const json = await res.json().catch(() => ({}));
+      const list = (json?.data?.entries ?? []) as ProgressEntry[];
+      const top = list[0];
+      if (!top) {
+        setEntry(null);
+        setStatus("empty");
+      } else {
+        setEntry(top);
+        setStatus("ready");
+      }
+    } catch {
+      setStatus("error");
+    }
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   // Hook-order safety: defined unconditionally so render branching below
   // doesn't change which hooks run between renders.
@@ -84,7 +84,7 @@ export function CheckInContextCard() {
   if (status === "loading") {
     return (
       <Card className="border-dashed">
-        <CardContent className="flex items-center gap-2 py-3 text-xs text-muted-foreground">
+        <CardContent className="flex items-center gap-2 py-3 text-xs text-muted-foreground" role="status">
           <Loader2 className="size-3.5 animate-spin" aria-hidden />
           {t("loading")}
         </CardContent>
@@ -92,10 +92,29 @@ export function CheckInContextCard() {
     );
   }
 
-  // Anon + transient errors stay invisible — the routine page already has
-  // its own auth banner; we don't want to double up on noise.
-  if (status === "anon" || status === "error") {
+  if (status === "anon") {
     return null;
+  }
+
+  if (status === "error") {
+    return (
+      <Card className="border-destructive/30 bg-destructive/5">
+        <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-0.5">
+            <p className="text-sm font-semibold text-destructive">{t("errorTitle")}</p>
+            <p className="text-xs text-muted-foreground">{t("errorHint")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 self-start rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted sm:self-center"
+          >
+            <RefreshCw className="size-3.5" aria-hidden />
+            {t("retry")}
+          </button>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (status === "empty") {

@@ -2,6 +2,7 @@
 
 import { AlertCircle, CheckCircle2, X } from "lucide-react";
 
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { cn } from "@/lib/utils";
 
 /**
@@ -35,14 +36,13 @@ export function Banner({
     >
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <p className="flex-1 leading-relaxed">{message}</p>
-      <button
-        type="button"
+      <IconDismissButton
         onClick={onClose}
-        aria-label={closeLabel}
-        className="rounded-md p-1 transition-opacity hover:opacity-70"
+        ariaLabel={closeLabel}
+        className="text-current hover:opacity-70"
       >
         <X className="size-4" aria-hidden />
-      </button>
+      </IconDismissButton>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-envelope";
 import { getAccessToken } from "@/lib/auth-token";
@@ -40,7 +41,7 @@ export function ProgressTimeline() {
   const fetchTimeline = useCallback(
     async (r: ProgressRangeKey) => {
       setLoading(true);
-      setErrMsg(null);
+      if (!data) setErrMsg(null);
       try {
         const headers: Record<string, string> = {};
         const token = getAccessToken();
@@ -65,7 +66,7 @@ export function ProgressTimeline() {
         setLoading(false);
       }
     },
-    [t],
+    [t, data],
   );
 
   useEffect(() => {
@@ -92,16 +93,29 @@ export function ProgressTimeline() {
 
   return (
     <div className="space-y-6">
-      <RangeChips active={range} onChange={setRange} />
+      <RangeChips active={range} onChange={setRange} busy={loading && Boolean(data)} />
 
-      {loading ? <LoadingCard message={t("loading")} /> : null}
+      {loading && !data ? <TimelineSkeleton /> : null}
 
-      {!loading && errMsg ? <ErrorCard message={errMsg} onRetry={() => fetchTimeline(range)} retryLabel={t("retry")} /> : null}
+      {!loading && errMsg ? (
+        <ErrorCard
+          message={errMsg}
+          onRetry={() => fetchTimeline(range)}
+          retryLabel={t("retry")}
+          loginLabel={t("errors.signIn")}
+          showLogin={errMsg === t("errors.needAuth")}
+        />
+      ) : null}
 
-      {!loading && !errMsg && data && data.entries.length === 0 ? <EmptyState /> : null}
+      {!errMsg && data && data.entries.length === 0 && !loading ? <EmptyState /> : null}
 
-      {!loading && !errMsg && data && data.entries.length > 0 ? (
-        <div className="space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
+      {!errMsg && data && data.entries.length > 0 ? (
+        <div
+          className={cn(
+            "space-y-5 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500",
+            loading && "pointer-events-none opacity-60",
+          )}
+        >
           <ProgressSummaryCard summary={data.summary} sparklinePoints={sparklinePoints} />
 
           {beforeAfter ? (
@@ -131,49 +145,60 @@ export function ProgressTimeline() {
 function RangeChips({
   active,
   onChange,
+  busy = false,
 }: {
   active: ProgressRangeKey;
   onChange: (r: ProgressRangeKey) => void;
+  busy?: boolean;
 }) {
   const t = useTranslations("progress.range");
   const tProgress = useTranslations("progress");
   // Use radiogroup semantics — these chips behave like single-select filters
   // without tab panels, which is the actual interaction model.
   return (
-    <div
-      className="flex flex-wrap gap-1.5"
-      role="radiogroup"
-      aria-label={tProgress("rangeAriaLabel")}
-    >
-      {rangeOptions.map((opt) => (
-        <button
-          key={opt}
-          type="button"
-          role="radio"
-          aria-checked={opt === active}
-          onClick={() => onChange(opt)}
-          className={cn(
-            "min-h-9 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-            opt === active
-              ? "border-primary bg-primary/10 text-primary"
-              : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-          )}
-        >
-          {t(opt)}
-        </button>
-      ))}
+    <div className="flex flex-wrap items-center gap-2">
+      <div
+        className="flex flex-wrap gap-1.5"
+        role="radiogroup"
+        aria-label={tProgress("rangeAriaLabel")}
+      >
+        {rangeOptions.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            role="radio"
+            aria-checked={opt === active}
+            disabled={busy}
+            onClick={() => onChange(opt)}
+            className={cn(
+              "min-h-9 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+              opt === active
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+              busy && "opacity-70",
+            )}
+          >
+            {t(opt)}
+          </button>
+        ))}
+      </div>
+      {busy ? (
+        <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden />
+      ) : null}
     </div>
   );
 }
 
-function LoadingCard({ message }: { message: string }) {
+function TimelineSkeleton() {
   return (
-    <Card className="border-dashed">
-      <CardContent className="flex items-center gap-3 py-10 text-muted-foreground">
-        <Loader2 className="size-5 shrink-0 animate-spin text-primary" aria-hidden />
-        <p className="text-sm">{message}</p>
-      </CardContent>
-    </Card>
+    <div className="space-y-5" aria-hidden>
+      <Skeleton className="h-36 w-full rounded-xl" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-44 w-full rounded-xl" />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -181,21 +206,32 @@ function ErrorCard({
   message,
   onRetry,
   retryLabel,
+  loginLabel,
+  showLogin,
 }: {
   message: string;
   onRetry: () => void;
   retryLabel: string;
+  loginLabel?: string;
+  showLogin?: boolean;
 }) {
   return (
     <Card className="border-destructive/30 bg-destructive/5">
       <CardContent className="space-y-3 pt-5">
-        <div className="flex items-center gap-2 font-medium text-destructive">
+        <div className="flex items-center gap-2 font-medium text-destructive" role="alert">
           <AlertCircle className="size-4 shrink-0" aria-hidden />
           {message}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
-          {retryLabel}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            {retryLabel}
+          </Button>
+          {showLogin && loginLabel ? (
+            <ButtonLink href="/login" variant="default" size="sm">
+              {loginLabel}
+            </ButtonLink>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );

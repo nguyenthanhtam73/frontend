@@ -59,9 +59,12 @@ export function SkincareCabinetOverview() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardContent className="space-y-3 p-6 pt-6">
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
               <Sparkles className="size-4 text-primary" aria-hidden />
               {t("usingTitle")}
+              <span className="rounded-full border border-dashed border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+                {t("demoBadge")}
+              </span>
             </div>
             <ul className="list-inside list-disc space-y-1.5 text-sm text-muted-foreground">
               {demoRoutine.map((x) => (
@@ -74,9 +77,12 @@ export function SkincareCabinetOverview() {
 
         <Card>
           <CardContent className="space-y-3 p-6 pt-6">
-            <div className="flex items-center gap-2 text-sm font-semibold">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
               <Droplets className="size-4 text-primary" aria-hidden />
               {t("wishTitle")}
+              <span className="rounded-full border border-dashed border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+                {t("demoBadge")}
+              </span>
             </div>
             <ul className="space-y-2">
               {demoWishlist.map((x) => (
@@ -111,13 +117,16 @@ export function SkincareCabinetOverview() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">
-            {t("noStarter")}{" "}
-            <Link href="/onboarding" className="font-medium text-primary underline underline-offset-4">
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardContent className="space-y-3 p-6">
+            <p className="text-sm font-medium">{t("noStarterTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("noStarter")}</p>
+            <Link
+              href="/onboarding"
+              className="inline-flex min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
               {t("setupLink")}
             </Link>
-            .
           </CardContent>
         </Card>
       )}

@@ -4,6 +4,7 @@ import { Check, Loader2, Moon, RefreshCw, Sun, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import {
   normalizeCategory,
@@ -63,14 +64,13 @@ export function SuggestionPreview({
             <p className="text-sm font-semibold tracking-tight">{labels.title}</p>
             <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{labels.hint}</p>
           </div>
-          <button
-            type="button"
+          <IconDismissButton
             onClick={onDismiss}
-            aria-label={labels.dismiss}
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            ariaLabel={labels.dismiss}
+            className="text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" aria-hidden />
-          </button>
+          </IconDismissButton>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

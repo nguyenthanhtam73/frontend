@@ -303,6 +303,7 @@
       "processing": "Đang xử lý…",
       "failedTitle": "Chưa tạo được lời khuyên",
       "failedUnknown": "Có lỗi khi đọc ảnh. Thử lại sau hoặc kiểm tra cấu hình AI.",
+      "retry": "Thử lại",
       "modelLine": "Pipeline: {model}",
       "coachPromptVersion": "Phiên bản lời khuyên v{v}",
       "rateTitle": "Lời khuyên này có hợp với bạn không?",
@@ -332,6 +333,7 @@
       "savedJustNow": "Đã lưu",
       "doneCount": "{done}/{total} bước hôm nay",
       "emptyHint": "Chưa có gì cho hôm nay. Bấm “Áp dụng cho hôm nay” phía trên hoặc mở trang chăm da để soạn nhanh.",
+      "emptyCta": "Soạn chăm da của tôi",
       "am": "Buổi sáng",
       "pm": "Buổi tối",
       "amEmpty": "Chưa có bước sáng nào.",
@@ -365,7 +367,12 @@
     "voteError": "Chưa gửi được góp ý (mạng hoặc cấu hình AI).",
     "voteNeedLogin": "Cần đăng nhập để gửi góp ý.",
     "ctaCheckIn": "Ghi nhật ký da hôm nay",
-    "ctaHome": "Về trang chủ"
+    "ctaHome": "Về trang chủ",
+    "needSignIn": "Đăng nhập để xem chăm da khởi đầu từ phần làm quen với da.",
+    "signInCta": "Đăng nhập",
+    "retry": "Thử lại",
+    "errorFetch": "Không tải được hồ sơ da. Thử lại nhé.",
+    "errorNetwork": "Mạng gián đoạn — kiểm tra kết nối và thử lại."
   },
   "cabinet": {
     "sectionLabel": "Tủ đồ chăm da",
@@ -378,7 +385,9 @@
     "starterTitle": "Chăm da khởi đầu (từ phần làm quen với da)",
     "adjustOnboarding": "Chỉnh lại làm quen với da",
     "noStarter": "Chưa có chăm da khởi đầu —",
+    "noStarterTitle": "Tủ đồ đang chờ bạn",
     "setupLink": "tạo trong khoảng 2 phút",
+    "demoBadge": "Mẫu demo",
     "demoUsing": [
       "Sữa rửa mặt dịu pH ~5.5 (tối giản)",
       "Vitamin C buổi sáng (thử trước cho an toàn)",
@@ -443,6 +452,7 @@
     },
     "errors": {
       "needAuth": "Cần đăng nhập để xem da thay đổi.",
+      "signIn": "Đăng nhập",
       "fetchFail": "Chưa tải được dữ liệu.",
       "networkError": "Mạng chưa ổn — thử lại sau giây lát nhé."
     }
@@ -693,6 +703,9 @@
       "emptyTitle": "Chưa có nhật ký nào",
       "emptyHint": "Thêm 1 ảnh + vài cảm nhận để gợi ý chăm da bám sát da bạn hôm nay.",
       "emptyCta": "Bắt đầu ghi nhật ký",
+      "errorTitle": "Không đọc được nhật ký gần nhất",
+      "errorHint": "Gợi ý chăm da có thể kém chính xác cho đến khi tải xong.",
+      "retry": "Thử lại",
       "status": {
         "pending": "Bạn đồng hành đang chờ",
         "processing": "Bạn đồng hành đang đọc",

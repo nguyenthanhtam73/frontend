@@ -8,12 +8,14 @@ import {
   Lightbulb,
   Loader2,
   Moon,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   Sun,
 } from "lucide-react";
 
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { getAccessToken } from "@/lib/auth-token";
@@ -65,8 +67,11 @@ function splitRoutineHints(hints: string[] | undefined): {
 
 export function DailyCoachFeedback({
   payload,
+  onRetry,
 }: {
   payload: CreateSkinCheckResponseDTO;
+  /** Clears the result view so the user can submit a new check-in. */
+  onRetry?: () => void;
 }) {
   const t = useTranslations("checkIn.coach");
   const a = payload.analysis;
@@ -75,7 +80,7 @@ export function DailyCoachFeedback({
   if (a.status === "pending" || a.status === "processing") {
     return (
       <Card className="border-dashed">
-        <CardContent className="flex items-center gap-3 py-8 text-muted-foreground">
+        <CardContent className="flex items-center gap-3 py-8 text-muted-foreground" role="status">
           <Loader2 className="size-6 shrink-0 animate-spin text-primary" aria-hidden />
           <p className="text-sm">{t("processing")}</p>
         </CardContent>
@@ -87,13 +92,19 @@ export function DailyCoachFeedback({
     return (
       <Card className="border-destructive/30 bg-destructive/5">
         <CardContent className="space-y-3 pt-6">
-          <div className="flex items-center gap-2 font-medium text-destructive">
+          <div className="flex items-center gap-2 font-medium text-destructive" role="alert">
             <AlertTriangle className="size-4 shrink-0" aria-hidden />
             {t("failedTitle")}
           </div>
           <p className="text-sm text-muted-foreground">
             {c?.error_message || t("failedUnknown")}
           </p>
+          {onRetry ? (
+            <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onRetry}>
+              <RefreshCw className="size-4" aria-hidden />
+              {t("retry")}
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
     );
@@ -106,11 +117,17 @@ export function DailyCoachFeedback({
     return (
       <Card className="border-amber-500/30 bg-amber-500/5">
         <CardContent className="space-y-3 pt-6">
-          <div className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200">
+          <div className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200" role="alert">
             <AlertTriangle className="size-4 shrink-0" aria-hidden />
             {t("failedTitle")}
           </div>
           <p className="text-sm text-muted-foreground">{t("failedUnknown")}</p>
+          {onRetry ? (
+            <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onRetry}>
+              <RefreshCw className="size-4" aria-hidden />
+              {t("retry")}
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
     );

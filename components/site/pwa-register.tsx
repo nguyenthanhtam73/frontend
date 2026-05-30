@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------
@@ -294,14 +295,13 @@ function ToastShell({
         tone === "info" ? "border-primary/40" : "border-border",
       )}
     >
-      <button
-        type="button"
+      <IconDismissButton
         onClick={secondary.onClick}
-        aria-label={secondary.ariaLabel ?? secondary.label}
-        className="absolute right-2 top-2 inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        ariaLabel={secondary.ariaLabel ?? secondary.label}
+        className="absolute right-1 top-1"
       >
-        <X className="size-3.5" aria-hidden />
-      </button>
+        <X className="size-4" aria-hidden />
+      </IconDismissButton>
 
       <div className="flex items-start gap-3 pr-6">
         <span

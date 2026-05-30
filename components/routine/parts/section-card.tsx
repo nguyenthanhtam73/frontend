@@ -316,7 +316,7 @@ function StepRow({
                 onClick={onMoveUp}
                 disabled={index === 0}
                 aria-label={labels.moveUp}
-                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 sm:size-7"
+                className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <ArrowUp className="size-4 sm:size-3.5" aria-hidden />
               </button>
@@ -325,7 +325,7 @@ function StepRow({
                 onClick={onMoveDown}
                 disabled={index === total - 1}
                 aria-label={labels.moveDown}
-                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 sm:size-7"
+                className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <ArrowDown className="size-4 sm:size-3.5" aria-hidden />
               </button>
@@ -335,7 +335,7 @@ function StepRow({
             type="button"
             onClick={onRemove}
             aria-label={labels.remove}
-            className="inline-flex size-8 items-center justify-center rounded-md text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive sm:size-7"
+            className="inline-flex size-11 items-center justify-center rounded-md text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="size-4 sm:size-3.5" aria-hidden />
           </button>

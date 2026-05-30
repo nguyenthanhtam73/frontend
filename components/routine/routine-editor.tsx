@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, Moon, Sun } from "lucide-react";
+import { RoutineEditorSkeleton } from "./routine-editor-skeleton";
+import { Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 
@@ -104,12 +105,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
   }, []);
 
   if (r.status === "loading" && !r.routine.routineDate) {
-    return (
-      <div className="flex items-center gap-3 rounded-xl border bg-card/60 px-4 py-6 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" aria-hidden />
-        <span>{t("loading")}</span>
-      </div>
-    );
+    return <RoutineEditorSkeleton />;
   }
 
   return (

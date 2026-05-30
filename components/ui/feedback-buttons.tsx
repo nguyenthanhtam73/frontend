@@ -275,11 +275,7 @@ export function FeedbackButtons({
       ) : null}
 
       {error ? (
-        <p
-          role="status"
-          aria-live="polite"
-          className="text-xs leading-snug text-destructive"
-        >
+        <p role="alert" className="text-xs leading-snug text-destructive">
           {error}
         </p>
       ) : null}

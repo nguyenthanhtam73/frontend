@@ -1,6 +1,16 @@
 import { getTranslations } from "next-intl/server";
 
-import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import dynamic from "next/dynamic";
+
+import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
+
+const OnboardingFlow = dynamic(
+  () =>
+    import("@/components/onboarding/onboarding-flow").then((m) => ({
+      default: m.OnboardingFlow,
+    })),
+  { loading: () => <OnboardingFlowSkeleton /> },
+);
 
 type Props = { params: Promise<{ locale: string }> };
 

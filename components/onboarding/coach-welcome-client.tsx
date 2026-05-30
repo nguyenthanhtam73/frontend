@@ -2,9 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import {
+  AlertCircle,
   Heart,
-  Loader2,
   Moon,
+  RefreshCw,
   Send,
   ShieldCheck,
   Sparkles,
@@ -14,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
@@ -65,9 +67,13 @@ export function CoachWelcomeClient() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [starter, setStarter] = useState<StarterRoutineDTO | null>(null);
   const [visionNotes, setVisionNotes] = useState<string | undefined>();
+  const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setErrorMsg(null);
+    setView("ok");
     try {
       const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
       if (raw) {
@@ -86,6 +92,8 @@ export function CoachWelcomeClient() {
 
     const token = getAccessToken();
     if (!token) {
+      setStarter(null);
+      setView("anon");
       setLoading(false);
       return;
     }
@@ -93,6 +101,17 @@ export function CoachWelcomeClient() {
       const res = await fetch(`${apiBaseUrl}/api/v1/profile/skin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        setStarter(null);
+        setView("anon");
+        return;
+      }
+      if (!res.ok) {
+        setStarter(null);
+        setView("error");
+        setErrorMsg(t("errorFetch"));
+        return;
+      }
       const json = (await res.json().catch(() => ({}))) as {
         data?: SkinProfileResponse;
       };
@@ -101,11 +120,19 @@ export function CoachWelcomeClient() {
         setProfileId(prof.id);
         const sr = parseSnapshotStarter(prof.onboarding_snapshot);
         setStarter(sr);
+        if (!sr) setView("empty");
+      } else {
+        setStarter(null);
+        setView("empty");
       }
+    } catch {
+      setStarter(null);
+      setView("error");
+      setErrorMsg(t("errorNetwork"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -113,14 +140,55 @@ export function CoachWelcomeClient() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-muted-foreground">
-        <Loader2 className="size-8 animate-spin" aria-hidden />
-        <p className="text-sm">{t("loading")}</p>
+      <div className="mx-auto w-full max-w-2xl space-y-6" role="status" aria-live="polite">
+        <Skeleton className="h-8 w-48 rounded-lg" />
+        <Skeleton className="h-4 w-full max-w-md rounded-md" />
+        <Skeleton className="h-28 w-full rounded-xl" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-40 w-full rounded-xl" />
+          <Skeleton className="h-40 w-full rounded-xl" />
+        </div>
+        <p className="sr-only">{t("loading")}</p>
       </div>
     );
   }
 
-  if (!starter) {
+  if (view === "error") {
+    return (
+      <div className="mx-auto max-w-lg space-y-4 text-center">
+        <div className="inline-flex items-center gap-2 text-sm font-medium text-destructive" role="alert">
+          <AlertCircle className="size-4 shrink-0" aria-hidden />
+          {errorMsg ?? t("errorFetch")}
+        </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className={cn(buttonVariants({ variant: "outline" }), "gap-2")}
+        >
+          <RefreshCw className="size-4" aria-hidden />
+          {t("retry")}
+        </button>
+      </div>
+    );
+  }
+
+  if (view === "anon") {
+    return (
+      <div className="mx-auto max-w-lg space-y-4 text-center">
+        <p className="text-muted-foreground">{t("needSignIn")}</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Link href="/login" className={cn(buttonVariants({ variant: "default" }))}>
+            {t("signInCta")}
+          </Link>
+          <Link href="/onboarding" className={cn(buttonVariants({ variant: "ghost" }))}>
+            {t("backOnboarding")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!starter || view === "empty") {
     return (
       <div className="mx-auto max-w-lg space-y-4 text-center">
         <p className="text-muted-foreground">{t("empty")}</p>

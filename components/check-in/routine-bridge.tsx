@@ -282,7 +282,9 @@ export function RoutineBridge({
               </Button>
             </div>
             {applyError ? (
-              <p className="mt-2 text-xs text-destructive">{applyError}</p>
+              <p className="mt-2 text-xs text-destructive" role="alert">
+                {applyError}
+              </p>
             ) : null}
             {!hasAuth ? (
               <p className="mt-2 text-xs text-muted-foreground">
@@ -321,8 +323,15 @@ export function RoutineBridge({
               {t("loading")}
             </div>
           ) : totalSteps === 0 ? (
-            <div className="rounded-xl border border-dashed bg-muted/30 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
-              {t("emptyHint")}
+            <div className="space-y-2 rounded-xl border border-dashed bg-muted/30 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
+              <p>{t("emptyHint")}</p>
+              <Link
+                href="/routine"
+                className="inline-flex min-h-9 items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {t("emptyCta")}
+                <ArrowRight className="size-3" aria-hidden />
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -356,7 +365,9 @@ export function RoutineBridge({
           )}
 
           {loadError ? (
-            <p className="text-xs text-destructive">{loadError}</p>
+            <p className="text-xs text-destructive" role="alert">
+              {loadError}
+            </p>
           ) : null}
         </div>
       </CardContent>

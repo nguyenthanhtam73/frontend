@@ -303,6 +303,7 @@
       "processing": "Processing…",
       "failedTitle": "Buddy notes unavailable",
       "failedUnknown": "The reading step didn't work. Try again later or check your AI configuration.",
+      "retry": "Try again",
       "modelLine": "Pipeline: {model}",
       "coachPromptVersion": "Buddy prompt v{v}",
       "rateTitle": "Was this helpful?",
@@ -332,6 +333,7 @@
       "savedJustNow": "Saved",
       "doneCount": "{done}/{total} done today",
       "emptyHint": "Nothing for today yet. Tap “Apply to today” above, or open the page to start one.",
+      "emptyCta": "Set up my routine",
       "am": "Morning",
       "pm": "Evening",
       "amEmpty": "No morning steps yet.",
@@ -365,7 +367,12 @@
     "voteError": "Couldn't send feedback (network or AI).",
     "voteNeedLogin": "Sign in to send feedback.",
     "ctaCheckIn": "Today's check-in",
-    "ctaHome": "Home"
+    "ctaHome": "Home",
+    "needSignIn": "Sign in to see your starter routine from getting-to-know-your-skin.",
+    "signInCta": "Sign in",
+    "retry": "Try again",
+    "errorFetch": "Couldn't load your profile. Please try again.",
+    "errorNetwork": "Network hiccup — check your connection and retry."
   },
   "cabinet": {
     "sectionLabel": "Skincare shelf",
@@ -378,7 +385,9 @@
     "starterTitle": "Starter routine (from getting to know your skin)",
     "adjustOnboarding": "Edit getting-to-know-your-skin",
     "noStarter": "No starter routine yet —",
+    "noStarterTitle": "Your shelf is waiting",
     "setupLink": "set up in ~2 minutes",
+    "demoBadge": "Sample",
     "demoUsing": [
       "Gentle pH ~5.5 cleanser (keep it minimal)",
       "Morning vitamin C (patch test first)",
@@ -443,6 +452,7 @@
     },
     "errors": {
       "needAuth": "Please sign in to view your progress.",
+      "signIn": "Sign in",
       "fetchFail": "Couldn't load progress data.",
       "networkError": "Network hiccup — give it another try in a moment."
     }
@@ -693,6 +703,9 @@
       "emptyTitle": "No check-in yet",
       "emptyHint": "Add a quick photo + a few skin tags so the suggestions match how your skin actually feels today.",
       "emptyCta": "Start check-in",
+      "errorTitle": "Couldn't read your latest check-in",
+      "errorHint": "Your routine suggestions may be less accurate until this loads.",
+      "retry": "Try again",
       "status": {
         "pending": "Buddy pending",
         "processing": "Buddy reading",

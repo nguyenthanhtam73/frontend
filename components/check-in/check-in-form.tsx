@@ -21,6 +21,7 @@ import { FacePrivacyConsentDialog } from "@/components/privacy/face-privacy-cons
 import { useConsentGate } from "@/components/privacy/use-consent-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
@@ -109,6 +110,13 @@ export function CheckInForm() {
       errorAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
+
+  const resetCoachResult = useCallback(() => {
+    setCoachPayload(null);
+    requestAnimationFrame(() => {
+      feedbackAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   const skillMode = useSkillStore((s) => s.mode);
   const setSkillMode = useSkillStore((s) => s.setMode);
@@ -679,7 +687,9 @@ export function CheckInForm() {
 
       <div ref={feedbackAnchorRef} className="scroll-mt-24 space-y-3">
         {submitting ? <CoachThinkingCard message={t("analyzingCoach")} /> : null}
-        {coachPayload ? <DailyCoachFeedback payload={coachPayload} /> : null}
+        {coachPayload ? (
+          <DailyCoachFeedback payload={coachPayload} onRetry={resetCoachResult} />
+        ) : null}
         {!submitting && !coachPayload ? (
           <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
             {t("coachBeforeSubmit")}
@@ -800,14 +810,13 @@ function InlineErrorBanner({
     >
       <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
       <p className="flex-1 leading-relaxed">{message}</p>
-      <button
-        type="button"
+      <IconDismissButton
         onClick={onDismiss}
-        aria-label={dismissLabel}
-        className="rounded-md p-1 text-destructive/70 transition-colors hover:bg-destructive/15 hover:text-destructive"
+        ariaLabel={dismissLabel}
+        className="text-destructive/70 hover:bg-destructive/15 hover:text-destructive"
       >
         <X className="size-4" aria-hidden />
-      </button>
+      </IconDismissButton>
     </div>
   );
 }

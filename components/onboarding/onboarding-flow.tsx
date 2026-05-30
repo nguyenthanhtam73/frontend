@@ -22,6 +22,7 @@ import { FacePrivacyConsentDialog } from "@/components/privacy/face-privacy-cons
 import { useConsentGate } from "@/components/privacy/use-consent-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
@@ -1232,14 +1233,13 @@ function FinishErrorBanner({
       <div className="flex items-start gap-2">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
         <p className="flex-1 leading-relaxed text-destructive">{message}</p>
-        <button
-          type="button"
+        <IconDismissButton
           onClick={onDismiss}
-          aria-label={dismissLabel}
-          className="rounded-md p-1 text-destructive/70 transition-colors hover:bg-destructive/15 hover:text-destructive"
+          ariaLabel={dismissLabel}
+          className="text-destructive/70 hover:bg-destructive/15 hover:text-destructive"
         >
           <X className="size-4" aria-hidden />
-        </button>
+        </IconDismissButton>
       </div>
       <div className="flex flex-wrap gap-2 pl-6">
         {kind !== "auth" ? (
