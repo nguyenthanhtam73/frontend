@@ -28,6 +28,7 @@ import { getAccessToken } from "@/lib/auth-token";
 import { blurFaceInImage, type BlurMethod } from "@/lib/privacy/face-blur";
 import type { SkillMode } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
@@ -98,7 +99,9 @@ export function CheckInForm() {
   const feedbackAnchorRef = useRef<HTMLDivElement>(null);
   const errorAnchorRef = useRef<HTMLDivElement>(null);
 
-  const skipFaceCapture = usePrivacyStore((s) => s.skipFaceCapture);
+  const privacyHydrated = usePrivacyHydrated();
+  const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
+  const skipFaceCapture = privacyHydrated && skipFaceCaptureStored;
   const setSkipFaceCapture = usePrivacyStore((s) => s.setSkipFaceCapture);
   const consent = useConsentGate();
 

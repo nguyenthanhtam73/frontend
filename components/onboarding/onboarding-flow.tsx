@@ -42,6 +42,7 @@ import {
   type SkinUndertone,
   useOnboardingStore,
 } from "@/lib/stores/onboarding-store";
+import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { cn } from "@/lib/utils";
@@ -156,7 +157,9 @@ export function OnboardingFlow() {
   const cameraRef = useRef<HTMLInputElement>(null);
   const ob = useOnboardingStore();
   const setSkillGlobal = useSkillStore((s) => s.setMode);
-  const skipFaceCapture = usePrivacyStore((s) => s.skipFaceCapture);
+  const privacyHydrated = usePrivacyHydrated();
+  const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
+  const skipFaceCapture = privacyHydrated && skipFaceCaptureStored;
   const setSkipFaceCapture = usePrivacyStore((s) => s.setSkipFaceCapture);
   const consent = useConsentGate();
 

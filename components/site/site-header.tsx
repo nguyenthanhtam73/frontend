@@ -9,6 +9,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { useClientMounted } from "@/lib/use-client-mounted";
 import { useCurrentHash } from "@/lib/use-current-hash";
 import { cn } from "@/lib/utils";
 
@@ -34,12 +35,6 @@ function isNavLinkActive(pathname: string, hash: string, href: string) {
   if (routePath === "/") return p === "/";
   if (p === routePath) return true;
   return p.startsWith(`${routePath}/`);
-}
-
-function authUiReady() {
-  if (typeof window === "undefined") return false;
-  const { user } = useAuthStore.getState();
-  return Boolean(user) || !getAccessToken();
 }
 
 function AuthSkeleton() {
@@ -136,7 +131,8 @@ export function SiteHeader() {
   const [, startTransition] = useTransition();
   const hash = useCurrentHash();
   const { user, logout } = useAuthStore();
-  const [authReady, setAuthReady] = useState(authUiReady);
+  const mounted = useClientMounted();
+  const [authReady, setAuthReady] = useState(false);
 
   const signOut = useCallback(() => {
     logout();
@@ -170,7 +166,8 @@ export function SiteHeader() {
   }, []);
 
   const accountLabel = user?.display_name?.trim() || user?.email || user?.username;
-  const showAuthSkeleton = !authReady && Boolean(getAccessToken()) && !user;
+  const showAuthSkeleton =
+    mounted && !authReady && Boolean(getAccessToken()) && !user;
 
   const desktopAuth =
     showAuthSkeleton ? (
