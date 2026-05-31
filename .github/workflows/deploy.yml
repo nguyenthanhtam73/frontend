@@ -33,16 +33,21 @@ jobs:
           TOKEN="$(printf '%s' "$VERCEL_TOKEN" | tr -d '[:space:]')"
 
           if [ -z "$TOKEN" ]; then
-            echo "::error::Missing GitHub repository secret VERCEL_TOKEN."
-            echo "::error::Create at https://github.com/nguyenthanhtam73/frontend/settings/secrets/actions"
-            echo "::error::Value = token from https://vercel.com/account/tokens (starts with vcp_, NOT a UUID)"
+            echo "::error::Thiếu GitHub secret VERCEL_TOKEN."
+            echo "::error::Vào https://github.com/nguyenthanhtam73/frontend/settings/secrets/actions"
+            echo "::error::Tạo secret VERCEL_TOKEN = token từ https://vercel.com/account/tokens (bắt đầu vcp_)"
             exit 1
           fi
 
           echo "Token length: ${#TOKEN}"
+          if [[ "$TOKEN" == *-*-*-*-* ]]; then
+            echo "::error::VERCEL_TOKEN đang là UUID (vd. ef3adf38-...). Đây là Project ID, KHÔNG phải token."
+            echo "::error::Tạo token mới tại https://vercel.com/account/tokens rồi paste vào secret VERCEL_TOKEN."
+            exit 1
+          fi
           if [[ ! "$TOKEN" == vcp_* ]]; then
-            echo "::error::VERCEL_TOKEN must start with vcp_. Got prefix: ${TOKEN:0:8}..."
-            echo "::error::Do NOT paste project UUID (ef3adf38-...) — use the vcp_ access token."
+            echo "::error::VERCEL_TOKEN phải bắt đầu bằng vcp_. Hiện tại: ${TOKEN:0:12}..."
+            echo "::error::Không dùng UUID project — chỉ dùng access token từ Vercel Account Settings."
             exit 1
           fi
 
