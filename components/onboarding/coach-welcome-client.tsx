@@ -81,14 +81,24 @@ export function CoachWelcomeClient() {
     setView("ok");
     try {
       const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
+      let cachedStarter: StarterRoutineDTO | null = null;
+      let cachedProfileId: string | null = null;
+      let cachedVision: string | undefined;
       if (raw) {
         const p = JSON.parse(raw) as CoachWelcomePayload;
         if (p.profileId && p.starterRoutine) {
-          setProfileId(p.profileId);
-          setStarter(p.starterRoutine);
-          setVisionNotes(p.coachingNotes);
-          setLoading(false);
-          return;
+          cachedProfileId = p.profileId;
+          cachedStarter = p.starterRoutine;
+          cachedVision = p.coachingNotes;
+          const hasAffiliate =
+            (p.starterRoutine.product_suggestions?.length ?? 0) > 0;
+          if (hasAffiliate) {
+            setProfileId(p.profileId);
+            setStarter(p.starterRoutine);
+            setVisionNotes(p.coachingNotes);
+            setLoading(false);
+            return;
+          }
         }
       }
     } catch {
@@ -124,8 +134,13 @@ export function CoachWelcomeClient() {
       if (prof?.id) {
         setProfileId(prof.id);
         const sr = parseSnapshotStarter(prof.onboarding_snapshot);
-        setStarter(sr);
-        if (!sr) setView("empty");
+        setStarter(sr ?? cachedStarter);
+        setVisionNotes(cachedVision);
+        if (!sr && !cachedStarter) setView("empty");
+      } else if (cachedProfileId && cachedStarter) {
+        setProfileId(cachedProfileId);
+        setStarter(cachedStarter);
+        setVisionNotes(cachedVision);
       } else {
         setStarter(null);
         setView("empty");
