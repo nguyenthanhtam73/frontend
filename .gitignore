@@ -36,11 +36,6 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-.vercel
+# vercel — keep project link in git; ignore pulled env files
+.vercel/*
+!.vercel/project.json
