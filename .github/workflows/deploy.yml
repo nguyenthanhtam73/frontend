@@ -10,7 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: team_H0EP3oDxgw49jvbj3Zn2ipeD
+  VERCEL_PROJECT_ID: prj_i9VIRTxrdFQFsZnRBaZMg4NlbAVL
 
 jobs:
   deploy:
@@ -21,31 +22,32 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Verify Vercel token
-        run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::Missing GitHub secret VERCEL_TOKEN. Create one at https://vercel.com/account/tokens"
-            exit 1
-          fi
-          if [[ ! "$VERCEL_TOKEN" == vcp_* ]]; then
-            echo "::error::VERCEL_TOKEN must be a Vercel access token (starts with vcp_), not a project UUID."
-            exit 1
-          fi
-
-      - name: Verify project link
-        run: |
-          if [ ! -f .vercel/project.json ]; then
-            echo "::error::Missing .vercel/project.json in the repository."
-            exit 1
-          fi
-          echo "Linked Vercel project:"
-          cat .vercel/project.json
-
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Authenticate Vercel token
-        run: vercel whoami --token="$VERCEL_TOKEN"
-
       - name: Deploy production
-        run: vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          TOKEN="$(printf '%s' "$VERCEL_TOKEN" | tr -d '[:space:]')"
+
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Missing GitHub repository secret VERCEL_TOKEN."
+            echo "::error::Create at https://github.com/nguyenthanhtam73/frontend/settings/secrets/actions"
+            echo "::error::Value = token from https://vercel.com/account/tokens (starts with vcp_, NOT a UUID)"
+            exit 1
+          fi
+
+          echo "Token length: ${#TOKEN}"
+          if [[ ! "$TOKEN" == vcp_* ]]; then
+            echo "::error::VERCEL_TOKEN must start with vcp_. Got prefix: ${TOKEN:0:8}..."
+            echo "::error::Do NOT paste project UUID (ef3adf38-...) — use the vcp_ access token."
+            exit 1
+          fi
+
+          echo "Authenticating…"
+          vercel whoami --token="$TOKEN"
+
+          echo "Deploying darwin-s-projects1/frontend (production)…"
+          vercel deploy --prod --yes --token="$TOKEN"
