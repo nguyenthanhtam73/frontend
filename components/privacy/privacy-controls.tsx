@@ -1,9 +1,10 @@
 "use client";
 
-import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   AlertCircle,
-  CheckCircle2,
+  Brain,
   Eye,
   ImageOff,
   Loader2,
@@ -11,12 +12,17 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { useLocale } from "next-intl";
 
-import { Button } from "@/components/ui/button";
+import { ToastBanner } from "@/components/ui/toast-banner";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiBaseUrl } from "@/lib/api";
+import { deleteAllUserData } from "@/lib/api/user-data";
+import { clearLocalUserData } from "@/lib/clear-local-user-data";
+import { Link, useRouter } from "@/i18n/navigation";
 import { getAccessToken } from "@/lib/auth-token";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { cn } from "@/lib/utils";
@@ -27,26 +33,15 @@ type ResetStatus =
   | { kind: "deleting" }
   | { kind: "ok" }
   | { kind: "auth" }
-  | { kind: "network" }
-  | { kind: "unsupported" };
+  | { kind: "network" };
 
-/**
- * Privacy & data control panel — surfaces every "soft promise" the consent
- * dialog made to the user, plus the controls to act on them.
- *
- * - Status row: are we in face-capture or tag-only mode? When was consent
- *   last given?
- * - Toggles: opt out of face capture (tag-only mode); re-read the
- *   transparency notice before the next photo step.
- * - Hard delete: wipe all photos + check-in history. We try the backend
- *   `DELETE /api/v1/me/data` endpoint and gracefully degrade to a local
- *   reset if the API isn't ready (the user's data on this device is
- *   always purged either way).
- */
 export function PrivacyControls() {
   const t = useTranslations("privacy");
-  const locale = useLocale();
   const formatter = useFormatter();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [, startTransition] = useTransition();
+  const logout = useAuthStore((s) => s.logout);
 
   const consentAcknowledged = usePrivacyStore((s) => s.consentAcknowledged);
   const consentAt = usePrivacyStore((s) => s.consentAcknowledgedAt);
@@ -56,10 +51,20 @@ export function PrivacyControls() {
   const withdrawConsent = usePrivacyStore((s) => s.withdrawConsent);
   const markDataReset = usePrivacyStore((s) => s.markDataReset);
 
-  const obReset = useOnboardingStore((s) => s.reset);
   const obClearPhotos = useOnboardingStore((s) => s.clearPhotos);
 
+  const locale = useLocale();
   const [status, setStatus] = useState<ResetStatus>({ kind: "idle" });
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [confirmInput, setConfirmInput] = useState("");
+
+  const confirmPhrase = locale === "vi" ? "XOÁ" : "DELETE";
+  const confirmReady = confirmInput.trim().toUpperCase() === confirmPhrase;
+
+  const deleteBullets = useMemo(
+    () => [t("deleteBullet1"), t("deleteBullet2"), t("deleteBullet3"), t("deleteBullet4")],
+    [t],
+  );
 
   const formatTimestamp = useCallback(
     (iso: string | null) => {
@@ -75,61 +80,52 @@ export function PrivacyControls() {
   );
 
   const requestDelete = useCallback(() => {
+    setConfirmInput("");
     setStatus({ kind: "confirming" });
+    setToast(null);
   }, []);
 
   const cancelDelete = useCallback(() => {
+    setConfirmInput("");
     setStatus({ kind: "idle" });
   }, []);
 
   const performDelete = useCallback(async () => {
     setStatus({ kind: "deleting" });
-
-    // Always nuke local-only state first so the device feels clean even if
-    // the backend rejects us — important for users who explicitly invoked
-    // "delete everything".
+    setToast(null);
     obClearPhotos();
 
     const token = getAccessToken();
     if (!token) {
-      // No login => nothing on server, just a local wipe.
-      obReset();
+      clearLocalUserData();
       markDataReset();
       setStatus({ kind: "ok" });
+      setToast({ kind: "ok", text: t("deleteSuccess") });
+      startTransition(() => router.push("/login"));
       return;
     }
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/me/data`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Accept-Language": locale,
-        },
-      });
-      if (res.ok) {
-        obReset();
-        markDataReset();
-        setStatus({ kind: "ok" });
-        return;
-      }
-      if (res.status === 401) {
+      await deleteAllUserData();
+      clearLocalUserData();
+      logout();
+      queryClient.clear();
+      markDataReset();
+      setStatus({ kind: "ok" });
+      setToast({ kind: "ok", text: t("deleteSuccessServer") });
+      startTransition(() => router.push("/login"));
+    } catch (err) {
+      if (err instanceof Error && err.message === "auth") {
+        clearLocalUserData();
+        logout();
+        queryClient.clear();
         setStatus({ kind: "auth" });
         return;
       }
-      if (res.status === 404 || res.status === 405) {
-        // Endpoint not implemented yet — be honest with the user but still
-        // wipe local data so the device-level promise holds.
-        obReset();
-        markDataReset();
-        setStatus({ kind: "unsupported" });
-        return;
-      }
       setStatus({ kind: "network" });
-    } catch {
-      setStatus({ kind: "network" });
+      setToast({ kind: "err", text: t("deleteNetwork") });
     }
-  }, [locale, markDataReset, obClearPhotos, obReset]);
+  }, [logout, markDataReset, obClearPhotos, queryClient, router, t]);
 
   return (
     <Card className="border-primary/15">
@@ -151,6 +147,21 @@ export function PrivacyControls() {
             </p>
           </div>
         </header>
+
+        <section className="rounded-xl border border-border/70 bg-muted/20 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <Brain className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+              <div>
+                <p className="text-sm font-semibold">{t("memoryLinkTitle")}</p>
+                <p className="text-xs text-muted-foreground">{t("memoryLinkSub")}</p>
+              </div>
+            </div>
+            <Link href="/me/memory" className={buttonVariants({ size: "sm", variant: "outline" })}>
+              {t("memoryLinkCta")}
+            </Link>
+          </div>
+        </section>
 
         <ul className="grid gap-2 rounded-xl border border-border/70 bg-muted/30 p-3 text-sm sm:grid-cols-2">
           <PromiseLine icon={<Eye className="size-4" aria-hidden />} text={t("dialogBullet1")} />
@@ -210,7 +221,6 @@ export function PrivacyControls() {
               onClick={() => {
                 setSkipFaceCapture(!skipFaceCapture);
                 if (!skipFaceCapture) {
-                  // Switching INTO skip mode purges any unsent local photos.
                   obClearPhotos();
                 }
               }}
@@ -221,9 +231,7 @@ export function PrivacyControls() {
               type="button"
               size="sm"
               variant="ghost"
-              onClick={() => {
-                withdrawConsent();
-              }}
+              onClick={() => withdrawConsent()}
               disabled={!consentAcknowledged}
             >
               {t("modeReshowNoticeCta")}
@@ -246,23 +254,60 @@ export function PrivacyControls() {
             </div>
           </div>
 
+          {toast ? (
+            <ToastBanner
+              kind={toast.kind}
+              message={toast.text}
+              onDismiss={() => setToast(null)}
+              dismissLabel={t("dismissToast")}
+            />
+          ) : null}
+
           {status.kind === "confirming" || status.kind === "deleting" ? (
             <div
               role="alertdialog"
-              aria-live="polite"
-              className="space-y-3 rounded-lg border border-destructive/40 bg-background/80 p-3"
+              aria-labelledby="delete-confirm-title"
+              aria-describedby="delete-confirm-body"
+              className="space-y-4 rounded-lg border-2 border-destructive/50 bg-destructive/5 p-4"
             >
-              <p className="text-sm font-medium">{t("deleteConfirmTitle")}</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p id="delete-confirm-title" className="text-sm font-semibold text-destructive">
+                {t("deleteConfirmTitle")}
+              </p>
+              <p id="delete-confirm-body" className="text-xs leading-relaxed text-muted-foreground">
                 {t("deleteConfirmBody")}
               </p>
+              <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
+                {deleteBullets.map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+              </ul>
+              <p className="text-xs font-medium text-foreground">{t("deleteAccountKept")}</p>
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="delete-confirm-input"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  {t("deleteConfirmTypeLabel", { phrase: confirmPhrase })}
+                </label>
+                <input
+                  id="delete-confirm-input"
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  value={confirmInput}
+                  onChange={(e) => setConfirmInput(e.target.value)}
+                  disabled={status.kind === "deleting"}
+                  placeholder={confirmPhrase}
+                  className="w-full min-h-11 rounded-xl border border-destructive/40 bg-background px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus-visible:border-destructive focus-visible:ring-[3px] focus-visible:ring-destructive/25"
+                />
+              </div>
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant="destructive"
                   onClick={() => void performDelete()}
-                  disabled={status.kind === "deleting"}
+                  disabled={status.kind === "deleting" || !confirmReady}
                 >
                   {status.kind === "deleting" ? (
                     <>
@@ -286,35 +331,19 @@ export function PrivacyControls() {
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                onClick={requestDelete}
-              >
+              <Button type="button" size="sm" variant="destructive" onClick={requestDelete}>
                 <Trash2 className="size-4" aria-hidden />
                 {t("deleteCta")}
               </Button>
             </div>
           )}
 
-          {status.kind === "ok" ? (
+          {status.kind === "ok" && !toast ? (
             <p
               role="status"
               className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-300"
             >
-              <CheckCircle2 className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               {t("deleteSuccess")}
-            </p>
-          ) : null}
-
-          {status.kind === "unsupported" ? (
-            <p
-              role="status"
-              className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-300"
-            >
-              <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              {t("deleteUnsupported")}
             </p>
           ) : null}
 
@@ -325,7 +354,7 @@ export function PrivacyControls() {
             </p>
           ) : null}
 
-          {status.kind === "network" ? (
+          {status.kind === "network" && !toast ? (
             <p role="alert" className="flex items-start gap-2 text-xs text-destructive">
               <AlertCircle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               {t("deleteNetwork")}

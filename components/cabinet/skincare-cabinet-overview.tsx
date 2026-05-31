@@ -1,49 +1,24 @@
 "use client";
 
-import { useMessages, useTranslations } from "next-intl";
-import { Droplets, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Sparkles } from "lucide-react";
 import { useMemo } from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { WardrobeProductForm } from "@/components/cabinet/wardrobe-product-form";
+import { WardrobeProductList } from "@/components/cabinet/wardrobe-product-list";
 import { PrivacyControls } from "@/components/privacy/privacy-controls";
+import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { buildLocalizedStarterLines } from "@/lib/i18n/starter-pack-lines";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 
-/**
- * Read a localized array from `messages.<namespace>.<key>` defensively.
- * `useTranslations` only returns strings, so for array bullets we dip into
- * the raw messages object. Fallback to `[]` if the key is missing or shaped
- * unexpectedly so the page never crashes due to bad copy.
- */
-function readMessageArray(
-  messages: ReturnType<typeof useMessages>,
-  namespace: string,
-  key: string,
-): string[] {
-  const ns = (messages as Record<string, unknown>)[namespace];
-  if (!ns || typeof ns !== "object") return [];
-  const value = (ns as Record<string, unknown>)[key];
-  return Array.isArray(value) ? value.filter((v) => typeof v === "string") : [];
-}
-
 export function SkincareCabinetOverview() {
   const t = useTranslations("cabinet");
   const tOnboarding = useTranslations("onboarding");
-  const messages = useMessages();
   const ob = useOnboardingStore();
   const bullets = useMemo(
     () => buildLocalizedStarterLines(ob, tOnboarding),
     [ob, tOnboarding],
-  );
-
-  const demoRoutine = useMemo(
-    () => readMessageArray(messages, "cabinet", "demoUsing"),
-    [messages],
-  );
-  const demoWishlist = useMemo(
-    () => readMessageArray(messages, "cabinet", "demoWishlist"),
-    [messages],
   );
 
   return (
@@ -57,52 +32,24 @@ export function SkincareCabinetOverview() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardContent className="space-y-3 p-6 pt-6">
-            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-              <Sparkles className="size-4 text-primary" aria-hidden />
-              {t("usingTitle")}
-              <span className="rounded-full border border-dashed border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-                {t("demoBadge")}
-              </span>
-            </div>
-            <ul className="list-inside list-disc space-y-1.5 text-sm text-muted-foreground">
-              {demoRoutine.map((x) => (
-                <li key={x}>{x}</li>
-              ))}
-            </ul>
-            <p className="text-xs text-muted-foreground">{t("usingHint")}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-3 p-6 pt-6">
-            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-              <Droplets className="size-4 text-primary" aria-hidden />
-              {t("wishTitle")}
-              <span className="rounded-full border border-dashed border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-                {t("demoBadge")}
-              </span>
-            </div>
-            <ul className="space-y-2">
-              {demoWishlist.map((x) => (
-                <li
-                  key={x}
-                  className="rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground"
-                >
-                  {x}
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-muted-foreground">{t("wishHint")}</p>
-          </CardContent>
-        </Card>
+        <WardrobeProductList
+          onAddClick={() => {
+            document.getElementById("wardrobe-add-form")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+        <WardrobeProductForm formId="wardrobe-add-form" />
       </div>
 
       {ob.completedAt ? (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="space-y-3 p-6">
-            <p className="text-sm font-medium">{t("starterTitle")}</p>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Sparkles className="size-4 text-primary" aria-hidden />
+              {t("starterTitle")}
+            </div>
             <ul className="space-y-1.5 text-sm text-muted-foreground">
               {bullets.map((b) => (
                 <li key={b}>• {b}</li>
@@ -123,7 +70,7 @@ export function SkincareCabinetOverview() {
             <p className="text-sm text-muted-foreground">{t("noStarter")}</p>
             <Link
               href="/onboarding"
-              className="inline-flex min-h-10 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {t("setupLink")}
             </Link>
