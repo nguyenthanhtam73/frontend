@@ -79,11 +79,11 @@ export function CoachWelcomeClient() {
     setLoading(true);
     setErrorMsg(null);
     setView("ok");
+    let cachedStarter: StarterRoutineDTO | null = null;
+    let cachedProfileId: string | null = null;
+    let cachedVision: string | undefined;
     try {
       const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
-      let cachedStarter: StarterRoutineDTO | null = null;
-      let cachedProfileId: string | null = null;
-      let cachedVision: string | undefined;
       if (raw) {
         const p = JSON.parse(raw) as CoachWelcomePayload;
         if (p.profileId && p.starterRoutine) {
