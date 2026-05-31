@@ -15,12 +15,14 @@ import { useCallback, useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 import type { SkinProfileResponse } from "@/lib/types/profile";
+import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
 import {
   COACH_WELCOME_STORAGE_KEY,
   type CoachWelcomePayload,
@@ -55,6 +57,9 @@ function parseSnapshotStarter(
       skin_readback: String(sr.skin_readback ?? ""),
       rationale: String(sr.rationale ?? ""),
       closing_reminder: String(sr.closing_reminder ?? ""),
+      product_suggestions: Array.isArray(sr.product_suggestions)
+        ? (sr.product_suggestions as ProductSuggestionDTO[])
+        : undefined,
     };
   } catch {
     return null;
@@ -316,6 +321,12 @@ export function CoachWelcomeClient() {
           {starter.closing_reminder}
         </p>
       ) : null}
+
+      <ProductSuggestionsCard
+        suggestions={starter.product_suggestions}
+        source="starter_routine"
+        contextId={profileId ?? undefined}
+      />
 
       {/* Feedback loop on the starter routine — uses the user's profile id
           as the target so subsequent AI calls can pick up early signal. */}

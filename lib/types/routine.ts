@@ -1,4 +1,6 @@
 /** Matches backend `dto.RoutineStep`. */
+
+import type { ProductSuggestionDTO } from "./product-suggestion";
 export type RoutineStepDTO = {
   /** Stable id — frontend generates one for new steps (uuid v4) so React keys
    *  don't churn while editing. */
@@ -41,6 +43,7 @@ export type SuggestRoutineDTO = {
   /** Server-issued UUID for this transient suggestion. The frontend uses it
    *  as `target_id` when posting thumbs-up/down feedback. */
   feedback_target_id?: string;
+  product_suggestions?: ProductSuggestionDTO[];
 };
 
 /** Matches backend `dto.RoutineHistoryResponse`. */

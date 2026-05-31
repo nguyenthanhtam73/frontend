@@ -347,6 +347,15 @@
       "toggleOff": "Mark as done"
     }
   },
+  "productSuggestions": {
+    "title": "Product picks for you",
+    "hint": "Matched to today's skin signals — totally optional to buy.",
+    "affiliateBadge": "Affiliate",
+    "affiliateNote": "Links may earn DaDiary a small commission (affiliate). You're free to shop anywhere.",
+    "priorityHigh": "Top pick",
+    "priorityMedium": "Also consider",
+    "viewProduct": "View on Shopee"
+  },
   "coachWelcome": {
     "badge": "AI buddy",
     "title": "Your starter routine",

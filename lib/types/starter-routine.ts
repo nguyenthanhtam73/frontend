@@ -1,4 +1,6 @@
 /** Matches backend `StarterRoutineResponse` / persisted `starter_routine` in onboarding snapshot. */
+
+import type { ProductSuggestionDTO } from "./product-suggestion";
 export type StarterRoutineDTO = {
   morning: string[];
   evening: string[];
@@ -8,6 +10,7 @@ export type StarterRoutineDTO = {
   skin_readback: string;
   rationale: string;
   closing_reminder: string;
+  product_suggestions?: ProductSuggestionDTO[];
 };
 
 export const COACH_WELCOME_STORAGE_KEY = "dadiary_coach_welcome_v1";

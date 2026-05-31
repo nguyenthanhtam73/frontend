@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
+import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
@@ -402,6 +403,12 @@ export function DailyCoachFeedback({
           </CardContent>
         </Card>
       ) : null}
+
+      <ProductSuggestionsCard
+        suggestions={c.product_suggestions}
+        source="daily_feedback"
+        contextId={a.id}
+      />
 
       {c.avoid_or_patch && c.avoid_or_patch.length > 0 ? (
         <Card className="border-orange-500/20">

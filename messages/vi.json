@@ -347,6 +347,15 @@
       "toggleOff": "Đánh dấu đã làm"
     }
   },
+  "productSuggestions": {
+    "title": "Gợi ý sản phẩm cho bạn",
+    "hint": "Chọn lọc theo tình trạng da hôm nay — không bắt buộc mua.",
+    "affiliateBadge": "Affiliate",
+    "affiliateNote": "Liên kết có thể giúp DaDiary duy trì dịch vụ (affiliate). Bạn vẫn tự do chọn nơi mua.",
+    "priorityHigh": "Ưu tiên",
+    "priorityMedium": "Tham khảo",
+    "viewProduct": "Xem trên Shopee"
+  },
   "coachWelcome": {
     "badge": "Bạn đồng hành AI",
     "title": "Chăm da khởi đầu cho bạn",

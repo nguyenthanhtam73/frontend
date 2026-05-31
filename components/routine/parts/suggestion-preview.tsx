@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
+import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import {
   normalizeCategory,
   type RoutineCategory,
@@ -125,6 +126,12 @@ export function SuggestionPreview({
             {labels.closing}: {suggestion.closing_reminder}
           </p>
         ) : null}
+
+        <ProductSuggestionsCard
+          suggestions={suggestion.product_suggestions}
+          source="routine_suggest"
+          contextId={suggestion.feedback_target_id}
+        />
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="default" onClick={onApply}>
