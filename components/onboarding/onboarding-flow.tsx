@@ -27,7 +27,6 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 import { buildLocalizedStarterLines } from "@/lib/i18n/starter-pack-lines";
-import { blurFaceInImage, blurMethodDetail, type BlurMethod } from "@/lib/privacy/face-blur";
 import {
   COACH_WELCOME_STORAGE_KEY,
   type CoachWelcomePayload,
@@ -144,15 +143,6 @@ export function OnboardingFlow() {
   const [finishError, setFinishError] = useState<
     null | "auth" | "save_failed" | "network"
   >(null);
-  /**
-   * Tracks per-photo blur progress so the user gets a "Đang làm mờ…" placeholder
-   * card instead of seeing the original (unblurred) thumbnail flash up before
-   * we replace it. We never insert into `ob.photos` until the blur succeeds.
-   */
-  const [blurStatus, setBlurStatus] = useState<{
-    inflight: number;
-    error: string | null;
-  }>({ inflight: 0, error: null });
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const ob = useOnboardingStore();
@@ -165,17 +155,10 @@ export function OnboardingFlow() {
 
   useEffect(() => {
     if (steps[idx] === "aiReview" && !ob.aiSnapshot) {
-      // Skip-face users should never land on aiReview — their flow goes
-      // photos (skip card) → context. If we somehow do land here, drop back
-      // to the photos step which will render the skip card instead.
       setIdx(steps.indexOf("photos"));
     }
   }, [idx, ob.aiSnapshot]);
 
-  // Switching INTO skip mode mid-flow: drop any unsent photos so the
-  // analyze pipeline can't accidentally run on them later. We pull the slice
-  // explicitly (rather than depending on the whole `ob`) so this effect
-  // doesn't re-run on every unrelated store mutation.
   const photoCount = useOnboardingStore((s) => s.photos.length);
   const clearPhotos = useOnboardingStore((s) => s.clearPhotos);
   useEffect(() => {
@@ -191,37 +174,21 @@ export function OnboardingFlow() {
 
   const step = steps[idx];
 
-  /**
-   * Blur for on-screen preview only; originals are uploaded for AI analysis.
-   */
   const applyFiles = useCallback(
-    async (list: FileList | null) => {
+    (list: FileList | null) => {
       if (!list?.length) return;
       const remaining = Math.max(0, 3 - ob.photos.length);
       const queue = Array.from(list)
         .filter((f) => f.type.startsWith("image/"))
         .slice(0, remaining);
-      if (!queue.length) return;
-      setBlurStatus((s) => ({ inflight: s.inflight + queue.length, error: null }));
       for (const file of queue) {
-        try {
-          const blurred = await blurFaceInImage(file);
-          ob.addPhoto({
-            file,
-            preview: blurred.previewUrl,
-            blurMethod: blurred.method,
-          });
-          setBlurStatus((s) => ({ inflight: Math.max(0, s.inflight - 1), error: s.error }));
-        } catch (err) {
-          console.warn("[onboarding] face-blur failed", err);
-          setBlurStatus((s) => ({
-            inflight: Math.max(0, s.inflight - 1),
-            error: tPrivacy("captureCard.blurError"),
-          }));
-        }
+        ob.addPhoto({
+          file,
+          preview: URL.createObjectURL(file),
+        });
       }
     },
-    [ob, tPrivacy],
+    [ob],
   );
 
   /** Wraps file-picker triggers with the consent gate so the dialog only
@@ -474,7 +441,7 @@ export function OnboardingFlow() {
                     capture="user"
                     className="sr-only"
                     onChange={(e) => {
-                      void applyFiles(e.target.files);
+                      applyFiles(e.target.files);
                       e.target.value = "";
                     }}
                   />
@@ -485,7 +452,7 @@ export function OnboardingFlow() {
                     multiple
                     className="sr-only"
                     onChange={(e) => {
-                      void applyFiles(e.target.files);
+                      applyFiles(e.target.files);
                       e.target.value = "";
                     }}
                   />
@@ -497,7 +464,7 @@ export function OnboardingFlow() {
                       size="lg"
                       className="min-h-12 gap-2"
                       onClick={openCamera}
-                      disabled={ob.photos.length >= 3 || blurStatus.inflight > 0}
+                      disabled={ob.photos.length >= 3}
                     >
                       <Camera className="size-4" aria-hidden />
                       {tPrivacy("captureCard.actionCamera")}
@@ -508,7 +475,7 @@ export function OnboardingFlow() {
                       size="lg"
                       className="min-h-12 gap-2"
                       onClick={openLibrary}
-                      disabled={ob.photos.length >= 3 || blurStatus.inflight > 0}
+                      disabled={ob.photos.length >= 3}
                     >
                       <ImagePlus className="size-4" aria-hidden />
                       {tPrivacy("captureCard.actionLibrary")}
@@ -521,38 +488,19 @@ export function OnboardingFlow() {
                     </p>
                   )}
 
-                  {blurStatus.inflight > 0 && <BlurringPlaceholder t={tPrivacy} />}
-                  {blurStatus.error ? (
-                    <p
-                      role="alert"
-                      className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-                    >
-                      {blurStatus.error}
-                    </p>
-                  ) : null}
-
                   {ob.photos.length > 0 && (
                     <div className="space-y-3">
                       <div className="grid gap-3 sm:grid-cols-2">
                         {ob.photos.map((p, i) => (
-                          <BlurredPhotoCard
+                          <OnboardingPhotoCard
                             key={p.preview}
                             previewUrl={p.preview}
-                            blurMethod={p.blurMethod ?? "skipped"}
                             altLabel={tCheckIn("altPhoto", { n: i + 1 })}
-                            blurredCaption={tPrivacy("captureCard.blurredBadge")}
-                            previewCaptionNoBlur={tPrivacy("captureCard.previewBadgeNoBlur")}
-                            blurMethodNative={tPrivacy("captureCard.blurMethodNative")}
-                            blurMethodHeuristic={tPrivacy("captureCard.blurMethodHeuristic")}
-                            blurMethodSkipped={tPrivacy("captureCard.blurMethodSkipped")}
                             removeLabel={tPrivacy("captureCard.remove")}
                             onRemove={() => ob.removePhotoAt(i)}
                           />
                         ))}
                       </div>
-                      <p className="text-center text-sm font-medium text-foreground sm:text-left">
-                        {tPrivacy("captureCard.blurredHint")}
-                      </p>
                       <div className="flex flex-wrap gap-2">
                         <Button
                           type="button"
@@ -567,7 +515,7 @@ export function OnboardingFlow() {
                           variant="ghost"
                           size="sm"
                           onClick={openLibrary}
-                          disabled={ob.photos.length >= 3 || blurStatus.inflight > 0}
+                          disabled={ob.photos.length >= 3}
                         >
                           {tPrivacy("captureCard.retake")}
                         </Button>
@@ -595,8 +543,7 @@ export function OnboardingFlow() {
                       className="w-full gap-2 sm:w-auto"
                       disabled={
                         ob.photos.length < 2 ||
-                        ob.analyzeStatus === "loading" ||
-                        blurStatus.inflight > 0
+                        ob.analyzeStatus === "loading"
                       }
                       onClick={() => void runAnalyze()}
                     >
@@ -1027,70 +974,22 @@ function PrivacyHeader({
   );
 }
 
-/** "Đang làm mờ khuôn mặt…" placeholder while the on-device blur runs. */
-function BlurringPlaceholder({
-  t,
-}: {
-  t: ReturnType<typeof useTranslations<"privacy">>;
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
-      <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-primary" aria-hidden />
-      <div className="space-y-0.5">
-        <p className="text-sm font-medium text-foreground">
-          {t("captureCard.blurringTitle")}
-        </p>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {t("captureCard.blurringHint")}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Single blurred-photo preview card. Renders a clear "Đã làm mờ khuôn mặt"
- * badge on top of the image plus a small method-line below so the user
- * knows whether we used the precise face detector or a heuristic.
- */
-function BlurredPhotoCard({
+function OnboardingPhotoCard({
   previewUrl,
   altLabel,
-  blurMethod,
-  blurredCaption,
-  previewCaptionNoBlur,
-  blurMethodNative,
-  blurMethodHeuristic,
-  blurMethodSkipped,
   removeLabel,
   onRemove,
 }: {
   previewUrl: string;
   altLabel: string;
-  blurMethod: BlurMethod;
-  blurredCaption: string;
-  previewCaptionNoBlur: string;
-  blurMethodNative: string;
-  blurMethodHeuristic: string;
-  blurMethodSkipped: string;
   removeLabel: string;
   onRemove: () => void;
 }) {
-  const badgeCaption =
-    blurMethod === "skipped" ? previewCaptionNoBlur : blurredCaption;
-  const showShield = blurMethod !== "skipped";
-
   return (
     <figure className="space-y-1.5">
       <div className="relative aspect-3/4 overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={previewUrl} alt={altLabel} className="size-full object-cover" />
-        <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow ring-1 ring-border/50 backdrop-blur">
-          {showShield ? (
-            <ShieldCheck className="size-3.5 text-primary" aria-hidden />
-          ) : null}
-          {badgeCaption}
-        </span>
         <button
           type="button"
           onClick={onRemove}
@@ -1100,13 +999,6 @@ function BlurredPhotoCard({
           <X className="size-4" aria-hidden />
         </button>
       </div>
-      <figcaption className="text-[11px] leading-snug text-muted-foreground">
-        {blurMethodDetail(blurMethod, {
-          native: blurMethodNative,
-          heuristic: blurMethodHeuristic,
-          skipped: blurMethodSkipped,
-        })}
-      </figcaption>
     </figure>
   );
 }

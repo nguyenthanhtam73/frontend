@@ -3,7 +3,6 @@
 import { Clock3, Sparkles, Tag } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { PrivacyBlurredImage } from "@/components/privacy/privacy-blurred-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiBaseUrl } from "@/lib/api";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
@@ -24,10 +23,12 @@ export function ProgressEntryCard({ entry }: { entry: ProgressEntryDTO }) {
       <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted shadow-sm sm:size-24">
           {thumb ? (
-            <PrivacyBlurredImage
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={absURL(thumb)}
               alt={`${entry.title?.trim() || t("untitled")} — ${entry.check_date}`}
               className="size-full object-cover"
+              loading="lazy"
             />
           ) : (
             <div className="flex size-full items-center justify-center text-xs text-muted-foreground">—</div>

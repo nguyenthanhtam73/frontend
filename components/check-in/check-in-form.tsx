@@ -9,7 +9,6 @@ import {
   ImageOff,
   ImagePlus,
   Lightbulb,
-  Loader2,
   ShieldCheck,
   Sparkles,
   X,
@@ -25,7 +24,6 @@ import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
-import { blurFaceInImage, blurMethodDetail, type BlurMethod } from "@/lib/privacy/face-blur";
 import type { SkillMode } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
@@ -63,7 +61,7 @@ const symptomIds = [
   "mask_friction",
 ] as const;
 
-type UploadItem = { file: File; url: string; blurMethod: BlurMethod };
+type UploadItem = { file: File; url: string };
 
 export function CheckInForm() {
   const t = useTranslations("checkIn");
@@ -84,15 +82,6 @@ export function CheckInForm() {
   const [coachPayload, setCoachPayload] = useState<CreateSkinCheckResponseDTO | null>(
     null,
   );
-  /**
-   * Number of files currently being blurred on-device + last error if a blur
-   * failed. The "Send for analysis" button is disabled while inflight > 0 so
-   * the user can never accidentally submit a half-processed batch.
-   */
-  const [blurStatus, setBlurStatus] = useState<{ inflight: number; error: string | null }>({
-    inflight: 0,
-    error: null,
-  });
   // Inline error banner replaces native alert() — much friendlier on mobile (no modal
   // popups stealing focus or breaking scroll). Auto-cleared on next submit attempt.
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -141,11 +130,7 @@ export function CheckInForm() {
     };
   }, []);
 
-  /**
-   * Build a blurred preview for the UI while keeping the original file for
-   * upload — the backend AI needs the full image for accurate skin analysis.
-   */
-  async function handleFiles(files: FileList | null) {
+  function handleFiles(files: FileList | null) {
     if (!files) return;
     const remainingSlots = Math.max(0, 6 - items.length);
     const queue: File[] = [];
@@ -164,26 +149,8 @@ export function CheckInForm() {
     }
     if (queue.length === 0) return;
 
-    setBlurStatus((s) => ({ inflight: s.inflight + queue.length, error: null }));
-
-    for (const file of queue) {
-      try {
-        const blurred = await blurFaceInImage(file);
-        const newItem: UploadItem = {
-          file,
-          url: blurred.previewUrl,
-          blurMethod: blurred.method,
-        };
-        setItems((cur) => [...cur, newItem].slice(0, 6));
-        setBlurStatus((s) => ({ inflight: Math.max(0, s.inflight - 1), error: s.error }));
-      } catch (err) {
-        console.warn("[check-in] face-blur failed", err);
-        setBlurStatus((s) => ({
-          inflight: Math.max(0, s.inflight - 1),
-          error: t("blurFailure"),
-        }));
-      }
-    }
+    const added = queue.map((file) => ({ file, url: URL.createObjectURL(file) }));
+    setItems((cur) => [...cur, ...added].slice(0, 6));
   }
 
   const openCamera = useCallback(() => {
@@ -240,21 +207,14 @@ export function CheckInForm() {
     setVisibility("private");
     setCoachPayload(null);
     setErrorMsg(null);
-    setBlurStatus({ inflight: 0, error: null });
   }
 
-  /**
-   * Switch into skip-face (tag + notes only) mode. Drops any inflight blurred
-   * photos so we don't accidentally upload them on the next submit, and
-   * keeps the rest of the form (notes, tags) intact since those are exactly
-   * what the user is now relying on.
-   */
+  /** Switch into skip-face (tag + notes only) mode. Clears staged photos. */
   const enterSkipMode = useCallback(() => {
     setItems((cur) => {
       cur.forEach((x) => URL.revokeObjectURL(x.url));
       return [];
     });
-    setBlurStatus({ inflight: 0, error: null });
     setSkipFaceCapture(true);
   }, [setSkipFaceCapture]);
 
@@ -419,7 +379,7 @@ export function CheckInForm() {
               <button
                 type="button"
                 onClick={openLibrary}
-                disabled={blurStatus.inflight > 0 || items.length >= 6}
+                disabled={items.length >= 6}
                 className="group flex aspect-4/3 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/40 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <div className="rounded-full bg-background p-3 shadow-sm ring-1 ring-border">
@@ -438,7 +398,7 @@ export function CheckInForm() {
                 capture="user"
                 className="sr-only"
                 onChange={(e) => {
-                  void handleFiles(e.target.files);
+                  handleFiles(e.target.files);
                   e.target.value = "";
                 }}
               />
@@ -449,7 +409,7 @@ export function CheckInForm() {
                 capture="environment"
                 className="sr-only"
                 onChange={(e) => {
-                  void handleFiles(e.target.files);
+                  handleFiles(e.target.files);
                   e.target.value = "";
                 }}
               />
@@ -460,25 +420,10 @@ export function CheckInForm() {
                 multiple
                 className="sr-only"
                 onChange={(e) => {
-                  void handleFiles(e.target.files);
+                  handleFiles(e.target.files);
                   e.target.value = "";
                 }}
               />
-
-              {blurStatus.inflight > 0 && (
-                <BlurringNotice
-                  title={t("blurWorkingTitle")}
-                  hint={t("blurWorkingHint")}
-                />
-              )}
-              {blurStatus.error ? (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
-                >
-                  {blurStatus.error}
-                </p>
-              ) : null}
 
               {items.length > 0 ? (
                 <div className="space-y-2">
@@ -488,17 +433,11 @@ export function CheckInForm() {
                   </div>
                   <div className="grid gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300 sm:grid-cols-2">
                     {items.map((item, i) => (
-                      <BlurredPreviewCard
+                      <PhotoPreviewCard
                         key={item.url}
                         index={i + 1}
                         previewUrl={item.url}
-                        blurMethod={item.blurMethod}
                         altLabel={t("altPhoto", { n: i + 1 })}
-                        blurredCaption={t("blurredCaption")}
-                        previewCaptionNoBlur={t("previewCaptionNoBlur")}
-                        blurMethodNative={t("blurMethodNative")}
-                        blurMethodHeuristic={t("blurMethodHeuristic")}
-                        blurMethodSkipped={t("blurMethodSkipped")}
                         retakeLabel={tPrivacy("captureCard.retake")}
                         removeLabel={t("removePhoto")}
                         onRetake={openLibrary}
@@ -734,7 +673,7 @@ export function CheckInForm() {
             type="submit"
             size="default"
             className="min-h-12 flex-[2] sm:min-h-9 sm:flex-initial"
-            disabled={submitting || blurStatus.inflight > 0}
+            disabled={submitting}
           >
             {submitting
               ? t("submitting")
@@ -869,26 +808,10 @@ function PhotoChoiceButton({
   );
 }
 
-/**
- * Blurred-preview card. Renders the on-device-anonymized photo at a generous
- * size with an obvious "Đã làm mờ khuôn mặt" overlay so the user can verify
- * the blur covered the right region BEFORE the photo is sent.
- *
- * The retake + remove controls live on this card (rather than only at the
- * bottom of the form) because once you've seen the blurred result, the most
- * common micro-decisions are "this looks good" vs "let me try again" — both
- * deserve to be one-tap right where the user is looking.
- */
-function BlurredPreviewCard({
+function PhotoPreviewCard({
   index,
   previewUrl,
-  blurMethod,
   altLabel,
-  blurredCaption,
-  previewCaptionNoBlur,
-  blurMethodNative,
-  blurMethodHeuristic,
-  blurMethodSkipped,
   retakeLabel,
   removeLabel,
   onRetake,
@@ -896,22 +819,12 @@ function BlurredPreviewCard({
 }: {
   index: number;
   previewUrl: string;
-  blurMethod: BlurMethod;
   altLabel: string;
-  blurredCaption: string;
-  previewCaptionNoBlur: string;
-  blurMethodNative: string;
-  blurMethodHeuristic: string;
-  blurMethodSkipped: string;
   retakeLabel: string;
   removeLabel: string;
   onRetake: () => void;
   onRemove: () => void;
 }) {
-  const badgeCaption =
-    blurMethod === "skipped" ? previewCaptionNoBlur : blurredCaption;
-  const showShield = blurMethod !== "skipped";
-
   return (
     <figure className="space-y-1.5">
       <div className="relative aspect-3/4 overflow-hidden rounded-2xl border bg-muted shadow-sm ring-1 ring-transparent transition-shadow hover:ring-primary/40">
@@ -921,12 +834,6 @@ function BlurredPreviewCard({
           alt={altLabel}
           className="size-full object-cover"
         />
-        <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow ring-1 ring-border/50 backdrop-blur">
-          {showShield ? (
-            <ShieldCheck className="size-3.5 text-primary" aria-hidden />
-          ) : null}
-          {badgeCaption}
-        </span>
         <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-background/85 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-foreground shadow-sm backdrop-blur">
           {index}
         </span>
@@ -939,14 +846,7 @@ function BlurredPreviewCard({
           <X className="size-4" aria-hidden />
         </button>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
-        <figcaption className="text-[11px] leading-snug text-muted-foreground">
-          {blurMethodDetail(blurMethod, {
-            native: blurMethodNative,
-            heuristic: blurMethodHeuristic,
-            skipped: blurMethodSkipped,
-          })}
-        </figcaption>
+      <div className="flex flex-wrap items-center justify-end gap-2 px-0.5">
         <button
           type="button"
           onClick={onRetake}
@@ -956,19 +856,6 @@ function BlurredPreviewCard({
         </button>
       </div>
     </figure>
-  );
-}
-
-/** "Đang làm mờ khuôn mặt…" status while we run the on-device blur pipeline. */
-function BlurringNotice({ title, hint }: { title: string; hint: string }) {
-  return (
-    <div className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
-      <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-primary" aria-hidden />
-      <div className="space-y-0.5">
-        <p className="text-sm font-medium text-foreground">{title}</p>
-        <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
-      </div>
-    </div>
   );
 }
 

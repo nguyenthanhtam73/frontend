@@ -1,6 +1,5 @@
 import { create } from "zustand";
 
-import type { BlurMethod } from "@/lib/privacy/face-blur";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 
 /** Primary skin type (self-reported or confirmed from AI). */
@@ -17,11 +16,6 @@ export type SkillMode = "beginner" | "intermediate" | "advanced";
 export type PhotoItem = {
   file: File;
   preview: string;
-  /**
-   * `null` when face capture is bypassed (legacy path or future test fixtures).
-   * Otherwise mirrors the on-device blur method so the UI can label the photo.
-   */
-  blurMethod?: BlurMethod | null;
 };
 
 export type OnboardingState = {
