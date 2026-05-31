@@ -3,10 +3,23 @@ name: Deploy to Vercel
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@v5
 
@@ -15,10 +28,31 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - run: npm ci
+      - name: Verify Vercel secrets
+        run: |
+          missing=0
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::Missing GitHub secret VERCEL_TOKEN. Create one at https://vercel.com/account/tokens"
+            missing=1
+          fi
+          if [ -z "$VERCEL_ORG_ID" ]; then
+            echo "::error::Missing GitHub secret VERCEL_ORG_ID (team/org id from Vercel project settings or .vercel/project.json)"
+            missing=1
+          fi
+          if [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::error::Missing GitHub secret VERCEL_PROJECT_ID (project id from Vercel project settings or .vercel/project.json)"
+            missing=1
+          fi
+          exit "$missing"
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy production
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
