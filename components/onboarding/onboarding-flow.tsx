@@ -27,7 +27,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 import { buildLocalizedStarterLines } from "@/lib/i18n/starter-pack-lines";
-import { blurFaceInImage, type BlurMethod } from "@/lib/privacy/face-blur";
+import { blurFaceInImage, blurMethodDetail, type BlurMethod } from "@/lib/privacy/face-blur";
 import {
   COACH_WELCOME_STORAGE_KEY,
   type CoachWelcomePayload,
@@ -538,11 +538,13 @@ export function OnboardingFlow() {
                           <BlurredPhotoCard
                             key={p.preview}
                             previewUrl={p.preview}
-                            blurMethod={p.blurMethod ?? "heuristic"}
+                            blurMethod={p.blurMethod ?? "skipped"}
                             altLabel={tCheckIn("altPhoto", { n: i + 1 })}
                             blurredCaption={tPrivacy("captureCard.blurredBadge")}
+                            previewCaptionNoBlur={tPrivacy("captureCard.previewBadgeNoBlur")}
                             blurMethodNative={tPrivacy("captureCard.blurMethodNative")}
                             blurMethodHeuristic={tPrivacy("captureCard.blurMethodHeuristic")}
+                            blurMethodSkipped={tPrivacy("captureCard.blurMethodSkipped")}
                             removeLabel={tPrivacy("captureCard.remove")}
                             onRemove={() => ob.removePhotoAt(i)}
                           />
@@ -1056,8 +1058,10 @@ function BlurredPhotoCard({
   altLabel,
   blurMethod,
   blurredCaption,
+  previewCaptionNoBlur,
   blurMethodNative,
   blurMethodHeuristic,
+  blurMethodSkipped,
   removeLabel,
   onRemove,
 }: {
@@ -1065,19 +1069,27 @@ function BlurredPhotoCard({
   altLabel: string;
   blurMethod: BlurMethod;
   blurredCaption: string;
+  previewCaptionNoBlur: string;
   blurMethodNative: string;
   blurMethodHeuristic: string;
+  blurMethodSkipped: string;
   removeLabel: string;
   onRemove: () => void;
 }) {
+  const badgeCaption =
+    blurMethod === "skipped" ? previewCaptionNoBlur : blurredCaption;
+  const showShield = blurMethod !== "skipped";
+
   return (
     <figure className="space-y-1.5">
       <div className="relative aspect-3/4 overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={previewUrl} alt={altLabel} className="size-full object-cover" />
         <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow ring-1 ring-border/50 backdrop-blur">
-          <ShieldCheck className="size-3.5 text-primary" aria-hidden />
-          {blurredCaption}
+          {showShield ? (
+            <ShieldCheck className="size-3.5 text-primary" aria-hidden />
+          ) : null}
+          {badgeCaption}
         </span>
         <button
           type="button"
@@ -1089,7 +1101,11 @@ function BlurredPhotoCard({
         </button>
       </div>
       <figcaption className="text-[11px] leading-snug text-muted-foreground">
-        {blurMethod === "native-face-detector" ? blurMethodNative : blurMethodHeuristic}
+        {blurMethodDetail(blurMethod, {
+          native: blurMethodNative,
+          heuristic: blurMethodHeuristic,
+          skipped: blurMethodSkipped,
+        })}
       </figcaption>
     </figure>
   );

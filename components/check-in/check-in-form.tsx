@@ -25,7 +25,7 @@ import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
-import { blurFaceInImage, type BlurMethod } from "@/lib/privacy/face-blur";
+import { blurFaceInImage, blurMethodDetail, type BlurMethod } from "@/lib/privacy/face-blur";
 import type { SkillMode } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
@@ -495,8 +495,10 @@ export function CheckInForm() {
                         blurMethod={item.blurMethod}
                         altLabel={t("altPhoto", { n: i + 1 })}
                         blurredCaption={t("blurredCaption")}
+                        previewCaptionNoBlur={t("previewCaptionNoBlur")}
                         blurMethodNative={t("blurMethodNative")}
                         blurMethodHeuristic={t("blurMethodHeuristic")}
+                        blurMethodSkipped={t("blurMethodSkipped")}
                         retakeLabel={tPrivacy("captureCard.retake")}
                         removeLabel={t("removePhoto")}
                         onRetake={openLibrary}
@@ -883,8 +885,10 @@ function BlurredPreviewCard({
   blurMethod,
   altLabel,
   blurredCaption,
+  previewCaptionNoBlur,
   blurMethodNative,
   blurMethodHeuristic,
+  blurMethodSkipped,
   retakeLabel,
   removeLabel,
   onRetake,
@@ -895,13 +899,19 @@ function BlurredPreviewCard({
   blurMethod: BlurMethod;
   altLabel: string;
   blurredCaption: string;
+  previewCaptionNoBlur: string;
   blurMethodNative: string;
   blurMethodHeuristic: string;
+  blurMethodSkipped: string;
   retakeLabel: string;
   removeLabel: string;
   onRetake: () => void;
   onRemove: () => void;
 }) {
+  const badgeCaption =
+    blurMethod === "skipped" ? previewCaptionNoBlur : blurredCaption;
+  const showShield = blurMethod !== "skipped";
+
   return (
     <figure className="space-y-1.5">
       <div className="relative aspect-3/4 overflow-hidden rounded-2xl border bg-muted shadow-sm ring-1 ring-transparent transition-shadow hover:ring-primary/40">
@@ -912,8 +922,10 @@ function BlurredPreviewCard({
           className="size-full object-cover"
         />
         <span className="pointer-events-none absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-background/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow ring-1 ring-border/50 backdrop-blur">
-          <ShieldCheck className="size-3.5 text-primary" aria-hidden />
-          {blurredCaption}
+          {showShield ? (
+            <ShieldCheck className="size-3.5 text-primary" aria-hidden />
+          ) : null}
+          {badgeCaption}
         </span>
         <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-background/85 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-foreground shadow-sm backdrop-blur">
           {index}
@@ -929,7 +941,11 @@ function BlurredPreviewCard({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
         <figcaption className="text-[11px] leading-snug text-muted-foreground">
-          {blurMethod === "native-face-detector" ? blurMethodNative : blurMethodHeuristic}
+          {blurMethodDetail(blurMethod, {
+            native: blurMethodNative,
+            heuristic: blurMethodHeuristic,
+            skipped: blurMethodSkipped,
+          })}
         </figcaption>
         <button
           type="button"

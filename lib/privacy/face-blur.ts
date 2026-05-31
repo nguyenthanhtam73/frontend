@@ -2,10 +2,11 @@
  * Client-side face anonymization for **display** previews.
  *
  * Original photos are uploaded to the backend for accurate AI skin analysis.
- * This module produces blurred previews shown in the UI (eyes + mouth hidden).
+ * This module produces blurred previews shown in the UI (eye band hidden when
+ * a clear face is detected). Cheek-only crops with no confident face hit skip blur.
  */
 
-import { detectFaceOnCanvas } from "@/lib/privacy/face-detect";
+import { detectFaceOnCanvas, isClearFaceDetection } from "@/lib/privacy/face-detect";
 
 const MAX_DIM = 1280;
 const OUTPUT_TYPE = "image/jpeg";
@@ -14,6 +15,15 @@ const OUTPUT_QUALITY = 0.92;
 const displayUrlCache = new Map<string, string>();
 
 export type BlurMethod = "native-face-detector" | "heuristic" | "skipped";
+
+export function blurMethodDetail(
+  method: BlurMethod,
+  labels: { native: string; heuristic: string; skipped: string },
+): string {
+  if (method === "native-face-detector") return labels.native;
+  if (method === "skipped") return labels.skipped;
+  return labels.heuristic;
+}
 
 export type BlurredImage = {
   /** Blurred blob as a File (for tests / optional download). */
@@ -43,21 +53,29 @@ export async function blurFaceInImage(file: File): Promise<BlurredImage> {
 
     ctx.drawImage(decoded.source, 0, 0, width, height);
 
-    const faceBox = await detectFaceOnCanvas(canvas);
-    const regions = computeBlurRegions(width, height, faceBox);
+    const face = await detectFaceOnCanvas(canvas);
+    const shouldBlur = face != null && isClearFaceDetection(face, width, height);
 
-    for (const region of regions) {
-      blurRegion(ctx, canvas, region);
+    if (shouldBlur) {
+      for (const region of regionsFromFaceBounds(face.box, width, height)) {
+        blurRegion(ctx, canvas, region);
+      }
+      const blob = await canvasToBlob(canvas, OUTPUT_TYPE, OUTPUT_QUALITY);
+      const outName = renameForBlur(file.name);
+      const outFile = new File([blob], outName, { type: OUTPUT_TYPE, lastModified: Date.now() });
+      return {
+        file: outFile,
+        previewUrl: URL.createObjectURL(blob),
+        method: "native-face-detector",
+        width,
+        height,
+      };
     }
 
-    const blob = await canvasToBlob(canvas, OUTPUT_TYPE, OUTPUT_QUALITY);
-    const outName = renameForBlur(file.name);
-    const outFile = new File([blob], outName, { type: OUTPUT_TYPE, lastModified: Date.now() });
-    const previewUrl = URL.createObjectURL(blob);
     return {
-      file: outFile,
-      previewUrl,
-      method: faceBox ? "native-face-detector" : "heuristic",
+      file,
+      previewUrl: URL.createObjectURL(file),
+      method: "skipped",
       width,
       height,
     };
@@ -194,27 +212,6 @@ function regionsFromFaceBounds(bounds: FaceBounds, imgW: number, imgH: number): 
   };
 
   return [clampRegion(eyeBand, imgW, imgH)];
-}
-
-function computeBlurRegions(
-  imgW: number,
-  imgH: number,
-  face: FaceBounds | null,
-): BlurRegion[] {
-  if (face) {
-    return regionsFromFaceBounds(face, imgW, imgH);
-  }
-
-  // Last resort: estimate a centred portrait box, still using tight patches.
-  const faceW = imgW * 0.58;
-  const faceH = imgH * 0.48;
-  const estimated: FaceBounds = {
-    x: (imgW - faceW) / 2,
-    y: imgH * 0.12,
-    width: faceW,
-    height: faceH,
-  };
-  return regionsFromFaceBounds(estimated, imgW, imgH);
 }
 
 function clampRegion(r: BlurRegion, w: number, h: number): BlurRegion {
