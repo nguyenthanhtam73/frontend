@@ -471,6 +471,10 @@
       "wardrobe": "Tủ đồ"
     },
     "emptyMemory": "(Chưa có đủ dữ liệu — làm quen với da hoặc ghi nhật ký để bạn đồng hành bắt đầu nhớ.)",
+    "emptySection": "(Trống)",
+    "metaPromptVersion": "Coach prompt v{v}",
+    "metaMonthlyDigest": "Có tóm tắt theo tháng",
+    "metaCache": "Cache: {entries} mục · TTL {ttl}s",
     "footerNote": "Dữ liệu thuộc về bạn. Xoá toàn bộ trong Quyền riêng tư & dữ liệu bên dưới hoặc tại trang Tủ đồ.",
     "needAuth": "Đăng nhập để xem trí nhớ AI.",
     "signIn": "Đăng nhập",

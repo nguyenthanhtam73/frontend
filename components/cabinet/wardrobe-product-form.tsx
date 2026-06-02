@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useWardrobe } from "@/lib/hooks/use-wardrobe";
+import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 
 const CATEGORY_IDS = [
   "cleanser",

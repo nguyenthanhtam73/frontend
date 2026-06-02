@@ -12,7 +12,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import type { CreateWardrobeProductInput } from "@/lib/types/wardrobe";
 
 /** Wardrobe list + create — TanStack Query, gated on auth. */
-export function useWardrobe() {
+export function useWardrobeQuery() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const hasAuth = !!user || !!getAccessToken();

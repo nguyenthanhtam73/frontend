@@ -19,6 +19,7 @@ import { ToastBanner } from "@/components/ui/toast-banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { deleteAllUserData } from "@/lib/api/user-data";
+import { wardrobeQueryKey } from "@/lib/api/wardrobe";
 import { clearLocalUserData } from "@/lib/clear-local-user-data";
 import { Link, useRouter } from "@/i18n/navigation";
 import { getAccessToken } from "@/lib/auth-token";
@@ -109,6 +110,8 @@ export function PrivacyControls() {
       await deleteAllUserData();
       clearLocalUserData();
       logout();
+      queryClient.removeQueries({ queryKey: wardrobeQueryKey });
+      queryClient.removeQueries({ queryKey: ["me", "memory"] });
       queryClient.clear();
       markDataReset();
       setStatus({ kind: "ok" });

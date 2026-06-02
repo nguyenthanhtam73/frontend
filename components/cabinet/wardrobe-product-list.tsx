@@ -7,7 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
-import { useWardrobe } from "@/lib/hooks/use-wardrobe";
+import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 

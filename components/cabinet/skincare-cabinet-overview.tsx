@@ -6,6 +6,7 @@ import { useMemo } from "react";
 
 import { WardrobeProductForm } from "@/components/cabinet/wardrobe-product-form";
 import { WardrobeProductList } from "@/components/cabinet/wardrobe-product-list";
+import { WardrobeProvider } from "@/components/cabinet/wardrobe-provider";
 import { PrivacyControls } from "@/components/privacy/privacy-controls";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
@@ -31,17 +32,19 @@ export function SkincareCabinetOverview() {
         <p className="max-w-2xl text-muted-foreground">{t("sub")}</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <WardrobeProductList
-          onAddClick={() => {
-            document.getElementById("wardrobe-add-form")?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }}
-        />
-        <WardrobeProductForm formId="wardrobe-add-form" />
-      </div>
+      <WardrobeProvider>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <WardrobeProductList
+            onAddClick={() => {
+              document.getElementById("wardrobe-add-form")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }}
+          />
+          <WardrobeProductForm formId="wardrobe-add-form" />
+        </div>
+      </WardrobeProvider>
 
       {ob.completedAt ? (
         <Card className="border-primary/20 bg-primary/5">

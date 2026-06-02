@@ -17,7 +17,7 @@ export type WardrobeListDTO = {
 
 export type CreateWardrobeProductInput = {
   name: string;
-  brand?: string;
+  brand: string;
   category?: string;
   notes?: string;
   opened_at?: string;

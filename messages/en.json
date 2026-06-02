@@ -471,6 +471,10 @@
       "wardrobe": "Shelf"
     },
     "emptyMemory": "(Not enough data yet — complete getting-to-know-your-skin or check in so the buddy can remember.)",
+    "emptySection": "(Empty)",
+    "metaPromptVersion": "Coach prompt v{v}",
+    "metaMonthlyDigest": "Monthly digest included",
+    "metaCache": "Cache: {entries} entries · TTL {ttl}s",
     "footerNote": "This data belongs to you. Wipe everything under Privacy & data below or on the Shelf page.",
     "needAuth": "Sign in to view AI memory.",
     "signIn": "Sign in",

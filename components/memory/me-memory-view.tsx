@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   Brain,
+  ChevronDown,
   Loader2,
   RefreshCw,
   Sparkles,
@@ -42,6 +43,11 @@ export function MeMemoryView() {
     if (Number.isNaN(d.getTime())) return "";
     return formatter.dateTime(d, { dateStyle: "medium", timeStyle: "short" });
   }, [data?.generated_at, formatter]);
+
+  const memorySections = useMemo(
+    () => (data?.memory_text ? splitMemorySections(data.memory_text) : []),
+    [data?.memory_text],
+  );
 
   if (!hasAuth) {
     return (
@@ -136,10 +142,22 @@ export function MeMemoryView() {
           label={t("statVotes")}
           value={`${stats.helpful_votes} / ${stats.not_helpful_votes}`}
         />
-        <StatPill
-          label={t("statChars")}
-          value={formatter.number(stats.char_count)}
-        />
+        <StatPill label={t("statChars")} value={formatter.number(stats.char_count)} />
+      </div>
+
+      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+        {stats.prompt_version > 0 ? (
+          <MetaChip label={t("metaPromptVersion", { v: stats.prompt_version })} />
+        ) : null}
+        {stats.has_monthly_digest ? <MetaChip label={t("metaMonthlyDigest")} /> : null}
+        {stats.cache_ttl_seconds > 0 ? (
+          <MetaChip
+            label={t("metaCache", {
+              entries: stats.cache_entries,
+              ttl: Math.round(stats.cache_ttl_seconds),
+            })}
+          />
+        ) : null}
       </div>
 
       {stats.adherence_tier ? (
@@ -162,23 +180,81 @@ export function MeMemoryView() {
         </div>
       ) : null}
 
-      <Card>
-        <CardContent className="p-0">
-          <pre
-            className={cn(
-              "max-h-[min(70vh,32rem)] overflow-auto rounded-xl p-4 sm:p-5",
-              "whitespace-pre-wrap break-words font-mono text-xs leading-relaxed",
-              "bg-muted/40 text-foreground/90",
-            )}
-          >
-            {data.memory_text.trim() || t("emptyMemory")}
-          </pre>
-        </CardContent>
-      </Card>
+      {memorySections.length > 1 ? (
+        <div className="space-y-2">
+          {memorySections.map((block) => (
+            <details
+              key={block.title}
+              open
+              className="group rounded-xl border border-border/70 bg-card"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                <span>{block.title}</span>
+                <ChevronDown
+                  className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+              </summary>
+              <pre
+                className={cn(
+                  "border-t border-border/60 px-4 py-3",
+                  "whitespace-pre-wrap break-words font-mono text-xs leading-relaxed",
+                  "text-foreground/90",
+                )}
+              >
+                {block.body.trim() || t("emptySection")}
+              </pre>
+            </details>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <pre
+              className={cn(
+                "max-h-[min(70vh,32rem)] overflow-auto rounded-xl p-4 sm:p-5",
+                "whitespace-pre-wrap break-words font-mono text-xs leading-relaxed",
+                "bg-muted/40 text-foreground/90",
+              )}
+            >
+              {data.memory_text.trim() || t("emptyMemory")}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
 
       <p className="text-xs leading-relaxed text-muted-foreground">{t("footerNote")}</p>
     </div>
   );
+}
+
+type MemoryBlock = { title: string; body: string };
+
+/** Split USER_MEMORY markdown on ## headings for accordion UI. */
+function splitMemorySections(text: string): MemoryBlock[] {
+  const lines = text.split("\n");
+  const blocks: MemoryBlock[] = [];
+  let current: MemoryBlock | null = null;
+
+  for (const line of lines) {
+    if (line.startsWith("## ")) {
+      if (current) blocks.push(current);
+      current = { title: line.slice(3).trim(), body: "" };
+      continue;
+    }
+    if (current) {
+      current.body += (current.body ? "\n" : "") + line;
+    } else {
+      if (!blocks.length && line.trim()) {
+        current = { title: "Overview", body: line };
+      } else if (blocks.length === 0 && !current) {
+        current = { title: "Overview", body: "" };
+        if (line.trim()) current.body = line;
+      }
+    }
+  }
+  if (current) blocks.push(current);
+  return blocks.filter((b) => b.title || b.body.trim());
 }
 
 const ADHERENCE_TIERS = ["strong", "moderate", "low", "none"] as const;
@@ -216,6 +292,12 @@ function StatPill({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-0.5 text-sm font-semibold tabular-nums">{value}</p>
     </div>
+  );
+}
+
+function MetaChip({ label }: { label: string }) {
+  return (
+    <span className="rounded-full border border-border bg-muted/30 px-2.5 py-1">{label}</span>
   );
 }
 
