@@ -551,7 +551,7 @@
     "intro": "3 bước — dưới 90 giây là xong. Không so sánh, không áp lực.",
     "progress": {
       "stepOf": "Bước {current}/{total}",
-      "analyze": "Ảnh & da",
+      "analyze": "Ảnh & phân tích",
       "quickInfo": "Thông tin nhanh",
       "summary": "Bắt đầu",
       "timeHint": "Thường xong trong dưới 90 giây"
@@ -596,15 +596,11 @@
     },
     "quickInfo": {
       "title": "Gần xong rồi",
-      "subtitle": "Trình độ + mục tiêu — hoàn cảnh là tùy chọn.",
+      "subtitle": "Chọn trình độ và một mục tiêu da — chỉ hai nhóm, vài giây là xong.",
       "skillSection": "Trình độ",
       "goalSection": "Mục tiêu chính",
-      "contextSection": "Hoàn cảnh",
-      "contextHint": "Chạm nếu có — giúp AI nhắc SPF & phục hồi.",
       "groupSkill": "Trình độ",
-      "groupGoal": "Mục tiêu",
-      "groupContext": "Hoàn cảnh",
-      "optionalTag": "tùy chọn"
+      "groupGoal": "Mục tiêu da"
     },
     "aiReview": {
       "title": "AI đề xuất cho bạn",

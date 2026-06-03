@@ -6,8 +6,6 @@ import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 export type SkinTypeCard = "dry" | "oily" | "combo" | "normal" | "sensitive" | "prefer_not";
 /** Undertone for product shade hints. */
 export type SkinUndertone = "cool" | "warm" | "neutral" | "deep" | "fair" | "prefer_not";
-/** Lifestyle / context buckets for routine hints. */
-export type LifeContext = "work" | "study" | "gym" | "outdoor" | "travel" | "shift_work";
 export type BudgetTier = "entry" | "mid" | "flexible";
 /** Primary skin goal. */
 export type SkinGoal = "glow" | "clear_acne" | "barrier" | "anti_aging" | "unsure";
@@ -26,7 +24,6 @@ export type PhotoItem = {
 export type OnboardingState = {
   skinType: SkinTypeCard | null;
   undertone: SkinUndertone | null;
-  contexts: LifeContext[];
   budget: BudgetTier | null;
   goal: SkinGoal | null;
   skillMode: SkillMode | null;
@@ -47,7 +44,6 @@ export type OnboardingState = {
 type Store = OnboardingState & {
   setSkinType: (v: SkinTypeCard | null) => void;
   setUndertone: (v: SkinUndertone | null) => void;
-  toggleContext: (v: LifeContext) => void;
   setBudget: (v: BudgetTier | null) => void;
   setGoal: (v: SkinGoal | null) => void;
   setSkillMode: (v: SkillMode | null) => void;
@@ -70,7 +66,6 @@ type Store = OnboardingState & {
 const initial: OnboardingState = {
   skinType: null,
   undertone: null,
-  contexts: [],
   budget: null,
   goal: null,
   skillMode: null,
@@ -106,12 +101,6 @@ export const useOnboardingStore = create<Store>((set) => ({
   ...initial,
   setSkinType: (skinType) => set({ skinType }),
   setUndertone: (undertone) => set({ undertone }),
-  toggleContext: (v) =>
-    set((s) => ({
-      contexts: s.contexts.includes(v)
-        ? s.contexts.filter((x) => x !== v)
-        : [...s.contexts, v],
-    })),
   setBudget: (budget) => set({ budget }),
   setGoal: (goal) => set({ goal }),
   setSkillMode: (skillMode) => set({ skillMode }),
@@ -203,9 +192,6 @@ export function buildStarterPackBullets(s: OnboardingState): string[] {
   }
   if (s.goal && s.goal !== "unsure") {
     lines.push(`Mục tiêu: ${s.goal} — coach AI sẽ ưu tiên giải thích “vì sao” trước “dùng gì”.`);
-  }
-  if (s.contexts.length) {
-    lines.push(`Ngữ cảnh: ${s.contexts.join(", ")} — gợi ý sẽ nhắc SPF/tẩy trang/phục hồi cho lịch của bạn.`);
   }
   return lines.slice(0, 6);
 }

@@ -75,6 +75,10 @@ export function OnboardingStepPanel({
   );
 }
 
+/** Reserve space so scrollable onboarding content clears the fixed footer. */
+export const ONBOARDING_FOOTER_PAD = "pb-24" as const;
+export const ONBOARDING_FOOTER_PAD_SUMMARY = "pb-28" as const;
+
 export function OnboardingStickyNav({
   backLabel,
   continueLabel,
@@ -86,6 +90,8 @@ export function OnboardingStickyNav({
   hideContinue,
   continueIcon,
   primaryEmphasis,
+  /** Summary step — full-width primary CTA only (no back). */
+  singleCta,
 }: {
   backLabel: string;
   continueLabel: string;
@@ -98,25 +104,36 @@ export function OnboardingStickyNav({
   continueIcon?: ReactNode;
   /** Summary step — larger primary CTA. */
   primaryEmphasis?: boolean;
+  singleCta?: boolean;
 }) {
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 px-4 py-3 shadow-[0_-10px_32px_rgba(0,0,0,0.08)] backdrop-blur-md supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    <footer
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-white/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-lg dark:bg-background/92"
       role="navigation"
       aria-label={continueLabel}
+      style={{
+        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+      }}
     >
-      <div className="mx-auto flex max-w-2xl items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="lg"
-          onClick={onBack}
-          disabled={backDisabled}
-          className="min-h-12 shrink-0 gap-1 px-3"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          <span className="sr-only sm:not-sr-only">{backLabel}</span>
-        </Button>
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-2xl items-stretch gap-2 px-4 pt-3 sm:gap-3",
+          singleCta ? "flex-col" : "flex-row",
+        )}
+      >
+        {!singleCta ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={onBack}
+            disabled={backDisabled}
+            className="min-h-12 shrink-0 gap-1.5 px-3 sm:min-w-[7rem] sm:px-4"
+          >
+            <ArrowLeft className="size-4 shrink-0" aria-hidden />
+            <span className="text-sm font-medium sm:text-base">{backLabel}</span>
+          </Button>
+        ) : null}
         {!hideContinue ? (
           <Button
             type="button"
@@ -124,24 +141,24 @@ export function OnboardingStickyNav({
             onClick={onContinue}
             disabled={continueDisabled || continueLoading}
             className={cn(
-              "flex-1 gap-2 font-semibold shadow-md",
-              primaryEmphasis
-                ? "min-h-14 text-base sm:text-lg"
-                : "min-h-12 text-base",
+              "gap-2 font-semibold shadow-md",
+              singleCta || primaryEmphasis
+                ? "min-h-14 w-full text-base sm:min-h-[3.25rem] sm:text-lg"
+                : "min-h-12 min-w-0 flex-[1.35] text-base sm:flex-1",
             )}
           >
             {continueLoading ? (
-              <Loader2 className="size-5 animate-spin" aria-hidden />
+              <Loader2 className="size-5 shrink-0 animate-spin" aria-hidden />
             ) : (
               continueIcon ?? <ArrowRight className="size-5 shrink-0" aria-hidden />
             )}
-            <span className="truncate">{continueLabel}</span>
+            <span className={cn(singleCta ? "text-center" : "truncate")}>{continueLabel}</span>
           </Button>
-        ) : (
-          <div className="flex-1" />
+        ) : singleCta ? null : (
+          <div className="flex-[1.35] sm:flex-1" />
         )}
       </div>
-    </div>
+    </footer>
   );
 }
 
@@ -299,6 +316,7 @@ export function QuickChipGrid<T extends string>({
   onSelect,
   columns = 2,
   hideTitle,
+  size = "default",
 }: {
   title: string;
   options: { id: T; label: string }[];
@@ -306,12 +324,15 @@ export function QuickChipGrid<T extends string>({
   onSelect: (id: T) => void;
   columns?: 2 | 3;
   hideTitle?: boolean;
+  /** Larger tap targets for primary choices (e.g. skin goals). */
+  size?: "default" | "large";
 }) {
+  const large = size === "large";
   return (
     <div className="space-y-2">
       {!hideTitle ? <p className="text-sm font-semibold">{title}</p> : null}
       <div
-        className={cn("grid gap-2", columns === 3 ? "grid-cols-3" : "grid-cols-2")}
+        className={cn("grid gap-2.5", columns === 3 ? "grid-cols-3" : "grid-cols-2")}
         role="group"
         aria-label={title}
       >
@@ -321,7 +342,8 @@ export function QuickChipGrid<T extends string>({
             type="button"
             onClick={() => onSelect(o.id)}
             className={cn(
-              "min-h-12 touch-manipulation rounded-xl border px-3 py-3 text-center text-sm font-medium transition-all active:scale-[0.98]",
+              "touch-manipulation rounded-xl border text-center font-medium transition-all active:scale-[0.98]",
+              large ? "min-h-[3.25rem] px-3 py-3.5 text-[15px] leading-snug" : "min-h-12 px-3 py-3 text-sm",
               selected === o.id
                 ? "border-primary bg-primary text-primary-foreground shadow-md ring-2 ring-primary/20"
                 : "border-border bg-background hover:border-primary/40 hover:bg-muted/50",
@@ -330,57 +352,6 @@ export function QuickChipGrid<T extends string>({
             {o.label}
           </button>
         ))}
-      </div>
-    </div>
-  );
-}
-
-export function OptionalChipRow({
-  title,
-  hint,
-  ids,
-  selected,
-  onToggle,
-  label,
-  hideTitle,
-}: {
-  title: string;
-  hint?: string;
-  ids: readonly string[];
-  selected: string[];
-  onToggle: (id: string) => void;
-  label: (id: string) => string;
-  hideTitle?: boolean;
-}) {
-  return (
-    <div className="space-y-2">
-      {!hideTitle ? (
-        <div>
-          <p className="text-sm font-semibold">{title}</p>
-          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-        </div>
-      ) : hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
-      <div className="flex flex-wrap gap-2" role="group" aria-label={title}>
-        {ids.map((id) => {
-          const on = selected.includes(id);
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onToggle(id)}
-              className={cn(
-                "min-h-11 touch-manipulation rounded-full border px-4 py-2.5 text-sm font-medium transition-all active:scale-[0.98]",
-                on
-                  ? "border-primary bg-primary/15 text-primary shadow-sm"
-                  : "border-border bg-background text-muted-foreground hover:bg-muted",
-              )}
-            >
-              {label(id)}
-            </button>
-          );
-        })}
       </div>
     </div>
   );

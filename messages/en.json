@@ -551,7 +551,7 @@
     "intro": "Three steps — under 90 seconds if you're quick. No comparison, no pressure.",
     "progress": {
       "stepOf": "Step {current} of {total}",
-      "analyze": "Photos & skin",
+      "analyze": "Photos & analysis",
       "quickInfo": "Quick info",
       "summary": "Start",
       "timeHint": "Usually done in under 90 seconds"
@@ -596,15 +596,11 @@
     },
     "quickInfo": {
       "title": "Almost there",
-      "subtitle": "Skill + goal — life context is optional.",
+      "subtitle": "Pick your skill level and one skin goal — two quick groups.",
       "skillSection": "Skill level",
       "goalSection": "Main goal",
-      "contextSection": "Life context",
-      "contextHint": "Tap if it fits — helps with SPF & recovery nudges.",
       "groupSkill": "Skill",
-      "groupGoal": "Goal",
-      "groupContext": "Context",
-      "optionalTag": "optional"
+      "groupGoal": "Skin goal"
     },
     "aiReview": {
       "title": "AI suggestions for you",

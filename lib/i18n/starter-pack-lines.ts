@@ -31,9 +31,5 @@ export function buildLocalizedStarterLines(
       }),
     );
   }
-  if (s.contexts.length) {
-    const ctx = s.contexts.map((c) => t(`context.${c}`)).join(", ");
-    lines.push(t("contextCoachLine", { contexts: ctx }));
-  }
   return lines.slice(0, 6);
 }

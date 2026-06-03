@@ -1,5 +1,4 @@
 import type {
-  LifeContext,
   SkinGoal,
   SkinTypeCard,
   SkinUndertone,
@@ -30,7 +29,7 @@ export const PHOTO_QUICK_CONCERNS = [
 
 export type ManualQuickConcern = (typeof MANUAL_QUICK_CONCERNS)[number];
 
-/** Quick-info: 4 main goals (skill 3 + goals 4 + optional context). */
+/** Quick-info step: 4 main skin goals (skill is 3 choices in UI). */
 export const QUICK_GOALS: SkinGoal[] = [
   "glow",
   "clear_acne",
@@ -48,9 +47,6 @@ export const QUICK_UNDERTONES: SkinUndertone[] = [
   "neutral",
   "prefer_not",
 ];
-
-/** Optional life context chips on quick-info (0–3). */
-export const QUICK_LIFE_CONTEXTS: LifeContext[] = ["outdoor", "work", "gym"];
 
 /** Session flag: coach-welcome plays a short entrance animation. */
 export const ONBOARDING_EXIT_ANIM_KEY = "dadiary_onboarding_exit_anim";
