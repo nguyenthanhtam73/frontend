@@ -28,6 +28,7 @@ import {
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
+import { ONBOARDING_EXIT_ANIM_KEY } from "@/lib/onboarding/constants";
 import { cn } from "@/lib/utils";
 
 function numberedList(lines: string[]) {
@@ -74,6 +75,18 @@ export function CoachWelcomeClient() {
   const [visionNotes, setVisionNotes] = useState<string | undefined>();
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [enterAnim, setEnterAnim] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(ONBOARDING_EXIT_ANIM_KEY)) {
+        sessionStorage.removeItem(ONBOARDING_EXIT_ANIM_KEY);
+        setEnterAnim(true);
+      }
+    } catch {
+      /* private mode */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -223,7 +236,13 @@ export function CoachWelcomeClient() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6">
+    <div
+      className={cn(
+        "mx-auto w-full max-w-2xl space-y-6",
+        enterAnim &&
+          "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:slide-in-from-bottom-4 motion-safe:duration-500",
+      )}
+    >
       <header className="space-y-2 text-center sm:text-left">
         <div className="inline-flex items-center gap-2 rounded-full border bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
           <Sparkles className="size-4" aria-hidden />

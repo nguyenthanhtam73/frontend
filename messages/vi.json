@@ -10,7 +10,7 @@
     },
     "onboarding": {
       "title": "Làm quen với da bạn · DaDiary",
-      "description": "Chụp vài tấm ảnh để AI gợi ý loại da & tone, sau đó bạn xem lại, chỉnh sửa rồi nhận chăm da sáng tối khởi đầu cá nhân hóa."
+      "description": "3 bước nhanh: ảnh & da, thông tin sở thích, rồi nhận chăm da sáng tối khởi đầu từ AI."
     },
     "progress": {
       "title": "Xem da thay đổi · DaDiary",
@@ -548,10 +548,34 @@
   "onboarding": {
     "sectionLabel": "Làm quen với da bạn",
     "title": "Chăm da khởi đầu",
-    "intro": "Chụp vài ảnh da mặt rồi để AI đọc tín hiệu — bạn luôn có thể chỉnh lại trước khi lưu. Không so sánh, không áp lực.",
+    "intro": "3 bước — dưới 90 giây là xong. Không so sánh, không áp lực.",
+    "progress": {
+      "stepOf": "Bước {current}/{total}",
+      "analyze": "Ảnh & da",
+      "quickInfo": "Thông tin nhanh",
+      "summary": "Bắt đầu",
+      "timeHint": "Thường xong trong dưới 90 giây"
+    },
+    "analyze": {
+      "title": "Ảnh & phân tích",
+      "subtitle": "Chụp ảnh (hoặc bỏ qua) — chỉnh da ngay bên dưới, không đổi màn.",
+      "skinSection": "Da của bạn",
+      "skinSectionHint": "Chạm chip để chỉnh cho đúng."
+    },
     "photos": {
       "title": "Ảnh da mặt cho AI",
-      "hint": "2–3 ảnh: ánh sáng tự nhiên, không trang điểm, ảnh chính diện + ảnh nửa nghiêng nếu được.",
+      "hint": "1–3 ảnh: ánh sáng tự nhiên, không trang điểm. Hai góc giúp AI đọc chính xác hơn.",
+      "skipShyCta": "Ngại chụp? Bỏ qua ảnh",
+      "skipShyHint": "Vẫn tạo được chăm da khởi đầu — AI sẽ kém chính xác hơn một chút so với có ảnh.",
+      "emptyTitle": "Chưa có ảnh nào",
+      "emptyBody": "Chụp hoặc chọn 1–3 ảnh mặt, hoặc bấm nút bỏ qua phía trên nếu bạn ngại.",
+      "analyzeTitle": "AI đang xem ảnh của bạn…",
+      "analyzeSubtitle": "Thường chỉ mất vài giây — đừng tắt màn hình nhé.",
+      "errorTitle": "Chưa đọc được ảnh",
+      "errorRetry": "Thử lại",
+      "tipsCompact": "Ánh sáng tự nhiên · thẳng mặt hoặc nửa nghiêng · không filter mạnh.",
+      "orUpload": "Hoặc thêm ảnh",
+      "changePhotos": "Đổi ảnh",
       "tipLight": "Đứng gần cửa sổ, tránh đèn flash mạnh.",
       "tipAngle": "Một ảnh thẳng mặt + một ảnh nửa nghiêng.",
       "tipClean": "Rửa tay sạch, không chỉnh màu/filter quá mạnh.",
@@ -559,7 +583,7 @@
       "remove": "Bỏ",
       "analyze": "Phân tích với AI",
       "analyzing": "Đang đọc ảnh…",
-      "needTwo": "Chọn ít nhất 2 ảnh (tối đa 3).",
+      "needOne": "Chọn ít nhất 1 ảnh (tối đa 3).",
       "maxPhotos": "Tối đa 3 ảnh.",
       "analyzeFail": "Chưa đọc được. Thử lại hoặc kiểm tra backend & OpenAI.",
       "nextAfterAi": "Xem gợi ý AI",
@@ -570,9 +594,24 @@
       "skipSwitchBack": "Tôi đổi ý — bật lại chụp ảnh",
       "privacyOpen": "Đọc lại thông báo quyền riêng tư"
     },
+    "quickInfo": {
+      "title": "Gần xong rồi",
+      "subtitle": "Trình độ + mục tiêu — hoàn cảnh là tùy chọn.",
+      "skillSection": "Trình độ",
+      "goalSection": "Mục tiêu chính",
+      "contextSection": "Hoàn cảnh",
+      "contextHint": "Chạm nếu có — giúp AI nhắc SPF & phục hồi.",
+      "groupSkill": "Trình độ",
+      "groupGoal": "Mục tiêu",
+      "groupContext": "Hoàn cảnh",
+      "optionalTag": "tùy chọn"
+    },
     "aiReview": {
       "title": "AI đề xuất cho bạn",
       "subtitle": "Đây là gợi ý từ ảnh — không phải chẩn đoán y khoa.",
+      "manualSubtitle": "Chọn nhanh loại da + 1–2 vấn đề chính — xong trong vài giây.",
+      "manualConcernsHint": "Chạm để chọn (có thể chọn nhiều).",
+      "aiNotesToggle": "Xem ghi chú AI",
       "skin": "Loại da",
       "undertone": "Tone da",
       "concerns": "Vấn đề ghi nhận",
@@ -601,8 +640,18 @@
       "uneven_texture": "Bề mặt sần / không đều"
     },
     "back": "Quay lại",
-    "next": "Tiếp",
-    "finish": "Xong — sang ghi nhật ký da",
+    "next": "Tiếp tục",
+    "analyzeCta": "Phân tích ảnh với AI",
+    "finish": "Tạo routine khởi đầu cho tôi",
+    "summaryTitle": "Sẵn sàng!",
+    "summarySubtitle": "Kiểm tra lại — rồi tạo chăm da sáng/tối cho bạn.",
+    "summaryRecapSkin": "Loại da: {value}",
+    "summaryRecapConcerns": "Quan tâm: {value}",
+    "summaryRecapSkill": "Trình độ: {value}",
+    "summaryRecapGoal": "Mục tiêu: {value}",
+    "summaryRecapBudget": "Ngân sách: {value}",
+    "summaryRecapContext": "Hoàn cảnh: {value}",
+    "summaryOptional": "Ghi chú thêm (tùy chọn)",
     "homeLink": "Về trang chủ",
     "summaryBadge": "Chăm da khởi đầu của bạn",
     "summaryFoot": "Ghi nhật ký bằng ảnh + cảm nhận mỗi ngày giúp bạn đồng hành sát hơn. Không hứa “da hoàn hảo” qua đêm — chỉ tiến bộ rõ ràng nếu bạn kiên trì.",
@@ -640,6 +689,12 @@
       "travel": "Du lịch / đổi khí hậu",
       "shift_work": "Ca đêm / ngủ không đều"
     },
+    "contextShort": {
+      "outdoor": "Nắng nhiều",
+      "work": "Máy lạnh / VP",
+      "gym": "Gym",
+      "shift_work": "Ngủ muộn"
+    },
     "budget": {
       "entry": "Tiết kiệm / drugstore",
       "mid": "Tầm trung",
@@ -655,14 +710,17 @@
     "skill": {
       "beginner": {
         "title": "Người mới (chế độ đơn giản)",
+        "short": "Mới bắt đầu",
         "desc": "Dành cho bạn mới bắt đầu — chỉ những bước cơ bản, từ ngữ dễ hiểu, nhịp chậm rãi."
       },
       "intermediate": {
         "title": "Chế độ trung bình",
+        "short": "Trung bình",
         "desc": "Có giới thiệu thành phần & thứ tự các bước; gợi ý cân bằng, an toàn."
       },
       "advanced": {
         "title": "Chế độ nâng cao",
+        "short": "Nâng cao",
         "desc": "Đi sâu vào thành phần, cách kết hợp sản phẩm, theo dõi thử trước (patch test)."
       }
     },

@@ -24,9 +24,6 @@ export function buildLocalizedStarterLines(
     lines.push(t("packLines.skillAdvanced0"));
     lines.push(t("packLines.skillAdvanced1"));
   }
-  if (s.budget === "entry") lines.push(t("packLines.budgetEntry"));
-  else if (s.budget === "mid") lines.push(t("packLines.budgetMid"));
-  else if (s.budget === "flexible") lines.push(t("packLines.budgetFlexible"));
   if (s.goal && s.goal !== "unsure") {
     lines.push(
       t("goalCoachLine", {

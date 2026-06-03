@@ -4,20 +4,28 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   Camera,
   Check,
-  ImageOff,
   ImagePlus,
-  Loader2,
   ShieldCheck,
   Sparkles,
-  Sun,
-  UserRound,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  AnalyzeLoadingOverlay,
+  ConcernChipRow,
+  FriendlyNotice,
+  OnboardingProgress,
+  OnboardingStepPanel,
+  OnboardingStickyNav,
+  OptionalChipRow,
+  QuickChipGrid,
+  QuickInfoGroup,
+  SkinProfilePanel,
+  SkipPhotosButton,
+} from "@/components/onboarding/onboarding-ui";
 import { FacePrivacyConsentDialog } from "@/components/privacy/face-privacy-consent-dialog";
 import { useConsentGate } from "@/components/privacy/use-consent-gate";
 import { Button } from "@/components/ui/button";
@@ -26,17 +34,17 @@ import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
-import { buildLocalizedStarterLines } from "@/lib/i18n/starter-pack-lines";
 import {
   COACH_WELCOME_STORAGE_KEY,
   type CoachWelcomePayload,
 } from "@/lib/types/starter-routine";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import {
-  type BudgetTier,
   type LifeContext,
+  ONBOARDING_STEPS,
+  type OnboardingStepId,
+  type OnboardingState,
   type SkillMode,
-  type SkinGoal,
   type SkinTypeCard,
   type SkinUndertone,
   useOnboardingStore,
@@ -44,6 +52,16 @@ import {
 import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
+import {
+  MANUAL_QUICK_CONCERNS,
+  MANUAL_QUICK_SKIN_TYPES,
+  ONBOARDING_EXIT_ANIM_KEY,
+  PHOTO_QUICK_CONCERNS,
+  ONBOARDING_DEFAULT_BUDGET,
+  QUICK_GOALS,
+  QUICK_LIFE_CONTEXTS,
+  QUICK_UNDERTONES,
+} from "@/lib/onboarding/constants";
 import { cn } from "@/lib/utils";
 
 /** Stable IDs aligned with backend onboarding vision schema + i18n `onboarding.aiConcerns.*`. */
@@ -80,15 +98,7 @@ function barrierLabel(t: OnboardingT, signal: string) {
   );
 }
 
-const steps = [
-  "photos",
-  "aiReview",
-  "context",
-  "budget",
-  "goal",
-  "skill",
-  "summary",
-] as const;
+const steps = ONBOARDING_STEPS;
 
 const skinTypeOrder: SkinTypeCard[] = [
   "dry",
@@ -98,31 +108,40 @@ const skinTypeOrder: SkinTypeCard[] = [
   "sensitive",
   "prefer_not",
 ];
-const undertoneOrder: SkinUndertone[] = [
-  "cool",
-  "warm",
-  "neutral",
-  "deep",
-  "fair",
-  "prefer_not",
-];
-const contextOrder: LifeContext[] = [
-  "work",
-  "study",
-  "gym",
-  "outdoor",
-  "travel",
-  "shift_work",
-];
-const budgetOrder: BudgetTier[] = ["entry", "mid", "flexible"];
-const goalOrder: SkinGoal[] = [
-  "glow",
-  "clear_acne",
-  "barrier",
-  "anti_aging",
-  "unsure",
-];
 const skillOrder: SkillMode[] = ["beginner", "intermediate", "advanced"];
+
+function buildSummaryRecap(
+  ob: OnboardingState,
+  t: OnboardingT,
+): string[] {
+  const lines: string[] = [];
+  if (ob.skinType) {
+    lines.push(
+      t("summaryRecapSkin", { value: t(`skinType.${ob.skinType}`) }),
+    );
+  }
+  if (ob.aiConcernTags.length) {
+    const concerns = ob.aiConcernTags
+      .map((id) => concernChipLabel(t, id))
+      .join(", ");
+    lines.push(t("summaryRecapConcerns", { value: concerns }));
+  }
+  if (ob.skillMode) {
+    lines.push(
+      t("summaryRecapSkill", { value: t(`skill.${ob.skillMode}.short`) }),
+    );
+  }
+  if (ob.goal) {
+    lines.push(t("summaryRecapGoal", { value: t(`goal.${ob.goal}`) }));
+  }
+  if (ob.contexts.length) {
+    const ctx = ob.contexts
+      .map((c) => t(`contextShort.${c}` as `contextShort.${LifeContext}`))
+      .join(", ");
+    lines.push(t("summaryRecapContext", { value: ctx }));
+  }
+  return lines;
+}
 
 export function OnboardingFlow() {
   const t = useTranslations("onboarding");
@@ -132,8 +151,9 @@ export function OnboardingFlow() {
   const locale = useLocale();
   const router = useRouter();
   const [idx, setIdx] = useState(0);
-  const [aiEditing, setAiEditing] = useState(false);
+  const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [finishing, setFinishing] = useState(false);
+  const skinSectionRef = useRef<HTMLDivElement>(null);
   /**
    * Inline finish-error replaces native `alert()` so:
    *   - mobile users don't get a focus-stealing modal,
@@ -153,12 +173,6 @@ export function OnboardingFlow() {
   const setSkipFaceCapture = usePrivacyStore((s) => s.setSkipFaceCapture);
   const consent = useConsentGate();
 
-  useEffect(() => {
-    if (steps[idx] === "aiReview" && !ob.aiSnapshot) {
-      setIdx(steps.indexOf("photos"));
-    }
-  }, [idx, ob.aiSnapshot]);
-
   const photoCount = useOnboardingStore((s) => s.photos.length);
   const clearPhotos = useOnboardingStore((s) => s.clearPhotos);
   useEffect(() => {
@@ -167,12 +181,26 @@ export function OnboardingFlow() {
     }
   }, [skipFaceCapture, photoCount, clearPhotos]);
 
-  const starterBullets = useMemo(
-    () => buildLocalizedStarterLines(ob, t),
-    [ob, t],
-  );
+  const summaryRecap = useMemo(() => buildSummaryRecap(ob, t), [ob, t]);
 
   const step = steps[idx];
+  const analyzing = ob.analyzeStatus === "loading";
+  const showSkinSection = skipFaceCapture || ob.aiSnapshot != null;
+  const isManualReview = skipFaceCapture && !ob.aiSnapshot;
+  const needsAnalyze =
+    step === "analyze" &&
+    ob.photos.length >= 1 &&
+    !ob.aiSnapshot &&
+    !skipFaceCapture &&
+    !analyzing;
+
+  useEffect(() => {
+    if (!showSkinSection || !skinSectionRef.current) return;
+    const t = window.setTimeout(() => {
+      skinSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [showSkinSection]);
 
   const applyFiles = useCallback(
     (list: FileList | null) => {
@@ -206,7 +234,7 @@ export function OnboardingFlow() {
       ob.setAnalyzeStatus("error", "auth");
       return;
     }
-    if (ob.photos.length < 2) return;
+    if (ob.photos.length < 1) return;
     ob.setAnalyzeStatus("loading");
     try {
       const fd = new FormData();
@@ -230,32 +258,54 @@ export function OnboardingFlow() {
         return;
       }
       ob.applyAiAnalyzeResult(json.data);
-      setIdx(Math.max(0, steps.indexOf("aiReview")));
-      setAiEditing(false);
+      setSkipFaceCapture(false);
     } catch {
       ob.setAnalyzeStatus("error", "network");
     }
   }
 
-  function next() {
-    setIdx((i) => {
-      const target = Math.min(i + 1, steps.length - 1);
-      // Skip-face users have no `aiSnapshot`, so the AI review step is empty —
-      // jump straight to "context" rather than dead-ending them.
-      if (steps[target] === "aiReview" && !ob.aiSnapshot) {
-        return Math.min(steps.indexOf("context"), steps.length - 1);
-      }
-      return target;
-    });
+  function goSkipPhotos() {
+    ob.clearPhotos();
+    setSkipFaceCapture(true);
+    if (!ob.undertone) ob.setUndertone("prefer_not");
   }
+
+  function handlePrimary() {
+    if (needsAnalyze) {
+      void runAnalyze();
+      return;
+    }
+    if (step === "summary") {
+      void finish();
+      return;
+    }
+    next();
+  }
+
+  const stickyContinueLabel = needsAnalyze
+    ? t("analyzeCta")
+    : step === "summary"
+      ? t("finish")
+      : t("next");
+
+  const stickyCanContinue =
+    needsAnalyze
+      ? ob.photos.length >= 1
+      : step === "summary"
+        ? !finishing
+        : canProceed(step, ob, skipFaceCapture);
+
+  const showStickyContinue =
+    step !== "analyze" || needsAnalyze || showSkinSection;
+
+  function next() {
+    setSlideDir(1);
+    setIdx((i) => Math.min(i + 1, steps.length - 1));
+  }
+
   function prev() {
-    setIdx((i) => {
-      const target = Math.max(i - 1, 0);
-      if (steps[target] === "aiReview" && !ob.aiSnapshot) {
-        return Math.max(steps.indexOf("photos"), 0);
-      }
-      return target;
-    });
+    setSlideDir(-1);
+    setIdx((i) => Math.max(i - 1, 0));
   }
 
   /**
@@ -297,12 +347,13 @@ export function OnboardingFlow() {
       return;
     }
 
+    const undertone = ob.undertone ?? "prefer_not";
+
     if (
       !ob.skinType ||
-      !ob.undertone ||
-      !ob.budget ||
       !ob.goal ||
-      !ob.skillMode
+      !ob.skillMode ||
+      bodyConcerns.length === 0
     ) {
       setFinishError("save_failed");
       return;
@@ -318,9 +369,9 @@ export function OnboardingFlow() {
         },
         body: JSON.stringify({
           skin_type: ob.skinType,
-          undertone: ob.undertone,
+          undertone,
           contexts: ob.contexts,
-          budget: ob.budget,
+          budget: ONBOARDING_DEFAULT_BUDGET,
           goal: ob.goal,
           skill_level: ob.skillMode,
           body_concerns: bodyConcerns,
@@ -357,6 +408,11 @@ export function OnboardingFlow() {
         }
         if (ob.skillMode) setSkillGlobal(ob.skillMode);
         ob.markComplete();
+        try {
+          sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
+        } catch {
+          /* private mode */
+        }
         router.push("/onboarding/coach-welcome");
       } else {
         setFinishError("save_failed");
@@ -369,7 +425,12 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 px-4 sm:space-y-8 sm:px-0">
+    <div
+      className={cn(
+        "mx-auto w-full max-w-2xl space-y-5 px-4 sm:space-y-6 sm:px-0",
+        step === "summary" ? "pb-32" : "pb-28",
+      )}
+    >
       <div className="space-y-2 text-center sm:text-left">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {t("sectionLabel")}
@@ -378,490 +439,256 @@ export function OnboardingFlow() {
         <p className="text-sm text-muted-foreground sm:text-base">{t("intro")}</p>
       </div>
 
-      <div className="flex gap-1">
-        {steps.map((s, i) => (
-          <div
-            key={s}
-            className={cn(
-              "h-1 flex-1 rounded-full transition-colors",
-              i <= idx ? "bg-primary" : "bg-muted",
-            )}
+      <OnboardingProgress idx={idx} t={t} />
+
+      <Card className="relative overflow-hidden border-border/80 shadow-sm">
+        {analyzing && (
+          <AnalyzeLoadingOverlay
+            title={t("photos.analyzeTitle")}
+            subtitle={t("photos.analyzeSubtitle")}
           />
-        ))}
-      </div>
-
-      <Card className="overflow-hidden border-border/80 shadow-sm">
-        <CardContent className="space-y-6 p-4 pt-5 sm:p-6 sm:pt-6">
-          {step === "photos" && (
-            <section className="space-y-5" aria-labelledby="onb-photo-title">
+        )}
+        <CardContent className="p-4 pt-5 sm:p-6 sm:pt-6">
+          <OnboardingStepPanel stepKey={step} direction={slideDir}>
+          {step === "analyze" && (
+            <section className="space-y-5" aria-labelledby="onb-analyze-title">
               <div className="space-y-2">
-                <h2 id="onb-photo-title" className="text-lg font-semibold">
-                  {t("photos.title")}
+                <h2 id="onb-analyze-title" className="text-lg font-semibold">
+                  {t("analyze.title")}
                 </h2>
-                <p className="text-sm text-muted-foreground">{t("photos.hint")}</p>
+                <p className="text-sm text-muted-foreground">{t("analyze.subtitle")}</p>
               </div>
 
-              {skipFaceCapture ? (
-                <SkipModeCard
-                  title={t("photos.skipTitle")}
-                  body={t("photos.skipBody")}
-                  continueCta={t("photos.skipContinue")}
-                  switchBackCta={t("photos.skipSwitchBack")}
-                  badgeLabel={tPrivacy("modeBadgeSkip")}
-                  onContinue={() => setIdx(steps.indexOf("context"))}
-                  onSwitchBack={() => setSkipFaceCapture(false)}
-                />
+              {showSkinSection ? (
+                <details className="rounded-xl border border-border/60 bg-muted/20 px-3 py-1">
+                  <summary className="cursor-pointer py-2.5 text-sm font-medium">
+                    {t("photos.changePhotos")}
+                  </summary>
+                  <div className="space-y-4 pb-3 pt-1">
+                    <PhotoCaptureBlock
+                      t={t}
+                      tPrivacy={tPrivacy}
+                      tAuth={tAuth}
+                      tCheckIn={tCheckIn}
+                      consent={consent}
+                      fileRef={fileRef}
+                      cameraRef={cameraRef}
+                      openCamera={openCamera}
+                      openLibrary={openLibrary}
+                      onSkip={goSkipPhotos}
+                      showSkip={false}
+                      onRetryAnalyze={() => {
+                        ob.setAnalyzeStatus("idle");
+                        void runAnalyze();
+                      }}
+                    />
+                  </div>
+                </details>
               ) : (
-                <>
-                  <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
-                    <li className="flex gap-2 rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <Sun className="size-5 shrink-0 text-amber-500" aria-hidden />
-                      <span>{t("photos.tipLight")}</span>
-                    </li>
-                    <li className="flex gap-2 rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <Camera className="size-5 shrink-0 text-primary" aria-hidden />
-                      <span>{t("photos.tipAngle")}</span>
-                    </li>
-                    <li className="flex gap-2 rounded-xl border border-border/60 bg-muted/30 p-3 sm:col-span-1">
-                      <UserRound className="size-5 shrink-0 text-primary" aria-hidden />
-                      <span>{t("photos.tipClean")}</span>
-                    </li>
-                  </ul>
-
-                  <PrivacyHeader
-                    headline={tPrivacy("captureCard.subtitle")}
-                    privacyLabel={t("photos.privacyOpen")}
-                    onOpenNotice={consent.openManually}
-                  />
-
-                  <input
-                    ref={cameraRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    capture="user"
-                    className="sr-only"
-                    onChange={(e) => {
-                      applyFiles(e.target.files);
-                      e.target.value = "";
-                    }}
-                  />
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    multiple
-                    className="sr-only"
-                    onChange={(e) => {
-                      applyFiles(e.target.files);
-                      e.target.value = "";
-                    }}
-                  />
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="min-h-12 gap-2"
-                      onClick={openCamera}
-                      disabled={ob.photos.length >= 3}
-                    >
-                      <Camera className="size-4" aria-hidden />
-                      {tPrivacy("captureCard.actionCamera")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="min-h-12 gap-2"
-                      onClick={openLibrary}
-                      disabled={ob.photos.length >= 3}
-                    >
-                      <ImagePlus className="size-4" aria-hidden />
-                      {tPrivacy("captureCard.actionLibrary")}
-                    </Button>
-                  </div>
-
-                  {ob.photos.length >= 3 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      {t("photos.maxPhotos")}
-                    </p>
-                  )}
-
-                  {ob.photos.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {ob.photos.map((p, i) => (
-                          <OnboardingPhotoCard
-                            key={p.preview}
-                            previewUrl={p.preview}
-                            altLabel={tCheckIn("altPhoto", { n: i + 1 })}
-                            removeLabel={tPrivacy("captureCard.remove")}
-                            onRemove={() => ob.removePhotoAt(i)}
-                          />
-                        ))}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => ob.clearPhotos()}
-                        >
-                          {tPrivacy("captureCard.removeAll")}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={openLibrary}
-                          disabled={ob.photos.length >= 3}
-                        >
-                          {tPrivacy("captureCard.retake")}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {ob.photos.length < 2 && (
-                    <p className="text-sm text-muted-foreground">{t("photos.needTwo")}</p>
-                  )}
-
-                  {ob.analyzeStatus === "error" && (
-                    <p className="text-sm text-destructive" role="alert">
-                      {ob.analyzeError === "auth"
-                        ? tAuth("errorGeneric")
-                        : ob.analyzeError === "network"
-                          ? tAuth("networkError")
-                          : t("photos.analyzeFail")}
-                    </p>
-                  )}
-
-                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                    <Button
-                      type="button"
-                      className="w-full gap-2 sm:w-auto"
-                      disabled={
-                        ob.photos.length < 2 ||
-                        ob.analyzeStatus === "loading"
-                      }
-                      onClick={() => void runAnalyze()}
-                    >
-                      {ob.analyzeStatus === "loading" ? (
-                        <>
-                          <Loader2 className="size-4 animate-spin" aria-hidden />
-                          {t("photos.analyzing")}
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="size-4" aria-hidden />
-                          {tPrivacy("captureCard.submit")}
-                        </>
-                      )}
-                    </Button>
-                    {ob.aiSnapshot && (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="w-full sm:w-auto"
-                        onClick={() => setIdx(steps.indexOf("aiReview"))}
-                      >
-                        {t("photos.nextAfterAi")}
-                        <ArrowRight className="size-4" aria-hidden />
-                      </Button>
-                    )}
-                  </div>
-
-                  <SkipFaceFooter
-                    skipCta={tPrivacy("captureCard.skipCta")}
-                    skipHint={tPrivacy("captureCard.skipHint")}
-                    onSkip={() => {
-                      ob.clearPhotos();
-                      setSkipFaceCapture(true);
-                    }}
-                  />
-
-                  {ob.aiSnapshot?.model_used && (
-                    <p className="text-xs text-muted-foreground">
-                      {t("photos.modelLine", { model: ob.aiSnapshot.model_used })}
-                    </p>
-                  )}
-                </>
+                <PhotoCaptureBlock
+                  t={t}
+                  tPrivacy={tPrivacy}
+                  tAuth={tAuth}
+                  tCheckIn={tCheckIn}
+                  consent={consent}
+                  fileRef={fileRef}
+                  cameraRef={cameraRef}
+                  openCamera={openCamera}
+                  openLibrary={openLibrary}
+                  onSkip={goSkipPhotos}
+                  showSkip
+                  onRetryAnalyze={() => {
+                    ob.setAnalyzeStatus("idle");
+                    void runAnalyze();
+                  }}
+                />
               )}
-            </section>
-          )}
 
-          {step === "aiReview" && ob.aiSnapshot && (
-            <section className="space-y-5" aria-labelledby="onb-ai-title">
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-2 rounded-full border bg-primary/5 px-3 py-1 text-sm font-medium text-primary">
-                  <Sparkles className="size-4" aria-hidden />
-                  {t("aiReview.title")}
-                </div>
-                <p id="onb-ai-title" className="text-sm text-muted-foreground">
-                  {t("aiReview.subtitle")}
-                </p>
-              </div>
-
-              {!aiEditing ? (
-                <div className="space-y-4 text-sm">
-                  <div className="grid gap-3 rounded-2xl border bg-card p-4 sm:grid-cols-2">
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {t("aiReview.skin")}
-                      </p>
-                      <p className="mt-1 font-medium">
-                        {ob.skinType ? t(`skinType.${ob.skinType}`) : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {t("aiReview.undertone")}
-                      </p>
-                      <p className="mt-1 font-medium">
-                        {ob.undertone ? t(`undertone.${ob.undertone}`) : "—"}
-                      </p>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {t("aiReview.concerns")}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {ob.aiConcernTags.map((c) => (
-                          <span
-                            key={c}
-                            className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
-                          >
-                            {concernChipLabel(t, c)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {t("aiReview.goal")}
-                      </p>
-                      <p className="mt-1 font-medium">
-                        {ob.goal ? t(`goal.${ob.goal}`) : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {t("aiReview.barrier")}
-                      </p>
-                      <p className="mt-1 font-medium">
+              {showSkinSection && (
+                <div ref={skinSectionRef}>
+                <SkinProfilePanel
+                  title={t("analyze.skinSection")}
+                  subtitle={t("analyze.skinSectionHint")}
+                >
+              {ob.aiSnapshot && !isManualReview && (
+                <details className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm">
+                  <summary className="cursor-pointer py-1 font-medium">
+                    {t("aiReview.aiNotesToggle")} · {Math.round(ob.aiSnapshot.confidence * 100)}%
+                  </summary>
+                  <div className="space-y-2 pb-2 pt-2 text-muted-foreground">
+                    <p>
+                      {t("aiReview.barrier")}:{" "}
+                      <span className="text-foreground">
                         {barrierLabel(t, ob.aiSnapshot.barrier_signal)}
+                      </span>
+                    </p>
+                    {ob.aiSnapshot.coaching_notes ? (
+                      <p className="leading-relaxed text-foreground">
+                        {ob.aiSnapshot.coaching_notes}
                       </p>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {t("aiReview.confidence")}
-                    </p>
-                    <p className="mt-1">
-                      {Math.round(ob.aiSnapshot.confidence * 100)}%
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-border/80 bg-muted/30 p-4">
-                    <p className="text-xs font-medium text-muted-foreground">{t("aiReview.notes")}</p>
-                    <p className="mt-2 leading-relaxed text-foreground">
-                      {ob.aiSnapshot.coaching_notes}
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{ob.aiSnapshot.non_diagnostic}</p>
-                  {!ob.aiSnapshot.photo_quality.sufficient &&
-                    ob.aiSnapshot.photo_quality.tips.length > 0 && (
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-                        <p className="font-medium text-amber-800 dark:text-amber-200">
-                          {t("aiReview.photoTips")}
-                        </p>
-                        <ul className="mt-2 list-inside list-disc space-y-1 text-muted-foreground">
+                    ) : null}
+                    {!ob.aiSnapshot.photo_quality.sufficient &&
+                      ob.aiSnapshot.photo_quality.tips.length > 0 && (
+                        <ul className="list-inside list-disc space-y-1">
                           {ob.aiSnapshot.photo_quality.tips.map((tip) => (
                             <li key={tip}>{tip}</li>
                           ))}
                         </ul>
-                      </div>
-                    )}
-                  <Button type="button" variant="outline" onClick={() => setAiEditing(true)}>
-                    {t("aiReview.edit")}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <StepGrid
-                    title={t("steps.typeTitle")}
-                    options={skinTypeOrder.map((k) => ({
-                      id: k,
-                      label: t(`skinType.${k}` as const),
-                    }))}
-                    selected={ob.skinType}
-                    onSelect={ob.setSkinType}
-                  />
-                  <StepGrid
-                    title={t("steps.undertoneTitle")}
-                    options={undertoneOrder.map((k) => ({
-                      id: k,
-                      label: t(`undertone.${k}` as const),
-                    }))}
-                    selected={ob.undertone}
-                    onSelect={ob.setUndertone}
-                  />
-                  <div>
-                    <p className="mb-2 text-sm font-medium">{t("aiReview.concerns")}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {CONCERN_IDS.map((id) => (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => ob.toggleAiConcernTag(id)}
-                          className={cn(
-                            "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                            ob.aiConcernTags.includes(id)
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border text-muted-foreground hover:bg-muted",
-                          )}
-                        >
-                          {concernChipLabel(t, id)}
-                        </button>
-                      ))}
-                    </div>
+                      )}
                   </div>
-                  <StepGrid
-                    title={t("steps.goalTitle")}
-                    options={goalOrder.map((k) => ({
-                      id: k,
-                      label: t(`goal.${k}` as const),
-                    }))}
-                    selected={ob.goal}
-                    onSelect={ob.setGoal}
-                  />
-                  <Button type="button" variant="secondary" onClick={() => setAiEditing(false)}>
-                    {t("back")}
-                  </Button>
+                </details>
+              )}
+
+              <QuickChipGrid
+                title={t("steps.typeTitle")}
+                options={(isManualReview ? MANUAL_QUICK_SKIN_TYPES : skinTypeOrder).map(
+                  (k) => ({
+                    id: k,
+                    label: t(`skinType.${k}` as const),
+                  }),
+                )}
+                selected={ob.skinType}
+                onSelect={ob.setSkinType}
+                columns={isManualReview ? 2 : 2}
+              />
+
+              {!isManualReview && (
+                <QuickChipGrid
+                  title={t("steps.undertoneTitle")}
+                  options={QUICK_UNDERTONES.map((k) => ({
+                    id: k,
+                    label: t(`undertone.${k}` as const),
+                  }))}
+                  selected={ob.undertone}
+                  onSelect={ob.setUndertone}
+                  columns={2}
+                />
+              )}
+
+              <ConcernChipRow
+                title={t("aiReview.concerns")}
+                hint={isManualReview ? t("aiReview.manualConcernsHint") : undefined}
+                concernIds={
+                  isManualReview ? MANUAL_QUICK_CONCERNS : PHOTO_QUICK_CONCERNS
+                }
+                selected={ob.aiConcernTags}
+                onToggle={ob.toggleAiConcernTag}
+                label={(id) => concernChipLabel(t, id)}
+              />
+                </SkinProfilePanel>
                 </div>
               )}
             </section>
           )}
 
-          {step === "context" && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold">{t("steps.contextTitle")}</h2>
-              <p className="text-sm text-muted-foreground">{t("steps.contextHint")}</p>
-              <div className="flex flex-wrap gap-2">
-                {contextOrder.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => ob.toggleContext(k)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-sm transition-colors",
-                      ob.contexts.includes(k)
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:bg-muted",
-                    )}
-                  >
-                    {t(`context.${k}` as const)}
-                  </button>
-                ))}
+          {step === "quickInfo" && (
+            <section className="space-y-5" aria-labelledby="onb-quick-title">
+              <div className="space-y-1">
+                <h2 id="onb-quick-title" className="text-lg font-semibold">
+                  {t("quickInfo.title")}
+                </h2>
+                <p className="text-sm text-muted-foreground">{t("quickInfo.subtitle")}</p>
               </div>
-            </div>
-          )}
-          {step === "budget" && (
-            <StepGrid
-              title={t("steps.budgetTitle")}
-              options={budgetOrder.map((k) => ({
-                id: k,
-                label: t(`budget.${k}` as const),
-              }))}
-              selected={ob.budget}
-              onSelect={ob.setBudget}
-            />
-          )}
-          {step === "goal" && (
-            <StepGrid
-              title={t("steps.goalTitle")}
-              options={goalOrder.map((k) => ({
-                id: k,
-                label: t(`goal.${k}` as const),
-              }))}
-              selected={ob.goal}
-              onSelect={ob.setGoal}
-            />
-          )}
-          {step === "skill" && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold">{t("skillTitle")}</h2>
-              <p className="text-sm text-muted-foreground">{t("skillHint")}</p>
-              <div className="grid gap-3">
-                {skillOrder.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => ob.setSkillMode(m)}
-                    className={cn(
-                      "rounded-xl border p-4 text-left transition-colors",
-                      ob.skillMode === m
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-muted",
-                    )}
-                  >
-                    <div className="font-medium">{t(`skill.${m}.title` as const)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {t(`skill.${m}.desc` as const)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+
+              <QuickInfoGroup label={t("quickInfo.groupSkill")}>
+                <QuickChipGrid
+                  title={t("quickInfo.skillSection")}
+                  hideTitle
+                  options={skillOrder.map((m) => ({
+                    id: m,
+                    label: t(`skill.${m}.short` as const),
+                  }))}
+                  selected={ob.skillMode}
+                  onSelect={ob.setSkillMode}
+                  columns={3}
+                />
+              </QuickInfoGroup>
+
+              <QuickInfoGroup label={t("quickInfo.groupGoal")}>
+                <QuickChipGrid
+                  title={t("quickInfo.goalSection")}
+                  hideTitle
+                  options={QUICK_GOALS.map((k) => ({
+                    id: k,
+                    label: t(`goal.${k}` as const),
+                  }))}
+                  selected={ob.goal}
+                  onSelect={ob.setGoal}
+                  columns={2}
+                />
+              </QuickInfoGroup>
+
+              <QuickInfoGroup
+                label={t("quickInfo.groupContext")}
+                optionalTag={t("quickInfo.optionalTag")}
+              >
+                <OptionalChipRow
+                  title={t("quickInfo.contextSection")}
+                  hideTitle
+                  hint={t("quickInfo.contextHint")}
+                  ids={QUICK_LIFE_CONTEXTS}
+                  selected={ob.contexts}
+                  onToggle={(id) => ob.toggleContext(id as LifeContext)}
+                  label={(id) =>
+                    t(`contextShort.${id}` as `contextShort.${LifeContext}`)
+                  }
+                />
+              </QuickInfoGroup>
+            </section>
           )}
           {step === "summary" && (
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border bg-primary/5 px-3 py-1 text-sm font-medium text-primary">
-                <Sparkles className="size-4" aria-hidden />
-                {t("summaryBadge")}
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold">{t("summaryTitle")}</h2>
+                <p className="text-sm text-muted-foreground">{t("summarySubtitle")}</p>
               </div>
-              <ul className="space-y-2 text-sm leading-relaxed">
-                {starterBullets.map((line) => (
+              <ul className="space-y-2.5 rounded-xl border bg-muted/25 p-4 text-sm leading-relaxed">
+                {summaryRecap.map((line) => (
                   <li key={line} className="flex gap-2">
                     <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
                     <span>{line}</span>
                   </li>
                 ))}
               </ul>
-              <div className="space-y-3 pt-2">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="ob-body-concerns"
-                    className="text-xs font-medium text-muted-foreground"
-                  >
-                    {tAuth("fieldBodyConcerns")}
-                  </label>
-                  <textarea
-                    id="ob-body-concerns"
-                    value={ob.bodyConcernsText}
-                    onChange={(e) => ob.setBodyConcernsText(e.target.value)}
-                    placeholder={tAuth("placeholderBodyConcerns")}
-                    rows={2}
-                    className="w-full rounded-md border bg-background px-3 py-2 text-base outline-none ring-ring/40 focus:ring-2 sm:text-sm"
-                  />
+              <details className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                <summary className="cursor-pointer py-1 text-sm font-medium">
+                  {t("summaryOptional")}
+                </summary>
+                <div className="space-y-3 pb-2 pt-3">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="ob-body-concerns"
+                      className="text-xs font-medium text-muted-foreground"
+                    >
+                      {tAuth("fieldBodyConcerns")}
+                    </label>
+                    <textarea
+                      id="ob-body-concerns"
+                      value={ob.bodyConcernsText}
+                      onChange={(e) => ob.setBodyConcernsText(e.target.value)}
+                      placeholder={tAuth("placeholderBodyConcerns")}
+                      rows={2}
+                      className="w-full rounded-md border bg-background px-3 py-2 text-base outline-none ring-ring/40 focus:ring-2 sm:text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="ob-current-routine"
+                      className="text-xs font-medium text-muted-foreground"
+                    >
+                      {tAuth("fieldCurrentRoutine")}
+                    </label>
+                    <textarea
+                      id="ob-current-routine"
+                      value={ob.currentRoutineText}
+                      onChange={(e) => ob.setCurrentRoutineText(e.target.value)}
+                      placeholder={tAuth("placeholderCurrentRoutine")}
+                      rows={3}
+                      className="w-full rounded-md border bg-background px-3 py-2 text-base outline-none ring-ring/40 focus:ring-2 sm:text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="ob-current-routine"
-                    className="text-xs font-medium text-muted-foreground"
-                  >
-                    {tAuth("fieldCurrentRoutine")}
-                  </label>
-                  <textarea
-                    id="ob-current-routine"
-                    value={ob.currentRoutineText}
-                    onChange={(e) => ob.setCurrentRoutineText(e.target.value)}
-                    placeholder={tAuth("placeholderCurrentRoutine")}
-                    rows={3}
-                    className="w-full rounded-md border bg-background px-3 py-2 text-base outline-none ring-ring/40 focus:ring-2 sm:text-sm"
-                  />
-                </div>
-              </div>
+              </details>
               <p className="text-xs text-muted-foreground">{t("summaryFoot")}</p>
               {finishError ? (
                 <FinishErrorBanner
@@ -879,55 +706,30 @@ export function OnboardingFlow() {
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={prev}
-              disabled={idx === 0}
-              className="gap-1"
-            >
-              <ArrowLeft className="size-4" aria-hidden />
-              {t("back")}
-            </Button>
-            {step === "aiReview" && ob.aiSnapshot && !aiEditing ? (
-              <Button type="button" onClick={next} className="gap-1">
-                {t("aiReview.confirm")}
-                <ArrowRight className="size-4" aria-hidden />
-              </Button>
-            ) : step === "summary" ? (
-              <Button
-                type="button"
-                onClick={() => void finish()}
-                disabled={finishing}
-                className="gap-1"
-              >
-                {finishing ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                    {tAuth("submitting")}
-                  </>
-                ) : (
-                  <>
-                    {t("finish")}
-                    <ArrowRight className="size-4" aria-hidden />
-                  </>
-                )}
-              </Button>
-            ) : step === "photos" ? null : (
-              <Button
-                type="button"
-                onClick={next}
-                disabled={!canProceed(step, ob)}
-                className="gap-1"
-              >
-                {t("next")}
-                <ArrowRight className="size-4" aria-hidden />
-              </Button>
-            )}
-          </div>
+          </OnboardingStepPanel>
         </CardContent>
       </Card>
+
+      <OnboardingStickyNav
+        backLabel={t("back")}
+        continueLabel={
+          finishing && step === "summary"
+            ? tAuth("submitting")
+            : stickyContinueLabel
+        }
+        onBack={prev}
+        onContinue={handlePrimary}
+        backDisabled={idx === 0}
+        continueDisabled={!stickyCanContinue}
+        continueLoading={(analyzing && step === "analyze") || (finishing && step === "summary")}
+        hideContinue={!showStickyContinue}
+        continueIcon={
+          step === "summary" ? (
+            <Sparkles className="size-5" aria-hidden />
+          ) : undefined
+        }
+        primaryEmphasis={step === "summary"}
+      />
 
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/" className="underline underline-offset-4 hover:text-foreground">
@@ -936,6 +738,192 @@ export function OnboardingFlow() {
       </p>
 
       <FacePrivacyConsentDialog {...consent.dialogProps} />
+    </div>
+  );
+}
+
+function PhotoCaptureBlock({
+  t,
+  tPrivacy,
+  tAuth,
+  tCheckIn,
+  consent,
+  fileRef,
+  cameraRef,
+  openCamera,
+  openLibrary,
+  onSkip,
+  showSkip,
+  onRetryAnalyze,
+}: {
+  t: OnboardingT;
+  tPrivacy: ReturnType<typeof useTranslations<"privacy">>;
+  tAuth: ReturnType<typeof useTranslations<"auth">>;
+  tCheckIn: ReturnType<typeof useTranslations<"checkIn">>;
+  consent: ReturnType<typeof useConsentGate>;
+  fileRef: React.RefObject<HTMLInputElement | null>;
+  cameraRef: React.RefObject<HTMLInputElement | null>;
+  openCamera: () => void;
+  openLibrary: () => void;
+  onSkip: () => void;
+  showSkip: boolean;
+  onRetryAnalyze: () => void;
+}) {
+  const ob = useOnboardingStore();
+  return (
+    <div className="space-y-4">
+      <PrivacyHeader
+        headline={tPrivacy("captureCard.subtitle")}
+        privacyLabel={t("photos.privacyOpen")}
+        onOpenNotice={consent.openManually}
+      />
+
+      {showSkip ? (
+        <>
+          <SkipPhotosButton
+            title={t("photos.skipShyCta")}
+            hint={t("photos.skipShyHint")}
+            onClick={onSkip}
+          />
+          <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {t("photos.orUpload")}
+          </p>
+        </>
+      ) : null}
+
+      <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+        {t("photos.tipsCompact")}
+      </p>
+
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="user"
+        className="sr-only"
+        onChange={(e) => {
+          const list = e.target.files;
+          if (list?.length) {
+            const remaining = Math.max(0, 3 - ob.photos.length);
+            Array.from(list)
+              .filter((f) => f.type.startsWith("image/"))
+              .slice(0, remaining)
+              .forEach((file) => {
+                ob.addPhoto({ file, preview: URL.createObjectURL(file) });
+              });
+          }
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
+        className="sr-only"
+        onChange={(e) => {
+          const list = e.target.files;
+          if (list?.length) {
+            const remaining = Math.max(0, 3 - ob.photos.length);
+            Array.from(list)
+              .filter((f) => f.type.startsWith("image/"))
+              .slice(0, remaining)
+              .forEach((file) => {
+                ob.addPhoto({ file, preview: URL.createObjectURL(file) });
+              });
+          }
+          e.target.value = "";
+        }}
+      />
+
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="min-h-12 gap-2"
+          onClick={openCamera}
+          disabled={ob.photos.length >= 3}
+        >
+          <Camera className="size-4" aria-hidden />
+          {tPrivacy("captureCard.actionCamera")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="min-h-12 gap-2"
+          onClick={openLibrary}
+          disabled={ob.photos.length >= 3}
+        >
+          <ImagePlus className="size-4" aria-hidden />
+          {tPrivacy("captureCard.actionLibrary")}
+        </Button>
+      </div>
+
+      {ob.photos.length >= 3 && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">{t("photos.maxPhotos")}</p>
+      )}
+
+      {ob.photos.length > 0 && (
+        <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {ob.photos.map((p, i) => (
+              <OnboardingPhotoCard
+                key={p.preview}
+                previewUrl={p.preview}
+                altLabel={tCheckIn("altPhoto", { n: i + 1 })}
+                removeLabel={tPrivacy("captureCard.remove")}
+                onRemove={() => ob.removePhotoAt(i)}
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => ob.clearPhotos()}>
+              {tPrivacy("captureCard.removeAll")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={openLibrary}
+              disabled={ob.photos.length >= 3}
+            >
+              {tPrivacy("captureCard.retake")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {ob.photos.length < 1 && !showSkip && (
+        <FriendlyNotice variant="empty" title={t("photos.emptyTitle")}>
+          {t("photos.emptyBody")}
+        </FriendlyNotice>
+      )}
+
+      {ob.analyzeStatus === "error" && (
+        <FriendlyNotice
+          variant="error"
+          title={t("photos.errorTitle")}
+          action={
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="self-start"
+              onClick={onRetryAnalyze}
+            >
+              {t("photos.errorRetry")}
+            </Button>
+          }
+        >
+          {ob.analyzeError === "auth"
+            ? tAuth("errorGeneric")
+            : ob.analyzeError === "network"
+              ? tAuth("networkError")
+              : t("photos.analyzeFail")}
+        </FriendlyNotice>
+      )}
     </div>
   );
 }
@@ -1003,105 +991,22 @@ function OnboardingPhotoCard({
   );
 }
 
-/**
- * Bottom escape-hatch on the photos step — explicit "I don't want to take a
- * face photo" CTA + plain-language hint about what changes if they pick it.
- *
- * Placement matters: the requirement calls out parity with the consent dialog
- * decline action, but the dialog is one-shot. Keeping the same affordance
- * available below the photos UI is what lets a user who *first* uploaded
- * change their mind without backing out of the flow.
- */
-function SkipFaceFooter({
-  skipCta,
-  skipHint,
-  onSkip,
-}: {
-  skipCta: string;
-  skipHint: string;
-  onSkip: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs leading-relaxed text-muted-foreground">{skipHint}</p>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onSkip}
-        className="gap-2 self-start sm:self-auto"
-      >
-        <ImageOff className="size-4" aria-hidden />
-        {skipCta}
-      </Button>
-    </div>
-  );
-}
-
-/**
- * The "skip-face" replacement for the photos step. Calmly explains what the
- * user is opting into (lower AI precision, but onboarding still completes)
- * and gives them a one-tap way to flip back.
- */
-function SkipModeCard({
-  title,
-  body,
-  continueCta,
-  switchBackCta,
-  badgeLabel,
-  onContinue,
-  onSwitchBack,
-}: {
-  title: string;
-  body: string;
-  continueCta: string;
-  switchBackCta: string;
-  badgeLabel: string;
-  onContinue: () => void;
-  onSwitchBack: () => void;
-}) {
-  return (
-    <div className="space-y-3 rounded-2xl border border-border bg-muted/30 p-4 sm:p-5">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground ring-1 ring-border">
-        <ImageOff className="size-3.5" aria-hidden />
-        {badgeLabel}
-      </span>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
-      <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
-      <div className="flex flex-wrap gap-2 pt-1">
-        <Button type="button" onClick={onContinue} className="gap-1">
-          {continueCta}
-          <ArrowRight className="size-4" aria-hidden />
-        </Button>
-        <Button type="button" variant="outline" onClick={onSwitchBack}>
-          {switchBackCta}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 function canProceed(
-  step: (typeof steps)[number],
+  step: OnboardingStepId,
   ob: ReturnType<typeof useOnboardingStore.getState>,
+  skipFace: boolean,
 ): boolean {
   switch (step) {
-    case "photos":
-      // Either the AI analysis happened (face flow) or the user is in
-      // skip-face mode — but in skip-face mode the photos step is replaced
-      // by SkipModeCard which navigates directly to "context", so this
-      // branch only fires for the photo flow.
-      return ob.photos.length >= 2 && ob.aiSnapshot != null;
-    case "aiReview":
-      return ob.skinType != null && ob.undertone != null && ob.goal != null;
-    case "context":
-      return ob.contexts.length > 0;
-    case "budget":
-      return ob.budget != null;
-    case "goal":
-      return ob.goal != null;
-    case "skill":
-      return ob.skillMode != null;
+    case "analyze": {
+      const hasConcerns = ob.aiConcernTags.length > 0;
+      if (!skipFace && !ob.aiSnapshot) return false;
+      if (skipFace && !ob.aiSnapshot) {
+        return ob.skinType != null && hasConcerns;
+      }
+      return ob.skinType != null && ob.undertone != null && hasConcerns;
+    }
+    case "quickInfo":
+      return ob.goal != null && ob.skillMode != null;
     default:
       return true;
   }
@@ -1166,37 +1071,3 @@ function FinishErrorBanner({
   );
 }
 
-function StepGrid<T extends string>({
-  title,
-  options,
-  selected,
-  onSelect,
-}: {
-  title: string;
-  options: { id: T; label: string }[];
-  selected: T | null;
-  onSelect: (id: T | null) => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => onSelect(o.id)}
-            className={cn(
-              "rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
-              selected === o.id
-                ? "border-primary bg-primary/5 font-medium text-primary"
-                : "border-border hover:bg-muted",
-            )}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}

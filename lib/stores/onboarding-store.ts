@@ -13,6 +13,11 @@ export type BudgetTier = "entry" | "mid" | "flexible";
 export type SkinGoal = "glow" | "clear_acne" | "barrier" | "anti_aging" | "unsure";
 export type SkillMode = "beginner" | "intermediate" | "advanced";
 
+/** Three-step onboarding: analyze (photos + skin) → quickInfo → summary. */
+export const ONBOARDING_STEPS = ["analyze", "quickInfo", "summary"] as const;
+
+export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
+
 export type PhotoItem = {
   file: File;
   preview: string;
@@ -195,13 +200,6 @@ export function buildStarterPackBullets(s: OnboardingState): string[] {
   } else if (s.skillMode === "advanced") {
     lines.push("Tối ưu tầng (layering) có chủ đích; theo dõi pH và thứ tự acid/retinol.");
     lines.push("So ảnh cùng ánh sáng/góc trước khi kết luận “tiến triển”.");
-  }
-  if (s.budget === "entry") {
-    lines.push("Ưu tiên drugstore đủ công thức: cleanser pH ~5–6, ceramide, SPF bền hơn là serum đắt.");
-  } else if (s.budget === "mid") {
-    lines.push("Đầu tư 1 serum hoạt chất + 1 kem dưỡng/làm dịu tốt; phần còn lại giữ tối giản.");
-  } else if (s.budget === "flexible") {
-    lines.push("Có thể dồn ngân sách vào điều trị/SPF chất lượng + dụng cụ tối giản.");
   }
   if (s.goal && s.goal !== "unsure") {
     lines.push(`Mục tiêu: ${s.goal} — coach AI sẽ ưu tiên giải thích “vì sao” trước “dùng gì”.`);

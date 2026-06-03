@@ -10,7 +10,7 @@
     },
     "onboarding": {
       "title": "Get to know your skin · DaDiary",
-      "description": "Face photos so the AI can suggest your skin type & undertone, then edit & finish — a personalized starter routine."
+      "description": "Three quick steps: photos & skin, your preferences, then a personalized AM/PM starter routine."
     },
     "progress": {
       "title": "See how your skin changes · DaDiary",
@@ -548,10 +548,34 @@
   "onboarding": {
     "sectionLabel": "Get to know your skin",
     "title": "Starter routine",
-    "intro": "Take a few face photos so the AI can read signals — you can always edit before saving. No comparison, no pressure.",
+    "intro": "Three steps — under 90 seconds if you're quick. No comparison, no pressure.",
+    "progress": {
+      "stepOf": "Step {current} of {total}",
+      "analyze": "Photos & skin",
+      "quickInfo": "Quick info",
+      "summary": "Start",
+      "timeHint": "Usually done in under 90 seconds"
+    },
+    "analyze": {
+      "title": "Photos & analysis",
+      "subtitle": "Add photos (or skip) — edit your skin picks below, same screen.",
+      "skinSection": "Your skin",
+      "skinSectionHint": "Tap a chip to adjust."
+    },
     "photos": {
       "title": "Face photos for the AI",
-      "hint": "2–3 photos: natural light, no makeup, front + slight side angle if you can.",
+      "hint": "1–3 photos: natural light, no makeup. Two angles help the AI read better.",
+      "skipShyCta": "Skip if you're shy",
+      "skipShyHint": "You can still get a starter routine — the AI will be a little less accurate without photos.",
+      "emptyTitle": "No photos yet",
+      "emptyBody": "Take or pick 1–3 face photos, or use the skip button above.",
+      "analyzeTitle": "AI is reading your photos…",
+      "analyzeSubtitle": "Usually just a few seconds — stay on this screen.",
+      "errorTitle": "Couldn't read your photos",
+      "errorRetry": "Try again",
+      "tipsCompact": "Natural light · front or ¾ angle · light filters only.",
+      "orUpload": "Or add photos",
+      "changePhotos": "Change photos",
       "tipLight": "Stand near a window; avoid harsh flash.",
       "tipAngle": "One straight-on portrait + one ¾ profile.",
       "tipClean": "Clean hands; avoid heavy filters.",
@@ -559,7 +583,7 @@
       "remove": "Remove",
       "analyze": "Analyze with AI",
       "analyzing": "Reading photos…",
-      "needTwo": "Pick at least 2 photos (max 3).",
+      "needOne": "Pick at least 1 photo (max 3).",
       "maxPhotos": "Maximum 3 photos.",
       "analyzeFail": "Reading didn't work. Retry or check backend & OpenAI.",
       "nextAfterAi": "View AI suggestions",
@@ -570,9 +594,24 @@
       "skipSwitchBack": "I changed my mind — re-enable photos",
       "privacyOpen": "Re-read the privacy notice"
     },
+    "quickInfo": {
+      "title": "Almost there",
+      "subtitle": "Skill + goal — life context is optional.",
+      "skillSection": "Skill level",
+      "goalSection": "Main goal",
+      "contextSection": "Life context",
+      "contextHint": "Tap if it fits — helps with SPF & recovery nudges.",
+      "groupSkill": "Skill",
+      "groupGoal": "Goal",
+      "groupContext": "Context",
+      "optionalTag": "optional"
+    },
     "aiReview": {
       "title": "AI suggestions for you",
       "subtitle": "Hints from photos — not a medical diagnosis.",
+      "manualSubtitle": "Quick picks — skin type + main concerns. Done in seconds.",
+      "manualConcernsHint": "Tap to select (one or more).",
+      "aiNotesToggle": "View AI notes",
       "skin": "Skin type",
       "undertone": "Skin tone",
       "concerns": "Things noted",
@@ -601,8 +640,18 @@
       "uneven_texture": "Uneven texture"
     },
     "back": "Back",
-    "next": "Next",
-    "finish": "Done — go to skin check-in",
+    "next": "Continue",
+    "analyzeCta": "Analyze photos with AI",
+    "finish": "Create my starter routine",
+    "summaryTitle": "You're set!",
+    "summarySubtitle": "Quick check — then we'll build your AM/PM starter routine.",
+    "summaryRecapSkin": "Skin type: {value}",
+    "summaryRecapConcerns": "Focus: {value}",
+    "summaryRecapSkill": "Level: {value}",
+    "summaryRecapGoal": "Goal: {value}",
+    "summaryRecapBudget": "Budget: {value}",
+    "summaryRecapContext": "Context: {value}",
+    "summaryOptional": "Optional notes (body areas, current routine)",
     "homeLink": "Home",
     "summaryBadge": "Your starter routine",
     "summaryFoot": "Daily photos + skin notes make the timeline and your buddy sharper. We won't promise “perfect skin” overnight — just clear progress when you stay consistent.",
@@ -640,6 +689,12 @@
       "travel": "Travel / climate shifts",
       "shift_work": "Night shifts / irregular sleep"
     },
+    "contextShort": {
+      "outdoor": "Lots of sun",
+      "work": "AC / office",
+      "gym": "Gym",
+      "shift_work": "Late nights"
+    },
     "budget": {
       "entry": "Drugstore / budget",
       "mid": "Mid-range",
@@ -655,14 +710,17 @@
     "skill": {
       "beginner": {
         "title": "Beginner (simple mode)",
+        "short": "Beginner",
         "desc": "For total beginners — only the basic steps, plain words, slower pace."
       },
       "intermediate": {
         "title": "Mid mode",
+        "short": "Mid",
         "desc": "Introduces ingredients & step order; balanced, safety-first tips."
       },
       "advanced": {
         "title": "Advanced mode",
+        "short": "Advanced",
         "desc": "Goes deeper on ingredients, product combinations, patch testing."
       }
     },
