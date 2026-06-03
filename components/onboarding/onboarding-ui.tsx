@@ -75,10 +75,7 @@ export function OnboardingStepPanel({
   );
 }
 
-/** Reserve space so scrollable onboarding content clears the fixed footer. */
-export const ONBOARDING_FOOTER_PAD = "pb-24" as const;
-export const ONBOARDING_FOOTER_PAD_SUMMARY = "pb-28" as const;
-
+/** Back / continue row — sits inline below the step form (not viewport-fixed). */
 export function OnboardingStickyNav({
   backLabel,
   continueLabel,
@@ -107,17 +104,14 @@ export function OnboardingStickyNav({
   singleCta?: boolean;
 }) {
   return (
-    <footer
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-white/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-lg dark:bg-background/92"
+    <nav
+      className="mt-6 border-t border-border/70 pt-4"
       role="navigation"
       aria-label={continueLabel}
-      style={{
-        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-      }}
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-2xl items-stretch gap-2 px-4 pt-3 sm:gap-3",
+          "flex w-full items-stretch gap-2 sm:gap-3",
           singleCta ? "flex-col" : "flex-row",
         )}
       >
@@ -158,7 +152,7 @@ export function OnboardingStickyNav({
           <div className="flex-[1.35] sm:flex-1" />
         )}
       </div>
-    </footer>
+    </nav>
   );
 }
 

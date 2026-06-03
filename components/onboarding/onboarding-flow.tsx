@@ -19,8 +19,6 @@ import {
   FriendlyNotice,
   OnboardingProgress,
   OnboardingStepPanel,
-  ONBOARDING_FOOTER_PAD,
-  ONBOARDING_FOOTER_PAD_SUMMARY,
   OnboardingStickyNav,
   QuickChipGrid,
   QuickInfoGroup,
@@ -420,13 +418,7 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-2xl">
-      <div
-        className={cn(
-          "space-y-5 px-4 sm:space-y-6 sm:px-0",
-          step === "summary" ? ONBOARDING_FOOTER_PAD_SUMMARY : ONBOARDING_FOOTER_PAD,
-        )}
-      >
+    <div className="mx-auto w-full max-w-2xl space-y-5 px-4 sm:space-y-6 sm:px-0">
       <div className="space-y-2 text-center sm:text-left">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {t("sectionLabel")}
@@ -687,39 +679,40 @@ export function OnboardingFlow() {
           )}
 
           </OnboardingStepPanel>
+
+          {showFooterNav ? (
+            <OnboardingStickyNav
+              backLabel={t("back")}
+              continueLabel={
+                finishing && step === "summary"
+                  ? tAuth("submitting")
+                  : stickyContinueLabel
+              }
+              onBack={prev}
+              onContinue={handlePrimary}
+              backDisabled={idx === 0}
+              continueDisabled={!stickyCanContinue}
+              continueLoading={
+                (analyzing && step === "analyze") || (finishing && step === "summary")
+              }
+              hideContinue={!showStickyContinue}
+              continueIcon={
+                step === "summary" ? (
+                  <Sparkles className="size-5" aria-hidden />
+                ) : undefined
+              }
+              primaryEmphasis={step === "summary"}
+              singleCta={step === "summary"}
+            />
+          ) : null}
         </CardContent>
       </Card>
 
-      <p className="pb-2 text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-muted-foreground">
         <Link href="/" className="underline underline-offset-4 hover:text-foreground">
           {t("homeLink")}
         </Link>
       </p>
-      </div>
-
-      {showFooterNav ? (
-        <OnboardingStickyNav
-          backLabel={t("back")}
-          continueLabel={
-            finishing && step === "summary"
-              ? tAuth("submitting")
-              : stickyContinueLabel
-          }
-          onBack={prev}
-          onContinue={handlePrimary}
-          backDisabled={idx === 0}
-          continueDisabled={!stickyCanContinue}
-          continueLoading={(analyzing && step === "analyze") || (finishing && step === "summary")}
-          hideContinue={!showStickyContinue}
-          continueIcon={
-            step === "summary" ? (
-              <Sparkles className="size-5" aria-hidden />
-            ) : undefined
-          }
-          primaryEmphasis={step === "summary"}
-          singleCta={step === "summary"}
-        />
-      ) : null}
 
       <FacePrivacyConsentDialog {...consent.dialogProps} />
     </div>
