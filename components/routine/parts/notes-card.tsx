@@ -11,10 +11,12 @@ export function NotesCard({
   value,
   onChange,
   labels,
+  readOnly = false,
 }: {
   value: string;
   onChange: (next: string) => void;
   labels: { title: string; placeholder: string };
+  readOnly?: boolean;
 }) {
   return (
     <Card>
@@ -31,7 +33,8 @@ export function NotesCard({
           onChange={(e) => onChange(e.target.value)}
           placeholder={labels.placeholder}
           rows={3}
-          className="min-h-22 w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:text-sm"
+          readOnly={readOnly}
+          className="min-h-22 w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:text-sm disabled:cursor-default disabled:bg-muted/30"
         />
       </CardContent>
     </Card>

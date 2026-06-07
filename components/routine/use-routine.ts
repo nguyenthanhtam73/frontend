@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import { apiBaseUrl } from "@/lib/api";
 import { authHeaders, getAccessToken } from "@/lib/auth-token";
+import { usageQueryKey } from "@/lib/api/usage";
 import type {
   RoutineDTO,
   RoutineHistoryDTO,
@@ -53,7 +56,15 @@ export type RoutineMessages = {
 
 export type FetchStatus = "idle" | "loading" | "success" | "error";
 
+function mapRoutineApiError(json: { error?: { code?: string; message?: string } }, fallback: string) {
+  const code = json.error?.code;
+  if (code === "quota_exceeded") return "quota_exceeded";
+  if (code === "premium_required") return "premium_required";
+  return typeof json.error?.message === "string" ? json.error.message : fallback;
+}
+
 export function useRoutine(locale: string, msg: RoutineMessages) {
+  const queryClient = useQueryClient();
   const [routine, setRoutine] = useState<LocalRoutine>(emptyRoutine);
   const [history, setHistory] = useState<RoutineHistoryDTO | null>(null);
   const [status, setStatus] = useState<FetchStatus>("idle");
@@ -194,7 +205,11 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
   // ---- save / autosave ----------------------------------------------------
 
   const persist = useCallback(
-    async (opts: { silent?: boolean; skillMode?: string | null } = {}) => {
+    async (opts: {
+      silent?: boolean;
+      skillMode?: string | null;
+      saveKind?: "tick_only" | "manual_edit";
+    } = {}) => {
       const cur = latestRef.current;
       const hasSteps = cur.morning.length > 0 || cur.evening.length > 0;
       if (!hasSteps) return null;
@@ -208,6 +223,7 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
         notes: cur.notes,
         source: cur.source === "ai_suggested" ? "ai_suggested" : "manual",
         skill_mode: opts.skillMode ?? skillModeRef.current ?? cur.skillMode ?? "",
+        save_kind: opts.saveKind ?? "manual_edit",
       };
       try {
         const res = await fetch(`${apiBaseUrl}/api/v1/routines`, {
@@ -220,11 +236,13 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
           const next = toLocal(json.data as RoutineDTO);
           setRoutine(next);
           everSavedRef.current = true;
+          void queryClient.invalidateQueries({ queryKey: usageQueryKey });
           if (!opts.silent) setSaveMsg({ kind: "ok", text: msg.saveSuccess });
           return next;
         }
+        const mapped = mapRoutineApiError(json, msg.saveError);
         const text =
-          typeof json?.error?.message === "string" ? json.error.message : msg.saveError;
+          mapped === "quota_exceeded" ? "quota_exceeded" : mapped === "premium_required" ? mapped : mapped;
         if (!opts.silent) setSaveMsg({ kind: "err", text });
         return null;
       } catch {
@@ -232,7 +250,7 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
         return null;
       }
     },
-    [msg.needAuth, msg.saveError, msg.saveSuccess],
+    [msg.needAuth, msg.saveError, msg.saveSuccess, queryClient],
   );
 
   const save = useCallback(
@@ -278,7 +296,7 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
         setAutoSaving(true);
-        void persist({ silent: true }).finally(() => {
+        void persist({ silent: true, saveKind: "tick_only" }).finally(() => {
           setAutoSaving(false);
           setSaveMsg({ kind: "ok", text: msg.autoSaved });
           // Autosave toast self-dismisses fast — this is a tertiary signal.
@@ -327,10 +345,10 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
             morning: data.morning.map((s) => ({ ...s, id: s.id || localId() })),
             evening: data.evening.map((s) => ({ ...s, id: s.id || localId() })),
           });
+          void queryClient.invalidateQueries({ queryKey: usageQueryKey });
         } else {
-          const text =
-            typeof json?.error?.message === "string" ? json.error.message : msg.aiSuggestError;
-          setSuggestError(text);
+          const mapped = mapRoutineApiError(json, msg.aiSuggestError);
+          setSuggestError(mapped);
         }
       } catch {
         setSuggestError(msg.aiSuggestError);
@@ -338,7 +356,7 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
         setSuggesting(false);
       }
     },
-    [focusNote, locale, msg.aiSuggestError, msg.needAuth],
+    [focusNote, locale, msg.aiSuggestError, msg.needAuth, queryClient],
   );
 
   const applySuggestion = useCallback(() => {

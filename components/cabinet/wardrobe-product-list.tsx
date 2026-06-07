@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
+import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
   const t = useTranslations("cabinet");
   const formatter = useFormatter();
   const { hasAuth, products, isLoading, isError, error, refetch, isFetching } = useWardrobe();
+  const { canWardrobeWrite } = useUsageQuota();
 
   if (!hasAuth) {
     return (
@@ -93,7 +95,7 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
               {t("emptyBody")}
             </p>
-            {onAddClick ? (
+            {onAddClick && canWardrobeWrite ? (
               <Button
                 type="button"
                 size="sm"

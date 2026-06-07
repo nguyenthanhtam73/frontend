@@ -63,6 +63,7 @@ export function SectionCard({
   onToggle,
   labels,
   accent,
+  editLocked = false,
 }: {
   section: StepSection;
   title: string;
@@ -79,6 +80,8 @@ export function SectionCard({
   labels: SectionLabels;
   /** Tints the section's icon ring; gives AM/PM cards distinct accent colors. */
   accent: "am" | "pm";
+  /** Free plan: allow tick-only; block add/remove/reorder/title edits. */
+  editLocked?: boolean;
 }) {
   const dragIdx = useRef<number | null>(null);
   const accentRing =
@@ -104,7 +107,7 @@ export function SectionCard({
               <p className="text-xs leading-snug text-muted-foreground">{desc}</p>
             </div>
           </div>
-          <Button type="button" size="sm" variant="outline" onClick={onAdd}>
+          <Button type="button" size="sm" variant="outline" onClick={onAdd} disabled={editLocked}>
             <Plus className="size-3.5" aria-hidden />
             <span>{labels.add}</span>
           </Button>
@@ -113,8 +116,14 @@ export function SectionCard({
         {steps.length === 0 ? (
           <button
             type="button"
-            onClick={onAdd}
-            className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/40 px-3 py-7 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+            onClick={editLocked ? undefined : onAdd}
+            disabled={editLocked}
+            className={cn(
+              "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/40 px-3 py-7 text-muted-foreground transition-colors",
+              editLocked
+                ? "cursor-not-allowed opacity-60"
+                : "hover:border-primary/40 hover:bg-primary/5 hover:text-foreground",
+            )}
           >
             <Plus className="size-5" aria-hidden />
             <span className="text-sm font-medium">
@@ -126,7 +135,7 @@ export function SectionCard({
             {steps.map((step, idx) => (
               <li
                 key={step.id}
-                draggable={!beginnerSimple}
+                draggable={!beginnerSimple && !editLocked}
                 onDragStart={
                   beginnerSimple
                     ? undefined
@@ -171,6 +180,7 @@ export function SectionCard({
                   total={steps.length}
                   step={step}
                   beginnerSimple={beginnerSimple}
+                  editLocked={editLocked}
                   onRemove={() => onRemove(step.id)}
                   onMoveUp={() => onMove(step.id, -1)}
                   onMoveDown={() => onMove(step.id, 1)}
@@ -198,6 +208,7 @@ function StepRow({
   total,
   step,
   beginnerSimple,
+  editLocked,
   onRemove,
   onMoveUp,
   onMoveDown,
@@ -209,6 +220,7 @@ function StepRow({
   total: number;
   step: RoutineStepDTO;
   beginnerSimple: boolean;
+  editLocked: boolean;
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -260,12 +272,14 @@ function StepRow({
             value={step.title}
             onChange={(value) => onChange({ title: value })}
             placeholder={labels.placeholder}
+            readOnly={editLocked}
             className={cn(
               "block w-full rounded-lg border bg-background px-3 py-2 text-base leading-snug outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:py-1.5 sm:text-sm sm:leading-snug",
               step.completed ? "text-muted-foreground line-through" : "",
+              editLocked ? "cursor-default bg-muted/30" : "",
             )}
           />
-          {!beginnerSimple ? (
+          {!beginnerSimple && !editLocked ? (
             <>
               <div className="flex flex-wrap items-center gap-1.5">
                 <select
@@ -309,7 +323,7 @@ function StepRow({
         </div>
 
         <div className="flex flex-col gap-1 pt-0.5">
-          {!beginnerSimple ? (
+          {!beginnerSimple && !editLocked ? (
             <>
               <button
                 type="button"
@@ -331,14 +345,16 @@ function StepRow({
               </button>
             </>
           ) : null}
-          <button
-            type="button"
-            onClick={onRemove}
-            aria-label={labels.remove}
-            className="inline-flex size-11 items-center justify-center rounded-md text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="size-4 sm:size-3.5" aria-hidden />
-          </button>
+          {!editLocked ? (
+            <button
+              type="button"
+              onClick={onRemove}
+              aria-label={labels.remove}
+              className="inline-flex size-11 items-center justify-center rounded-md text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="size-4 sm:size-3.5" aria-hidden />
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -372,6 +388,7 @@ function AutoGrowTextarea({
   className,
   minRows = 1,
   allowNewlines = false,
+  readOnly = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -379,6 +396,7 @@ function AutoGrowTextarea({
   className?: string;
   minRows?: number;
   allowNewlines?: boolean;
+  readOnly?: boolean;
 }) {
   const ref = useRef<HTMLTextAreaElement | null>(null);
 
@@ -407,6 +425,7 @@ function AutoGrowTextarea({
       }}
       placeholder={placeholder}
       rows={minRows}
+      readOnly={readOnly}
       className={cn("resize-none overflow-hidden field-sizing-content", className)}
     />
   );

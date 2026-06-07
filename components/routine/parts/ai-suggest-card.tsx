@@ -4,6 +4,8 @@ import { Loader2, RefreshCw, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { UsageQuotaChip } from "@/components/premium/premium-upsell-banner";
+
 import { Banner } from "./banner";
 
 /**
@@ -21,6 +23,8 @@ export function AISuggestCard({
   error,
   onDismissError,
   labels,
+  disabled = false,
+  quotaLabel,
 }: {
   suggesting: boolean;
   hasSuggestion: boolean;
@@ -39,6 +43,8 @@ export function AISuggestCard({
     focusPlaceholder: string;
     closeError: string;
   };
+  disabled?: boolean;
+  quotaLabel?: string;
 }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-linear-to-br from-primary/10 via-accent/20 to-background p-4 shadow-sm sm:p-5">
@@ -58,6 +64,7 @@ export function AISuggestCard({
             </p>
           </div>
         </div>
+        {quotaLabel ? <UsageQuotaChip label={quotaLabel} /> : null}
         <div className="space-y-1.5">
           <label
             htmlFor="ai-focus-note"
@@ -79,7 +86,7 @@ export function AISuggestCard({
           size="default"
           className="min-h-11 w-full sm:min-h-9 sm:w-auto"
           onClick={onSuggest}
-          disabled={suggesting}
+          disabled={suggesting || disabled}
         >
           {suggesting ? (
             <>

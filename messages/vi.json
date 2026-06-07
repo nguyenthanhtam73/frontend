@@ -383,6 +383,15 @@
     "errorFetch": "Không tải được hồ sơ da. Thử lại nhé.",
     "errorNetwork": "Mạng gián đoạn — kiểm tra kết nối và thử lại."
   },
+  "premium": {
+    "cta": "Nâng cấp Premium ngay",
+    "quotaSuggestTitle": "Hết lượt free rồi bro! Tháng này mày xài hết {limit} lần gợi ý rồi 😂",
+    "quotaSuggestBody": "Nâng cấp Premium để AI troll da mày không giới hạn đi — không ai cấm đâu.",
+    "quotaEditTitle": "Hết lượt chỉnh routine rồi bro ✋",
+    "quotaEditBody": "Tháng này mày chỉnh tay {limit} lần rồi — vẫn tick hoàn thành bình thường. Premium thì sửa thoải mái!",
+    "wardrobeTitle": "Tủ đồ đang khóa rồi bro 👀",
+    "wardrobeBody": "Gói Free chỉ xem thôi — muốn thêm/sửa món thì Premium cho nhanh, không thì AI cứ gợi ý trùng món 😅"
+  },
   "cabinet": {
     "sectionLabel": "Tủ đồ chăm da",
     "title": "Sản phẩm bạn đang dùng",
@@ -430,7 +439,10 @@
     "adjustOnboarding": "Chỉnh lại làm quen với da",
     "noStarter": "Chưa có chăm da khởi đầu —",
     "noStarterTitle": "Tủ đồ đang chờ bạn",
-    "setupLink": "tạo trong khoảng 2 phút"
+    "setupLink": "tạo trong khoảng 2 phút",
+    "premiumWardrobeTitle": "Tủ đồ đang khóa rồi bro 👀",
+    "premiumWardrobeBody": "Gói Free chỉ xem thôi — muốn thêm/sửa món thì Premium cho nhanh, không thì AI cứ gợi ý trùng món bạn đã có 😅",
+    "premiumWardrobeCta": "Nâng cấp Premium ngay"
   },
   "meMemory": {
     "sectionLabel": "Minh bạch AI",
@@ -643,11 +655,11 @@
     "summaryOptional": "Ghi chú thêm (tùy chọn)",
     "homeLink": "Về trang chủ",
     "guestTrial": {
-      "title": "Ê, mày thử onboarding rồi kìa 😂",
+      "title": "Ê mày thử xong rồi à 😂",
       "body1": "Bạn đã dùng thử onboarding 1 lần rồi.",
-      "body2": "DaDiary cần login để lưu nhật ký da, routine, và AI nhớ lâu dài cho bạn.",
-      "body3": "Không login thì lần sau phải làm lại từ đầu, hơi phí vl 😅",
-      "registerCta": "Đăng ký ngay",
+      "body2": "Lần sau muốn lưu dữ liệu, xem lịch sử da, và để AI nhớ lâu dài thì phải đăng ký thôi.",
+      "body3": "Không login thì phí công sức vl 😅",
+      "registerCta": "Đăng ký cho nhanh",
       "loginCta": "Đăng nhập",
       "homeLink": "Về trang chủ"
     },
@@ -796,6 +808,12 @@
     "aiSuggestCta": "AI gợi ý cho tôi",
     "aiSuggesting": "Đang nghĩ giúp bạn…",
     "aiSuggestError": "Chưa gọi được AI. Thử lại hoặc kiểm tra kết nối nhé.",
+    "quotaSuggest": "AI gợi ý: {used}/{limit} tháng này 😏",
+    "quotaManualEdit": "Chỉnh tay: {used}/{limit} tháng này ✋",
+    "quotaSuggestExceeded": "Hết lượt free rồi bro! Tháng này mày xài hết {limit} lần gợi ý rồi. Nâng cấp Premium để AI troll da mày không giới hạn đi 😂",
+    "quotaEditExceeded": "Hết lượt chỉnh routine rồi bro 😂 Tháng này mày chỉnh tay {limit} lần rồi — vẫn tick hoàn thành bình thường nhé. Premium thì sửa thoải mái!",
+    "premiumUnlimited": "Premium — AI troll không giới hạn ✨",
+    "editLockedHint": "Gói Free: xem + tick thôi. Muốn sửa bước thì cần Premium hoặc còn lượt chỉnh tay — đừng giận coach nhé 😅",
     "aiFocusLabel": "Hôm nay bạn muốn nhấn mạnh gì? (không bắt buộc)",
     "aiFocusPlaceholder": "VD: da hơi căng, xin chăm da dịu",
     "aiPreviewTitle": "Bản xem trước AI",

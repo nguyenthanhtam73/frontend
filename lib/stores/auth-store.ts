@@ -16,6 +16,7 @@ export type AuthUser = {
   avatar_url?: string;
   provider?: string;
   is_active?: boolean;
+  plan_tier?: "free" | "premium" | string;
   created_at?: string;
 };
 

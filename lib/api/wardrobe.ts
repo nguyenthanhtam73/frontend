@@ -41,6 +41,9 @@ export async function createWardrobeProduct(
     throw new Error("auth");
   }
   if (!res.ok || !json.data) {
+    if (json.error?.code === "premium_required") {
+      throw new Error("premium_required");
+    }
     throw new Error(getApiErrorMessage(json, "wardrobe_create_failed"));
   }
   return json.data;

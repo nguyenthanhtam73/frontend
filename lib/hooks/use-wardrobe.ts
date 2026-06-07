@@ -7,6 +7,7 @@ import {
   fetchWardrobe,
   wardrobeQueryKey,
 } from "@/lib/api/wardrobe";
+import { usageQueryKey } from "@/lib/api/usage";
 import { getAccessToken } from "@/lib/auth-token";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type { CreateWardrobeProductInput } from "@/lib/types/wardrobe";
@@ -28,7 +29,10 @@ export function useWardrobeQuery() {
   const createMutation = useMutation({
     mutationFn: (input: CreateWardrobeProductInput) => createWardrobeProduct(input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: wardrobeQueryKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: wardrobeQueryKey }),
+        queryClient.invalidateQueries({ queryKey: usageQueryKey }),
+      ]);
     },
   });
 

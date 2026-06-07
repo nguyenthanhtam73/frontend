@@ -9,6 +9,8 @@ import {
   type RoutineCategory,
   type RoutineStepDTO,
 } from "@/lib/types/routine";
+import { PremiumUpsellBanner, UsageQuotaChip } from "@/components/premium/premium-upsell-banner";
+import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { cn } from "@/lib/utils";
@@ -46,6 +48,7 @@ import { useRoutine } from "./use-routine";
  */
 export function RoutineEditor({ locale }: { locale: string }) {
   const t = useTranslations("routine");
+  const tPremium = useTranslations("premium");
 
   const skillMode = useSkillStore((s) => s.mode);
   const setSkillMode = useSkillStore((s) => s.setMode);
@@ -71,6 +74,45 @@ export function RoutineEditor({ locale }: { locale: string }) {
 
   const r = useRoutine(locale, messages);
   const { setSkillModeRef } = r;
+  const usage = useUsageQuota();
+  const editLocked = !usage.isPremium && !usage.canRoutineManualEdit;
+  const suggestDisabled = !usage.isPremium && !usage.canRoutineSuggest;
+
+  const suggestQuotaLabel = usage.isPremium
+    ? t("premiumUnlimited")
+    : usage.routineSuggest
+      ? t("quotaSuggest", {
+          used: usage.routineSuggest.used,
+          limit: usage.routineSuggest.limit,
+        })
+      : undefined;
+
+  const editQuotaLabel = usage.isPremium
+    ? undefined
+    : usage.routineManualEdit
+      ? t("quotaManualEdit", {
+          used: usage.routineManualEdit.used,
+          limit: usage.routineManualEdit.limit,
+        })
+      : undefined;
+
+  const suggestLimit = usage.routineSuggest?.limit ?? 3;
+  const editLimit = usage.routineManualEdit?.limit ?? 5;
+
+  function resolveSuggestExceeded() {
+    return t("quotaSuggestExceeded", { limit: suggestLimit });
+  }
+
+  function resolveEditExceeded() {
+    return t("quotaEditExceeded", { limit: editLimit });
+  }
+
+  function resolveErrorMessage(code: string | null | undefined, kind: "suggest" | "edit") {
+    if (code === "quota_exceeded") {
+      return kind === "suggest" ? resolveSuggestExceeded() : resolveEditExceeded();
+    }
+    return code ?? "";
+  }
 
   // Keep the data hook informed of the current skill mode without making it
   // a dependency of the autosave loop (refs > recreating callbacks).
@@ -131,6 +173,28 @@ export function RoutineEditor({ locale }: { locale: string }) {
           and offers a one-tap link back to /check-in. */}
       <CheckInContextCard />
 
+      {!usage.isPremium && (suggestDisabled || editLocked) ? (
+        <PremiumUpsellBanner
+          title={
+            suggestDisabled
+              ? tPremium("quotaSuggestTitle", { limit: suggestLimit })
+              : tPremium("quotaEditTitle")
+          }
+          body={
+            suggestDisabled
+              ? tPremium("quotaSuggestBody")
+              : tPremium("quotaEditBody", { limit: editLimit })
+          }
+          cta={tPremium("cta")}
+        />
+      ) : null}
+
+      {editQuotaLabel ? (
+        <div className="flex justify-end">
+          <UsageQuotaChip label={editQuotaLabel} />
+        </div>
+      ) : null}
+
       {r.fresh ? (
         <EmptyHero
           suggesting={r.suggesting}
@@ -174,7 +238,11 @@ export function RoutineEditor({ locale }: { locale: string }) {
           focusNote={r.focusNote}
           onFocusChange={r.setFocusNote}
           onSuggest={() => void r.requestSuggestion(skillMode ?? null)}
-          error={r.suggestError}
+          disabled={suggestDisabled}
+          quotaLabel={suggestQuotaLabel}
+          error={
+            r.suggestError ? resolveErrorMessage(r.suggestError, "suggest") : null
+          }
           onDismissError={r.dismissSuggestError}
           labels={{
             title: t("aiSuggestTitle"),
@@ -231,6 +299,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
           onUpdate={(id, patch) => r.updateStep("morning", id, patch)}
           onToggle={(id) => r.toggleComplete("morning", id)}
           labels={editorLabels(t)}
+          editLocked={editLocked}
         />
         <SectionCard
           section="evening"
@@ -247,6 +316,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
           onUpdate={(id, patch) => r.updateStep("evening", id, patch)}
           onToggle={(id) => r.toggleComplete("evening", id)}
           labels={editorLabels(t)}
+          editLocked={editLocked}
         />
       </div>
 
@@ -254,6 +324,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
         <NotesCard
           value={r.routine.notes}
           onChange={r.setNotes}
+          readOnly={editLocked}
           labels={{ title: t("notesTitle"), placeholder: t("notesPlaceholder") }}
         />
       ) : null}
@@ -276,7 +347,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
       {r.saveMsg ? (
         <Banner
           kind={r.saveMsg.kind}
-          message={r.saveMsg.text}
+          message={resolveErrorMessage(r.saveMsg.text, "edit") || r.saveMsg.text}
           onClose={r.dismissSaveMsg}
           closeLabel={t("dismiss")}
         />
@@ -297,7 +368,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
       <SaveBar
         saving={r.saving}
         autoSaving={r.autoSaving}
-        canSave={validation.canSave}
+        canSave={validation.canSave && !editLocked}
         hasUnsaved={!r.routine.saved}
         warningHint={validation.warnings[0] ?? null}
         onReset={() => void r.reload()}
