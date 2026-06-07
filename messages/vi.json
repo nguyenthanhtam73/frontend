@@ -288,7 +288,7 @@
     "needAuth": "Cần đăng nhập để gửi nhật ký (kết nối tài khoản với máy chủ).",
     "networkError": "Chưa kết nối được tới máy chủ (hoặc CORS). Kiểm tra `NEXT_PUBLIC_API_URL` và backend — form đã dùng đúng field multipart.",
     "analyzingCoach": "Đang đọc ảnh và soạn lời khuyên — có thể mất vài phút, bạn cứ để tab mở nhé.",
-    "coachBeforeSubmit": "Gửi để nhận: lời khen, tóm tắt hôm nay, gợi ý điều chỉnh chăm da, điều nên cẩn thận, và nhắc an toàn.",
+    "coachBeforeSubmit": "Gửi để nhận: tóm tắt hôm nay, gợi ý điều chỉnh chăm da, điều nên cẩn thận, và nhắc an toàn.",
     "coach": {
       "title": "Lời khuyên hôm nay",
       "praise": "Bạn đang làm tốt",

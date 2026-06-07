@@ -38,16 +38,17 @@ export function ProgressTimeline() {
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
-  const fetchTimeline = useCallback(
-    async (r: ProgressRangeKey) => {
+  const loadTimeline = useCallback(
+    async (r: ProgressRangeKey, isStale?: () => boolean) => {
       setLoading(true);
-      if (!data) setErrMsg(null);
+      setErrMsg(null);
       try {
         const headers: Record<string, string> = {};
         const token = getAccessToken();
         if (token) headers.Authorization = `Bearer ${token}`;
         const res = await fetch(`${apiBaseUrl}/api/v1/progress?range=${r}`, { headers });
         const raw = await res.json().catch(() => ({}));
+        if (isStale?.()) return;
         if (res.status === 401) {
           setErrMsg(t("errors.needAuth"));
           setData(null);
@@ -60,18 +61,24 @@ export function ProgressTimeline() {
         }
         setData(raw.data as ProgressTimelineDTO);
       } catch {
-        setErrMsg(t("errors.networkError"));
-        setData(null);
+        if (!isStale?.()) {
+          setErrMsg(t("errors.networkError"));
+          setData(null);
+        }
       } finally {
-        setLoading(false);
+        if (!isStale?.()) setLoading(false);
       }
     },
-    [t, data],
+    [t],
   );
 
   useEffect(() => {
-    void fetchTimeline(range);
-  }, [range, fetchTimeline]);
+    let cancelled = false;
+    void loadTimeline(range, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [range, loadTimeline]);
 
   // Oldest-→-newest sparkline points (entries arrive newest-first; reverse + filter).
   const sparklinePoints = useMemo<SparklinePoint[]>(() => {
@@ -100,7 +107,7 @@ export function ProgressTimeline() {
       {!loading && errMsg ? (
         <ErrorCard
           message={errMsg}
-          onRetry={() => fetchTimeline(range)}
+          onRetry={() => loadTimeline(range)}
           retryLabel={t("retry")}
           loginLabel={t("errors.signIn")}
           showLogin={errMsg === t("errors.needAuth")}

@@ -288,7 +288,7 @@
     "needAuth": "You need to sign in to send a check-in (connect auth on the backend for demos).",
     "networkError": "Could not reach the API (or CORS). Check `NEXT_PUBLIC_API_URL` and the backend — multipart field names are correct.",
     "analyzingCoach": "Reading your photos and writing a friendly response — this can take a few minutes. Keep the tab open.",
-    "coachBeforeSubmit": "Send to receive: a small praise, today's read, routine tweaks, what to ease off, and safety notes.",
+    "coachBeforeSubmit": "Send to receive: today's read, routine tweaks, what to ease off, and safety notes.",
     "coach": {
       "title": "Today's notes from your buddy",
       "praise": "You're doing well",

@@ -4,13 +4,11 @@ import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Ban,
-  Heart,
   Lightbulb,
   Loader2,
   Moon,
   RefreshCw,
   ShieldCheck,
-  Sparkles,
   Sun,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -220,49 +218,6 @@ export function DailyCoachFeedback({
       className="space-y-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500"
       data-coach-feedback
     >
-      {/* Hero — visually anchors the feedback block. */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/12 via-accent/40 to-background px-5 py-5 shadow-sm sm:px-6 sm:py-6">
-        <div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-        <div className="relative flex items-start gap-3">
-          <div className="rounded-full bg-background/80 p-2 shadow-sm ring-1 ring-primary/20">
-            <Sparkles className="size-4 text-primary" aria-hidden />
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-              {t("title")}
-            </p>
-            {c.summary_notes ? (
-              <p className="text-sm font-medium leading-snug text-foreground sm:text-base">
-                {c.summary_notes}
-              </p>
-            ) : (
-              <p className="text-sm leading-snug text-muted-foreground">
-                {t("processing")}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {c.strengths && c.strengths.length > 0 ? (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="space-y-2 pt-5">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
-              <Heart className="size-3.5" aria-hidden />
-              {t("praise")}
-            </div>
-            <ul className="space-y-1.5 text-sm leading-relaxed">
-              {c.strengths.map((line, i) => (
-                <li key={`${i}-${line.slice(0, 40)}`} className="flex gap-2">
-                  <span className="mt-1 size-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      ) : null}
-
       {c.situation_summary ? (
         <Card>
           <CardContent className="space-y-2 pt-5">
