@@ -9,15 +9,12 @@ import {
   ImageOff,
   ImagePlus,
   Lightbulb,
-  ShieldCheck,
   Sparkles,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
-import { FacePrivacyConsentDialog } from "@/components/privacy/face-privacy-consent-dialog";
-import { useConsentGate } from "@/components/privacy/use-consent-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
@@ -63,6 +60,9 @@ const symptomIds = [
 
 type UploadItem = { file: File; url: string };
 
+/** Daily check-in photo cap — 1 required, 2 recommended (straight + slight angle). */
+const MAX_CHECKIN_PHOTOS = 2;
+
 export function CheckInForm() {
   const t = useTranslations("checkIn");
   const tPrivacy = useTranslations("privacy");
@@ -92,7 +92,6 @@ export function CheckInForm() {
   const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
   const skipFaceCapture = privacyHydrated && skipFaceCaptureStored;
   const setSkipFaceCapture = usePrivacyStore((s) => s.setSkipFaceCapture);
-  const consent = useConsentGate();
 
   // Show an inline error in a sticky-friendly banner and scroll it into view so
   // users on small screens never miss it.
@@ -132,36 +131,47 @@ export function CheckInForm() {
 
   function handleFiles(files: FileList | null) {
     if (!files) return;
-    const remainingSlots = Math.max(0, 6 - items.length);
+    const remainingSlots = Math.max(0, MAX_CHECKIN_PHOTOS - items.length);
+    if (remainingSlots === 0) {
+      showError(t("maxPhotos"));
+      return;
+    }
     const queue: File[] = [];
     let skippedEmpty = 0;
+    let skippedOverCap = 0;
     Array.from(files).forEach((file) => {
       if (!file.type.startsWith("image/")) return;
       if (file.size <= 0) {
         skippedEmpty += 1;
         return;
       }
-      if (queue.length >= remainingSlots) return;
+      if (queue.length >= remainingSlots) {
+        skippedOverCap += 1;
+        return;
+      }
       queue.push(file);
     });
     if (skippedEmpty > 0) {
       showError(t("emptyImageSkipped"));
     }
+    if (skippedOverCap > 0) {
+      showError(t("maxPhotos"));
+    }
     if (queue.length === 0) return;
 
     const added = queue.map((file) => ({ file, url: URL.createObjectURL(file) }));
-    setItems((cur) => [...cur, ...added].slice(0, 6));
+    setItems((cur) => [...cur, ...added].slice(0, MAX_CHECKIN_PHOTOS));
   }
 
   const openCamera = useCallback(() => {
-    consent.requestCapture(() => cameraRef.current?.click());
-  }, [consent]);
+    cameraRef.current?.click();
+  }, []);
   const openCameraBack = useCallback(() => {
-    consent.requestCapture(() => cameraBackRef.current?.click());
-  }, [consent]);
+    cameraBackRef.current?.click();
+  }, []);
   const openLibrary = useCallback(() => {
-    consent.requestCapture(() => fileRef.current?.click());
-  }, [consent]);
+    fileRef.current?.click();
+  }, []);
 
   function removeAt(idx: number) {
     setItems((cur) => {
@@ -324,19 +334,9 @@ export function CheckInForm() {
       <div className="flex flex-col gap-6 lg:grid lg:max-w-5xl lg:grid-cols-[1.05fr_1fr] lg:gap-8 xl:mx-auto">
       <Card className="overflow-hidden shadow-sm lg:shadow-md">
         <CardContent className="space-y-4 p-4 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold tracking-tight">{t("photoTitle")}</h2>
-              <p className="text-sm text-muted-foreground">{t("photoHint")}</p>
-            </div>
-            <button
-              type="button"
-              onClick={consent.openManually}
-              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-            >
-              <ShieldCheck className="size-3.5" aria-hidden />
-              {t("privacyOpen")}
-            </button>
+          <div>
+            <h2 className="text-base font-semibold tracking-tight">{t("photoTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("photoHint")}</p>
           </div>
 
           {skipFaceCapture ? (
@@ -361,16 +361,19 @@ export function CheckInForm() {
               <div className="grid grid-cols-3 gap-2">
                 <PhotoChoiceButton
                   onClick={openCamera}
+                  disabled={items.length >= MAX_CHECKIN_PHOTOS}
                   icon={<Camera className="size-4" aria-hidden />}
                   label={t("photoCapture")}
                 />
                 <PhotoChoiceButton
                   onClick={openCameraBack}
+                  disabled={items.length >= MAX_CHECKIN_PHOTOS}
                   icon={<Camera className="size-4" aria-hidden />}
                   label={t("photoCaptureBack")}
                 />
                 <PhotoChoiceButton
                   onClick={openLibrary}
+                  disabled={items.length >= MAX_CHECKIN_PHOTOS}
                   icon={<ImageIcon className="size-4" aria-hidden />}
                   label={t("photoLibrary")}
                 />
@@ -379,7 +382,7 @@ export function CheckInForm() {
               <button
                 type="button"
                 onClick={openLibrary}
-                disabled={items.length >= 6}
+                disabled={items.length >= MAX_CHECKIN_PHOTOS}
                 className="group flex aspect-4/3 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/40 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <div className="rounded-full bg-background p-3 shadow-sm ring-1 ring-border">
@@ -684,7 +687,6 @@ export function CheckInForm() {
         </div>
       </div>
 
-      <FacePrivacyConsentDialog {...consent.dialogProps} />
     </form>
   );
 }
@@ -789,10 +791,12 @@ function PhotoTipsCard({ title, tips }: { title: string; tips: string[] }) {
 /** Reusable photo-source button. Camera (front), camera (back), and library use the same shape. */
 function PhotoChoiceButton({
   onClick,
+  disabled,
   icon,
   label,
 }: {
   onClick: () => void;
+  disabled?: boolean;
   icon: React.ReactNode;
   label: string;
 }) {
@@ -800,7 +804,8 @@ function PhotoChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-background px-2 py-2.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
+      disabled={disabled}
+      className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-background px-2 py-2.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
     >
       <span className="text-primary">{icon}</span>
       <span>{label}</span>

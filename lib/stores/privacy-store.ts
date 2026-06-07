@@ -11,8 +11,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
  */
 export type PrivacyState = {
   /**
-   * Has the user acknowledged the privacy notice (auto-blur + no original
-   * stored + delete-anytime) at least once? Re-asking on every photo step
+   * Has the user acknowledged the privacy notice at least once? Re-asking on every photo step
    * is hostile UX; the consent dialog stays a tap away from the photo
    * controls and from the Privacy section in Settings if they want to
    * read it again.

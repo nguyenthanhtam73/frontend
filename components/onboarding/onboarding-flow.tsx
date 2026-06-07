@@ -7,7 +7,6 @@ import {
   Camera,
   Check,
   ImagePlus,
-  ShieldCheck,
   Sparkles,
   X,
 } from "lucide-react";
@@ -25,8 +24,6 @@ import {
   SkinProfilePanel,
   SkipPhotosButton,
 } from "@/components/onboarding/onboarding-ui";
-import { FacePrivacyConsentDialog } from "@/components/privacy/face-privacy-consent-dialog";
-import { useConsentGate } from "@/components/privacy/use-consent-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
@@ -162,7 +159,6 @@ export function OnboardingFlow() {
   const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
   const skipFaceCapture = privacyHydrated && skipFaceCaptureStored;
   const setSkipFaceCapture = usePrivacyStore((s) => s.setSkipFaceCapture);
-  const consent = useConsentGate();
 
   const photoCount = useOnboardingStore((s) => s.photos.length);
   const clearPhotos = useOnboardingStore((s) => s.clearPhotos);
@@ -210,14 +206,12 @@ export function OnboardingFlow() {
     [ob],
   );
 
-  /** Wraps file-picker triggers with the consent gate so the dialog only
-   *  blocks the FIRST photo action; subsequent picks are immediate. */
   const openCamera = useCallback(() => {
-    consent.requestCapture(() => cameraRef.current?.click());
-  }, [consent]);
+    cameraRef.current?.click();
+  }, []);
   const openLibrary = useCallback(() => {
-    consent.requestCapture(() => fileRef.current?.click());
-  }, [consent]);
+    fileRef.current?.click();
+  }, []);
 
   async function runAnalyze() {
     const token = getAccessToken();
@@ -458,7 +452,6 @@ export function OnboardingFlow() {
                       tPrivacy={tPrivacy}
                       tAuth={tAuth}
                       tCheckIn={tCheckIn}
-                      consent={consent}
                       fileRef={fileRef}
                       cameraRef={cameraRef}
                       openCamera={openCamera}
@@ -478,7 +471,6 @@ export function OnboardingFlow() {
                   tPrivacy={tPrivacy}
                   tAuth={tAuth}
                   tCheckIn={tCheckIn}
-                  consent={consent}
                   fileRef={fileRef}
                   cameraRef={cameraRef}
                   openCamera={openCamera}
@@ -714,7 +706,6 @@ export function OnboardingFlow() {
         </Link>
       </p>
 
-      <FacePrivacyConsentDialog {...consent.dialogProps} />
     </div>
   );
 }
@@ -724,7 +715,6 @@ function PhotoCaptureBlock({
   tPrivacy,
   tAuth,
   tCheckIn,
-  consent,
   fileRef,
   cameraRef,
   openCamera,
@@ -737,7 +727,6 @@ function PhotoCaptureBlock({
   tPrivacy: ReturnType<typeof useTranslations<"privacy">>;
   tAuth: ReturnType<typeof useTranslations<"auth">>;
   tCheckIn: ReturnType<typeof useTranslations<"checkIn">>;
-  consent: ReturnType<typeof useConsentGate>;
   fileRef: React.RefObject<HTMLInputElement | null>;
   cameraRef: React.RefObject<HTMLInputElement | null>;
   openCamera: () => void;
@@ -749,11 +738,7 @@ function PhotoCaptureBlock({
   const ob = useOnboardingStore();
   return (
     <div className="space-y-4">
-      <PrivacyHeader
-        headline={tPrivacy("captureCard.subtitle")}
-        privacyLabel={t("photos.privacyOpen")}
-        onOpenNotice={consent.openManually}
-      />
+      <p className="text-sm text-muted-foreground">{tPrivacy("captureCard.subtitle")}</p>
 
       {showSkip ? (
         <>
@@ -901,40 +886,6 @@ function PhotoCaptureBlock({
               : t("photos.analyzeFail")}
         </FriendlyNotice>
       )}
-    </div>
-  );
-}
-
-/**
- * Pre-photo trust strip — small reminder + "Read the privacy notice" link.
- *
- * Sits directly above the camera/library buttons so the user always has
- * the option to re-read the four promises before the next photo. Easy to
- * miss is bad UX for a privacy-critical surface — keeping the open-notice
- * affordance one tap away builds confidence.
- */
-function PrivacyHeader({
-  headline,
-  privacyLabel,
-  onOpenNotice,
-}: {
-  headline: string;
-  privacyLabel: string;
-  onOpenNotice: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-      <p className="flex items-start gap-2 text-xs leading-relaxed text-foreground/90">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-        <span>{headline}</span>
-      </p>
-      <button
-        type="button"
-        onClick={onOpenNotice}
-        className="self-start text-xs font-medium text-primary underline-offset-4 hover:underline sm:self-auto"
-      >
-        {privacyLabel}
-      </button>
     </div>
   );
 }
