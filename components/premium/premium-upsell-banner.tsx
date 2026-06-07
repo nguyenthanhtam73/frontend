@@ -2,8 +2,7 @@
 
 import { Crown, Sparkles } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
+import { ButtonLink } from "@/components/ui/button-link";
 import { cn } from "@/lib/utils";
 
 /** Friendly free-plan nudge — playful, not blocking. */
@@ -49,14 +48,14 @@ export function PremiumUpsellBanner({
           </p>
           <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
           {cta ? (
-            <Button
-              asChild
+            <ButtonLink
+              href={ctaHref}
               size={primaryCta ? "lg" : "sm"}
               variant={primaryCta ? "default" : "outline"}
               className={primaryCta ? "mt-3 min-h-12 w-full font-semibold sm:w-auto" : "mt-2 min-h-9"}
             >
-              <Link href={ctaHref}>{cta}</Link>
-            </Button>
+              {cta}
+            </ButtonLink>
           ) : null}
         </div>
       </div>

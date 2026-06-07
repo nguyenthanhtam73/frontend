@@ -3,7 +3,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import {
   AlertCircle,
-  ArrowLeft,
   Camera,
   Check,
   ImagePlus,
@@ -44,7 +43,6 @@ import {
   type OnboardingState,
   type SkillMode,
   type SkinTypeCard,
-  type SkinUndertone,
   useOnboardingStore,
 } from "@/lib/stores/onboarding-store";
 import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
@@ -61,7 +59,7 @@ import {
   QUICK_GOALS,
   QUICK_UNDERTONES,
 } from "@/lib/onboarding/constants";
-import { cn } from "@/lib/utils";
+import { ButtonLink } from "@/components/ui/button-link";
 
 /** Stable IDs aligned with backend onboarding vision schema + i18n `onboarding.aiConcerns.*`. */
 const CONCERN_IDS = [
@@ -206,23 +204,6 @@ export function OnboardingFlow() {
     }, 120);
     return () => window.clearTimeout(t);
   }, [showSkinSection]);
-
-  const applyFiles = useCallback(
-    (list: FileList | null) => {
-      if (!list?.length) return;
-      const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
-      const queue = Array.from(list)
-        .filter((f) => f.type.startsWith("image/"))
-        .slice(0, remaining);
-      for (const file of queue) {
-        ob.addPhoto({
-          file,
-          preview: URL.createObjectURL(file),
-        });
-      }
-    },
-    [ob],
-  );
 
   const openCamera = useCallback(() => {
     cameraRef.current?.click();
@@ -1030,12 +1011,16 @@ function GuestTrialGate({
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <Button asChild size="lg" className="min-h-12 w-full text-base font-semibold">
-              <Link href="/register">{registerLabel}</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="min-h-11 w-full">
-              <Link href="/login">{loginLabel}</Link>
-            </Button>
+            <ButtonLink
+              href="/register"
+              size="lg"
+              className="min-h-12 w-full text-base font-semibold"
+            >
+              {registerLabel}
+            </ButtonLink>
+            <ButtonLink href="/login" size="lg" variant="outline" className="min-h-11 w-full">
+              {loginLabel}
+            </ButtonLink>
           </div>
           <p>
             <Link
