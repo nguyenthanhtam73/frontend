@@ -30,9 +30,12 @@ import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
+import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
 import {
   COACH_WELCOME_STORAGE_KEY,
+  GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
+  type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
@@ -296,21 +299,23 @@ export function OnboardingFlow() {
     setIdx((i) => Math.max(i - 1, 0));
   }
 
+  function goToCoachWelcome(pack: CoachWelcomePayload) {
+    try {
+      sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(pack));
+      sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
+    } catch {
+      /* storage full or private mode */
+    }
+    if (ob.skillMode) setSkillGlobal(ob.skillMode);
+    ob.markComplete();
+    router.push("/onboarding/coach-welcome");
+  }
+
   /**
    * Finish onboarding.
    *
-   * Order of operations:
-   *   1. Validate we have everything needed and an auth token. Without auth we
-   *      surface an inline `auth` error and do NOT mark complete or navigate
-   *      (previous behaviour silently dropped the user on /check-in despite
-   *      the save never happening).
-   *   2. POST to /profile/onboarding/complete. On success: mirror starter
-   *      routine into sessionStorage and route to /onboarding/coach-welcome.
-   *   3. On failure: keep the user on the summary step with an inline banner
-   *      offering Retry or "Continue without saving" so they're never stuck.
-   *
-   * `setSkillGlobal` runs once we know we'll continue (success or local
-   * fallback) so the skill mode actually applies to the rest of the app.
+   * Guests: preview-complete (no DB) → coach-welcome with session cache.
+   * Logged-in: persist profile + starter routine → coach-welcome.
    */
   async function finish(opts: { skipServer?: boolean } = {}) {
     if (finishing) return;
@@ -322,19 +327,91 @@ export function OnboardingFlow() {
       .filter(Boolean);
     const bodyConcerns = [...new Set([...ob.aiConcernTags, ...manual])];
     const token = getAccessToken();
+    const undertone = ob.undertone ?? "prefer_not";
+    const finishBody = {
+      skin_type: ob.skinType,
+      undertone,
+      contexts: [] as string[],
+      budget: ONBOARDING_DEFAULT_BUDGET,
+      goal: ob.goal,
+      skill_level: ob.skillMode,
+      body_concerns: bodyConcerns,
+      current_routine: ob.currentRoutineText.trim(),
+      locale,
+    };
 
-    if (opts.skipServer) {
-      if (ob.skillMode) setSkillGlobal(ob.skillMode);
-      ob.markComplete();
-      router.push("/check-in");
+    if (
+      !ob.skinType ||
+      !ob.goal ||
+      !ob.skillMode ||
+      bodyConcerns.length === 0
+    ) {
+      setFinishError("save_failed");
       return;
     }
 
     if (!token) {
-      setFinishError("auth");
+      await finishGuestPreview();
       return;
     }
 
+    if (opts.skipServer) {
+      goToCoachWelcome({
+        profileId: GUEST_COACH_PROFILE_ID,
+        starterRoutine: buildGuestStarterFallback(ob, locale),
+        coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
+      });
+      return;
+    }
+
+    setFinishing(true);
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(finishBody),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        success?: boolean;
+        data?: {
+          profile?: { id?: string };
+          starter_routine?: StarterRoutineDTO;
+        };
+      };
+
+      if (
+        res.ok &&
+        payload.success &&
+        payload.data?.profile?.id &&
+        payload.data?.starter_routine
+      ) {
+        goToCoachWelcome({
+          profileId: payload.data.profile.id,
+          starterRoutine: payload.data.starter_routine,
+          coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
+        });
+        return;
+      }
+      setFinishError("save_failed");
+    } catch {
+      setFinishError("network");
+    } finally {
+      setFinishing(false);
+    }
+  }
+
+  async function finishGuestPreview() {
+    if (finishing) return;
+    setFinishError(null);
+
+    const manual = ob.bodyConcernsText
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const bodyConcerns = [...new Set([...ob.aiConcernTags, ...manual])];
     const undertone = ob.undertone ?? "prefer_not";
 
     if (
@@ -348,13 +425,11 @@ export function OnboardingFlow() {
     }
 
     setFinishing(true);
+    let starter: StarterRoutineDTO = buildGuestStarterFallback(ob, locale);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
+      const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/preview-complete`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           skin_type: ob.skinType,
           undertone,
@@ -369,47 +444,22 @@ export function OnboardingFlow() {
       });
       const payload = (await res.json().catch(() => ({}))) as {
         success?: boolean;
-        data?: {
-          profile?: { id?: string };
-          starter_routine?: CoachWelcomePayload["starterRoutine"];
-        };
+        data?: { starter_routine?: StarterRoutineDTO };
       };
-
-      if (
-        res.ok &&
-        payload.success &&
-        payload.data?.profile?.id &&
-        payload.data?.starter_routine
-      ) {
-        const pack: CoachWelcomePayload = {
-          profileId: payload.data.profile.id,
-          starterRoutine: payload.data.starter_routine,
-          coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
-        };
-        try {
-          sessionStorage.setItem(
-            COACH_WELCOME_STORAGE_KEY,
-            JSON.stringify(pack),
-          );
-        } catch {
-          /* storage full or private mode — coach-welcome falls back gracefully. */
-        }
-        if (ob.skillMode) setSkillGlobal(ob.skillMode);
-        ob.markComplete();
-        try {
-          sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
-        } catch {
-          /* private mode */
-        }
-        router.push("/onboarding/coach-welcome");
-      } else {
-        setFinishError("save_failed");
+      if (res.ok && payload.success && payload.data?.starter_routine) {
+        starter = payload.data.starter_routine;
       }
     } catch {
-      setFinishError("network");
+      /* offline — local fallback above */
     } finally {
       setFinishing(false);
     }
+
+    goToCoachWelcome({
+      profileId: GUEST_COACH_PROFILE_ID,
+      starterRoutine: starter,
+      coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
+    });
   }
 
   if (guestTrialBlocked === null) {
@@ -422,7 +472,6 @@ export function OnboardingFlow() {
         title={t("guestTrial.title")}
         body1={t("guestTrial.body1")}
         body2={t("guestTrial.body2")}
-        body3={t("guestTrial.body3")}
         registerLabel={t("guestTrial.registerCta")}
         loginLabel={t("guestTrial.loginCta")}
         homeLabel={t("guestTrial.homeLink")}
@@ -977,7 +1026,6 @@ function GuestTrialGate({
   title,
   body1,
   body2,
-  body3,
   registerLabel,
   loginLabel,
   homeLabel,
@@ -985,7 +1033,6 @@ function GuestTrialGate({
   title: string;
   body1: string;
   body2: string;
-  body3: string;
   registerLabel: string;
   loginLabel: string;
   homeLabel: string;
@@ -1007,7 +1054,6 @@ function GuestTrialGate({
             <div className="space-y-2.5 text-left text-sm leading-relaxed text-muted-foreground sm:text-base">
               <p>{body1}</p>
               <p>{body2}</p>
-              <p className="font-medium text-foreground/90">{body3}</p>
             </div>
           </div>
           <div className="flex flex-col gap-3">

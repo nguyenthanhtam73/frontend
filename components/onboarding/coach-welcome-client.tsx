@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +26,7 @@ import type { SkinProfileResponse } from "@/lib/types/profile";
 import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
 import {
   COACH_WELCOME_STORAGE_KEY,
+  GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
@@ -99,19 +101,15 @@ export function CoachWelcomeClient() {
       const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
       if (raw) {
         const p = JSON.parse(raw) as CoachWelcomePayload;
-        if (p.profileId && p.starterRoutine) {
-          cachedProfileId = p.profileId;
+        if (p.starterRoutine) {
+          cachedProfileId = p.profileId ?? null;
           cachedStarter = p.starterRoutine;
           cachedVision = p.coachingNotes;
-          const hasAffiliate =
-            (p.starterRoutine.product_suggestions?.length ?? 0) > 0;
-          if (hasAffiliate) {
-            setProfileId(p.profileId);
-            setStarter(p.starterRoutine);
-            setVisionNotes(p.coachingNotes);
-            setLoading(false);
-            return;
-          }
+          setProfileId(p.profileId ?? null);
+          setStarter(p.starterRoutine);
+          setVisionNotes(p.coachingNotes);
+          setLoading(false);
+          return;
         }
       }
     } catch {
@@ -356,18 +354,31 @@ export function CoachWelcomeClient() {
         </p>
       ) : null}
 
+      {profileId === GUEST_COACH_PROFILE_ID ? (
+        <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
+          <CardContent className="space-y-3 pt-6 text-center sm:text-left">
+            <p className="text-sm leading-relaxed text-muted-foreground">{t("guestPreviewHint")}</p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <ButtonLink href="/register" size="lg" className="min-h-11 flex-1 font-semibold">
+                {t("guestRegisterCta")}
+              </ButtonLink>
+              <ButtonLink href="/login" size="lg" variant="outline" className="min-h-11 flex-1">
+                {t("signInCta")}
+              </ButtonLink>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <ProductSuggestionsCard
         suggestions={starter.product_suggestions}
         source="starter_routine"
         contextId={profileId ?? undefined}
       />
 
-      {/* Feedback loop on the starter routine — uses the user's profile id
-          as the target so subsequent AI calls can pick up early signal. */}
-      <FeedbackButtons
-        targetType="starter_routine"
-        targetId={profileId}
-      />
+      {profileId && profileId !== GUEST_COACH_PROFILE_ID ? (
+        <FeedbackButtons targetType="starter_routine" targetId={profileId} />
+      ) : null}
 
       <div className="flex flex-col gap-3 pb-8 sm:flex-row sm:justify-center">
         <Link
