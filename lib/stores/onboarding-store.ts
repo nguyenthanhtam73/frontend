@@ -1,7 +1,10 @@
 import { create } from "zustand";
 
 import { getAccessToken } from "@/lib/auth-token";
-import { ONBOARDING_GUEST_TRIAL_KEY } from "@/lib/onboarding/constants";
+import {
+  ONBOARDING_GUEST_TRIAL_KEY,
+  ONBOARDING_MAX_PHOTOS,
+} from "@/lib/onboarding/constants";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 
 /** Primary skin type (self-reported or confirmed from AI). */
@@ -145,7 +148,7 @@ export const useOnboardingStore = create<Store>((set) => ({
   setPhotos: (photos) => set({ photos }),
   addPhoto: (item) =>
     set((s) => {
-      if (s.photos.length >= 3) return s;
+      if (s.photos.length >= ONBOARDING_MAX_PHOTOS) return s;
       return {
         photos: [...s.photos, item],
         aiSnapshot: null,

@@ -53,3 +53,7 @@ export const ONBOARDING_EXIT_ANIM_KEY = "dadiary_onboarding_exit_anim";
 
 /** Guest (no login) may complete onboarding once; value `"true"` when used. */
 export const ONBOARDING_GUEST_TRIAL_KEY = "hasCompletedOnboardingTrial";
+
+/** Onboarding photo AI: at least 2 angles, up to 3. */
+export const ONBOARDING_MIN_PHOTOS = 2;
+export const ONBOARDING_MAX_PHOTOS = 3;

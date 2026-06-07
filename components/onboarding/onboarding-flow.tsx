@@ -56,6 +56,8 @@ import {
   ONBOARDING_EXIT_ANIM_KEY,
   PHOTO_QUICK_CONCERNS,
   ONBOARDING_DEFAULT_BUDGET,
+  ONBOARDING_MAX_PHOTOS,
+  ONBOARDING_MIN_PHOTOS,
   QUICK_GOALS,
   QUICK_UNDERTONES,
 } from "@/lib/onboarding/constants";
@@ -192,7 +194,7 @@ export function OnboardingFlow() {
   const isManualReview = skipFaceCapture && !ob.aiSnapshot;
   const needsAnalyze =
     step === "analyze" &&
-    ob.photos.length >= 1 &&
+    ob.photos.length >= ONBOARDING_MIN_PHOTOS &&
     !ob.aiSnapshot &&
     !skipFaceCapture &&
     !analyzing;
@@ -208,7 +210,7 @@ export function OnboardingFlow() {
   const applyFiles = useCallback(
     (list: FileList | null) => {
       if (!list?.length) return;
-      const remaining = Math.max(0, 3 - ob.photos.length);
+      const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
       const queue = Array.from(list)
         .filter((f) => f.type.startsWith("image/"))
         .slice(0, remaining);
@@ -230,21 +232,19 @@ export function OnboardingFlow() {
   }, []);
 
   async function runAnalyze() {
-    const token = getAccessToken();
-    if (!token) {
-      ob.setAnalyzeStatus("error", "auth");
-      return;
-    }
-    if (ob.photos.length < 1) return;
+    if (ob.photos.length < ONBOARDING_MIN_PHOTOS) return;
     ob.setAnalyzeStatus("loading");
     try {
       const fd = new FormData();
       ob.photos.forEach((p) => fd.append("images", p.file));
       fd.append("locale", locale);
+      const token = getAccessToken();
+      const headers: HeadersInit = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/analyze-skin`, {
         method: "POST",
         body: fd,
-        headers: { Authorization: `Bearer ${token}` },
+        headers,
       });
       const json = (await res.json().catch(() => ({}))) as {
         success?: boolean;
@@ -252,6 +252,10 @@ export function OnboardingFlow() {
         error?: { message?: string };
       };
       if (!res.ok || !json.data) {
+        if (res.status === 401 || res.status === 403) {
+          ob.setAnalyzeStatus("error", "auth");
+          return;
+        }
         ob.setAnalyzeStatus(
           "error",
           json.error?.message ?? `HTTP ${res.status}`,
@@ -291,7 +295,7 @@ export function OnboardingFlow() {
 
   const stickyCanContinue =
     needsAnalyze
-      ? ob.photos.length >= 1
+      ? ob.photos.length >= ONBOARDING_MIN_PHOTOS
       : step === "summary"
         ? !finishing
         : canProceed(step, ob, skipFaceCapture);
@@ -800,7 +804,7 @@ function PhotoCaptureBlock({
         onChange={(e) => {
           const list = e.target.files;
           if (list?.length) {
-            const remaining = Math.max(0, 3 - ob.photos.length);
+            const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
             Array.from(list)
               .filter((f) => f.type.startsWith("image/"))
               .slice(0, remaining)
@@ -820,7 +824,7 @@ function PhotoCaptureBlock({
         onChange={(e) => {
           const list = e.target.files;
           if (list?.length) {
-            const remaining = Math.max(0, 3 - ob.photos.length);
+            const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
             Array.from(list)
               .filter((f) => f.type.startsWith("image/"))
               .slice(0, remaining)
@@ -839,7 +843,7 @@ function PhotoCaptureBlock({
           size="lg"
           className="min-h-12 gap-2"
           onClick={openCamera}
-          disabled={ob.photos.length >= 3}
+          disabled={ob.photos.length >= ONBOARDING_MAX_PHOTOS}
         >
           <Camera className="size-4" aria-hidden />
           {tPrivacy("captureCard.actionCamera")}
@@ -850,15 +854,21 @@ function PhotoCaptureBlock({
           size="lg"
           className="min-h-12 gap-2"
           onClick={openLibrary}
-          disabled={ob.photos.length >= 3}
+          disabled={ob.photos.length >= ONBOARDING_MAX_PHOTOS}
         >
           <ImagePlus className="size-4" aria-hidden />
           {tPrivacy("captureCard.actionLibrary")}
         </Button>
       </div>
 
-      {ob.photos.length >= 3 && (
+      {ob.photos.length >= ONBOARDING_MAX_PHOTOS && (
         <p className="text-xs text-amber-600 dark:text-amber-400">{t("photos.maxPhotos")}</p>
+      )}
+
+      {ob.photos.length > 0 && ob.photos.length < ONBOARDING_MIN_PHOTOS && (
+        <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+          {t("photos.needMore")}
+        </p>
       )}
 
       {ob.photos.length > 0 && (
@@ -883,7 +893,7 @@ function PhotoCaptureBlock({
               variant="ghost"
               size="sm"
               onClick={openLibrary}
-              disabled={ob.photos.length >= 3}
+              disabled={ob.photos.length >= ONBOARDING_MAX_PHOTOS}
             >
               {tPrivacy("captureCard.retake")}
             </Button>
@@ -914,7 +924,7 @@ function PhotoCaptureBlock({
           }
         >
           {ob.analyzeError === "auth"
-            ? tAuth("errorGeneric")
+            ? t("photos.analyzeNeedLogin")
             : ob.analyzeError === "network"
               ? tAuth("networkError")
               : t("photos.analyzeFail")}
