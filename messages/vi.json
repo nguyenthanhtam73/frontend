@@ -640,6 +640,15 @@
     "summaryRecapContext": "Hoàn cảnh: {value}",
     "summaryOptional": "Ghi chú thêm (tùy chọn)",
     "homeLink": "Về trang chủ",
+    "guestTrial": {
+      "title": "Ê, mày thử onboarding rồi kìa 😂",
+      "body1": "Bạn đã dùng thử onboarding 1 lần rồi.",
+      "body2": "DaDiary cần login để lưu nhật ký da, routine, và AI nhớ lâu dài cho bạn.",
+      "body3": "Không login thì lần sau phải làm lại từ đầu, hơi phí vl 😅",
+      "registerCta": "Đăng ký ngay",
+      "loginCta": "Đăng nhập",
+      "homeLink": "Về trang chủ"
+    },
     "summaryBadge": "Chăm da khởi đầu của bạn",
     "summaryFoot": "Ghi nhật ký bằng ảnh + cảm nhận mỗi ngày giúp bạn đồng hành sát hơn. Không hứa “da hoàn hảo” qua đêm — chỉ tiến bộ rõ ràng nếu bạn kiên trì.",
     "skillTitle": "Chế độ phản hồi của AI",

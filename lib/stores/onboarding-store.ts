@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import { getAccessToken } from "@/lib/auth-token";
+import { ONBOARDING_GUEST_TRIAL_KEY } from "@/lib/onboarding/constants";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 
 /** Primary skin type (self-reported or confirmed from AI). */
@@ -97,6 +99,32 @@ const undertoneSet = new Set<SkinUndertone>([
 ]);
 const goalSet = new Set<SkinGoal>(["glow", "clear_acne", "barrier", "anti_aging", "unsure"]);
 
+/** True when a guest has already finished onboarding once on this device. */
+export function hasGuestCompletedOnboardingTrial(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(ONBOARDING_GUEST_TRIAL_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/** Persist one-time guest trial flag (logged-in users are not limited). */
+export function markGuestOnboardingTrialComplete(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ONBOARDING_GUEST_TRIAL_KEY, "true");
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+/** Guest = no JWT; logged-in users may repeat onboarding freely. */
+export function isGuestOnboardingBlocked(): boolean {
+  if (getAccessToken()) return false;
+  return hasGuestCompletedOnboardingTrial();
+}
+
 export const useOnboardingStore = create<Store>((set) => ({
   ...initial,
   setSkinType: (skinType) => set({ skinType }),
@@ -153,7 +181,12 @@ export const useOnboardingStore = create<Store>((set) => ({
       }
       return initial;
     }),
-  markComplete: () => set({ completedAt: new Date().toISOString() }),
+  markComplete: () => {
+    if (!getAccessToken()) {
+      markGuestOnboardingTrialComplete();
+    }
+    set({ completedAt: new Date().toISOString() });
+  },
   applyAiAnalyzeResult: (data) =>
     set((s) => {
       const st = skinSet.has(data.skin_type_guess as SkinTypeCard)

@@ -7,6 +7,7 @@ import {
   Camera,
   Check,
   ImagePlus,
+  Laugh,
   Sparkles,
   X,
 } from "lucide-react";
@@ -35,7 +36,9 @@ import {
   type CoachWelcomePayload,
 } from "@/lib/types/starter-routine";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
+import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
 import {
+  isGuestOnboardingBlocked,
   ONBOARDING_STEPS,
   type OnboardingStepId,
   type OnboardingState,
@@ -138,6 +141,7 @@ export function OnboardingFlow() {
   const tCheckIn = useTranslations("checkIn");
   const locale = useLocale();
   const router = useRouter();
+  const [guestTrialBlocked, setGuestTrialBlocked] = useState<boolean | null>(null);
   const [idx, setIdx] = useState(0);
   const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [finishing, setFinishing] = useState(false);
@@ -162,6 +166,18 @@ export function OnboardingFlow() {
 
   const photoCount = useOnboardingStore((s) => s.photos.length);
   const clearPhotos = useOnboardingStore((s) => s.clearPhotos);
+
+  const refreshGuestTrialGate = useCallback(() => {
+    setGuestTrialBlocked(isGuestOnboardingBlocked());
+  }, []);
+
+  useEffect(() => {
+    refreshGuestTrialGate();
+    const onAuthChanged = () => refreshGuestTrialGate();
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+  }, [refreshGuestTrialGate]);
+
   useEffect(() => {
     if (skipFaceCapture && photoCount > 0) {
       clearPhotos();
@@ -409,6 +425,24 @@ export function OnboardingFlow() {
     } finally {
       setFinishing(false);
     }
+  }
+
+  if (guestTrialBlocked === null) {
+    return null;
+  }
+
+  if (guestTrialBlocked) {
+    return (
+      <GuestTrialGate
+        title={t("guestTrial.title")}
+        body1={t("guestTrial.body1")}
+        body2={t("guestTrial.body2")}
+        body3={t("guestTrial.body3")}
+        registerLabel={t("guestTrial.registerCta")}
+        loginLabel={t("guestTrial.loginCta")}
+        homeLabel={t("guestTrial.homeLink")}
+      />
+    );
   }
 
   return (
@@ -947,6 +981,66 @@ function canProceed(
  * and gets explicit choices: retry the save, or proceed without saving (the
  * old behaviour, but now opt-in instead of silent).
  */
+/** Shown when a guest has already completed their one free onboarding on this device. */
+function GuestTrialGate({
+  title,
+  body1,
+  body2,
+  body3,
+  registerLabel,
+  loginLabel,
+  homeLabel,
+}: {
+  title: string;
+  body1: string;
+  body2: string;
+  body3: string;
+  registerLabel: string;
+  loginLabel: string;
+  homeLabel: string;
+}) {
+  return (
+    <div className="mx-auto w-full max-w-md px-4 sm:px-0">
+      <Card className="overflow-hidden border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-background to-primary/5 shadow-lg dark:border-amber-500/25 dark:from-amber-950/40 dark:to-primary/10">
+        <CardContent className="space-y-6 p-6 text-center sm:p-8">
+          <div
+            className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-amber-100 text-amber-600 shadow-inner motion-safe:animate-in motion-safe:zoom-in motion-safe:duration-500 dark:bg-amber-900/50 dark:text-amber-300"
+            aria-hidden
+          >
+            <Laugh className="size-8" />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-xl font-bold leading-snug tracking-tight sm:text-2xl">
+              {title}
+            </h2>
+            <div className="space-y-2.5 text-left text-sm leading-relaxed text-muted-foreground sm:text-base">
+              <p>{body1}</p>
+              <p>{body2}</p>
+              <p className="font-medium text-foreground/90">{body3}</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button asChild size="lg" className="min-h-12 w-full text-base font-semibold">
+              <Link href="/register">{registerLabel}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="min-h-11 w-full">
+              <Link href="/login">{loginLabel}</Link>
+            </Button>
+          </div>
+          <p>
+            <Link
+              href="/"
+              className="text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+            >
+              {homeLabel}
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function FinishErrorBanner({
   kind,
   authMessage,

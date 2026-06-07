@@ -640,6 +640,15 @@
     "summaryRecapContext": "Context: {value}",
     "summaryOptional": "Optional notes (body areas, current routine)",
     "homeLink": "Home",
+    "guestTrial": {
+      "title": "Yo, you already tried onboarding 😂",
+      "body1": "You've used your one free onboarding round.",
+      "body2": "DaDiary needs you logged in to save your skin diary, routine, and long-term AI memory.",
+      "body3": "No login = start from scratch next time. Kind of a waste, ngl 😅",
+      "registerCta": "Sign up now",
+      "loginCta": "Log in",
+      "homeLink": "Back to home"
+    },
     "summaryBadge": "Your starter routine",
     "summaryFoot": "Daily photos + skin notes make the timeline and your buddy sharper. We won't promise “perfect skin” overnight — just clear progress when you stay consistent.",
     "skillTitle": "AI reply mode",
