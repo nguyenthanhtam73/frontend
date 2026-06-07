@@ -3,7 +3,6 @@
 import { useTranslations } from "next-intl";
 import {
   AlertCircle,
-  Heart,
   Moon,
   RefreshCw,
   Send,
@@ -74,7 +73,6 @@ export function CoachWelcomeClient() {
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [starter, setStarter] = useState<StarterRoutineDTO | null>(null);
-  const [visionNotes, setVisionNotes] = useState<string | undefined>();
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [enterAnim, setEnterAnim] = useState(false);
@@ -96,7 +94,6 @@ export function CoachWelcomeClient() {
     setView("ok");
     let cachedStarter: StarterRoutineDTO | null = null;
     let cachedProfileId: string | null = null;
-    let cachedVision: string | undefined;
     try {
       const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
       if (raw) {
@@ -104,10 +101,8 @@ export function CoachWelcomeClient() {
         if (p.starterRoutine) {
           cachedProfileId = p.profileId ?? null;
           cachedStarter = p.starterRoutine;
-          cachedVision = p.coachingNotes;
           setProfileId(p.profileId ?? null);
           setStarter(p.starterRoutine);
-          setVisionNotes(p.coachingNotes);
           setLoading(false);
           return;
         }
@@ -146,12 +141,10 @@ export function CoachWelcomeClient() {
         setProfileId(prof.id);
         const sr = parseSnapshotStarter(prof.onboarding_snapshot);
         setStarter(sr ?? cachedStarter);
-        setVisionNotes(cachedVision);
         if (!sr && !cachedStarter) setView("empty");
       } else if (cachedProfileId && cachedStarter) {
         setProfileId(cachedProfileId);
         setStarter(cachedStarter);
-        setVisionNotes(cachedVision);
       } else {
         setStarter(null);
         setView("empty");
@@ -251,30 +244,6 @@ export function CoachWelcomeClient() {
         </h1>
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </header>
-
-      {visionNotes ? (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="space-y-2 pt-6">
-            <div className="flex items-center gap-2 text-sm font-medium text-primary">
-              <Sparkles className="size-4 shrink-0" aria-hidden />
-              {t("visionSection")}
-            </div>
-            <p className="text-sm leading-relaxed text-foreground">{visionNotes}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {starter.encouragement ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Heart className="size-4 text-rose-500" aria-hidden />
-              {t("encouragement")}
-            </div>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.encouragement}</p>
-          </CardContent>
-        </Card>
-      ) : null}
 
       {starter.skin_readback ? (
         <Card>
