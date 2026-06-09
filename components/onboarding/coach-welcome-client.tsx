@@ -5,6 +5,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Eye,
+  Loader2,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -36,8 +37,7 @@ import { cn } from "@/lib/utils";
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_ATTEMPTS = 20;
-
-type AiRoutineStatus = "generating" | "fallback";
+const ROUTINE_HIGHLIGHT_MS = 2200;
 
 function routineFingerprint(r: StarterRoutineDTO): string {
   return JSON.stringify({
@@ -46,6 +46,7 @@ function routineFingerprint(r: StarterRoutineDTO): string {
     week_notes: r.week_notes,
     encouragement: r.encouragement,
     rationale: r.rationale,
+    skin_readback: r.skin_readback,
   });
 }
 
@@ -56,23 +57,45 @@ export function CoachWelcomeClient() {
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [starter, setStarter] = useState<StarterRoutineDTO | null>(null);
-  const [starterRoutinePending, setStarterRoutinePending] = useState(false);
-  const [aiRoutineStatus, setAiRoutineStatus] = useState<AiRoutineStatus | null>(null);
+  const [isGeneratingRoutine, setIsGeneratingRoutine] = useState(false);
+  const [showFallbackBanner, setShowFallbackBanner] = useState(false);
+  const [routineJustUpdated, setRoutineJustUpdated] = useState(false);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const initialRoutineRef = useRef<string | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isGeneratingRef = useRef(false);
   const [isGuest, setIsGuest] = useState(false);
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const beginAiTracking = useCallback((starter: StarterRoutineDTO, pending: boolean) => {
-    initialRoutineRef.current = routineFingerprint(starter);
-    if (pending) {
-      setStarterRoutinePending(true);
-      setAiRoutineStatus("generating");
-    } else {
-      setStarterRoutinePending(false);
-      setAiRoutineStatus(null);
-    }
+  const triggerRoutineHighlight = useCallback(() => {
+    setRoutineJustUpdated(true);
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => {
+      setRoutineJustUpdated(false);
+    }, ROUTINE_HIGHLIGHT_MS);
+  }, []);
+
+  const applyStarterFromAi = useCallback(
+    (next: StarterRoutineDTO, opts: { upgraded: boolean; fallback?: boolean }) => {
+      setStarter(next);
+      isGeneratingRef.current = false;
+      setIsGeneratingRoutine(false);
+      if (opts.upgraded) {
+        setShowFallbackBanner(false);
+        triggerRoutineHighlight();
+      } else if (opts.fallback) {
+        setShowFallbackBanner(true);
+      }
+    },
+    [triggerRoutineHighlight],
+  );
+
+  const beginAiTracking = useCallback((routine: StarterRoutineDTO, pending: boolean) => {
+    initialRoutineRef.current = routineFingerprint(routine);
+    isGeneratingRef.current = pending;
+    setIsGeneratingRoutine(pending);
+    if (pending) setShowFallbackBanner(false);
   }, []);
 
   const applyReviewData = useCallback(
@@ -93,6 +116,9 @@ export function CoachWelcomeClient() {
 
   useEffect(() => {
     consumeJustCompletedOnboarding();
+    return () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    };
   }, []);
 
   const load = useCallback(async () => {
@@ -181,25 +207,54 @@ export function CoachWelcomeClient() {
       const patch = (event as CustomEvent<Partial<CoachWelcomePayload>>).detail;
       if (!patch) return;
       if (patch.profileId) setProfileId(patch.profileId);
+
       if (patch.starterRoutine) {
-        setStarter(patch.starterRoutine);
+        const baseline = initialRoutineRef.current;
+        const upgraded =
+          Boolean(baseline) &&
+          routineFingerprint(patch.starterRoutine) !== baseline;
+
         if (patch.starterRoutinePending === true) {
+          setStarter(patch.starterRoutine);
           beginAiTracking(patch.starterRoutine, true);
-        } else if (patch.starterRoutinePending === false) {
-          setStarterRoutinePending(false);
-          setAiRoutineStatus(null);
+          return;
         }
-      } else if (patch.starterRoutinePending === false) {
-        setStarterRoutinePending(false);
-        setAiRoutineStatus(null);
+
+        applyStarterFromAi(patch.starterRoutine, {
+          upgraded,
+          fallback: isGeneratingRef.current && !upgraded,
+        });
+
+        try {
+          const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
+          if (raw) {
+            const p = JSON.parse(raw) as CoachWelcomePayload;
+            sessionStorage.setItem(
+              COACH_WELCOME_STORAGE_KEY,
+              JSON.stringify({
+                ...p,
+                ...patch,
+                starterRoutinePending: false,
+              }),
+            );
+          }
+        } catch {
+          /* ignore storage errors */
+        }
+        return;
+      }
+
+      if (patch.starterRoutinePending === false) {
+        isGeneratingRef.current = false;
+        setIsGeneratingRoutine(false);
       }
     };
     window.addEventListener(COACH_WELCOME_SESSION_EVENT, onSessionPatch);
     return () => window.removeEventListener(COACH_WELCOME_SESSION_EVENT, onSessionPatch);
-  }, [beginAiTracking]);
+  }, [applyStarterFromAi, beginAiTracking]);
 
   useEffect(() => {
-    if (!starterRoutinePending || isGuest || !getAccessToken()) return;
+    if (!isGeneratingRoutine || isGuest || !getAccessToken()) return;
 
     let cancelled = false;
     const poll = async () => {
@@ -209,19 +264,15 @@ export function CoachWelcomeClient() {
         try {
           const prof = await fetchSkinProfile();
           if (!prof) continue;
-          const pending = isStarterRoutinePending(prof.onboarding_snapshot);
+          if (isStarterRoutinePending(prof.onboarding_snapshot)) continue;
           const sr = parseSnapshotStarter(prof.onboarding_snapshot);
           if (!sr) continue;
-
-          if (pending) continue;
 
           const baseline = initialRoutineRef.current ?? routineFingerprint(sr);
           const upgraded = routineFingerprint(sr) !== baseline;
 
-          setStarter(sr);
           setProfileId(prof.id);
-          setStarterRoutinePending(false);
-          setAiRoutineStatus(upgraded ? null : "fallback");
+          applyStarterFromAi(sr, { upgraded, fallback: !upgraded });
 
           try {
             const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
@@ -246,8 +297,9 @@ export function CoachWelcomeClient() {
         }
       }
       if (!cancelled) {
-        setStarterRoutinePending(false);
-        setAiRoutineStatus("fallback");
+        isGeneratingRef.current = false;
+        setIsGeneratingRoutine(false);
+        setShowFallbackBanner(true);
       }
     };
 
@@ -255,7 +307,20 @@ export function CoachWelcomeClient() {
     return () => {
       cancelled = true;
     };
-  }, [starterRoutinePending, isGuest]);
+  }, [applyStarterFromAi, isGeneratingRoutine, isGuest]);
+
+  useEffect(() => {
+    if (!isGeneratingRoutine || !isGuest) return;
+
+    const timeoutMs = POLL_INTERVAL_MS * POLL_MAX_ATTEMPTS;
+    const timer = setTimeout(() => {
+      isGeneratingRef.current = false;
+      setIsGeneratingRoutine(false);
+      setShowFallbackBanner(true);
+    }, timeoutMs);
+
+    return () => clearTimeout(timer);
+  }, [isGeneratingRoutine, isGuest]);
 
   const completedLabel = (() => {
     if (!completedAt) return "";
@@ -346,19 +411,24 @@ export function CoachWelcomeClient() {
         </p>
       </header>
 
-      {aiRoutineStatus === "generating" ? (
-        <p className="flex items-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
-          <RefreshCw className="size-3.5 shrink-0 animate-spin" aria-hidden />
+      {isGeneratingRoutine ? (
+        <p
+          className="flex items-center justify-center gap-2 text-xs leading-relaxed text-muted-foreground sm:justify-start"
+          role="status"
+          aria-live="polite"
+        >
+          <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground/80" aria-hidden />
           {t("starterGenerating")}
         </p>
       ) : null}
 
-      {aiRoutineStatus === "fallback" ? (
-        <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
-          <CardContent className="pt-6 text-sm leading-relaxed text-muted-foreground">
-            {t("starterFallbackNotice")}
-          </CardContent>
-        </Card>
+      {showFallbackBanner ? (
+        <div
+          className="rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2.5 text-sm leading-relaxed text-amber-950/80 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100/90"
+          role="status"
+        >
+          {t("starterFallbackNotice")}
+        </div>
       ) : null}
 
       {starter.skin_readback ? (
@@ -372,12 +442,20 @@ export function CoachWelcomeClient() {
         </Card>
       ) : null}
 
-      <StarterRoutineCards
-        starter={starter}
-        morningLabel={t("morning")}
-        eveningLabel={t("evening")}
-        noStepsLabel={t("noSteps")}
-      />
+      <div
+        className={cn(
+          "rounded-xl transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
+          routineJustUpdated &&
+            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-sm motion-safe:duration-700",
+        )}
+      >
+        <StarterRoutineCards
+          starter={starter}
+          morningLabel={t("morning")}
+          eveningLabel={t("evening")}
+          noStepsLabel={t("noSteps")}
+        />
+      </div>
 
       {starter.rationale ? (
         <Card>

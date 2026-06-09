@@ -358,7 +358,7 @@
     "subtitle": "Morning/evening steps from your getting-to-know-your-skin answers — friendly, doable, not a substitute for a dermatologist.",
     "loading": "Loading…",
     "starterGenerating": "AI is building your personalized routine — this page will update in a moment…",
-    "starterFallbackNotice": "You're on the default starter routine for now — you can adjust it anytime.",
+    "starterFallbackNotice": "You're on the default starter routine for now. You can adjust it anytime!",
     "empty": "No starter data yet. Finish getting-to-know-your-skin while signed in.",
     "backOnboarding": "Back to getting to know your skin",
     "visionSection": "From your photos (reminder)",

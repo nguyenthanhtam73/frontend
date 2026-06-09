@@ -531,6 +531,7 @@ export function OnboardingFlow() {
     goToCoachWelcome({
       profileId: GUEST_COACH_PROFILE_ID,
       starterRoutine: fallbackStarter,
+      starterRoutinePending: true,
       coachingNotes,
     });
 
@@ -556,7 +557,10 @@ export function OnboardingFlow() {
           data?: { starter_routine?: StarterRoutineDTO };
         };
         if (res.ok && payload.success && payload.data?.starter_routine) {
-          patchCoachWelcomeSession({ starterRoutine: payload.data.starter_routine });
+          patchCoachWelcomeSession({
+            starterRoutine: payload.data.starter_routine,
+            starterRoutinePending: false,
+          });
         }
       } catch {
         /* offline — local fallback already shown */
