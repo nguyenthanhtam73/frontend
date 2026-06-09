@@ -11,6 +11,7 @@ import {
   loadGuestReviewFromSession,
   type OnboardingReviewData,
 } from "@/lib/onboarding/review-data";
+import { isCoachWelcomeRoutinePending } from "@/lib/onboarding/coach-welcome-session";
 import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { getAccessToken } from "@/lib/auth-token";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
@@ -54,6 +55,12 @@ export function OnboardingPageClient() {
       }
       setReviewData(null);
       setMode("flow");
+      return;
+    }
+
+    if (isCoachWelcomeRoutinePending()) {
+      setMode("redirecting");
+      router.replace("/onboarding/coach-welcome");
       return;
     }
 

@@ -561,9 +561,17 @@ export function OnboardingFlow() {
             starterRoutine: payload.data.starter_routine,
             starterRoutinePending: false,
           });
+        } else {
+          patchCoachWelcomeSession({
+            starterRoutine: fallbackStarter,
+            starterRoutinePending: false,
+          });
         }
       } catch {
-        /* offline — local fallback already shown */
+        patchCoachWelcomeSession({
+          starterRoutine: fallbackStarter,
+          starterRoutinePending: false,
+        });
       }
     })();
   }

@@ -7,12 +7,15 @@ import { useCallback, useState } from "react";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
+import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import type { OnboardingReviewData } from "@/lib/onboarding/review-data";
+import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
 import { GUEST_COACH_PROFILE_ID } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
 
@@ -199,35 +202,11 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
       </div>
 
       {data.starter ? (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-5 text-primary" aria-hidden />
-              <h2 className="text-lg font-semibold">{tReview("routineSection")}</h2>
-            </div>
-            <Link
-              href="/onboarding/coach-welcome"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              {tReview("viewFullRoutine")}
-            </Link>
-          </div>
-          <StarterRoutineCards
-            starter={data.starter}
-            morningLabel={tCoach("morning")}
-            eveningLabel={tCoach("evening")}
-            noStepsLabel={tCoach("noSteps")}
-          />
-          <ProductSuggestionsCard
-            suggestions={data.starter.product_suggestions}
-            source="starter_routine"
-            contextId={
-              data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
-                ? data.profileId
-                : undefined
-            }
-          />
-        </section>
+        data.isGuest ? (
+          <GuestReviewRoutineSection data={data} />
+        ) : (
+          <LoggedInReviewRoutineSection data={data} />
+        )
       ) : null}
 
       {data.isGuest ? (
@@ -247,6 +226,96 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           onClose={closeLightbox}
         />
       ) : null}
+    </div>
+  );
+}
+
+function LoggedInReviewRoutineSection({ data }: { data: OnboardingReviewData }) {
+  const tCoach = useTranslations("coachWelcome");
+
+  if (!data.starter) return null;
+
+  return (
+    <section className="space-y-4">
+      <ReviewRoutineHeader />
+      <StarterRoutineCards
+        starter={data.starter}
+        morningLabel={tCoach("morning")}
+        eveningLabel={tCoach("evening")}
+        noStepsLabel={tCoach("noSteps")}
+      />
+      <ProductSuggestionsCard
+        suggestions={data.starter.product_suggestions}
+        source="starter_routine"
+        contextId={
+          data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
+            ? data.profileId
+            : undefined
+        }
+      />
+    </section>
+  );
+}
+
+function GuestReviewRoutineSection({ data }: { data: OnboardingReviewData }) {
+  const tCoach = useTranslations("coachWelcome");
+  const session = readCoachWelcomeSession();
+  const initialPending =
+    data.starterRoutinePending === true || session?.starterRoutinePending === true;
+  const starter = data.starter!;
+
+  const { starter: liveStarter, isGeneratingRoutine, showFallbackBanner, routineJustUpdated } =
+    useStarterRoutineLive({
+      initialStarter: starter,
+      initialPending,
+      isGuest: true,
+    });
+
+  return (
+    <section className="space-y-4">
+      <ReviewRoutineHeader />
+      <StarterRoutineGenerationNotice
+        isGeneratingRoutine={isGeneratingRoutine}
+        showFallbackBanner={showFallbackBanner}
+        isGuest
+      />
+      <div
+        className={cn(
+          "rounded-xl transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
+          routineJustUpdated &&
+            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-sm motion-safe:duration-700",
+        )}
+      >
+        <StarterRoutineCards
+          starter={liveStarter}
+          morningLabel={tCoach("morning")}
+          eveningLabel={tCoach("evening")}
+          noStepsLabel={tCoach("noSteps")}
+        />
+      </div>
+      <ProductSuggestionsCard
+        suggestions={liveStarter.product_suggestions}
+        source="starter_routine"
+      />
+    </section>
+  );
+}
+
+function ReviewRoutineHeader() {
+  const tReview = useTranslations("onboarding.review");
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <Sparkles className="size-5 text-primary" aria-hidden />
+        <h2 className="text-lg font-semibold">{tReview("routineSection")}</h2>
+      </div>
+      <Link
+        href="/onboarding/coach-welcome"
+        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+      >
+        {tReview("viewFullRoutine")}
+      </Link>
     </div>
   );
 }

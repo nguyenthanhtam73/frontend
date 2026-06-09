@@ -31,6 +31,7 @@ export type OnboardingReviewData = {
   photosSkipped: boolean;
   starter: StarterRoutineDTO | null;
   coachingNotes?: string;
+  starterRoutinePending?: boolean;
 };
 
 export function buildReviewSummaryFromStore(ob: OnboardingState): OnboardingReviewSummary {
@@ -95,6 +96,7 @@ export function loadGuestReviewFromSession(): OnboardingReviewData | null {
       photosSkipped: summary?.photos_skipped === true,
       starter: p.starterRoutine,
       coachingNotes: p.coachingNotes,
+      starterRoutinePending: p.starterRoutinePending === true,
     };
   } catch {
     return null;
