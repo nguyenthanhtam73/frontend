@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Eye, EyeOff, Sparkles } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
@@ -339,10 +339,12 @@ function ReviewPhotoLightbox({
       onClick={onClose}
     >
       <IconDismissButton
-        label={closeLabel}
+        ariaLabel={closeLabel}
         onClick={onClose}
         className="absolute right-4 top-4 z-10 bg-black/50 text-white hover:bg-black/70"
-      />
+      >
+        <X className="size-4" aria-hidden />
+      </IconDismissButton>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
