@@ -25,6 +25,8 @@ export type OnboardingReviewSummary = {
   skill_level?: string;
   body_concerns?: string[];
   completed_at?: string;
+  photo_urls?: string[];
+  photos_skipped?: boolean;
 };
 
 export type CoachWelcomePayload = {

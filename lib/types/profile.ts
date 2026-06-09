@@ -6,6 +6,7 @@ export type SkinProfileResponse = {
   skill_level: string;
   concerns?: string[];
   notes?: string;
+  photo_urls?: string[];
   onboarding_snapshot?: Record<string, unknown> | string | null;
   version: number;
   created_at: string;

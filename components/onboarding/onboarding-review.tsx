@@ -1,14 +1,17 @@
 "use client";
 
-import { CheckCircle2, Eye, Sparkles } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Sparkles } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
 
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
+import { apiBaseUrl } from "@/lib/api";
 import type { OnboardingReviewData } from "@/lib/onboarding/review-data";
 import { GUEST_COACH_PROFILE_ID } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
@@ -30,11 +33,19 @@ type OnboardingReviewProps = {
   onDeleted?: () => void;
 };
 
+function absUploadUrl(url: string): string {
+  if (url.startsWith("http") || url.startsWith("blob:")) return url;
+  return `${apiBaseUrl}${url}`;
+}
+
 export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const t = useTranslations("onboarding");
   const tReview = useTranslations("onboarding.review");
   const tCoach = useTranslations("coachWelcome");
+  const tCheckIn = useTranslations("checkIn");
   const formatter = useFormatter();
+  const [showPhotos, setShowPhotos] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const completedLabel = (() => {
     const d = new Date(data.completedAt);
@@ -59,6 +70,11 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
       : id,
   );
 
+  const hasPhotos = data.photoUrls.length > 0;
+  const showPhotoSection = data.photosSkipped || hasPhotos;
+
+  const closeLightbox = useCallback(() => setLightboxUrl(null), []);
+
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
       <header className="space-y-3 text-center sm:text-left">
@@ -69,6 +85,51 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
           {tReview("title")}
         </h1>
+
+        {showPhotoSection ? (
+          <div className="space-y-3">
+            {data.photosSkipped ? (
+              <p className="text-sm text-muted-foreground">{tReview("photosSkipped")}</p>
+            ) : hasPhotos ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  aria-expanded={showPhotos}
+                  onClick={() => setShowPhotos((v) => !v)}
+                >
+                  {showPhotos ? (
+                    <>
+                      <EyeOff className="size-4" aria-hidden />
+                      {tReview("hidePhotos")}
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="size-4" aria-hidden />
+                      {tReview("showPhotos")}
+                    </>
+                  )}
+                </Button>
+
+                {showPhotos ? (
+                  <section aria-label={tReview("photosSection")} className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {tReview("photosSection")}
+                    </p>
+                    <ReviewPhotoGrid
+                      urls={data.photoUrls}
+                      altLabel={(n) => tCheckIn("altPhoto", { n })}
+                      onOpen={setLightboxUrl}
+                    />
+                  </section>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        ) : null}
+
         {completedLabel ? (
           <p className="text-sm text-muted-foreground">
             {tReview("completedOn", { date: completedLabel })}
@@ -178,6 +239,117 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
       ) : null}
 
       <OnboardingDeleteSection isGuest={data.isGuest} onDeleted={onDeleted} />
+
+      {lightboxUrl ? (
+        <ReviewPhotoLightbox
+          url={lightboxUrl}
+          closeLabel={tReview("closePhoto")}
+          onClose={closeLightbox}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function ReviewPhotoGrid({
+  urls,
+  altLabel,
+  onOpen,
+}: {
+  urls: string[];
+  altLabel: (n: number) => string;
+  onOpen: (url: string) => void;
+}) {
+  const colClass =
+    urls.length >= 3
+      ? "grid-cols-3"
+      : urls.length === 2
+        ? "grid-cols-2"
+        : "grid-cols-1 max-w-[12rem]";
+
+  return (
+    <ul className={cn("grid gap-2 sm:gap-3", colClass)}>
+      {urls.map((url, i) => (
+        <li key={`${url}-${i}`}>
+          <ReviewPhotoThumb
+            src={absUploadUrl(url)}
+            alt={altLabel(i + 1)}
+            onOpen={() => onOpen(absUploadUrl(url))}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ReviewPhotoThumb({
+  src,
+  alt,
+  onOpen,
+}: {
+  src: string;
+  alt: string;
+  onOpen: () => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group relative aspect-3/4 w-full overflow-hidden rounded-xl border border-border/80 bg-muted shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {!loaded ? (
+        <span
+          className="absolute inset-0 animate-pulse bg-muted-foreground/10"
+          aria-hidden
+        />
+      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        className={cn(
+          "size-full object-cover transition-opacity duration-200",
+          loaded ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </button>
+  );
+}
+
+function ReviewPhotoLightbox({
+  url,
+  closeLabel,
+  onClose,
+}: {
+  url: string;
+  closeLabel: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={closeLabel}
+      onClick={onClose}
+    >
+      <IconDismissButton
+        label={closeLabel}
+        onClick={onClose}
+        className="absolute right-4 top-4 z-10 bg-black/50 text-white hover:bg-black/70"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt=""
+        className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      />
     </div>
   );
 }

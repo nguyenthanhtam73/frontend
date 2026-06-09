@@ -301,9 +301,16 @@ export function OnboardingFlow() {
   }
 
   function goToCoachWelcome(pack: CoachWelcomePayload) {
+    const photosSkipped = skipFaceCapture || ob.photos.length === 0;
     const full: CoachWelcomePayload = {
       ...pack,
-      reviewSummary: pack.reviewSummary ?? buildReviewSummaryFromStore(ob),
+      reviewSummary: {
+        ...(pack.reviewSummary ?? buildReviewSummaryFromStore(ob)),
+        photo_urls: photosSkipped
+          ? undefined
+          : ob.photos.slice(0, ONBOARDING_MAX_PHOTOS).map((p) => p.preview),
+        photos_skipped: photosSkipped,
+      },
     };
     try {
       sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(full));
@@ -333,6 +340,7 @@ export function OnboardingFlow() {
     const bodyConcerns = [...new Set([...ob.aiConcernTags, ...manual])];
     const token = getAccessToken();
     const undertone = ob.undertone ?? "prefer_not";
+    const photosSkipped = skipFaceCapture || ob.photos.length === 0;
     const finishBody = {
       skin_type: ob.skinType,
       undertone,
@@ -343,6 +351,7 @@ export function OnboardingFlow() {
       body_concerns: bodyConcerns,
       current_routine: ob.currentRoutineText.trim(),
       locale,
+      photos_skipped: photosSkipped,
     };
 
     if (
@@ -371,14 +380,31 @@ export function OnboardingFlow() {
 
     setFinishing(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(finishBody),
-      });
+      const hasPhotos = !photosSkipped && ob.photos.length > 0;
+      let res: Response;
+      if (hasPhotos) {
+        const fd = new FormData();
+        fd.append("payload", JSON.stringify(finishBody));
+        ob.photos.slice(0, ONBOARDING_MAX_PHOTOS).forEach((p) => {
+          fd.append("images", p.file);
+        });
+        res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: fd,
+        });
+      } else {
+        res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(finishBody),
+        });
+      }
       const payload = (await res.json().catch(() => ({}))) as {
         success?: boolean;
         data?: {

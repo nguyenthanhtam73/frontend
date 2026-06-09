@@ -687,7 +687,12 @@
       "deleteSuccess": "Onboarding data deleted. You can start fresh now.",
       "deleteError": "Couldn't delete — try again in a moment.",
       "deleteNeedAuth": "Sign in to delete server-side data.",
-      "dismissToast": "Dismiss"
+      "dismissToast": "Dismiss",
+      "photosSection": "Photos you took",
+      "showPhotos": "View photos",
+      "hidePhotos": "Hide photos",
+      "photosSkipped": "You skipped taking photos.",
+      "closePhoto": "Close photo"
     },
     "summaryBadge": "Your starter routine",
     "summaryFoot": "Daily photos + skin notes make the timeline and your buddy sharper. We won't promise “perfect skin” overnight — just clear progress when you stay consistent.",

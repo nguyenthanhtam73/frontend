@@ -13,6 +13,7 @@ import {
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
 import { hasGuestCompletedOnboardingTrial } from "@/lib/stores/onboarding-store";
+import { ONBOARDING_MAX_PHOTOS } from "@/lib/onboarding/constants";
 
 export type OnboardingReviewData = {
   profileId: string | null;
@@ -23,6 +24,8 @@ export type OnboardingReviewData = {
   goal: string | null;
   skillLevel: string | null;
   concerns: string[];
+  photoUrls: string[];
+  photosSkipped: boolean;
   starter: StarterRoutineDTO | null;
   coachingNotes?: string;
 };
@@ -48,6 +51,10 @@ export function buildReviewFromProfile(profile: SkinProfileResponse): Onboarding
   const concerns = snap?.body_concerns?.length
     ? snap.body_concerns
     : profile.concerns ?? [];
+  const photoUrls = (profile.photo_urls?.length
+    ? profile.photo_urls
+    : snap?.photo_urls ?? []
+  ).slice(0, ONBOARDING_MAX_PHOTOS);
   return {
     profileId: profile.id,
     isGuest: false,
@@ -57,6 +64,8 @@ export function buildReviewFromProfile(profile: SkinProfileResponse): Onboarding
     goal: snap?.goal ?? null,
     skillLevel: profile.skill_level ?? snap?.skill_level ?? null,
     concerns,
+    photoUrls,
+    photosSkipped: snap?.photos_skipped === true,
     starter: parseSnapshotStarter(profile.onboarding_snapshot),
   };
 }
@@ -79,6 +88,8 @@ export function loadGuestReviewFromSession(): OnboardingReviewData | null {
       goal: summary?.goal ?? null,
       skillLevel: summary?.skill_level ?? null,
       concerns: summary?.body_concerns ?? [],
+      photoUrls: (summary?.photo_urls ?? []).slice(0, ONBOARDING_MAX_PHOTOS),
+      photosSkipped: summary?.photos_skipped === true,
       starter: p.starterRoutine,
       coachingNotes: p.coachingNotes,
     };

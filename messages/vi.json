@@ -687,7 +687,12 @@
       "deleteSuccess": "Đã xóa thông tin onboarding. Bạn có thể làm lại từ đầu.",
       "deleteError": "Chưa xóa được — thử lại sau vài giây.",
       "deleteNeedAuth": "Cần đăng nhập để xóa dữ liệu trên máy chủ.",
-      "dismissToast": "Đóng"
+      "dismissToast": "Đóng",
+      "photosSection": "Ảnh đã chụp",
+      "showPhotos": "Xem ảnh",
+      "hidePhotos": "Ẩn ảnh",
+      "photosSkipped": "Bạn đã bỏ qua chụp ảnh.",
+      "closePhoto": "Đóng ảnh"
     },
     "summaryBadge": "Chăm da khởi đầu của bạn",
     "summaryFoot": "Ghi nhật ký bằng ảnh + cảm nhận mỗi ngày giúp bạn đồng hành sát hơn. Không hứa “da hoàn hảo” qua đêm — chỉ tiến bộ rõ ràng nếu bạn kiên trì.",

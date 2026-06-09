@@ -9,6 +9,8 @@ export type OnboardingSnapshot = {
   skin_type?: string;
   body_concerns?: string[];
   completed_via?: string;
+  photos_skipped?: boolean;
+  photo_urls?: string[];
   starter_routine?: Record<string, unknown>;
 };
 
