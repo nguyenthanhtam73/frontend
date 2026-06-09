@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { getAccessToken } from "@/lib/auth-token";
 import {
+  JUST_COMPLETED_ONBOARDING_KEY,
   ONBOARDING_GUEST_TRIAL_KEY,
   ONBOARDING_MAX_PHOTOS,
 } from "@/lib/onboarding/constants";
@@ -126,6 +127,47 @@ export function markGuestOnboardingTrialComplete(): void {
 export function isGuestOnboardingBlocked(): boolean {
   if (getAccessToken()) return false;
   return hasGuestCompletedOnboardingTrial();
+}
+
+/** Mark that the user just finished onboarding (survives one reload of /onboarding). */
+export function markJustCompletedOnboarding(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(JUST_COMPLETED_ONBOARDING_KEY, "1");
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+/** Peek without clearing — used by /onboarding to redirect to coach-welcome. */
+export function hasJustCompletedOnboarding(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(JUST_COMPLETED_ONBOARDING_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Read and clear — call once when coach-welcome mounts. */
+export function consumeJustCompletedOnboarding(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const active = sessionStorage.getItem(JUST_COMPLETED_ONBOARDING_KEY) === "1";
+    if (active) sessionStorage.removeItem(JUST_COMPLETED_ONBOARDING_KEY);
+    return active;
+  } catch {
+    return false;
+  }
+}
+
+export function clearJustCompletedOnboarding(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(JUST_COMPLETED_ONBOARDING_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export const useOnboardingStore = create<Store>((set) => ({

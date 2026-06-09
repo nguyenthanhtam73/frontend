@@ -12,7 +12,10 @@ import {
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
-import { hasGuestCompletedOnboardingTrial } from "@/lib/stores/onboarding-store";
+import {
+  clearJustCompletedOnboarding,
+  hasGuestCompletedOnboardingTrial,
+} from "@/lib/stores/onboarding-store";
 import { ONBOARDING_MAX_PHOTOS } from "@/lib/onboarding/constants";
 
 export type OnboardingReviewData = {
@@ -103,6 +106,7 @@ export function clearOnboardingSessionCache(): void {
   try {
     sessionStorage.removeItem(COACH_WELCOME_STORAGE_KEY);
     sessionStorage.removeItem("dadiary_onboarding_exit_anim");
+    clearJustCompletedOnboarding();
   } catch {
     /* ignore */
   }

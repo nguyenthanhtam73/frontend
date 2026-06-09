@@ -14,6 +14,8 @@ import {
 import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { getAccessToken } from "@/lib/auth-token";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
+import { useRouter } from "@/i18n/navigation";
+import { hasJustCompletedOnboarding } from "@/lib/stores/onboarding-store";
 
 const OnboardingFlow = dynamic(
   () =>
@@ -23,13 +25,20 @@ const OnboardingFlow = dynamic(
   { loading: () => <OnboardingFlowSkeleton /> },
 );
 
-type PageMode = "loading" | "review" | "flow";
+type PageMode = "loading" | "review" | "flow" | "redirecting";
 
 export function OnboardingPageClient() {
+  const router = useRouter();
   const [mode, setMode] = useState<PageMode>("loading");
   const [reviewData, setReviewData] = useState<OnboardingReviewData | null>(null);
 
   const resolveMode = useCallback(async () => {
+    if (hasJustCompletedOnboarding()) {
+      setMode("redirecting");
+      router.replace("/onboarding/coach-welcome");
+      return;
+    }
+
     setMode("loading");
     const token = getAccessToken();
     if (token) {
@@ -57,7 +66,7 @@ export function OnboardingPageClient() {
 
     setReviewData(null);
     setMode("flow");
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     void resolveMode();
@@ -66,7 +75,7 @@ export function OnboardingPageClient() {
     return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
   }, [resolveMode]);
 
-  if (mode === "loading") {
+  if (mode === "loading" || mode === "redirecting") {
     return <OnboardingFlowSkeleton />;
   }
 

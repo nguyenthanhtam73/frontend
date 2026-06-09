@@ -9,7 +9,7 @@ import {
   Send,
   ShieldCheck,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
@@ -24,13 +24,30 @@ import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
 import { isOnboardingComplete, isStarterRoutinePending, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
+import { consumeJustCompletedOnboarding } from "@/lib/stores/onboarding-store";
 import {
+  COACH_WELCOME_SESSION_EVENT,
   COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
+
+const POLL_INTERVAL_MS = 3000;
+const POLL_MAX_ATTEMPTS = 20;
+
+type AiRoutineStatus = "generating" | "fallback";
+
+function routineFingerprint(r: StarterRoutineDTO): string {
+  return JSON.stringify({
+    morning: r.morning,
+    evening: r.evening,
+    week_notes: r.week_notes,
+    encouragement: r.encouragement,
+    rationale: r.rationale,
+  });
+}
 
 export function CoachWelcomeClient() {
   const t = useTranslations("coachWelcome");
@@ -40,10 +57,23 @@ export function CoachWelcomeClient() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [starter, setStarter] = useState<StarterRoutineDTO | null>(null);
   const [starterRoutinePending, setStarterRoutinePending] = useState(false);
+  const [aiRoutineStatus, setAiRoutineStatus] = useState<AiRoutineStatus | null>(null);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
+  const initialRoutineRef = useRef<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const beginAiTracking = useCallback((starter: StarterRoutineDTO, pending: boolean) => {
+    initialRoutineRef.current = routineFingerprint(starter);
+    if (pending) {
+      setStarterRoutinePending(true);
+      setAiRoutineStatus("generating");
+    } else {
+      setStarterRoutinePending(false);
+      setAiRoutineStatus(null);
+    }
+  }, []);
 
   const applyReviewData = useCallback(
     (opts: {
@@ -61,6 +91,10 @@ export function CoachWelcomeClient() {
     [],
   );
 
+  useEffect(() => {
+    consumeJustCompletedOnboarding();
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setErrorMsg(null);
@@ -77,7 +111,7 @@ export function CoachWelcomeClient() {
             completedAt: p.reviewSummary?.completed_at ?? null,
             isGuest: p.profileId === GUEST_COACH_PROFILE_ID,
           });
-          setStarterRoutinePending(p.starterRoutinePending === true);
+          beginAiTracking(p.starterRoutine, p.starterRoutinePending === true);
           setLoading(false);
           return;
         }
@@ -99,7 +133,7 @@ export function CoachWelcomeClient() {
               completedAt: prof.updated_at || prof.created_at,
               isGuest: false,
             });
-            setStarterRoutinePending(isStarterRoutinePending(prof.onboarding_snapshot));
+            beginAiTracking(sr, isStarterRoutinePending(prof.onboarding_snapshot));
             return;
           }
         }
@@ -136,34 +170,71 @@ export function CoachWelcomeClient() {
     setStarter(null);
     setView("anon");
     setLoading(false);
-  }, [applyReviewData, t]);
+  }, [applyReviewData, beginAiTracking, t]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
+    const onSessionPatch = (event: Event) => {
+      const patch = (event as CustomEvent<Partial<CoachWelcomePayload>>).detail;
+      if (!patch) return;
+      if (patch.profileId) setProfileId(patch.profileId);
+      if (patch.starterRoutine) {
+        setStarter(patch.starterRoutine);
+        if (patch.starterRoutinePending === true) {
+          beginAiTracking(patch.starterRoutine, true);
+        } else if (patch.starterRoutinePending === false) {
+          setStarterRoutinePending(false);
+          setAiRoutineStatus(null);
+        }
+      } else if (patch.starterRoutinePending === false) {
+        setStarterRoutinePending(false);
+        setAiRoutineStatus(null);
+      }
+    };
+    window.addEventListener(COACH_WELCOME_SESSION_EVENT, onSessionPatch);
+    return () => window.removeEventListener(COACH_WELCOME_SESSION_EVENT, onSessionPatch);
+  }, [beginAiTracking]);
+
+  useEffect(() => {
     if (!starterRoutinePending || isGuest || !getAccessToken()) return;
 
     let cancelled = false;
     const poll = async () => {
-      for (let attempt = 0; attempt < 20 && !cancelled; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+      for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS && !cancelled; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
         if (cancelled) return;
         try {
           const prof = await fetchSkinProfile();
-          if (!prof || isStarterRoutinePending(prof.onboarding_snapshot)) continue;
+          if (!prof) continue;
+          const pending = isStarterRoutinePending(prof.onboarding_snapshot);
           const sr = parseSnapshotStarter(prof.onboarding_snapshot);
           if (!sr) continue;
+
+          if (pending) continue;
+
+          const baseline = initialRoutineRef.current ?? routineFingerprint(sr);
+          const upgraded = routineFingerprint(sr) !== baseline;
+
           setStarter(sr);
+          setProfileId(prof.id);
           setStarterRoutinePending(false);
+          setAiRoutineStatus(upgraded ? null : "fallback");
+
           try {
             const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
             if (raw) {
               const p = JSON.parse(raw) as CoachWelcomePayload;
               sessionStorage.setItem(
                 COACH_WELCOME_STORAGE_KEY,
-                JSON.stringify({ ...p, starterRoutine: sr, starterRoutinePending: false }),
+                JSON.stringify({
+                  ...p,
+                  profileId: prof.id,
+                  starterRoutine: sr,
+                  starterRoutinePending: false,
+                }),
               );
             }
           } catch {
@@ -176,6 +247,7 @@ export function CoachWelcomeClient() {
       }
       if (!cancelled) {
         setStarterRoutinePending(false);
+        setAiRoutineStatus("fallback");
       }
     };
 
@@ -274,11 +346,17 @@ export function CoachWelcomeClient() {
         </p>
       </header>
 
-      {starterRoutinePending ? (
-        <Card className="border-sky-200/70 bg-sky-50/50 dark:border-sky-500/25 dark:bg-sky-950/30">
-          <CardContent className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
-            <RefreshCw className="size-4 shrink-0 animate-spin" aria-hidden />
-            {t("starterRefreshing")}
+      {aiRoutineStatus === "generating" ? (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
+          <RefreshCw className="size-3.5 shrink-0 animate-spin" aria-hidden />
+          {t("starterGenerating")}
+        </p>
+      ) : null}
+
+      {aiRoutineStatus === "fallback" ? (
+        <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
+          <CardContent className="pt-6 text-sm leading-relaxed text-muted-foreground">
+            {t("starterFallbackNotice")}
           </CardContent>
         </Card>
       ) : null}

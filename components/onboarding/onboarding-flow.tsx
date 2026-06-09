@@ -33,6 +33,7 @@ import { getAccessToken } from "@/lib/auth-token";
 import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
 import {
   COACH_WELCOME_STORAGE_KEY,
+  COACH_WELCOME_SESSION_EVENT,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
   type StarterRoutineDTO,
@@ -42,6 +43,7 @@ import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
 import {
   isGuestOnboardingBlocked,
+  markJustCompletedOnboarding,
   ONBOARDING_STEPS,
   type OnboardingStepId,
   type OnboardingState,
@@ -155,7 +157,11 @@ function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): void {
     const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
     if (!raw) return;
     const p = JSON.parse(raw) as CoachWelcomePayload;
-    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify({ ...p, ...patch }));
+    const next = { ...p, ...patch };
+    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(next));
+    window.dispatchEvent(
+      new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }),
+    );
   } catch {
     /* storage full or private mode */
   }
@@ -338,6 +344,7 @@ export function OnboardingFlow() {
     try {
       sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(full));
       sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
+      markJustCompletedOnboarding();
     } catch {
       /* storage full or private mode */
     }

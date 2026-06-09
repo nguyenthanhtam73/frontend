@@ -15,6 +15,9 @@ export type StarterRoutineDTO = {
 
 export const COACH_WELCOME_STORAGE_KEY = "dadiary_coach_welcome_v1";
 
+/** Dispatched when onboarding-flow patches coach-welcome session after a late API response. */
+export const COACH_WELCOME_SESSION_EVENT = "dadiary:coach-welcome-session";
+
 /** Session-only id when guest finishes onboarding without saving a profile. */
 export const GUEST_COACH_PROFILE_ID = "guest-preview";
 

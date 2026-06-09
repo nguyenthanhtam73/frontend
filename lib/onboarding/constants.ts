@@ -51,6 +51,9 @@ export const QUICK_UNDERTONES: SkinUndertone[] = [
 /** Session flag: coach-welcome plays a short entrance animation. */
 export const ONBOARDING_EXIT_ANIM_KEY = "dadiary_onboarding_exit_anim";
 
+/** Set when user taps Finish — reload /onboarding should go to coach-welcome, not review. */
+export const JUST_COMPLETED_ONBOARDING_KEY = "dadiary_just_completed_onboarding";
+
 /** Guest (no login) may complete onboarding once; value `"true"` when used. */
 export const ONBOARDING_GUEST_TRIAL_KEY = "hasCompletedOnboardingTrial";
 
