@@ -530,6 +530,7 @@ export function OnboardingFlow() {
     // Guests should not block on preview-complete (sync LLM). Navigate instantly.
     goToCoachWelcome({
       profileId: GUEST_COACH_PROFILE_ID,
+      guestPreview: true,
       starterRoutine: fallbackStarter,
       starterRoutinePending: true,
       coachingNotes,
@@ -560,12 +561,23 @@ export function OnboardingFlow() {
             preview_job_id?: string;
           };
         };
-        if (res.ok && payload.success && payload.data?.starter_routine) {
-          patchCoachWelcomeSession({
-            starterRoutine: payload.data.starter_routine,
-            starterRoutinePending: payload.data.starter_routine_pending === true,
-            previewJobId: payload.data.preview_job_id,
-          });
+        if (res.ok && payload.success && payload.data) {
+          if (
+            payload.data.starter_routine_pending === true &&
+            payload.data.preview_job_id
+          ) {
+            // Keep local fallback on screen; only register the background job.
+            patchCoachWelcomeSession({
+              previewJobId: payload.data.preview_job_id,
+              starterRoutinePending: true,
+            });
+          } else if (payload.data.starter_routine) {
+            patchCoachWelcomeSession({
+              starterRoutine: payload.data.starter_routine,
+              starterRoutinePending: false,
+              previewJobId: payload.data.preview_job_id,
+            });
+          }
         } else {
           patchCoachWelcomeSession({
             starterRoutine: fallbackStarter,

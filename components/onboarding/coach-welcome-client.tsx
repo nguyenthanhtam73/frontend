@@ -23,7 +23,7 @@ import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { Link } from "@/i18n/navigation";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
-import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { readCoachWelcomeSession, isGuestCoachSession } from "@/lib/onboarding/coach-welcome-session";
 import { isOnboardingComplete, isStarterRoutinePending, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
@@ -42,6 +42,7 @@ type LoadedCoachWelcome = {
   pending: boolean;
   completedAt: string | null;
   isGuest: boolean;
+  coachingNotes?: string;
 };
 
 function CoachWelcomeLoaded({
@@ -50,6 +51,7 @@ function CoachWelcomeLoaded({
   pending: initialPending,
   completedAt,
   isGuest,
+  coachingNotes,
   onReload,
 }: LoadedCoachWelcome & { onReload: () => void }) {
   const t = useTranslations("coachWelcome");
@@ -84,6 +86,9 @@ function CoachWelcomeLoaded({
     return formatter.dateTime(d, { dateStyle: "long", timeStyle: "short" });
   })();
 
+  const skinReadback =
+    starter.skin_readback?.trim() || coachingNotes?.trim() || "";
+
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
       <header className="space-y-2 text-center sm:text-left">
@@ -111,13 +116,13 @@ function CoachWelcomeLoaded({
         isGuest={isGuest}
       />
 
-      {starter.skin_readback ? (
+      {skinReadback ? (
         <Card>
           <CardContent className="space-y-2 pt-6">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t("readback")}
             </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.skin_readback}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{skinReadback}</p>
           </CardContent>
         </Card>
       ) : null}
@@ -228,22 +233,44 @@ export function CoachWelcomeClient() {
     setLoaded(null);
 
     const session = readCoachWelcomeSession();
+    const token = getAccessToken();
+
     if (session?.starterRoutine) {
+      const isGuest = isGuestCoachSession(session, Boolean(token));
       setLoaded({
         profileId: session.profileId ?? null,
         starter: session.starterRoutine,
         pending: session.starterRoutinePending === true,
         completedAt: session.reviewSummary?.completed_at ?? null,
-        isGuest: session.profileId === GUEST_COACH_PROFILE_ID || !getAccessToken(),
+        isGuest,
+        coachingNotes: session.coachingNotes,
       });
       setLoading(false);
       return;
     }
 
-    const token = getAccessToken();
-    if (token) {
-      try {
-        const prof = await fetchSkinProfile();
+    if (!token) {
+      const guestReview = loadGuestReviewFromSession();
+      if (guestReview?.starter) {
+        setLoaded({
+          profileId: guestReview.profileId,
+          starter: guestReview.starter,
+          pending: guestReview.starterRoutinePending === true,
+          completedAt: guestReview.completedAt,
+          isGuest: true,
+          coachingNotes: guestReview.coachingNotes,
+        });
+        setLoading(false);
+        return;
+      }
+
+      setView("anon");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const prof = await fetchSkinProfile();
         if (prof && isOnboardingComplete(prof)) {
           const sr = parseSnapshotStarter(prof.onboarding_snapshot);
           if (sr) {
@@ -270,23 +297,6 @@ export function CoachWelcomeClient() {
       } finally {
         setLoading(false);
       }
-    }
-
-    const guestReview = loadGuestReviewFromSession();
-    if (guestReview?.starter) {
-      setLoaded({
-        profileId: guestReview.profileId,
-        starter: guestReview.starter,
-        pending: guestReview.starterRoutinePending === true,
-        completedAt: guestReview.completedAt,
-        isGuest: true,
-      });
-      setLoading(false);
-      return;
-    }
-
-    setView("anon");
-    setLoading(false);
   }, [t]);
 
   useEffect(() => {

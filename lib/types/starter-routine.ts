@@ -44,4 +44,6 @@ export type CoachWelcomePayload = {
   reviewSummary?: OnboardingReviewSummary;
   /** Guest background AI job id for polling preview-routine. */
   previewJobId?: string;
+  /** True for local guest trial (never call /profile/skin). */
+  guestPreview?: boolean;
 };

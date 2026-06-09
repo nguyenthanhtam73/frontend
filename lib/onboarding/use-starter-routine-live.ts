@@ -36,7 +36,6 @@ function persistCoachWelcomePatch(patch: Partial<CoachWelcomePayload>): void {
       JSON.stringify({
         ...p,
         ...patch,
-        starterRoutinePending: patch.starterRoutinePending ?? false,
       }),
     );
   } catch {
@@ -114,7 +113,15 @@ export function useStarterRoutineLive({
       if (!patch) return;
 
       if (patch.previewJobId) {
-        persistCoachWelcomePatch({ previewJobId: patch.previewJobId });
+        persistCoachWelcomePatch({
+          previewJobId: patch.previewJobId,
+          starterRoutinePending: patch.starterRoutinePending ?? true,
+        });
+        if (!isGeneratingRef.current) {
+          isGeneratingRef.current = true;
+          setIsGeneratingRoutine(true);
+          setShowFallbackBanner(false);
+        }
       }
 
       if (!patch.starterRoutine) {

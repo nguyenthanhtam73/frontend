@@ -1,5 +1,6 @@
 import {
   COACH_WELCOME_STORAGE_KEY,
+  GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
 } from "@/lib/types/starter-routine";
 
@@ -14,6 +15,16 @@ export function readCoachWelcomeSession(): CoachWelcomePayload | null {
   } catch {
     return null;
   }
+}
+
+/** Guest preview must use session + preview-routine poll only — never /profile/skin. */
+export function isGuestCoachSession(
+  session: CoachWelcomePayload,
+  hasToken: boolean,
+): boolean {
+  if (session.guestPreview === true) return true;
+  if (session.profileId === GUEST_COACH_PROFILE_ID) return true;
+  return !hasToken;
 }
 
 export function isCoachWelcomeRoutinePending(): boolean {
