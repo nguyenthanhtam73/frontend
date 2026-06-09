@@ -22,7 +22,7 @@ import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { Link } from "@/i18n/navigation";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
-import { isOnboardingComplete, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
+import { isOnboardingComplete, isStarterRoutinePending, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import {
   COACH_WELCOME_STORAGE_KEY,
@@ -39,6 +39,7 @@ export function CoachWelcomeClient() {
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [starter, setStarter] = useState<StarterRoutineDTO | null>(null);
+  const [starterRoutinePending, setStarterRoutinePending] = useState(false);
   const [completedAt, setCompletedAt] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
@@ -76,6 +77,7 @@ export function CoachWelcomeClient() {
             completedAt: p.reviewSummary?.completed_at ?? null,
             isGuest: p.profileId === GUEST_COACH_PROFILE_ID,
           });
+          setStarterRoutinePending(p.starterRoutinePending === true);
           setLoading(false);
           return;
         }
@@ -97,6 +99,7 @@ export function CoachWelcomeClient() {
               completedAt: prof.updated_at || prof.created_at,
               isGuest: false,
             });
+            setStarterRoutinePending(isStarterRoutinePending(prof.onboarding_snapshot));
             return;
           }
         }
@@ -138,6 +141,46 @@ export function CoachWelcomeClient() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!starterRoutinePending || isGuest || !getAccessToken()) return;
+
+    let cancelled = false;
+    const poll = async () => {
+      for (let attempt = 0; attempt < 20 && !cancelled; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        if (cancelled) return;
+        try {
+          const prof = await fetchSkinProfile();
+          if (!prof || isStarterRoutinePending(prof.onboarding_snapshot)) continue;
+          const sr = parseSnapshotStarter(prof.onboarding_snapshot);
+          if (!sr) continue;
+          setStarter(sr);
+          setStarterRoutinePending(false);
+          try {
+            const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
+            if (raw) {
+              const p = JSON.parse(raw) as CoachWelcomePayload;
+              sessionStorage.setItem(
+                COACH_WELCOME_STORAGE_KEY,
+                JSON.stringify({ ...p, starterRoutine: sr, starterRoutinePending: false }),
+              );
+            }
+          } catch {
+            /* ignore storage errors */
+          }
+          return;
+        } catch {
+          /* keep polling */
+        }
+      }
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [starterRoutinePending, isGuest]);
 
   const completedLabel = (() => {
     if (!completedAt) return "";
@@ -227,6 +270,15 @@ export function CoachWelcomeClient() {
           {tReview("readOnlyHint")}
         </p>
       </header>
+
+      {starterRoutinePending ? (
+        <Card className="border-sky-200/70 bg-sky-50/50 dark:border-sky-500/25 dark:bg-sky-950/30">
+          <CardContent className="flex items-center gap-2 pt-6 text-sm text-muted-foreground">
+            <RefreshCw className="size-4 shrink-0 animate-spin" aria-hidden />
+            {t("starterRefreshing")}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {starter.skin_readback ? (
         <Card>

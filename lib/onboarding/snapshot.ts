@@ -11,6 +11,7 @@ export type OnboardingSnapshot = {
   completed_via?: string;
   photos_skipped?: boolean;
   photo_urls?: string[];
+  starter_routine_pending?: boolean;
   starter_routine?: Record<string, unknown>;
 };
 
@@ -46,6 +47,14 @@ export function parseSnapshotStarter(
       ? (sr.product_suggestions as ProductSuggestionDTO[])
       : undefined,
   };
+}
+
+/** True when persisted onboarding snapshot still awaits AI starter refresh. */
+export function isStarterRoutinePending(
+  raw: SkinProfileResponse["onboarding_snapshot"],
+): boolean {
+  const snap = parseOnboardingSnapshot(raw);
+  return snap?.starter_routine_pending === true;
 }
 
 /** True when the user has a persisted or preview onboarding result. */

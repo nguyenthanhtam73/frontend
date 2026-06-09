@@ -33,6 +33,8 @@ export type CoachWelcomePayload = {
   /** Real profile id when saved; `guest-preview` for local guest trial. */
   profileId?: string;
   starterRoutine: StarterRoutineDTO;
+  /** True when API returned a quick scaffold and AI is still generating. */
+  starterRoutinePending?: boolean;
   /** From onboarding vision step (optional). */
   coachingNotes?: string;
   /** Cached answers for review mode (guest / session reload). */

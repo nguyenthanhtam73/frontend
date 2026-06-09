@@ -410,6 +410,7 @@ export function OnboardingFlow() {
         data?: {
           profile?: { id?: string };
           starter_routine?: StarterRoutineDTO;
+          starter_routine_pending?: boolean;
         };
       };
 
@@ -422,6 +423,7 @@ export function OnboardingFlow() {
         goToCoachWelcome({
           profileId: payload.data.profile.id,
           starterRoutine: payload.data.starter_routine,
+          starterRoutinePending: payload.data.starter_routine_pending === true,
           coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
         });
         return;
