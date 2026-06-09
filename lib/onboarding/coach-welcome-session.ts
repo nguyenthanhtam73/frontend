@@ -1,4 +1,5 @@
 import {
+  COACH_WELCOME_SESSION_EVENT,
   COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
@@ -29,4 +30,18 @@ export function isGuestCoachSession(
 
 export function isCoachWelcomeRoutinePending(): boolean {
   return readCoachWelcomeSession()?.starterRoutinePending === true;
+}
+
+/** Merge a partial payload into sessionStorage and notify coach-welcome listeners. */
+export function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw) as CoachWelcomePayload;
+    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify({ ...p, ...patch }));
+    window.dispatchEvent(new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }));
+  } catch {
+    /* storage full or private mode */
+  }
 }

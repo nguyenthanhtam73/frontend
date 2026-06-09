@@ -31,9 +31,9 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
+import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import {
   COACH_WELCOME_STORAGE_KEY,
-  COACH_WELCOME_SESSION_EVENT,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
   type StarterRoutineDTO,
@@ -151,21 +151,6 @@ type OnboardingCompletePayload = {
     starter_routine_pending?: boolean;
   };
 };
-
-function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): void {
-  try {
-    const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
-    if (!raw) return;
-    const p = JSON.parse(raw) as CoachWelcomePayload;
-    const next = { ...p, ...patch };
-    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(next));
-    window.dispatchEvent(
-      new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }),
-    );
-  } catch {
-    /* storage full or private mode */
-  }
-}
 
 export function OnboardingFlow() {
   const t = useTranslations("onboarding");
@@ -333,6 +318,7 @@ export function OnboardingFlow() {
     const photosSkipped = skipFaceCapture || ob.photos.length === 0;
     const full: CoachWelcomePayload = {
       ...pack,
+      locale,
       reviewSummary: {
         ...(pack.reviewSummary ?? buildReviewSummaryFromStore(ob)),
         photo_urls: photosSkipped

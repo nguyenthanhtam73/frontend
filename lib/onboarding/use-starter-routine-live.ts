@@ -6,6 +6,7 @@ import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
 import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { requestGuestPreviewJob } from "@/lib/onboarding/guest-preview-api";
 import { routineFingerprint } from "@/lib/onboarding/starter-routine-fingerprint";
 import { isStarterRoutinePending, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
 import {
@@ -53,9 +54,13 @@ export function useStarterRoutineLive({
   const [isGeneratingRoutine, setIsGeneratingRoutine] = useState(initialPending);
   const [showFallbackBanner, setShowFallbackBanner] = useState(false);
   const [routineJustUpdated, setRoutineJustUpdated] = useState(false);
+  const [previewJobId, setPreviewJobId] = useState<string | undefined>(
+    () => readCoachWelcomeSession()?.previewJobId,
+  );
   const initialRoutineRef = useRef<string | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isGeneratingRef = useRef(false);
+  const guestJobRequestedRef = useRef(false);
 
   const triggerRoutineHighlight = useCallback(() => {
     setRoutineJustUpdated(true);
@@ -97,6 +102,7 @@ export function useStarterRoutineLive({
   useEffect(() => {
     if (!enabled) return;
     beginAiTracking(initialStarter, initialPending);
+    setPreviewJobId(readCoachWelcomeSession()?.previewJobId);
   }, [beginAiTracking, enabled, initialPending, initialStarter]);
 
   useEffect(() => {
@@ -113,6 +119,7 @@ export function useStarterRoutineLive({
       if (!patch) return;
 
       if (patch.previewJobId) {
+        setPreviewJobId(patch.previewJobId);
         persistCoachWelcomePatch({
           previewJobId: patch.previewJobId,
           starterRoutinePending: patch.starterRoutinePending ?? true,
@@ -194,14 +201,26 @@ export function useStarterRoutineLive({
   }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest]);
 
   useEffect(() => {
-    if (!enabled || !isGeneratingRoutine || !isGuest) return;
+    if (!enabled || !isGeneratingRoutine || !isGuest || previewJobId) return;
 
-    const previewJobId = readCoachWelcomeSession()?.previewJobId;
-    if (!previewJobId) {
-      const timeoutMs = POLL_INTERVAL_MS * POLL_MAX_ATTEMPTS;
-      const timer = setTimeout(finishPollTimeout, timeoutMs);
-      return () => clearTimeout(timer);
-    }
+    const session = readCoachWelcomeSession();
+    if (!session || guestJobRequestedRef.current) return;
+
+    guestJobRequestedRef.current = true;
+    let cancelled = false;
+
+    void requestGuestPreviewJob(session).then((jobId) => {
+      if (cancelled) return;
+      if (jobId) setPreviewJobId(jobId);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, isGeneratingRoutine, isGuest, previewJobId]);
+
+  useEffect(() => {
+    if (!enabled || !isGeneratingRoutine || !isGuest || !previewJobId) return;
 
     let cancelled = false;
     const poll = async () => {
@@ -245,7 +264,7 @@ export function useStarterRoutineLive({
     return () => {
       cancelled = true;
     };
-  }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest]);
+  }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest, previewJobId]);
 
   return {
     starter,

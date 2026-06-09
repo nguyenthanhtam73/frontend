@@ -42,6 +42,8 @@ export type CoachWelcomePayload = {
   coachingNotes?: string;
   /** Cached answers for review mode (guest / session reload). */
   reviewSummary?: OnboardingReviewSummary;
+  /** UI locale when onboarding finished (guest preview API). */
+  locale?: string;
   /** Guest background AI job id for polling preview-routine. */
   previewJobId?: string;
   /** True for local guest trial (never call /profile/skin). */
