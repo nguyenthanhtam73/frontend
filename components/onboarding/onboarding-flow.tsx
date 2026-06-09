@@ -138,6 +138,29 @@ function buildSummaryRecap(
   return lines;
 }
 
+/** Max wait on summary before navigating with a local scaffold (ms). */
+const ONBOARDING_FINISH_NAV_MS = 4000;
+
+type OnboardingCompletePayload = {
+  success?: boolean;
+  data?: {
+    profile?: { id?: string };
+    starter_routine?: StarterRoutineDTO;
+    starter_routine_pending?: boolean;
+  };
+};
+
+function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): void {
+  try {
+    const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw) as CoachWelcomePayload;
+    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify({ ...p, ...patch }));
+  } catch {
+    /* storage full or private mode */
+  }
+}
+
 export function OnboardingFlow() {
   const t = useTranslations("onboarding");
   const tPrivacy = useTranslations("privacy");
@@ -379,56 +402,93 @@ export function OnboardingFlow() {
     }
 
     setFinishing(true);
+    const fallbackStarter = buildGuestStarterFallback(ob, locale);
+    const coachingNotes = ob.aiSnapshot?.coaching_notes?.trim() || undefined;
+
     try {
       const hasPhotos = !photosSkipped && ob.photos.length > 0;
-      let res: Response;
-      if (hasPhotos) {
-        const fd = new FormData();
-        fd.append("payload", JSON.stringify(finishBody));
-        ob.photos.slice(0, ONBOARDING_MAX_PHOTOS).forEach((p) => {
-          fd.append("images", p.file);
-        });
-        res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: fd,
-        });
-      } else {
-        res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(finishBody),
-        });
-      }
-      const payload = (await res.json().catch(() => ({}))) as {
-        success?: boolean;
-        data?: {
-          profile?: { id?: string };
-          starter_routine?: StarterRoutineDTO;
-          starter_routine_pending?: boolean;
-        };
-      };
+      const completeTask = (async () => {
+        let res: Response;
+        if (hasPhotos) {
+          const fd = new FormData();
+          fd.append("payload", JSON.stringify(finishBody));
+          ob.photos.slice(0, ONBOARDING_MAX_PHOTOS).forEach((p) => {
+            fd.append("images", p.file);
+          });
+          res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: fd,
+          });
+        } else {
+          res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(finishBody),
+          });
+        }
+        const payload = (await res.json().catch(() => ({}))) as OnboardingCompletePayload;
+        return { res, payload };
+      })();
 
-      if (
-        res.ok &&
-        payload.success &&
-        payload.data?.profile?.id &&
-        payload.data?.starter_routine
-      ) {
-        goToCoachWelcome({
-          profileId: payload.data.profile.id,
-          starterRoutine: payload.data.starter_routine,
-          starterRoutinePending: payload.data.starter_routine_pending === true,
-          coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
-        });
+      const raced = await Promise.race([
+        completeTask.then((value) => ({ kind: "done" as const, ...value })),
+        new Promise<{ kind: "timeout" }>((resolve) =>
+          setTimeout(() => resolve({ kind: "timeout" }), ONBOARDING_FINISH_NAV_MS),
+        ),
+      ]);
+
+      if (raced.kind === "done") {
+        const { res, payload } = raced;
+        if (
+          res.ok &&
+          payload.success &&
+          payload.data?.profile?.id &&
+          payload.data?.starter_routine
+        ) {
+          goToCoachWelcome({
+            profileId: payload.data.profile.id,
+            starterRoutine: payload.data.starter_routine,
+            starterRoutinePending: payload.data.starter_routine_pending === true,
+            coachingNotes,
+          });
+          return;
+        }
+        setFinishError("save_failed");
         return;
       }
-      setFinishError("save_failed");
+
+      // API still running — show local scaffold immediately instead of spinning forever.
+      goToCoachWelcome({
+        starterRoutine: fallbackStarter,
+        starterRoutinePending: true,
+        coachingNotes,
+      });
+
+      void completeTask
+        .then(({ res, payload }) => {
+          if (
+            !res.ok ||
+            !payload.success ||
+            !payload.data?.profile?.id ||
+            !payload.data?.starter_routine
+          ) {
+            return;
+          }
+          patchCoachWelcomeSession({
+            profileId: payload.data.profile.id,
+            starterRoutine: payload.data.starter_routine,
+            starterRoutinePending: payload.data.starter_routine_pending === true,
+          });
+        })
+        .catch(() => {
+          /* user already has local scaffold on coach-welcome */
+        });
     } catch {
       setFinishError("network");
     } finally {

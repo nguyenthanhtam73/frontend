@@ -174,6 +174,9 @@ export function CoachWelcomeClient() {
           /* keep polling */
         }
       }
+      if (!cancelled) {
+        setStarterRoutinePending(false);
+      }
     };
 
     void poll();
