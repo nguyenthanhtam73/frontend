@@ -524,42 +524,44 @@ export function OnboardingFlow() {
       return;
     }
 
-    setFinishing(true);
-    let starter: StarterRoutineDTO = buildGuestStarterFallback(ob, locale);
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/preview-complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          skin_type: ob.skinType,
-          undertone,
-          contexts: [],
-          budget: ONBOARDING_DEFAULT_BUDGET,
-          goal: ob.goal,
-          skill_level: ob.skillMode,
-          body_concerns: bodyConcerns,
-          current_routine: ob.currentRoutineText.trim(),
-          locale,
-        }),
-      });
-      const payload = (await res.json().catch(() => ({}))) as {
-        success?: boolean;
-        data?: { starter_routine?: StarterRoutineDTO };
-      };
-      if (res.ok && payload.success && payload.data?.starter_routine) {
-        starter = payload.data.starter_routine;
-      }
-    } catch {
-      /* offline — local fallback above */
-    } finally {
-      setFinishing(false);
-    }
+    const fallbackStarter = buildGuestStarterFallback(ob, locale);
+    const coachingNotes = ob.aiSnapshot?.coaching_notes?.trim() || undefined;
 
+    // Guests should not block on preview-complete (sync LLM). Navigate instantly.
     goToCoachWelcome({
       profileId: GUEST_COACH_PROFILE_ID,
-      starterRoutine: starter,
-      coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
+      starterRoutine: fallbackStarter,
+      coachingNotes,
     });
+
+    void (async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/preview-complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            skin_type: ob.skinType,
+            undertone,
+            contexts: [],
+            budget: ONBOARDING_DEFAULT_BUDGET,
+            goal: ob.goal,
+            skill_level: ob.skillMode,
+            body_concerns: bodyConcerns,
+            current_routine: ob.currentRoutineText.trim(),
+            locale,
+          }),
+        });
+        const payload = (await res.json().catch(() => ({}))) as {
+          success?: boolean;
+          data?: { starter_routine?: StarterRoutineDTO };
+        };
+        if (res.ok && payload.success && payload.data?.starter_routine) {
+          patchCoachWelcomeSession({ starterRoutine: payload.data.starter_routine });
+        }
+      } catch {
+        /* offline — local fallback already shown */
+      }
+    })();
   }
 
   if (guestTrialBlocked === null) {
