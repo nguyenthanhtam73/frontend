@@ -73,7 +73,7 @@ const initial: OnboardingState = {
   undertone: null,
   budget: null,
   goal: null,
-  skillMode: null,
+  skillMode: "beginner",
   bodyConcernsText: "",
   currentRoutineText: "",
   aiConcernTags: [],
