@@ -389,12 +389,12 @@
   },
   "premium": {
     "cta": "Upgrade to Premium now",
-    "quotaSuggestTitle": "Free quota's gone, bro! You used all {limit} AI suggests this month 😂",
-    "quotaSuggestBody": "Go Premium for unlimited skin-roasting — no one's stopping you.",
-    "quotaEditTitle": "Routine edit limit hit, bro ✋",
-    "quotaEditBody": "You used all {limit} manual edits this month — ticking steps still works. Premium = edit freely!",
-    "wardrobeTitle": "Your shelf is locked, bro 👀",
-    "wardrobeBody": "Free plan = view only. Want to add/edit stuff? Go Premium — or the AI keeps suggesting dupes 😅"
+    "quotaSuggestTitle": "You've used all {limit} AI suggestions this month",
+    "quotaSuggestBody": "Upgrade to Premium for unlimited AI skincare suggestions.",
+    "quotaEditTitle": "Routine edit limit reached this month",
+    "quotaEditBody": "You've used all {limit} manual edits this month — ticking steps still works. Premium allows unlimited edits.",
+    "wardrobeTitle": "Your shelf is locked",
+    "wardrobeBody": "Free plan is view-only. Upgrade to Premium to add and edit products in your shelf."
   },
   "cabinet": {
     "sectionLabel": "Skincare shelf",
@@ -444,8 +444,8 @@
     "noStarter": "No starter routine yet —",
     "noStarterTitle": "Your shelf is waiting",
     "setupLink": "set up in ~2 minutes",
-    "premiumWardrobeTitle": "Your shelf is locked, bro 👀",
-    "premiumWardrobeBody": "Free plan = view only. Want to add/edit stuff? Go Premium — or the AI keeps suggesting dupes 😅",
+    "premiumWardrobeTitle": "Your shelf is locked",
+    "premiumWardrobeBody": "Free plan is view-only. Upgrade to Premium to add and edit products in your shelf.",
     "premiumWardrobeCta": "Upgrade to Premium now"
   },
   "meMemory": {
@@ -659,7 +659,7 @@
     "summaryOptional": "Optional notes (body areas, current routine)",
     "homeLink": "Home",
     "guestTrial": {
-      "title": "Yo, you already finished your trial 😂",
+      "title": "You've used your free trial",
       "body1": "You've used your one free onboarding round.",
       "body2": "Next time you want saved data, skin history, and long-term AI memory — you gotta sign up.",
       "registerCta": "Sign up, quick!",
@@ -841,12 +841,12 @@
     "aiSuggestCta": "Suggest with AI",
     "aiSuggesting": "Thinking with you…",
     "aiSuggestError": "Couldn't reach AI. Try again or check your connection.",
-    "quotaSuggest": "AI suggest: {used}/{limit} this month 😏",
-    "quotaManualEdit": "Manual edits: {used}/{limit} this month ✋",
-    "quotaSuggestExceeded": "Free quota's gone, bro! You used all {limit} AI suggests this month. Go Premium for unlimited skin-roasting 😂",
-    "quotaEditExceeded": "Manual edit limit hit, bro 😂 You used all {limit} edits this month — ticking steps still works. Premium = edit freely!",
-    "premiumUnlimited": "Premium — unlimited AI roasts ✨",
-    "editLockedHint": "Free plan: view + tick only. Want to edit steps? Premium or spare manual edits left — don't hate the coach 😅",
+    "quotaSuggest": "AI suggest: {used}/{limit} this month",
+    "quotaManualEdit": "Manual edits: {used}/{limit} this month",
+    "quotaSuggestExceeded": "You've used all {limit} AI suggestions this month. Upgrade to Premium for unlimited access.",
+    "quotaEditExceeded": "You've used all {limit} manual edits this month — ticking steps still works. Premium allows unlimited edits.",
+    "premiumUnlimited": "Premium — unlimited AI suggestions",
+    "editLockedHint": "Free plan: view and tick completion only. To edit steps, upgrade to Premium or use remaining manual edits.",
     "aiFocusLabel": "Anything specific for today? (optional)",
     "aiFocusPlaceholder": "e.g. skin feels tight, prefer a gentle routine",
     "aiPreviewTitle": "AI preview",

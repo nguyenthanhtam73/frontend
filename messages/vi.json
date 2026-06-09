@@ -389,12 +389,12 @@
   },
   "premium": {
     "cta": "Nâng cấp Premium ngay",
-    "quotaSuggestTitle": "Hết lượt free rồi bro! Tháng này mày xài hết {limit} lần gợi ý rồi 😂",
-    "quotaSuggestBody": "Nâng cấp Premium để AI troll da mày không giới hạn đi — không ai cấm đâu.",
-    "quotaEditTitle": "Hết lượt chỉnh routine rồi bro ✋",
-    "quotaEditBody": "Tháng này mày chỉnh tay {limit} lần rồi — vẫn tick hoàn thành bình thường. Premium thì sửa thoải mái!",
-    "wardrobeTitle": "Tủ đồ đang khóa rồi bro 👀",
-    "wardrobeBody": "Gói Free chỉ xem thôi — muốn thêm/sửa món thì Premium cho nhanh, không thì AI cứ gợi ý trùng món 😅"
+    "quotaSuggestTitle": "Đã hết lượt gợi ý AI tháng này ({limit} lần)",
+    "quotaSuggestBody": "Nâng cấp Premium để nhận gợi ý AI không giới hạn.",
+    "quotaEditTitle": "Đã hết lượt chỉnh routine tháng này",
+    "quotaEditBody": "Bạn đã dùng hết {limit} lần chỉnh tay trong tháng — vẫn có thể tick hoàn thành bình thường. Premium cho phép chỉnh sửa không giới hạn.",
+    "wardrobeTitle": "Tủ đồ đang khóa",
+    "wardrobeBody": "Gói Free chỉ xem. Nâng cấp Premium để thêm và chỉnh sửa sản phẩm trong tủ đồ."
   },
   "cabinet": {
     "sectionLabel": "Tủ đồ chăm da",
@@ -444,8 +444,8 @@
     "noStarter": "Chưa có chăm da khởi đầu —",
     "noStarterTitle": "Tủ đồ đang chờ bạn",
     "setupLink": "tạo trong khoảng 2 phút",
-    "premiumWardrobeTitle": "Tủ đồ đang khóa rồi bro 👀",
-    "premiumWardrobeBody": "Gói Free chỉ xem thôi — muốn thêm/sửa món thì Premium cho nhanh, không thì AI cứ gợi ý trùng món bạn đã có 😅",
+    "premiumWardrobeTitle": "Tủ đồ đang khóa",
+    "premiumWardrobeBody": "Gói Free chỉ xem. Nâng cấp Premium để thêm và chỉnh sửa sản phẩm trong tủ đồ.",
     "premiumWardrobeCta": "Nâng cấp Premium ngay"
   },
   "meMemory": {
@@ -659,7 +659,7 @@
     "summaryOptional": "Ghi chú thêm (tùy chọn)",
     "homeLink": "Về trang chủ",
     "guestTrial": {
-      "title": "Ê mày thử xong rồi à 😂",
+      "title": "Bạn đã dùng hết lượt thử",
       "body1": "Bạn đã dùng thử onboarding 1 lần rồi.",
       "body2": "Lần sau muốn lưu dữ liệu, xem lịch sử da, và để AI nhớ lâu dài thì phải đăng ký thôi.",
       "registerCta": "Đăng ký cho nhanh",
@@ -841,12 +841,12 @@
     "aiSuggestCta": "AI gợi ý cho tôi",
     "aiSuggesting": "Đang nghĩ giúp bạn…",
     "aiSuggestError": "Chưa gọi được AI. Thử lại hoặc kiểm tra kết nối nhé.",
-    "quotaSuggest": "AI gợi ý: {used}/{limit} tháng này 😏",
-    "quotaManualEdit": "Chỉnh tay: {used}/{limit} tháng này ✋",
-    "quotaSuggestExceeded": "Hết lượt free rồi bro! Tháng này mày xài hết {limit} lần gợi ý rồi. Nâng cấp Premium để AI troll da mày không giới hạn đi 😂",
-    "quotaEditExceeded": "Hết lượt chỉnh routine rồi bro 😂 Tháng này mày chỉnh tay {limit} lần rồi — vẫn tick hoàn thành bình thường nhé. Premium thì sửa thoải mái!",
-    "premiumUnlimited": "Premium — AI troll không giới hạn ✨",
-    "editLockedHint": "Gói Free: xem + tick thôi. Muốn sửa bước thì cần Premium hoặc còn lượt chỉnh tay — đừng giận coach nhé 😅",
+    "quotaSuggest": "AI gợi ý: {used}/{limit} tháng này",
+    "quotaManualEdit": "Chỉnh tay: {used}/{limit} tháng này",
+    "quotaSuggestExceeded": "Đã hết {limit} lượt gợi ý AI trong tháng. Nâng cấp Premium để không giới hạn.",
+    "quotaEditExceeded": "Đã hết {limit} lượt chỉnh tay trong tháng — vẫn tick hoàn thành bình thường. Premium cho phép chỉnh sửa không giới hạn.",
+    "premiumUnlimited": "Premium — gợi ý AI không giới hạn",
+    "editLockedHint": "Gói Free: xem và tick hoàn thành. Muốn sửa bước cần Premium hoặc còn lượt chỉnh tay.",
     "aiFocusLabel": "Hôm nay bạn muốn nhấn mạnh gì? (không bắt buộc)",
     "aiFocusPlaceholder": "VD: da hơi căng, xin chăm da dịu",
     "aiPreviewTitle": "Bản xem trước AI",
