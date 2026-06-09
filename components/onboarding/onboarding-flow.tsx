@@ -554,12 +554,17 @@ export function OnboardingFlow() {
         });
         const payload = (await res.json().catch(() => ({}))) as {
           success?: boolean;
-          data?: { starter_routine?: StarterRoutineDTO };
+          data?: {
+            starter_routine?: StarterRoutineDTO;
+            starter_routine_pending?: boolean;
+            preview_job_id?: string;
+          };
         };
         if (res.ok && payload.success && payload.data?.starter_routine) {
           patchCoachWelcomeSession({
             starterRoutine: payload.data.starter_routine,
-            starterRoutinePending: false,
+            starterRoutinePending: payload.data.starter_routine_pending === true,
+            previewJobId: payload.data.preview_job_id,
           });
         } else {
           patchCoachWelcomeSession({

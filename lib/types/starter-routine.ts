@@ -42,4 +42,6 @@ export type CoachWelcomePayload = {
   coachingNotes?: string;
   /** Cached answers for review mode (guest / session reload). */
   reviewSummary?: OnboardingReviewSummary;
+  /** Guest background AI job id for polling preview-routine. */
+  previewJobId?: string;
 };

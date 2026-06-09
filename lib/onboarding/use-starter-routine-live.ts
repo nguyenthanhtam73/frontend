@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
+import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import { routineFingerprint } from "@/lib/onboarding/starter-routine-fingerprint";
 import { isStarterRoutinePending, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
 import {
@@ -23,6 +25,24 @@ type UseStarterRoutineLiveOpts = {
   isGuest: boolean;
   enabled?: boolean;
 };
+
+function persistCoachWelcomePatch(patch: Partial<CoachWelcomePayload>): void {
+  try {
+    const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw) as CoachWelcomePayload;
+    sessionStorage.setItem(
+      COACH_WELCOME_STORAGE_KEY,
+      JSON.stringify({
+        ...p,
+        ...patch,
+        starterRoutinePending: patch.starterRoutinePending ?? false,
+      }),
+    );
+  } catch {
+    /* ignore storage errors */
+  }
+}
 
 export function useStarterRoutineLive({
   initialStarter,
@@ -69,6 +89,12 @@ export function useStarterRoutineLive({
     if (pending) setShowFallbackBanner(false);
   }, []);
 
+  const finishPollTimeout = useCallback(() => {
+    isGeneratingRef.current = false;
+    setIsGeneratingRoutine(false);
+    setShowFallbackBanner(true);
+  }, []);
+
   useEffect(() => {
     if (!enabled) return;
     beginAiTracking(initialStarter, initialPending);
@@ -85,8 +111,14 @@ export function useStarterRoutineLive({
 
     const onSessionPatch = (event: Event) => {
       const patch = (event as CustomEvent<Partial<CoachWelcomePayload>>).detail;
-      if (!patch?.starterRoutine) {
-        if (patch?.starterRoutinePending === false) {
+      if (!patch) return;
+
+      if (patch.previewJobId) {
+        persistCoachWelcomePatch({ previewJobId: patch.previewJobId });
+      }
+
+      if (!patch.starterRoutine) {
+        if (patch.starterRoutinePending === false) {
           isGeneratingRef.current = false;
           setIsGeneratingRoutine(false);
         }
@@ -107,22 +139,10 @@ export function useStarterRoutineLive({
         fallback: isGeneratingRef.current && !upgraded,
       });
 
-      try {
-        const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
-        if (raw) {
-          const p = JSON.parse(raw) as CoachWelcomePayload;
-          sessionStorage.setItem(
-            COACH_WELCOME_STORAGE_KEY,
-            JSON.stringify({
-              ...p,
-              ...patch,
-              starterRoutinePending: false,
-            }),
-          );
-        }
-      } catch {
-        /* ignore storage errors */
-      }
+      persistCoachWelcomePatch({
+        ...patch,
+        starterRoutinePending: false,
+      });
     };
 
     window.addEventListener(COACH_WELCOME_SESSION_EVENT, onSessionPatch);
@@ -148,52 +168,77 @@ export function useStarterRoutineLive({
           const upgraded = routineFingerprint(sr) !== baseline;
           applyStarterFromAi(sr, { upgraded, fallback: !upgraded });
 
-          try {
-            const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
-            if (raw) {
-              const p = JSON.parse(raw) as CoachWelcomePayload;
-              sessionStorage.setItem(
-                COACH_WELCOME_STORAGE_KEY,
-                JSON.stringify({
-                  ...p,
-                  starterRoutine: sr,
-                  starterRoutinePending: false,
-                }),
-              );
-            }
-          } catch {
-            /* ignore storage errors */
-          }
+          persistCoachWelcomePatch({
+            starterRoutine: sr,
+            starterRoutinePending: false,
+          });
           return;
         } catch {
           /* keep polling */
         }
       }
-      if (!cancelled) {
-        isGeneratingRef.current = false;
-        setIsGeneratingRoutine(false);
-        setShowFallbackBanner(true);
-      }
+      if (!cancelled) finishPollTimeout();
     };
 
     void poll();
     return () => {
       cancelled = true;
     };
-  }, [applyStarterFromAi, enabled, isGeneratingRoutine, isGuest]);
+  }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest]);
 
   useEffect(() => {
     if (!enabled || !isGeneratingRoutine || !isGuest) return;
 
-    const timeoutMs = POLL_INTERVAL_MS * POLL_MAX_ATTEMPTS;
-    const timer = setTimeout(() => {
-      isGeneratingRef.current = false;
-      setIsGeneratingRoutine(false);
-      setShowFallbackBanner(true);
-    }, timeoutMs);
+    const previewJobId = readCoachWelcomeSession()?.previewJobId;
+    if (!previewJobId) {
+      const timeoutMs = POLL_INTERVAL_MS * POLL_MAX_ATTEMPTS;
+      const timer = setTimeout(finishPollTimeout, timeoutMs);
+      return () => clearTimeout(timer);
+    }
 
-    return () => clearTimeout(timer);
-  }, [enabled, isGeneratingRoutine, isGuest]);
+    let cancelled = false;
+    const poll = async () => {
+      for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS && !cancelled; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        if (cancelled) return;
+        try {
+          const res = await fetch(
+            `${apiBaseUrl}/api/v1/onboarding/preview-routine/${encodeURIComponent(previewJobId)}`,
+            { headers: { Accept: "application/json" } },
+          );
+          const payload = (await res.json().catch(() => ({}))) as {
+            success?: boolean;
+            data?: {
+              starter_routine?: StarterRoutineDTO;
+              starter_routine_pending?: boolean;
+            };
+          };
+          if (!res.ok || !payload.success || !payload.data?.starter_routine) continue;
+          if (payload.data.starter_routine_pending === true) continue;
+
+          const sr = payload.data.starter_routine;
+          const baseline = initialRoutineRef.current ?? routineFingerprint(sr);
+          const upgraded = routineFingerprint(sr) !== baseline;
+          applyStarterFromAi(sr, { upgraded, fallback: !upgraded });
+
+          persistCoachWelcomePatch({
+            starterRoutine: sr,
+            starterRoutinePending: false,
+            previewJobId,
+          });
+          return;
+        } catch {
+          /* keep polling */
+        }
+      }
+      if (!cancelled) finishPollTimeout();
+    };
+
+    void poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest]);
 
   return {
     starter,
