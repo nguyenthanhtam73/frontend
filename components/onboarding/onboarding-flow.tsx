@@ -37,6 +37,7 @@ import {
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
+import { buildReviewSummaryFromStore } from "@/lib/onboarding/review-data";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
 import {
@@ -300,8 +301,12 @@ export function OnboardingFlow() {
   }
 
   function goToCoachWelcome(pack: CoachWelcomePayload) {
+    const full: CoachWelcomePayload = {
+      ...pack,
+      reviewSummary: pack.reviewSummary ?? buildReviewSummaryFromStore(ob),
+    };
     try {
-      sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(pack));
+      sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(full));
       sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
     } catch {
       /* storage full or private mode */

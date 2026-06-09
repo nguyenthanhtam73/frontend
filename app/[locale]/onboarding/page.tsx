@@ -1,16 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-import dynamic from "next/dynamic";
-
-import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
-
-const OnboardingFlow = dynamic(
-  () =>
-    import("@/components/onboarding/onboarding-flow").then((m) => ({
-      default: m.OnboardingFlow,
-    })),
-  { loading: () => <OnboardingFlowSkeleton /> },
-);
+import { OnboardingPageClient } from "@/components/onboarding/onboarding-page-client";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -26,7 +16,7 @@ export async function generateMetadata({ params }: Props) {
 export default function OnboardingPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      <OnboardingFlow />
+      <OnboardingPageClient />
     </div>
   );
 }

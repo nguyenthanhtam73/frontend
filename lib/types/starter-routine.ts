@@ -18,10 +18,21 @@ export const COACH_WELCOME_STORAGE_KEY = "dadiary_coach_welcome_v1";
 /** Session-only id when guest finishes onboarding without saving a profile. */
 export const GUEST_COACH_PROFILE_ID = "guest-preview";
 
+export type OnboardingReviewSummary = {
+  skin_type?: string;
+  undertone?: string;
+  goal?: string;
+  skill_level?: string;
+  body_concerns?: string[];
+  completed_at?: string;
+};
+
 export type CoachWelcomePayload = {
   /** Real profile id when saved; `guest-preview` for local guest trial. */
   profileId?: string;
   starterRoutine: StarterRoutineDTO;
   /** From onboarding vision step (optional). */
   coachingNotes?: string;
+  /** Cached answers for review mode (guest / session reload). */
+  reviewSummary?: OnboardingReviewSummary;
 };

@@ -1,17 +1,18 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import {
   AlertCircle,
-  Moon,
+  CheckCircle2,
+  Eye,
   RefreshCw,
   Send,
   ShieldCheck,
-  Sparkles,
-  Sun,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
+import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
 import { buttonVariants } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,148 +20,131 @@ import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-c
 import { Skeleton } from "@/components/ui/skeleton";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { Link } from "@/i18n/navigation";
-import { apiBaseUrl } from "@/lib/api";
+import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
-import type { SkinProfileResponse } from "@/lib/types/profile";
-import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
+import { isOnboardingComplete, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
+import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import {
   COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
-import { ONBOARDING_EXIT_ANIM_KEY } from "@/lib/onboarding/constants";
 import { cn } from "@/lib/utils";
-
-function numberedList(lines: string[]) {
-  return (
-    <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-foreground">
-      {lines.map((line, i) => (
-        <li key={i}>{line}</li>
-      ))}
-    </ol>
-  );
-}
-
-function parseSnapshotStarter(
-  raw: SkinProfileResponse["onboarding_snapshot"],
-): StarterRoutineDTO | null {
-  if (raw == null) return null;
-  try {
-    const snap = typeof raw === "string" ? JSON.parse(raw) : raw;
-    const sr = snap?.starter_routine;
-    if (!sr || typeof sr !== "object") return null;
-    return {
-      morning: Array.isArray(sr.morning) ? sr.morning : [],
-      evening: Array.isArray(sr.evening) ? sr.evening : [],
-      week_notes: String(sr.week_notes ?? ""),
-      safety_notes: String(sr.safety_notes ?? ""),
-      encouragement: String(sr.encouragement ?? ""),
-      skin_readback: String(sr.skin_readback ?? ""),
-      rationale: String(sr.rationale ?? ""),
-      closing_reminder: String(sr.closing_reminder ?? ""),
-      product_suggestions: Array.isArray(sr.product_suggestions)
-        ? (sr.product_suggestions as ProductSuggestionDTO[])
-        : undefined,
-    };
-  } catch {
-    return null;
-  }
-}
 
 export function CoachWelcomeClient() {
   const t = useTranslations("coachWelcome");
+  const tReview = useTranslations("onboarding.review");
+  const formatter = useFormatter();
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [starter, setStarter] = useState<StarterRoutineDTO | null>(null);
+  const [completedAt, setCompletedAt] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [enterAnim, setEnterAnim] = useState(false);
 
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem(ONBOARDING_EXIT_ANIM_KEY)) {
-        sessionStorage.removeItem(ONBOARDING_EXIT_ANIM_KEY);
-        setEnterAnim(true);
-      }
-    } catch {
-      /* private mode */
-    }
-  }, []);
+  const applyReviewData = useCallback(
+    (opts: {
+      profileId: string | null;
+      starter: StarterRoutineDTO;
+      completedAt: string | null;
+      isGuest: boolean;
+    }) => {
+      setProfileId(opts.profileId);
+      setStarter(opts.starter);
+      setCompletedAt(opts.completedAt);
+      setIsGuest(opts.isGuest);
+      setView("ok");
+    },
+    [],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
     setErrorMsg(null);
     setView("ok");
-    let cachedStarter: StarterRoutineDTO | null = null;
-    let cachedProfileId: string | null = null;
+
     try {
       const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
       if (raw) {
         const p = JSON.parse(raw) as CoachWelcomePayload;
         if (p.starterRoutine) {
-          cachedProfileId = p.profileId ?? null;
-          cachedStarter = p.starterRoutine;
-          setProfileId(p.profileId ?? null);
-          setStarter(p.starterRoutine);
+          applyReviewData({
+            profileId: p.profileId ?? null,
+            starter: p.starterRoutine,
+            completedAt: p.reviewSummary?.completed_at ?? null,
+            isGuest: p.profileId === GUEST_COACH_PROFILE_ID,
+          });
           setLoading(false);
           return;
         }
       }
     } catch {
-      /* fall through to API */
+      /* fall through */
     }
 
     const token = getAccessToken();
-    if (!token) {
-      setStarter(null);
-      setView("anon");
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/profile/skin`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401) {
+    if (token) {
+      try {
+        const prof = await fetchSkinProfile();
+        if (prof && isOnboardingComplete(prof)) {
+          const sr = parseSnapshotStarter(prof.onboarding_snapshot);
+          if (sr) {
+            applyReviewData({
+              profileId: prof.id,
+              starter: sr,
+              completedAt: prof.updated_at || prof.created_at,
+              isGuest: false,
+            });
+            return;
+          }
+        }
         setStarter(null);
-        setView("anon");
+        setView("empty");
         return;
-      }
-      if (!res.ok) {
+      } catch (err) {
+        if (err instanceof Error && err.message === "auth") {
+          setStarter(null);
+          setView("anon");
+          return;
+        }
         setStarter(null);
         setView("error");
         setErrorMsg(t("errorFetch"));
         return;
+      } finally {
+        setLoading(false);
       }
-      const json = (await res.json().catch(() => ({}))) as {
-        data?: SkinProfileResponse;
-      };
-      const prof = json.data;
-      if (prof?.id) {
-        setProfileId(prof.id);
-        const sr = parseSnapshotStarter(prof.onboarding_snapshot);
-        setStarter(sr ?? cachedStarter);
-        if (!sr && !cachedStarter) setView("empty");
-      } else if (cachedProfileId && cachedStarter) {
-        setProfileId(cachedProfileId);
-        setStarter(cachedStarter);
-      } else {
-        setStarter(null);
-        setView("empty");
-      }
-    } catch {
-      setStarter(null);
-      setView("error");
-      setErrorMsg(t("errorNetwork"));
-    } finally {
-      setLoading(false);
     }
-  }, [t]);
+
+    const guestReview = loadGuestReviewFromSession();
+    if (guestReview?.starter) {
+      applyReviewData({
+        profileId: guestReview.profileId,
+        starter: guestReview.starter,
+        completedAt: guestReview.completedAt,
+        isGuest: guestReview.isGuest,
+      });
+      setLoading(false);
+      return;
+    }
+
+    setStarter(null);
+    setView("anon");
+    setLoading(false);
+  }, [applyReviewData, t]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const completedLabel = (() => {
+    if (!completedAt) return "";
+    const d = new Date(completedAt);
+    if (Number.isNaN(d.getTime())) return "";
+    return formatter.dateTime(d, { dateStyle: "long", timeStyle: "short" });
+  })();
 
   if (loading) {
     return (
@@ -216,10 +200,7 @@ export function CoachWelcomeClient() {
     return (
       <div className="mx-auto max-w-lg space-y-4 text-center">
         <p className="text-muted-foreground">{t("empty")}</p>
-        <Link
-          href="/onboarding"
-          className={cn(buttonVariants({ variant: "default" }))}
-        >
+        <Link href="/onboarding" className={cn(buttonVariants({ variant: "default" }))}>
           {t("backOnboarding")}
         </Link>
       </div>
@@ -227,22 +208,24 @@ export function CoachWelcomeClient() {
   }
 
   return (
-    <div
-      className={cn(
-        "mx-auto w-full max-w-2xl space-y-6",
-        enterAnim &&
-          "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:slide-in-from-bottom-4 motion-safe:duration-500",
-      )}
-    >
+    <div className="mx-auto w-full max-w-2xl space-y-6">
       <header className="space-y-2 text-center sm:text-left">
-        <div className="inline-flex items-center gap-2 rounded-full border bg-primary/5 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-          <Sparkles className="size-4" aria-hidden />
-          {t("badge")}
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+          <CheckCircle2 className="size-4" aria-hidden />
+          {tReview("badge")}
         </div>
         <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-          {t("title")}
+          {tReview("title")}
         </h1>
-        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+        {completedLabel ? (
+          <p className="text-sm text-muted-foreground">
+            {tReview("completedOn", { date: completedLabel })}
+          </p>
+        ) : null}
+        <p className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <Eye className="size-3.5 shrink-0" aria-hidden />
+          {tReview("readOnlyHint")}
+        </p>
       </header>
 
       {starter.skin_readback ? (
@@ -256,34 +239,12 @@ export function CoachWelcomeClient() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="overflow-hidden border-amber-500/25 bg-gradient-to-b from-amber-500/5 to-transparent">
-          <CardContent className="space-y-3 pt-6">
-            <div className="flex items-center gap-2 font-semibold">
-              <Sun className="size-5 text-amber-500" aria-hidden />
-              {t("morning")}
-            </div>
-            {starter.morning.length > 0 ? (
-              numberedList(starter.morning)
-            ) : (
-              <p className="text-sm text-muted-foreground">{t("noSteps")}</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-indigo-500/25 bg-gradient-to-b from-indigo-500/5 to-transparent">
-          <CardContent className="space-y-3 pt-6">
-            <div className="flex items-center gap-2 font-semibold">
-              <Moon className="size-5 text-indigo-500" aria-hidden />
-              {t("evening")}
-            </div>
-            {starter.evening.length > 0 ? (
-              numberedList(starter.evening)
-            ) : (
-              <p className="text-sm text-muted-foreground">{t("noSteps")}</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <StarterRoutineCards
+        starter={starter}
+        morningLabel={t("morning")}
+        eveningLabel={t("evening")}
+        noStepsLabel={t("noSteps")}
+      />
 
       {starter.rationale ? (
         <Card>
@@ -349,21 +310,23 @@ export function CoachWelcomeClient() {
         <FeedbackButtons targetType="starter_routine" targetId={profileId} />
       ) : null}
 
-      <div className="flex flex-col gap-3 pb-8 sm:flex-row sm:justify-center">
-        <Link
-          href="/check-in"
-          className={cn(buttonVariants({ size: "lg" }), "gap-2")}
-        >
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <Link href="/check-in" className={cn(buttonVariants({ size: "lg" }), "gap-2")}>
           {t("ctaCheckIn")}
           <Send className="size-4" aria-hidden />
         </Link>
         <Link
-          href="/"
-          className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
+          href="/onboarding"
+          className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
         >
+          {tReview("backToReview")}
+        </Link>
+        <Link href="/" className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}>
           {t("ctaHome")}
         </Link>
       </div>
+
+      <OnboardingDeleteSection isGuest={isGuest} onDeleted={() => void load()} />
     </div>
   );
 }
