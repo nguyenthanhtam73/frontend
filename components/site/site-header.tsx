@@ -280,9 +280,9 @@ export function SiteHeader() {
         </div>
       </nav>
 
-      <div className="flex min-h-9 flex-nowrap items-center justify-start gap-2 overflow-x-auto border-t border-border/40 px-4 py-2 [scrollbar-width:none] sm:justify-center sm:px-6 [&::-webkit-scrollbar]:hidden md:hidden">
+      <div className="theme-toggle-mobile-bar flex min-h-9 flex-nowrap items-center justify-start gap-2 overflow-x-auto border-t border-border/40 px-4 py-2 [scrollbar-width:none] sm:justify-center sm:px-6 [&::-webkit-scrollbar]:hidden md:hidden">
         <LocaleSwitcher />
-        <ThemeToggle />
+        <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
         {mobileAuth}
       </div>
     </header>

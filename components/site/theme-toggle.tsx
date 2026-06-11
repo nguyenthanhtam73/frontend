@@ -13,12 +13,18 @@ type Mode = "light" | "dark";
 const EASE_SPRING = "cubic-bezier(0.34, 1.35, 0.64, 1)";
 const ICON_T_MS = 260;
 
-/** Crisp SVG strokes on mobile; desktop keeps prior ~16px footprint */
-const iconMotion = cn(
-  "absolute z-[5] shrink-0 [vector-effect:non-scaling-stroke] [shape-rendering:geometricPrecision]",
-  "h-5 w-5 md:h-4 md:w-4",
-  "motion-safe:transition-[opacity,transform] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
-  "md:motion-safe:transition-[opacity,transform,filter]",
+/** Crisp SVG on mobile; desktop keeps orbit animation */
+const iconBase = cn(
+  "theme-toggle-icon absolute z-[5] shrink-0 stroke-[2]",
+  "h-[20px] w-[20px] md:h-4 md:w-4",
+  "max-md:motion-safe:transition-opacity max-md:motion-safe:duration-[260ms] max-md:motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)]",
+  "md:motion-safe:transition-[opacity,transform,filter] md:motion-safe:duration-[260ms] md:motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)]",
+  "motion-reduce:transition-none",
+);
+
+const iconShellClass = cn(
+  "theme-toggle-icon-shell relative grid size-7 shrink-0 place-items-center rounded-full md:size-6",
+  "bg-linear-to-br from-muted/50 to-transparent motion-reduce:from-muted/35 motion-reduce:to-transparent",
 );
 
 export function ThemeToggle({ className }: { className?: string }) {
@@ -45,7 +51,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         aria-busy="true"
         aria-label={t("label")}
       >
-        <span className="relative grid size-7 shrink-0 place-items-center md:size-6" aria-hidden>
+        <span className={cn(iconShellClass, "cursor-default")} aria-hidden>
           <span className="absolute inset-[15%] rounded-full bg-muted/70" />
         </span>
         <span className="hidden min-h-3 min-w-[2.5rem] rounded-sm bg-muted/60 sm:block" aria-hidden />
@@ -71,18 +77,15 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={label}
       onClick={() => setTheme(active === "light" ? "dark" : "light")}
       className={cn(
-        "group/theme-toggle relative isolate inline-flex h-8 min-h-8 min-w-[2.85rem] shrink-0 cursor-pointer items-center gap-1 overflow-visible rounded-lg border border-border bg-background px-1.5 text-[11px] font-medium text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-200 hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 sm:min-w-[5rem] sm:text-xs",
+        "theme-toggle-btn group/theme-toggle relative isolate inline-flex h-8 min-h-8 min-w-[2.85rem] shrink-0 cursor-pointer items-center gap-1 overflow-visible rounded-lg border border-border bg-background px-1.5 text-[11px] font-medium text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-200 hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 sm:min-w-[5rem] sm:text-xs",
         className,
       )}
     >
-      <span
-        className="relative grid size-7 shrink-0 place-items-center rounded-full bg-linear-to-br from-muted/50 to-transparent motion-reduce:from-muted/35 motion-reduce:to-transparent md:size-6"
-        aria-hidden
-      >
-        {/* Ambient halo: warm day → cool night */}
+      <span className={iconShellClass} aria-hidden>
+        {/* Ambient halo: warm day → cool night (desktop only) */}
         <span
           className={cn(
-            "pointer-events-none absolute inset-0 rounded-full blur-[8px]",
+            "theme-toggle-halo pointer-events-none absolute inset-0 rounded-full blur-[8px]",
             "motion-safe:transition-[opacity,transform,background-color] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
             isLight ? "scale-100 bg-amber-400/55 opacity-90" : "scale-125 bg-indigo-500/45 opacity-100 dark:bg-sky-600/38",
           )}
@@ -92,11 +95,16 @@ export function ThemeToggle({ className }: { className?: string }) {
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
           className={cn(
-            iconMotion,
+            iconBase,
             "text-amber-500 max-md:drop-shadow-none drop-shadow-[0_0_8px_oklab(82%_0.12_95/0.35)] motion-reduce:drop-shadow-none",
             isLight
-              ? "rotate-0 scale-100 opacity-100 blur-none"
-              : "rotate-[-110deg] scale-[0.35] opacity-0 max-md:blur-none blur-[1.5px] motion-reduce:blur-none motion-reduce:opacity-0",
+              ? "theme-toggle-icon--active rotate-0 scale-100 opacity-100 blur-none"
+              : cn(
+                  "theme-toggle-icon--inactive opacity-0",
+                  "max-md:rotate-0 max-md:scale-100 max-md:blur-none",
+                  "md:rotate-[-110deg] md:scale-[0.35] md:blur-[1.5px]",
+                  "motion-reduce:blur-none motion-reduce:opacity-0",
+                ),
           )}
         />
 
@@ -104,18 +112,23 @@ export function ThemeToggle({ className }: { className?: string }) {
           strokeWidth={2}
           vectorEffect="non-scaling-stroke"
           className={cn(
-            iconMotion,
+            iconBase,
             "text-sky-300 max-md:drop-shadow-none drop-shadow-[0_0_7px_oklab(78%_0.09_260/0.42)] motion-reduce:drop-shadow-none dark:text-sky-200",
             "md:h-[0.9375rem] md:w-[0.9375rem]",
             isLight
-              ? "rotate-110 scale-[0.35] opacity-0 max-md:blur-none blur-[1.5px] motion-reduce:blur-none motion-reduce:opacity-0"
-              : "rotate-0 scale-100 opacity-100 blur-none",
+              ? cn(
+                  "theme-toggle-icon--inactive opacity-0",
+                  "max-md:rotate-0 max-md:scale-100 max-md:blur-none",
+                  "md:rotate-110 md:scale-[0.35] md:blur-[1.5px]",
+                  "motion-reduce:blur-none motion-reduce:opacity-0",
+                )
+              : "theme-toggle-icon--active rotate-0 scale-100 opacity-100 blur-none",
           )}
         />
 
         <span
           className={cn(
-            "pointer-events-none absolute inset-0 z-[6]",
+            "theme-toggle-stars pointer-events-none absolute inset-0 z-[6]",
             "motion-safe:transition-opacity motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
             isLight ? "opacity-0" : "opacity-100",
           )}

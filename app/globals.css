@@ -222,6 +222,59 @@
   }
 }
 
+/* Theme toggle — crisp Sun/Moon on mobile (retina + backdrop-blur headers) */
+@media (max-width: 767px) {
+  .theme-toggle-btn {
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  .theme-toggle-icon-shell {
+    contain: layout style paint;
+    isolation: isolate;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .theme-toggle-icon {
+    shape-rendering: geometricPrecision;
+    vector-effect: non-scaling-stroke;
+    -webkit-font-smoothing: antialiased;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    filter: none !important;
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+
+  .theme-toggle-icon--active {
+    opacity: 1;
+    transform: none !important;
+  }
+
+  .theme-toggle-icon--inactive {
+    opacity: 0;
+    transform: none !important;
+    pointer-events: none;
+  }
+
+  .theme-toggle-halo,
+  .theme-toggle-stars {
+    display: none;
+  }
+
+  .theme-toggle-mobile-bar .theme-toggle-btn {
+    position: relative;
+    z-index: 1;
+  }
+}
+
 /* Top progress bar shown by `app/[locale]/loading.tsx` during navigation. */
 @keyframes nav-progress-indeterminate {
   0% {
