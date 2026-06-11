@@ -31,6 +31,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
+import { buildOnboardingFinishBody } from "@/lib/onboarding/finish-body";
 import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import {
   COACH_WELCOME_STORAGE_KEY,
@@ -59,7 +60,6 @@ import {
   MANUAL_QUICK_SKIN_TYPES,
   ONBOARDING_EXIT_ANIM_KEY,
   PHOTO_QUICK_CONCERNS,
-  ONBOARDING_DEFAULT_BUDGET,
   ONBOARDING_MAX_PHOTOS,
   ONBOARDING_MIN_PHOTOS,
   QUICK_GOALS,
@@ -349,36 +349,14 @@ export function OnboardingFlow() {
     if (finishing) return;
     setFinishError(null);
 
-    const manual = ob.bodyConcernsText
-      .split(/[,;\n]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const bodyConcerns = [...new Set([...ob.aiConcernTags, ...manual])];
-    const token = getAccessToken();
-    const undertone = ob.undertone ?? "prefer_not";
     const photosSkipped = skipFaceCapture || ob.photos.length === 0;
-    const finishBody = {
-      skin_type: ob.skinType,
-      undertone,
-      contexts: [] as string[],
-      budget: ONBOARDING_DEFAULT_BUDGET,
-      goal: ob.goal,
-      skill_level: ob.skillMode,
-      body_concerns: bodyConcerns,
-      current_routine: ob.currentRoutineText.trim(),
-      locale,
-      photos_skipped: photosSkipped,
-    };
-
-    if (
-      !ob.skinType ||
-      !ob.goal ||
-      !ob.skillMode ||
-      bodyConcerns.length === 0
-    ) {
+    const finishBody = buildOnboardingFinishBody(ob, locale, photosSkipped);
+    if (!finishBody) {
       setFinishError("save_failed");
       return;
     }
+
+    const token = getAccessToken();
 
     if (!token) {
       await finishGuestPreview();
@@ -493,19 +471,9 @@ export function OnboardingFlow() {
     if (finishing) return;
     setFinishError(null);
 
-    const manual = ob.bodyConcernsText
-      .split(/[,;\n]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const bodyConcerns = [...new Set([...ob.aiConcernTags, ...manual])];
-    const undertone = ob.undertone ?? "prefer_not";
-
-    if (
-      !ob.skinType ||
-      !ob.goal ||
-      !ob.skillMode ||
-      bodyConcerns.length === 0
-    ) {
+    const photosSkipped = skipFaceCapture || ob.photos.length === 0;
+    const finishBody = buildOnboardingFinishBody(ob, locale, photosSkipped);
+    if (!finishBody) {
       setFinishError("save_failed");
       return;
     }
@@ -527,17 +495,7 @@ export function OnboardingFlow() {
         const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/preview-complete`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({
-            skin_type: ob.skinType,
-            undertone,
-            contexts: [],
-            budget: ONBOARDING_DEFAULT_BUDGET,
-            goal: ob.goal,
-            skill_level: ob.skillMode,
-            body_concerns: bodyConcerns,
-            current_routine: ob.currentRoutineText.trim(),
-            locale,
-          }),
+          body: JSON.stringify(finishBody),
         });
         const payload = (await res.json().catch(() => ({}))) as {
           success?: boolean;

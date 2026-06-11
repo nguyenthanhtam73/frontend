@@ -39,6 +39,7 @@ export async function requestGuestPreviewJob(
         current_routine: "",
         locale,
         photos_skipped: summary.photos_skipped === true,
+        skin_analysis: summary.skin_analysis,
       }),
     });
     const payload = (await res.json().catch(() => ({}))) as PreviewCompletePayload;

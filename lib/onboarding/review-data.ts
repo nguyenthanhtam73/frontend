@@ -1,6 +1,7 @@
 import type { OnboardingState } from "@/lib/stores/onboarding-store";
 import type { OnboardingReviewSummary } from "@/lib/types/starter-routine";
 import type { SkinProfileResponse } from "@/lib/types/profile";
+import { bodyConcernsFromStore } from "@/lib/onboarding/finish-body";
 import {
   getOnboardingCompletedAt,
   parseOnboardingSnapshot,
@@ -35,11 +36,7 @@ export type OnboardingReviewData = {
 };
 
 export function buildReviewSummaryFromStore(ob: OnboardingState): OnboardingReviewSummary {
-  const manual = ob.bodyConcernsText
-    .split(/[,;\n]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const concerns = ob.aiConcernTags.length ? ob.aiConcernTags : manual;
+  const concerns = bodyConcernsFromStore(ob);
   return {
     skin_type: ob.skinType ?? undefined,
     undertone: ob.undertone ?? undefined,
@@ -47,6 +44,7 @@ export function buildReviewSummaryFromStore(ob: OnboardingState): OnboardingRevi
     skill_level: ob.skillMode ?? undefined,
     body_concerns: concerns.length ? concerns : undefined,
     completed_at: new Date().toISOString(),
+    skin_analysis: ob.aiSnapshot ?? undefined,
   };
 }
 

@@ -86,8 +86,9 @@ function CoachWelcomeLoaded({
     return formatter.dateTime(d, { dateStyle: "long", timeStyle: "short" });
   })();
 
+  // Photo coaching notes are richer and more accurate than the starter LLM skin_readback.
   const skinReadback =
-    starter.skin_readback?.trim() || coachingNotes?.trim() || "";
+    coachingNotes?.trim() || starter.skin_readback?.trim() || "";
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">

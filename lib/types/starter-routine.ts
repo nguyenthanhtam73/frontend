@@ -1,6 +1,7 @@
 /** Matches backend `StarterRoutineResponse` / persisted `starter_routine` in onboarding snapshot. */
 
 import type { ProductSuggestionDTO } from "./product-suggestion";
+import type { OnboardingSkinAnalyzeDTO } from "./onboarding-ai";
 export type StarterRoutineDTO = {
   morning: string[];
   evening: string[];
@@ -30,6 +31,8 @@ export type OnboardingReviewSummary = {
   completed_at?: string;
   photo_urls?: string[];
   photos_skipped?: boolean;
+  /** Vision + coach output — used when guest preview job retries in background. */
+  skin_analysis?: OnboardingSkinAnalyzeDTO;
 };
 
 export type CoachWelcomePayload = {
