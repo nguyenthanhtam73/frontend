@@ -13,6 +13,14 @@ type Mode = "light" | "dark";
 const EASE_SPRING = "cubic-bezier(0.34, 1.35, 0.64, 1)";
 const ICON_T_MS = 260;
 
+/** Crisp SVG strokes on mobile; desktop keeps prior ~16px footprint */
+const iconMotion = cn(
+  "absolute z-[5] shrink-0 [vector-effect:non-scaling-stroke] [shape-rendering:geometricPrecision]",
+  "h-5 w-5 md:h-4 md:w-4",
+  "motion-safe:transition-[opacity,transform] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
+  "md:motion-safe:transition-[opacity,transform,filter]",
+);
+
 export function ThemeToggle({ className }: { className?: string }) {
   const t = useTranslations("common.theme");
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -37,7 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         aria-busy="true"
         aria-label={t("label")}
       >
-        <span className="relative grid size-6 shrink-0 place-items-center" aria-hidden>
+        <span className="relative grid size-7 shrink-0 place-items-center md:size-6" aria-hidden>
           <span className="absolute inset-[15%] rounded-full bg-muted/70" />
         </span>
         <span className="hidden min-h-3 min-w-[2.5rem] rounded-sm bg-muted/60 sm:block" aria-hidden />
@@ -68,7 +76,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       )}
     >
       <span
-        className="relative grid size-6 shrink-0 place-items-center rounded-full bg-linear-to-br from-muted/50 to-transparent motion-reduce:from-muted/35 motion-reduce:to-transparent"
+        className="relative grid size-7 shrink-0 place-items-center rounded-full bg-linear-to-br from-muted/50 to-transparent motion-reduce:from-muted/35 motion-reduce:to-transparent md:size-6"
         aria-hidden
       >
         {/* Ambient halo: warm day → cool night */}
@@ -82,24 +90,25 @@ export function ThemeToggle({ className }: { className?: string }) {
 
         <Sun
           strokeWidth={2}
+          vectorEffect="non-scaling-stroke"
           className={cn(
-            "absolute z-[5] text-amber-500 drop-shadow-[0_0_8px_oklab(82%_0.12_95/0.35)] motion-reduce:drop-shadow-none",
-            "motion-safe:transition-[opacity,transform,filter] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
-            "size-[1rem]",
+            iconMotion,
+            "text-amber-500 max-md:drop-shadow-none drop-shadow-[0_0_8px_oklab(82%_0.12_95/0.35)] motion-reduce:drop-shadow-none",
             isLight
               ? "rotate-0 scale-100 opacity-100 blur-none"
-              : "rotate-[-110deg] scale-[0.35] opacity-0 blur-[1.5px] motion-reduce:blur-none motion-reduce:opacity-0",
+              : "rotate-[-110deg] scale-[0.35] opacity-0 max-md:blur-none blur-[1.5px] motion-reduce:blur-none motion-reduce:opacity-0",
           )}
         />
 
         <Moon
           strokeWidth={2}
+          vectorEffect="non-scaling-stroke"
           className={cn(
-            "absolute z-[5] text-sky-300 drop-shadow-[0_0_7px_oklab(78%_0.09_260/0.42)] motion-reduce:drop-shadow-none dark:text-sky-200",
-            "motion-safe:transition-[opacity,transform,filter] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
-            "size-[0.9375rem]",
+            iconMotion,
+            "text-sky-300 max-md:drop-shadow-none drop-shadow-[0_0_7px_oklab(78%_0.09_260/0.42)] motion-reduce:drop-shadow-none dark:text-sky-200",
+            "md:h-[0.9375rem] md:w-[0.9375rem]",
             isLight
-              ? "rotate-110 scale-[0.35] opacity-0 blur-[1.5px] motion-reduce:blur-none motion-reduce:opacity-0"
+              ? "rotate-110 scale-[0.35] opacity-0 max-md:blur-none blur-[1.5px] motion-reduce:blur-none motion-reduce:opacity-0"
               : "rotate-0 scale-100 opacity-100 blur-none",
           )}
         />
