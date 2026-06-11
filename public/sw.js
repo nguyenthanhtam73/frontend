@@ -11,7 +11,7 @@
  * Bump CACHE_VERSION on any change so old clients pick up the new SW.
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `dadiary-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `dadiary-runtime-${CACHE_VERSION}`;
 const HTML_CACHE = `dadiary-html-${CACHE_VERSION}`;
@@ -21,6 +21,9 @@ const API_CACHE = `dadiary-api-${CACHE_VERSION}`;
 const PRECACHE_URLS = [
   "/",
   "/manifest.json",
+  "/favicon.ico",
+  "/favicon-16.png",
+  "/favicon-32.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-maskable-512.png",

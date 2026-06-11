@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 /**
  * Generate PWA icon PNGs and iOS splash screens with no external
- * dependencies. The artwork is a placeholder that matches the DaDiary brand
- * palette (soft teal → baby pink gradient with a centered drop glyph).
+ * dependencies. Artwork matches components/site/logo.tsx (rounded gradient
+ * tile with the journal glyph).
  *
  * Re-run after updating the brand or adding a new device size:
  *   node scripts/generate-pwa-icons.mjs
  *
  * Outputs:
  *   public/icons/icon-{192,512,maskable-512}.png
+ *   public/favicon-{16,32}.png
+ *   public/favicon.ico
  *   public/apple-touch-icon.png
  *   public/splash/<name>.png  (one per iOS device class)
  *   lib/pwa-splash.ts         (typed list of <link> entries)
@@ -29,7 +31,6 @@ const SPLASH_TS_OUT = resolve(ROOT, "lib/pwa-splash.ts");
 const BG_TOP = hex("#9DD7D4");      // soft teal tint
 const BG_BOTTOM = hex("#F4C7CE");   // baby pink wash
 const GLYPH = hex("#FFFFFF");       // white glyph for contrast on gradient
-const SAFE = hex("#0F2B33");        // deep ink for fallback / shadows
 // Splash background uses a slightly washed cream so the glyph reads softer
 // when the launch image fills the entire screen.
 const SPLASH_TOP = hex("#E8F5F3");
@@ -109,17 +110,72 @@ function renderPng(width, height, paint) {
  */
 function renderIcon({ size, maskable = false }) {
   const safeRatio = maskable ? 0.78 : 1;
-  const cornerRatio = maskable ? 0 : 0.22;
   const inset = (size * (1 - safeRatio)) / 2;
   const artSize = size - inset * 2;
-  const radius = artSize * cornerRatio;
-  return renderPng(size, size, (x, y) =>
-    paintIconPixel(x, y, { size, inset, artSize, radius, maskable }),
-  );
+  return renderPng(size, size, (x, y) => paintIconPixel(x, y, { size, inset, artSize, maskable }));
+}
+
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  if (dx === 0 && dy === 0) return Math.hypot(px - x1, py - y1);
+  const t = clamp(((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy), 0, 1);
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+/** Matches components/site/logo.tsx glyph in a square canvas. */
+function paintLogoGlyph(localX, localY, artSize) {
+  const pad = artSize * (1 / 32);
+  const box = artSize - pad * 2;
+  const radius = box * (9 / 30);
+  const lx = localX - pad;
+  const ly = localY - pad;
+
+  if (lx < 0 || ly < 0 || lx >= box || ly >= box) return null;
+
+  const alpha = roundedRectAlpha(lx, ly, box, box, radius);
+  if (alpha === 0) return null;
+
+  const u = lx / box;
+  const v = ly / box;
+  const t = clamp((u + v) / 2, 0, 1);
+  const bg = mix(BG_TOP, BG_BOTTOM, t);
+
+  const s = box / 30;
+  const ox = pad + s;
+  const oy = pad + s;
+
+  const dotCx = ox + 22 * s;
+  const dotCy = oy + 14 * s;
+  const dotR = 1.4 * s;
+  if (Math.hypot(localX - dotCx, localY - dotCy) <= dotR + 0.5) {
+    return [...GLYPH, 255];
+  }
+
+  const stroke = 2 * s;
+  const half = stroke / 2;
+  const segments = [
+    [ox + 11 * s, oy + 21 * s, ox + 11 * s, oy + 13 * s],
+    [ox + 11 * s, oy + 13 * s, ox + 14 * s, oy + 10 * s],
+    [ox + 14 * s, oy + 10 * s, ox + 18 * s, oy + 10 * s],
+    [ox + 18 * s, oy + 10 * s, ox + 21 * s, oy + 13 * s],
+    [ox + 21 * s, oy + 13 * s, ox + 21 * s, oy + 14.5 * s],
+    [ox + 21 * s, oy + 17.5 * s, ox + 21 * s, oy + 19 * s],
+    [ox + 21 * s, oy + 19 * s, ox + 18 * s, oy + 22 * s],
+    [ox + 18 * s, oy + 22 * s, ox + 14 * s, oy + 22 * s],
+  ];
+
+  for (const [x1, y1, x2, y2] of segments) {
+    if (distToSegment(localX, localY, x1, y1, x2, y2) <= half + 0.6) {
+      return [...GLYPH, 255];
+    }
+  }
+
+  return [...bg, alpha];
 }
 
 function paintIconPixel(x, y, ctx) {
-  const { size, inset, artSize, radius, maskable } = ctx;
+  const { size, inset, artSize, maskable } = ctx;
 
   const inSafeZone =
     x >= inset && x < size - inset && y >= inset && y < size - inset;
@@ -127,34 +183,15 @@ function paintIconPixel(x, y, ctx) {
     return maskable ? [...BG_TOP, 255] : [0, 0, 0, 0];
   }
 
-  const localX = x - inset;
-  const localY = y - inset;
-  const u = localX / artSize;
-  const v = localY / artSize;
-
-  let bgAlpha = 255;
-  if (radius > 0) {
-    bgAlpha = roundedRectAlpha(localX, localY, artSize, artSize, radius);
-    if (bgAlpha === 0) return [0, 0, 0, 0];
-  }
-
-  const t = clamp((u + v) / 2, 0, 1);
-  const highlight = Math.max(0, 1 - v * 1.6) * 0.12;
-  const bg = mix(BG_TOP, BG_BOTTOM, t).map((c) => clamp(c + highlight * 255, 0, 255));
-
-  const drop = inDrop(localX, localY, artSize);
-  if (drop.inside) {
-    const shadow = clamp((localY - drop.cy) / drop.r, 0, 1) * 0.18;
-    return [...mix(GLYPH, SAFE, shadow), bgAlpha];
-  }
-  return [...bg, bgAlpha];
+  const glyph = paintLogoGlyph(x - inset, y - inset, artSize);
+  return glyph ?? [0, 0, 0, 0];
 }
 
 // ---------- splash ----------------------------------------------------------
 
 /**
  * Splash screens fill the device viewport at launch. Brand background gradient
- * with the drop glyph centered horizontally and slightly above center so the
+ * with the logo glyph centered horizontally and slightly above center so the
  * iOS home indicator doesn't overlap it.
  */
 function renderSplash({ width, height }) {
@@ -164,7 +201,6 @@ function renderSplash({ width, height }) {
   const glyphY = Math.round((height - glyphSize) / 2 - height * 0.05);
 
   return renderPng(width, height, (x, y) => {
-    // Soft diagonal gradient cream → blush across the entire viewport.
     const t = clamp((x / width + y / height) / 2, 0, 1);
     const bg = mix(SPLASH_TOP, SPLASH_BOTTOM, t);
 
@@ -174,42 +210,27 @@ function renderSplash({ width, height }) {
       return [...bg, 255];
     }
 
-    const drop = inDrop(localX, localY, glyphSize);
-    if (!drop.inside) return [...bg, 255];
-
-    // The splash glyph uses brand teal-pink fill so it pops on the cream
-    // background instead of disappearing into white.
-    const tt = clamp((localX + localY) / (2 * glyphSize), 0, 1);
-    const shadow = clamp((localY - drop.cy) / drop.r, 0, 1) * 0.15;
-    const fill = mix(BG_TOP, BG_BOTTOM, tt).map((c) =>
-      clamp(c - shadow * 80, 0, 255),
-    );
-    return [...fill, 255];
+    const glyph = paintLogoGlyph(localX, localY, glyphSize);
+    return glyph ?? [...bg, 255];
   });
 }
 
-/**
- * Returns whether `(localX, localY)` falls inside the canonical drop
- * silhouette scaled into a square of side `artSize`. Shared between icon
- * and splash renderers.
- */
-function inDrop(localX, localY, artSize) {
-  const cx = artSize / 2;
-  const cy = artSize * 0.6;
-  const r = artSize * 0.22;
-  const dx = localX - cx;
-  const dy = localY - cy;
-  const inBody = dx * dx + dy * dy <= r * r;
+/** Wrap a 32×32 PNG in a minimal ICO container (PNG-in-ICO, Vista+). */
+function pngToIco(pngBuf) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(1, 4);
 
-  const tipHeight = artSize * 0.32;
-  const tipHalf = r * 0.85;
-  const tipBaseY = cy - r * 0.4;
-  const tipApexY = cy - r - tipHeight * 0.5;
-  const tipNormX = Math.abs(dx) / tipHalf;
-  const tipNormY = (tipBaseY - localY) / (tipBaseY - tipApexY);
-  const inTip = tipNormY >= 0 && tipNormY <= 1 && tipNormX <= 1 - tipNormY;
+  const entry = Buffer.alloc(16);
+  entry[0] = 32;
+  entry[1] = 32;
+  entry.writeUInt16LE(1, 4);
+  entry.writeUInt16LE(32, 6);
+  entry.writeUInt32LE(pngBuf.length, 8);
+  entry.writeUInt32LE(22, 12);
 
-  return { inside: inBody || inTip, cx, cy, r };
+  return Buffer.concat([header, entry, pngBuf]);
 }
 
 function roundedRectAlpha(x, y, w, h, r) {
@@ -309,6 +330,11 @@ write(resolve(ICONS_OUT, "icon-192.png"), renderIcon({ size: 192 }));
 write(resolve(ICONS_OUT, "icon-512.png"), renderIcon({ size: 512 }));
 write(resolve(ICONS_OUT, "icon-maskable-512.png"), renderIcon({ size: 512, maskable: true }));
 write(APPLE_OUT, renderIcon({ size: 180 }));
+
+const favicon32 = renderIcon({ size: 32 });
+write(resolve(ROOT, "public/favicon-32.png"), favicon32);
+write(resolve(ROOT, "public/favicon-16.png"), renderIcon({ size: 16 }));
+write(resolve(ROOT, "public/favicon.ico"), pngToIco(favicon32));
 
 console.log("Generating iOS splash screens…");
 for (const d of SPLASH_DEVICES) {
