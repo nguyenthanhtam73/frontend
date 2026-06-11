@@ -31,6 +31,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
+import { appendOnboardingPhotos } from "@/lib/onboarding/compress-photo";
 import { buildOnboardingFinishBody } from "@/lib/onboarding/finish-body";
 import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import {
@@ -910,12 +911,9 @@ function PhotoCaptureBlock({
           const list = e.target.files;
           if (list?.length) {
             const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
-            Array.from(list)
-              .filter((f) => f.type.startsWith("image/"))
-              .slice(0, remaining)
-              .forEach((file) => {
-                ob.addPhoto({ file, preview: URL.createObjectURL(file) });
-              });
+            void appendOnboardingPhotos(Array.from(list), remaining, (item) =>
+              ob.addPhoto(item),
+            );
           }
           e.target.value = "";
         }}
@@ -930,12 +928,9 @@ function PhotoCaptureBlock({
           const list = e.target.files;
           if (list?.length) {
             const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
-            Array.from(list)
-              .filter((f) => f.type.startsWith("image/"))
-              .slice(0, remaining)
-              .forEach((file) => {
-                ob.addPhoto({ file, preview: URL.createObjectURL(file) });
-              });
+            void appendOnboardingPhotos(Array.from(list), remaining, (item) =>
+              ob.addPhoto(item),
+            );
           }
           e.target.value = "";
         }}
