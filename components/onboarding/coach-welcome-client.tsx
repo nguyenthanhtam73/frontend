@@ -128,6 +128,12 @@ function CoachWelcomeLoaded({
         </Card>
       ) : null}
 
+      <ProductSuggestionsCard
+        suggestions={starter.product_suggestions}
+        source="starter_routine"
+        contextId={profileId ?? undefined}
+      />
+
       <div
         className={cn(
           "rounded-xl transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
@@ -184,12 +190,6 @@ function CoachWelcomeLoaded({
       {isGuest && !isGeneratingRoutine ? (
         <GuestCoachWelcomeCta variant={showFallbackBanner ? "fallback" : "ready"} />
       ) : null}
-
-      <ProductSuggestionsCard
-        suggestions={starter.product_suggestions}
-        source="starter_routine"
-        contextId={profileId ?? undefined}
-      />
 
       {profileId && profileId !== GUEST_COACH_PROFILE_ID ? (
         <FeedbackButtons targetType="starter_routine" targetId={profileId} />
