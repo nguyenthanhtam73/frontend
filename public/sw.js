@@ -11,7 +11,7 @@
  * Bump CACHE_VERSION on any change so old clients pick up the new SW.
  */
 
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const STATIC_CACHE = `dadiary-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `dadiary-runtime-${CACHE_VERSION}`;
 const HTML_CACHE = `dadiary-html-${CACHE_VERSION}`;
@@ -20,6 +20,10 @@ const API_CACHE = `dadiary-api-${CACHE_VERSION}`;
 // App-shell entries that we precache so the app boots offline.
 const PRECACHE_URLS = [
   "/",
+  "/onboarding",
+  "/check-in",
+  "/login",
+  "/register",
   "/manifest.json",
   "/favicon.ico",
   "/favicon-16.png",
@@ -49,7 +53,9 @@ self.addEventListener("install", (event) => {
           }
         }),
       );
-      await self.skipWaiting();
+      // Do not call skipWaiting() here — unsolicited activation triggers
+      // controllerchange and the page reloads mid-navigation (e.g. /onboarding).
+      // The client posts SKIP_WAITING only when the user accepts an update.
     })(),
   );
 });
@@ -197,9 +203,13 @@ async function staleWhileRevalidate(req, cacheName) {
   const fresh = await networkPromise;
   if (fresh) return fresh;
 
-  // Last resort: serve the precached app shell so the user sees something.
-  const shell = await cache.match("/") ?? (await caches.match("/"));
-  if (shell) return shell;
+  // Only fall back to the home shell for the home URL itself — serving `/` HTML
+  // for `/onboarding` (etc.) made "Bắt đầu" look like a reload back to landing.
+  const path = new URL(req.url).pathname.replace(/\/$/, "") || "/";
+  if (path === "/") {
+    const shell = await cache.match("/") ?? (await caches.match("/"));
+    if (shell) return shell;
+  }
 
   // Bilingual fallback so the offline message reads correctly for both
   // primary locales (vi / en). The PWA shell + locale-aware UI usually load

@@ -72,6 +72,8 @@ export function PwaRegister() {
 
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [updating, setUpdating] = useState(false);
+  /** True only after the user taps "Apply update" — avoids reload on first SW install. */
+  const pendingReloadRef = useRef(false);
   const refreshingRef = useRef(false);
 
   // ---------------------------------------------------------------------
@@ -121,9 +123,9 @@ export function PwaRegister() {
       }
     };
 
-    /** When the active SW changes (after the user accepts our update CTA),
-     *  reload exactly once so the freshly cached app shell takes over. */
+    /** Reload only when the user accepted an update — not on first SW install/claim. */
     const onControllerChange = () => {
+      if (!pendingReloadRef.current) return;
       if (refreshingRef.current) return;
       refreshingRef.current = true;
       window.location.reload();
@@ -193,8 +195,8 @@ export function PwaRegister() {
   const handleApplyUpdate = useCallback(() => {
     if (!waitingWorker) return;
     setUpdating(true);
-    // The SW listens for SKIP_WAITING and activates immediately; the
-    // `controllerchange` listener above then reloads the page.
+    pendingReloadRef.current = true;
+    // The SW listens for SKIP_WAITING and activates; controllerchange reloads once.
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
   }, [waitingWorker]);
 

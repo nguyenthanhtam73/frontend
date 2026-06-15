@@ -24,6 +24,7 @@ import {
   SkinProfilePanel,
   SkipPhotosButton,
 } from "@/components/onboarding/onboarding-ui";
+import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
@@ -539,7 +540,7 @@ export function OnboardingFlow() {
   }
 
   if (guestTrialBlocked === null) {
-    return null;
+    return <OnboardingFlowSkeleton />;
   }
 
   if (guestTrialBlocked) {
