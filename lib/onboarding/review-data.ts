@@ -4,7 +4,9 @@ import type { SkinProfileResponse } from "@/lib/types/profile";
 import { bodyConcernsFromStore } from "@/lib/onboarding/finish-body";
 import {
   getOnboardingCompletedAt,
+  isStarterRoutinePending,
   parseOnboardingSnapshot,
+  parseSnapshotCoachingNotes,
   parseSnapshotStarter,
 } from "@/lib/onboarding/snapshot";
 import {
@@ -69,6 +71,8 @@ export function buildReviewFromProfile(profile: SkinProfileResponse): Onboarding
     photoUrls,
     photosSkipped: snap?.photos_skipped === true,
     starter: parseSnapshotStarter(profile.onboarding_snapshot),
+    coachingNotes: parseSnapshotCoachingNotes(profile.onboarding_snapshot),
+    starterRoutinePending: isStarterRoutinePending(profile.onboarding_snapshot),
   };
 }
 
@@ -93,7 +97,10 @@ export function loadGuestReviewFromSession(): OnboardingReviewData | null {
       photoUrls: (summary?.photo_urls ?? []).slice(0, ONBOARDING_MAX_PHOTOS),
       photosSkipped: summary?.photos_skipped === true,
       starter: p.starterRoutine,
-      coachingNotes: p.coachingNotes,
+      coachingNotes:
+        p.coachingNotes?.trim() ||
+        summary?.skin_analysis?.coaching_notes?.trim() ||
+        undefined,
       starterRoutinePending: p.starterRoutinePending === true,
     };
   } catch {

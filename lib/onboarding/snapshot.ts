@@ -1,5 +1,6 @@
 import type { SkinProfileResponse } from "@/lib/types/profile";
 import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
+import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 
 export type OnboardingSnapshot = {
@@ -13,6 +14,7 @@ export type OnboardingSnapshot = {
   photo_urls?: string[];
   starter_routine_pending?: boolean;
   starter_routine?: Record<string, unknown>;
+  skin_analysis?: OnboardingSkinAnalyzeDTO | Record<string, unknown>;
 };
 
 export function parseOnboardingSnapshot(
@@ -68,4 +70,16 @@ export function isOnboardingComplete(profile: SkinProfileResponse | null | undef
 
 export function getOnboardingCompletedAt(profile: SkinProfileResponse): string {
   return profile.updated_at || profile.created_at;
+}
+
+/** Rich photo-coach notes from persisted vision analysis (preferred over starter skin_readback). */
+export function parseSnapshotCoachingNotes(
+  raw: SkinProfileResponse["onboarding_snapshot"],
+): string | undefined {
+  const snap = parseOnboardingSnapshot(raw);
+  const analysis = snap?.skin_analysis;
+  if (!analysis || typeof analysis !== "object") return undefined;
+  const notes = (analysis as OnboardingSkinAnalyzeDTO).coaching_notes;
+  const trimmed = typeof notes === "string" ? notes.trim() : "";
+  return trimmed || undefined;
 }
