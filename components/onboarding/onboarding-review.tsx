@@ -212,9 +212,9 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
 
       {data.starter ? (
         data.isGuest ? (
-          <GuestReviewRoutineSection data={data} />
+          <GuestReviewRoutineSection data={data} starter={data.starter} />
         ) : (
-          <LoggedInReviewRoutineSection data={data} />
+          <LoggedInReviewRoutineSection data={data} starter={data.starter} />
         )
       ) : null}
 
@@ -239,15 +239,19 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   );
 }
 
-function LoggedInReviewRoutineSection({ data }: { data: OnboardingReviewData }) {
+function LoggedInReviewRoutineSection({
+  data,
+  starter: initialStarter,
+}: {
+  data: OnboardingReviewData;
+  starter: NonNullable<OnboardingReviewData["starter"]>;
+}) {
   const tCoach = useTranslations("coachWelcome");
-
-  if (!data.starter) return null;
 
   const initialPending = data.starterRoutinePending === true;
   const { starter, isGeneratingRoutine, showFallbackBanner, routineJustUpdated } =
     useStarterRoutineLive({
-      initialStarter: data.starter,
+      initialStarter,
       initialPending,
       isGuest: false,
     });
@@ -288,16 +292,21 @@ function LoggedInReviewRoutineSection({ data }: { data: OnboardingReviewData }) 
   );
 }
 
-function GuestReviewRoutineSection({ data }: { data: OnboardingReviewData }) {
+function GuestReviewRoutineSection({
+  data,
+  starter: initialStarter,
+}: {
+  data: OnboardingReviewData;
+  starter: NonNullable<OnboardingReviewData["starter"]>;
+}) {
   const tCoach = useTranslations("coachWelcome");
   const session = readCoachWelcomeSession();
   const initialPending =
     data.starterRoutinePending === true || session?.starterRoutinePending === true;
-  const starter = data.starter!;
 
   const { starter: liveStarter, isGeneratingRoutine, showFallbackBanner, routineJustUpdated } =
     useStarterRoutineLive({
-      initialStarter: starter,
+      initialStarter,
       initialPending,
       isGuest: true,
     });
