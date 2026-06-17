@@ -142,11 +142,7 @@ export function RoutineEditor() {
     [validation.issues, beginnerSimple, validationEngaged, saveAttempted],
   );
 
-  const [saveFlashTick, setSaveFlashTick] = useState(0);
-  useEffect(() => {
-    if (r.saveMsg?.kind === "ok") setSaveFlashTick((n) => n + 1);
-  }, [r.saveMsg]);
-  const savedFlash = useSaveFlash(saveFlashTick);
+  const savedFlash = useSaveFlash(r.saveSuccessTick);
 
   const completion = useMemo(() => countCompletion(r.routine), [r.routine]);
 
@@ -420,6 +416,7 @@ export function RoutineEditor() {
       <HistoryStrip
         history={r.history}
         todayISO={todayISO}
+        dismissSheetTick={r.saveSuccessTick}
         editAllowed={!editLocked}
         onEditLockedAttempt={engageEditQuota}
         onEditDay={(entry) => {

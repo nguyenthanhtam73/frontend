@@ -66,6 +66,8 @@ export function useRoutine(msg: RoutineMessages) {
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  /** Increments after each successful manual save — drives SaveBar flash + sheet dismiss. */
+  const [saveSuccessTick, setSaveSuccessTick] = useState(0);
 
   // We keep the most recent server snapshot in a ref so the autosave loop can
   // POST the latest state without depending on the React state closure (which
@@ -226,7 +228,6 @@ export function useRoutine(msg: RoutineMessages) {
           setRoutine(next);
           everSavedRef.current = true;
           void queryClient.invalidateQueries({ queryKey: usageQueryKey });
-          if (!opts.silent) setSaveMsg({ kind: "ok", text: msg.saveSuccess });
           return next;
         }
         const mapped = mapRoutineApiError(json, msg.saveError);
@@ -239,7 +240,7 @@ export function useRoutine(msg: RoutineMessages) {
         return null;
       }
     },
-    [msg.needAuth, msg.saveError, msg.saveSuccess, queryClient],
+    [msg.needAuth, msg.saveError, queryClient],
   );
 
   const save = useCallback(
@@ -249,6 +250,7 @@ export function useRoutine(msg: RoutineMessages) {
       const result = await persist({ skillMode });
       setSaving(false);
       if (result) {
+        setSaveSuccessTick((n) => n + 1);
         // Refresh history strip so streak/avg update right away.
         try {
           const headers = authHeaders();
@@ -344,6 +346,7 @@ export function useRoutine(msg: RoutineMessages) {
     saving,
     autoSaving,
     saveMsg,
+    saveSuccessTick,
     fresh,
     // actions
     setRoutine,

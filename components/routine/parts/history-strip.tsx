@@ -52,6 +52,7 @@ type HistoryLabels = HistoryDaySheetLabels & {
 export function HistoryStrip({
   history,
   todayISO,
+  dismissSheetTick = 0,
   labels,
   editAllowed = true,
   onEditDay,
@@ -60,6 +61,8 @@ export function HistoryStrip({
 }: {
   history: RoutineHistoryDTO | null;
   todayISO: string;
+  /** When this increments (manual save OK), close any open day sheet. */
+  dismissSheetTick?: number;
   labels: HistoryLabels;
   editAllowed?: boolean;
   onEditDay?: (entry: RoutineDTO) => void;
@@ -99,6 +102,10 @@ export function HistoryStrip({
   useEffect(() => {
     didInitialScroll.current = false;
   }, [rangeDays]);
+
+  useEffect(() => {
+    if (dismissSheetTick > 0) setSelectedDate(null);
+  }, [dismissSheetTick]);
 
   useEffect(() => {
     if (didInitialScroll.current) return;
