@@ -35,6 +35,7 @@ import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
 import { appendOnboardingPhotos } from "@/lib/onboarding/compress-photo";
 import { buildOnboardingFinishBody } from "@/lib/onboarding/finish-body";
 import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { resolveReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import {
   COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
@@ -148,7 +149,7 @@ const ONBOARDING_FINISH_NAV_MS = 4000;
 type OnboardingCompletePayload = {
   success?: boolean;
   data?: {
-    profile?: { id?: string };
+    profile?: { id?: string; photo_urls?: string[] };
     starter_routine?: StarterRoutineDTO;
     starter_routine_pending?: boolean;
   };
@@ -316,16 +317,25 @@ export function OnboardingFlow() {
     setIdx((i) => Math.max(i - 1, 0));
   }
 
-  function goToCoachWelcome(pack: CoachWelcomePayload) {
+  async function goToCoachWelcome(pack: CoachWelcomePayload) {
     const photosSkipped = skipFaceCapture || ob.photos.length === 0;
+    let photoUrls: string[] | undefined;
+    if (!photosSkipped) {
+      try {
+        photoUrls = await resolveReviewPhotoUrls(
+          ob.photos.slice(0, ONBOARDING_MAX_PHOTOS),
+          pack.reviewSummary?.photo_urls,
+        );
+      } catch {
+        photoUrls = pack.reviewSummary?.photo_urls;
+      }
+    }
     const full: CoachWelcomePayload = {
       ...pack,
       locale,
       reviewSummary: {
         ...(pack.reviewSummary ?? buildReviewSummaryFromStore(ob)),
-        photo_urls: photosSkipped
-          ? undefined
-          : ob.photos.slice(0, ONBOARDING_MAX_PHOTOS).map((p) => p.preview),
+        photo_urls: photosSkipped ? undefined : photoUrls,
         photos_skipped: photosSkipped,
       },
     };
@@ -366,7 +376,7 @@ export function OnboardingFlow() {
     }
 
     if (opts.skipServer) {
-      goToCoachWelcome({
+      await goToCoachWelcome({
         profileId: GUEST_COACH_PROFILE_ID,
         starterRoutine: buildGuestStarterFallback(ob, locale),
         coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
@@ -424,11 +434,14 @@ export function OnboardingFlow() {
           payload.data?.profile?.id &&
           payload.data?.starter_routine
         ) {
-          goToCoachWelcome({
+          await goToCoachWelcome({
             profileId: payload.data.profile.id,
             starterRoutine: payload.data.starter_routine,
             starterRoutinePending: payload.data.starter_routine_pending === true,
             coachingNotes,
+            reviewSummary: {
+              photo_urls: payload.data.profile.photo_urls,
+            },
           });
           return;
         }
@@ -437,7 +450,7 @@ export function OnboardingFlow() {
       }
 
       // API still running — show local scaffold immediately instead of spinning forever.
-      goToCoachWelcome({
+      await goToCoachWelcome({
         starterRoutine: fallbackStarter,
         starterRoutinePending: true,
         coachingNotes,
@@ -457,6 +470,9 @@ export function OnboardingFlow() {
             profileId: payload.data.profile.id,
             starterRoutine: payload.data.starter_routine,
             starterRoutinePending: payload.data.starter_routine_pending === true,
+            reviewSummary: {
+              photo_urls: payload.data.profile.photo_urls,
+            },
           });
         })
         .catch(() => {
@@ -484,7 +500,7 @@ export function OnboardingFlow() {
     const coachingNotes = ob.aiSnapshot?.coaching_notes?.trim() || undefined;
 
     // Guests should not block on preview-complete (sync LLM). Navigate instantly.
-    goToCoachWelcome({
+    await goToCoachWelcome({
       profileId: GUEST_COACH_PROFILE_ID,
       guestPreview: true,
       starterRoutine: fallbackStarter,

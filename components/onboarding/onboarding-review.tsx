@@ -37,8 +37,16 @@ type OnboardingReviewProps = {
 };
 
 function absUploadUrl(url: string): string {
-  if (url.startsWith("http") || url.startsWith("blob:")) return url;
-  return `${apiBaseUrl}${url}`;
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("blob:") ||
+    url.startsWith("data:")
+  ) {
+    return url;
+  }
+  const base = apiBaseUrl.replace(/\/$/, "");
+  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
 export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
@@ -450,18 +458,25 @@ function ReviewPhotoThumb({
   onOpen: () => void;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="group relative aspect-3/4 w-full overflow-hidden rounded-xl border border-border/80 bg-muted shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      disabled={failed}
+      className="group relative aspect-3/4 w-full overflow-hidden rounded-xl border border-border/80 bg-muted shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {!loaded ? (
+      {!loaded && !failed ? (
         <span
           className="absolute inset-0 animate-pulse bg-muted-foreground/10"
           aria-hidden
         />
+      ) : null}
+      {failed ? (
+        <span className="absolute inset-0 flex items-center justify-center px-2 text-center text-xs text-muted-foreground">
+          —
+        </span>
       ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -470,9 +485,10 @@ function ReviewPhotoThumb({
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
         className={cn(
           "size-full object-cover transition-opacity duration-200",
-          loaded ? "opacity-100" : "opacity-0",
+          loaded && !failed ? "opacity-100" : "opacity-0",
         )}
       />
     </button>

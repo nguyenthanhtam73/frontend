@@ -39,7 +39,14 @@ export function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): v
     const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
     if (!raw) return;
     const p = JSON.parse(raw) as CoachWelcomePayload;
-    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify({ ...p, ...patch }));
+    const merged: CoachWelcomePayload = {
+      ...p,
+      ...patch,
+      reviewSummary: patch.reviewSummary
+        ? { ...p.reviewSummary, ...patch.reviewSummary }
+        : p.reviewSummary,
+    };
+    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }));
   } catch {
     /* storage full or private mode */
