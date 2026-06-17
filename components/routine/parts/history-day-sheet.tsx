@@ -39,6 +39,7 @@ export function HistoryDaySheet({
   editAllowed,
   onClose,
   onEdit,
+  onEditLockedAttempt,
 }: {
   open: boolean;
   entry: RoutineDTO | null;
@@ -47,6 +48,7 @@ export function HistoryDaySheet({
   editAllowed: boolean;
   onClose: () => void;
   onEdit: (entry: RoutineDTO) => void;
+  onEditLockedAttempt?: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -215,7 +217,13 @@ export function HistoryDaySheet({
               {isToday ? labels.detailEditToday : labels.detailEdit}
             </Button>
           ) : (
-            <p className="text-center text-xs text-muted-foreground">{labels.editLocked}</p>
+            <button
+              type="button"
+              onClick={() => onEditLockedAttempt?.()}
+              className="mx-auto block max-w-sm text-center text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {labels.editLocked}
+            </button>
           )}
         </div>
       </div>

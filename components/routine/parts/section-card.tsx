@@ -80,6 +80,7 @@ export function SectionCard({
   editLocked = false,
   highlightEmptyTitles = false,
   sectionAlert,
+  onEditLockedAttempt,
 }: {
   section: StepSection;
   title: string;
@@ -98,6 +99,7 @@ export function SectionCard({
   editLocked?: boolean;
   highlightEmptyTitles?: boolean;
   sectionAlert?: string | null;
+  onEditLockedAttempt?: () => void;
 }) {
   const canDrag = useCanDragReorder();
   const dragIdx = useRef<number | null>(null);
@@ -150,9 +152,18 @@ export function SectionCard({
               type="button"
               size="sm"
               variant="outline"
-              onClick={onAdd}
-              disabled={editLocked}
-              className="min-h-11 w-full text-sm sm:min-h-9 sm:w-auto"
+              onClick={() => {
+                if (editLocked) {
+                  onEditLockedAttempt?.();
+                  return;
+                }
+                onAdd();
+              }}
+              aria-disabled={editLocked}
+              className={cn(
+                "min-h-11 w-full text-sm sm:min-h-9 sm:w-auto",
+                editLocked && "cursor-not-allowed opacity-60",
+              )}
             >
               <Plus className="size-4" aria-hidden />
               <span>{labels.add}</span>
@@ -173,6 +184,7 @@ export function SectionCard({
             beginnerSimple={beginnerSimple}
             editLocked={editLocked}
             onAdd={onAdd}
+            onEditLockedAttempt={onEditLockedAttempt}
             labels={labels}
           />
         ) : (
@@ -236,6 +248,7 @@ export function SectionCard({
                     step={step}
                     beginnerSimple={beginnerSimple}
                     editLocked={editLocked}
+                    onEditLockedAttempt={onEditLockedAttempt}
                     showDragHandle={dragEnabled}
                     onRemove={() => handleRemove(step.id)}
                     onMoveUp={() => onMove(step.id, -1)}
@@ -261,6 +274,7 @@ function SectionEmptyState({
   beginnerSimple,
   editLocked,
   onAdd,
+  onEditLockedAttempt,
   labels,
 }: {
   section: StepSection;
@@ -268,6 +282,7 @@ function SectionEmptyState({
   beginnerSimple: boolean;
   editLocked: boolean;
   onAdd: () => void;
+  onEditLockedAttempt?: () => void;
   labels: SectionLabels;
 }) {
   const cta =
@@ -281,8 +296,14 @@ function SectionEmptyState({
   return (
     <button
       type="button"
-      onClick={editLocked ? undefined : onAdd}
-      disabled={editLocked}
+      onClick={() => {
+        if (editLocked) {
+          onEditLockedAttempt?.();
+          return;
+        }
+        onAdd();
+      }}
+      aria-disabled={editLocked}
       className={cn(
         "group flex w-full min-h-[10.5rem] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all duration-200 active:scale-[0.99] sm:min-h-[9rem]",
         editLocked
@@ -397,6 +418,7 @@ function StepRow({
   beginnerSimple,
   editLocked,
   showDragHandle,
+  onEditLockedAttempt,
   onRemove,
   onMoveUp,
   onMoveDown,
@@ -411,6 +433,7 @@ function StepRow({
   beginnerSimple: boolean;
   editLocked: boolean;
   showDragHandle: boolean;
+  onEditLockedAttempt?: () => void;
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -466,6 +489,7 @@ function StepRow({
             onChange={(value) => onChange({ title: value })}
             placeholder={labels.placeholder}
             readOnly={editLocked}
+            onLockedAttempt={onEditLockedAttempt}
             className={cn(
               "block w-full rounded-xl border bg-background px-3 py-2.5 text-base leading-snug outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:rounded-lg sm:py-2 sm:text-sm",
               step.completed ? "text-muted-foreground line-through" : "",
@@ -604,6 +628,7 @@ function AutoGrowTextarea({
   minRows = 1,
   allowNewlines = false,
   readOnly = false,
+  onLockedAttempt,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -612,6 +637,7 @@ function AutoGrowTextarea({
   minRows?: number;
   allowNewlines?: boolean;
   readOnly?: boolean;
+  onLockedAttempt?: () => void;
 }) {
   const ref = useRef<HTMLTextAreaElement | null>(null);
 
@@ -639,6 +665,9 @@ function AutoGrowTextarea({
       placeholder={placeholder}
       rows={minRows}
       readOnly={readOnly}
+      onFocus={() => {
+        if (readOnly) onLockedAttempt?.();
+      }}
       className={cn("resize-none overflow-hidden field-sizing-content", className)}
     />
   );

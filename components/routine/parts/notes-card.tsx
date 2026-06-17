@@ -12,11 +12,13 @@ export function NotesCard({
   onChange,
   labels,
   readOnly = false,
+  onLockedAttempt,
 }: {
   value: string;
   onChange: (next: string) => void;
   labels: { title: string; placeholder: string };
   readOnly?: boolean;
+  onLockedAttempt?: () => void;
 }) {
   return (
     <Card>
@@ -34,6 +36,9 @@ export function NotesCard({
           placeholder={labels.placeholder}
           rows={3}
           readOnly={readOnly}
+          onFocus={() => {
+            if (readOnly) onLockedAttempt?.();
+          }}
           className="min-h-24 w-full resize-none rounded-xl border bg-background px-3 py-3 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:min-h-22 sm:py-2.5 sm:text-sm disabled:cursor-default disabled:bg-muted/30"
         />
       </CardContent>

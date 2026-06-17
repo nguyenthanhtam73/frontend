@@ -110,7 +110,9 @@ export function RoutineEditor() {
   const editorGridRef = useRef<HTMLDivElement>(null);
   const [validationEngaged, setValidationEngaged] = useState(false);
   const [saveAttempted, setSaveAttempted] = useState(false);
+  const [editQuotaEngaged, setEditQuotaEngaged] = useState(false);
   const engageValidation = useCallback(() => setValidationEngaged(true), []);
+  const engageEditQuota = useCallback(() => setEditQuotaEngaged(true), []);
 
   const validationLabels = useMemo(
     () => ({
@@ -177,17 +179,23 @@ export function RoutineEditor() {
       {/* Most recent check-in summary — offers a one-tap link back to /check-in. */}
       <CheckInContextCard />
 
-      {!usage.isPremium && editLocked ? (
+      {!usage.isPremium && editLocked && editQuotaEngaged ? (
         <PremiumUpsellBanner
           title={tPremium("quotaEditTitle")}
           body={tPremium("quotaEditBody", { limit: editLimit })}
           cta={tPremium("cta")}
+          onDismiss={() => setEditQuotaEngaged(false)}
+          dismissLabel={t("dismiss")}
         />
       ) : null}
 
       {editQuotaLabel ? (
         <div className="flex justify-end">
-          <UsageQuotaChip label={editQuotaLabel} />
+          <UsageQuotaChip
+            label={editQuotaLabel}
+            variant={editLocked ? "warning" : "default"}
+            onClick={editLocked ? engageEditQuota : undefined}
+          />
         </div>
       ) : null}
 
@@ -290,6 +298,7 @@ export function RoutineEditor() {
           onToggle={(id) => r.toggleComplete("morning", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
+          onEditLockedAttempt={engageEditQuota}
         />
         <SectionCard
           section="evening"
@@ -323,6 +332,7 @@ export function RoutineEditor() {
           onToggle={(id) => r.toggleComplete("evening", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
+          onEditLockedAttempt={engageEditQuota}
         />
       </div>
 
@@ -334,6 +344,7 @@ export function RoutineEditor() {
             r.setNotes(notes);
           }}
           readOnly={editLocked}
+          onLockedAttempt={engageEditQuota}
           labels={{ title: t("notesTitle"), placeholder: t("notesPlaceholder") }}
         />
       ) : null}
@@ -342,6 +353,7 @@ export function RoutineEditor() {
         history={r.history}
         todayISO={todayISO}
         editAllowed={!editLocked}
+        onEditLockedAttempt={engageEditQuota}
         onEditDay={(entry) => {
           r.loadFromEntry(entry);
           engageValidation();
@@ -394,11 +406,13 @@ export function RoutineEditor() {
         onReset={() => {
           setSaveAttempted(false);
           setValidationEngaged(false);
+          setEditQuotaEngaged(false);
           void r.reload();
         }}
         onSave={() => {
           setSaveAttempted(true);
           engageValidation();
+          if (editLocked) engageEditQuota();
           void r.save(skillMode);
         }}
         labels={{

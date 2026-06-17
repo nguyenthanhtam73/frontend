@@ -30,6 +30,7 @@ export function HistoryStrip({
   editAllowed = true,
   onEditDay,
   onSelectToday,
+  onEditLockedAttempt,
 }: {
   history: RoutineHistoryDTO | null;
   todayISO: string;
@@ -37,6 +38,7 @@ export function HistoryStrip({
   editAllowed?: boolean;
   onEditDay?: (entry: RoutineDTO) => void;
   onSelectToday?: () => void;
+  onEditLockedAttempt?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -132,6 +134,7 @@ export function HistoryStrip({
         editAllowed={editAllowed}
         onClose={() => setSelectedDate(null)}
         onEdit={handleEdit}
+        onEditLockedAttempt={onEditLockedAttempt}
       />
     </>
   );
