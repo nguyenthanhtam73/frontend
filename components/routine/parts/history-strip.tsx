@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Calendar, ChevronDown, Flame } from "lucide-react";
 
@@ -71,6 +71,10 @@ export function HistoryStrip({
     }
   }
 
+  const handleSheetClose = useCallback(() => {
+    setSelectedDate(null);
+  }, []);
+
   return (
     <>
       <Card>
@@ -136,7 +140,7 @@ export function HistoryStrip({
         todayISO={todayISO}
         labels={labels}
         editAllowed={editAllowed}
-        onClose={() => setSelectedDate(null)}
+        onClose={handleSheetClose}
         onEdit={handleEdit}
         onEditLockedAttempt={onEditLockedAttempt}
       />

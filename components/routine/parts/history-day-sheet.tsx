@@ -63,6 +63,7 @@ export function HistoryDaySheet({
   const startY = useRef(0);
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const isAnimatingCloseRef = useRef(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -78,15 +79,16 @@ export function HistoryDaySheet({
   }, []);
 
   const requestClose = useCallback(() => {
-    if (closing) return;
+    if (isAnimatingCloseRef.current) return;
+    isAnimatingCloseRef.current = true;
     setClosing(true);
-    setEntered(false);
     if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
     closeTimerRef.current = window.setTimeout(() => {
-      finishClose();
+      isAnimatingCloseRef.current = false;
       onClose();
+      finishClose();
     }, CLOSE_MS);
-  }, [closing, finishClose, onClose]);
+  }, [finishClose, onClose]);
 
   useEffect(() => {
     return () => {
@@ -95,30 +97,22 @@ export function HistoryDaySheet({
   }, []);
 
   useEffect(() => {
-    if (open && entry) {
-      setDisplayEntry(entry);
-      setVisible(true);
-      setClosing(false);
-      setEntered(false);
-      return;
-    }
-    if (!open && visible && !closing) {
-      requestClose();
-    }
-  }, [open, entry, visible, closing, requestClose]);
+    if (!open || !entry || isAnimatingCloseRef.current) return;
+    setDisplayEntry(entry);
+    setVisible(true);
+    setClosing(false);
+    setEntered(false);
+  }, [open, entry]);
 
   useEffect(() => {
-    if (!visible || closing) {
-      setEntered(false);
-      return;
-    }
+    if (!visible || closing) return;
     const id = requestAnimationFrame(() => {
       requestAnimationFrame(() => setEntered(true));
     });
     return () => cancelAnimationFrame(id);
   }, [visible, closing, displayEntry?.routine_date]);
 
-  useBodyScrollLock(visible && !closing);
+  useBodyScrollLock(visible);
 
   useEffect(() => {
     if (!visible) return;
@@ -159,8 +153,8 @@ export function HistoryDaySheet({
         type="button"
         aria-label={labels.detailClose}
         className={cn(
-          "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity ease-out lg:bg-black/50",
-          sheetOpen ? "opacity-100 duration-300" : "opacity-0 duration-200",
+          "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:bg-black/50",
+          sheetOpen ? "opacity-100" : "opacity-0",
         )}
         onClick={requestClose}
       />
