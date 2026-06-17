@@ -1,3 +1,4 @@
+import { mergeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import {
   COACH_WELCOME_SESSION_EVENT,
   COACH_WELCOME_STORAGE_KEY,
@@ -39,12 +40,20 @@ export function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): v
     const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
     if (!raw) return;
     const p = JSON.parse(raw) as CoachWelcomePayload;
+    const mergedReviewSummary = patch.reviewSummary
+      ? {
+          ...p.reviewSummary,
+          ...patch.reviewSummary,
+          photo_urls: mergeReviewPhotoUrls(
+            p.reviewSummary?.photo_urls,
+            patch.reviewSummary.photo_urls,
+          ),
+        }
+      : p.reviewSummary;
     const merged: CoachWelcomePayload = {
       ...p,
       ...patch,
-      reviewSummary: patch.reviewSummary
-        ? { ...p.reviewSummary, ...patch.reviewSummary }
-        : p.reviewSummary,
+      reviewSummary: mergedReviewSummary,
     };
     sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(merged));
     window.dispatchEvent(new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }));

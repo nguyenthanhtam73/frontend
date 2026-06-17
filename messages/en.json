@@ -699,6 +699,7 @@
       "showPhotos": "View photos",
       "hidePhotos": "Hide photos",
       "photosSkipped": "You skipped taking photos.",
+      "photosExpired": "Photos are no longer available in this session (old tab or after reload). Redo onboarding if you need to see them again.",
       "closePhoto": "Close photo"
     },
     "summaryBadge": "Your starter routine",

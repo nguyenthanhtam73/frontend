@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
@@ -15,6 +15,7 @@ import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import type { OnboardingReviewData } from "@/lib/onboarding/review-data";
 import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
 import { GUEST_COACH_PROFILE_ID } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
@@ -81,8 +82,14 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
       : id,
   );
 
-  const hasPhotos = data.photoUrls.length > 0;
-  const showPhotoSection = data.photosSkipped || hasPhotos;
+  const photoUrls = useMemo(
+    () => normalizeReviewPhotoUrls(data.photoUrls),
+    [data.photoUrls],
+  );
+  const hasPhotos = photoUrls.length > 0;
+  const photosLost =
+    !data.photosSkipped && data.photoUrls.length > 0 && !hasPhotos;
+  const showPhotoSection = data.photosSkipped || hasPhotos || photosLost;
 
   const skinReadback =
     data.coachingNotes?.trim() || data.starter?.skin_readback?.trim() || "";
@@ -133,13 +140,16 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
                       {tReview("photosSection")}
                     </p>
                     <ReviewPhotoGrid
-                      urls={data.photoUrls}
+                      urls={photoUrls}
                       altLabel={(n) => tCheckIn("altPhoto", { n })}
+                      eagerLoad
                       onOpen={setLightboxUrl}
                     />
                   </section>
                 ) : null}
               </>
+            ) : photosLost ? (
+              <p className="text-sm text-muted-foreground">{tReview("photosExpired")}</p>
             ) : null}
           </div>
         ) : null}
@@ -421,10 +431,12 @@ function ReviewPhotoGrid({
   urls,
   altLabel,
   onOpen,
+  eagerLoad = false,
 }: {
   urls: string[];
   altLabel: (n: number) => string;
   onOpen: (url: string) => void;
+  eagerLoad?: boolean;
 }) {
   const colClass =
     urls.length >= 3
@@ -440,6 +452,7 @@ function ReviewPhotoGrid({
           <ReviewPhotoThumb
             src={absUploadUrl(url)}
             alt={altLabel(i + 1)}
+            eagerLoad={eagerLoad}
             onOpen={() => onOpen(absUploadUrl(url))}
           />
         </li>
@@ -452,10 +465,12 @@ function ReviewPhotoThumb({
   src,
   alt,
   onOpen,
+  eagerLoad = false,
 }: {
   src: string;
   alt: string;
   onOpen: () => void;
+  eagerLoad?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -482,7 +497,7 @@ function ReviewPhotoThumb({
       <img
         src={src}
         alt={alt}
-        loading="lazy"
+        loading={eagerLoad ? "eager" : "lazy"}
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => setFailed(true)}

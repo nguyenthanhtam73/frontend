@@ -11,6 +11,26 @@ export function isPersistentPhotoUrl(url: string): boolean {
   );
 }
 
+/** Drop revoked blob URLs saved before review-mode persistence shipped. */
+export function normalizeReviewPhotoUrls(urls: string[] | undefined): string[] {
+  if (!urls?.length) return [];
+  return urls.map((u) => u.trim()).filter((u) => u !== "" && isPersistentPhotoUrl(u));
+}
+
+/**
+ * Merge review photo URLs without clobbering working data URLs with empty or
+ * stale server paths from a late onboarding-complete patch.
+ */
+export function mergeReviewPhotoUrls(
+  existing: string[] | undefined,
+  incoming: string[] | undefined,
+): string[] {
+  const prev = normalizeReviewPhotoUrls(existing);
+  const next = normalizeReviewPhotoUrls(incoming);
+  if (next.length > 0) return next;
+  return prev;
+}
+
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

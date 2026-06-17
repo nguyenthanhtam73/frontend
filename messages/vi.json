@@ -699,6 +699,7 @@
       "showPhotos": "Xem ảnh",
       "hidePhotos": "Ẩn ảnh",
       "photosSkipped": "Bạn đã bỏ qua chụp ảnh.",
+      "photosExpired": "Ảnh không còn trong phiên này (tab cũ hoặc đã reload). Làm lại onboarding nếu bạn cần xem lại ảnh.",
       "closePhoto": "Đóng ảnh"
     },
     "summaryBadge": "Chăm da khởi đầu của bạn",

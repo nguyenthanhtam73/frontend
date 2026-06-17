@@ -226,12 +226,32 @@ export function OnboardingFlow() {
     return () => window.clearTimeout(t);
   }, [showSkinSection]);
 
+  const addPhoto = useOnboardingStore((s) => s.addPhoto);
+
   const openCamera = useCallback(() => {
     cameraRef.current?.click();
   }, []);
   const openLibrary = useCallback(() => {
     fileRef.current?.click();
   }, []);
+
+  const handlePhotoFiles = useCallback(
+    (files: FileList | null, replace: boolean) => {
+      if (!files?.length) return;
+      const list = Array.from(files);
+      if (replace) {
+        clearPhotos();
+        void appendOnboardingPhotos(list, ONBOARDING_MAX_PHOTOS, addPhoto);
+        return;
+      }
+      const remaining = Math.max(
+        0,
+        ONBOARDING_MAX_PHOTOS - useOnboardingStore.getState().photos.length,
+      );
+      void appendOnboardingPhotos(list, remaining, addPhoto);
+    },
+    [addPhoto, clearPhotos],
+  );
 
   async function runAnalyze() {
     if (ob.photos.length < ONBOARDING_MIN_PHOTOS) return;
@@ -603,37 +623,57 @@ export function OnboardingFlow() {
               </div>
 
               {showSkinSection ? (
-                <details className="rounded-xl border border-border/60 bg-muted/20 px-3 py-1">
-                  <summary className="cursor-pointer py-2.5 text-sm font-medium">
-                    {t("photos.changePhotos")}
-                  </summary>
-                  <div className="space-y-4 pb-3 pt-1">
-                    <PhotoCaptureBlock
-                      t={t}
-                      tPrivacy={tPrivacy}
-                      tAuth={tAuth}
-                      tCheckIn={tCheckIn}
-                      fileRef={fileRef}
-                      cameraRef={cameraRef}
-                      openCamera={openCamera}
-                      openLibrary={openLibrary}
-                      onSkip={goSkipPhotos}
-                      showSkip={false}
-                      onRetryAnalyze={() => {
-                        ob.setAnalyzeStatus("idle");
-                        void runAnalyze();
-                      }}
-                    />
-                  </div>
-                </details>
+                <>
+                  {ob.photos.length > 0 ? (
+                    <section
+                      aria-label={t("review.photosSection")}
+                      className="space-y-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-3"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("review.photosSection")}
+                      </p>
+                      <div className="grid grid-cols-3 gap-2 sm:max-w-md">
+                        {ob.photos.map((p, i) => (
+                          <OnboardingPhotoCard
+                            key={p.preview}
+                            previewUrl={p.preview}
+                            altLabel={tCheckIn("altPhoto", { n: i + 1 })}
+                            removeLabel={tPrivacy("captureCard.remove")}
+                            onRemove={() => ob.removePhotoAt(i)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+                  <details className="rounded-xl border border-border/60 bg-muted/20 px-3 py-1">
+                    <summary className="cursor-pointer py-2.5 text-sm font-medium">
+                      {t("photos.changePhotos")}
+                    </summary>
+                    <div className="space-y-4 pb-3 pt-1">
+                      <PhotoCaptureBlock
+                        t={t}
+                        tPrivacy={tPrivacy}
+                        tAuth={tAuth}
+                        tCheckIn={tCheckIn}
+                        openCamera={openCamera}
+                        openLibrary={openLibrary}
+                        onSkip={goSkipPhotos}
+                        showSkip={false}
+                        hidePhotoGrid
+                        onRetryAnalyze={() => {
+                          ob.setAnalyzeStatus("idle");
+                          void runAnalyze();
+                        }}
+                      />
+                    </div>
+                  </details>
+                </>
               ) : (
                 <PhotoCaptureBlock
                   t={t}
                   tPrivacy={tPrivacy}
                   tAuth={tAuth}
                   tCheckIn={tCheckIn}
-                  fileRef={fileRef}
-                  cameraRef={cameraRef}
                   openCamera={openCamera}
                   openLibrary={openLibrary}
                   onSkip={goSkipPhotos}
@@ -867,6 +907,35 @@ export function OnboardingFlow() {
         </Link>
       </p>
 
+      {/* Keep file inputs mounted outside <details> so programmatic .click() works on mobile. */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(e) => {
+          const replace = useOnboardingStore.getState().aiSnapshot != null;
+          handlePhotoFiles(e.target.files, replace);
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(e) => {
+          const replace = useOnboardingStore.getState().aiSnapshot != null;
+          handlePhotoFiles(e.target.files, replace);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }
@@ -876,24 +945,22 @@ function PhotoCaptureBlock({
   tPrivacy,
   tAuth,
   tCheckIn,
-  fileRef,
-  cameraRef,
   openCamera,
   openLibrary,
   onSkip,
   showSkip,
+  hidePhotoGrid = false,
   onRetryAnalyze,
 }: {
   t: OnboardingT;
   tPrivacy: ReturnType<typeof useTranslations<"privacy">>;
   tAuth: ReturnType<typeof useTranslations<"auth">>;
   tCheckIn: ReturnType<typeof useTranslations<"checkIn">>;
-  fileRef: React.RefObject<HTMLInputElement | null>;
-  cameraRef: React.RefObject<HTMLInputElement | null>;
   openCamera: () => void;
   openLibrary: () => void;
   onSkip: () => void;
   showSkip: boolean;
+  hidePhotoGrid?: boolean;
   onRetryAnalyze: () => void;
 }) {
   const ob = useOnboardingStore();
@@ -917,41 +984,6 @@ function PhotoCaptureBlock({
       <p className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
         {t("photos.tipsCompact")}
       </p>
-
-      <input
-        ref={cameraRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        capture="user"
-        className="sr-only"
-        onChange={(e) => {
-          const list = e.target.files;
-          if (list?.length) {
-            const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
-            void appendOnboardingPhotos(Array.from(list), remaining, (item) =>
-              ob.addPhoto(item),
-            );
-          }
-          e.target.value = "";
-        }}
-      />
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        multiple
-        className="sr-only"
-        onChange={(e) => {
-          const list = e.target.files;
-          if (list?.length) {
-            const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - ob.photos.length);
-            void appendOnboardingPhotos(Array.from(list), remaining, (item) =>
-              ob.addPhoto(item),
-            );
-          }
-          e.target.value = "";
-        }}
-      />
 
       <div className="grid grid-cols-2 gap-2">
         <Button
@@ -988,7 +1020,7 @@ function PhotoCaptureBlock({
         </p>
       )}
 
-      {ob.photos.length > 0 && (
+      {ob.photos.length > 0 && !hidePhotoGrid && (
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             {ob.photos.map((p, i) => (
