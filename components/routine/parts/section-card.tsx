@@ -9,7 +9,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { useCanDragReorder } from "../hooks/use-can-drag-reorder";
+import { AutoGrowTextarea } from "./auto-grow-textarea";
 import type { StepSection } from "../routine-helpers";
 
 export type SectionLabels = {
@@ -231,7 +232,7 @@ export function SectionCard({
                     "group rounded-xl border ease-out will-change-[transform,opacity,max-height]",
                     exiting
                       ? "pointer-events-none max-h-0 scale-[0.98] overflow-hidden border-transparent opacity-0 duration-200"
-                      : "max-h-[500px] opacity-100 duration-300 in-animate animate-in fade-in slide-in-from-bottom-2",
+                      : "opacity-100 duration-300 in-animate animate-in fade-in slide-in-from-bottom-2",
                     !exiting &&
                       (dragEnabled
                         ? "lg:cursor-grab lg:active:cursor-grabbing"
@@ -617,58 +618,5 @@ function StepRow({
         />
       ) : null}
     </div>
-  );
-}
-
-function AutoGrowTextarea({
-  value,
-  onChange,
-  placeholder,
-  className,
-  minRows = 1,
-  allowNewlines = false,
-  readOnly = false,
-  onLockedAttempt,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-  minRows?: number;
-  allowNewlines?: boolean;
-  readOnly?: boolean;
-  onLockedAttempt?: () => void;
-}) {
-  const ref = useRef<HTMLTextAreaElement | null>(null);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [value]);
-
-  return (
-    <textarea
-      ref={ref}
-      value={value}
-      onChange={(e) => {
-        const next = allowNewlines ? e.target.value : e.target.value.replace(/\r?\n/g, " ");
-        onChange(next);
-      }}
-      onKeyDown={(e) => {
-        if (!allowNewlines && e.key === "Enter") {
-          e.preventDefault();
-          e.currentTarget.blur();
-        }
-      }}
-      placeholder={placeholder}
-      rows={minRows}
-      readOnly={readOnly}
-      onFocus={() => {
-        if (readOnly) onLockedAttempt?.();
-      }}
-      className={cn("resize-none overflow-hidden field-sizing-content", className)}
-    />
   );
 }

@@ -24,7 +24,7 @@ import { SectionCard, type SectionLabels } from "./parts/section-card";
 import { SkillModeBar } from "./parts/skill-mode-bar";
 import { StatusBanner } from "./parts/status-banner";
 import { ValidationPanel, getVisibleValidationIssues } from "./parts/validation-panel";
-import { countCompletion, localId, validateRoutine } from "./routine-helpers";
+import { countCompletion, localId, resolveRoutineSource, validateRoutine } from "./routine-helpers";
 import { useRoutine } from "./use-routine";
 
 /**
@@ -147,6 +147,29 @@ export function RoutineEditor() {
 
   const completion = useMemo(() => countCompletion(r.routine), [r.routine]);
 
+  const sourceInfo = useMemo(
+    () => resolveRoutineSource(r.routine, r.history),
+    [r.routine, r.history],
+  );
+
+  const sourceLabels = useMemo(
+    () => ({
+      savedToday: t("sourceSavedToday"),
+      savedTodayHint: t("sourceSavedTodayHint"),
+      carriedFrom: (date: string) => t("sourceCarriedFrom", { date }),
+      carriedSubtitle: t("sourceCarriedSubtitle"),
+      carriedHint: t("sourceCarriedHint"),
+      onboardingSeed: t("sourceOnboardingSeed"),
+      onboardingSubtitle: t("sourceOnboardingSubtitle"),
+      onboardingHint: t("sourceOnboardingHint"),
+      onboardingEditLink: t("sourceOnboardingEditLink"),
+      aiSuggested: t("aiSuggestedBadge"),
+      aiHint: t("sourceAiHint"),
+      infoToggle: t("sourceInfoToggle"),
+    }),
+    [t],
+  );
+
   // Today (UTC) ISO — used by the history strip to label "today/yesterday".
   const todayISO = useMemo(() => {
     const now = new Date();
@@ -175,6 +198,20 @@ export function RoutineEditor() {
         hint={beginnerSimple ? t("modeBeginnerHint") : t("modeHint")}
         ariaLabel={t("modeAriaLabel")}
       />
+
+      {!r.fresh ? (
+        <StatusBanner
+          sourceInfo={sourceInfo}
+          sourceLabels={sourceLabels}
+          autoSaving={r.autoSaving}
+          completed={completion.completed}
+          total={completion.total}
+          progressPct={completion.pct}
+          labels={{
+            autosaving: t("autoSaving"),
+          }}
+        />
+      ) : null}
 
       {/* Most recent check-in summary — offers a one-tap link back to /check-in. */}
       <CheckInContextCard />
@@ -214,22 +251,7 @@ export function RoutineEditor() {
             safety: t("safetyTile"),
           }}
         />
-      ) : (
-        <StatusBanner
-          saved={r.routine.saved}
-          source={r.routine.source}
-          autoSaving={r.autoSaving}
-          completed={completion.completed}
-          total={completion.total}
-          progressPct={completion.pct}
-          labels={{
-            saved: t("savedBadge"),
-            carried: t("carriedBadge"),
-            ai: t("aiSuggestedBadge"),
-            autosaving: t("autoSaving"),
-          }}
-        />
-      )}
+      ) : null}
 
       <ValidationPanel
         issues={visibleValidationIssues}

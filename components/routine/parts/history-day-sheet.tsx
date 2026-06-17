@@ -274,7 +274,7 @@ function DetailStepList({
             >
               {s.completed ? <Check className="size-3" aria-hidden /> : null}
             </span>
-            <span>{s.title || "—"}</span>
+            <span className="min-w-0 flex-1 break-words [overflow-wrap:anywhere]">{s.title || "—"}</span>
           </li>
         ))}
       </ul>

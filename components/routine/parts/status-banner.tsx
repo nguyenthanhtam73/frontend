@@ -1,70 +1,69 @@
 "use client";
 
-import { CircleCheck, CloudUpload, Sparkles, Sun } from "lucide-react";
+import { CloudUpload } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import type { RoutineSourceInfo } from "../routine-helpers";
+import { RoutineSourceBadge, type RoutineSourceLabels } from "./routine-source-badge";
+
 /**
- * Compact status banner: badge + progress + autosave indicator.
- * Stacks vertically on mobile so the progress bar stays readable.
+ * Compact status banner: routine source + progress + autosave indicator.
+ * Stacks vertically on mobile so source copy and progress stay readable.
  */
 export function StatusBanner({
-  saved,
-  source,
+  sourceInfo,
+  sourceLabels,
   autoSaving,
   labels,
   completed,
   total,
   progressPct,
 }: {
-  saved: boolean;
-  source: string;
+  sourceInfo: RoutineSourceInfo;
+  sourceLabels: RoutineSourceLabels;
   autoSaving: boolean;
-  labels: { saved: string; carried: string; ai: string; autosaving: string };
+  labels: { autosaving: string };
   completed: number;
   total: number;
   progressPct: number;
 }) {
-  let badge = labels.saved;
-  let tone: "ok" | "muted" | "accent" = "ok";
-  let Icon = CircleCheck;
-  if (!saved && source === "ai_suggested") {
-    badge = labels.ai;
-    tone = "accent";
-    Icon = Sparkles;
-  } else if (!saved) {
-    badge = labels.carried;
-    tone = "muted";
-    Icon = Sun;
-  }
-  const toneCls =
+  const tone =
+    sourceInfo.kind === "saved_today"
+      ? "ok"
+      : sourceInfo.kind === "ai_suggested"
+        ? "accent"
+        : sourceInfo.kind === "onboarding_seed"
+          ? "seed"
+          : "muted";
+
+  const shellCls =
     tone === "ok"
-      ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"
+      ? "border-emerald-500/25 bg-emerald-500/[0.03]"
       : tone === "accent"
-        ? "border-primary/30 bg-primary/5 text-primary"
-        : "border-amber-500/30 bg-amber-500/5 text-amber-800 dark:text-amber-200";
+        ? "border-primary/25 bg-primary/[0.03]"
+        : tone === "seed"
+          ? "border-teal-500/25 bg-teal-500/[0.03]"
+          : "border-amber-500/25 bg-amber-500/[0.03]";
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-xl border px-3.5 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm",
-        toneCls,
+        "flex flex-col gap-3 rounded-xl border px-3.5 py-3.5 sm:gap-4 sm:px-4 sm:py-4",
+        shellCls,
       )}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-2 font-medium">
-          <Icon className="size-4 shrink-0" aria-hidden />
-          <span className="leading-snug">{badge}</span>
-        </span>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <RoutineSourceBadge info={sourceInfo} labels={sourceLabels} className="flex-1" />
         {autoSaving ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground in-animate animate-in fade-in duration-200">
+          <span className="inline-flex min-h-9 shrink-0 items-center gap-1.5 self-start rounded-full bg-background/80 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground in-animate animate-in fade-in duration-200">
             <CloudUpload className="size-3.5 animate-pulse" aria-hidden />
             {labels.autosaving}
           </span>
         ) : null}
       </div>
 
-      <div className="flex w-full items-center gap-3 sm:ml-auto sm:w-auto">
+      <div className="flex w-full items-center gap-3 border-t border-border/50 pt-3 sm:pt-3">
         <span className="shrink-0 text-sm tabular-nums text-foreground/80">
           {completed}/{total}
         </span>

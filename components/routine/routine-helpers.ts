@@ -3,7 +3,7 @@
  * touch React, the network, or `next-intl` lives here so the parts/ files stay
  * lean and the unit-testable surface is obvious.
  */
-import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
+import type { RoutineDTO, RoutineHistoryDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 export type StepSection = "morning" | "evening";
 
@@ -20,6 +20,7 @@ export type LocalRoutine = {
   skillMode: string;
   saved: boolean;
   routineDate: string;
+  carriedFromDate: string;
 };
 
 export const emptyRoutine: LocalRoutine = {
@@ -30,6 +31,7 @@ export const emptyRoutine: LocalRoutine = {
   skillMode: "",
   saved: false,
   routineDate: "",
+  carriedFromDate: "",
 };
 
 /** Generate a stable client-side id for a freshly-added step. */
@@ -51,6 +53,7 @@ export function toLocal(routine: RoutineDTO | null): LocalRoutine {
     skillMode: routine.skill_mode ?? "",
     saved: !!routine.saved,
     routineDate: routine.routine_date ?? "",
+    carriedFromDate: routine.carried_from_date ?? "",
   };
 }
 
@@ -204,4 +207,46 @@ export function isFreshlyEmpty(routine: LocalRoutine): boolean {
     routine.morning.length === 0 &&
     routine.evening.length === 0
   );
+}
+
+export type RoutineSourceKind = "saved_today" | "carried" | "onboarding_seed" | "ai_suggested";
+
+export type RoutineSourceInfo = {
+  kind: RoutineSourceKind;
+  /** ISO date for carry-over (when kind === "carried"). */
+  fromDate?: string;
+};
+
+/**
+ * Derives a user-facing source label from the routine payload.
+ * Falls back to history when the API omits carried_from_date (older backend).
+ */
+export function resolveRoutineSource(
+  routine: LocalRoutine,
+  history: RoutineHistoryDTO | null,
+): RoutineSourceInfo {
+  if (routine.saved) {
+    return { kind: "saved_today" };
+  }
+  if (routine.source === "ai_suggested") {
+    return { kind: "ai_suggested" };
+  }
+  if (routine.source === "onboarding_starter") {
+    return { kind: "onboarding_seed" };
+  }
+
+  let fromDate = routine.carriedFromDate.trim();
+  if (!fromDate && history?.entries?.length) {
+    const today = routine.routineDate;
+    const prior =
+      history.entries.find((e) => e.routine_date && e.routine_date !== today) ??
+      history.entries[0];
+    fromDate = prior?.routine_date ?? "";
+  }
+
+  if (!fromDate && (history?.entries?.length ?? 0) === 0) {
+    return { kind: "onboarding_seed" };
+  }
+
+  return { kind: "carried", fromDate: fromDate || undefined };
 }

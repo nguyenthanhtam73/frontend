@@ -20,9 +20,11 @@ export type RoutineDTO = {
   morning: RoutineStepDTO[];
   evening: RoutineStepDTO[];
   notes?: string;
-  /** "manual" | "ai_suggested" | "carried_over" */
+  /** "manual" | "ai_suggested" | "carried_over" | "onboarding_starter" */
   source?: string;
   skill_mode?: string;
+  /** Original date when today's routine is carried forward from a prior save. */
+  carried_from_date?: string;
   /** True once today's row exists in the DB (vs carried-over preview). */
   saved: boolean;
   updated_at?: string;

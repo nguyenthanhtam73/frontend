@@ -2,6 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 
+import { AutoGrowTextarea } from "./auto-grow-textarea";
+
 /**
  * Free-form notes for the day — used in Normal / Intermediate / Advanced
  * modes. Beginner mode hides this entirely; the AI suggest's "encouragement"
@@ -29,17 +31,16 @@ export function NotesCard({
         >
           {labels.title}
         </label>
-        <textarea
+        <AutoGrowTextarea
           id="routine-notes"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
           placeholder={labels.placeholder}
-          rows={3}
+          minRows={3}
+          allowNewlines
           readOnly={readOnly}
-          onFocus={() => {
-            if (readOnly) onLockedAttempt?.();
-          }}
-          className="min-h-24 w-full resize-none rounded-xl border bg-background px-3 py-3 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:min-h-22 sm:py-2.5 sm:text-sm disabled:cursor-default disabled:bg-muted/30"
+          onLockedAttempt={onLockedAttempt}
+          className="min-h-24 rounded-xl border bg-background px-3 py-3 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:min-h-22 sm:py-2.5 sm:text-sm read-only:cursor-default read-only:bg-muted/30"
         />
       </CardContent>
     </Card>
