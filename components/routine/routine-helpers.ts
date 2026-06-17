@@ -81,51 +81,84 @@ export function formatShortDate(iso: string): string {
  * - `warnings` are nudges (e.g. AM is missing SPF). They show inline but do
  *   not block — skincare is personal and forcing rules erodes trust.
  */
+export type ValidationIssueCode = "no_steps" | "no_title" | "missing_spf";
+
+export type ValidationIssue = {
+  code: ValidationIssueCode;
+  message: string;
+  severity: "blocker" | "warning";
+  section?: "morning";
+};
+
 export type RoutineValidation = {
+  issues: ValidationIssue[];
   blockers: string[];
   warnings: string[];
   canSave: boolean;
+  hasEmptyTitles: boolean;
+  missingSpf: boolean;
 };
 
 export type ValidationLabels = {
   noStepsBlocker: string;
   noTitleBlocker: string;
+  noTitleBlockerBeginner: string;
   amSpfWarning: string;
+  amSpfWarningBeginner: string;
 };
 
 export function validateRoutine(
   routine: LocalRoutine,
   labels: ValidationLabels,
+  opts?: { beginnerSimple?: boolean },
 ): RoutineValidation {
+  const beginnerSimple = opts?.beginnerSimple ?? false;
   const morningClean = routine.morning.filter((s) => s.title.trim().length > 0);
   const eveningClean = routine.evening.filter((s) => s.title.trim().length > 0);
 
+  const issues: ValidationIssue[] = [];
   const blockers: string[] = [];
   const warnings: string[] = [];
 
   if (morningClean.length === 0 && eveningClean.length === 0) {
-    blockers.push(labels.noStepsBlocker);
+    const msg = labels.noStepsBlocker;
+    blockers.push(msg);
+    issues.push({ code: "no_steps", message: msg, severity: "blocker" });
   }
 
-  // If the user added rows but none of them have a title, surface that as a
-  // separate explainer (different fix than "no steps at all").
   const totalRows = routine.morning.length + routine.evening.length;
-  if (
+  const hasEmptyTitles =
     totalRows > 0 &&
     morningClean.length === 0 &&
-    eveningClean.length === 0
-  ) {
-    blockers.push(labels.noTitleBlocker);
+    eveningClean.length === 0;
+
+  if (hasEmptyTitles) {
+    const msg = beginnerSimple ? labels.noTitleBlockerBeginner : labels.noTitleBlocker;
+    blockers.push(msg);
+    issues.push({ code: "no_title", message: msg, severity: "blocker" });
   }
 
-  if (morningClean.length > 0 && !hasSPF(morningClean)) {
-    warnings.push(labels.amSpfWarning);
+  const missingSpf = morningClean.length > 0 && !hasSPF(morningClean);
+  if (missingSpf && !beginnerSimple) {
+    const msg = labels.amSpfWarning;
+    warnings.push(msg);
+    issues.push({
+      code: "missing_spf",
+      message: msg,
+      severity: "warning",
+      section: "morning",
+    });
+  } else if (missingSpf && beginnerSimple) {
+    warnings.push(labels.amSpfWarningBeginner);
   }
 
   return {
+    issues,
     blockers,
     warnings,
     canSave: blockers.length === 0,
+    hasEmptyTitles,
+    missingSpf,
   };
 }
 

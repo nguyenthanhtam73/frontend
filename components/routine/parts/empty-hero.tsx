@@ -1,17 +1,20 @@
 "use client";
 
-import { Droplet, Moon, Shield, Sun } from "lucide-react";
+import { ArrowDown, Droplet, Moon, Shield, Sun } from "lucide-react";
 
 /**
- * First-run state when the user has no routine yet.
- * Points them at the morning/evening editors below — no AI draft on this page.
+ * First-run hero when the user has no routine at all yet.
  */
 export function EmptyHero({
+  beginnerSimple,
   labels,
 }: {
+  beginnerSimple: boolean;
   labels: {
     title: string;
     body: string;
+    beginnerBody: string;
+    scrollHint: string;
     am: string;
     pm: string;
     amHint: string;
@@ -19,10 +22,12 @@ export function EmptyHero({
     safety: string;
   };
 }) {
+  const body = beginnerSimple ? labels.beginnerBody : labels.body;
+
   return (
     <section
       aria-label={labels.title}
-      className="relative overflow-hidden rounded-3xl border border-primary/25 bg-linear-to-br from-primary/12 via-accent/35 to-background p-5 shadow-sm sm:p-8 in-animate animate-in fade-in slide-in-from-bottom-2 duration-400"
+      className="relative overflow-hidden rounded-3xl border border-primary/25 bg-linear-to-br from-primary/12 via-accent/35 to-background p-5 shadow-sm sm:p-8 in-animate animate-in fade-in slide-in-from-bottom-2 duration-300"
     >
       <div
         className="pointer-events-none absolute -right-16 -top-16 size-44 rounded-full bg-primary/30 blur-3xl"
@@ -39,23 +44,27 @@ export function EmptyHero({
             {labels.title}
           </h2>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-            {labels.body}
+            {body}
+          </p>
+          <p className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-2 text-xs font-medium text-primary lg:hidden">
+            <ArrowDown className="size-3.5 animate-bounce" aria-hidden />
+            {labels.scrollHint}
           </p>
         </div>
 
         <div className="grid w-full gap-2 sm:w-72">
           <PreviewTile
-            icon={<Sun className="size-3.5 text-amber-500" aria-hidden />}
+            icon={<Sun className="size-4 text-amber-500" aria-hidden />}
             title={labels.am}
             hint={labels.amHint}
           />
           <PreviewTile
-            icon={<Moon className="size-3.5 text-indigo-500" aria-hidden />}
+            icon={<Moon className="size-4 text-indigo-500" aria-hidden />}
             title={labels.pm}
             hint={labels.pmHint}
           />
           <PreviewTile
-            icon={<Shield className="size-3.5 text-emerald-500" aria-hidden />}
+            icon={<Shield className="size-4 text-emerald-500" aria-hidden />}
             title={labels.safety}
             hint=""
             tone="muted"
@@ -81,23 +90,23 @@ function PreviewTile({
     <div
       className={
         tone === "card"
-          ? "flex items-center gap-2.5 rounded-xl border bg-card/70 px-3 py-2 shadow-sm backdrop-blur"
-          : "flex items-center gap-2.5 rounded-xl border border-dashed bg-background/40 px-3 py-2 text-xs text-muted-foreground"
+          ? "flex items-center gap-3 rounded-xl border bg-card/70 px-3 py-2.5 shadow-sm backdrop-blur"
+          : "flex items-center gap-3 rounded-xl border border-dashed bg-background/40 px-3 py-2.5 text-xs text-muted-foreground"
       }
     >
-      <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-background/80 ring-1 ring-border/60">
+      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-background/80 ring-1 ring-border/60">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold leading-tight">{title}</p>
+        <p className="text-sm font-semibold leading-tight sm:text-xs">{title}</p>
         {hint ? (
-          <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-muted-foreground">
+          <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-muted-foreground sm:text-[11px]">
             {hint}
           </p>
         ) : null}
       </div>
       {tone === "card" ? (
-        <Droplet className="size-3 text-muted-foreground/50" aria-hidden />
+        <Droplet className="size-3.5 text-muted-foreground/50" aria-hidden />
       ) : null}
     </div>
   );

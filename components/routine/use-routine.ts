@@ -212,6 +212,7 @@ export function useRoutine(msg: RoutineMessages) {
         source: cur.source === "ai_suggested" ? "ai_suggested" : "manual",
         skill_mode: opts.skillMode ?? skillModeRef.current ?? cur.skillMode ?? "",
         save_kind: opts.saveKind ?? "manual_edit",
+        ...(cur.routineDate ? { routine_date: cur.routineDate } : {}),
       };
       try {
         const res = await fetch(`${apiBaseUrl}/api/v1/routines`, {
@@ -305,6 +306,13 @@ export function useRoutine(msg: RoutineMessages) {
   const dismissLoadError = useCallback(() => setLoadError(null), []);
   const dismissSaveMsg = useCallback(() => setSaveMsg(null), []);
 
+  /** Load a historical (or today) entry into the editor for editing. */
+  const loadFromEntry = useCallback((entry: RoutineDTO) => {
+    const next = toLocal(entry);
+    setRoutine({ ...next, saved: true });
+    everSavedRef.current = true;
+  }, []);
+
   /** Allow the editor to inform the hook of the current skill mode without
    *  forcing it as a dependency on every callback (would invalidate refs). */
   const setSkillModeRef = useCallback((mode: string | null) => {
@@ -334,6 +342,7 @@ export function useRoutine(msg: RoutineMessages) {
     toggleComplete,
     save,
     reload,
+    loadFromEntry,
     dismissLoadError,
     dismissSaveMsg,
     setSkillModeRef,

@@ -32,7 +32,7 @@ export default async function RoutinePage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "routine" });
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+    <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-6 sm:py-10">
       <header className="mb-6 max-w-2xl space-y-2 sm:mb-8 sm:space-y-3">
         <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           <span className="inline-block size-1.5 rounded-full bg-primary" aria-hidden />

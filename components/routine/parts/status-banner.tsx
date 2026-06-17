@@ -5,14 +5,8 @@ import { CircleCheck, CloudUpload, Sparkles, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Compact status banner shown above the editor when there is already a
- * routine on file. Combines: badge ("Saved" / "AI suggested" / "Carried over"),
- * progress (`completed/total` + bar), and an optional autosave indicator.
- *
- * Three tone presets keep the visual hierarchy clear at a glance:
- *   - emerald: today is saved → green check
- *   - primary: AI-suggested but not yet saved → primary tint
- *   - amber: carried-over draft → soft warning so the user knows to confirm
+ * Compact status banner: badge + progress + autosave indicator.
+ * Stacks vertically on mobile so the progress bar stays readable.
  */
 export function StatusBanner({
   saved,
@@ -53,32 +47,44 @@ export function StatusBanner({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2.5 text-xs sm:text-sm",
+        "flex flex-col gap-3 rounded-xl border px-3.5 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-3 sm:py-2.5 sm:text-sm",
         toneCls,
       )}
     >
-      <span className="inline-flex items-center gap-2 font-medium">
-        <Icon className="size-4" aria-hidden />
-        <span>{badge}</span>
-      </span>
-      {autoSaving ? (
-        <span className="inline-flex items-center gap-1 rounded-full bg-background/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground in-animate animate-in fade-in duration-200">
-          <CloudUpload className="size-3 animate-pulse" aria-hidden />
-          {labels.autosaving}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-2 font-medium">
+          <Icon className="size-4 shrink-0" aria-hidden />
+          <span className="leading-snug">{badge}</span>
         </span>
-      ) : null}
-      <span className="ml-auto inline-flex items-center gap-3 text-foreground/70">
-        <span className="tabular-nums">
+        {autoSaving ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground in-animate animate-in fade-in duration-200">
+            <CloudUpload className="size-3.5 animate-pulse" aria-hidden />
+            {labels.autosaving}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="flex w-full items-center gap-3 sm:ml-auto sm:w-auto">
+        <span className="shrink-0 text-sm tabular-nums text-foreground/80">
           {completed}/{total}
         </span>
-        <span className="relative inline-flex h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+        <div
+          className="relative h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-muted sm:h-1.5 sm:w-28 sm:flex-none"
+          role="progressbar"
+          aria-valuenow={progressPct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${completed}/${total}`}
+        >
           <span
-            className="absolute inset-y-0 left-0 bg-primary transition-[width] duration-500 ease-out"
+            className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-500 ease-out"
             style={{ width: `${progressPct}%` }}
-            aria-hidden
           />
+        </div>
+        <span className="shrink-0 text-xs tabular-nums text-foreground/60 sm:hidden">
+          {progressPct}%
         </span>
-      </span>
+      </div>
     </div>
   );
 }

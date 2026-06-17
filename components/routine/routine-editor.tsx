@@ -3,7 +3,7 @@
 import { RoutineEditorSkeleton } from "./routine-editor-skeleton";
 import { Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   type RoutineCategory,
@@ -13,18 +13,18 @@ import { PremiumUpsellBanner, UsageQuotaChip } from "@/components/premium/premiu
 import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
-import { cn } from "@/lib/utils";
 
 import { Banner } from "./parts/banner";
 import { CheckInContextCard } from "./parts/check-in-context-card";
 import { EmptyHero } from "./parts/empty-hero";
 import { HistoryStrip } from "./parts/history-strip";
 import { NotesCard } from "./parts/notes-card";
-import { SaveBar } from "./parts/save-bar";
+import { SaveBar, useSaveFlash } from "./parts/save-bar";
 import { SectionCard, type SectionLabels } from "./parts/section-card";
 import { SkillModeBar } from "./parts/skill-mode-bar";
 import { StatusBanner } from "./parts/status-banner";
-import { countCompletion, validateRoutine } from "./routine-helpers";
+import { ValidationPanel, getVisibleValidationIssues } from "./parts/validation-panel";
+import { countCompletion, localId, validateRoutine } from "./routine-helpers";
 import { useRoutine } from "./use-routine";
 
 /**
@@ -106,18 +106,42 @@ export function RoutineEditor() {
 
   const beginnerSimple = skillMode === "beginner";
 
+  const editorTopRef = useRef<HTMLDivElement>(null);
+  const editorGridRef = useRef<HTMLDivElement>(null);
+  const [validationEngaged, setValidationEngaged] = useState(false);
+  const [saveAttempted, setSaveAttempted] = useState(false);
+  const engageValidation = useCallback(() => setValidationEngaged(true), []);
+
   const validationLabels = useMemo(
     () => ({
       noStepsBlocker: t("validateNoSteps"),
       noTitleBlocker: t("validateNoTitle"),
+      noTitleBlockerBeginner: t("validateNoTitleBeginner"),
       amSpfWarning: t("validateSpfMissing"),
+      amSpfWarningBeginner: t("validateSpfMissingBeginner"),
     }),
     [t],
   );
   const validation = useMemo(
-    () => validateRoutine(r.routine, validationLabels),
-    [r.routine, validationLabels],
+    () => validateRoutine(r.routine, validationLabels, { beginnerSimple }),
+    [r.routine, validationLabels, beginnerSimple],
   );
+
+  const visibleValidationIssues = useMemo(
+    () =>
+      getVisibleValidationIssues(validation.issues, {
+        beginnerSimple,
+        engaged: validationEngaged,
+        saveAttempted,
+      }),
+    [validation.issues, beginnerSimple, validationEngaged, saveAttempted],
+  );
+
+  const [saveFlashTick, setSaveFlashTick] = useState(0);
+  useEffect(() => {
+    if (r.saveMsg?.kind === "ok") setSaveFlashTick((n) => n + 1);
+  }, [r.saveMsg]);
+  const savedFlash = useSaveFlash(saveFlashTick);
 
   const completion = useMemo(() => countCompletion(r.routine), [r.routine]);
 
@@ -133,7 +157,7 @@ export function RoutineEditor() {
   }
 
   return (
-    <div className="space-y-5 pb-32 lg:pb-0">
+    <div ref={editorTopRef} className="space-y-4 pb-40 sm:space-y-5 lg:pb-0">
       {r.loadError ? (
         <Banner kind="err" message={r.loadError} onClose={r.dismissLoadError} />
       ) : null}
@@ -169,9 +193,12 @@ export function RoutineEditor() {
 
       {r.fresh ? (
         <EmptyHero
+          beginnerSimple={beginnerSimple}
           labels={{
             title: t("emptyHeroTitle"),
             body: t("emptyHeroBody"),
+            beginnerBody: t("emptyHeroBeginnerBody"),
+            scrollHint: t("emptyHeroScrollHint"),
             am: t("morningTitle"),
             pm: t("eveningTitle"),
             amHint: t("morningDesc"),
@@ -196,7 +223,36 @@ export function RoutineEditor() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <ValidationPanel
+        issues={visibleValidationIssues}
+        beginnerSimple={beginnerSimple}
+        labels={{
+          addMorning: t("validateAddMorning"),
+          addEvening: t("validateAddEvening"),
+          addSpf: t("validateAddSpf"),
+          blockerLabel: t("validateBlockerLabel"),
+          warningLabel: t("validateWarningLabel"),
+        }}
+        onAddMorning={() => {
+          engageValidation();
+          r.addStep("morning");
+        }}
+        onAddEvening={() => {
+          engageValidation();
+          r.addStep("evening");
+        }}
+        onAddSpf={() => {
+          engageValidation();
+          r.addStep("morning", {
+            id: localId(),
+            title: t("categories.spf"),
+            category: "spf",
+            completed: false,
+          });
+        }}
+      />
+
+      <div ref={editorGridRef} className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-4">
         <SectionCard
           section="morning"
           title={t("morningTitle")}
@@ -205,11 +261,32 @@ export function RoutineEditor() {
           steps={r.routine.morning}
           beginnerSimple={beginnerSimple}
           accent="am"
-          onAdd={() => r.addStep("morning")}
-          onRemove={(id) => r.removeStep("morning", id)}
-          onMove={(id, delta) => r.moveStep("morning", id, delta)}
-          onReorder={(from, to) => r.reorder("morning", from, to)}
-          onUpdate={(id, patch) => r.updateStep("morning", id, patch)}
+          highlightEmptyTitles={validation.hasEmptyTitles && validationEngaged}
+          sectionAlert={
+            validation.missingSpf && !beginnerSimple && validationEngaged
+              ? t("validateSpfSection")
+              : null
+          }
+          onAdd={() => {
+            engageValidation();
+            r.addStep("morning");
+          }}
+          onRemove={(id) => {
+            engageValidation();
+            r.removeStep("morning", id);
+          }}
+          onMove={(id, delta) => {
+            engageValidation();
+            r.moveStep("morning", id, delta);
+          }}
+          onReorder={(from, to) => {
+            engageValidation();
+            r.reorder("morning", from, to);
+          }}
+          onUpdate={(id, patch) => {
+            engageValidation();
+            r.updateStep("morning", id, patch);
+          }}
           onToggle={(id) => r.toggleComplete("morning", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
@@ -222,11 +299,27 @@ export function RoutineEditor() {
           steps={r.routine.evening}
           beginnerSimple={beginnerSimple}
           accent="pm"
-          onAdd={() => r.addStep("evening")}
-          onRemove={(id) => r.removeStep("evening", id)}
-          onMove={(id, delta) => r.moveStep("evening", id, delta)}
-          onReorder={(from, to) => r.reorder("evening", from, to)}
-          onUpdate={(id, patch) => r.updateStep("evening", id, patch)}
+          highlightEmptyTitles={validation.hasEmptyTitles && validationEngaged}
+          onAdd={() => {
+            engageValidation();
+            r.addStep("evening");
+          }}
+          onRemove={(id) => {
+            engageValidation();
+            r.removeStep("evening", id);
+          }}
+          onMove={(id, delta) => {
+            engageValidation();
+            r.moveStep("evening", id, delta);
+          }}
+          onReorder={(from, to) => {
+            engageValidation();
+            r.reorder("evening", from, to);
+          }}
+          onUpdate={(id, patch) => {
+            engageValidation();
+            r.updateStep("evening", id, patch);
+          }}
           onToggle={(id) => r.toggleComplete("evening", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
@@ -236,7 +329,10 @@ export function RoutineEditor() {
       {!beginnerSimple ? (
         <NotesCard
           value={r.routine.notes}
-          onChange={r.setNotes}
+          onChange={(notes) => {
+            engageValidation();
+            r.setNotes(notes);
+          }}
           readOnly={editLocked}
           labels={{ title: t("notesTitle"), placeholder: t("notesPlaceholder") }}
         />
@@ -245,6 +341,15 @@ export function RoutineEditor() {
       <HistoryStrip
         history={r.history}
         todayISO={todayISO}
+        editAllowed={!editLocked}
+        onEditDay={(entry) => {
+          r.loadFromEntry(entry);
+          engageValidation();
+          editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        onSelectToday={() =>
+          editorTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
         labels={{
           title: t("historyTitle"),
           hint: t("historyHint"),
@@ -254,6 +359,17 @@ export function RoutineEditor() {
           today: t("historyToday"),
           yesterday: t("historyYesterday"),
           done: (done: number, total: number) => t("historyDone", { done, total }),
+          tapHint: t("historyTapHint"),
+          detailAm: t("historyAm"),
+          detailPm: t("historyPm"),
+          detailEmpty: t("historyDetailEmpty"),
+          detailClose: t("historyDetailClose"),
+          detailPct: (pct: number) => t("historyDetailPct", { pct }),
+          detailNotes: t("historyDetailNotes"),
+          detailEdit: t("historyDetailEdit"),
+          detailEditToday: t("historyDetailEditToday"),
+          sheetSwipeHint: t("historySheetSwipeHint"),
+          editLocked: t("historyEditLocked"),
         }}
       />
 
@@ -266,31 +382,31 @@ export function RoutineEditor() {
         />
       ) : null}
 
-      {/* Inline blockers — soft, conversational, never red unless serious. */}
-      {validation.blockers.length > 0 ? (
-        <div
-          role="alert"
-          className={cn(
-            "rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-200 sm:text-sm",
-          )}
-        >
-          {validation.blockers[0]}
-        </div>
-      ) : null}
-
       <SaveBar
         saving={r.saving}
         autoSaving={r.autoSaving}
         canSave={validation.canSave && !editLocked}
         hasUnsaved={!r.routine.saved}
-        warningHint={validation.warnings[0] ?? null}
-        onReset={() => void r.reload()}
-        onSave={() => void r.save(skillMode)}
+        warningHint={
+          beginnerSimple ? null : (validation.warnings[0] ?? null)
+        }
+        savedFlash={savedFlash}
+        onReset={() => {
+          setSaveAttempted(false);
+          setValidationEngaged(false);
+          void r.reload();
+        }}
+        onSave={() => {
+          setSaveAttempted(true);
+          engageValidation();
+          void r.save(skillMode);
+        }}
         labels={{
           save: t("save"),
           saving: t("saving"),
           reset: t("reset"),
           autosaving: t("autoSaving"),
+          saved: t("saveSuccess"),
           unsavedHint: t("unsavedHint"),
           cleanHint: t("cleanHint"),
         }}
@@ -331,6 +447,8 @@ function editorLabels(t: TFn): SectionLabels {
     placeholder: t("stepPlaceholder"),
     emptyAddMorning: t("emptyAddMorning"),
     emptyAddEvening: t("emptyAddEvening"),
+    emptySectionHint: t("emptySectionHint"),
+    emptySectionBeginnerHint: t("emptySectionBeginnerHint"),
     categories: catLabels(t),
   };
 }
