@@ -178,6 +178,7 @@ export function OnboardingFlow() {
   >(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const skipFaceCaptureWas = useRef(false);
   const ob = useOnboardingStore();
   const setSkillGlobal = useSkillStore((s) => s.setMode);
   const privacyHydrated = usePrivacyHydrated();
@@ -200,10 +201,11 @@ export function OnboardingFlow() {
   }, [refreshGuestTrialGate]);
 
   useEffect(() => {
-    if (skipFaceCapture && photoCount > 0) {
+    if (skipFaceCapture && !skipFaceCaptureWas.current) {
       clearPhotos();
     }
-  }, [skipFaceCapture, photoCount, clearPhotos]);
+    skipFaceCaptureWas.current = skipFaceCapture;
+  }, [skipFaceCapture, clearPhotos]);
 
   const summaryRecap = useMemo(() => buildSummaryRecap(ob, t), [ob, t]);
 
@@ -238,6 +240,7 @@ export function OnboardingFlow() {
   const handlePhotoFiles = useCallback(
     (files: FileList | null, replace: boolean) => {
       if (!files?.length) return;
+      setSkipFaceCapture(false);
       const list = Array.from(files);
       if (replace) {
         clearPhotos();
@@ -250,7 +253,7 @@ export function OnboardingFlow() {
       );
       void appendOnboardingPhotos(list, remaining, addPhoto);
     },
-    [addPhoto, clearPhotos],
+    [addPhoto, clearPhotos, setSkipFaceCapture],
   );
 
   async function runAnalyze() {

@@ -27,6 +27,12 @@ export type PhotoItem = {
   preview: string;
 };
 
+function revokePhotoPreview(preview: string) {
+  if (preview.startsWith("blob:")) {
+    URL.revokeObjectURL(preview);
+  }
+}
+
 export type OnboardingState = {
   skinType: SkinTypeCard | null;
   undertone: SkinUndertone | null;
@@ -203,7 +209,7 @@ export const useOnboardingStore = create<Store>((set) => ({
     set((s) => {
       const next = [...s.photos];
       const [rm] = next.splice(index, 1);
-      if (rm?.preview) URL.revokeObjectURL(rm.preview);
+      if (rm?.preview) revokePhotoPreview(rm.preview);
       return {
         photos: next,
         aiSnapshot: null,
@@ -214,7 +220,7 @@ export const useOnboardingStore = create<Store>((set) => ({
     }),
   clearPhotos: () =>
     set((s) => {
-      s.photos.forEach((p) => URL.revokeObjectURL(p.preview));
+      s.photos.forEach((p) => revokePhotoPreview(p.preview));
       return { photos: [], aiSnapshot: null, analyzeStatus: "idle", analyzeError: null };
     }),
   setAnalyzeStatus: (status, err = null) =>
@@ -222,7 +228,7 @@ export const useOnboardingStore = create<Store>((set) => ({
   reset: () =>
     set((s) => {
       for (const p of s.photos) {
-        if (p.preview) URL.revokeObjectURL(p.preview);
+        if (p.preview) revokePhotoPreview(p.preview);
       }
       return initial;
     }),

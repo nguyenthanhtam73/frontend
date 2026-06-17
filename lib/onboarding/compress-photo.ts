@@ -6,6 +6,14 @@ export const ONBOARDING_PHOTO_JPEG_QUALITY = 0.88;
 
 const SKIP_IF_JPEG_UNDER_BYTES = 500_000;
 
+/** Some mobile cameras return `type: ""` even for valid JPEGs. */
+export function isLikelyImageFile(file: File): boolean {
+  if (file.size <= 0) return false;
+  if (file.type.startsWith("image/")) return true;
+  if (!file.type) return true;
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/iu.test(file.name);
+}
+
 function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -40,12 +48,28 @@ function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<B
   });
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string" && result.startsWith("data:")) {
+        resolve(result);
+        return;
+      }
+      reject(new Error("invalid data url"));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
 /** Resize/compress a face photo before onboarding upload. Falls back to the original file on failure. */
 export async function compressOnboardingPhoto(
   file: File,
 ): Promise<{ file: File; preview: string }> {
-  if (!file.type.startsWith("image/")) {
-    return { file, preview: URL.createObjectURL(file) };
+  if (!isLikelyImageFile(file)) {
+    throw new Error("not an image");
   }
 
   if (
@@ -56,7 +80,7 @@ export async function compressOnboardingPhoto(
       const img = await loadImageFromFile(file);
       const long = Math.max(img.naturalWidth, img.naturalHeight);
       if (long <= ONBOARDING_PHOTO_MAX_EDGE) {
-        return { file, preview: URL.createObjectURL(file) };
+        return { file, preview: await fileToDataUrl(file) };
       }
     } catch {
       /* fall through to full compress path */
@@ -76,13 +100,13 @@ export async function compressOnboardingPhoto(
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
-      return { file, preview: URL.createObjectURL(file) };
+      return { file, preview: await fileToDataUrl(file) };
     }
     ctx.drawImage(img, 0, 0, width, height);
 
     const blob = await canvasToJpegBlob(canvas, ONBOARDING_PHOTO_JPEG_QUALITY);
     if (!blob) {
-      return { file, preview: URL.createObjectURL(file) };
+      return { file, preview: await fileToDataUrl(file) };
     }
 
     const base = file.name.replace(/\.[^.]+$/u, "") || "onboarding";
@@ -90,9 +114,9 @@ export async function compressOnboardingPhoto(
       type: "image/jpeg",
       lastModified: Date.now(),
     });
-    return { file: compressed, preview: URL.createObjectURL(compressed) };
+    return { file: compressed, preview: await fileToDataUrl(compressed) };
   } catch {
-    return { file, preview: URL.createObjectURL(file) };
+    return { file, preview: await fileToDataUrl(file) };
   }
 }
 
@@ -102,9 +126,13 @@ export async function appendOnboardingPhotos(
   remaining: number,
   addPhoto: (item: { file: File; preview: string }) => void,
 ): Promise<void> {
-  const picked = files.filter((f) => f.type.startsWith("image/")).slice(0, remaining);
+  const picked = files.filter(isLikelyImageFile).slice(0, remaining);
   for (const file of picked) {
-    const item = await compressOnboardingPhoto(file);
-    addPhoto(item);
+    try {
+      const item = await compressOnboardingPhoto(file);
+      addPhoto(item);
+    } catch {
+      /* skip unreadable picks */
+    }
   }
 }
