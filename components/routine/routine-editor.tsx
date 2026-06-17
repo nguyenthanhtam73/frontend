@@ -473,6 +473,7 @@ export function RoutineEditor() {
         />
       ) : null}
 
+      {!r.routine.saved || r.saving || r.autoSaving || savedFlash ? (
       <SaveBar
         saving={r.saving}
         autoSaving={r.autoSaving}
@@ -501,9 +502,9 @@ export function RoutineEditor() {
           autosaving: t("autoSaving"),
           saved: t("saveSuccess"),
           unsavedHint: t("unsavedHint"),
-          cleanHint: t("cleanHint"),
         }}
       />
+      ) : null}
     </div>
   );
 }

@@ -61,6 +61,38 @@ export function buildCalendarRange(todayISO: string, days: number): string[] {
   return result;
 }
 
+/** Oldest → newest inclusive range between two ISO dates. */
+export function buildCalendarRangeFromTo(fromISO: string, toISO: string): string[] {
+  if (fromISO > toISO) return [];
+  const result: string[] = [];
+  let cur = fromISO;
+  while (cur <= toISO) {
+    result.push(cur);
+    cur = addDaysUTC(cur, 1);
+  }
+  return result;
+}
+
+/** Saved entries within the last `rangeDays` days, oldest → newest. */
+export function filterEntriesInRange(
+  entries: RoutineDTO[],
+  todayISO: string,
+  rangeDays: number,
+): RoutineDTO[] {
+  const since = addDaysUTC(todayISO, -(rangeDays - 1));
+  return entries
+    .filter((e) => e.routine_date >= since && e.routine_date <= todayISO)
+    .sort((a, b) => a.routine_date.localeCompare(b.routine_date));
+}
+
+export function buildChartPointsFromEntries(entries: RoutineDTO[]): ChartPoint[] {
+  return entries.map((entry) => ({
+    date: entry.routine_date,
+    pct: entryCompletionPct(entry),
+    hasEntry: true,
+  }));
+}
+
 /** Longest run of consecutive calendar days with at least one tick. */
 export function computeBestStreak(entries: RoutineDTO[], calendarDays: string[]): number {
   const byDate = new Map(entries.map((e) => [e.routine_date, e]));

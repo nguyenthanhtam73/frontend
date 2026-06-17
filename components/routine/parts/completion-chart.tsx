@@ -151,16 +151,20 @@ function BarChart({
   const [activeDate, setActiveDate] = useState<string | null>(null);
   const [pinnedTooltipDate, setPinnedTooltipDate] = useState<string | null>(null);
 
-  const barW = points.length > 20 ? 10 : 14;
-  const gap = points.length > 20 ? 3 : 4;
+  const barW =
+    points.length <= 6 ? 22 : points.length <= 10 ? 18 : points.length > 20 ? 10 : 14;
+  const gap =
+    points.length <= 6 ? 10 : points.length <= 10 ? 8 : points.length > 20 ? 3 : 5;
   const chartH = 96;
-  const padX = 8;
+  const padX = 12;
   const padTop = 8;
-  const padBottom = 22;
-  const hitPad = 6;
+  const padBottom = 28;
+  const hitPad = 8;
+  const tooltipReserve = 44;
   const width = padX * 2 + points.length * barW + (points.length - 1) * gap;
   const height = chartH + padTop + padBottom;
-  const labelEvery = points.length > 20 ? 5 : points.length > 14 ? 3 : 2;
+  const labelEvery =
+    points.length <= 8 ? 1 : points.length <= 14 ? 2 : points.length > 20 ? 5 : 3;
 
   const bars: BarLayout[] = useMemo(
     () =>
@@ -236,6 +240,7 @@ function BarChart({
   function handlePointerUp(bar: BarLayout) {
     clearLongPress();
     setActiveDate(null);
+    setHoveredDate(null);
     pointerStartRef.current = null;
     if (!bar.point.hasEntry || pointerMovedRef.current) return;
     if (!longPressTriggeredRef.current) {
@@ -255,20 +260,19 @@ function BarChart({
     <div
       ref={containerRef}
       className="relative touch-pan-x sm:touch-auto"
-      style={{ minWidth: `${Math.max(width, 280)}px` }}
+      style={{
+        minWidth: `${Math.max(width, 280)}px`,
+        paddingTop: tooltipReserve,
+        minHeight: height + tooltipReserve,
+      }}
     >
       {tooltipBar ? (
         <ChartTooltip
           bar={tooltipBar}
           dateLabel={dateLabelFor(tooltipBar.date)}
-          valueLabel={
-            tooltipBar.point.hasEntry
-              ? labels.detailPct(tooltipBar.point.pct)
-              : labels.noSave
-          }
-          pinned={!!pinnedTooltipDate}
+          valueLabel={labels.detailPct(tooltipBar.point.pct)}
           chartWidth={width}
-          chartHeight={height}
+          tooltipReserve={tooltipReserve}
         />
       ) : null}
 
@@ -310,7 +314,6 @@ function BarChart({
           const isSelected = p.date === selectedDate;
           const isHovered = p.date === hoveredDate;
           const isActive = p.date === activeDate;
-          const clickable = p.hasEntry;
 
           const visualState = isActive
             ? "active"
@@ -320,48 +323,35 @@ function BarChart({
                 ? "hover"
                 : "default";
 
-          const scale =
-            isActive ? 1.12 : isHovered || isSelected ? 1.06 : 1;
-          const cx = bar.x + bar.barW / 2;
-          const cy = bar.y + bar.barH / 2;
+          const showLabel = i === 0 || i === points.length - 1 || i % labelEvery === 0;
 
           return (
             <g key={p.date}>
-              <g
-                transform={
-                  scale !== 1
-                    ? `translate(${cx} ${cy}) scale(${scale}) translate(${-cx} ${-cy})`
-                    : undefined
-                }
-                className="transition-transform duration-150 ease-out"
-              >
+              <rect
+                x={bar.x}
+                y={bar.y}
+                width={bar.barW}
+                height={bar.barH}
+                rx={3}
+                className={cn(
+                  "transition-[fill,opacity] duration-100",
+                  barFillClass(p, visualState),
+                  isSelected && "opacity-100",
+                  isActive && "opacity-100",
+                )}
+              />
+              {(isSelected || isActive) && (
                 <rect
-                  x={bar.x}
-                  y={bar.y}
-                  width={bar.barW}
-                  height={bar.barH}
-                  rx={3}
-                  className={cn(
-                    "transition-[fill,opacity,filter] duration-150",
-                    barFillClass(p, visualState),
-                    isSelected && "drop-shadow-sm",
-                    isActive && "drop-shadow-md",
-                    !clickable && "opacity-55",
-                  )}
+                  x={bar.x - 1.5}
+                  y={bar.y - 1.5}
+                  width={bar.barW + 3}
+                  height={bar.barH + 3}
+                  rx={4}
+                  fill="none"
+                  className="stroke-primary"
+                  strokeWidth={2}
                 />
-                {isSelected || isActive ? (
-                  <rect
-                    x={bar.x - 1}
-                    y={bar.y - 1}
-                    width={bar.barW + 2}
-                    height={bar.barH + 2}
-                    rx={4}
-                    fill="none"
-                    className="stroke-primary/70"
-                    strokeWidth={1.5}
-                  />
-                ) : null}
-              </g>
+              )}
 
               {/* Wider hit target for touch / hover */}
               <rect
@@ -370,7 +360,7 @@ function BarChart({
                 width={bar.barW + hitPad}
                 height={chartH}
                 fill="transparent"
-                className={cn(clickable ? "cursor-pointer" : "cursor-default")}
+                className="cursor-pointer"
                 onPointerEnter={() => setHoveredDate(p.date)}
                 onPointerLeave={() => {
                   if (pinnedTooltipDate !== p.date) setHoveredDate(null);
@@ -389,26 +379,18 @@ function BarChart({
                 }}
               />
 
-              {isToday ? (
-                <circle
-                  cx={bar.centerX}
-                  cy={padTop + chartH + 10}
-                  r={2.5}
-                  className="fill-primary"
-                />
-              ) : null}
-              {(i === 0 || i === points.length - 1 || i % labelEvery === 0) && (
+              {showLabel && (
                 <text
                   x={bar.centerX}
-                  y={height - 4}
+                  y={height - 6}
                   textAnchor="middle"
                   className={cn(
-                    "fill-muted-foreground text-[8px]",
+                    "fill-muted-foreground text-[9px]",
                     isToday && "fill-primary font-semibold",
                     (isSelected || isActive) && "fill-foreground font-semibold",
                   )}
                 >
-                  {isToday ? labels.today : formatShortDate(p.date)}
+                  {formatShortDate(p.date)}
                 </text>
               )}
             </g>
@@ -423,34 +405,24 @@ function ChartTooltip({
   bar,
   dateLabel,
   valueLabel,
-  pinned,
   chartWidth,
-  chartHeight,
+  tooltipReserve,
 }: {
   bar: BarLayout;
   dateLabel: string;
   valueLabel: string;
-  pinned: boolean;
   chartWidth: number;
-  chartHeight: number;
+  tooltipReserve: number;
 }) {
   const leftPct = (bar.centerX / chartWidth) * 100;
-  const topPct = Math.max(0, ((bar.y - 6) / chartHeight) * 100);
+  const topPx = tooltipReserve - 8;
 
   return (
     <div
-      className={cn(
-        "pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full animate-in fade-in-0 zoom-in-95 duration-150",
-        pinned && "ring-1 ring-primary/30 rounded-lg",
-      )}
-      style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+      className="pointer-events-none absolute z-20 -translate-x-1/2"
+      style={{ left: `${leftPct}%`, top: topPx }}
     >
-      <div
-        className={cn(
-          "mb-1.5 whitespace-nowrap rounded-lg border bg-popover px-2.5 py-1.5 text-popover-foreground shadow-md",
-          "text-[11px] leading-tight sm:text-xs",
-        )}
-      >
+      <div className="whitespace-nowrap rounded-lg border bg-popover px-2.5 py-1.5 text-popover-foreground shadow-md text-[11px] leading-tight sm:text-xs">
         <p className="font-semibold text-foreground">{dateLabel}</p>
         <p className="mt-0.5 tabular-nums text-muted-foreground">{valueLabel}</p>
       </div>

@@ -11,11 +11,12 @@ import { cn } from "@/lib/utils";
 import { CompletionChart } from "./completion-chart";
 import {
   avgCompletion,
-  buildCalendarRange,
-  buildChartPoints,
+  buildCalendarRangeFromTo,
+  buildChartPointsFromEntries,
   computeBestStreak,
   computeTrend,
   entryCompletionPct,
+  filterEntriesInRange,
 } from "./history-stats";
 import { HistoryDaySheet, type HistoryDaySheetLabels } from "./history-day-sheet";
 import { StreakSummary } from "./streak-summary";
@@ -77,9 +78,9 @@ export function HistoryStrip({
   const allEntries = useMemo(() => history?.entries ?? [], [history?.entries]);
   const streak = history?.streak_days ?? 0;
 
-  const calendarDays = useMemo(
-    () => buildCalendarRange(todayISO, rangeDays),
-    [todayISO, rangeDays],
+  const visibleEntries = useMemo(
+    () => filterEntriesInRange(allEntries, todayISO, rangeDays),
+    [allEntries, todayISO, rangeDays],
   );
 
   const entriesByDate = useMemo(
@@ -87,14 +88,16 @@ export function HistoryStrip({
     [allEntries],
   );
 
-  const filteredEntries = useMemo(
-    () => calendarDays.map((d) => entriesByDate.get(d)).filter(Boolean) as RoutineDTO[],
-    [calendarDays, entriesByDate],
+  const avgPct = Math.round(avgCompletion(visibleEntries) * 100);
+  const streakCalendarDays = useMemo(() => {
+    if (visibleEntries.length === 0) return [];
+    return buildCalendarRangeFromTo(visibleEntries[0].routine_date, todayISO);
+  }, [visibleEntries, todayISO]);
+  const bestStreak = computeBestStreak(allEntries, streakCalendarDays);
+  const chartPoints = useMemo(
+    () => buildChartPointsFromEntries(visibleEntries),
+    [visibleEntries],
   );
-
-  const avgPct = Math.round(avgCompletion(filteredEntries) * 100);
-  const bestStreak = computeBestStreak(allEntries, calendarDays);
-  const chartPoints = buildChartPoints(allEntries, calendarDays);
   const trend = computeTrend(chartPoints);
 
   const selectedEntry = selectedDate ? (entriesByDate.get(selectedDate) ?? null) : null;
@@ -110,11 +113,11 @@ export function HistoryStrip({
   useEffect(() => {
     if (didInitialScroll.current) return;
     const el = scrollRef.current;
-    if (!el || calendarDays.length === 0) return;
+    if (!el || visibleEntries.length === 0) return;
     const pill = el.querySelector<HTMLElement>(`[data-date="${todayISO}"]`);
     pill?.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
     didInitialScroll.current = true;
-  }, [calendarDays, todayISO]);
+  }, [visibleEntries, todayISO]);
 
   function handleDayClick(date: string) {
     const entry = entriesByDate.get(date);
@@ -211,21 +214,18 @@ export function HistoryStrip({
                   ref={scrollRef}
                   className="-mx-1 mt-1.5 overflow-x-auto overscroll-x-contain px-1 py-1 pb-1.5 [scrollbar-width:thin] snap-x snap-mandatory scroll-smooth touch-pan-x sm:mt-2 sm:py-1.5 sm:pb-2"
                 >
-                  <ol className="flex min-w-min gap-2.5 px-1">
-                    {calendarDays.map((date) => {
-                      const entry = entriesByDate.get(date);
-                      return (
+                  <ol className="flex min-w-min gap-3 px-1">
+                    {visibleEntries.map((entry) => (
                         <HistoryDayPill
-                          key={date}
-                          date={date}
+                          key={entry.routine_date}
+                          date={entry.routine_date}
                           entry={entry}
                           todayISO={todayISO}
-                          selected={selectedDate === date}
+                          selected={selectedDate === entry.routine_date}
                           labels={labels}
-                          onClick={() => handleDayClick(date)}
+                          onClick={() => handleDayClick(entry.routine_date)}
                         />
-                      );
-                    })}
+                    ))}
                   </ol>
                 </div>
               </div>
@@ -301,26 +301,22 @@ function HistoryDayPill({
   onClick,
 }: {
   date: string;
-  entry?: RoutineDTO;
+  entry: RoutineDTO;
   todayISO: string;
   selected: boolean;
   labels: HistoryLabels;
   onClick: () => void;
   }) {
-  const hasEntry = !!entry;
-  const pct = entry ? entryCompletionPct(entry) : 0;
-  const total = entry ? entry.morning.length + entry.evening.length : 0;
-  const done = entry
-    ? entry.morning.filter((s) => s.completed).length +
-      entry.evening.filter((s) => s.completed).length
-    : 0;
+  const pct = entryCompletionPct(entry);
+  const total = entry.morning.length + entry.evening.length;
+  const done =
+    entry.morning.filter((s) => s.completed).length +
+    entry.evening.filter((s) => s.completed).length;
 
   const dateLabel = humanizeDateLabel(date, todayISO, labels.today, labels.yesterday);
   const isToday = date === todayISO;
   const isYesterday = isYesterdayDate(date, todayISO);
-  const tooltip = hasEntry
-    ? `${date} · ${labels.detailPct(pct)} · ${labels.done(done, total)}`
-    : `${date} · ${labels.noSave}`;
+  const tooltip = `${date} · ${labels.detailPct(pct)} · ${labels.done(done, total)}`;
 
   return (
     <li className="snap-start">
@@ -328,33 +324,22 @@ function HistoryDayPill({
         type="button"
         data-date={date}
         title={tooltip}
-        disabled={!hasEntry}
+        disabled={false}
         aria-expanded={selected}
-        aria-haspopup={hasEntry ? "dialog" : undefined}
-        aria-label={
-          hasEntry
-            ? `${dateLabel}, ${labels.done(done, total)}, ${labels.detailPct(pct)}`
-            : `${dateLabel}, ${labels.noSave}`
-        }
+        aria-haspopup="dialog"
+        aria-label={`${dateLabel}, ${labels.done(done, total)}, ${labels.detailPct(pct)}`}
         onClick={onClick}
         className={cn(
-          "group flex min-h-[5.5rem] min-w-[4.25rem] flex-col rounded-2xl border px-2.5 py-2.5 text-left text-xs transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out sm:min-h-[6.25rem] sm:min-w-[5.5rem] sm:px-3 sm:py-3",
-          hasEntry && "active:scale-[0.97]",
-          !hasEntry &&
-            "cursor-default border-dashed border-border/60 bg-muted/15 opacity-70",
-          hasEntry &&
-            isToday &&
+          "group flex min-h-[5.5rem] min-w-[5.25rem] flex-col rounded-2xl border px-2.5 py-2.5 text-left text-xs transition-[border-color,background-color,box-shadow] duration-200 ease-out active:scale-[0.98] sm:min-h-[6.25rem] sm:min-w-[5.75rem] sm:px-3 sm:py-3",
+          isToday &&
             "border-primary/70 bg-primary/12 shadow-md ring-2 ring-inset ring-primary/35 hover:border-primary hover:bg-primary/16 hover:shadow-lg",
-          hasEntry &&
-            isYesterday &&
+          isYesterday &&
             !isToday &&
             "border-indigo-500/55 bg-indigo-500/12 ring-1 ring-inset ring-indigo-500/35 hover:border-indigo-500/70 hover:bg-indigo-500/16 hover:shadow-md",
-          hasEntry &&
-            !isToday &&
+          !isToday &&
             !isYesterday &&
             "border-border/80 bg-card/80 hover:border-primary/40 hover:bg-card hover:shadow-md",
-          hasEntry &&
-            selected &&
+          selected &&
             "border-primary/80 bg-primary/14 shadow-lg ring-2 ring-inset ring-primary/50",
         )}
       >
@@ -364,53 +349,41 @@ function HistoryDayPill({
           ) : null}
           <span
             className={cn(
-              "text-[11px] font-bold leading-tight tracking-tight",
+              "line-clamp-2 text-[10px] font-bold leading-tight tracking-tight sm:text-[11px]",
               isToday
                 ? "text-primary"
-                : isYesterday
+                  : isYesterday
                   ? "text-indigo-700 dark:text-indigo-300"
-                  : hasEntry
-                    ? "text-foreground/90"
-                    : "text-muted-foreground",
+                  : "text-foreground/90",
             )}
           >
             {dateLabel}
           </span>
         </span>
 
-        {hasEntry ? (
-          <>
-            <span className="mt-1 text-base font-bold tabular-nums leading-none sm:mt-1.5 sm:text-lg">
-              {pct}%
-            </span>
-            <span className="mt-1 tabular-nums text-[10px] text-muted-foreground">
-              {labels.done(done, total)}
-            </span>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted/80">
-              <span
-                className={cn(
-                  "block h-full rounded-full transition-[width] duration-500 ease-out",
-                  pct >= 80 ? "bg-emerald-500" : pct >= 40 ? "bg-primary" : "bg-amber-400",
-                )}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </>
-        ) : (
-          <span className="mt-3 text-[10px] font-medium text-muted-foreground/80">
-            {labels.noSave}
-          </span>
-        )}
+        <span className="mt-1 text-base font-bold tabular-nums leading-none sm:mt-1.5 sm:text-lg">
+          {pct}%
+        </span>
+        <span className="mt-1 tabular-nums text-[10px] text-muted-foreground">
+          {labels.done(done, total)}
+        </span>
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted/80">
+          <span
+            className={cn(
+              "block h-full rounded-full transition-[width] duration-500 ease-out",
+              pct >= 80 ? "bg-emerald-500" : pct >= 40 ? "bg-primary" : "bg-amber-400",
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
 
         <div className="mt-1.5 flex h-3.5 shrink-0 items-center justify-center" aria-hidden>
-          {hasEntry ? (
-            <ChevronDown
-              className={cn(
-                "size-3.5 text-primary transition-opacity duration-200",
-                selected ? "opacity-100" : "opacity-0 group-hover:opacity-60",
-              )}
-            />
-          ) : null}
+          <ChevronDown
+            className={cn(
+              "size-3.5 text-primary transition-opacity duration-200",
+              selected ? "opacity-100" : "opacity-0 group-hover:opacity-60",
+            )}
+          />
         </div>
       </button>
     </li>

@@ -11,11 +11,10 @@ export type SaveBarStatus =
   | "manual-saving"
   | "saved"
   | "unsaved"
-  | "warning"
-  | "clean";
+  | "warning";
 
 /**
- * Sticky save bar with clear autosave / unsaved / saved feedback.
+ * Sticky save bar — shown only while today’s routine is not yet saved (or during save feedback).
  */
 export function SaveBar({
   saving,
@@ -43,7 +42,6 @@ export function SaveBar({
     autosaving: string;
     saved: string;
     unsavedHint: string;
-    cleanHint: string;
   };
 }) {
   const status = resolveStatus({ saving, autoSaving, hasUnsaved, warningHint, savedFlash });
@@ -120,6 +118,8 @@ function StatusHint({
   hint: string;
   labels: { autosaving: string; saved: string };
 }) {
+  if (!hint && status !== "autosaving" && status !== "saved") return null;
+
   return (
     <p
       className={cn(
@@ -129,7 +129,6 @@ function StatusHint({
         status === "saved" && "font-medium text-emerald-700 dark:text-emerald-300",
         status === "unsaved" && "font-medium text-primary",
         status === "warning" && "text-amber-700 dark:text-amber-300",
-        status === "clean" && "text-muted-foreground",
       )}
       aria-live="polite"
     >
@@ -162,17 +161,17 @@ function resolveStatus(opts: {
   if (opts.savedFlash) return "saved";
   if (opts.hasUnsaved) return "unsaved";
   if (opts.warningHint) return "warning";
-  return "clean";
+  return "unsaved";
 }
 
 function statusHint(
   status: SaveBarStatus,
-  labels: { unsavedHint: string; cleanHint: string },
+  labels: { unsavedHint: string },
   warningHint: string | null,
 ): string {
-  if (status === "warning") return warningHint ?? labels.cleanHint;
+  if (status === "warning") return warningHint ?? "";
   if (status === "unsaved") return labels.unsavedHint;
-  return labels.cleanHint;
+  return "";
 }
 
 /** Flash "saved" briefly after each successful save (trigger increments). */
