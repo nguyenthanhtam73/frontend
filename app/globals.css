@@ -146,6 +146,7 @@
   html {
     /* ~17px from typical 16px browser default — scales all text-* / spacing rem tokens gently */
     font-size: 106.25%;
+    scrollbar-gutter: stable;
     @apply font-sans;
   }
   body {

@@ -41,6 +41,7 @@ export function HistoryStrip({
   onEditLockedAttempt?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const didInitialScroll = useRef(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const entries = history?.entries ?? [];
@@ -50,14 +51,17 @@ export function HistoryStrip({
   const selectedEntry = entries.find((e) => e.routine_date === selectedDate) ?? null;
 
   useEffect(() => {
+    if (didInitialScroll.current) return;
     const el = scrollRef.current;
     if (!el || entries.length === 0) return;
     const pill = el.querySelector<HTMLElement>(`[data-date="${todayISO}"]`);
-    pill?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    pill?.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
+    didInitialScroll.current = true;
   }, [entries, todayISO]);
 
   function handleDayClick(entry: RoutineDTO) {
-    setSelectedDate((cur) => (cur === entry.routine_date ? null : entry.routine_date));
+    if (selectedDate === entry.routine_date) return;
+    setSelectedDate(entry.routine_date);
   }
 
   function handleEdit(entry: RoutineDTO) {
@@ -106,7 +110,7 @@ export function HistoryStrip({
               <p className="text-xs text-muted-foreground">{labels.tapHint}</p>
               <div
                 ref={scrollRef}
-                className="-mx-1 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:thin] snap-x snap-mandatory scroll-smooth touch-pan-x"
+                className="-mx-1 overflow-x-auto overscroll-x-contain px-1 py-1.5 pb-2 [scrollbar-width:thin] snap-x snap-mandatory scroll-smooth touch-pan-x"
               >
                 <ol className="flex min-w-min gap-2 px-1">
                   {entries.map((e) => (
@@ -203,17 +207,17 @@ function HistoryDayPill({
         aria-label={`${dateLabel}, ${labels.done(done, total)}, ${labels.detailPct(pct)}`}
         onClick={onClick}
         className={cn(
-          "group flex min-h-[5.75rem] min-w-[6rem] flex-col rounded-xl border px-3 py-2.5 text-left text-xs transition-all duration-200 ease-out active:scale-[0.97] sm:min-w-[6.75rem]",
+          "group flex min-h-[5.75rem] min-w-[6rem] flex-col rounded-xl border px-3 py-2.5 text-left text-xs transition-[border-color,background-color,box-shadow] duration-200 ease-out active:scale-[0.98] sm:min-w-[6.75rem]",
           isToday &&
-            "border-primary/60 bg-primary/10 shadow-sm ring-2 ring-primary/35 hover:border-primary hover:bg-primary/14 hover:shadow-md hover:ring-primary/45",
+            "border-primary/60 bg-primary/10 shadow-sm ring-2 ring-inset ring-primary/30 hover:border-primary hover:bg-primary/14 hover:shadow-md",
           isYesterday &&
             !isToday &&
-            "border-indigo-500/50 bg-indigo-500/12 ring-1 ring-indigo-500/35 hover:border-indigo-500/65 hover:bg-indigo-500/16 hover:shadow-sm hover:ring-indigo-500/45",
+            "border-indigo-500/50 bg-indigo-500/12 ring-1 ring-inset ring-indigo-500/30 hover:border-indigo-500/65 hover:bg-indigo-500/16 hover:shadow-sm",
           !isToday &&
             !isYesterday &&
-            "border-border/80 bg-card/70 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card hover:shadow-md",
+            "border-border/80 bg-card/70 hover:border-primary/35 hover:bg-card hover:shadow-sm",
           selected &&
-            "z-[1] -translate-y-0.5 shadow-md ring-2 ring-primary/45 ring-offset-2 ring-offset-background",
+            "border-primary/70 bg-primary/12 shadow-md ring-2 ring-inset ring-primary/45",
         )}
       >
         <span className="flex items-center gap-1.5">
@@ -249,12 +253,14 @@ function HistoryDayPill({
             style={{ width: `${pct}%` }}
           />
         </div>
-        {selected ? (
+        <div className="mt-1.5 flex h-3.5 shrink-0 items-center justify-center" aria-hidden>
           <ChevronDown
-            className="mt-1.5 size-3.5 self-center text-primary transition-transform duration-200 group-hover:translate-y-0.5"
-            aria-hidden
+            className={cn(
+              "size-3.5 text-primary transition-opacity duration-200",
+              selected ? "opacity-100" : "opacity-0",
+            )}
           />
-        ) : null}
+        </div>
       </button>
     </li>
   );

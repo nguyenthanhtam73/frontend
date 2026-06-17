@@ -7,6 +7,7 @@ import { Check, Lock, Moon, Pencil, Sun, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { RoutineDTO } from "@/lib/types/routine";
+import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
 
 import { formatShortDate } from "../routine-helpers";
@@ -56,57 +57,95 @@ export function HistoryDaySheet({
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const [displayEntry, setDisplayEntry] = useState<RoutineDTO | null>(null);
   const dragY = useRef(0);
   const startY = useRef(0);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => setMounted(true), []);
 
+  const finishClose = useCallback(() => {
+    setClosing(false);
+    setEntered(false);
+    setVisible(false);
+    setDisplayEntry(null);
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = "";
+      sheetRef.current.style.transform = "";
+    }
+  }, []);
+
   const requestClose = useCallback(() => {
+    if (closing) return;
     setClosing(true);
-    window.setTimeout(() => {
-      setClosing(false);
-      setVisible(false);
+    setEntered(false);
+    if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(() => {
+      finishClose();
       onClose();
     }, CLOSE_MS);
-  }, [onClose]);
+  }, [closing, finishClose, onClose]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (open && entry) {
+      setDisplayEntry(entry);
       setVisible(true);
       setClosing(false);
+      setEntered(false);
+      return;
     }
-  }, [open, entry]);
+    if (!open && visible && !closing) {
+      requestClose();
+    }
+  }, [open, entry, visible, closing, requestClose]);
+
+  useEffect(() => {
+    if (!visible || closing) {
+      setEntered(false);
+      return;
+    }
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setEntered(true));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [visible, closing, displayEntry?.routine_date]);
+
+  useBodyScrollLock(visible && !closing);
 
   useEffect(() => {
     if (!visible) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") requestClose();
     };
     window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [visible, requestClose]);
 
-  if (!mounted || !visible || !entry) return null;
+  if (!mounted || !visible || !displayEntry) return null;
 
   const dateLabel = humanizeDateLabel(
-    entry.routine_date,
+    displayEntry.routine_date,
     todayISO,
     labels.today,
     labels.yesterday,
   );
-  const isToday = entry.routine_date === todayISO;
-  const total = entry.morning.length + entry.evening.length;
+  const isToday = displayEntry.routine_date === todayISO;
+  const total = displayEntry.morning.length + displayEntry.evening.length;
   const done =
-    entry.morning.filter((s) => s.completed).length +
-    entry.evening.filter((s) => s.completed).length;
+    displayEntry.morning.filter((s) => s.completed).length +
+    displayEntry.evening.filter((s) => s.completed).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const sheetTitle = labels.detailTitle(dateLabel);
+
+  const sheetOpen = entered && !closing;
 
   return createPortal(
     <div
@@ -121,7 +160,7 @@ export function HistoryDaySheet({
         aria-label={labels.detailClose}
         className={cn(
           "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity ease-out lg:bg-black/50",
-          closing ? "opacity-0 duration-200" : "opacity-100 duration-300",
+          sheetOpen ? "opacity-100 duration-300" : "opacity-0 duration-200",
         )}
         onClick={requestClose}
       />
@@ -139,8 +178,8 @@ export function HistoryDaySheet({
           const y = e.touches[0]?.clientY ?? 0;
           dragY.current = Math.max(0, y - startY.current);
           if (sheetRef.current && !closing) {
-            sheetRef.current.style.transform = `translateY(${dragY.current}px)`;
             sheetRef.current.style.transition = "none";
+            sheetRef.current.style.transform = `translateY(${dragY.current}px)`;
           }
         }}
         onTouchEnd={() => {
@@ -153,10 +192,11 @@ export function HistoryDaySheet({
           dragY.current = 0;
         }}
         className={cn(
-          "relative flex max-h-[min(88vh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl transition-all ease-out lg:max-w-lg lg:rounded-2xl",
-          closing
-            ? "translate-y-full opacity-0 duration-[260ms] lg:translate-y-3 lg:scale-[0.98] lg:opacity-0"
-            : "translate-y-0 opacity-100 duration-300 in-animate animate-in slide-in-from-bottom-5 fade-in lg:zoom-in-95",
+          "relative flex max-h-[min(88vh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl will-change-transform",
+          "transition-[transform,opacity] duration-300 ease-out lg:max-w-lg lg:rounded-2xl",
+          sheetOpen
+            ? "translate-y-0 opacity-100 lg:translate-y-0 lg:scale-100"
+            : "translate-y-full opacity-0 lg:translate-y-3 lg:scale-[0.98]",
         )}
       >
         <div
@@ -210,22 +250,22 @@ export function HistoryDaySheet({
               <DetailStepList
                 icon={<Sun className="size-4 text-amber-500" aria-hidden />}
                 title={labels.detailAm}
-                steps={entry.morning}
+                steps={displayEntry.morning}
               />
               <DetailStepList
                 icon={<Moon className="size-4 text-indigo-500" aria-hidden />}
                 title={labels.detailPm}
-                steps={entry.evening}
+                steps={displayEntry.evening}
               />
             </div>
           )}
 
-          {entry.notes?.trim() ? (
-            <div className="mt-4 rounded-xl border bg-muted/25 px-3.5 py-3 sm:mt-5">
+          {displayEntry.notes?.trim() ? (
+            <div className="rounded-xl border bg-muted/25 px-3.5 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {labels.detailNotes}
               </p>
-              <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap">{entry.notes}</p>
+              <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap">{displayEntry.notes}</p>
             </div>
           ) : null}
         </div>
@@ -237,7 +277,7 @@ export function HistoryDaySheet({
               variant="default"
               className="min-h-11 w-full gap-2 text-sm font-semibold shadow-sm"
               onClick={() => {
-                onEdit(entry);
+                onEdit(displayEntry);
                 requestClose();
               }}
             >
