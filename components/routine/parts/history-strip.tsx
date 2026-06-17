@@ -205,13 +205,13 @@ function HistoryDayPill({
         className={cn(
           "group flex min-h-[5.75rem] min-w-[6rem] flex-col rounded-xl border px-3 py-2.5 text-left text-xs transition-all duration-200 ease-out active:scale-[0.97] sm:min-w-[6.75rem]",
           isToday &&
-            "border-primary/70 bg-primary/12 shadow-sm ring-2 ring-primary/30 hover:border-primary hover:bg-primary/16 hover:shadow-md hover:ring-primary/40",
+            "border-primary/60 bg-primary/10 shadow-sm ring-2 ring-primary/35 hover:border-primary hover:bg-primary/14 hover:shadow-md hover:ring-primary/45",
           isYesterday &&
             !isToday &&
-            "border-indigo-400/45 bg-indigo-500/10 ring-1 ring-indigo-400/30 hover:border-indigo-400/60 hover:bg-indigo-500/14 hover:shadow-sm hover:ring-indigo-400/40",
+            "border-indigo-500/50 bg-indigo-500/12 ring-1 ring-indigo-500/35 hover:border-indigo-500/65 hover:bg-indigo-500/16 hover:shadow-sm hover:ring-indigo-500/45",
           !isToday &&
             !isYesterday &&
-            "border-border/80 bg-card/70 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card hover:shadow-sm",
+            "border-border/80 bg-card/70 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card hover:shadow-md",
           selected &&
             "z-[1] -translate-y-0.5 shadow-md ring-2 ring-primary/45 ring-offset-2 ring-offset-background",
         )}

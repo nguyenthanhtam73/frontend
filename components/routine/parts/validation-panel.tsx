@@ -70,7 +70,7 @@ export function ValidationPanel({
         "space-y-2 transition-all ease-out",
         exiting
           ? "pointer-events-none opacity-0 duration-[220ms]"
-          : "opacity-100 duration-300 in-animate animate-in fade-in slide-in-from-top-0.5",
+          : "opacity-100 duration-350 in-animate animate-in fade-in slide-in-from-top-1",
       )}
       role="status"
       aria-live="polite"
@@ -193,26 +193,26 @@ function IssueActions({
 }) {
   if (issue.code === "no_steps") {
     return (
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:shrink-0">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11 gap-2 border-amber-500/30 bg-background/95 text-sm sm:min-h-10"
+          className="min-h-11 gap-2 border-amber-500/35 bg-background/95 px-3 text-sm sm:min-h-10"
           onClick={onAddMorning}
         >
           <Sun className="size-4 shrink-0 text-amber-500" aria-hidden />
-          <span>{labels.addMorning}</span>
+          <span className="truncate">{labels.addMorning}</span>
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11 gap-2 border-indigo-500/30 bg-background/95 text-sm sm:min-h-10"
+          className="min-h-11 gap-2 border-indigo-500/35 bg-background/95 px-3 text-sm sm:min-h-10"
           onClick={onAddEvening}
         >
           <Moon className="size-4 shrink-0 text-indigo-500" aria-hidden />
-          <span>{labels.addEvening}</span>
+          <span className="truncate">{labels.addEvening}</span>
         </Button>
       </div>
     );
@@ -224,7 +224,7 @@ function IssueActions({
         type="button"
         size="sm"
         variant="secondary"
-        className="min-h-11 w-full shrink-0 gap-2 bg-sky-500/12 text-sm hover:bg-sky-500/20 sm:min-h-10 sm:w-auto"
+        className="min-h-11 w-full shrink-0 gap-2 bg-sky-500/12 px-3 text-sm hover:bg-sky-500/20 sm:min-h-10 sm:w-auto"
         onClick={onAddSpf}
       >
         <SunMedium className="size-4 shrink-0 text-sky-600 dark:text-sky-300" aria-hidden />

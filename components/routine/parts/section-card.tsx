@@ -179,8 +179,8 @@ export function SectionCard({
         </header>
 
         {sectionAlert ? (
-          <div className="flex flex-col gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.05] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <p className="text-xs leading-snug text-amber-900/90 dark:text-amber-100/90">
+          <div className="flex flex-row items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.05] px-3 py-2.5 sm:gap-3">
+            <p className="min-w-0 flex-1 text-xs leading-snug text-amber-900/90 dark:text-amber-100/90">
               {sectionAlert.message}
             </p>
             {sectionAlert.actionLabel && sectionAlert.onAction ? (
@@ -188,11 +188,11 @@ export function SectionCard({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="min-h-10 w-full shrink-0 gap-1.5 border-amber-500/30 bg-background/90 text-xs sm:w-auto"
+                className="min-h-10 shrink-0 gap-1.5 border-amber-500/35 bg-background/90 px-2.5 text-xs sm:px-3"
                 onClick={sectionAlert.onAction}
               >
                 <Plus className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-                {sectionAlert.actionLabel}
+                <span className="whitespace-nowrap">{sectionAlert.actionLabel}</span>
               </Button>
             ) : null}
           </div>
@@ -516,7 +516,7 @@ function StepRow({
               step.completed ? "text-muted-foreground line-through" : "",
               editLocked ? "cursor-default bg-muted/30" : "",
               highlightEmptyTitle &&
-                "border-amber-500/40 bg-amber-500/[0.04] ring-1 ring-amber-500/20 focus:border-amber-500/50 focus:ring-amber-500/25",
+                "border-amber-500/60 bg-amber-500/[0.04] ring-1 ring-amber-500/15 focus:border-amber-500/65 focus:ring-amber-500/20",
             )}
           />
           {!beginnerSimple && !editLocked ? (

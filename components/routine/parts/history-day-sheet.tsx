@@ -28,7 +28,7 @@ export type HistoryDaySheetLabels = {
   editLocked: string;
 };
 
-const CLOSE_MS = 260;
+const CLOSE_MS = 280;
 
 /**
  * Mobile: bottom sheet with swipe-to-dismiss.
@@ -156,7 +156,7 @@ export function HistoryDaySheet({
           "relative flex max-h-[min(88vh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl transition-all ease-out lg:max-w-lg lg:rounded-2xl",
           closing
             ? "translate-y-full opacity-0 duration-[260ms] lg:translate-y-3 lg:scale-[0.98] lg:opacity-0"
-            : "translate-y-0 opacity-100 duration-300 in-animate animate-in slide-in-from-bottom-6 fade-in lg:zoom-in-95",
+            : "translate-y-0 opacity-100 duration-300 in-animate animate-in slide-in-from-bottom-5 fade-in lg:zoom-in-95",
         )}
       >
         <div
@@ -200,13 +200,13 @@ export function HistoryDaySheet({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
           {total === 0 ? (
-            <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-5 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-6 text-center text-sm leading-relaxed text-muted-foreground">
               {labels.detailEmpty}
             </p>
           ) : (
-            <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <DetailStepList
                 icon={<Sun className="size-4 text-amber-500" aria-hidden />}
                 title={labels.detailAm}
@@ -234,7 +234,8 @@ export function HistoryDaySheet({
           {editAllowed ? (
             <Button
               type="button"
-              className="min-h-11 w-full gap-2 text-sm font-semibold"
+              variant="default"
+              className="min-h-11 w-full gap-2 text-sm font-semibold shadow-sm"
               onClick={() => {
                 onEdit(entry);
                 requestClose();
@@ -244,17 +245,20 @@ export function HistoryDaySheet({
               {isToday ? labels.detailEditToday : labels.detailEdit}
             </Button>
           ) : (
-            <button
-              type="button"
-              onClick={() => onEditLockedAttempt?.()}
-              className="flex w-full min-h-11 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/25 px-4 py-3 text-center transition-colors hover:border-muted-foreground/45 hover:bg-muted/40 active:scale-[0.99]"
-            >
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Lock className="size-4 shrink-0 opacity-70" aria-hidden />
-                {isToday ? labels.detailEditToday : labels.detailEdit}
-              </span>
-              <span className="text-xs leading-snug text-muted-foreground/90">{labels.editLocked}</span>
-            </button>
+            <div className="space-y-1.5">
+              <button
+                type="button"
+                title={labels.editLocked}
+                onClick={() => onEditLockedAttempt?.()}
+                className="flex w-full min-h-11 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-muted-foreground/35 bg-muted/25 px-4 py-2.5 text-center transition-colors hover:border-muted-foreground/50 hover:bg-muted/40 active:scale-[0.99]"
+              >
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Lock className="size-4 shrink-0 opacity-70" aria-hidden />
+                  {isToday ? labels.detailEditToday : labels.detailEdit}
+                </span>
+              </button>
+              <p className="text-center text-xs leading-snug text-muted-foreground">{labels.editLocked}</p>
+            </div>
           )}
         </div>
       </div>
