@@ -25,6 +25,12 @@ import { useCanDragReorder } from "../hooks/use-can-drag-reorder";
 import { AutoGrowTextarea } from "./auto-grow-textarea";
 import type { StepSection } from "../routine-helpers";
 
+export type SectionAlert = {
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+};
+
 export type SectionLabels = {
   add: string;
   remove: string;
@@ -99,7 +105,7 @@ export function SectionCard({
   accent: "am" | "pm";
   editLocked?: boolean;
   highlightEmptyTitles?: boolean;
-  sectionAlert?: string | null;
+  sectionAlert?: SectionAlert | null;
   onEditLockedAttempt?: () => void;
 }) {
   const canDrag = useCanDragReorder();
@@ -173,9 +179,23 @@ export function SectionCard({
         </header>
 
         {sectionAlert ? (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-500/8 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
-            {sectionAlert}
-          </p>
+          <div className="flex flex-col gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.05] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <p className="text-xs leading-snug text-amber-900/90 dark:text-amber-100/90">
+              {sectionAlert.message}
+            </p>
+            {sectionAlert.actionLabel && sectionAlert.onAction ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="min-h-10 w-full shrink-0 gap-1.5 border-amber-500/30 bg-background/90 text-xs sm:w-auto"
+                onClick={sectionAlert.onAction}
+              >
+                <Plus className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+                {sectionAlert.actionLabel}
+              </Button>
+            ) : null}
+          </div>
         ) : null}
 
         {steps.length === 0 ? (
@@ -496,7 +516,7 @@ function StepRow({
               step.completed ? "text-muted-foreground line-through" : "",
               editLocked ? "cursor-default bg-muted/30" : "",
               highlightEmptyTitle &&
-                "border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/30",
+                "border-amber-500/40 bg-amber-500/[0.04] ring-1 ring-amber-500/20 focus:border-amber-500/50 focus:ring-amber-500/25",
             )}
           />
           {!beginnerSimple && !editLocked ? (

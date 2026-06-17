@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 import { localId } from "@/components/routine/routine-helpers";
 
-import { buildStepsFromHints, suggestionToken } from "./routine-hint-parser";
+import { buildStepsFromHints, splitRoutineHints, suggestionToken } from "./routine-hint-parser";
 
 /**
  * Bridge between Daily Check-in feedback and the Routine page.

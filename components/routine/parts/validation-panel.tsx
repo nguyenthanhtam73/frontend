@@ -1,15 +1,19 @@
 "use client";
 
-import { AlertCircle, AlertTriangle, Plus, Sun } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { AlertCircle, AlertTriangle, Moon, Plus, Sun, SunMedium } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import type { ValidationIssue } from "../routine-helpers";
 
+const EXIT_MS = 220;
+
 /**
  * Inline validation above the AM/PM editor.
- * Renders nothing when `issues` is empty (auto-hides when fixed).
+ * Fades out gently when issues are resolved (auto-hide).
  */
 export function ValidationPanel({
   issues,
@@ -32,14 +36,42 @@ export function ValidationPanel({
   onAddEvening: () => void;
   onAddSpf: () => void;
 }) {
-  if (issues.length === 0) return null;
+  const [renderIssues, setRenderIssues] = useState<ValidationIssue[]>([]);
+  const [exiting, setExiting] = useState(false);
+  const prevCountRef = useRef(0);
 
-  const blockers = issues.filter((i) => i.severity === "blocker");
-  const warnings = issues.filter((i) => i.severity === "warning");
+  useEffect(() => {
+    if (issues.length > 0) {
+      setRenderIssues(issues);
+      setExiting(false);
+      prevCountRef.current = issues.length;
+      return;
+    }
+
+    if (prevCountRef.current > 0) {
+      setExiting(true);
+      const timer = window.setTimeout(() => {
+        setRenderIssues([]);
+        setExiting(false);
+        prevCountRef.current = 0;
+      }, EXIT_MS);
+      return () => window.clearTimeout(timer);
+    }
+  }, [issues]);
+
+  if (renderIssues.length === 0) return null;
+
+  const blockers = renderIssues.filter((i) => i.severity === "blocker");
+  const warnings = renderIssues.filter((i) => i.severity === "warning");
 
   return (
     <div
-      className="space-y-2 in-animate animate-in fade-in slide-in-from-top-1 duration-200"
+      className={cn(
+        "space-y-2 transition-all ease-out",
+        exiting
+          ? "pointer-events-none opacity-0 duration-[220ms]"
+          : "opacity-100 duration-300 in-animate animate-in fade-in slide-in-from-top-0.5",
+      )}
       role="status"
       aria-live="polite"
     >
@@ -96,37 +128,37 @@ function IssueGroup({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border",
+        "overflow-hidden rounded-xl border shadow-sm",
         isBlocker
-          ? "border-amber-500/40 bg-amber-500/8"
-          : "border-sky-500/35 bg-sky-500/6",
+          ? "border-amber-500/30 bg-amber-500/[0.06]"
+          : "border-sky-500/25 bg-sky-500/[0.05]",
       )}
     >
       <p
         className={cn(
           "border-b px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider",
           isBlocker
-            ? "border-amber-500/20 text-amber-800 dark:text-amber-200"
-            : "border-sky-500/20 text-sky-800 dark:text-sky-200",
+            ? "border-amber-500/15 text-amber-800/90 dark:text-amber-200/90"
+            : "border-sky-500/15 text-sky-800/90 dark:text-sky-200/90",
         )}
       >
         {groupLabel}
       </p>
-      <div className="divide-y divide-border/50">
+      <div className="divide-y divide-border/40">
         {issues.map((issue) => (
           <div
             key={issue.code}
-            className="flex flex-col gap-3 px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           >
             <p
               className={cn(
                 "inline-flex items-start gap-2 text-sm leading-snug",
                 isBlocker
-                  ? "text-amber-950 dark:text-amber-50"
-                  : "text-sky-950 dark:text-sky-50",
+                  ? "text-amber-950/90 dark:text-amber-50/95"
+                  : "text-sky-950/90 dark:text-sky-50/95",
               )}
             >
-              <Icon className="mt-0.5 size-4 shrink-0 opacity-80" aria-hidden />
+              <Icon className="mt-0.5 size-4 shrink-0 opacity-75" aria-hidden />
               <span>{issue.message}</span>
             </p>
             <IssueActions
@@ -166,21 +198,21 @@ function IssueActions({
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11 border-amber-500/35 bg-background/90 text-sm sm:min-h-10"
+          className="min-h-11 gap-2 border-amber-500/30 bg-background/95 text-sm sm:min-h-10"
           onClick={onAddMorning}
         >
           <Sun className="size-4 shrink-0 text-amber-500" aria-hidden />
-          <span className="truncate">{labels.addMorning}</span>
+          <span>{labels.addMorning}</span>
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11 border-indigo-500/35 bg-background/90 text-sm sm:min-h-10"
+          className="min-h-11 gap-2 border-indigo-500/30 bg-background/95 text-sm sm:min-h-10"
           onClick={onAddEvening}
         >
-          <Plus className="size-4 shrink-0 text-indigo-500" aria-hidden />
-          <span className="truncate">{labels.addEvening}</span>
+          <Moon className="size-4 shrink-0 text-indigo-500" aria-hidden />
+          <span>{labels.addEvening}</span>
         </Button>
       </div>
     );
@@ -192,11 +224,11 @@ function IssueActions({
         type="button"
         size="sm"
         variant="secondary"
-        className="min-h-11 w-full shrink-0 bg-sky-500/15 text-sm hover:bg-sky-500/25 sm:min-h-10 sm:w-auto"
+        className="min-h-11 w-full shrink-0 gap-2 bg-sky-500/12 text-sm hover:bg-sky-500/20 sm:min-h-10 sm:w-auto"
         onClick={onAddSpf}
       >
-        <Plus className="size-4 shrink-0" aria-hidden />
-        {labels.addSpf}
+        <SunMedium className="size-4 shrink-0 text-sky-600 dark:text-sky-300" aria-hidden />
+        <span>{labels.addSpf}</span>
       </Button>
     );
   }

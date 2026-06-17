@@ -306,6 +306,20 @@ export function useRoutine(msg: RoutineMessages) {
   const dismissLoadError = useCallback(() => setLoadError(null), []);
   const dismissSaveMsg = useCallback(() => setSaveMsg(null), []);
 
+  /** Replace AM/PM steps with coach hints from the latest check-in. */
+  const applySuggestedSteps = useCallback(
+    (morning: RoutineStepDTO[], evening: RoutineStepDTO[]) => {
+      setRoutine((cur) => ({
+        ...cur,
+        morning: morning.map((s) => ({ ...s, id: localId(), completed: false })),
+        evening: evening.map((s) => ({ ...s, id: localId(), completed: false })),
+        source: "ai_suggested",
+        saved: false,
+      }));
+    },
+    [],
+  );
+
   /** Load a historical (or today) entry into the editor for editing. */
   const loadFromEntry = useCallback((entry: RoutineDTO) => {
     const next = toLocal(entry);
@@ -346,5 +360,6 @@ export function useRoutine(msg: RoutineMessages) {
     dismissLoadError,
     dismissSaveMsg,
     setSkillModeRef,
+    applySuggestedSteps,
   };
 }

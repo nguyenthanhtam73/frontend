@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { Check, Moon, Pencil, Sun, X } from "lucide-react";
+import { Check, Lock, Moon, Pencil, Sun, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { RoutineDTO } from "@/lib/types/routine";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { formatShortDate } from "../routine-helpers";
 
 export type HistoryDaySheetLabels = {
+  detailTitle: (date: string) => string;
   detailAm: string;
   detailPm: string;
   detailEmpty: string;
@@ -26,6 +27,8 @@ export type HistoryDaySheetLabels = {
   sheetSwipeHint: string;
   editLocked: string;
 };
+
+const CLOSE_MS = 260;
 
 /**
  * Mobile: bottom sheet with swipe-to-dismiss.
@@ -51,6 +54,7 @@ export function HistoryDaySheet({
   onEditLockedAttempt?: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
   const dragY = useRef(0);
   const startY = useRef(0);
@@ -62,12 +66,20 @@ export function HistoryDaySheet({
     setClosing(true);
     window.setTimeout(() => {
       setClosing(false);
+      setVisible(false);
       onClose();
-    }, 220);
+    }, CLOSE_MS);
   }, [onClose]);
 
   useEffect(() => {
-    if (!open) return;
+    if (open && entry) {
+      setVisible(true);
+      setClosing(false);
+    }
+  }, [open, entry]);
+
+  useEffect(() => {
+    if (!visible) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
@@ -78,9 +90,9 @@ export function HistoryDaySheet({
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, requestClose]);
+  }, [visible, requestClose]);
 
-  if (!mounted || !open || !entry) return null;
+  if (!mounted || !visible || !entry) return null;
 
   const dateLabel = humanizeDateLabel(
     entry.routine_date,
@@ -94,6 +106,7 @@ export function HistoryDaySheet({
     entry.morning.filter((s) => s.completed).length +
     entry.evening.filter((s) => s.completed).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const sheetTitle = labels.detailTitle(dateLabel);
 
   return createPortal(
     <div
@@ -107,8 +120,8 @@ export function HistoryDaySheet({
         type="button"
         aria-label={labels.detailClose}
         className={cn(
-          "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 lg:bg-black/50",
-          closing ? "opacity-0" : "opacity-100",
+          "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity ease-out lg:bg-black/50",
+          closing ? "opacity-0 duration-200" : "opacity-100 duration-300",
         )}
         onClick={requestClose}
       />
@@ -117,7 +130,7 @@ export function HistoryDaySheet({
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={dateLabel}
+        aria-labelledby="history-day-sheet-title"
         onTouchStart={(e) => {
           startY.current = e.touches[0]?.clientY ?? 0;
           dragY.current = 0;
@@ -125,40 +138,52 @@ export function HistoryDaySheet({
         onTouchMove={(e) => {
           const y = e.touches[0]?.clientY ?? 0;
           dragY.current = Math.max(0, y - startY.current);
-          if (sheetRef.current) {
+          if (sheetRef.current && !closing) {
             sheetRef.current.style.transform = `translateY(${dragY.current}px)`;
+            sheetRef.current.style.transition = "none";
           }
         }}
         onTouchEnd={() => {
-          if (dragY.current > 80) {
+          if (dragY.current > 72) {
             requestClose();
           } else if (sheetRef.current) {
+            sheetRef.current.style.transition = "";
             sheetRef.current.style.transform = "";
           }
           dragY.current = 0;
         }}
         className={cn(
-          "relative flex max-h-[min(88vh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl transition-transform duration-300 ease-out lg:max-w-lg lg:rounded-2xl",
+          "relative flex max-h-[min(88vh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl transition-all ease-out lg:max-w-lg lg:rounded-2xl",
           closing
-            ? "translate-y-full opacity-0 lg:translate-y-4 lg:scale-95 lg:opacity-0"
-            : "translate-y-0 opacity-100 in-animate animate-in slide-in-from-bottom-4 fade-in duration-300 lg:zoom-in-95",
+            ? "translate-y-full opacity-0 duration-[260ms] lg:translate-y-3 lg:scale-[0.98] lg:opacity-0"
+            : "translate-y-0 opacity-100 duration-300 in-animate animate-in slide-in-from-bottom-6 fade-in lg:zoom-in-95",
         )}
       >
-        <div className="flex shrink-0 flex-col items-center border-b px-4 pb-3 pt-3 lg:hidden">
-          <span className="mb-2 h-1 w-10 rounded-full bg-muted-foreground/30" aria-hidden />
+        <div
+          className="flex shrink-0 cursor-grab flex-col items-center border-b px-4 pb-2.5 pt-2.5 active:cursor-grabbing lg:hidden"
+          aria-hidden
+        >
+          <span className="mb-1.5 h-1.5 w-12 rounded-full bg-muted-foreground/35" />
           <p className="text-[11px] text-muted-foreground">{labels.sheetSwipeHint}</p>
         </div>
 
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3 sm:px-5">
-          <div className="min-w-0 space-y-1">
-            <p className="text-base font-semibold leading-tight">{dateLabel}</p>
-            <p className="text-sm text-muted-foreground">
-              {labels.done(done, total)} · {labels.detailPct(pct)}
-            </p>
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3.5 sm:px-5">
+          <div className="min-w-0 flex-1 space-y-2.5">
+            <div className="space-y-1">
+              <p
+                id="history-day-sheet-title"
+                className="text-base font-semibold leading-snug tracking-tight sm:text-lg"
+              >
+                {sheetTitle}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {labels.done(done, total)} · {labels.detailPct(pct)}
+              </p>
+            </div>
             <div className="h-2 max-w-xs overflow-hidden rounded-full bg-muted">
               <span
                 className={cn(
-                  "block h-full rounded-full transition-[width] duration-500",
+                  "block h-full rounded-full transition-[width] duration-500 ease-out",
                   pct >= 80 ? "bg-emerald-500" : pct >= 40 ? "bg-primary" : "bg-amber-400",
                 )}
                 style={{ width: `${pct}%` }}
@@ -169,17 +194,19 @@ export function HistoryDaySheet({
             type="button"
             onClick={requestClose}
             aria-label={labels.detailClose}
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border bg-muted/40 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl border bg-muted/40 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
           >
             <X className="size-4" aria-hidden />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
           {total === 0 ? (
-            <p className="text-sm text-muted-foreground">{labels.detailEmpty}</p>
+            <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-5 text-center text-sm text-muted-foreground">
+              {labels.detailEmpty}
+            </p>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">
               <DetailStepList
                 icon={<Sun className="size-4 text-amber-500" aria-hidden />}
                 title={labels.detailAm}
@@ -194,35 +221,39 @@ export function HistoryDaySheet({
           )}
 
           {entry.notes?.trim() ? (
-            <div className="mt-4 rounded-xl border bg-muted/30 px-3 py-2.5">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="mt-4 rounded-xl border bg-muted/25 px-3.5 py-3 sm:mt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {labels.detailNotes}
               </p>
-              <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap">{entry.notes}</p>
+              <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap">{entry.notes}</p>
             </div>
           ) : null}
         </div>
 
-        <div className="shrink-0 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+        <div className="shrink-0 border-t px-4 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-5">
           {editAllowed ? (
             <Button
               type="button"
-              className="min-h-11 w-full"
+              className="min-h-11 w-full gap-2 text-sm font-semibold"
               onClick={() => {
                 onEdit(entry);
                 requestClose();
               }}
             >
-              <Pencil className="size-4" aria-hidden />
+              <Pencil className="size-4 shrink-0" aria-hidden />
               {isToday ? labels.detailEditToday : labels.detailEdit}
             </Button>
           ) : (
             <button
               type="button"
               onClick={() => onEditLockedAttempt?.()}
-              className="mx-auto block max-w-sm text-center text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              className="flex w-full min-h-11 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/25 px-4 py-3 text-center transition-colors hover:border-muted-foreground/45 hover:bg-muted/40 active:scale-[0.99]"
             >
-              {labels.editLocked}
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Lock className="size-4 shrink-0 opacity-70" aria-hidden />
+                {isToday ? labels.detailEditToday : labels.detailEdit}
+              </span>
+              <span className="text-xs leading-snug text-muted-foreground/90">{labels.editLocked}</span>
             </button>
           )}
         </div>
@@ -243,19 +274,23 @@ function DetailStepList({
 }) {
   if (steps.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed bg-muted/20 px-3 py-3 text-sm text-muted-foreground">
-        {title}: —
+      <div className="rounded-xl border border-dashed bg-muted/15 px-3.5 py-3.5">
+        <p className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+          {icon}
+          {title}
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground/80">—</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border bg-card/80 px-3 py-3">
-      <p className="mb-2 inline-flex items-center gap-2 text-sm font-semibold">
+    <div className="rounded-xl border bg-card/80 px-3.5 py-3.5 shadow-sm">
+      <p className="mb-2.5 inline-flex items-center gap-2 text-sm font-semibold">
         {icon}
         {title}
       </p>
-      <ul className="space-y-2">
+      <ul className="space-y-2.5">
         {steps.map((s) => (
           <li
             key={s.id}
@@ -266,7 +301,7 @@ function DetailStepList({
           >
             <span
               className={cn(
-                "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border",
+                "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
                 s.completed
                   ? "border-emerald-500 bg-emerald-500 text-white"
                   : "border-border bg-background",

@@ -10,6 +10,7 @@ import {
   type RoutineStepDTO,
 } from "@/lib/types/routine";
 import { PremiumUpsellBanner, UsageQuotaChip } from "@/components/premium/premium-upsell-banner";
+import { ToastBanner } from "@/components/ui/toast-banner";
 import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
@@ -111,12 +112,14 @@ export function RoutineEditor() {
   const [validationEngaged, setValidationEngaged] = useState(false);
   const [saveAttempted, setSaveAttempted] = useState(false);
   const [editQuotaEngaged, setEditQuotaEngaged] = useState(false);
+  const [applyHintsToast, setApplyHintsToast] = useState<string | null>(null);
   const engageValidation = useCallback(() => setValidationEngaged(true), []);
   const engageEditQuota = useCallback(() => setEditQuotaEngaged(true), []);
 
   const validationLabels = useMemo(
     () => ({
       noStepsBlocker: t("validateNoSteps"),
+      noStepsBlockerBeginner: t("validateNoStepsBeginner"),
       noTitleBlocker: t("validateNoTitle"),
       noTitleBlockerBeginner: t("validateNoTitleBeginner"),
       amSpfWarning: t("validateSpfMissing"),
@@ -177,6 +180,14 @@ export function RoutineEditor() {
     return utc.toISOString().slice(0, 10);
   }, []);
 
+  const hasEditorContent = useMemo(
+    () =>
+      r.routine.morning.length > 0 ||
+      r.routine.evening.length > 0 ||
+      !!r.routine.notes.trim(),
+    [r.routine],
+  );
+
   if (r.status === "loading" && !r.routine.routineDate) {
     return <RoutineEditorSkeleton />;
   }
@@ -213,8 +224,31 @@ export function RoutineEditor() {
         />
       ) : null}
 
-      {/* Most recent check-in summary — offers a one-tap link back to /check-in. */}
-      <CheckInContextCard />
+      {/* Latest check-in — links skin journal to today's routine. */}
+      {applyHintsToast ? (
+        <ToastBanner
+          kind="ok"
+          message={applyHintsToast}
+          onDismiss={() => setApplyHintsToast(null)}
+          dismissLabel={t("dismiss")}
+          className="shadow-sm"
+        />
+      ) : null}
+
+      <CheckInContextCard
+        editLocked={editLocked}
+        beginnerSimple={beginnerSimple}
+        hasEditorContent={hasEditorContent}
+        onApplyHints={(morning, evening) => {
+          r.applySuggestedSteps(morning, evening);
+          engageValidation();
+        }}
+        onApplySuccess={() => {
+          setApplyHintsToast(t("checkInContext.applySuccess"));
+          window.setTimeout(() => setApplyHintsToast(null), 3500);
+          editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
 
       {!usage.isPremium && editLocked && editQuotaEngaged ? (
         <PremiumUpsellBanner
@@ -294,7 +328,19 @@ export function RoutineEditor() {
           highlightEmptyTitles={validation.hasEmptyTitles && validationEngaged}
           sectionAlert={
             validation.missingSpf && !beginnerSimple && validationEngaged
-              ? t("validateSpfSection")
+              ? {
+                  message: t("validateSpfSection"),
+                  actionLabel: t("validateAddSpf"),
+                  onAction: () => {
+                    engageValidation();
+                    r.addStep("morning", {
+                      id: localId(),
+                      title: t("categories.spf"),
+                      category: "spf",
+                      completed: false,
+                    });
+                  },
+                }
               : null
           }
           onAdd={() => {
@@ -397,6 +443,7 @@ export function RoutineEditor() {
           detailAm: t("historyAm"),
           detailPm: t("historyPm"),
           detailEmpty: t("historyDetailEmpty"),
+          detailTitle: (date: string) => t("historyDetailTitle", { date }),
           detailClose: t("historyDetailClose"),
           detailPct: (pct: number) => t("historyDetailPct", { pct }),
           detailNotes: t("historyDetailNotes"),

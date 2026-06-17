@@ -104,6 +104,7 @@ export type RoutineValidation = {
 
 export type ValidationLabels = {
   noStepsBlocker: string;
+  noStepsBlockerBeginner: string;
   noTitleBlocker: string;
   noTitleBlockerBeginner: string;
   amSpfWarning: string;
@@ -124,7 +125,7 @@ export function validateRoutine(
   const warnings: string[] = [];
 
   if (morningClean.length === 0 && eveningClean.length === 0) {
-    const msg = labels.noStepsBlocker;
+    const msg = beginnerSimple ? labels.noStepsBlockerBeginner : labels.noStepsBlocker;
     blockers.push(msg);
     issues.push({ code: "no_steps", message: msg, severity: "blocker" });
   }

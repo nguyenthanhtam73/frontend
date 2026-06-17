@@ -203,25 +203,38 @@ function HistoryDayPill({
         aria-label={`${dateLabel}, ${labels.done(done, total)}, ${labels.detailPct(pct)}`}
         onClick={onClick}
         className={cn(
-          "flex min-h-[5.5rem] min-w-[5.75rem] flex-col rounded-xl border px-3 py-2.5 text-left text-xs transition-all duration-200 active:scale-[0.98] sm:min-w-[6.5rem]",
+          "group flex min-h-[5.75rem] min-w-[6rem] flex-col rounded-xl border px-3 py-2.5 text-left text-xs transition-all duration-200 ease-out active:scale-[0.97] sm:min-w-[6.75rem]",
           isToday &&
-            "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/25",
+            "border-primary/70 bg-primary/12 shadow-sm ring-2 ring-primary/30 hover:border-primary hover:bg-primary/16 hover:shadow-md hover:ring-primary/40",
           isYesterday &&
             !isToday &&
-            "border-indigo-400/35 bg-indigo-500/8 ring-1 ring-indigo-400/25",
+            "border-indigo-400/45 bg-indigo-500/10 ring-1 ring-indigo-400/30 hover:border-indigo-400/60 hover:bg-indigo-500/14 hover:shadow-sm hover:ring-indigo-400/40",
           !isToday &&
             !isYesterday &&
-            "border-border/80 bg-card/60 hover:border-primary/30 hover:bg-card",
-          selected && "ring-2 ring-primary/40 shadow-md",
+            "border-border/80 bg-card/70 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card hover:shadow-sm",
+          selected &&
+            "z-[1] -translate-y-0.5 shadow-md ring-2 ring-primary/45 ring-offset-2 ring-offset-background",
         )}
       >
-        <span
-          className={cn(
-            "font-semibold leading-tight",
-            isToday ? "text-primary" : isYesterday ? "text-indigo-700 dark:text-indigo-300" : "",
-          )}
-        >
-          {dateLabel}
+        <span className="flex items-center gap-1.5">
+          {isToday ? (
+            <span
+              className="size-1.5 shrink-0 rounded-full bg-primary"
+              aria-hidden
+            />
+          ) : null}
+          <span
+            className={cn(
+              "font-semibold leading-tight",
+              isToday
+                ? "text-primary"
+                : isYesterday
+                  ? "text-indigo-700 dark:text-indigo-300"
+                  : "text-foreground/90",
+            )}
+          >
+            {dateLabel}
+          </span>
         </span>
         <span className="mt-1 tabular-nums text-muted-foreground">{labels.done(done, total)}</span>
         <span className="mt-0.5 text-[10px] font-medium tabular-nums text-foreground/60">
@@ -237,7 +250,10 @@ function HistoryDayPill({
           />
         </div>
         {selected ? (
-          <ChevronDown className="mt-1.5 size-3.5 self-center text-primary" aria-hidden />
+          <ChevronDown
+            className="mt-1.5 size-3.5 self-center text-primary transition-transform duration-200 group-hover:translate-y-0.5"
+            aria-hidden
+          />
         ) : null}
       </button>
     </li>

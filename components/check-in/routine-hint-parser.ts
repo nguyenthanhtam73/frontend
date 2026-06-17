@@ -124,6 +124,40 @@ export function buildStepsFromHints(lines: string[] | undefined): RoutineStepDTO
   return out;
 }
 
+/** Split coach routine_hints by AM/PM-style prefixes (Vi + En). */
+export function splitRoutineHints(hints: string[] | undefined): {
+  morning: string[];
+  evening: string[];
+  other: string[];
+} {
+  if (!hints?.length) return { morning: [], evening: [], other: [] };
+  const morning: string[] = [];
+  const evening: string[] = [];
+  const other: string[] = [];
+  for (const h of hints) {
+    const s = h.trim();
+    const low = s.toLowerCase();
+    if (
+      low.startsWith("am:") ||
+      low.startsWith("sáng:") ||
+      low.startsWith("sang:") ||
+      low.startsWith("morning:")
+    ) {
+      morning.push(s);
+    } else if (
+      low.startsWith("pm:") ||
+      low.startsWith("tối:") ||
+      low.startsWith("toi:") ||
+      low.startsWith("evening:")
+    ) {
+      evening.push(s);
+    } else {
+      other.push(s);
+    }
+  }
+  return { morning, evening, other };
+}
+
 /**
  * Stable token derived from a hint payload. Used by the bridge component to
  * detect when the coach has produced the same suggestion the user already
