@@ -31,7 +31,7 @@ export function SkillModeBar({
 
   return (
     <Card>
-      <CardContent className="space-y-3 p-3.5 sm:space-y-0 sm:p-5">
+      <CardContent className="p-3.5 sm:p-5">
         <div
           role="radiogroup"
           aria-label={ariaLabel}
@@ -59,7 +59,7 @@ export function SkillModeBar({
             );
           })}
         </div>
-        <p className="text-sm leading-relaxed text-muted-foreground sm:text-xs sm:leading-snug">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-xs sm:leading-snug">
           {hint}
         </p>
       </CardContent>
