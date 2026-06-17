@@ -38,7 +38,7 @@
     },
     "routine": {
       "title": "Morning & evening skincare · DaDiary",
-      "description": "Build your morning & evening skincare — edit, reorder, tick steps daily, and get AI suggestions based on your skin."
+      "description": "Build your morning & evening skincare — edit, reorder, and tick steps daily."
     }
   },
   "auth": {
@@ -789,7 +789,7 @@
   "routine": {
     "sectionEyebrow": "Morning & evening skincare",
     "pageTitle": "Your morning & evening skincare",
-    "pageSub": "Build a rhythm that fits your skin, tick steps as you do them, or let AI draft one for you in seconds.",
+    "pageSub": "Build a rhythm that fits your skin and tick steps as you do them.",
     "loading": "Loading…",
     "savedBadge": "Saved for today",
     "carriedBadge": "Carried over from your last entry — save to apply for today",
@@ -801,9 +801,7 @@
     "modeHint": "Beginner: simple 3-step routine. Mid/Advanced: fuller, profile-aware.",
     "modeBeginnerHint": "Simple mode is on — just step titles and a tick to mark done. The rest is hidden so it stays calm.",
     "emptyHeroTitle": "No skincare set yet",
-    "emptyHeroBody": "Quickest start: let DaDiary draft a morning/evening rhythm from your skin profile. Preview, tweak, then save — you stay in control.",
-    "emptyHeroCta": "Let AI draft one for me",
-    "emptyHeroOr": "or add steps manually below",
+    "emptyHeroBody": "Add a few morning or evening steps below — save and tick them off each day.",
     "morningTitle": "Morning",
     "morningDesc": "Gentle cleanse · hydrate · sunscreen.",
     "eveningTitle": "Evening",
@@ -835,10 +833,11 @@
     "saving": "Saving…",
     "saveSuccess": "Saved for today.",
     "saveError": "Could not save. Try again in a moment.",
+    "loadError": "Could not load your routine. Refresh the page or check your connection.",
     "reset": "Discard changes",
     "needAuth": "Sign in to save.",
     "emptyTitle": "No skincare set yet",
-    "emptyBody": "Add a few morning or evening steps, or tap “Suggest with AI” to start from a draft built around your skin profile.",
+    "emptyBody": "Add a few morning or evening steps to get started.",
     "emptyAddMorning": "Add your first morning step",
     "emptyAddEvening": "Add your first evening step",
     "aiSuggestTitle": "AI skincare suggestion for today",
@@ -886,7 +885,7 @@
     "dismiss": "Dismiss",
     "checkInContext": {
       "title": "From your latest check-in",
-      "subtitle": "Skincare suggestions are tuned to today's skin signals.",
+      "subtitle": "Track your skin via your latest check-in — update it on the check-in page.",
       "loading": "Reading your latest check-in…",
       "cta": "Update check-in",
       "today": "Today",

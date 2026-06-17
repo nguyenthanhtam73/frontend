@@ -15,7 +15,6 @@ import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { cn } from "@/lib/utils";
 
-import { AISuggestCard } from "./parts/ai-suggest-card";
 import { Banner } from "./parts/banner";
 import { CheckInContextCard } from "./parts/check-in-context-card";
 import { EmptyHero } from "./parts/empty-hero";
@@ -25,7 +24,6 @@ import { SaveBar } from "./parts/save-bar";
 import { SectionCard, type SectionLabels } from "./parts/section-card";
 import { SkillModeBar } from "./parts/skill-mode-bar";
 import { StatusBanner } from "./parts/status-banner";
-import { SuggestionPreview } from "./parts/suggestion-preview";
 import { countCompletion, validateRoutine } from "./routine-helpers";
 import { useRoutine } from "./use-routine";
 
@@ -46,7 +44,7 @@ import { useRoutine } from "./use-routine";
  *   - Hides the day-level Notes card
  *   - Skill bar hint switches to a calmer copy
  */
-export function RoutineEditor({ locale }: { locale: string }) {
+export function RoutineEditor() {
   const t = useTranslations("routine");
   const tPremium = useTranslations("premium");
 
@@ -64,28 +62,17 @@ export function RoutineEditor({ locale }: { locale: string }) {
     () => ({
       needAuth: t("needAuth"),
       saveError: t("saveError"),
-      aiSuggestError: t("aiSuggestError"),
-      loadError: t("aiSuggestError"),
+      loadError: t("loadError"),
       saveSuccess: t("saveSuccess"),
       autoSaved: t("autoSaved"),
     }),
     [t],
   );
 
-  const r = useRoutine(locale, messages);
+  const r = useRoutine(messages);
   const { setSkillModeRef } = r;
   const usage = useUsageQuota();
   const editLocked = !usage.isPremium && !usage.canRoutineManualEdit;
-  const suggestDisabled = !usage.isPremium && !usage.canRoutineSuggest;
-
-  const suggestQuotaLabel = usage.isPremium
-    ? t("premiumUnlimited")
-    : usage.routineSuggest
-      ? t("quotaSuggest", {
-          used: usage.routineSuggest.used,
-          limit: usage.routineSuggest.limit,
-        })
-      : undefined;
 
   const editQuotaLabel = usage.isPremium
     ? undefined
@@ -96,20 +83,15 @@ export function RoutineEditor({ locale }: { locale: string }) {
         })
       : undefined;
 
-  const suggestLimit = usage.routineSuggest?.limit ?? 3;
   const editLimit = usage.routineManualEdit?.limit ?? 5;
-
-  function resolveSuggestExceeded() {
-    return t("quotaSuggestExceeded", { limit: suggestLimit });
-  }
 
   function resolveEditExceeded() {
     return t("quotaEditExceeded", { limit: editLimit });
   }
 
-  function resolveErrorMessage(code: string | null | undefined, kind: "suggest" | "edit") {
+  function resolveErrorMessage(code: string | null | undefined) {
     if (code === "quota_exceeded") {
-      return kind === "suggest" ? resolveSuggestExceeded() : resolveEditExceeded();
+      return resolveEditExceeded();
     }
     return code ?? "";
   }
@@ -168,23 +150,13 @@ export function RoutineEditor({ locale }: { locale: string }) {
         ariaLabel={t("modeAriaLabel")}
       />
 
-      {/* Most recent check-in summary — shows the user what skin context
-          (conditions / symptoms / soft score) the AI suggestion is based on
-          and offers a one-tap link back to /check-in. */}
+      {/* Most recent check-in summary — offers a one-tap link back to /check-in. */}
       <CheckInContextCard />
 
-      {!usage.isPremium && (suggestDisabled || editLocked) ? (
+      {!usage.isPremium && editLocked ? (
         <PremiumUpsellBanner
-          title={
-            suggestDisabled
-              ? tPremium("quotaSuggestTitle", { limit: suggestLimit })
-              : tPremium("quotaEditTitle")
-          }
-          body={
-            suggestDisabled
-              ? tPremium("quotaSuggestBody")
-              : tPremium("quotaEditBody", { limit: editLimit })
-          }
+          title={tPremium("quotaEditTitle")}
+          body={tPremium("quotaEditBody", { limit: editLimit })}
           cta={tPremium("cta")}
         />
       ) : null}
@@ -197,14 +169,9 @@ export function RoutineEditor({ locale }: { locale: string }) {
 
       {r.fresh ? (
         <EmptyHero
-          suggesting={r.suggesting}
-          onSuggest={() => void r.requestSuggestion(skillMode ?? null)}
           labels={{
             title: t("emptyHeroTitle"),
             body: t("emptyHeroBody"),
-            cta: t("emptyHeroCta"),
-            loading: t("aiSuggesting"),
-            or: t("emptyHeroOr"),
             am: t("morningTitle"),
             pm: t("eveningTitle"),
             amHint: t("morningDesc"),
@@ -228,60 +195,6 @@ export function RoutineEditor({ locale }: { locale: string }) {
           }}
         />
       )}
-
-      {/* Compact AI suggest card — kept out of the way on first run (the
-          EmptyHero is already the primary CTA). */}
-      {!r.fresh || r.suggestError ? (
-        <AISuggestCard
-          suggesting={r.suggesting}
-          hasSuggestion={!!r.suggestion}
-          focusNote={r.focusNote}
-          onFocusChange={r.setFocusNote}
-          onSuggest={() => void r.requestSuggestion(skillMode ?? null)}
-          disabled={suggestDisabled}
-          quotaLabel={suggestQuotaLabel}
-          error={
-            r.suggestError ? resolveErrorMessage(r.suggestError, "suggest") : null
-          }
-          onDismissError={r.dismissSuggestError}
-          labels={{
-            title: t("aiSuggestTitle"),
-            body: t("aiSuggestBody"),
-            cta: t("aiSuggestCta"),
-            retry: t("aiRetry"),
-            loading: t("aiSuggesting"),
-            focusLabel: t("aiFocusLabel"),
-            focusPlaceholder: t("aiFocusPlaceholder"),
-            closeError: t("dismiss"),
-          }}
-        />
-      ) : null}
-
-      {r.suggestion ? (
-        <SuggestionPreview
-          suggestion={r.suggestion}
-          retrying={r.suggesting}
-          onApply={r.applySuggestion}
-          onRetry={() => void r.requestSuggestion(skillMode ?? null)}
-          onDismiss={r.dismissSuggestion}
-          labels={{
-            title: t("aiPreviewTitle"),
-            hint: t("aiPreviewHint"),
-            apply: t("aiApply"),
-            retry: t("aiRetry"),
-            retrying: t("aiSuggesting"),
-            dismiss: t("aiDismiss"),
-            morning: t("morningTitle"),
-            evening: t("eveningTitle"),
-            encouragement: t("aiEncouragement"),
-            rationale: t("aiRationale"),
-            week: t("aiWeekNotes"),
-            safety: t("aiSafety"),
-            closing: t("aiClosing"),
-          }}
-          categoryLabels={catLabels(t)}
-        />
-      ) : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard
@@ -347,7 +260,7 @@ export function RoutineEditor({ locale }: { locale: string }) {
       {r.saveMsg ? (
         <Banner
           kind={r.saveMsg.kind}
-          message={resolveErrorMessage(r.saveMsg.text, "edit") || r.saveMsg.text}
+          message={resolveErrorMessage(r.saveMsg.text) || r.saveMsg.text}
           onClose={r.dismissSaveMsg}
           closeLabel={t("dismiss")}
         />

@@ -1,4 +1,4 @@
-import { Moon, Sparkles, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { RoutineEditor } from "@/components/routine/routine-editor";
@@ -19,8 +19,8 @@ export async function generateMetadata({ params }: Props) {
  *
  * Layout breakdown:
  *   - Eyebrow + title + subtitle (a calm motivational header).
- *   - Three hero tiles for AM / PM / AI suggest with subtle accent colors so
- *     the page sets visual context before the editor appears.
+ *   - Two hero tiles for AM / PM with subtle accent colors so the page sets
+ *     visual context before the editor appears.
  *   - <RoutineEditor /> — the actual interactive editor (client component).
  *
  * The page itself is server-rendered for fast first paint; only the editor
@@ -46,7 +46,7 @@ export default async function RoutinePage({ params }: Props) {
         </p>
       </header>
 
-      <div className="mb-6 grid grid-cols-1 gap-2 sm:mb-8 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-2 sm:mb-8 sm:grid-cols-2">
         <HeroTile
           icon={<Sun className="size-4 text-amber-500" aria-hidden />}
           ringClass="ring-amber-300/60 dark:ring-amber-300/30"
@@ -59,15 +59,9 @@ export default async function RoutinePage({ params }: Props) {
           title={t("eveningTitle")}
           desc={t("eveningDesc")}
         />
-        <HeroTile
-          icon={<Sparkles className="size-4 text-primary" aria-hidden />}
-          ringClass="ring-primary/30"
-          title={t("aiSuggestTitle")}
-          desc={t("aiSuggestBody")}
-        />
       </div>
 
-      <RoutineEditor locale={locale} />
+      <RoutineEditor />
     </div>
   );
 }

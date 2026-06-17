@@ -38,7 +38,7 @@
     },
     "routine": {
       "title": "Chăm da sáng tối · DaDiary",
-      "description": "Soạn các bước chăm da sáng/tối — chỉnh sửa, kéo thả, tick hoàn thành mỗi ngày, AI gợi ý theo da bạn."
+      "description": "Soạn các bước chăm da sáng/tối — chỉnh sửa, kéo thả, tick hoàn thành mỗi ngày."
     }
   },
   "auth": {
@@ -789,7 +789,7 @@
   "routine": {
     "sectionEyebrow": "Chăm da sáng tối",
     "pageTitle": "Chăm da sáng & tối của bạn",
-    "pageSub": "Soạn nhịp sáng/tối phù hợp da bạn, tick từng bước khi đã làm, hoặc để AI gợi ý nhanh trong vài giây.",
+    "pageSub": "Soạn nhịp sáng/tối phù hợp da bạn và tick từng bước khi đã làm.",
     "loading": "Đang tải…",
     "savedBadge": "Đã lưu cho hôm nay",
     "carriedBadge": "Lấy từ lần gần nhất — lưu để áp dụng cho hôm nay",
@@ -801,9 +801,7 @@
     "modeHint": "Người mới: chăm da gọn 3 bước. Trung bình/Nâng cao: đầy đủ hơn theo hồ sơ.",
     "modeBeginnerHint": "Đang ở chế độ đơn giản — chỉ tên bước và tick hoàn thành. Mọi chi tiết khác được ẩn cho gọn.",
     "emptyHeroTitle": "Bạn chưa có chăm da nào",
-    "emptyHeroBody": "Khởi đầu nhanh: để DaDiary gợi ý sáng/tối dựa trên hồ sơ da bạn — bạn xem trước, chỉnh nếu thích, rồi lưu.",
-    "emptyHeroCta": "Để AI gợi ý cho tôi",
-    "emptyHeroOr": "hoặc tự thêm bước bên dưới",
+    "emptyHeroBody": "Thêm vài bước sáng hoặc tối bên dưới — bạn có thể lưu và tick hoàn thành mỗi ngày.",
     "morningTitle": "Buổi sáng",
     "morningDesc": "Sạch dịu · cấp ẩm · kem chống nắng.",
     "eveningTitle": "Buổi tối",
@@ -835,10 +833,11 @@
     "saving": "Đang lưu…",
     "saveSuccess": "Đã lưu chăm da cho hôm nay.",
     "saveError": "Chưa lưu được. Thử lại sau giây lát nhé.",
+    "loadError": "Chưa tải được chăm da. Thử tải lại trang hoặc kiểm tra kết nối nhé.",
     "reset": "Bỏ thay đổi",
     "needAuth": "Cần đăng nhập để lưu nhé.",
     "emptyTitle": "Chưa có chăm da nào",
-    "emptyBody": "Thêm vài bước cho buổi sáng hoặc bấm “AI gợi ý cho tôi” để DaDiary soạn giúp bạn một bộ khởi đầu.",
+    "emptyBody": "Thêm vài bước cho buổi sáng hoặc buổi tối để bắt đầu.",
     "emptyAddMorning": "Thêm bước sáng đầu tiên",
     "emptyAddEvening": "Thêm bước tối đầu tiên",
     "aiSuggestTitle": "AI gợi ý chăm da cho hôm nay",
@@ -886,7 +885,7 @@
     "dismiss": "Đóng",
     "checkInContext": {
       "title": "Từ nhật ký gần nhất",
-      "subtitle": "Gợi ý chăm da đang dựa vào dấu hiệu da hôm nay của bạn.",
+      "subtitle": "Theo dõi da qua nhật ký gần nhất — cập nhật tại trang ghi nhật ký.",
       "loading": "Đang đọc nhật ký gần nhất…",
       "cta": "Cập nhật nhật ký",
       "today": "Hôm nay",

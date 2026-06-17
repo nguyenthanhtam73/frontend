@@ -11,7 +11,6 @@ import type {
   RoutineDTO,
   RoutineHistoryDTO,
   RoutineStepDTO,
-  SuggestRoutineDTO,
 } from "@/lib/types/routine";
 
 import {
@@ -40,15 +39,10 @@ import {
  *     are still saved on the explicit Save button — typing churn would create
  *     way too many requests, and an unfinished title is a low-value snapshot).
  *   - Debounced 750ms; the latest tick wins.
- *
- * Suggest behaviour:
- *   - Caches the last `focusNote` so "Thử lại" can re-roll without retyping.
- *   - Never auto-applies; the preview waits for user to Apply or Dismiss.
  */
 export type RoutineMessages = {
   needAuth: string;
   saveError: string;
-  aiSuggestError: string;
   loadError: string;
   saveSuccess: string;
   autoSaved: string;
@@ -63,7 +57,7 @@ function mapRoutineApiError(json: { error?: { code?: string; message?: string } 
   return typeof json.error?.message === "string" ? json.error.message : fallback;
 }
 
-export function useRoutine(locale: string, msg: RoutineMessages) {
+export function useRoutine(msg: RoutineMessages) {
   const queryClient = useQueryClient();
   const [routine, setRoutine] = useState<LocalRoutine>(emptyRoutine);
   const [history, setHistory] = useState<RoutineHistoryDTO | null>(null);
@@ -72,12 +66,6 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
-
-  // AI suggest
-  const [suggesting, setSuggesting] = useState(false);
-  const [suggestError, setSuggestError] = useState<string | null>(null);
-  const [suggestion, setSuggestion] = useState<SuggestRoutineDTO | null>(null);
-  const [focusNote, setFocusNote] = useState("");
 
   // We keep the most recent server snapshot in a ref so the autosave loop can
   // POST the latest state without depending on the React state closure (which
@@ -314,73 +302,6 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
     };
   }, []);
 
-  // ---- AI suggest ---------------------------------------------------------
-
-  const requestSuggestion = useCallback(
-    async (skillMode: string | null, overrideFocus?: string) => {
-      if (!getAccessToken()) {
-        setSuggestError(msg.needAuth);
-        return;
-      }
-      setSuggesting(true);
-      setSuggestError(null);
-      setSuggestion(null);
-      try {
-        const note = (overrideFocus ?? focusNote).trim();
-        const body = {
-          skill_mode: skillMode ?? "",
-          locale,
-          focus_note: note,
-        };
-        const res = await fetch(`${apiBaseUrl}/api/v1/routines/suggest`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify(body),
-        });
-        const json = await res.json().catch(() => ({}));
-        if (res.ok && json?.success && json?.data) {
-          const data = json.data as SuggestRoutineDTO;
-          setSuggestion({
-            ...data,
-            morning: data.morning.map((s) => ({ ...s, id: s.id || localId() })),
-            evening: data.evening.map((s) => ({ ...s, id: s.id || localId() })),
-          });
-          void queryClient.invalidateQueries({ queryKey: usageQueryKey });
-        } else {
-          const mapped = mapRoutineApiError(json, msg.aiSuggestError);
-          setSuggestError(mapped);
-        }
-      } catch {
-        setSuggestError(msg.aiSuggestError);
-      } finally {
-        setSuggesting(false);
-      }
-    },
-    [focusNote, locale, msg.aiSuggestError, msg.needAuth, queryClient],
-  );
-
-  const applySuggestion = useCallback(() => {
-    if (!suggestion) return;
-    setRoutine((cur) => ({
-      ...cur,
-      morning: suggestion.morning.map((s) => ({
-        ...s,
-        id: localId(),
-        completed: false,
-      })),
-      evening: suggestion.evening.map((s) => ({
-        ...s,
-        id: localId(),
-        completed: false,
-      })),
-      source: "ai_suggested",
-      skillMode: suggestion.skill_mode ?? cur.skillMode,
-    }));
-    // Don't dismiss — user may want to keep the rationale visible while editing.
-  }, [suggestion]);
-
-  const dismissSuggestion = useCallback(() => setSuggestion(null), []);
-  const dismissSuggestError = useCallback(() => setSuggestError(null), []);
   const dismissLoadError = useCallback(() => setLoadError(null), []);
   const dismissSaveMsg = useCallback(() => setSaveMsg(null), []);
 
@@ -401,14 +322,9 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
     saving,
     autoSaving,
     saveMsg,
-    suggesting,
-    suggestError,
-    suggestion,
-    focusNote,
     fresh,
     // actions
     setRoutine,
-    setFocusNote,
     setNotes,
     addStep,
     removeStep,
@@ -418,10 +334,6 @@ export function useRoutine(locale: string, msg: RoutineMessages) {
     toggleComplete,
     save,
     reload,
-    requestSuggestion,
-    applySuggestion,
-    dismissSuggestion,
-    dismissSuggestError,
     dismissLoadError,
     dismissSaveMsg,
     setSkillModeRef,
