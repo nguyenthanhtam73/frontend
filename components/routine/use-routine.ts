@@ -86,7 +86,7 @@ export function useRoutine(msg: RoutineMessages) {
       const headers = authHeaders();
       const [routineRes, historyRes] = await Promise.all([
         fetch(`${apiBaseUrl}/api/v1/routines`, { headers }),
-        fetch(`${apiBaseUrl}/api/v1/routines/history?range=14`, { headers }),
+        fetch(`${apiBaseUrl}/api/v1/routines/history?range=30`, { headers }),
       ]);
       if (routineRes.status === 401) {
         setLoadError(msg.needAuth);
@@ -253,7 +253,7 @@ export function useRoutine(msg: RoutineMessages) {
         try {
           const headers = authHeaders();
           const historyRes = await fetch(
-            `${apiBaseUrl}/api/v1/routines/history?range=14`,
+            `${apiBaseUrl}/api/v1/routines/history?range=30`,
             { headers },
           );
           if (historyRes.ok) {
