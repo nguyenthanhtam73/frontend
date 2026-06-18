@@ -48,6 +48,20 @@ export type SuggestRoutineDTO = {
   product_suggestions?: ProductSuggestionDTO[];
 };
 
+/** POST /routines/suggest — async job created. */
+export type SuggestJobCreatedDTO = {
+  job_id: string;
+  status: "processing";
+};
+
+/** GET /routines/suggest/status — poll result. */
+export type SuggestJobStatusDTO = {
+  job_id: string;
+  status: "processing" | "completed" | "failed" | "cancelled";
+  error?: string;
+  suggestion?: SuggestRoutineDTO;
+};
+
 /** Matches backend `dto.RoutineHistoryResponse`. */
 export type RoutineHistoryDTO = {
   range_days: number;

@@ -2,6 +2,7 @@
 
 import { CheckCircle2, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { cn } from "@/lib/utils";
 
@@ -11,12 +12,17 @@ export function ToastBanner({
   message,
   onDismiss,
   dismissLabel = "Dismiss",
+  actionLabel,
+  onAction,
   className,
 }: {
   kind: "ok" | "err";
   message: string;
   onDismiss?: () => void;
   dismissLabel?: string;
+  /** Optional inline action (e.g. Retry on error toasts). */
+  actionLabel?: string;
+  onAction?: () => void;
   className?: string;
 }) {
   return (
@@ -36,6 +42,17 @@ export function ToastBanner({
         <X className="mt-0.5 size-4 shrink-0" aria-hidden />
       )}
       <span className="min-w-0 flex-1 leading-snug">{message}</span>
+      {actionLabel && onAction ? (
+        <Button
+          type="button"
+          size="sm"
+          variant={kind === "err" ? "outline" : "secondary"}
+          onClick={onAction}
+          className="shrink-0"
+        >
+          {actionLabel}
+        </Button>
+      ) : null}
       {onDismiss ? (
         <IconDismissButton
           ariaLabel={dismissLabel}

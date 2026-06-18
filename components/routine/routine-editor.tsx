@@ -2,7 +2,7 @@
 
 import { RoutineEditorSkeleton } from "./routine-editor-skeleton";
 import { Moon, Sun } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -16,6 +16,7 @@ import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 
 import { Banner } from "./parts/banner";
+import { AISuggestCard } from "./parts/ai-suggest-card";
 import { CheckInContextCard } from "./parts/check-in-context-card";
 import { EmptyHero } from "./parts/empty-hero";
 import { HistoryStrip } from "./parts/history-strip";
@@ -24,9 +25,12 @@ import { SaveBar, useSaveFlash } from "./parts/save-bar";
 import { SectionCard, type SectionLabels } from "./parts/section-card";
 import { SkillModeBar } from "./parts/skill-mode-bar";
 import { StatusBanner } from "./parts/status-banner";
+import { SuggestionPreview } from "./parts/suggestion-preview";
 import { ValidationPanel, getVisibleValidationIssues } from "./parts/validation-panel";
+import { AiSuggestLoading } from "./ai-suggest-loading";
 import { countCompletion, localId, resolveRoutineSource, validateRoutine } from "./routine-helpers";
 import { useRoutine } from "./use-routine";
+import { useRoutineSuggest, type SuggestError } from "./use-routine-suggest";
 
 /**
  * Routine Management — main client component.
@@ -48,6 +52,7 @@ import { useRoutine } from "./use-routine";
 export function RoutineEditor() {
   const t = useTranslations("routine");
   const tPremium = useTranslations("premium");
+  const locale = useLocale();
 
   const skillMode = useSkillStore((s) => s.mode);
   const setSkillMode = useSkillStore((s) => s.setMode);
@@ -71,9 +76,12 @@ export function RoutineEditor() {
   );
 
   const r = useRoutine(messages);
+  const suggest = useRoutineSuggest(locale, skillMode ?? null);
+  const [suggestToastDismissed, setSuggestToastDismissed] = useState(false);
   const { setSkillModeRef } = r;
   const usage = useUsageQuota();
   const editLocked = !usage.isPremium && !usage.canRoutineManualEdit;
+  const suggestDisabled = !usage.isPremium && !usage.canRoutineSuggest;
 
   const editQuotaLabel = usage.isPremium
     ? undefined
@@ -84,18 +92,107 @@ export function RoutineEditor() {
         })
       : undefined;
 
+  const suggestQuotaLabel = usage.isPremium
+    ? t("premiumUnlimited")
+    : usage.routineSuggest
+      ? t("quotaSuggest", {
+          used: usage.routineSuggest.used,
+          limit: usage.routineSuggest.limit,
+        })
+      : undefined;
+
   const editLimit = usage.routineManualEdit?.limit ?? 5;
+  const suggestLimit = usage.routineSuggest?.limit ?? 3;
 
   function resolveEditExceeded() {
     return t("quotaEditExceeded", { limit: editLimit });
   }
 
-  function resolveErrorMessage(code: string | null | undefined) {
+  function resolveSuggestExceeded() {
+    return t("quotaSuggestExceeded", { limit: suggestLimit });
+  }
+
+  function resolveSaveErrorMessage(code: string | null | undefined) {
     if (code === "quota_exceeded") {
       return resolveEditExceeded();
     }
     return code ?? "";
   }
+
+  function resolveSuggestError(err: SuggestError | null): string | null {
+    if (!err) return null;
+    switch (err.code) {
+      case "need_auth":
+        return t("needAuth");
+      case "network":
+        return t("aiSuggestNetwork");
+      case "timeout":
+        return t("aiSuggestTimeout");
+      case "expired":
+        return t("aiSuggestExpired");
+      case "quota_exceeded":
+        return resolveSuggestExceeded();
+      case "premium_required":
+        return tPremium("quotaSuggestBody");
+      case "ai_failed":
+        return t("aiSuggestFailed");
+      default:
+        return t("aiSuggestError");
+    }
+  }
+
+  function resolveSuggestToastMessage(): string | null {
+    if (!suggest.toast) return null;
+    switch (suggest.toast.variant) {
+      case "completed":
+        return t("aiSuggestToastCompleted");
+      case "cancelled":
+        return t("aiSuggestToastCancelled");
+      case "resumed":
+        return t("aiSuggestToastResumed");
+      case "failed":
+        return resolveSuggestError(suggest.error);
+      default:
+        return null;
+    }
+  }
+
+  function handleSuggestRetry() {
+    if (suggestDisabled) {
+      engageSuggestQuota();
+      return;
+    }
+    suggest.clearToast();
+    setSuggestToastDismissed(false);
+    suggest.dismissError();
+    void suggest.requestSuggestion();
+  }
+
+  const suggestToastMessage = resolveSuggestToastMessage();
+  const showSuggestToast =
+    suggest.toast != null && suggestToastMessage != null && !suggestToastDismissed;
+
+  useEffect(() => {
+    if (!suggest.toast) {
+      setSuggestToastDismissed(false);
+      return;
+    }
+    setSuggestToastDismissed(false);
+
+    const variant = suggest.toast.variant;
+    // Failed toasts stay until user dismisses or taps Retry (no auto-hide).
+    if (variant === "failed") return;
+
+    const ms =
+      variant === "resumed" ? 3000 : variant === "completed" || variant === "cancelled" ? 4000 : null;
+    if (ms == null) return;
+
+    const timer = window.setTimeout(() => {
+      suggest.clearToast();
+      setSuggestToastDismissed(true);
+    }, ms);
+    return () => window.clearTimeout(timer);
+  }, [suggest.toast, suggest.clearToast]);
 
   // Keep the data hook informed of the current skill mode without making it
   // a dependency of the autosave loop (refs > recreating callbacks).
@@ -112,9 +209,11 @@ export function RoutineEditor() {
   const [validationEngaged, setValidationEngaged] = useState(false);
   const [saveAttempted, setSaveAttempted] = useState(false);
   const [editQuotaEngaged, setEditQuotaEngaged] = useState(false);
+  const [suggestQuotaEngaged, setSuggestQuotaEngaged] = useState(false);
   const [applyHintsToast, setApplyHintsToast] = useState<string | null>(null);
   const engageValidation = useCallback(() => setValidationEngaged(true), []);
   const engageEditQuota = useCallback(() => setEditQuotaEngaged(true), []);
+  const engageSuggestQuota = useCallback(() => setSuggestQuotaEngaged(true), []);
 
   const validationLabels = useMemo(
     () => ({
@@ -231,6 +330,29 @@ export function RoutineEditor() {
         />
       ) : null}
 
+      {showSuggestToast ? (
+        <ToastBanner
+          kind={suggest.toast!.kind}
+          message={suggestToastMessage!}
+          onDismiss={() => {
+            suggest.clearToast();
+            setSuggestToastDismissed(true);
+          }}
+          dismissLabel={t("dismiss")}
+          actionLabel={
+            suggest.toast!.variant === "failed" && suggest.canRetry
+              ? t("aiRetry")
+              : undefined
+          }
+          onAction={
+            suggest.toast!.variant === "failed" && suggest.canRetry
+              ? handleSuggestRetry
+              : undefined
+          }
+          className="shadow-sm"
+        />
+      ) : null}
+
       <CheckInContextCard
         editLocked={editLocked}
         beginnerSimple={beginnerSimple}
@@ -246,12 +368,23 @@ export function RoutineEditor() {
         }}
       />
 
-      {!usage.isPremium && editLocked && editQuotaEngaged ? (
+      {!usage.isPremium && (suggestDisabled || editLocked) && (suggestQuotaEngaged || editQuotaEngaged) ? (
         <PremiumUpsellBanner
-          title={tPremium("quotaEditTitle")}
-          body={tPremium("quotaEditBody", { limit: editLimit })}
+          title={
+            suggestDisabled && suggestQuotaEngaged
+              ? tPremium("quotaSuggestTitle", { limit: suggestLimit })
+              : tPremium("quotaEditTitle")
+          }
+          body={
+            suggestDisabled && suggestQuotaEngaged
+              ? tPremium("quotaSuggestBody")
+              : tPremium("quotaEditBody", { limit: editLimit })
+          }
           cta={tPremium("cta")}
-          onDismiss={() => setEditQuotaEngaged(false)}
+          onDismiss={() => {
+            setSuggestQuotaEngaged(false);
+            setEditQuotaEngaged(false);
+          }}
           dismissLabel={t("dismiss")}
         />
       ) : null}
@@ -280,6 +413,110 @@ export function RoutineEditor() {
             pmHint: t("eveningDesc"),
             safety: t("safetyTile"),
           }}
+        />
+      ) : null}
+
+      <AISuggestCard
+        suggesting={suggest.suggesting}
+        busy={suggest.suggestBusy}
+        hasSuggestion={!!suggest.suggestion}
+        focusNote={suggest.focusNote}
+        onFocusChange={suggest.setFocusNote}
+        onSuggest={() => {
+          if (suggest.suggestBusy) return;
+          if (suggest.error && suggest.canRetry) {
+            handleSuggestRetry();
+            return;
+          }
+          if (suggestDisabled) {
+            engageSuggestQuota();
+            return;
+          }
+          void suggest.requestSuggestion();
+        }}
+        disabled={suggestDisabled || suggest.suggestBusy}
+        quotaLabel={suggestQuotaLabel}
+        error={resolveSuggestError(suggest.error)}
+        onDismissError={suggest.dismissError}
+        onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
+        labels={{
+          title: t("aiSuggestTitle"),
+          body: t("aiSuggestBody"),
+          cta: t("aiSuggestCta"),
+          retry: t("aiRetry"),
+          loading: t("aiSuggesting"),
+          focusLabel: t("aiFocusLabel"),
+          focusPlaceholder: t("aiFocusPlaceholder"),
+          closeError: t("dismiss"),
+        }}
+      />
+
+      {suggest.suggesting ? (
+        <AiSuggestLoading
+          variant="loading"
+          title={t("aiSuggestLoadingTitle")}
+          subtitle={t("aiSuggestLoadingSubtitle")}
+          progress={suggest.fakeProgress}
+          progressLabel={t("aiSuggestProgress")}
+          cancelLabel={t("aiSuggestCancel")}
+          cancellingLabel={t("aiSuggestCancelling")}
+          onCancel={() => void suggest.cancelSuggestion()}
+          showCancel
+          cancelling={suggest.cancelling}
+        />
+      ) : null}
+
+      {suggest.showErrorPanel ? (
+        <AiSuggestLoading
+          variant="error"
+          title={t("aiSuggestErrorTitle")}
+          subtitle={t("aiSuggestFailed")}
+          errorMessage={resolveSuggestError(suggest.error) ?? undefined}
+          progress={suggest.fakeProgress}
+          progressLabel={t("aiSuggestProgress")}
+          cancelLabel={t("aiSuggestCancel")}
+          retryLabel={t("aiRetry")}
+          onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
+          showCancel={false}
+        />
+      ) : null}
+
+      {suggest.suggestion ? (
+        <SuggestionPreview
+          suggestion={suggest.suggestion}
+          retrying={suggest.suggesting}
+          onApply={() => {
+            r.applySuggestedSteps(
+              suggest.suggestion!.morning,
+              suggest.suggestion!.evening,
+            );
+            engageValidation();
+            editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          onRetry={() => {
+            if (suggestDisabled) {
+              engageSuggestQuota();
+              return;
+            }
+            handleSuggestRetry();
+          }}
+          onDismiss={suggest.dismiss}
+          labels={{
+            title: t("aiPreviewTitle"),
+            hint: t("aiPreviewHint"),
+            apply: t("aiApply"),
+            retry: t("aiRetry"),
+            retrying: t("aiSuggesting"),
+            dismiss: t("aiDismiss"),
+            morning: t("morningTitle"),
+            evening: t("eveningTitle"),
+            encouragement: t("aiEncouragement"),
+            rationale: t("aiRationale"),
+            week: t("aiWeekNotes"),
+            safety: t("aiSafety"),
+            closing: t("aiClosing"),
+          }}
+          categoryLabels={editorLabels(t).categories}
         />
       ) : null}
 
@@ -469,7 +706,7 @@ export function RoutineEditor() {
       {r.saveMsg ? (
         <Banner
           kind={r.saveMsg.kind}
-          message={resolveErrorMessage(r.saveMsg.text) || r.saveMsg.text}
+          message={resolveSaveErrorMessage(r.saveMsg.text) || r.saveMsg.text}
           onClose={r.dismissSaveMsg}
           closeLabel={t("dismiss")}
         />
