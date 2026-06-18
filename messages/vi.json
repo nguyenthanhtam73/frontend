@@ -827,6 +827,7 @@
     "stepMoveDown": "Xuống",
     "stepCompleteOn": "Bỏ đánh dấu hoàn thành",
     "stepCompleteOff": "Đánh dấu đã làm",
+    "stepCompleteLocked": "Bước đã hoàn thành — không thể chỉnh sửa",
     "stepCategory": "Loại bước",
     "stepNotesLabel": "Ghi chú (không bắt buộc)",
     "stepNotesPlaceholder": "Tần suất, lưu ý, vùng dùng…",

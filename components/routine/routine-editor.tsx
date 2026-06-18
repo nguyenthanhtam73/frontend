@@ -362,6 +362,7 @@ export function RoutineEditor() {
           onToggle={(id) => r.toggleComplete("morning", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
+          isStepConfirmed={r.isStepConfirmed}
           onEditLockedAttempt={engageEditQuota}
         />
         <SectionCard
@@ -396,6 +397,7 @@ export function RoutineEditor() {
           onToggle={(id) => r.toggleComplete("evening", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
+          isStepConfirmed={r.isStepConfirmed}
           onEditLockedAttempt={engageEditQuota}
         />
       </div>
@@ -535,6 +537,7 @@ function editorLabels(t: TFn): SectionLabels {
     moveDown: t("stepMoveDown"),
     completeOn: t("stepCompleteOn"),
     completeOff: t("stepCompleteOff"),
+    completeLocked: t("stepCompleteLocked"),
     category: t("stepCategory"),
     notesLabel: t("stepNotesLabel"),
     notesPlaceholder: t("stepNotesPlaceholder"),

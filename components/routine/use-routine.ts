@@ -17,6 +17,7 @@ import {
   emptyRoutine,
   isFreshlyEmpty,
   localId,
+  lockedCompletedIds,
   stripStep,
   toLocal,
   type LocalRoutine,
@@ -75,9 +76,21 @@ export function useRoutine(msg: RoutineMessages) {
   const latestRef = useRef<LocalRoutine>(routine);
   latestRef.current = routine;
 
-  const skillModeRef = useRef<string | null>(null);
+  // Track step ids that were ticked complete and persisted — they become immutable.
+  const [confirmedCompletedIds, setConfirmedCompletedIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
-  // Track whether the user has saved at least once — gates the autosave loop.
+  const syncConfirmedFromRoutine = useCallback((next: LocalRoutine) => {
+    setConfirmedCompletedIds(lockedCompletedIds(next));
+  }, []);
+
+  const isStepConfirmed = useCallback(
+    (id: string) => confirmedCompletedIds.has(id),
+    [confirmedCompletedIds],
+  );
+
+  const skillModeRef = useRef<string | null>(null);
   const everSavedRef = useRef(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -100,9 +113,11 @@ export function useRoutine(msg: RoutineMessages) {
       if (routineRes.ok && routineJson?.success && routineJson?.data) {
         const next = toLocal(routineJson.data as RoutineDTO);
         setRoutine(next);
+        syncConfirmedFromRoutine(next);
         if (next.saved) everSavedRef.current = true;
       } else {
         setRoutine(emptyRoutine);
+        setConfirmedCompletedIds(new Set());
       }
       if (historyRes.ok) {
         const historyJson = await historyRes.json().catch(() => ({}));
@@ -116,7 +131,7 @@ export function useRoutine(msg: RoutineMessages) {
       setRoutine(emptyRoutine);
       setStatus("error");
     }
-  }, [msg.loadError, msg.needAuth]);
+  }, [msg.loadError, msg.needAuth, syncConfirmedFromRoutine]);
 
   useEffect(() => {
     void reload();
@@ -143,25 +158,28 @@ export function useRoutine(msg: RoutineMessages) {
 
   const removeStep = useCallback(
     (section: StepSection, id: string) => {
+      if (confirmedCompletedIds.has(id)) return;
       patchSteps(section, (cur) => cur.filter((s) => s.id !== id));
     },
-    [patchSteps],
+    [patchSteps, confirmedCompletedIds],
   );
 
   const moveStep = useCallback(
     (section: StepSection, id: string, delta: -1 | 1) => {
+      if (confirmedCompletedIds.has(id)) return;
       patchSteps(section, (cur) => {
         const idx = cur.findIndex((s) => s.id === id);
         if (idx < 0) return cur;
         const target = idx + delta;
         if (target < 0 || target >= cur.length) return cur;
+        if (confirmedCompletedIds.has(cur[target]?.id ?? "")) return cur;
         const copy = [...cur];
         const [removed] = copy.splice(idx, 1);
         copy.splice(target, 0, removed);
         return copy;
       });
     },
-    [patchSteps],
+    [patchSteps, confirmedCompletedIds],
   );
 
   const reorder = useCallback(
@@ -169,23 +187,26 @@ export function useRoutine(msg: RoutineMessages) {
       if (fromIdx === toIdx) return;
       patchSteps(section, (cur) => {
         if (fromIdx < 0 || fromIdx >= cur.length) return cur;
+        if (confirmedCompletedIds.has(cur[fromIdx]?.id ?? "")) return cur;
         const copy = [...cur];
         const [moved] = copy.splice(fromIdx, 1);
         const insertAt = Math.max(0, Math.min(copy.length, toIdx));
+        if (confirmedCompletedIds.has(copy[insertAt]?.id ?? "")) return cur;
         copy.splice(insertAt, 0, moved);
         return copy;
       });
     },
-    [patchSteps],
+    [patchSteps, confirmedCompletedIds],
   );
 
   const updateStep = useCallback(
     (section: StepSection, id: string, patch: Partial<RoutineStepDTO>) => {
+      if (confirmedCompletedIds.has(id)) return;
       patchSteps(section, (cur) =>
         cur.map((s) => (s.id === id ? { ...s, ...patch } : s)),
       );
     },
-    [patchSteps],
+    [patchSteps, confirmedCompletedIds],
   );
 
   const setNotes = useCallback((notes: string) => {
@@ -226,6 +247,7 @@ export function useRoutine(msg: RoutineMessages) {
         if (res.ok && json?.success && json?.data) {
           const next = toLocal(json.data as RoutineDTO);
           setRoutine(next);
+          syncConfirmedFromRoutine(next);
           everSavedRef.current = true;
           void queryClient.invalidateQueries({ queryKey: usageQueryKey });
           return next;
@@ -240,7 +262,7 @@ export function useRoutine(msg: RoutineMessages) {
         return null;
       }
     },
-    [msg.needAuth, msg.saveError, queryClient],
+    [msg.needAuth, msg.saveError, queryClient, syncConfirmedFromRoutine],
   );
 
   const save = useCallback(
@@ -279,6 +301,7 @@ export function useRoutine(msg: RoutineMessages) {
    */
   const toggleComplete = useCallback(
     (section: StepSection, id: string) => {
+      if (confirmedCompletedIds.has(id)) return;
       patchSteps(section, (cur) =>
         cur.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s)),
       );
@@ -295,7 +318,7 @@ export function useRoutine(msg: RoutineMessages) {
         });
       }, 750);
     },
-    [patchSteps, persist, msg.autoSaved],
+    [patchSteps, persist, msg.autoSaved, confirmedCompletedIds],
   );
 
   // Cancel any pending autosave on unmount so we don't leak a timer.
@@ -318,16 +341,21 @@ export function useRoutine(msg: RoutineMessages) {
         source: "ai_suggested",
         saved: false,
       }));
+      setConfirmedCompletedIds(new Set());
     },
     [],
   );
 
   /** Load a historical (or today) entry into the editor for editing. */
-  const loadFromEntry = useCallback((entry: RoutineDTO) => {
-    const next = toLocal(entry);
-    setRoutine({ ...next, saved: true });
-    everSavedRef.current = true;
-  }, []);
+  const loadFromEntry = useCallback(
+    (entry: RoutineDTO) => {
+      const next = toLocal(entry);
+      setRoutine({ ...next, saved: true });
+      syncConfirmedFromRoutine(next);
+      everSavedRef.current = true;
+    },
+    [syncConfirmedFromRoutine],
+  );
 
   /** Allow the editor to inform the hook of the current skill mode without
    *  forcing it as a dependency on every callback (would invalidate refs). */
@@ -357,6 +385,7 @@ export function useRoutine(msg: RoutineMessages) {
     reorder,
     updateStep,
     toggleComplete,
+    isStepConfirmed,
     save,
     reload,
     loadFromEntry,

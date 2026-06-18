@@ -827,6 +827,7 @@
     "stepMoveDown": "Down",
     "stepCompleteOn": "Mark as not done",
     "stepCompleteOff": "Mark as done",
+    "stepCompleteLocked": "Step completed — cannot be edited",
     "stepCategory": "Step type",
     "stepNotesLabel": "Notes (optional)",
     "stepNotesPlaceholder": "Frequency, reminders, where to apply…",

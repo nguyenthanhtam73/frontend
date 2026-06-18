@@ -57,6 +57,15 @@ export function toLocal(routine: RoutineDTO | null): LocalRoutine {
   };
 }
 
+/** Step ids that were ticked complete and persisted — immutable in the editor. */
+export function lockedCompletedIds(routine: LocalRoutine): Set<string> {
+  const ids = new Set<string>();
+  for (const s of [...routine.morning, ...routine.evening]) {
+    if (s.completed) ids.add(s.id);
+  }
+  return ids;
+}
+
 /** Strip transient fields and trim strings before sending to the API. */
 export function stripStep(s: RoutineStepDTO): RoutineStepDTO {
   return {

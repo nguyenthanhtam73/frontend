@@ -38,6 +38,7 @@ export type SectionLabels = {
   moveDown: string;
   completeOn: string;
   completeOff: string;
+  completeLocked: string;
   category: string;
   notesLabel: string;
   notesPlaceholder: string;
@@ -85,6 +86,7 @@ export function SectionCard({
   labels,
   accent,
   editLocked = false,
+  isStepConfirmed,
   highlightEmptyTitles = false,
   sectionAlert,
   onEditLockedAttempt,
@@ -104,6 +106,8 @@ export function SectionCard({
   labels: SectionLabels;
   accent: "am" | "pm";
   editLocked?: boolean;
+  /** Steps ticked complete and saved — cannot edit, delete, or untick. */
+  isStepConfirmed?: (id: string) => boolean;
   highlightEmptyTitles?: boolean;
   sectionAlert?: SectionAlert | null;
   onEditLockedAttempt?: () => void;
@@ -212,12 +216,14 @@ export function SectionCard({
           <ol className="space-y-2.5 sm:space-y-2">
             {steps.map((step, idx) => {
               const exiting = exitingIds.has(step.id);
+              const stepConfirmed = isStepConfirmed?.(step.id) ?? false;
+              const stepDragEnabled = dragEnabled && !exiting && !stepConfirmed;
               return (
                 <li
                   key={step.id}
-                  draggable={dragEnabled && !exiting}
+                  draggable={stepDragEnabled}
                   onDragStart={
-                    dragEnabled && !exiting
+                    stepDragEnabled
                       ? () => {
                           dragIdx.current = idx;
                         }
@@ -254,12 +260,14 @@ export function SectionCard({
                       ? "pointer-events-none max-h-0 scale-[0.98] overflow-hidden border-transparent opacity-0 duration-200"
                       : "opacity-100 duration-300 in-animate animate-in fade-in slide-in-from-bottom-2",
                     !exiting &&
-                      (dragEnabled
+                      (stepDragEnabled
                         ? "lg:cursor-grab lg:active:cursor-grabbing"
                         : undefined),
                     !exiting &&
                       (step.completed
-                        ? "border-emerald-500/30 bg-emerald-500/5"
+                        ? stepConfirmed
+                          ? "border-emerald-500/40 bg-emerald-500/8"
+                          : "border-emerald-500/30 bg-emerald-500/5"
                         : "border-border/80 bg-card/60 hover:border-primary/30 hover:bg-card"),
                   )}
                 >
@@ -269,8 +277,9 @@ export function SectionCard({
                     step={step}
                     beginnerSimple={beginnerSimple}
                     editLocked={editLocked}
+                    stepConfirmed={stepConfirmed}
                     onEditLockedAttempt={onEditLockedAttempt}
-                    showDragHandle={dragEnabled}
+                    showDragHandle={stepDragEnabled}
                     onRemove={() => handleRemove(step.id)}
                     onMoveUp={() => onMove(step.id, -1)}
                     onMoveDown={() => onMove(step.id, 1)}
@@ -438,6 +447,7 @@ function StepRow({
   step,
   beginnerSimple,
   editLocked,
+  stepConfirmed = false,
   showDragHandle,
   onEditLockedAttempt,
   onRemove,
@@ -453,6 +463,7 @@ function StepRow({
   step: RoutineStepDTO;
   beginnerSimple: boolean;
   editLocked: boolean;
+  stepConfirmed?: boolean;
   showDragHandle: boolean;
   onEditLockedAttempt?: () => void;
   onRemove: () => void;
@@ -465,8 +476,9 @@ function StepRow({
 }) {
   const [showNotes, setShowNotes] = useState(!!step.notes);
   const cat = useMemo(() => normalizeCategory(step.category), [step.category]);
-  const showReorder = !beginnerSimple && !editLocked;
-  const showRemove = !editLocked;
+  const locked = editLocked || stepConfirmed;
+  const showReorder = !beginnerSimple && !locked;
+  const showRemove = !locked;
 
   return (
     <div className="space-y-2.5 p-3 sm:space-y-2 sm:p-3.5">
@@ -482,14 +494,25 @@ function StepRow({
 
         <button
           type="button"
-          onClick={onToggle}
-          aria-label={step.completed ? labels.completeOn : labels.completeOff}
+          onClick={stepConfirmed ? undefined : onToggle}
+          disabled={stepConfirmed}
+          aria-label={
+            stepConfirmed
+              ? labels.completeLocked
+              : step.completed
+                ? labels.completeOn
+                : labels.completeOff
+          }
           aria-pressed={step.completed}
           className={cn(
-            "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-[0.95] sm:size-10",
-            step.completed
-              ? "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
-              : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
+            "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 sm:size-10",
+            stepConfirmed
+              ? "cursor-default border-emerald-500/60 bg-emerald-500/90 text-white opacity-95"
+              : "active:scale-[0.95]",
+            !stepConfirmed &&
+              (step.completed
+                ? "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
+                : "border-border bg-background hover:border-primary/40 hover:bg-primary/5"),
           )}
         >
           {step.completed ? (
@@ -509,17 +532,17 @@ function StepRow({
             value={step.title}
             onChange={(value) => onChange({ title: value })}
             placeholder={labels.placeholder}
-            readOnly={editLocked}
+            readOnly={locked}
             onLockedAttempt={onEditLockedAttempt}
             className={cn(
               "block w-full rounded-xl border bg-background px-3 py-2.5 text-base leading-snug outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:rounded-lg sm:py-2 sm:text-sm",
               step.completed ? "text-muted-foreground line-through" : "",
-              editLocked ? "cursor-default bg-muted/30" : "",
+              locked ? "cursor-default bg-muted/30" : "",
               highlightEmptyTitle &&
                 "border-amber-500/60 bg-amber-500/[0.04] ring-1 ring-amber-500/15 focus:border-amber-500/65 focus:ring-amber-500/20",
             )}
           />
-          {!beginnerSimple && !editLocked ? (
+          {!beginnerSimple && !locked ? (
             <>
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1.5">
                 <select
