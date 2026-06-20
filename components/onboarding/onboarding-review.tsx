@@ -1,12 +1,19 @@
 "use client";
 
-import { CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, X } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
+import { CoachWelcomeCta } from "@/components/onboarding/coach-welcome-cta";
+import { CoachWelcomeSection } from "@/components/onboarding/coach-welcome-section";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
+import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
+import {
+  StarterRoutineSafetySection,
+  StarterRoutineSupportExtras,
+} from "@/components/onboarding/starter-routine-extras";
 import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -106,6 +113,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
           {tReview("title")}
         </h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">{tCoach("introLine")}</p>
 
         {showPhotoSection ? (
           <div className="space-y-3">
@@ -237,14 +245,22 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
       ) : null}
 
       {data.isGuest ? (
-        <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
-          <CardContent className="pt-6 text-sm leading-relaxed text-muted-foreground">
-            {tCoach("guestPreviewHint")}
-          </CardContent>
-        </Card>
+        <CoachWelcomeSection delayMs={80}>
+          <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
+            <CardContent className="pt-6 text-sm leading-relaxed text-muted-foreground">
+              {tCoach("guestPreviewHint")}
+            </CardContent>
+          </Card>
+        </CoachWelcomeSection>
       ) : null}
 
-      <OnboardingDeleteSection isGuest={data.isGuest} onDeleted={onDeleted} />
+      <CoachWelcomeSection delayMs={120}>
+        <CoachWelcomeCta isGuest={data.isGuest} />
+      </CoachWelcomeSection>
+
+      <CoachWelcomeSection delayMs={160} className="border-t border-border/50 pt-6">
+        <OnboardingDeleteSection isGuest={data.isGuest} onDeleted={onDeleted} />
+      </CoachWelcomeSection>
 
       {lightboxUrl ? (
         <ReviewPhotoLightbox
@@ -275,13 +291,31 @@ function LoggedInReviewRoutineSection({
     });
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <ReviewRoutineHeader />
       <StarterRoutineGenerationNotice
         isGeneratingRoutine={isGeneratingRoutine}
         showFallbackBanner={showFallbackBanner}
         isGuest={false}
       />
+      <div
+        className={cn(
+          "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 sm:p-5",
+          routineJustUpdated &&
+            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
+        )}
+      >
+        <StarterRoutineCards
+          starter={starter}
+          morningLabel={tCoach("morning")}
+          eveningLabel={tCoach("evening")}
+          noStepsLabel={tCoach("noSteps")}
+          featured
+          sectionTitle={tCoach("routineSectionTitle")}
+          sectionSubtitle={tCoach("routineSectionSub")}
+        />
+      </div>
+      <StarterRoutineSupportExtras starter={starter} />
       <ProductSuggestionsCard
         suggestions={starter.product_suggestions}
         source="starter_routine"
@@ -290,22 +324,12 @@ function LoggedInReviewRoutineSection({
             ? data.profileId
             : undefined
         }
+        maxVisible={3}
       />
-      <div
-        className={cn(
-          "rounded-xl transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
-          routineJustUpdated &&
-            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-sm motion-safe:duration-700",
-        )}
-      >
-        <StarterRoutineCards
-          starter={starter}
-          morningLabel={tCoach("morning")}
-          eveningLabel={tCoach("evening")}
-          noStepsLabel={tCoach("noSteps")}
-        />
-      </div>
-      <StarterRoutineExtraCards starter={starter} />
+      <StarterRoutineSafetySection starter={starter} />
+      {data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID ? (
+        <StarterRoutineFeedback profileId={data.profileId} />
+      ) : null}
     </section>
   );
 }
@@ -330,22 +354,18 @@ function GuestReviewRoutineSection({
     });
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-5">
       <ReviewRoutineHeader />
       <StarterRoutineGenerationNotice
         isGeneratingRoutine={isGeneratingRoutine}
         showFallbackBanner={showFallbackBanner}
         isGuest
       />
-      <ProductSuggestionsCard
-        suggestions={liveStarter.product_suggestions}
-        source="starter_routine"
-      />
       <div
         className={cn(
-          "rounded-xl transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
+          "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 sm:p-5",
           routineJustUpdated &&
-            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-sm motion-safe:duration-700",
+            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
         )}
       >
         <StarterRoutineCards
@@ -353,58 +373,19 @@ function GuestReviewRoutineSection({
           morningLabel={tCoach("morning")}
           eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
+          featured
+          sectionTitle={tCoach("routineSectionTitle")}
+          sectionSubtitle={tCoach("routineSectionSub")}
         />
       </div>
-      <StarterRoutineExtraCards starter={liveStarter} />
+      <StarterRoutineSupportExtras starter={liveStarter} />
+      <ProductSuggestionsCard
+        suggestions={liveStarter.product_suggestions}
+        source="starter_routine"
+        maxVisible={3}
+      />
+      <StarterRoutineSafetySection starter={liveStarter} />
     </section>
-  );
-}
-
-function StarterRoutineExtraCards({ starter }: { starter: NonNullable<OnboardingReviewData["starter"]> }) {
-  const tCoach = useTranslations("coachWelcome");
-
-  return (
-    <>
-      {starter.rationale ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {tCoach("why")}
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.rationale}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {starter.week_notes ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {tCoach("weekNotes")}
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.week_notes}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {starter.safety_notes ? (
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardContent className="space-y-2 pt-6">
-            <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-200">
-              <ShieldCheck className="size-4" aria-hidden />
-              {tCoach("safety")}
-            </div>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.safety_notes}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {starter.closing_reminder ? (
-        <p className="text-center text-sm font-medium text-muted-foreground">
-          {starter.closing_reminder}
-        </p>
-      ) : null}
-    </>
   );
 }
 

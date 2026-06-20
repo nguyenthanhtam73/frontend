@@ -47,6 +47,8 @@ export type CoachWelcomePayload = {
   reviewSummary?: OnboardingReviewSummary;
   /** UI locale when onboarding finished (guest preview API). */
   locale?: string;
+  /** True when user explicitly chose the offline default on summary step. */
+  usedDefaultRoutine?: boolean;
   /** Guest background AI job id for polling preview-routine. */
   previewJobId?: string;
   /** True for local guest trial (never call /profile/skin). */

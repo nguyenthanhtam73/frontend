@@ -7,6 +7,7 @@ import {
   ONBOARDING_MAX_PHOTOS,
 } from "@/lib/onboarding/constants";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
+import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 
 /** Primary skin type (self-reported or confirmed from AI). */
 export type SkinTypeCard = "dry" | "oily" | "combo" | "normal" | "sensitive" | "prefer_not";
@@ -16,6 +17,12 @@ export type BudgetTier = "entry" | "mid" | "flexible";
 /** Primary skin goal. */
 export type SkinGoal = "glow" | "clear_acne" | "barrier" | "anti_aging" | "unsure";
 export type SkillMode = "beginner" | "intermediate" | "advanced";
+
+/**
+ * How step-1 skin info was entered — persists while user moves between steps
+ * so returning to step 1 keeps manual vs AI context clear.
+ */
+export type SkinInputMode = "none" | "ai" | "manual_skip" | "manual_fallback";
 
 /** Three-step onboarding: analyze (photos + skin) → quickInfo → summary. */
 export const ONBOARDING_STEPS = ["analyze", "quickInfo", "summary"] as const;
@@ -49,7 +56,9 @@ export type OnboardingState = {
   photos: PhotoItem[];
   /** Analyzing facial photos with vision API */
   analyzeStatus: "idle" | "loading" | "error";
-  analyzeError: string | null;
+  analyzeErrorKind: OnboardingAiErrorKind | null;
+  /** Tracks manual vs AI path on step 1 (see SkinInputMode). */
+  skinInputMode: SkinInputMode;
   completedAt: string | null;
 };
 
@@ -68,7 +77,8 @@ type Store = OnboardingState & {
   addPhoto: (item: PhotoItem) => void;
   removePhotoAt: (index: number) => void;
   clearPhotos: () => void;
-  setAnalyzeStatus: (s: OnboardingState["analyzeStatus"], err?: string | null) => void;
+  setAnalyzeStatus: (s: OnboardingState["analyzeStatus"], err?: OnboardingAiErrorKind | null) => void;
+  setSkinInputMode: (mode: SkinInputMode) => void;
   reset: () => void;
   markComplete: () => void;
   /** Apply AI result to form fields + concern tags */
@@ -87,9 +97,48 @@ const initial: OnboardingState = {
   aiSnapshot: null,
   photos: [],
   analyzeStatus: "idle",
-  analyzeError: null,
+  analyzeErrorKind: null,
+  skinInputMode: "none",
   completedAt: null,
 };
+
+const ONBOARDING_SKIN_INPUT_KEY = "dadiary_onboarding_skin_input";
+
+function persistSkinInputMode(mode: SkinInputMode) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(ONBOARDING_SKIN_INPUT_KEY, mode);
+  } catch {
+    /* private mode */
+  }
+}
+
+/** Restore skin input mode after remount (e.g. back from review → redo flow). */
+export function readPersistedSkinInputMode(): SkinInputMode | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = sessionStorage.getItem(ONBOARDING_SKIN_INPUT_KEY);
+    if (v === "none" || v === "ai" || v === "manual_skip" || v === "manual_fallback") {
+      return v;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export function isManualSkinInput(
+  mode: SkinInputMode,
+  skipFace: boolean,
+  hasAiSnapshot: boolean,
+): boolean {
+  if (hasAiSnapshot) return false;
+  return skipFace || mode === "manual_skip" || mode === "manual_fallback";
+}
+
+export function isAiFallbackManual(mode: SkinInputMode): boolean {
+  return mode === "manual_fallback";
+}
 
 const skinSet = new Set<SkinTypeCard>([
   "dry",
@@ -202,7 +251,8 @@ export const useOnboardingStore = create<Store>((set) => ({
         aiSnapshot: null,
         aiConcernTags: [],
         analyzeStatus: "idle",
-        analyzeError: null,
+        analyzeErrorKind: null,
+        skinInputMode: "none",
       };
     }),
   removePhotoAt: (index) =>
@@ -210,26 +260,45 @@ export const useOnboardingStore = create<Store>((set) => ({
       const next = [...s.photos];
       const [rm] = next.splice(index, 1);
       if (rm?.preview) revokePhotoPreview(rm.preview);
+      const nextMode =
+        next.length === 0
+          ? "none"
+          : s.skinInputMode === "manual_fallback"
+            ? "manual_fallback"
+            : "none";
       return {
         photos: next,
         aiSnapshot: null,
         aiConcernTags: [],
         analyzeStatus: "idle",
-        analyzeError: null,
+        analyzeErrorKind: null,
+        skinInputMode: nextMode,
       };
     }),
   clearPhotos: () =>
     set((s) => {
       s.photos.forEach((p) => revokePhotoPreview(p.preview));
-      return { photos: [], aiSnapshot: null, analyzeStatus: "idle", analyzeError: null };
+      persistSkinInputMode("none");
+      return {
+        photos: [],
+        aiSnapshot: null,
+        analyzeStatus: "idle",
+        analyzeErrorKind: null,
+        skinInputMode: "none",
+      };
     }),
   setAnalyzeStatus: (status, err = null) =>
-    set({ analyzeStatus: status, analyzeError: err ?? null }),
+    set({ analyzeStatus: status, analyzeErrorKind: err ?? null }),
+  setSkinInputMode: (skinInputMode) => {
+    persistSkinInputMode(skinInputMode);
+    set({ skinInputMode });
+  },
   reset: () =>
     set((s) => {
       for (const p of s.photos) {
         if (p.preview) revokePhotoPreview(p.preview);
       }
+      persistSkinInputMode("none");
       return initial;
     }),
   markComplete: () => {
@@ -249,6 +318,7 @@ export const useOnboardingStore = create<Store>((set) => ({
       const gl = goalSet.has(data.suggested_goal as SkinGoal)
         ? (data.suggested_goal as SkinGoal)
         : null;
+      persistSkinInputMode("ai");
       return {
         aiSnapshot: data,
         aiConcernTags: [...data.concerns],
@@ -256,7 +326,8 @@ export const useOnboardingStore = create<Store>((set) => ({
         undertone: un ?? s.undertone,
         goal: gl ?? s.goal,
         analyzeStatus: "idle",
-        analyzeError: null,
+        analyzeErrorKind: null,
+        skinInputMode: "ai",
       };
     }),
 }));

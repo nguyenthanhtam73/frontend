@@ -63,3 +63,12 @@ export const ONBOARDING_RESET_KEY = "dadiary_onboarding_reset_at";
 /** Onboarding photo AI: at least 2 angles, up to 3. */
 export const ONBOARDING_MIN_PHOTOS = 2;
 export const ONBOARDING_MAX_PHOTOS = 3;
+
+/** Vision analyze-skin — abort request after this (ms). */
+export const ONBOARDING_ANALYZE_TIMEOUT_MS = 45_000;
+
+/** During analyze loading — show “taking longer than usual” copy (ms). */
+export const ONBOARDING_ANALYZE_SLOW_HINT_MS = 35_000;
+
+/** Finish / preview-complete — wait before offering default routine (ms). */
+export const ONBOARDING_FINISH_TIMEOUT_MS = 45_000;

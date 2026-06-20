@@ -1,9 +1,11 @@
 "use client";
 
-import { ExternalLink, ShoppingBag } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { logAffiliateClick, type AffiliateClickSource } from "@/lib/api/affiliate";
 import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
@@ -16,21 +18,40 @@ type ProductSuggestionsLabels = {
   priorityHigh: string;
   priorityMedium: string;
   viewProduct: string;
+  reasonLabel: string;
+  showMore: string;
+  showLess: string;
 };
+
+function sortByPriority(items: ProductSuggestionDTO[]) {
+  return [...items].sort((a, b) => {
+    const ah = a.priority?.toLowerCase() === "high" ? 0 : 1;
+    const bh = b.priority?.toLowerCase() === "high" ? 0 : 1;
+    return ah - bh;
+  });
+}
 
 export function ProductSuggestionsCard({
   suggestions,
   source,
   contextId,
   labels,
+  maxVisible = 3,
 }: {
   suggestions: ProductSuggestionDTO[] | undefined;
   source: AffiliateClickSource;
   contextId?: string;
   labels?: Partial<ProductSuggestionsLabels>;
+  maxVisible?: number;
 }) {
   const t = useTranslations("productSuggestions");
-  const items = suggestions?.filter((s) => s.product_name?.trim()) ?? [];
+  const [expanded, setExpanded] = useState(false);
+
+  const items = useMemo(
+    () => sortByPriority(suggestions?.filter((s) => s.product_name?.trim()) ?? []),
+    [suggestions],
+  );
+
   if (items.length === 0) return null;
 
   const L: ProductSuggestionsLabels = {
@@ -41,7 +62,14 @@ export function ProductSuggestionsCard({
     priorityHigh: labels?.priorityHigh ?? t("priorityHigh"),
     priorityMedium: labels?.priorityMedium ?? t("priorityMedium"),
     viewProduct: labels?.viewProduct ?? t("viewProduct"),
+    reasonLabel: labels?.reasonLabel ?? t("reasonLabel"),
+    showMore: labels?.showMore ?? t("showMore"),
+    showLess: labels?.showLess ?? t("showLess"),
   };
+
+  const hasMore = items.length > maxVisible;
+  const visible = expanded || !hasMore ? items : items.slice(0, maxVisible);
+  const hiddenCount = items.length - maxVisible;
 
   return (
     <Card className="border-violet-500/20 bg-gradient-to-b from-violet-500/[0.04] to-transparent">
@@ -65,25 +93,23 @@ export function ProductSuggestionsCard({
         </div>
 
         <ul className="space-y-3">
-          {items.map((item, idx) => {
+          {visible.map((item, idx) => {
             const priority =
               item.priority?.toLowerCase() === "high" ? L.priorityHigh : L.priorityMedium;
             const link = item.affiliate_link?.trim();
             return (
               <li
                 key={`${item.brand}-${item.product_name}-${idx}`}
-                className="rounded-xl border bg-background/70 p-3 shadow-sm"
+                className="rounded-xl border bg-background/80 p-3.5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold leading-snug">
-                      {item.product_name}
-                    </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold leading-snug">{item.product_name}</p>
                     <p className="text-xs text-muted-foreground">{item.brand}</p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5">
                     {item.price_range ? (
-                      <Badge variant="secondary" className="tabular-nums">
+                      <Badge variant="secondary" className="tabular-nums text-xs">
                         {item.price_range}
                       </Badge>
                     ) : null}
@@ -96,14 +122,21 @@ export function ProductSuggestionsCard({
                   </div>
                 </div>
                 {item.reason ? (
-                  <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.reason}</p>
+                  <div className="mt-2.5 rounded-lg bg-violet-500/[0.06] px-2.5 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-violet-800/80 dark:text-violet-200/80">
+                      {L.reasonLabel}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-foreground/90">
+                      {item.reason}
+                    </p>
+                  </div>
                 ) : null}
                 {link ? (
                   <a
                     href={link}
                     target="_blank"
                     rel="noopener noreferrer sponsored"
-                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
+                    className="mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-medium text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
                     onClick={() => {
                       void logAffiliateClick(item, source, contextId);
                     }}
@@ -116,6 +149,28 @@ export function ProductSuggestionsCard({
             );
           })}
         </ul>
+
+        {hasMore ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="w-full gap-1.5 text-violet-800 dark:text-violet-200"
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? (
+              <>
+                {L.showLess}
+                <ChevronUp className="size-4" aria-hidden />
+              </>
+            ) : (
+              <>
+                {t("showMore", { count: hiddenCount })}
+                <ChevronDown className="size-4" aria-hidden />
+              </>
+            )}
+          </Button>
+        ) : null}
 
         <p className="text-[11px] leading-relaxed text-muted-foreground">{L.affiliateNote}</p>
       </CardContent>

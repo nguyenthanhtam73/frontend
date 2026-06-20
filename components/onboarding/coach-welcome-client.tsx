@@ -6,20 +6,26 @@ import {
   CheckCircle2,
   Eye,
   RefreshCw,
-  Send,
-  ShieldCheck,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { GuestCoachWelcomeCta } from "@/components/onboarding/guest-coach-welcome-cta";
+import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
+import { CoachWelcomeCta } from "@/components/onboarding/coach-welcome-cta";
+import {
+  CoachWelcomeSection,
+  CoachWelcomeSectionHeading,
+} from "@/components/onboarding/coach-welcome-section";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
+import {
+  StarterRoutineSafetySection,
+  StarterRoutineSupportExtras,
+} from "@/components/onboarding/starter-routine-extras";
+import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
 import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { Link } from "@/i18n/navigation";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
@@ -58,12 +64,21 @@ function CoachWelcomeLoaded({
   const tReview = useTranslations("onboarding.review");
   const formatter = useFormatter();
   const [profileId, setProfileId] = useState(initialProfileId);
-  const { starter, isGeneratingRoutine, showFallbackBanner, routineJustUpdated } =
-    useStarterRoutineLive({
-      initialStarter,
-      initialPending,
-      isGuest,
-    });
+  const [retryAiLoading, setRetryAiLoading] = useState(false);
+  const {
+    starter,
+    isGeneratingRoutine,
+    showFallbackBanner,
+    routineJustUpdated,
+    retryAiGeneration,
+  } = useStarterRoutineLive({
+    initialStarter,
+    initialPending,
+    isGuest,
+  });
+  const session = readCoachWelcomeSession();
+  const showRetryAi =
+    (showFallbackBanner || session?.usedDefaultRoutine === true) && !isGeneratingRoutine;
 
   useEffect(() => {
     setProfileId(initialProfileId);
@@ -86,132 +101,111 @@ function CoachWelcomeLoaded({
     return formatter.dateTime(d, { dateStyle: "long", timeStyle: "short" });
   })();
 
-  // Photo coaching notes are richer and more accurate than the starter LLM skin_readback.
   const skinReadback =
     coachingNotes?.trim() || starter.skin_readback?.trim() || "";
 
-  return (
-    <div className="mx-auto w-full max-w-2xl space-y-6">
-      <header className="space-y-2 text-center sm:text-left">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-          <CheckCircle2 className="size-4" aria-hidden />
-          {tReview("badge")}
-        </div>
-        <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-          {tReview("title")}
-        </h1>
-        {completedLabel ? (
-          <p className="text-sm text-muted-foreground">
-            {tReview("completedOn", { date: completedLabel })}
-          </p>
-        ) : null}
-        <p className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          <Eye className="size-3.5 shrink-0" aria-hidden />
-          {tReview("readOnlyHint")}
-        </p>
-      </header>
+  const canFeedback =
+    !isGuest && profileId && profileId !== GUEST_COACH_PROFILE_ID;
 
-      <StarterRoutineGenerationNotice
-        isGeneratingRoutine={isGeneratingRoutine}
-        showFallbackBanner={showFallbackBanner}
-        isGuest={isGuest}
-      />
+  return (
+    <div className="mx-auto w-full max-w-2xl space-y-6 pb-4">
+      <CoachWelcomeSection>
+        <header className="space-y-3 text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="size-4" aria-hidden />
+            {tReview("badge")}
+          </div>
+          <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+            {t("title")}
+          </h1>
+          <p className="text-sm leading-relaxed text-muted-foreground">{t("introLine")}</p>
+          {completedLabel ? (
+            <p className="text-sm text-muted-foreground">
+              {tReview("completedOn", { date: completedLabel })}
+            </p>
+          ) : null}
+          <p className="inline-flex w-full items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5 text-xs leading-snug text-muted-foreground sm:w-auto">
+            <Eye className="size-3.5 shrink-0" aria-hidden />
+            {tReview("readOnlyHint")}
+          </p>
+        </header>
+      </CoachWelcomeSection>
+
+      <CoachWelcomeSection delayMs={60}>
+        <StarterRoutineGenerationNotice
+          isGeneratingRoutine={isGeneratingRoutine}
+          showFallbackBanner={showFallbackBanner}
+          showRetryAi={showRetryAi}
+          isGuest={isGuest}
+          retryLoading={retryAiLoading}
+          onRetryAi={() => {
+            setRetryAiLoading(true);
+            void retryAiGeneration().finally(() => setRetryAiLoading(false));
+          }}
+        />
+      </CoachWelcomeSection>
 
       {skinReadback ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("readback")}
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{skinReadback}</p>
-          </CardContent>
-        </Card>
+        <CoachWelcomeSection delayMs={120}>
+          <CoachWelcomeSectionHeading title={t("readback")} />
+          <Card>
+            <CardContent className="pt-5 pb-5">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{skinReadback}</p>
+            </CardContent>
+          </Card>
+        </CoachWelcomeSection>
       ) : null}
 
-      <ProductSuggestionsCard
-        suggestions={starter.product_suggestions}
-        source="starter_routine"
-        contextId={profileId ?? undefined}
-      />
-
-      <div
-        className={cn(
-          "rounded-xl transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
-          routineJustUpdated &&
-            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-sm motion-safe:duration-700",
-        )}
-      >
-        <StarterRoutineCards
-          starter={starter}
-          morningLabel={t("morning")}
-          eveningLabel={t("evening")}
-          noStepsLabel={t("noSteps")}
-        />
-      </div>
-
-      {starter.rationale ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("why")}
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.rationale}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {starter.week_notes ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("weekNotes")}
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.week_notes}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <Card className="border-emerald-500/20 bg-emerald-500/5">
-        <CardContent className="space-y-2 pt-6">
-          <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-200">
-            <ShieldCheck className="size-4" aria-hidden />
-            {t("safety")}
-          </div>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.safety_notes}</p>
-        </CardContent>
-      </Card>
-
-      {starter.closing_reminder ? (
-        <p className="text-center text-sm font-medium text-muted-foreground">
-          {starter.closing_reminder}
-        </p>
-      ) : null}
-
-      {isGuest && !isGeneratingRoutine ? (
-        <GuestCoachWelcomeCta variant={showFallbackBanner ? "fallback" : "ready"} />
-      ) : null}
-
-      {profileId && profileId !== GUEST_COACH_PROFILE_ID ? (
-        <FeedbackButtons targetType="starter_routine" targetId={profileId} />
-      ) : null}
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        <Link href="/check-in" className={cn(buttonVariants({ size: "lg" }), "gap-2")}>
-          {t("ctaCheckIn")}
-          <Send className="size-4" aria-hidden />
-        </Link>
-        <Link
-          href="/onboarding"
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+      <CoachWelcomeSection delayMs={180} id="coach-welcome-routine">
+        <div
+          className={cn(
+            "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 sm:p-5",
+            "transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
+            routineJustUpdated &&
+              "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
+          )}
         >
-          {tReview("backToReview")}
-        </Link>
-        <Link href="/" className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}>
-          {t("ctaHome")}
-        </Link>
-      </div>
+          <StarterRoutineCards
+            starter={starter}
+            morningLabel={t("morning")}
+            eveningLabel={t("evening")}
+            noStepsLabel={t("noSteps")}
+            featured
+            sectionTitle={t("routineSectionTitle")}
+            sectionSubtitle={t("routineSectionSub")}
+          />
+        </div>
+      </CoachWelcomeSection>
 
-      <OnboardingDeleteSection isGuest={isGuest} onDeleted={onReload} />
+      <StarterRoutineSupportExtras starter={starter} delayMs={240} />
+
+      <CoachWelcomeSection delayMs={300}>
+        <ProductSuggestionsCard
+          suggestions={starter.product_suggestions}
+          source="starter_routine"
+          contextId={profileId ?? undefined}
+          maxVisible={3}
+        />
+      </CoachWelcomeSection>
+
+      <StarterRoutineSafetySection starter={starter} delayMs={360} />
+
+      {canFeedback ? (
+        <CoachWelcomeSection delayMs={420}>
+          <StarterRoutineFeedback profileId={profileId} />
+        </CoachWelcomeSection>
+      ) : null}
+
+      <CoachWelcomeSection delayMs={480}>
+        <CoachWelcomeCta
+          isGuest={isGuest}
+          guestVariant={showFallbackBanner ? "fallback" : "ready"}
+        />
+      </CoachWelcomeSection>
+
+      <CoachWelcomeSection delayMs={540} className="pt-2">
+        <OnboardingDeleteSection isGuest={isGuest} onDeleted={onReload} />
+      </CoachWelcomeSection>
     </div>
   );
 }
@@ -272,32 +266,30 @@ export function CoachWelcomeClient() {
 
     try {
       const prof = await fetchSkinProfile();
-        if (prof && isOnboardingComplete(prof)) {
-          const sr = parseSnapshotStarter(prof.onboarding_snapshot);
-          if (sr) {
-            setLoaded({
-              profileId: prof.id,
-              starter: sr,
-              pending: isStarterRoutinePending(prof.onboarding_snapshot),
-              completedAt: prof.updated_at || prof.created_at,
-              isGuest: false,
-            });
-            return;
-          }
-        }
-        setView("empty");
-        return;
-      } catch (err) {
-        if (err instanceof Error && err.message === "auth") {
-          setView("anon");
+      if (prof && isOnboardingComplete(prof)) {
+        const sr = parseSnapshotStarter(prof.onboarding_snapshot);
+        if (sr) {
+          setLoaded({
+            profileId: prof.id,
+            starter: sr,
+            pending: isStarterRoutinePending(prof.onboarding_snapshot),
+            completedAt: prof.updated_at || prof.created_at,
+            isGuest: false,
+          });
           return;
         }
-        setView("error");
-        setErrorMsg(t("errorFetch"));
-        return;
-      } finally {
-        setLoading(false);
       }
+      setView("empty");
+    } catch (err) {
+      if (err instanceof Error && err.message === "auth") {
+        setView("anon");
+        return;
+      }
+      setView("error");
+      setErrorMsg(t("errorFetch"));
+    } finally {
+      setLoading(false);
+    }
   }, [t]);
 
   useEffect(() => {
@@ -311,8 +303,8 @@ export function CoachWelcomeClient() {
         <Skeleton className="h-4 w-full max-w-md rounded-md" />
         <Skeleton className="h-28 w-full rounded-xl" />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Skeleton className="h-40 w-full rounded-xl" />
-          <Skeleton className="h-40 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
         </div>
         <p className="sr-only">{t("loading")}</p>
       </div>
@@ -342,11 +334,11 @@ export function CoachWelcomeClient() {
     return (
       <div className="mx-auto max-w-lg space-y-4 text-center">
         <p className="text-muted-foreground">{t("needSignIn")}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Link href="/login" className={cn(buttonVariants({ variant: "default" }))}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Link href="/login" className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full sm:w-auto")}>
             {t("signInCta")}
           </Link>
-          <Link href="/onboarding" className={cn(buttonVariants({ variant: "ghost" }))}>
+          <Link href="/onboarding" className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "w-full sm:w-auto")}>
             {t("backOnboarding")}
           </Link>
         </div>

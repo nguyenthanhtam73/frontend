@@ -99,6 +99,28 @@ export function useStarterRoutineLive({
     setShowFallbackBanner(true);
   }, []);
 
+  const retryAiGeneration = useCallback(async () => {
+    const session = readCoachWelcomeSession();
+    if (!session?.starterRoutine) return;
+
+    guestJobRequestedRef.current = false;
+    setPreviewJobId(undefined);
+    beginAiTracking(session.starterRoutine, true);
+    setShowFallbackBanner(false);
+
+    const jobId = await requestGuestPreviewJob(session);
+    if (jobId) {
+      setPreviewJobId(jobId);
+      persistCoachWelcomePatch({
+        previewJobId: jobId,
+        starterRoutinePending: true,
+        usedDefaultRoutine: false,
+      });
+    } else {
+      finishPollTimeout();
+    }
+  }, [beginAiTracking, finishPollTimeout]);
+
   useEffect(() => {
     if (!enabled) return;
     beginAiTracking(initialStarter, initialPending);
@@ -272,5 +294,6 @@ export function useStarterRoutineLive({
     showFallbackBanner,
     routineJustUpdated,
     beginAiTracking,
+    retryAiGeneration,
   };
 }

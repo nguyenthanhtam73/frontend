@@ -2,7 +2,6 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import {
-  AlertCircle,
   Camera,
   Check,
   ImagePlus,
@@ -13,7 +12,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  AnalyzeLoadingOverlay,
   ConcernChipRow,
   FriendlyNotice,
   OnboardingProgress,
@@ -24,31 +22,46 @@ import {
   SkinProfilePanel,
   SkipPhotosButton,
 } from "@/components/onboarding/onboarding-ui";
+import { OnboardingAiErrorPanel, ManualSkinFallbackBanner } from "@/components/onboarding/onboarding-ai-error-panel";
+import { OnboardingAiLoading } from "@/components/onboarding/onboarding-ai-loading";
 import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
-import { buildGuestStarterFallback } from "@/lib/onboarding/guest-starter";
+import { buildDefaultStarterRoutine } from "@/lib/onboarding/guest-starter";
+import {
+  postGuestPreviewComplete,
+  postOnboardingComplete,
+  postOnboardingCompleteBackground,
+} from "@/lib/onboarding/finish-request";
+import {
+  assertAnalyzeSkinPayload,
+  fetchOnboardingAi,
+  onboardingAiErrorKind,
+  OnboardingAiError,
+  parseJsonSafe,
+  type OnboardingAiErrorKind,
+} from "@/lib/onboarding/onboarding-ai";
 import { appendOnboardingPhotos } from "@/lib/onboarding/compress-photo";
 import { buildOnboardingFinishBody } from "@/lib/onboarding/finish-body";
 import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import { resolveReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
+import { buildReviewSummaryFromStore } from "@/lib/onboarding/review-data";
 import {
   COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
-  type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
-import { buildReviewSummaryFromStore } from "@/lib/onboarding/review-data";
-import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import { AUTH_CHANGED_EVENT } from "@/lib/auth-token";
 import {
   isGuestOnboardingBlocked,
+  isAiFallbackManual,
+  isManualSkinInput,
   markJustCompletedOnboarding,
   ONBOARDING_STEPS,
+  readPersistedSkinInputMode,
   type OnboardingStepId,
   type OnboardingState,
   type SkillMode,
@@ -65,6 +78,7 @@ import {
   PHOTO_QUICK_CONCERNS,
   ONBOARDING_MAX_PHOTOS,
   ONBOARDING_MIN_PHOTOS,
+  ONBOARDING_ANALYZE_TIMEOUT_MS,
   QUICK_GOALS,
   QUICK_UNDERTONES,
 } from "@/lib/onboarding/constants";
@@ -143,18 +157,6 @@ function buildSummaryRecap(
   return lines;
 }
 
-/** Max wait on summary before navigating with a local scaffold (ms). */
-const ONBOARDING_FINISH_NAV_MS = 4000;
-
-type OnboardingCompletePayload = {
-  success?: boolean;
-  data?: {
-    profile?: { id?: string; photo_urls?: string[] };
-    starter_routine?: StarterRoutineDTO;
-    starter_routine_pending?: boolean;
-  };
-};
-
 export function OnboardingFlow() {
   const t = useTranslations("onboarding");
   const tPrivacy = useTranslations("privacy");
@@ -167,15 +169,10 @@ export function OnboardingFlow() {
   const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [finishing, setFinishing] = useState(false);
   const skinSectionRef = useRef<HTMLDivElement>(null);
-  /**
-   * Inline finish-error replaces native `alert()` so:
-   *   - mobile users don't get a focus-stealing modal,
-   *   - we can offer "Retry" + "Continue without saving" as explicit choices,
-   *   - we never navigate to /check-in pretending the save succeeded.
-   */
-  const [finishError, setFinishError] = useState<
-    null | "auth" | "save_failed" | "network"
-  >(null);
+/** Inline finish-error on summary — friendly AI / save failures with retry + default routine. */
+  const [finishError, setFinishError] = useState<OnboardingAiErrorKind | "save_failed" | null>(
+    null,
+  );
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const skipFaceCaptureWas = useRef(false);
@@ -201,6 +198,13 @@ export function OnboardingFlow() {
   }, [refreshGuestTrialGate]);
 
   useEffect(() => {
+    const persisted = readPersistedSkinInputMode();
+    if (persisted && persisted !== "none" && useOnboardingStore.getState().skinInputMode === "none") {
+      useOnboardingStore.getState().setSkinInputMode(persisted);
+    }
+  }, []);
+
+  useEffect(() => {
     if (skipFaceCapture && !skipFaceCaptureWas.current) {
       clearPhotos();
     }
@@ -211,14 +215,24 @@ export function OnboardingFlow() {
 
   const step = steps[idx];
   const analyzing = ob.analyzeStatus === "loading";
-  const showSkinSection = skipFaceCapture || ob.aiSnapshot != null;
-  const isManualReview = skipFaceCapture && !ob.aiSnapshot;
+  const analyzeFailed = ob.analyzeStatus === "error";
+  const aiFallbackManual = isAiFallbackManual(ob.skinInputMode);
+  const showSkinSection =
+    skipFaceCapture || ob.aiSnapshot != null || aiFallbackManual;
+  const isManualReview = isManualSkinInput(
+    ob.skinInputMode,
+    skipFaceCapture,
+    ob.aiSnapshot != null,
+  );
   const needsAnalyze =
     step === "analyze" &&
     ob.photos.length >= ONBOARDING_MIN_PHOTOS &&
     !ob.aiSnapshot &&
     !skipFaceCapture &&
-    !analyzing;
+    !aiFallbackManual &&
+    !analyzing &&
+    !analyzeFailed;
+  const blockInteraction = analyzing || finishing;
 
   useEffect(() => {
     if (!showSkinSection || !skinSectionRef.current) return;
@@ -258,6 +272,7 @@ export function OnboardingFlow() {
 
   async function runAnalyze() {
     if (ob.photos.length < ONBOARDING_MIN_PHOTOS) return;
+    ob.setSkinInputMode("none");
     ob.setAnalyzeStatus("loading");
     try {
       const fd = new FormData();
@@ -266,36 +281,29 @@ export function OnboardingFlow() {
       const token = getAccessToken();
       const headers: HeadersInit = {};
       if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/analyze-skin`, {
-        method: "POST",
-        body: fd,
-        headers,
-      });
-      const json = (await res.json().catch(() => ({}))) as {
-        success?: boolean;
-        data?: OnboardingSkinAnalyzeDTO;
-        error?: { message?: string };
-      };
-      if (!res.ok || !json.data) {
-        if (res.status === 401 || res.status === 403) {
-          ob.setAnalyzeStatus("error", "auth");
-          return;
-        }
-        ob.setAnalyzeStatus(
-          "error",
-          json.error?.message ?? `HTTP ${res.status}`,
-        );
-        return;
-      }
-      ob.applyAiAnalyzeResult(json.data);
+      const res = await fetchOnboardingAi(
+        `${apiBaseUrl}/api/v1/onboarding/analyze-skin`,
+        { method: "POST", body: fd, headers },
+        ONBOARDING_ANALYZE_TIMEOUT_MS,
+      );
+      const json = await parseJsonSafe(res);
+      const data = assertAnalyzeSkinPayload(res, json);
+      ob.applyAiAnalyzeResult(data);
       setSkipFaceCapture(false);
-    } catch {
-      ob.setAnalyzeStatus("error", "network");
+    } catch (err) {
+      ob.setAnalyzeStatus("error", onboardingAiErrorKind(err));
     }
+  }
+
+  function chooseManualSkinAfterAnalyzeError() {
+    ob.setSkinInputMode("manual_fallback");
+    ob.setAnalyzeStatus("idle");
+    if (!ob.undertone) ob.setUndertone("prefer_not");
   }
 
   function goSkipPhotos() {
     ob.clearPhotos();
+    ob.setSkinInputMode("manual_skip");
     setSkipFaceCapture(true);
     if (!ob.undertone) ob.setUndertone("prefer_not");
   }
@@ -375,12 +383,9 @@ export function OnboardingFlow() {
   }
 
   /**
-   * Finish onboarding.
-   *
-   * Guests: preview-complete (no DB) → coach-welcome with session cache.
-   * Logged-in: persist profile + starter routine → coach-welcome.
+   * Finish onboarding — wait for AI with clear loading; offer retry + default routine on failure.
    */
-  async function finish(opts: { skipServer?: boolean } = {}) {
+  async function finish() {
     if (finishing) return;
     setFinishError(null);
 
@@ -392,123 +397,48 @@ export function OnboardingFlow() {
     }
 
     const token = getAccessToken();
-
-    if (!token) {
-      await finishGuestPreview();
-      return;
-    }
-
-    if (opts.skipServer) {
-      await goToCoachWelcome({
-        profileId: GUEST_COACH_PROFILE_ID,
-        starterRoutine: buildGuestStarterFallback(ob, locale),
-        coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
-      });
-      return;
-    }
-
     setFinishing(true);
-    const fallbackStarter = buildGuestStarterFallback(ob, locale);
-    const coachingNotes = ob.aiSnapshot?.coaching_notes?.trim() || undefined;
 
     try {
-      const hasPhotos = !photosSkipped && ob.photos.length > 0;
-      const completeTask = (async () => {
-        let res: Response;
-        if (hasPhotos) {
-          const fd = new FormData();
-          fd.append("payload", JSON.stringify(finishBody));
-          ob.photos.slice(0, ONBOARDING_MAX_PHOTOS).forEach((p) => {
-            fd.append("images", p.file);
-          });
-          res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: fd,
-          });
-        } else {
-          res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding/complete`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(finishBody),
-          });
-        }
-        const payload = (await res.json().catch(() => ({}))) as OnboardingCompletePayload;
-        return { res, payload };
-      })();
-
-      const raced = await Promise.race([
-        completeTask.then((value) => ({ kind: "done" as const, ...value })),
-        new Promise<{ kind: "timeout" }>((resolve) =>
-          setTimeout(() => resolve({ kind: "timeout" }), ONBOARDING_FINISH_NAV_MS),
-        ),
-      ]);
-
-      if (raced.kind === "done") {
-        const { res, payload } = raced;
-        if (
-          res.ok &&
-          payload.success &&
-          payload.data?.profile?.id &&
-          payload.data?.starter_routine
-        ) {
-          await goToCoachWelcome({
-            profileId: payload.data.profile.id,
-            starterRoutine: payload.data.starter_routine,
-            starterRoutinePending: payload.data.starter_routine_pending === true,
-            coachingNotes,
-            reviewSummary: {
-              photo_urls: payload.data.profile.photo_urls,
-            },
-          });
-          return;
-        }
-        setFinishError("save_failed");
+      if (!token) {
+        const preview = await postGuestPreviewComplete(finishBody);
+        const fallback = buildDefaultStarterRoutine(ob, locale);
+        await goToCoachWelcome({
+          profileId: GUEST_COACH_PROFILE_ID,
+          guestPreview: true,
+          starterRoutine: preview.starterRoutine ?? fallback,
+          starterRoutinePending: preview.starterRoutinePending,
+          previewJobId: preview.previewJobId,
+          coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
+        });
         return;
       }
 
-      // API still running — show local scaffold immediately instead of spinning forever.
+      const result = await postOnboardingComplete(
+        finishBody,
+        ob.photos,
+        photosSkipped,
+        token,
+      );
       await goToCoachWelcome({
-        starterRoutine: fallbackStarter,
-        starterRoutinePending: true,
-        coachingNotes,
+        profileId: result.profileId,
+        starterRoutine: result.starterRoutine,
+        starterRoutinePending: result.starterRoutinePending,
+        coachingNotes: ob.aiSnapshot?.coaching_notes?.trim() || undefined,
+        reviewSummary: { photo_urls: result.photoUrls },
       });
-
-      void completeTask
-        .then(({ res, payload }) => {
-          if (
-            !res.ok ||
-            !payload.success ||
-            !payload.data?.profile?.id ||
-            !payload.data?.starter_routine
-          ) {
-            return;
-          }
-          patchCoachWelcomeSession({
-            profileId: payload.data.profile.id,
-            starterRoutine: payload.data.starter_routine,
-            starterRoutinePending: payload.data.starter_routine_pending === true,
-            reviewSummary: {
-              photo_urls: payload.data.profile.photo_urls,
-            },
-          });
-        })
-        .catch(() => {
-          /* user already has local scaffold on coach-welcome */
-        });
-    } catch {
-      setFinishError("network");
+    } catch (err) {
+      if (err instanceof OnboardingAiError && err.kind === "auth") {
+        setFinishError("auth");
+      } else {
+        setFinishError(onboardingAiErrorKind(err));
+      }
     } finally {
       setFinishing(false);
     }
   }
 
-  async function finishGuestPreview() {
+  async function finishWithDefaultRoutine() {
     if (finishing) return;
     setFinishError(null);
 
@@ -519,63 +449,61 @@ export function OnboardingFlow() {
       return;
     }
 
-    const fallbackStarter = buildGuestStarterFallback(ob, locale);
+    const fallback = buildDefaultStarterRoutine(ob, locale);
     const coachingNotes = ob.aiSnapshot?.coaching_notes?.trim() || undefined;
+    const token = getAccessToken();
 
-    // Guests should not block on preview-complete (sync LLM). Navigate instantly.
-    await goToCoachWelcome({
-      profileId: GUEST_COACH_PROFILE_ID,
-      guestPreview: true,
-      starterRoutine: fallbackStarter,
-      starterRoutinePending: true,
-      coachingNotes,
-    });
-
-    void (async () => {
-      try {
-        const res = await fetch(`${apiBaseUrl}/api/v1/onboarding/preview-complete`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify(finishBody),
+    setFinishing(true);
+    try {
+      if (!token) {
+        await goToCoachWelcome({
+          profileId: GUEST_COACH_PROFILE_ID,
+          guestPreview: true,
+          starterRoutine: fallback,
+          starterRoutinePending: true,
+          usedDefaultRoutine: true,
+          coachingNotes,
         });
-        const payload = (await res.json().catch(() => ({}))) as {
-          success?: boolean;
-          data?: {
-            starter_routine?: StarterRoutineDTO;
-            starter_routine_pending?: boolean;
-            preview_job_id?: string;
-          };
-        };
-        if (res.ok && payload.success && payload.data) {
-          if (
-            payload.data.starter_routine_pending === true &&
-            payload.data.preview_job_id
-          ) {
-            // Keep local fallback on screen; only register the background job.
+        void postGuestPreviewComplete(finishBody)
+          .then((preview) => {
             patchCoachWelcomeSession({
-              previewJobId: payload.data.preview_job_id,
-              starterRoutinePending: true,
+              previewJobId: preview.previewJobId,
+              starterRoutinePending: preview.starterRoutinePending,
+              ...(preview.starterRoutine
+                ? { starterRoutine: preview.starterRoutine, starterRoutinePending: false }
+                : {}),
             });
-          } else if (payload.data.starter_routine) {
-            patchCoachWelcomeSession({
-              starterRoutine: payload.data.starter_routine,
-              starterRoutinePending: false,
-              previewJobId: payload.data.preview_job_id,
-            });
-          }
-        } else {
-          patchCoachWelcomeSession({
-            starterRoutine: fallbackStarter,
-            starterRoutinePending: false,
+          })
+          .catch(() => {
+            patchCoachWelcomeSession({ starterRoutinePending: false });
           });
-        }
-      } catch {
-        patchCoachWelcomeSession({
-          starterRoutine: fallbackStarter,
-          starterRoutinePending: false,
-        });
+        return;
       }
-    })();
+
+      await goToCoachWelcome({
+        starterRoutine: fallback,
+        starterRoutinePending: false,
+        usedDefaultRoutine: true,
+        coachingNotes,
+      });
+
+      postOnboardingCompleteBackground(
+        finishBody,
+        ob.photos,
+        photosSkipped,
+        token,
+        (result) => {
+          patchCoachWelcomeSession({
+            profileId: result.profileId,
+            starterRoutine: result.starterRoutine,
+            starterRoutinePending: result.starterRoutinePending,
+            reviewSummary: { photo_urls: result.photoUrls },
+          });
+        },
+      );
+    } finally {
+      setFinishing(false);
+    }
   }
 
   if (guestTrialBlocked === null) {
@@ -608,11 +536,11 @@ export function OnboardingFlow() {
       <OnboardingProgress idx={idx} t={t} />
 
       <Card className="relative overflow-hidden border-border/80 shadow-sm">
-        {analyzing && (
-          <AnalyzeLoadingOverlay
-            title={t("photos.analyzeTitle")}
-            subtitle={t("photos.analyzeSubtitle")}
-          />
+        {analyzing && step === "analyze" && (
+          <OnboardingAiLoading phase="analyze" overlay />
+        )}
+        {finishing && step === "summary" && (
+          <OnboardingAiLoading phase="starterRoutine" overlay />
         )}
         <CardContent className="p-4 pt-5 sm:p-6 sm:pt-6">
           <OnboardingStepPanel stepKey={step} direction={slideDir}>
@@ -656,17 +584,12 @@ export function OnboardingFlow() {
                       <PhotoCaptureBlock
                         t={t}
                         tPrivacy={tPrivacy}
-                        tAuth={tAuth}
                         tCheckIn={tCheckIn}
                         openCamera={openCamera}
                         openLibrary={openLibrary}
                         onSkip={goSkipPhotos}
                         showSkip={false}
                         hidePhotoGrid
-                        onRetryAnalyze={() => {
-                          ob.setAnalyzeStatus("idle");
-                          void runAnalyze();
-                        }}
                       />
                     </div>
                   </details>
@@ -675,25 +598,48 @@ export function OnboardingFlow() {
                 <PhotoCaptureBlock
                   t={t}
                   tPrivacy={tPrivacy}
-                  tAuth={tAuth}
                   tCheckIn={tCheckIn}
                   openCamera={openCamera}
                   openLibrary={openLibrary}
                   onSkip={goSkipPhotos}
                   showSkip
-                  onRetryAnalyze={() => {
+                />
+              )}
+
+              {analyzeFailed && !aiFallbackManual && !analyzing && (
+                <OnboardingAiErrorPanel
+                  errorKind={ob.analyzeErrorKind ?? "unknown"}
+                  onRetry={() => {
                     ob.setAnalyzeStatus("idle");
                     void runAnalyze();
                   }}
+                  retryLabel={t("photos.errorRetry")}
+                  secondaryLabel={t("aiLoading.manualSkin")}
+                  onSecondary={chooseManualSkinAfterAnalyzeError}
                 />
               )}
 
               {showSkinSection && (
-                <div ref={skinSectionRef}>
+                <div
+                  ref={skinSectionRef}
+                  key={ob.aiSnapshot ? "ai-skin" : aiFallbackManual ? "manual-fallback" : "manual-skip"}
+                  className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400"
+                >
                 <SkinProfilePanel
                   title={t("analyze.skinSection")}
                   subtitle={t("analyze.skinSectionHint")}
                 >
+              {aiFallbackManual && ob.photos.length >= ONBOARDING_MIN_PHOTOS ? (
+                <ManualSkinFallbackBanner
+                  title={t("aiLoading.manualSkinBannerTitle")}
+                  body={t("aiLoading.manualSkinBannerBody")}
+                  retryLabel={t("aiLoading.retryAnalyzeAiShort")}
+                  onRetryAi={() => {
+                    ob.setSkinInputMode("none");
+                    void runAnalyze();
+                  }}
+                />
+              ) : null}
               {ob.aiSnapshot && !isManualReview && (
                 <details className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm">
                   <summary className="cursor-pointer py-1 font-medium">
@@ -859,17 +805,27 @@ export function OnboardingFlow() {
               </details>
               <p className="text-xs text-muted-foreground">{t("summaryFoot")}</p>
               {finishError ? (
-                <FinishErrorBanner
-                  kind={finishError}
-                  authMessage={tAuth("finishNeedAuth")}
-                  saveMessage={tAuth("finishNetworkError")}
-                  retryLabel={tAuth("finishRetry")}
-                  continueLabel={tAuth("finishContinueLocal")}
-                  onRetry={() => void finish()}
-                  onContinue={() => void finish({ skipServer: true })}
-                  onDismiss={() => setFinishError(null)}
-                  dismissLabel={t("back")}
-                />
+                finishError === "save_failed" ? (
+                  <FriendlyNotice variant="error" title={tAuth("finishNetworkError")}>
+                    <Button type="button" size="sm" className="mt-2" onClick={() => void finish()}>
+                      {t("aiLoading.retry")}
+                    </Button>
+                  </FriendlyNotice>
+                ) : finishError === "auth" ? (
+                  <FriendlyNotice variant="error" title={tAuth("finishNeedAuth")}>
+                    <Button type="button" size="sm" className="mt-2" onClick={() => void finish()}>
+                      {t("aiLoading.retry")}
+                    </Button>
+                  </FriendlyNotice>
+                ) : (
+                  <OnboardingAiErrorPanel
+                    titleKey="aiLoading.routineErrorTitle"
+                    errorKind={finishError}
+                    onRetry={() => void finish()}
+                    secondaryLabel={t("aiLoading.useDefaultRoutine")}
+                    onSecondary={() => void finishWithDefaultRoutine()}
+                  />
+                )
               ) : null}
             </div>
           )}
@@ -886,8 +842,8 @@ export function OnboardingFlow() {
               }
               onBack={prev}
               onContinue={handlePrimary}
-              backDisabled={idx === 0}
-              continueDisabled={!stickyCanContinue}
+              backDisabled={idx === 0 || blockInteraction}
+              continueDisabled={!stickyCanContinue || blockInteraction}
               continueLoading={
                 (analyzing && step === "analyze") || (finishing && step === "summary")
               }
@@ -946,25 +902,21 @@ export function OnboardingFlow() {
 function PhotoCaptureBlock({
   t,
   tPrivacy,
-  tAuth,
   tCheckIn,
   openCamera,
   openLibrary,
   onSkip,
   showSkip,
   hidePhotoGrid = false,
-  onRetryAnalyze,
 }: {
   t: OnboardingT;
   tPrivacy: ReturnType<typeof useTranslations<"privacy">>;
-  tAuth: ReturnType<typeof useTranslations<"auth">>;
   tCheckIn: ReturnType<typeof useTranslations<"checkIn">>;
   openCamera: () => void;
   openLibrary: () => void;
   onSkip: () => void;
   showSkip: boolean;
   hidePhotoGrid?: boolean;
-  onRetryAnalyze: () => void;
 }) {
   const ob = useOnboardingStore();
   return (
@@ -1058,30 +1010,6 @@ function PhotoCaptureBlock({
           {t("photos.emptyBody")}
         </FriendlyNotice>
       )}
-
-      {ob.analyzeStatus === "error" && (
-        <FriendlyNotice
-          variant="error"
-          title={t("photos.errorTitle")}
-          action={
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="self-start"
-              onClick={onRetryAnalyze}
-            >
-              {t("photos.errorRetry")}
-            </Button>
-          }
-        >
-          {ob.analyzeError === "auth"
-            ? t("photos.analyzeNeedLogin")
-            : ob.analyzeError === "network"
-              ? tAuth("networkError")
-              : t("photos.analyzeFail")}
-        </FriendlyNotice>
-      )}
     </div>
   );
 }
@@ -1123,8 +1051,9 @@ function canProceed(
   switch (step) {
     case "analyze": {
       const hasConcerns = ob.aiConcernTags.length > 0;
-      if (!skipFace && !ob.aiSnapshot) return false;
-      if (skipFace && !ob.aiSnapshot) {
+      const manualPath = isManualSkinInput(ob.skinInputMode, skipFace, ob.aiSnapshot != null);
+      if (!manualPath && !ob.aiSnapshot) return false;
+      if (manualPath && !ob.aiSnapshot) {
         return ob.skinType != null && hasConcerns;
       }
       return ob.skinType != null && ob.undertone != null && hasConcerns;
@@ -1200,58 +1129,6 @@ function GuestTrialGate({
           </p>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function FinishErrorBanner({
-  kind,
-  authMessage,
-  saveMessage,
-  retryLabel,
-  continueLabel,
-  onRetry,
-  onContinue,
-  onDismiss,
-  dismissLabel,
-}: {
-  kind: "auth" | "save_failed" | "network";
-  authMessage: string;
-  saveMessage: string;
-  retryLabel: string;
-  continueLabel: string;
-  onRetry: () => void;
-  onContinue: () => void;
-  onDismiss: () => void;
-  dismissLabel: string;
-}) {
-  const message = kind === "auth" ? authMessage : saveMessage;
-  return (
-    <div
-      role="alert"
-      className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2 motion-safe:duration-300"
-    >
-      <div className="flex items-start gap-2">
-        <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
-        <p className="flex-1 leading-relaxed text-destructive">{message}</p>
-        <IconDismissButton
-          onClick={onDismiss}
-          ariaLabel={dismissLabel}
-          className="text-destructive/70 hover:bg-destructive/15 hover:text-destructive"
-        >
-          <X className="size-4" aria-hidden />
-        </IconDismissButton>
-      </div>
-      <div className="flex flex-wrap gap-2 pl-6">
-        {kind !== "auth" ? (
-          <Button type="button" size="sm" onClick={onRetry}>
-            {retryLabel}
-          </Button>
-        ) : null}
-        <Button type="button" size="sm" variant="outline" onClick={onContinue}>
-          {continueLabel}
-        </Button>
-      </div>
     </div>
   );
 }
