@@ -3,18 +3,26 @@
 import { useLocale, useTranslations } from "next-intl";
 import {
   AlertCircle,
-  Camera,
+  AlertTriangle,
   ChevronDown,
-  ImageIcon,
-  ImageOff,
-  ImagePlus,
-  Lightbulb,
+  RefreshCw,
   Sparkles,
   X,
 } from "lucide-react";
+import { CaptureModeToggle } from "@/components/check-in/capture-mode-toggle";
+import { SkipModePanel } from "@/components/check-in/skip-mode-panel";
+import {
+  UploadPhotos,
+  compactPhotoSlots,
+  itemsToSlots,
+  type PhotoSlots,
+} from "@/components/check-in/upload-photos";
+import { useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
+import { useCheckInFeedback } from "@/components/check-in/use-check-in-feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
@@ -26,8 +34,9 @@ import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
-import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
+import { CHECKIN_PHOTO_MAX_MB } from "@/lib/check-in/photo-upload-validation";
 import { cn } from "@/lib/utils";
+import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
 /** Matches backend `domain.SkinCondition` string values. */
 const conditionIds = [
@@ -58,30 +67,20 @@ const symptomIds = [
   "mask_friction",
 ] as const;
 
-type UploadItem = { file: File; url: string };
-
-/** Daily check-in photo cap — 1 required, 2 recommended (straight + slight angle). */
-const MAX_CHECKIN_PHOTOS = 2;
-
 export function CheckInForm() {
   const t = useTranslations("checkIn");
-  const tPrivacy = useTranslations("privacy");
+  const tCoach = useTranslations("checkIn.coach");
   const tRoutine = useTranslations("routine");
   const locale = useLocale();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
-  const cameraBackRef = useRef<HTMLInputElement>(null);
-  const [items, setItems] = useState<UploadItem[]>([]);
+  const [photoSlots, setPhotoSlots] = useState<PhotoSlots>([null, null]);
   const [title, setTitle] = useState("");
   const [userNote, setUserNote] = useState("");
   const [environmentNote, setEnvironmentNote] = useState("");
   const [conditions, setConditions] = useState<string[]>([]);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<"private" | "public">("private");
-  const [submitting, setSubmitting] = useState(false);
-  const [coachPayload, setCoachPayload] = useState<CreateSkinCheckResponseDTO | null>(
-    null,
-  );
+  const router = useRouter();
+  const feedback = useCheckInFeedback();
   // Inline error banner replaces native alert() — much friendlier on mobile (no modal
   // popups stealing focus or breaking scroll). Auto-cleared on next submit attempt.
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -102,20 +101,37 @@ export function CheckInForm() {
     });
   }
 
-  const resetCoachResult = useCallback(() => {
-    setCoachPayload(null);
+  const scrollToFeedback = useCallback(() => {
     requestAnimationFrame(() => {
       feedbackAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, []);
+
+  const handleViewLater = useCallback(() => {
+    feedback.dismissWait();
+    router.push("/progress");
+  }, [feedback, router]);
 
   const skillMode = useSkillStore((s) => s.mode);
   const setSkillMode = useSkillStore((s) => s.setMode);
   const onboardingSkill = useOnboardingStore((s) => s.skillMode);
   const onboardingDone = useOnboardingStore((s) => s.completedAt);
 
+  const items = compactPhotoSlots(photoSlots);
+  const skipModeReady =
+    conditions.length > 0 ||
+    symptoms.length > 0 ||
+    userNote.trim().length > 0;
+  const canSubmit = skipFaceCapture ? skipModeReady : items.length > 0;
+
   const itemsRef = useRef(items);
   itemsRef.current = items;
+
+  const revokeAllPhotos = useCallback((slots: PhotoSlots) => {
+    slots.forEach((x) => {
+      if (x) URL.revokeObjectURL(x.url);
+    });
+  }, []);
 
   useEffect(() => {
     if (!skillMode && onboardingSkill) {
@@ -125,60 +141,17 @@ export function CheckInForm() {
 
   useEffect(() => {
     return () => {
-      itemsRef.current.forEach((x) => URL.revokeObjectURL(x.url));
+      revokeAllPhotos(itemsRef.current.length ? itemsToSlots(itemsRef.current) : [null, null]);
     };
-  }, []);
+  }, [revokeAllPhotos]);
 
-  function handleFiles(files: FileList | null) {
-    if (!files) return;
-    const remainingSlots = Math.max(0, MAX_CHECKIN_PHOTOS - items.length);
-    if (remainingSlots === 0) {
-      showError(t("maxPhotos"));
-      return;
-    }
-    const queue: File[] = [];
-    let skippedEmpty = 0;
-    let skippedOverCap = 0;
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      if (file.size <= 0) {
-        skippedEmpty += 1;
-        return;
-      }
-      if (queue.length >= remainingSlots) {
-        skippedOverCap += 1;
-        return;
-      }
-      queue.push(file);
-    });
-    if (skippedEmpty > 0) {
-      showError(t("emptyImageSkipped"));
-    }
-    if (skippedOverCap > 0) {
-      showError(t("maxPhotos"));
-    }
-    if (queue.length === 0) return;
-
-    const added = queue.map((file) => ({ file, url: URL.createObjectURL(file) }));
-    setItems((cur) => [...cur, ...added].slice(0, MAX_CHECKIN_PHOTOS));
-  }
-
-  const openCamera = useCallback(() => {
-    cameraRef.current?.click();
-  }, []);
-  const openCameraBack = useCallback(() => {
-    cameraBackRef.current?.click();
-  }, []);
-  const openLibrary = useCallback(() => {
-    fileRef.current?.click();
-  }, []);
-
-  function removeAt(idx: number) {
-    setItems((cur) => {
-      const copy = [...cur];
-      const [removed] = copy.splice(idx, 1);
-      if (removed) URL.revokeObjectURL(removed.url);
-      return copy;
+  function handleSlotsChange(next: PhotoSlots) {
+    setPhotoSlots((prev) => {
+      prev.forEach((old, i) => {
+        const neu = next[i];
+        if (old && old !== neu) URL.revokeObjectURL(old.url);
+      });
+      return next;
     });
   }
 
@@ -205,27 +178,29 @@ export function CheckInForm() {
    * URLs so we don't leak memory after multiple clear cycles.
    */
   function resetForm() {
-    setItems((cur) => {
-      cur.forEach((x) => URL.revokeObjectURL(x.url));
-      return [];
-    });
+    revokeAllPhotos(photoSlots);
+    setPhotoSlots([null, null]);
     setTitle("");
     setUserNote("");
     setEnvironmentNote("");
     setConditions([]);
     setSymptoms([]);
     setVisibility("private");
-    setCoachPayload(null);
+    feedback.resetFeedback();
     setErrorMsg(null);
   }
 
   /** Switch into skip-face (tag + notes only) mode. Clears staged photos. */
   const enterSkipMode = useCallback(() => {
-    setItems((cur) => {
-      cur.forEach((x) => URL.revokeObjectURL(x.url));
-      return [];
-    });
+    revokeAllPhotos(photoSlots);
+    setPhotoSlots([null, null]);
     setSkipFaceCapture(true);
+    setErrorMsg(null);
+  }, [photoSlots, revokeAllPhotos, setSkipFaceCapture]);
+
+  const exitSkipMode = useCallback(() => {
+    setSkipFaceCapture(false);
+    setErrorMsg(null);
   }, [setSkipFaceCapture]);
 
   return (
@@ -235,23 +210,21 @@ export function CheckInForm() {
         e.preventDefault();
         setErrorMsg(null);
         if (skipFaceCapture) {
-          // Tag + notes only path: require at least one signal so the AI
-          // has *something* to read. We accept either condition tags,
-          // symptom tags, or a non-empty note.
-          if (
-            conditions.length === 0 &&
-            symptoms.length === 0 &&
-            userNote.trim().length === 0
-          ) {
+          if (!skipModeReady) {
             showError(t("skipModeNeedTags"));
             return;
           }
+          /*
+           * TODO(backend): When POST /api/v1/skin-checks accepts tag+notes-only
+           * check-ins, skip the images requirement below and send skip_mode flag.
+           * Until then the API returns missing_images (400).
+           */
         } else if (items.length === 0) {
           showError(t("needImage"));
           return;
         }
-        setSubmitting(true);
-        setCoachPayload(null);
+        feedback.beginSubmit();
+        scrollToFeedback();
         try {
           const fd = new FormData();
           items.forEach((x) => fd.append("images", x.file));
@@ -283,17 +256,20 @@ export function CheckInForm() {
 
           const raw = await res.json().catch(() => ({}));
           if (res.ok && raw?.success && raw?.data) {
-            setCoachPayload(raw.data as CreateSkinCheckResponseDTO);
-            requestAnimationFrame(() => {
-              feedbackAnchorRef.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            });
+            feedback.onSubmitSuccess(raw.data as CreateSkinCheckResponseDTO);
+            scrollToFeedback();
           } else if (res.status === 401) {
+            feedback.onSubmitError();
             showError(t("needAuth"));
           } else {
-            // Prefer the server-provided error message (auth/db/moderation/...) for clarity.
+            feedback.onSubmitError();
+            const errCode =
+              typeof raw === "object" &&
+              raw !== null &&
+              "error" in raw &&
+              typeof (raw as { error?: { code?: string } }).error?.code === "string"
+                ? (raw as { error: { code: string } }).error.code
+                : "";
             const serverMsg =
               typeof raw === "object" &&
               raw !== null &&
@@ -302,164 +278,65 @@ export function CheckInForm() {
                 "string"
                 ? (raw as { error: { message: string } }).error.message
                 : "";
-            showError(
-              serverMsg
-                ? `${t("networkError")} (${res.status}). ${serverMsg}`
-                : `${t("networkError")} (${res.status}).`,
-            );
+
+            if (res.status === 413 || errCode === "file_too_large") {
+              showError(
+                t("photoErrorTooLargeShort", { maxMb: CHECKIN_PHOTO_MAX_MB }),
+              );
+            } else if (errCode === "moderation_failed") {
+              showError(t("photoErrorModeration"));
+            } else if (errCode === "missing_images" && skipFaceCapture) {
+              showError(t("submitErrorMissingImages"));
+            } else if (res.status >= 500 || res.status === 0) {
+              showError(t("submitErrorNetwork"));
+            } else {
+              showError(
+                serverMsg
+                  ? t("submitErrorGeneric", { status: res.status, detail: serverMsg })
+                  : t("submitErrorGeneric", {
+                      status: res.status,
+                      detail: t("submitErrorUnknown"),
+                    }),
+              );
+            }
           }
         } catch {
-          showError(t("networkError"));
-        } finally {
-          setSubmitting(false);
+          feedback.onSubmitError();
+          showError(t("submitErrorNetwork"));
         }
       }}
     >
-      {/*
-        `aria-live="assertive"` so screen readers announce the inline error as
-        soon as it appears — this anchor wraps the InlineErrorBanner which
-        also carries `role="alert"`, which together give the most reliable
-        announcement across NVDA, JAWS and VoiceOver.
-      */}
-      <div ref={errorAnchorRef} aria-live="assertive" aria-atomic="true">
-        {errorMsg ? (
-          <InlineErrorBanner
-            message={errorMsg}
-            onDismiss={() => setErrorMsg(null)}
-            dismissLabel={t("errorDismiss")}
-          />
-        ) : null}
-      </div>
-
       <div className="flex flex-col gap-6 lg:grid lg:max-w-5xl lg:grid-cols-[1.05fr_1fr] lg:gap-8 xl:mx-auto">
-      <Card className="overflow-hidden shadow-sm lg:shadow-md">
-        <CardContent className="space-y-4 p-4 sm:p-6">
-          <div>
-            <h2 className="text-base font-semibold tracking-tight">{t("photoTitle")}</h2>
-            <p className="text-sm text-muted-foreground">{t("photoHint")}</p>
-          </div>
-
-          {skipFaceCapture ? (
-            <SkipModeBanner
-              message={t("skipModeBanner")}
-              backCta={t("skipModeBackCta")}
-              manageCta={t("skipModeManageCta")}
-              onBack={() => setSkipFaceCapture(false)}
-            />
-          ) : (
-            <>
-              {/* Photo tips — appears only before user uploads, so the empty state has
-                  tangible guidance (lighting, angle, clean skin) without clutter once
-                  photos are already in the grid. */}
-              {items.length === 0 ? (
-                <PhotoTipsCard
-                  title={t("photoTipsTitle")}
-                  tips={[t("photoTipLight"), t("photoTipAngle"), t("photoTipClean")]}
-                />
-              ) : null}
-
-              <div className="grid grid-cols-3 gap-2">
-                <PhotoChoiceButton
-                  onClick={openCamera}
-                  disabled={items.length >= MAX_CHECKIN_PHOTOS}
-                  icon={<Camera className="size-4" aria-hidden />}
-                  label={t("photoCapture")}
-                />
-                <PhotoChoiceButton
-                  onClick={openCameraBack}
-                  disabled={items.length >= MAX_CHECKIN_PHOTOS}
-                  icon={<Camera className="size-4" aria-hidden />}
-                  label={t("photoCaptureBack")}
-                />
-                <PhotoChoiceButton
-                  onClick={openLibrary}
-                  disabled={items.length >= MAX_CHECKIN_PHOTOS}
-                  icon={<ImageIcon className="size-4" aria-hidden />}
-                  label={t("photoLibrary")}
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={openLibrary}
-                disabled={items.length >= MAX_CHECKIN_PHOTOS}
-                className="group flex aspect-4/3 w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/40 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <div className="rounded-full bg-background p-3 shadow-sm ring-1 ring-border">
-                  <ImagePlus className="size-6" aria-hidden />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">{t("dropTitle")}</p>
-                  <p className="text-xs">{t("dropHint")}</p>
-                </div>
-              </button>
-
-              <input
-                ref={cameraRef}
-                type="file"
-                accept="image/*"
-                capture="user"
-                className="sr-only"
-                onChange={(e) => {
-                  handleFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-              <input
-                ref={cameraBackRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="sr-only"
-                onChange={(e) => {
-                  handleFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="sr-only"
-                onChange={(e) => {
-                  handleFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-
-              {items.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{t("photoCountLabel", { n: items.length })}</span>
-                    <span>{t("photoCountHint")}</span>
-                  </div>
-                  <div className="grid gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300 sm:grid-cols-2">
-                    {items.map((item, i) => (
-                      <PhotoPreviewCard
-                        key={item.url}
-                        index={i + 1}
-                        previewUrl={item.url}
-                        altLabel={t("altPhoto", { n: i + 1 })}
-                        retakeLabel={tPrivacy("captureCard.retake")}
-                        removeLabel={t("removePhoto")}
-                        onRetake={openLibrary}
-                        onRemove={() => removeAt(i)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              <SkipFaceFooter
-                hint={tPrivacy("captureCard.skipHint")}
-                cta={tPrivacy("captureCard.skipCta")}
-                onSkip={enterSkipMode}
-              />
-            </>
+      <div className="space-y-3">
+        <CaptureModeToggle
+          skipMode={skipFaceCapture}
+          photoLabel={t("modeTogglePhoto")}
+          skipLabel={t("modeToggleSkip")}
+          onSelectPhoto={exitSkipMode}
+          onSelectSkip={enterSkipMode}
+          disabled={feedback.isWaiting}
+        />
+        <Card
+          className={cn(
+            "overflow-hidden shadow-sm transition-all duration-300 lg:shadow-md",
+            skipFaceCapture && "border-primary/15",
           )}
-        </CardContent>
-      </Card>
+        >
+          <CardContent className="p-4 sm:p-6">
+            {!skipFaceCapture ? (
+              <UploadPhotos
+                slots={photoSlots}
+                onSlotsChange={handleSlotsChange}
+              />
+            ) : (
+              <SkipModePanel
+                onBack={exitSkipMode}
+                readyToSubmit={skipModeReady}
+              />
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="space-y-4 lg:min-w-0">
         <Card>
@@ -515,8 +392,18 @@ export function CheckInForm() {
                 onChange={(e) => setUserNote(e.target.value)}
                 placeholder={t("placeholderUserNote")}
                 rows={3}
-                className="min-h-[5.5rem] w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:text-sm"
+                className={cn(
+                  "min-h-[5.5rem] w-full resize-none rounded-xl border bg-background px-3 py-2.5 text-base outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:text-sm",
+                  skipFaceCapture &&
+                    !skipModeReady &&
+                    "border-amber-500/40 focus:border-amber-500 focus:ring-amber-500/30",
+                )}
               />
+              {skipFaceCapture && !skipModeReady ? (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  {t("skipModeNeedTagsHint")}
+                </p>
+              ) : null}
             </Field>
 
             <Field label={t("fieldConditions")}>
@@ -633,14 +520,66 @@ export function CheckInForm() {
       </div>
 
       <div ref={feedbackAnchorRef} className="scroll-mt-24 space-y-3">
-        {submitting ? <CoachThinkingCard message={t("analyzingCoach")} /> : null}
-        {coachPayload ? (
-          <DailyCoachFeedback payload={coachPayload} onRetry={resetCoachResult} />
-        ) : null}
-        {!submitting && !coachPayload ? (
+        {feedback.phase === "idle" ? (
           <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
             {t("coachBeforeSubmit")}
           </p>
+        ) : null}
+
+        {feedback.phase === "submitting" ? (
+          <AiFeedbackLoading variant="submitting" progress={0} />
+        ) : null}
+
+        {feedback.phase === "processing" ? (
+          <AiFeedbackLoading
+            variant="processing"
+            progress={feedback.fakeProgress}
+            statusStep={feedback.statusStep}
+            onCancelWait={feedback.cancelWait}
+            onViewLater={handleViewLater}
+          />
+        ) : null}
+
+        {feedback.phase === "timeout" ? (
+          <AiFeedbackLoading
+            variant="timeout"
+            progress={feedback.fakeProgress}
+            onRetryPolling={feedback.retryPolling}
+            onViewLater={handleViewLater}
+          />
+        ) : null}
+
+        {feedback.phase === "failed" ? (
+          <FeedbackFailedCard
+            message={
+              feedback.failureMessage ?? tCoach("failedUnknown")
+            }
+            onRetry={feedback.resetFeedback}
+            retryLabel={tCoach("retry")}
+            title={tCoach("failedTitle")}
+          />
+        ) : null}
+
+        {feedback.phase === "completed" && feedback.payload ? (
+          <DailyCoachFeedback
+            payload={feedback.payload}
+            onRetry={feedback.resetFeedback}
+          />
+        ) : null}
+      </div>
+
+      <div
+        ref={errorAnchorRef}
+        aria-live="assertive"
+        aria-atomic="true"
+        className="scroll-mt-24"
+      >
+        {errorMsg ? (
+          <InlineErrorBanner
+            message={errorMsg}
+            onDismiss={() => setErrorMsg(null)}
+            dismissLabel={t("errorDismiss")}
+          />
         ) : null}
       </div>
 
@@ -667,7 +606,7 @@ export function CheckInForm() {
             variant="ghost"
             size="sm"
             className="min-h-11 flex-1 sm:min-h-9 sm:flex-none"
-            disabled={submitting}
+            disabled={feedback.isWaiting}
             onClick={resetForm}
           >
             {t("reset")}
@@ -676,9 +615,9 @@ export function CheckInForm() {
             type="submit"
             size="default"
             className="min-h-12 flex-[2] sm:min-h-9 sm:flex-initial"
-            disabled={submitting}
+            disabled={feedback.isWaiting || !canSubmit}
           >
-            {submitting
+            {feedback.phase === "submitting"
               ? t("submitting")
               : skipFaceCapture
                 ? t("noFaceSubmit")
@@ -713,28 +652,32 @@ function Field({
   );
 }
 
-/** Animated "AI is thinking" placeholder rendered above the feedback while the pipeline runs. */
-function CoachThinkingCard({ message }: { message: string }) {
+/** Inline error when AI analysis fails after submit. */
+function FeedbackFailedCard({
+  title,
+  message,
+  retryLabel,
+  onRetry,
+}: {
+  title: string;
+  message: string;
+  retryLabel: string;
+  onRetry: () => void;
+}) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-accent/30 to-background px-4 py-4 shadow-sm sm:px-5 sm:py-5">
-      <div
-        className="pointer-events-none absolute -right-12 -top-12 size-32 animate-pulse rounded-full bg-primary/25 blur-3xl"
-        aria-hidden
-      />
-      <div className="relative flex items-start gap-3">
-        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-background/80 shadow-sm ring-1 ring-primary/30">
-          <Sparkles className="size-4 animate-pulse text-primary" aria-hidden />
-        </span>
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">{message}</p>
-          <div className="flex items-center gap-1.5" aria-hidden>
-            <span className="size-1.5 animate-bounce rounded-full bg-primary/70 [animation-delay:-0.3s]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-primary/70 [animation-delay:-0.15s]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-primary/70" />
-          </div>
+    <Card className="border-destructive/30 bg-destructive/5">
+      <CardContent className="space-y-3 pt-6">
+        <div className="flex items-center gap-2 font-medium text-destructive" role="alert">
+          <AlertTriangle className="size-4 shrink-0" aria-hidden />
+          {title}
         </div>
-      </div>
-    </div>
+        <p className="text-sm text-muted-foreground">{message}</p>
+        <Button type="button" variant="outline" size="sm" className="min-h-11 gap-2 sm:min-h-9" onClick={onRetry}>
+          <RefreshCw className="size-4" aria-hidden />
+          {retryLabel}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -763,173 +706,6 @@ function InlineErrorBanner({
       >
         <X className="size-4" aria-hidden />
       </IconDismissButton>
-    </div>
-  );
-}
-
-/** Compact tips strip shown above the photo dropzone when no photos have been
- *  chosen yet — gives the user a quick "how to take a useful photo" nudge. */
-function PhotoTipsCard({ title, tips }: { title: string; tips: string[] }) {
-  return (
-    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
-      <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-amber-900 dark:text-amber-200">
-        <Lightbulb className="size-3.5" aria-hidden />
-        {title}
-      </div>
-      <ul className="space-y-0.5 text-xs leading-relaxed text-foreground/80">
-        {tips.map((tip, i) => (
-          <li key={`tip-${i}`} className="flex gap-1.5">
-            <span className="mt-1 size-1 shrink-0 rounded-full bg-amber-500/70" aria-hidden />
-            <span>{tip}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** Reusable photo-source button. Camera (front), camera (back), and library use the same shape. */
-function PhotoChoiceButton({
-  onClick,
-  disabled,
-  icon,
-  label,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="flex min-h-11 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-background px-2 py-2.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-row sm:gap-2 sm:px-4 sm:py-3 sm:text-sm"
-    >
-      <span className="text-primary">{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function PhotoPreviewCard({
-  index,
-  previewUrl,
-  altLabel,
-  retakeLabel,
-  removeLabel,
-  onRetake,
-  onRemove,
-}: {
-  index: number;
-  previewUrl: string;
-  altLabel: string;
-  retakeLabel: string;
-  removeLabel: string;
-  onRetake: () => void;
-  onRemove: () => void;
-}) {
-  return (
-    <figure className="space-y-1.5">
-      <div className="relative aspect-3/4 overflow-hidden rounded-2xl border bg-muted shadow-sm ring-1 ring-transparent transition-shadow hover:ring-primary/40">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={previewUrl}
-          alt={altLabel}
-          className="size-full object-cover"
-        />
-        <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-background/85 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-foreground shadow-sm backdrop-blur">
-          {index}
-        </span>
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label={removeLabel}
-          className="absolute right-2 bottom-2 inline-flex size-9 items-center justify-center rounded-full bg-black/60 text-white shadow-md backdrop-blur transition-colors hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-8"
-        >
-          <X className="size-4" aria-hidden />
-        </button>
-      </div>
-      <div className="flex flex-wrap items-center justify-end gap-2 px-0.5">
-        <button
-          type="button"
-          onClick={onRetake}
-          className="text-xs font-medium text-primary underline-offset-4 hover:underline"
-        >
-          {retakeLabel}
-        </button>
-      </div>
-    </figure>
-  );
-}
-
-/** Visible-but-non-aggressive footer on the photos card that lets users
- *  switch into tag + notes only mode at any time during the flow. */
-function SkipFaceFooter({
-  hint,
-  cta,
-  onSkip,
-}: {
-  hint: string;
-  cta: string;
-  onSkip: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onSkip}
-        className="gap-2 self-start sm:self-auto"
-      >
-        <ImageOff className="size-4" aria-hidden />
-        {cta}
-      </Button>
-    </div>
-  );
-}
-
-/**
- * Banner shown in place of the photo controls when the user opted out of
- * face capture. We *don't* hide the rest of the form — tag pickers and
- * notes still work — so the daily check-in remains useful in this mode.
- */
-function SkipModeBanner({
-  message,
-  backCta,
-  manageCta,
-  onBack,
-}: {
-  message: string;
-  backCta: string;
-  manageCta: string;
-  onBack: () => void;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-muted/40 p-4">
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden
-          className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-background text-foreground ring-1 ring-border"
-        >
-          <ImageOff className="size-4" />
-        </span>
-        <p className="text-sm leading-relaxed text-foreground">{message}</p>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2 pl-12">
-        <Button type="button" size="sm" onClick={onBack}>
-          {backCta}
-        </Button>
-        <Link
-          href="/cabinet"
-          className="inline-flex h-7 items-center rounded-md px-2 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          {manageCta}
-        </Link>
-      </div>
     </div>
   );
 }

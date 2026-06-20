@@ -3,17 +3,21 @@
 import {
   ArrowRight,
   Check,
+  CheckCircle2,
   Loader2,
   Moon,
   Sparkles,
   Sun,
+  Undo2,
   WandSparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { ApplyConfirmDialog } from "@/components/routine/parts/apply-confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ToastBanner } from "@/components/ui/toast-banner";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { authHeaders } from "@/lib/auth-token";
@@ -22,34 +26,21 @@ import { cn } from "@/lib/utils";
 
 import { localId } from "@/components/routine/routine-helpers";
 
-import { buildStepsFromHints, splitRoutineHints, suggestionToken } from "./routine-hint-parser";
+import { buildStepsFromHints, suggestionToken } from "./routine-hint-parser";
+
+const AUTO_SAVE_MS = 400;
+const TOAST_MS = 4500;
 
 /**
  * Bridge between Daily Check-in feedback and the Routine page.
- *
- * Two jobs in one card so the user has a single, low-friction surface:
- *   1. **Apply** — turn the AI coach's `routine_hints` into structured AM/PM
- *      steps and POST them to /api/v1/routines (source = "ai_suggested").
- *   2. **Quick tick** — once a routine exists for today, render compact rows
- *      with a checkbox per step. Toggling debounces a silent autosave so the
- *      user can mark steps done without leaving the check-in page.
- *
- * Mobile-first considerations:
- *   - Touch targets ≥ 44px on phones; tighter on desktop.
- *   - Single column by default, two columns from `sm:` breakpoint.
- *   - Sticky autosave hint stays subtle (no toast spam).
- *   - All network errors surface inline — no native alert().
  */
 export function RoutineBridge({
   suggestedMorning,
   suggestedEvening,
   hasAuth,
 }: {
-  /** AM lines from `coach.routine_hints` (already grouped by `splitRoutineHints`). */
   suggestedMorning: string[];
-  /** PM lines from `coach.routine_hints`. */
   suggestedEvening: string[];
-  /** Skip network calls when the user isn't signed in. */
   hasAuth: boolean;
 }) {
   const t = useTranslations("checkIn.routineBridge");
@@ -60,10 +51,18 @@ export function RoutineBridge({
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
   const [appliedToken, setAppliedToken] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [justToggledId, setJustToggledId] = useState<string | null>(null);
 
-  // Debounce ref — silent autosave coalesces rapid taps into one POST.
+  const [unapplying, setUnapplying] = useState(false);
+
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toggleAnimTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const routineBeforeApplyRef = useRef<RoutineDTO | null>(null);
 
   const hasSuggestion =
     suggestedMorning.length > 0 || suggestedEvening.length > 0;
@@ -72,9 +71,8 @@ export function RoutineBridge({
     [suggestedMorning, suggestedEvening],
   );
 
-  // Hide the Apply button once we've successfully replaced today's routine
-  // with this exact suggestion (so re-renders don't tempt a second apply).
-  const showApply = hasSuggestion && hasAuth && appliedToken !== token;
+  const isApplied = appliedToken === token && hasSuggestion;
+  const showApply = hasSuggestion && hasAuth && !isApplied;
 
   const suggestedSteps = useMemo(
     () => ({
@@ -84,11 +82,6 @@ export function RoutineBridge({
     [suggestedMorning, suggestedEvening],
   );
 
-  // ---- initial load -----------------------------------------------------
-  // Fetch today's routine so the quick panel has something to render. We
-  // tolerate empty/anon responses gracefully — the panel just shows the
-  // "no routine yet" hint (and the Apply CTA above it remains the primary
-  // action).
   useEffect(() => {
     if (!hasAuth) {
       setLoading(false);
@@ -120,14 +113,20 @@ export function RoutineBridge({
     };
   }, [hasAuth, t]);
 
-  // Cancel any pending autosave on unmount.
   useEffect(() => {
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
+      if (toggleAnimTimer.current) clearTimeout(toggleAnimTimer.current);
     };
   }, []);
 
-  // ---- persistence ------------------------------------------------------
+  useEffect(() => {
+    if (!toastMsg) return;
+    const id = window.setTimeout(() => setToastMsg(null), TOAST_MS);
+    return () => clearTimeout(id);
+  }, [toastMsg]);
+
   const persistRoutine = useCallback(
     async (next: RoutineDTO): Promise<RoutineDTO | null> => {
       const body = {
@@ -153,10 +152,17 @@ export function RoutineBridge({
     [],
   );
 
-  async function applySuggested() {
+  const applySuggested = useCallback(async () => {
     if (!hasSuggestion || !hasAuth) return;
     setApplying(true);
     setApplyError(null);
+    routineBeforeApplyRef.current = routine
+      ? {
+          ...routine,
+          morning: routine.morning.map((s) => ({ ...s })),
+          evening: routine.evening.map((s) => ({ ...s })),
+        }
+      : null;
     try {
       const next: RoutineDTO = {
         user_id: routine?.user_id ?? "",
@@ -177,12 +183,54 @@ export function RoutineBridge({
         saved: true,
       };
       const saved = await persistRoutine(next);
-      if (saved) setAppliedToken(token);
+      if (saved) {
+        setAppliedToken(token);
+        setToastMsg(t("applySuccess"));
+      }
     } catch {
       setApplyError(t("applyError"));
     } finally {
       setApplying(false);
+      setConfirmOpen(false);
     }
+  }, [hasAuth, hasSuggestion, persistRoutine, routine, suggestedSteps, t, token]);
+
+  const undoApply = useCallback(async () => {
+    if (!hasAuth || !isApplied) return;
+    setUnapplying(true);
+    setApplyError(null);
+    try {
+      const prev = routineBeforeApplyRef.current;
+      const next: RoutineDTO = prev ?? {
+        user_id: routine?.user_id ?? "",
+        routine_date: routine?.routine_date ?? "",
+        morning: [],
+        evening: [],
+        notes: routine?.notes ?? "",
+        source: "manual",
+        skill_mode: routine?.skill_mode ?? "",
+        saved: true,
+      };
+      await persistRoutine({ ...next, source: "manual" });
+      setAppliedToken(null);
+      routineBeforeApplyRef.current = null;
+      setToastMsg(t("unapplySuccess"));
+    } catch {
+      setApplyError(t("unapplyError"));
+    } finally {
+      setUnapplying(false);
+    }
+  }, [hasAuth, isApplied, persistRoutine, routine, t]);
+
+  function requestApply() {
+    if (!hasSuggestion || !hasAuth) return;
+    const existingSteps =
+      (routine?.morning.length ?? 0) + (routine?.evening.length ?? 0);
+    if (existingSteps > 0) {
+      setConfirmOpen(true);
+      return;
+    }
+    void applySuggested();
   }
 
   function toggleStep(section: "morning" | "evening", id: string) {
@@ -194,24 +242,27 @@ export function RoutineBridge({
       ),
     };
     setRoutine(updated);
+    setJustToggledId(id);
+    if (toggleAnimTimer.current) clearTimeout(toggleAnimTimer.current);
+    toggleAnimTimer.current = setTimeout(() => setJustToggledId(null), 550);
+
     if (!hasAuth) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(async () => {
       setAutoSaving(true);
       try {
         await persistRoutine(updated);
+        setSavedFlash(true);
+        if (savedFlashTimer.current) clearTimeout(savedFlashTimer.current);
+        savedFlashTimer.current = setTimeout(() => setSavedFlash(false), 1800);
       } catch {
-        // Best-effort autosave: surface a soft message but don't block UX.
         setLoadError(t("saveError"));
       } finally {
         setAutoSaving(false);
       }
-    }, 600);
+    }, AUTO_SAVE_MS);
   }
 
-  // ---- render -----------------------------------------------------------
-  // Hide the whole bridge for anon users when there's no suggestion either.
-  // (We don't want to surface a meaningless empty card after an unauth check-in.)
   if (!hasSuggestion && !routine && !loading) {
     return null;
   }
@@ -224,154 +275,198 @@ export function RoutineBridge({
     evening.filter((s) => s.completed).length;
 
   return (
-    <Card className="border-primary/25 bg-linear-to-br from-primary/5 via-accent/15 to-background">
-      <CardContent className="space-y-4 pt-5">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1">
-            <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-              <WandSparkles className="size-3" aria-hidden />
-              {t("title")}
-            </p>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {hasSuggestion ? t("subtitle") : t("subtitleNoSuggestion")}
-            </p>
-          </div>
-          <Link
-            href="/routine"
-            className="inline-flex shrink-0 items-center gap-1 self-start rounded-full border border-primary/30 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
-          >
-            {t("openFull")}
-            <ArrowRight className="size-3" aria-hidden />
-          </Link>
-        </div>
+    <>
+      <ApplyConfirmDialog
+        open={confirmOpen}
+        title={t("applyConfirmTitle")}
+        body={t("applyConfirmBody", {
+          am: morning.length,
+          pm: evening.length,
+          newAm: suggestedSteps.morning.length,
+          newPm: suggestedSteps.evening.length,
+        })}
+        cancelLabel={t("applyConfirmCancel")}
+        confirmLabel={t("applyConfirmOk")}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => void applySuggested()}
+      />
 
-        {/* Apply CTA — only when we have a coach suggestion that hasn't been
-            applied yet. Stays prominent so users notice it. */}
-        {showApply ? (
-          <div className="rounded-xl border border-primary/30 bg-background/80 p-3 sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold leading-snug">
-                  {t("applyTitle")}
-                </p>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {t("applyHint", {
-                    am: suggestedSteps.morning.length,
-                    pm: suggestedSteps.evening.length,
-                  })}
-                </p>
+      <Card className="border-primary/25 bg-linear-to-br from-primary/5 via-accent/15 to-background">
+        <CardContent className="space-y-4 pt-5">
+          {toastMsg ? (
+            <ToastBanner kind="ok" message={toastMsg} onDismiss={() => setToastMsg(null)} />
+          ) : null}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-1">
+              <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                <WandSparkles className="size-3" aria-hidden />
+                {t("title")}
+              </p>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {hasSuggestion ? t("subtitle") : t("subtitleNoSuggestion")}
+              </p>
+            </div>
+            <Link
+              href="/routine"
+              className="inline-flex shrink-0 items-center gap-1 self-start rounded-full border border-primary/30 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
+            >
+              {t("openFull")}
+              <ArrowRight className="size-3" aria-hidden />
+            </Link>
+          </div>
+
+          {isApplied ? (
+            <div className="flex flex-col gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/8 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-xs font-medium text-emerald-800 dark:text-emerald-200">
+                <CheckCircle2 className="size-4 shrink-0" aria-hidden />
+                {t("appliedStatus")}
               </div>
               <Button
                 type="button"
+                variant="ghost"
                 size="sm"
-                onClick={() => void applySuggested()}
-                disabled={applying || !hasAuth}
-                className="min-h-11 gap-1.5 sm:min-h-9"
+                onClick={() => void undoApply()}
+                disabled={applying || unapplying}
+                className="min-h-11 gap-1.5 self-start text-xs text-muted-foreground hover:text-foreground sm:min-h-9 sm:self-auto"
               >
-                {applying ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                    {t("applying")}
-                  </>
+                {unapplying ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
                 ) : (
-                  <>
-                    <Sparkles className="size-4" aria-hidden />
-                    {t("applyCta")}
-                  </>
+                  <Undo2 className="size-3.5" aria-hidden />
                 )}
+                {t("unapplyCta")}
               </Button>
             </div>
-            {applyError ? (
-              <p className="mt-2 text-xs text-destructive" role="alert">
-                {applyError}
-              </p>
-            ) : null}
-            {!hasAuth ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                {t("needAuth")}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-
-        {/* Quick panel — current routine with check toggles. */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-              {t("panelTitle")}
-            </p>
-            <span
-              className={cn(
-                "text-[11px] tabular-nums",
-                autoSaving ? "text-primary" : "text-muted-foreground",
-              )}
-              aria-live="polite"
-            >
-              {autoSaving
-                ? t("saving")
-                : appliedToken === token && hasSuggestion
-                  ? t("savedJustNow")
-                  : totalSteps > 0
-                    ? t("doneCount", { done: doneSteps, total: totalSteps })
-                    : ""}
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center gap-2 rounded-xl border border-dashed bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              {t("loading")}
-            </div>
-          ) : totalSteps === 0 ? (
-            <div className="space-y-2 rounded-xl border border-dashed bg-muted/30 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
-              <p>{t("emptyHint")}</p>
-              <Link
-                href="/routine"
-                className="inline-flex min-h-9 items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {t("emptyCta")}
-                <ArrowRight className="size-3" aria-hidden />
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <QuickColumn
-                icon={
-                  <Sun className="size-3.5 text-amber-500" aria-hidden />
-                }
-                label={t("am")}
-                steps={morning}
-                onToggle={(id) => toggleStep("morning", id)}
-                emptyLabel={t("amEmpty")}
-                doneLabel={t("doneShort")}
-                toggleOnLabel={t("toggleOn")}
-                toggleOffLabel={t("toggleOff")}
-                disabled={!hasAuth}
-              />
-              <QuickColumn
-                icon={
-                  <Moon className="size-3.5 text-indigo-500" aria-hidden />
-                }
-                label={t("pm")}
-                steps={evening}
-                onToggle={(id) => toggleStep("evening", id)}
-                emptyLabel={t("pmEmpty")}
-                doneLabel={t("doneShort")}
-                toggleOnLabel={t("toggleOn")}
-                toggleOffLabel={t("toggleOff")}
-                disabled={!hasAuth}
-              />
-            </div>
-          )}
-
-          {loadError ? (
-            <p className="text-xs text-destructive" role="alert">
-              {loadError}
-            </p>
           ) : null}
-        </div>
-      </CardContent>
-    </Card>
+
+          {showApply ? (
+            <div className="rounded-xl border border-primary/30 bg-background/80 p-3 sm:p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold leading-snug">
+                    {t("applyTitle")}
+                  </p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    {t("applyHint", {
+                      am: suggestedSteps.morning.length,
+                      pm: suggestedSteps.evening.length,
+                    })}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={requestApply}
+                  disabled={applying || !hasAuth}
+                  className="min-h-11 gap-1.5 sm:min-h-9"
+                >
+                  {applying ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" aria-hidden />
+                      {t("applying")}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-4" aria-hidden />
+                      {t("applyCta")}
+                    </>
+                  )}
+                </Button>
+              </div>
+              {applyError ? (
+                <p className="mt-2 text-xs text-destructive" role="alert">
+                  {applyError}
+                </p>
+              ) : null}
+              {!hasAuth ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("needAuth")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {t("panelTitle")}
+              </p>
+              <span
+                className={cn(
+                  "text-[11px] tabular-nums transition-colors",
+                  autoSaving
+                    ? "text-primary"
+                    : savedFlash
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-muted-foreground",
+                )}
+                aria-live="polite"
+              >
+                {autoSaving
+                  ? t("saving")
+                  : savedFlash
+                    ? t("savedJustNow")
+                    : totalSteps > 0
+                      ? t("doneCount", { done: doneSteps, total: totalSteps })
+                      : ""}
+              </span>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center gap-2 rounded-xl border border-dashed bg-muted/30 px-3 py-3 text-xs text-muted-foreground">
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                {t("loading")}
+              </div>
+            ) : totalSteps === 0 ? (
+              <div className="space-y-2 rounded-xl border border-dashed bg-muted/30 px-3 py-3 text-xs leading-relaxed text-muted-foreground">
+                <p>{t("emptyHint")}</p>
+                <Link
+                  href="/routine"
+                  className="inline-flex min-h-11 items-center gap-1 font-medium text-primary underline-offset-4 hover:underline sm:min-h-9"
+                >
+                  {t("emptyCta")}
+                  <ArrowRight className="size-3" aria-hidden />
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <QuickColumn
+                  icon={<Sun className="size-3.5 text-amber-500" aria-hidden />}
+                  label={t("am")}
+                  steps={morning}
+                  justToggledId={justToggledId}
+                  onToggle={(id) => toggleStep("morning", id)}
+                  emptyLabel={t("amEmpty")}
+                  doneLabel={t("doneShort")}
+                  toggleOnLabel={t("toggleOn")}
+                  toggleOffLabel={t("toggleOff")}
+                  disabled={!hasAuth}
+                />
+                <QuickColumn
+                  icon={<Moon className="size-3.5 text-indigo-500" aria-hidden />}
+                  label={t("pm")}
+                  steps={evening}
+                  justToggledId={justToggledId}
+                  onToggle={(id) => toggleStep("evening", id)}
+                  emptyLabel={t("pmEmpty")}
+                  doneLabel={t("doneShort")}
+                  toggleOnLabel={t("toggleOn")}
+                  toggleOffLabel={t("toggleOff")}
+                  disabled={!hasAuth}
+                />
+              </div>
+            )}
+
+            {loadError ? (
+              <p className="text-xs text-destructive" role="alert">
+                {loadError}
+              </p>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
@@ -379,6 +474,7 @@ function QuickColumn({
   icon,
   label,
   steps,
+  justToggledId,
   onToggle,
   emptyLabel,
   doneLabel,
@@ -389,6 +485,7 @@ function QuickColumn({
   icon: React.ReactNode;
   label: string;
   steps: RoutineStepDTO[];
+  justToggledId: string | null;
   onToggle: (id: string) => void;
   emptyLabel: string;
   doneLabel: string;
@@ -420,19 +517,24 @@ function QuickColumn({
                 aria-pressed={!!s.completed}
                 aria-label={s.completed ? toggleOnLabel : toggleOffLabel}
                 className={cn(
-                  "group flex w-full min-h-11 items-center gap-2.5 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors sm:min-h-9 sm:py-1",
+                  "group flex w-full min-h-11 items-center gap-2.5 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all duration-300 ease-out sm:min-h-9 sm:py-1",
                   s.completed
                     ? "border-primary/40 bg-primary/10 text-foreground"
                     : "border-border bg-background hover:bg-muted/60",
+                  justToggledId === s.id &&
+                    "motion-safe:scale-[0.97] motion-safe:ring-2 motion-safe:ring-primary/35",
                   disabled && "opacity-60",
                 )}
               >
                 <span
                   className={cn(
-                    "inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                    "inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-all duration-300 ease-out",
                     s.completed
-                      ? "border-primary bg-primary text-primary-foreground"
+                      ? "scale-110 border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-transparent group-hover:border-primary/50",
+                    justToggledId === s.id &&
+                      s.completed &&
+                      "motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300",
                   )}
                   aria-hidden
                 >
@@ -440,7 +542,7 @@ function QuickColumn({
                 </span>
                 <span
                   className={cn(
-                    "min-w-0 flex-1 truncate font-medium leading-snug",
+                    "min-w-0 flex-1 truncate font-medium leading-snug transition-opacity duration-200",
                     s.completed && "line-through opacity-70",
                   )}
                 >
@@ -460,7 +562,6 @@ function QuickColumn({
   );
 }
 
-/** Minimal step shape the API expects. Mirrors `routine-helpers.stripStep`. */
 function stripStep(s: RoutineStepDTO): RoutineStepDTO {
   return {
     id: s.id,

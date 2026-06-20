@@ -5,13 +5,11 @@ import {
   AlertTriangle,
   Ban,
   Lightbulb,
-  Loader2,
   Moon,
   RefreshCw,
   ShieldCheck,
   Sun,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
 import { splitRoutineHints } from "@/components/check-in/routine-hint-parser";
@@ -19,7 +17,6 @@ import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-c
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
-import { fetchSkinCheck, isAnalysisSettled } from "@/lib/api/skin-check";
 import { getAccessToken } from "@/lib/auth-token";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
@@ -33,6 +30,10 @@ function stripRoutinePrefix(line: string): string {
   return stripped || t;
 }
 
+/**
+ * Renders settled AI coach feedback. Polling / loading states are handled
+ * upstream by `useCheckInFeedback` + `AiFeedbackLoading`.
+ */
 export function DailyCoachFeedback({
   payload,
   onRetry,
@@ -42,115 +43,12 @@ export function DailyCoachFeedback({
   onRetry?: () => void;
 }) {
   const t = useTranslations("checkIn.coach");
-  const [livePayload, setLivePayload] = useState(payload);
-  const [pollTimedOut, setPollTimedOut] = useState(false);
 
-  useEffect(() => {
-    setLivePayload(payload);
-    setPollTimedOut(false);
-  }, [payload]);
-
-  const checkId = payload.check.id;
-  const analysisStatus = livePayload.analysis.status;
-
-  useEffect(() => {
-    if (isAnalysisSettled(analysisStatus)) return;
-
-    let cancelled = false;
-    const started = Date.now();
-    const maxMs = 5 * 60 * 1000;
-    const intervalMs = 2000;
-
-    const tick = async () => {
-      if (cancelled || Date.now() - started > maxMs) {
-        if (!cancelled) setPollTimedOut(true);
-        return;
-      }
-      const next = await fetchSkinCheck(checkId);
-      if (cancelled || !next) return;
-      setLivePayload(next);
-      if (!isAnalysisSettled(next.analysis.status)) {
-        window.setTimeout(tick, intervalMs);
-      }
-    };
-
-    void tick();
-    return () => {
-      cancelled = true;
-    };
-  }, [checkId, analysisStatus]);
-
-  const a = livePayload.analysis;
+  const a = payload.analysis;
   const c = a.coach;
-
-  if (
-    !pollTimedOut &&
-    (a.status === "pending" || a.status === "processing")
-  ) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col gap-2 py-8 text-muted-foreground" role="status">
-          <div className="flex items-center gap-3">
-            <Loader2 className="size-6 shrink-0 animate-spin text-primary" aria-hidden />
-            <p className="text-sm font-medium text-foreground">{t("processing")}</p>
-          </div>
-          <p className="text-xs pl-9">{t("processingHint")}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (
-    pollTimedOut &&
-    (a.status === "pending" || a.status === "processing")
-  ) {
-    return (
-      <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardContent className="space-y-3 pt-6">
-          <div
-            className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200"
-            role="alert"
-          >
-            <AlertTriangle className="size-4 shrink-0" aria-hidden />
-            {t("failedTitle")}
-          </div>
-          <p className="text-sm text-muted-foreground">{t("pollTimeout")}</p>
-          {onRetry ? (
-            <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onRetry}>
-              <RefreshCw className="size-4" aria-hidden />
-              {t("retry")}
-            </Button>
-          ) : null}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (a.status === "failed" || (c?.error_message && a.status !== "completed")) {
-    return (
-      <Card className="border-destructive/30 bg-destructive/5">
-        <CardContent className="space-y-3 pt-6">
-          <div className="flex items-center gap-2 font-medium text-destructive" role="alert">
-            <AlertTriangle className="size-4 shrink-0" aria-hidden />
-            {t("failedTitle")}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {c?.error_message || t("failedUnknown")}
-          </p>
-          {onRetry ? (
-            <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onRetry}>
-              <RefreshCw className="size-4" aria-hidden />
-              {t("retry")}
-            </Button>
-          ) : null}
-        </CardContent>
-      </Card>
-    );
-  }
 
   // Defensive fallback: backend reported `completed` but no coach payload (rare —
   // typically a parser glitch or a moderation block that didn't set status=failed).
-  // We still want to give the user something useful instead of a blank scroll.
   if (!c) {
     return (
       <Card className="border-amber-500/30 bg-amber-500/5">
@@ -272,10 +170,6 @@ export function DailyCoachFeedback({
         </div>
       )}
 
-      {/* Bridge between today's AI feedback and the dedicated /routine page.
-          - Lets users one-tap apply the suggested AM/PM routine.
-          - Renders a quick-tick panel for today's saved routine so they
-            can mark steps done without leaving this page. */}
       <RoutineBridge
         suggestedMorning={split.morning}
         suggestedEvening={split.evening}
@@ -382,8 +276,6 @@ export function DailyCoachFeedback({
         </p>
       ) : null}
 
-      {/* Feedback loop — votes feed back into BuildPriorFeedbackContext on
-          subsequent coach calls so the AI gradually adapts to this user. */}
       <FeedbackButtons
         targetType="skin_analysis"
         targetId={a.id}
@@ -392,7 +284,7 @@ export function DailyCoachFeedback({
   );
 }
 
-/** Soft 0-1 gauge bar; color-coded so users feel the read instantly. emphasis = used for "overall" with a slightly bigger track. */
+/** Soft 0-1 gauge bar; color-coded so users feel the read instantly. */
 function ScoreBar({
   label,
   value,
@@ -404,7 +296,6 @@ function ScoreBar({
 }) {
   const clamped = Math.min(1, Math.max(0, value));
   const pct = Math.round(clamped * 100);
-  // Color buckets keep the bar honest: low = soft amber (care needed), mid = neutral, high = teal/green (on-track).
   const color =
     clamped < 0.4
       ? "bg-amber-500/80"

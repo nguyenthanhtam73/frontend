@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
+import { PendingCheckinBanner } from "@/components/progress/pending-checkin-banner";
 import { ProgressTimeline } from "@/components/progress/progress-timeline";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -35,6 +36,7 @@ export default async function ProgressPage({ params }: Props) {
           {t("sub")}
         </p>
       </header>
+      <PendingCheckinBanner />
       <ProgressTimeline />
     </div>
   );
