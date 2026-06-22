@@ -3,15 +3,16 @@
  *
  * Strategies (kept intentionally small and dependency-free):
  *   • Cache-first      → hashed Next.js static assets, fonts, icons, images.
- *   • Stale-while-     → top-level HTML navigations: instant load from cache,
- *     revalidate          background refresh keeps it fresh.
+ *   • Network-first    → top-level HTML navigations: always fetch fresh HTML so
+ *                         post-deploy chunk hashes stay in sync; cache is fallback
+ *                         when offline (stale-while-revalidate broke mobile after deploys).
  *   • Network-first    → JSON API responses; falls back to cache when offline
  *                         so the diary timeline / routine still render.
  *
  * Bump CACHE_VERSION on any change so old clients pick up the new SW.
  */
 
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const STATIC_CACHE = `dadiary-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `dadiary-runtime-${CACHE_VERSION}`;
 const HTML_CACHE = `dadiary-html-${CACHE_VERSION}`;
@@ -107,7 +108,9 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isNavigation(req)) {
-    event.respondWith(staleWhileRevalidate(req, HTML_CACHE));
+    // Network-first keeps HTML aligned with hashed /_next/static assets after each
+    // Vercel deploy. Stale-while-revalidate served old HTML + missing JS on mobile.
+    event.respondWith(networkFirstHtml(req, HTML_CACHE, 10000));
     return;
   }
 
@@ -181,6 +184,38 @@ async function networkFirst(req, cacheName, timeoutMs = 4000) {
       status: 503,
       headers: { "Content-Type": "application/json" },
     });
+  }
+}
+
+/** HTML navigations: network-first with cache / home-shell / plain-text offline fallbacks. */
+async function networkFirstHtml(req, cacheName, timeoutMs = 10000) {
+  const cache = await caches.open(cacheName);
+  try {
+    const res = await Promise.race([
+      fetch(req),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("network-timeout")), timeoutMs),
+      ),
+    ]);
+    if (res && res.ok) cache.put(req, res.clone());
+    return res;
+  } catch {
+    const cached = await cache.match(req);
+    if (cached) return cached;
+
+    const path = new URL(req.url).pathname.replace(/\/$/, "") || "/";
+    if (path === "/") {
+      const shell = (await cache.match("/")) ?? (await caches.match("/"));
+      if (shell) return shell;
+    }
+
+    return new Response(
+      "Bạn đang offline. Vui lòng kiểm tra kết nối.\nYou are offline. Please check your connection.",
+      {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      },
+    );
   }
 }
 
