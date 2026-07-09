@@ -326,7 +326,7 @@
       "viewLater": "Xem kết quả sau",
       "keepTabHint": "Bạn có thể rời tab — nhật ký đã được lưu. Quay lại trang này hoặc mở Xem da thay đổi để xem khi xong.",
       "timeoutTitle": "Phản hồi AI chưa sẵn sàng",
-      "timeoutBody": "Đã chờ hơn 90 giây mà chưa có kết quả. Nhật ký của bạn vẫn đã lưu — thử chờ thêm hoặc xem sau trong dòng thời gian.",
+      "timeoutBody": "Đã chờ hơn 120 giây mà chưa có kết quả. Nhật ký của bạn vẫn đã lưu — thử chờ thêm hoặc xem sau trong dòng thời gian.",
       "retryPolling": "Thử chờ thêm"
     },
     "coach": {

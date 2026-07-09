@@ -326,7 +326,7 @@
       "viewLater": "View later",
       "keepTabHint": "You can leave this tab — your check-in is saved. Come back here or open Progress to see results when ready.",
       "timeoutTitle": "AI feedback isn't ready yet",
-      "timeoutBody": "We waited over 90 seconds with no result. Your check-in is saved — try waiting a bit longer or view it later on your timeline.",
+      "timeoutBody": "We waited over 120 seconds with no result. Your check-in is saved — try waiting a bit longer or view it later on your timeline.",
       "retryPolling": "Keep waiting"
     },
     "coach": {

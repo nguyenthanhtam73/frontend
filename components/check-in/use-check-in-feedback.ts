@@ -17,7 +17,7 @@ import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 const POLL_FAST_MS = 1000;
 const POLL_SLOW_MS = 2500;
 const POLL_PHASE_SWITCH_MS = 20_000;
-const TIMEOUT_MS = 90_000;
+const TIMEOUT_MS = 120_000;
 const MAX_NETWORK_RETRIES = 3;
 const NETWORK_RETRY_MS = 1500;
 const PROGRESS_TICK_MS = 800;
