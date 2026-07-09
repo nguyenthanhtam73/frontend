@@ -13,10 +13,10 @@ import {
 } from "@/lib/check-in/pending-feedback-session";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
-/** Smart polling: 2s for first 30s, then 4s; hard stop at 90s. */
-const POLL_FAST_MS = 2000;
-const POLL_SLOW_MS = 4000;
-const POLL_PHASE_SWITCH_MS = 30_000;
+/** Smart polling: 1s for first 20s, then 2.5s; hard stop at 90s. */
+const POLL_FAST_MS = 1000;
+const POLL_SLOW_MS = 2500;
+const POLL_PHASE_SWITCH_MS = 20_000;
 const TIMEOUT_MS = 90_000;
 const MAX_NETWORK_RETRIES = 3;
 const NETWORK_RETRY_MS = 1500;
