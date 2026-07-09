@@ -1,5 +1,16 @@
 {
   "projectId": "prj_i9VIRTxrdFQFsZnRBaZMg4NlbAVL",
   "orgId": "team_H0EP3oDxgw49jvbj3Zn2ipeD",
-  "projectName": "frontend"
+  "projectName": "frontend",
+  "settings": {
+    "createdAt": 1780002095718,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
 }

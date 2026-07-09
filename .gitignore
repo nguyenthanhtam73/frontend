@@ -39,3 +39,10 @@ yarn-error.log*
 # vercel — keep project link in git; ignore pulled env files
 .vercel/*
 !.vercel/project.json
+
+# typescript / next build artifacts
+*.tsbuildinfo
+next-env.d.ts
+
+# static export output
+/export/
