@@ -3,8 +3,8 @@
 import { Clock3, Sparkles, Tag } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { ProgressPhoto } from "@/components/progress/progress-photo";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiBaseUrl } from "@/lib/api";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
 
 /** ProgressEntryCard — one row on the timeline.
@@ -23,12 +23,9 @@ export function ProgressEntryCard({ entry }: { entry: ProgressEntryDTO }) {
       <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted shadow-sm sm:size-24">
           {thumb ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={absURL(thumb)}
+            <ProgressPhoto
+              url={thumb}
               alt={`${entry.title?.trim() || t("untitled")} — ${entry.check_date}`}
-              className="size-full object-cover"
-              loading="lazy"
             />
           ) : (
             <div className="flex size-full items-center justify-center text-xs text-muted-foreground">—</div>
@@ -89,9 +86,4 @@ export function ProgressEntryCard({ entry }: { entry: ProgressEntryDTO }) {
       </div>
     </Card>
   );
-}
-
-function absURL(u: string): string {
-  if (u.startsWith("http")) return u;
-  return `${apiBaseUrl}${u}`;
 }

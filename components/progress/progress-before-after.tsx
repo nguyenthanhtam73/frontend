@@ -3,8 +3,8 @@
 import { ArrowRight, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { ProgressPhoto } from "@/components/progress/progress-photo";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiBaseUrl } from "@/lib/api";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
 
 /** Before-After card — first entry in the range on the left, latest on the right.
@@ -75,14 +75,8 @@ function PhotoSlot({
     <div
       className={`relative overflow-hidden rounded-xl border bg-muted shadow-sm ${highlight ? "ring-2 ring-primary/30" : "ring-1 ring-transparent"}`}
     >
-      <div className="aspect-square w-full">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={absURL(url)}
-          alt={`${label} · ${date}`}
-          className="size-full object-cover"
-          loading="lazy"
-        />
+      <div className="relative aspect-square w-full">
+        <ProgressPhoto url={url} alt={`${label} · ${date}`} />
       </div>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent px-2 py-1.5">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-white/90">{label}</p>
@@ -122,11 +116,4 @@ function DeltaRow({ before, after }: { before: number; after: number }) {
 
 function pickThumbnail(entry: ProgressEntryDTO): string | null {
   return entry.image_urls?.[0] ?? null;
-}
-
-/** Skin-check uploads are stored as backend-relative paths like "/uploads/...";
- *  prefix with `apiBaseUrl` so cross-origin dev (frontend :3000 → backend :8080) works. */
-function absURL(u: string): string {
-  if (u.startsWith("http")) return u;
-  return `${apiBaseUrl}${u}`;
 }
