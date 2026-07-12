@@ -535,6 +535,8 @@ export function CheckInForm() {
             variant="processing"
             progress={feedback.fakeProgress}
             statusStep={feedback.statusStep}
+            isSlow={feedback.isSlow}
+            startedAt={feedback.startedAt}
             onCancelWait={feedback.cancelWait}
             onViewLater={handleViewLater}
           />

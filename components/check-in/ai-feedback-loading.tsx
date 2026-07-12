@@ -4,6 +4,10 @@ import {
   AlertTriangle,
   ArrowRight,
   Ban,
+  CheckCircle2,
+  Clock,
+  History,
+  Hourglass,
   Lightbulb,
   Loader2,
   Moon,
@@ -14,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +37,8 @@ export function AiFeedbackLoading({
   variant = "processing",
   progress,
   statusStep = 0,
+  isSlow = false,
+  startedAt = 0,
   onCancelWait,
   onViewLater,
   onRetryPolling,
@@ -39,6 +46,8 @@ export function AiFeedbackLoading({
   variant?: Variant;
   progress: number;
   statusStep?: number;
+  isSlow?: boolean;
+  startedAt?: number;
   onCancelWait?: () => void;
   onViewLater?: () => void;
   onRetryPolling?: () => void;
@@ -46,7 +55,30 @@ export function AiFeedbackLoading({
   const t = useTranslations("checkIn.feedbackLoading");
   const isSubmitting = variant === "submitting";
   const isTimeout = variant === "timeout";
+  const isProcessing = !isSubmitting && !isTimeout;
   const pct = Math.max(0, Math.min(100, Math.round(progress)));
+
+  // Live elapsed timer — ticks once a second while processing. Based on the
+  // hook's poll start time so it stays accurate even after a page-reload resume.
+  const [elapsedSec, setElapsedSec] = useState(() =>
+    startedAt > 0 ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0,
+  );
+  useEffect(() => {
+    if (!isProcessing || startedAt <= 0) return;
+    const tick = () =>
+      setElapsedSec(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [isProcessing, startedAt]);
+
+  const elapsedLabel =
+    elapsedSec >= 60
+      ? t("elapsedOver", {
+          minutes: Math.floor(elapsedSec / 60),
+          seconds: elapsedSec % 60,
+        })
+      : t("elapsedUnder", { seconds: elapsedSec });
 
   const statusIdx =
     statusStep % STATUS_MESSAGE_COUNT;
@@ -80,7 +112,7 @@ export function AiFeedbackLoading({
       role={isTimeout ? "alert" : "status"}
       aria-busy={!isTimeout}
     >
-      <CardContent className="space-y-4 p-4 sm:p-6">
+      <CardContent className="space-y-5 p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <span
@@ -118,13 +150,41 @@ export function AiFeedbackLoading({
               size="sm"
               variant="outline"
               onClick={onCancelWait}
-              className="min-h-11 shrink-0 gap-1.5 sm:min-h-9"
+              aria-label={t("cancelWait")}
+              className="min-h-11 min-w-11 shrink-0 gap-1.5 sm:min-h-9"
             >
               <X className="size-3.5" aria-hidden />
               {t("cancelWait")}
             </Button>
           ) : null}
         </div>
+
+        {isProcessing ? (
+          <div className="space-y-2.5">
+            <p className="flex items-start gap-2 rounded-lg bg-emerald-500/10 px-3 py-2.5 text-xs font-medium leading-relaxed text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
+              <span className="min-w-0">{t("savedAnalyzing")}</span>
+            </p>
+            <p
+              aria-hidden="true"
+              className={cn(
+                "flex items-center gap-1.5 px-1 text-xs tabular-nums transition-colors duration-500",
+                isSlow
+                  ? "font-semibold text-amber-700 dark:text-amber-300"
+                  : "text-muted-foreground",
+              )}
+            >
+              <Hourglass className="size-3.5 shrink-0" aria-hidden />
+              {elapsedLabel}
+            </p>
+            {isSlow ? (
+              <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2.5 text-xs font-medium leading-relaxed text-amber-700 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-500 dark:text-amber-300">
+                <Clock className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <span className="min-w-0">{t("slowWarning")}</span>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         {!isTimeout ? (
           <div className="space-y-2">
@@ -160,28 +220,43 @@ export function AiFeedbackLoading({
 
         {!isTimeout ? <CoachFeedbackSkeleton /> : null}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
           {isTimeout && onRetryPolling ? (
             <Button
               type="button"
               size="sm"
               onClick={onRetryPolling}
-              className="min-h-11 gap-1.5 sm:min-h-9"
+              aria-label={t("retryPolling")}
+              className="min-h-11 gap-1.5 transition-colors sm:min-h-9"
             >
               <RefreshCw className="size-4" aria-hidden />
               {t("retryPolling")}
             </Button>
           ) : null}
-          {(isTimeout || (!isSubmitting && onViewLater)) && onViewLater ? (
+          {(isTimeout || (isProcessing && onViewLater)) && onViewLater ? (
             <Button
               type="button"
               size="sm"
-              variant={isTimeout ? "outline" : "secondary"}
+              variant={isTimeout ? "outline" : isSlow ? "default" : "secondary"}
               onClick={onViewLater}
-              className="min-h-11 gap-1.5 sm:min-h-9"
+              aria-label={isProcessing ? t("leaveAndViewLater") : t("viewLater")}
+              className={cn(
+                "min-h-11 gap-1.5 transition-all duration-300 sm:min-h-9",
+                isProcessing && isSlow &&
+                  "font-semibold shadow-sm ring-1 ring-primary/40 sm:min-h-10 sm:text-sm",
+              )}
             >
-              {t("viewLater")}
-              <ArrowRight className="size-4" aria-hidden />
+              {isProcessing ? (
+                <>
+                  <History className="size-4" aria-hidden />
+                  {t("leaveAndViewLater")}
+                </>
+              ) : (
+                <>
+                  {t("viewLater")}
+                  <ArrowRight className="size-4" aria-hidden />
+                </>
+              )}
             </Button>
           ) : null}
         </div>

@@ -322,12 +322,17 @@
       "status3": "Đang soạn gợi ý chăm da sáng/tối phù hợp…",
       "status4": "Đang kiểm tra lưu ý an toàn và kem chống nắng…",
       "status5": "Gần xong rồi — thường mất khoảng 15–60 giây…",
+      "savedAnalyzing": "Đã lưu nhật ký thành công. AI đang phân tích…",
+      "elapsedUnder": "Đã chờ {seconds} giây",
+      "elapsedOver": "Đã chờ {minutes} phút {seconds} giây",
+      "slowWarning": "AI đang xử lý lâu hơn bình thường một chút — bạn có thể rời trang và quay lại sau nhé.",
       "cancelWait": "Hủy chờ",
       "viewLater": "Xem kết quả sau",
+      "leaveAndViewLater": "Rời trang & xem kết quả sau",
       "keepTabHint": "Bạn có thể rời tab — nhật ký đã được lưu. Quay lại trang này hoặc mở Xem da thay đổi để xem khi xong.",
       "timeoutTitle": "Phản hồi AI chưa sẵn sàng",
-      "timeoutBody": "Đã chờ hơn 120 giây mà chưa có kết quả. Nhật ký của bạn vẫn đã lưu — thử chờ thêm hoặc xem sau trong dòng thời gian.",
-      "retryPolling": "Thử chờ thêm"
+      "timeoutBody": "AI đang phân tích ảnh của bạn. Bạn có thể rời trang này và quay lại sau để xem kết quả — nhật ký của bạn đã được lưu.",
+      "retryPolling": "Tiếp tục chờ kết quả"
     },
     "coach": {
       "title": "Lời khuyên hôm nay",
@@ -628,9 +633,9 @@
       "networkError": "Mạng chưa ổn — thử lại sau giây lát nhé."
     },
     "pendingBanner": {
-      "title": "Check-in hôm nay đang được AI phân tích…",
-      "body": "Bạn có thể xem kết quả sau hoặc quay lại trang nhật ký da.",
-      "viewDetail": "Xem chi tiết",
+      "title": "Bạn có nhật ký đang chờ AI phân tích",
+      "body": "AI đang phân tích ảnh và tình trạng da của bạn.",
+      "viewDetail": "Xem kết quả",
       "dismiss": "Đóng",
       "waitElapsed": "Đã chờ {duration}",
       "waitElapsedMinSec": "{m} phút {s} giây",

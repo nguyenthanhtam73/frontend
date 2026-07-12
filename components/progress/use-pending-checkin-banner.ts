@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { apiBaseUrl } from "@/lib/api";
-import { fetchSkinCheckResult, isAnalysisSettled } from "@/lib/api/skin-check";
+import { fetchSkinCheckResult } from "@/lib/api/skin-check";
 import {
+  clearPersistedCheckInPending,
   dismissBannerForCheck,
   isAnalysisProcessing,
   isBannerDismissedForCheck,
@@ -23,6 +24,17 @@ const ELAPSED_TICK_MS = 1000;
 
 function pollDelayMs(pollElapsedMs: number): number {
   return pollElapsedMs < POLL_PHASE_SWITCH_MS ? POLL_FAST_MS : POLL_SLOW_MS;
+}
+
+/**
+ * Drop the persisted pending session once its analysis has settled, so a stale
+ * checkInId doesn't linger in sessionStorage until the TTL. Only clears when the
+ * settled id matches the persisted one (the id may have come from the timeline).
+ */
+function clearSessionIfMatches(id: string) {
+  if (readPersistedCheckInPending()?.checkId === id) {
+    clearPersistedCheckInPending();
+  }
 }
 
 /** Resolve a candidate check-in id from session or the newest timeline entry. */
@@ -167,6 +179,7 @@ export function usePendingCheckinBanner() {
 
       if (result.ok === false) {
         if (result.kind === "not_found") {
+          clearSessionIfMatches(id);
           hideAnimated();
           return "settled";
         }
@@ -179,11 +192,9 @@ export function usePendingCheckinBanner() {
         return "processing";
       }
 
-      if (isAnalysisSettled(status)) {
-        hideAnimated();
-        return "settled";
-      }
-
+      // completed / failed (or any non-processing terminal state) — the result is
+      // ready, so drop the pending session and retire the banner.
+      clearSessionIfMatches(id);
       hideAnimated();
       return "settled";
     },

@@ -13,11 +13,13 @@ import {
 } from "@/lib/check-in/pending-feedback-session";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
-/** Smart polling: 1s for first 20s, then 2.5s; hard stop at 90s. */
+/** Smart polling: 1s for first 20s, then 2.5s; hard stop at TIMEOUT_MS. */
 const POLL_FAST_MS = 1000;
 const POLL_SLOW_MS = 2500;
 const POLL_PHASE_SWITCH_MS = 20_000;
-const TIMEOUT_MS = 120_000;
+const TIMEOUT_MS = 160_000;
+/** After this long the coach is unusually slow — surface a reassuring "taking longer" hint. */
+const SLOW_WARNING_MS = 90_000;
 const MAX_NETWORK_RETRIES = 3;
 const NETWORK_RETRY_MS = 1500;
 const PROGRESS_TICK_MS = 800;
@@ -80,6 +82,10 @@ export function useCheckInFeedback() {
   const [checkId, setCheckId] = useState<string | null>(null);
   const [fakeProgress, setFakeProgress] = useState(0);
   const [statusStep, setStatusStep] = useState(0);
+  const [isSlow, setIsSlow] = useState(false);
+  // Wall-clock start of the current poll, exposed so the loading UI can render a
+  // live elapsed timer that stays accurate across page-reload resume.
+  const [pollStartedAt, setPollStartedAt] = useState(0);
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
 
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -129,11 +135,13 @@ export function useCheckInFeedback() {
     clearStatusStep();
     setFakeProgress(0);
     setStatusStep(0);
+    setIsSlow(false);
 
     progressTimer.current = setInterval(() => {
       const elapsed = elapsedMs(startedAt);
       const ratio = Math.min(1, elapsed / (TIMEOUT_MS * 0.95));
       setFakeProgress(Math.min(PROGRESS_CAP, Math.round(ratio * PROGRESS_CAP)));
+      if (elapsed >= SLOW_WARNING_MS) setIsSlow(true);
     }, PROGRESS_TICK_MS);
 
     statusTimer.current = setInterval(() => {
@@ -281,6 +289,7 @@ export function useCheckInFeedback() {
       const ts = startedAt ?? Date.now();
       pollMetaRef.current = { startedAt: ts, networkRetries: 0 };
 
+      setPollStartedAt(ts);
       setCheckId(id);
       syncPayload(initial);
       setPhase("processing");
@@ -331,6 +340,7 @@ export function useCheckInFeedback() {
     setPhase("idle");
     setFakeProgress(0);
     setStatusStep(0);
+    setIsSlow(false);
     setFailureMessage(null);
     devLog("cancelled wait");
   }, [stopPolling, syncPayload]);
@@ -343,6 +353,7 @@ export function useCheckInFeedback() {
     setPhase("idle");
     setFakeProgress(0);
     setStatusStep(0);
+    setIsSlow(false);
     devLog("dismissed wait", { checkId: checkIdRef.current });
   }, [stopPolling]);
 
@@ -366,6 +377,7 @@ export function useCheckInFeedback() {
     setPhase("idle");
     setFakeProgress(0);
     setStatusStep(0);
+    setIsSlow(false);
     setFailureMessage(null);
   }, [stopPolling, syncPayload]);
 
@@ -435,6 +447,8 @@ export function useCheckInFeedback() {
     checkId,
     fakeProgress,
     statusStep,
+    isSlow,
+    startedAt: pollStartedAt,
     failureMessage,
     beginSubmit,
     onSubmitSuccess,

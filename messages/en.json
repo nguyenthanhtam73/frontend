@@ -322,12 +322,17 @@
       "status3": "Drafting morning/evening routine ideas…",
       "status4": "Checking safety reminders and SPF notes…",
       "status5": "Almost there — this usually takes 15–60 seconds…",
+      "savedAnalyzing": "Check-in saved successfully. AI is analyzing…",
+      "elapsedUnder": "Waited {seconds}s",
+      "elapsedOver": "Waited {minutes}m {seconds}s",
+      "slowWarning": "AI is taking a little longer than usual — feel free to leave and come back later.",
       "cancelWait": "Stop waiting",
       "viewLater": "View later",
+      "leaveAndViewLater": "Leave & view results later",
       "keepTabHint": "You can leave this tab — your check-in is saved. Come back here or open Progress to see results when ready.",
       "timeoutTitle": "AI feedback isn't ready yet",
-      "timeoutBody": "We waited over 120 seconds with no result. Your check-in is saved — try waiting a bit longer or view it later on your timeline.",
-      "retryPolling": "Keep waiting"
+      "timeoutBody": "AI is still analyzing your photos. You can leave this page and come back later to see the result — your check-in is saved.",
+      "retryPolling": "Keep waiting for results"
     },
     "coach": {
       "title": "Today's notes from your buddy",
@@ -628,9 +633,9 @@
       "networkError": "Network hiccup — give it another try in a moment."
     },
     "pendingBanner": {
-      "title": "Today's check-in is being analyzed by AI…",
-      "body": "You can view results later or return to the check-in page.",
-      "viewDetail": "View details",
+      "title": "You have a check-in waiting for AI analysis",
+      "body": "AI is analyzing your photos and skin condition.",
+      "viewDetail": "View results",
       "dismiss": "Dismiss",
       "waitElapsed": "Waiting {duration}",
       "waitElapsedMinSec": "{m} min {s} sec",
