@@ -120,6 +120,20 @@
     "offlineNoticeBody": "Một số tính năng (đăng ảnh, bạn đồng hành AI, lưu chăm da sáng tối) có thể chưa hoạt động cho tới khi có mạng lại.",
     "offlineCheckInBody": "Tải ảnh và nhận lời khuyên AI cần kết nối mạng. Bạn vẫn có thể chuẩn bị nội dung và gửi sau."
   },
+  "iosInstall": {
+    "bannerTitle": "Cài DaDiary về màn hình chính để dùng như app",
+    "bannerDescription": "Bấm nút Chia sẻ → Thêm vào Màn hình chính",
+    "guideCta": "Hướng dẫn chi tiết",
+    "gotIt": "Đóng",
+    "dismiss": "Đóng",
+    "dialogLabel": "Hướng dẫn cài DaDiary trên iPhone",
+    "guideTitle": "Cài DaDiary lên iPhone / iPad",
+    "guideIntro": "Chỉ 3 bước, mất chưa tới 10 giây:",
+    "step1": "Bấm nút Chia sẻ trên thanh công cụ Safari (ô vuông có mũi tên hướng lên).",
+    "step2": "Kéo xuống và chọn “Thêm vào MH chính” (Add to Home Screen).",
+    "step3": "Bấm “Thêm” — DaDiary sẽ hiện như một app trên màn hình chính.",
+    "guideClose": "Đóng"
+  },
   "hero": {
     "badge": "DaDiary",
     "slogan": "Nhật ký da của bạn — bạn đồng hành AI mỗi ngày",

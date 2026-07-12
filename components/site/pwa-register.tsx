@@ -4,6 +4,7 @@ import { Download, RefreshCw, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { cn } from "@/lib/utils";
@@ -207,53 +208,59 @@ export function PwaRegister() {
   const showUpdate = waitingWorker !== null;
   const showInstall = !showUpdate && installEvent !== null && !installHidden;
 
-  if (!showUpdate && !showInstall) return null;
-
+  // The iOS banner self-gates (iOS only, not standalone, not dismissed) and
+  // never overlaps the Android/desktop install toast, since `beforeinstallprompt`
+  // doesn't fire on iOS. Render it independently of the toast container.
   return (
-    <div
-      className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex flex-col items-stretch gap-2 sm:bottom-4 sm:left-auto sm:right-4 sm:max-w-sm"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
-      {showUpdate && (
-        <ToastShell
-          tone="info"
-          icon={<RefreshCw className="size-4" aria-hidden />}
-          title={t("updateTitle")}
-          description={t("updateDescription")}
-          primary={{
-            label: updating ? t("updating") : t("updateCta"),
-            onClick: handleApplyUpdate,
-            disabled: updating,
-          }}
-          secondary={{
-            label: t("updateLater"),
-            onClick: handleUpdateDismiss,
-            ariaLabel: t("updateDismiss"),
-          }}
-          dialogLabel={t("updateDialogLabel")}
-        />
-      )}
+    <>
+      <IosInstallBanner />
+      {showUpdate || showInstall ? (
+        <div
+          className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex flex-col items-stretch gap-2 sm:bottom-4 sm:left-auto sm:right-4 sm:max-w-sm"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          {showUpdate && (
+            <ToastShell
+              tone="info"
+              icon={<RefreshCw className="size-4" aria-hidden />}
+              title={t("updateTitle")}
+              description={t("updateDescription")}
+              primary={{
+                label: updating ? t("updating") : t("updateCta"),
+                onClick: handleApplyUpdate,
+                disabled: updating,
+              }}
+              secondary={{
+                label: t("updateLater"),
+                onClick: handleUpdateDismiss,
+                ariaLabel: t("updateDismiss"),
+              }}
+              dialogLabel={t("updateDialogLabel")}
+            />
+          )}
 
-      {showInstall && (
-        <ToastShell
-          tone="brand"
-          icon={<Download className="size-4" aria-hidden />}
-          title={t("title")}
-          description={t("description")}
-          primary={{
-            label: installing ? t("installing") : t("install"),
-            onClick: handleInstall,
-            disabled: installing,
-          }}
-          secondary={{
-            label: t("later"),
-            onClick: handleInstallDismiss,
-            ariaLabel: t("dismiss"),
-          }}
-          dialogLabel={t("dialogLabel")}
-        />
-      )}
-    </div>
+          {showInstall && (
+            <ToastShell
+              tone="brand"
+              icon={<Download className="size-4" aria-hidden />}
+              title={t("title")}
+              description={t("description")}
+              primary={{
+                label: installing ? t("installing") : t("install"),
+                onClick: handleInstall,
+                disabled: installing,
+              }}
+              secondary={{
+                label: t("later"),
+                onClick: handleInstallDismiss,
+                ariaLabel: t("dismiss"),
+              }}
+              dialogLabel={t("dialogLabel")}
+            />
+          )}
+        </div>
+      ) : null}
+    </>
   );
 }
 

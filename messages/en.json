@@ -120,6 +120,20 @@
     "offlineNoticeBody": "Some features (photo uploads, AI buddy, saving routines) may not work until you're back online.",
     "offlineCheckInBody": "Uploading check-in photos and getting AI feedback need a connection. You can still prepare your entry and submit it later."
   },
+  "iosInstall": {
+    "bannerTitle": "Install DaDiary on your home screen to use it like an app",
+    "bannerDescription": "Tap Share → Add to Home Screen",
+    "guideCta": "How to install",
+    "gotIt": "Close",
+    "dismiss": "Dismiss",
+    "dialogLabel": "How to install DaDiary on iPhone",
+    "guideTitle": "Install DaDiary on iPhone / iPad",
+    "guideIntro": "Just 3 steps, under 10 seconds:",
+    "step1": "Tap the Share button in Safari's toolbar (the square with an upward arrow).",
+    "step2": "Scroll down and choose “Add to Home Screen”.",
+    "step3": "Tap “Add” — DaDiary will appear like an app on your home screen.",
+    "guideClose": "Close"
+  },
   "hero": {
     "badge": "DaDiary",
     "slogan": "Your skin diary — a friendly AI skincare buddy every day",
