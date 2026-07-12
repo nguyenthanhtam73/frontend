@@ -626,9 +626,21 @@
     "beforeAfter": {
       "title": "Before · After",
       "hint": "Comparing the oldest and newest photo in the selected window. Same lighting and angle make the comparison more honest.",
+      "caption": "Pick two photos with similar lighting and angle for a more accurate comparison.",
       "before": "Before",
-      "after": "Today",
-      "delta": "{d} pts"
+      "after": "After",
+      "latestBadge": "Latest",
+      "delta": "{d} pts",
+      "changePhoto": "Change photo",
+      "swap": "Swap",
+      "manualBadge": "Comparing manually",
+      "resetAuto": "Reset to automatic",
+      "pickerBeforeTitle": "Choose the Before photo",
+      "pickerAfterTitle": "Choose the After photo",
+      "pickerClose": "Close",
+      "notEnoughTitle": "Not enough photos to compare",
+      "notEnoughBody": "You need at least 2 photos to see the change. Check in more to track your skin progress.",
+      "notEnoughCta": "Check in now"
     },
     "entry": {
       "untitled": "Check-in",
@@ -637,9 +649,26 @@
       "photoCount": "{n} photos"
     },
     "empty": {
-      "title": "No check-ins in this range yet",
-      "body": "Start with one photo today and a few feeling tags — after 3–5 days you'll see a real timeline and before–after view.",
-      "cta": "Check in today"
+      "cta": "Start checking in now",
+      "benefit": "After 7–14 days of consistent check-ins, you'll clearly see your skin trend through charts and before/after photos.",
+      "first": {
+        "title": "Start your skin journey",
+        "body": "Start tracking your skin today. Just a few seconds a day and you'll clearly see how your skin changes over time."
+      },
+      "range": {
+        "title": "No data in this range yet",
+        "body": "There are no check-ins in this time window. Check in to start building your skin history.",
+        "viewAll": "View all time"
+      },
+      "preview": {
+        "label": "Here's what you'll see",
+        "streakValue": "🔥 7 days",
+        "streakLabel": "Streak",
+        "overallValue": "📈 +12%",
+        "overallLabel": "Overall",
+        "beforeAfterValue": "Before · After",
+        "beforeAfterLabel": "Photo compare"
+      }
     },
     "errors": {
       "needAuth": "Please sign in to view your progress.",

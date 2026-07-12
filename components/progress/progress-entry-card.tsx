@@ -6,20 +6,38 @@ import { useTranslations } from "next-intl";
 import { ProgressPhoto } from "@/components/progress/progress-photo";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
+import { cn } from "@/lib/utils";
 
 /** ProgressEntryCard — one row on the timeline.
  *
  *  Mobile-first layout: square thumbnail (left) + meta column (right). On wider
  *  screens the row keeps the same shape because vertically stacked content already
  *  reads well in a 3-column grid. */
-export function ProgressEntryCard({ entry }: { entry: ProgressEntryDTO }) {
+export function ProgressEntryCard({
+  entry,
+  highlighted = false,
+}: {
+  entry: ProgressEntryDTO;
+  /** When true (set briefly after a sparkline click), the card pulses a ring so
+   *  the user can spot which entry the data point maps to. */
+  highlighted?: boolean;
+}) {
   const t = useTranslations("progress.entry");
   const thumb = entry.image_urls?.[0];
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-md">
+    <Card
+      // Stable DOM id lets the timeline scroll straight to this card.
+      id={`progress-entry-${entry.id}`}
+      className={cn(
+        "overflow-hidden transition-all duration-300 hover:shadow-md",
+        highlighted
+          ? "shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background"
+          : "ring-0",
+      )}
+    >
       <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-muted shadow-sm sm:size-24">
           {thumb ? (

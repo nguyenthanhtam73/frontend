@@ -21,11 +21,14 @@ import {
 export function ProgressSummaryCard({
   summary,
   sparklinePoints,
+  onPointSelect,
 }: {
   summary: ProgressSummaryDataDTO;
   /** Optional. Pass the per-entry "overall" gauge values (oldest → newest) so the
    *  card can plot a sparkline. If empty, the chart is hidden gracefully. */
   sparklinePoints: SparklinePoint[];
+  /** Forwarded to the sparkline: clicking a point jumps to that timeline entry. */
+  onPointSelect?: (entryId: string) => void;
 }) {
   const t = useTranslations("progress.summary");
   void apiBaseUrl; // future use; placeholder to keep imports stable.
@@ -91,7 +94,12 @@ export function ProgressSummaryCard({
               <span>{t("sparklineLabel")}</span>
               <span className="tabular-nums">{sparklinePoints.length} pts</span>
             </div>
-            <ProgressSparkline points={sparklinePoints} height={48} ariaLabel={t("sparklineLabel")} />
+            <ProgressSparkline
+              points={sparklinePoints}
+              height={48}
+              ariaLabel={t("sparklineLabel")}
+              onPointSelect={onPointSelect}
+            />
           </div>
         ) : null}
 

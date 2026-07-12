@@ -1,8 +1,8 @@
 "use client";
 
-import { AlertCircle, Camera, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -18,6 +18,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 import { ProgressBeforeAfter } from "./progress-before-after";
+import { ProgressEmptyState } from "./progress-empty-state";
 import { ProgressEntryCard } from "./progress-entry-card";
 import { ProgressSummaryCard } from "./progress-summary-card";
 import type { SparklinePoint } from "./progress-sparkline";
@@ -37,16 +38,47 @@ export function ProgressTimeline() {
   const [data, setData] = useState<ProgressTimelineDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+  // Whether the user has EVER checked in (any time), used to pick the right empty
+  // state. `null` = not yet determined. A single ranged query can't tell a brand
+  // new user apart from an empty range, so we resolve this via an all-time probe.
+  const [everCheckedIn, setEverCheckedIn] = useState<boolean | null>(null);
+
+  const authHeaders = useCallback((): Record<string, string> => {
+    const headers: Record<string, string> = {};
+    const token = getAccessToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }, []);
+
+  // Cheap all-time probe: hits the summary endpoint (no entries payload) purely to
+  // learn whether any check-in exists at all. Only called when a ranged view came
+  // back empty and the range isn't already "all".
+  const probeEverCheckedIn = useCallback(
+    async (isStale?: () => boolean) => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/api/v1/progress/summary?range=all`, {
+          headers: authHeaders(),
+        });
+        const raw = await res.json().catch(() => ({}));
+        if (isStale?.()) return;
+        const total = raw?.data?.summary?.total_checks ?? 0;
+        setEverCheckedIn(total > 0);
+      } catch {
+        // On failure, default to the encouraging first-time copy.
+        if (!isStale?.()) setEverCheckedIn(false);
+      }
+    },
+    [authHeaders],
+  );
 
   const loadTimeline = useCallback(
     async (r: ProgressRangeKey, isStale?: () => boolean) => {
       setLoading(true);
       setErrMsg(null);
       try {
-        const headers: Record<string, string> = {};
-        const token = getAccessToken();
-        if (token) headers.Authorization = `Bearer ${token}`;
-        const res = await fetch(`${apiBaseUrl}/api/v1/progress?range=${r}`, { headers });
+        const res = await fetch(`${apiBaseUrl}/api/v1/progress?range=${r}`, {
+          headers: authHeaders(),
+        });
         const raw = await res.json().catch(() => ({}));
         if (isStale?.()) return;
         if (res.status === 401) {
@@ -59,7 +91,16 @@ export function ProgressTimeline() {
           setData(null);
           return;
         }
-        setData(raw.data as ProgressTimelineDTO);
+        const timeline = raw.data as ProgressTimelineDTO;
+        setData(timeline);
+        // Resolve which empty state to show (only matters when this range is empty).
+        if (timeline.entries.length > 0) {
+          setEverCheckedIn(true);
+        } else if (r === "all") {
+          setEverCheckedIn(false); // empty across all time = genuinely never
+        } else {
+          void probeEverCheckedIn(isStale);
+        }
       } catch {
         if (!isStale?.()) {
           setErrMsg(t("errors.networkError"));
@@ -69,7 +110,7 @@ export function ProgressTimeline() {
         if (!isStale?.()) setLoading(false);
       }
     },
-    [t],
+    [t, authHeaders, probeEverCheckedIn],
   );
 
   useEffect(() => {
@@ -81,22 +122,36 @@ export function ProgressTimeline() {
   }, [range, loadTimeline]);
 
   // Oldest-→-newest sparkline points (entries arrive newest-first; reverse + filter).
+  // We tag each point with its entry id so a sparkline click can jump to the row.
   const sparklinePoints = useMemo<SparklinePoint[]>(() => {
     if (!data) return [];
     return [...data.entries]
       .filter((e) => e.gauges?.overall != null)
       .reverse()
-      .map((e) => ({ date: e.check_date, value: e.gauges!.overall as number }));
+      .map((e) => ({ date: e.check_date, value: e.gauges!.overall as number, entryId: e.id }));
   }, [data]);
 
-  // Before-After candidate selection: most recent + first (oldest) completed entry
-  // in the same range that ALSO has a photo. Falls back gracefully to null.
-  const beforeAfter = useMemo(() => {
-    if (!data || data.entries.length < 2) return null;
-    const withPhoto = data.entries.filter((e) => (e.image_urls?.length ?? 0) > 0);
-    if (withPhoto.length < 2) return null;
-    return { after: withPhoto[0], before: withPhoto[withPhoto.length - 1] };
-  }, [data]);
+  // Which entry card is currently highlighted (after a sparkline click). The
+  // timeout ref lets us cancel a pending clear if the user clicks again quickly.
+  const [highlightedEntryId, setHighlightedEntryId] = useState<string | null>(null);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Clear any pending highlight timer on unmount.
+    return () => {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    };
+  }, []);
+
+  // Sparkline click → smooth-scroll to the matching entry card and pulse a ring on
+  // it for ~2.5s. We locate the card by its stable DOM id (set in ProgressEntryCard).
+  const focusEntry = useCallback((entryId: string) => {
+    const el = document.getElementById(`progress-entry-${entryId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightedEntryId(entryId);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setHighlightedEntryId(null), 2500);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -114,7 +169,15 @@ export function ProgressTimeline() {
         />
       ) : null}
 
-      {!errMsg && data && data.entries.length === 0 && !loading ? <EmptyState /> : null}
+      {!errMsg && data && data.entries.length === 0 && !loading ? (
+        // Distinguish a brand-new user ("first") from an empty range ("range").
+        // While the all-time probe is pending (everCheckedIn === null) we show the
+        // encouraging first-time copy; it upgrades to "range" once history is found.
+        <ProgressEmptyState
+          mode={everCheckedIn ? "range" : "first"}
+          onViewAll={() => setRange("all")}
+        />
+      ) : null}
 
       {!errMsg && data && data.entries.length > 0 ? (
         <div
@@ -123,11 +186,13 @@ export function ProgressTimeline() {
             loading && "pointer-events-none opacity-60",
           )}
         >
-          <ProgressSummaryCard summary={data.summary} sparklinePoints={sparklinePoints} />
+          <ProgressSummaryCard
+            summary={data.summary}
+            sparklinePoints={sparklinePoints}
+            onPointSelect={focusEntry}
+          />
 
-          {beforeAfter ? (
-            <ProgressBeforeAfter before={beforeAfter.before} after={beforeAfter.after} />
-          ) : null}
+          <ProgressBeforeAfter entries={data.entries} range={range} />
 
           <section className="space-y-2.5">
             <div className="flex items-center justify-between">
@@ -138,7 +203,11 @@ export function ProgressTimeline() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {data.entries.map((entry) => (
-                <ProgressEntryCard key={entry.id} entry={entry} />
+                <ProgressEntryCard
+                  key={entry.id}
+                  entry={entry}
+                  highlighted={entry.id === highlightedEntryId}
+                />
               ))}
             </div>
           </section>
@@ -244,27 +313,3 @@ function ErrorCard({
   );
 }
 
-/** Motivational empty state nudging the user toward their first check-in. */
-function EmptyState() {
-  const t = useTranslations("progress.empty");
-  return (
-    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-accent/40 to-background">
-      <div className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-      <CardContent className="relative space-y-4 py-10 text-center sm:py-14">
-        <span className="mx-auto inline-flex size-12 items-center justify-center rounded-full bg-background/80 shadow-sm ring-1 ring-primary/20">
-          <Camera className="size-5 text-primary" aria-hidden />
-        </span>
-        <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold tracking-tight sm:text-xl">{t("title")}</h2>
-          <p className="mx-auto max-w-md text-sm text-muted-foreground">{t("body")}</p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <ButtonLink href="/check-in" size="default" className="gap-1.5">
-            <Sparkles className="size-4" aria-hidden />
-            {t("cta")}
-          </ButtonLink>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}

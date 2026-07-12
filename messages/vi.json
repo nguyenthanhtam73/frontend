@@ -626,9 +626,21 @@
     "beforeAfter": {
       "title": "Trước · Sau",
       "hint": "So ảnh cũ nhất và mới nhất trong khoảng bạn chọn. Cùng ánh sáng & góc giúp so sánh chính xác hơn.",
+      "caption": "Chọn 2 ảnh có điều kiện ánh sáng và góc chụp tương đương để so sánh chính xác hơn.",
       "before": "Trước",
-      "after": "Hôm nay",
-      "delta": "{d} điểm"
+      "after": "Sau",
+      "latestBadge": "Mới nhất",
+      "delta": "{d} điểm",
+      "changePhoto": "Đổi ảnh",
+      "swap": "Đổi vị trí",
+      "manualBadge": "Đang so sánh thủ công",
+      "resetAuto": "Đặt lại tự động",
+      "pickerBeforeTitle": "Chọn ảnh Trước",
+      "pickerAfterTitle": "Chọn ảnh Sau",
+      "pickerClose": "Đóng",
+      "notEnoughTitle": "Chưa đủ ảnh để so sánh",
+      "notEnoughBody": "Cần ít nhất 2 ảnh để xem sự thay đổi. Hãy check-in thêm để theo dõi tiến trình da.",
+      "notEnoughCta": "Đi check-in ngay"
     },
     "entry": {
       "untitled": "Nhật ký",
@@ -637,9 +649,26 @@
       "photoCount": "{n} ảnh"
     },
     "empty": {
-      "title": "Chưa có nhật ký nào trong khoảng này",
-      "body": "Bắt đầu bằng 1 ảnh hôm nay + chọn vài cảm nhận — sau 3–5 ngày bạn sẽ thấy dòng thời gian & trước–sau rõ ràng.",
-      "cta": "Ghi nhật ký da hôm nay"
+      "cta": "Bắt đầu check-in ngay",
+      "benefit": "Sau 7–14 ngày check-in liên tục, bạn sẽ thấy rõ xu hướng da qua biểu đồ và ảnh before/after.",
+      "first": {
+        "title": "Bắt đầu hành trình chăm da của bạn",
+        "body": "Bắt đầu theo dõi da của bạn ngay hôm nay. Chỉ cần vài giây mỗi ngày, bạn sẽ thấy rõ sự thay đổi của da theo thời gian."
+      },
+      "range": {
+        "title": "Chưa có dữ liệu trong khoảng này",
+        "body": "Chưa có check-in nào trong khoảng thời gian này. Hãy check-in để bắt đầu xây dựng lịch sử da của bạn.",
+        "viewAll": "Xem toàn bộ thời gian"
+      },
+      "preview": {
+        "label": "Đây là những gì bạn sẽ thấy",
+        "streakValue": "🔥 7 ngày",
+        "streakLabel": "Chuỗi liên tiếp",
+        "overallValue": "📈 +12%",
+        "overallLabel": "Tổng thể",
+        "beforeAfterValue": "Trước · Sau",
+        "beforeAfterLabel": "So sánh ảnh"
+      }
     },
     "errors": {
       "needAuth": "Cần đăng nhập để xem da thay đổi.",
