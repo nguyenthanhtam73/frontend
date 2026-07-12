@@ -25,6 +25,7 @@ import {
 import { OnboardingAiErrorPanel, ManualSkinFallbackBanner } from "@/components/onboarding/onboarding-ai-error-panel";
 import { OnboardingAiLoading } from "@/components/onboarding/onboarding-ai-loading";
 import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
+import { AiDisclaimer } from "@/components/ui/ai-disclaimer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -668,6 +669,11 @@ export function OnboardingFlow() {
                   </div>
                 </details>
               )}
+
+              {/* Skin read from photos is a hint, not a diagnosis. */}
+              {ob.aiSnapshot && !isManualReview ? (
+                <AiDisclaimer variant="short" />
+              ) : null}
 
               <QuickChipGrid
                 title={t("steps.typeTitle")}

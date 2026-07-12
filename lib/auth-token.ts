@@ -8,10 +8,19 @@ function emitAuthChanged(): void {
   window.dispatchEvent(new CustomEvent(AUTH_CHANGED_EVENT));
 }
 
-/** Persists JWT access token for Authorization: Bearer (demo/local UX). */
+/** Persists JWT access token for Authorization: Bearer (demo/local UX).
+ *
+ *  localStorage can throw on iOS Safari private mode or when the quota is full,
+ *  so we guard the write — a failed persist shouldn't crash login. We still emit
+ *  the change event so the UI reflects the (possibly not-persisted) auth state
+ *  rather than hanging in a half-updated view. */
 export function setAccessToken(token: string): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+  try {
+    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+  } catch {
+    /* storage blocked/full — session just won't survive a reload */
+  }
   emitAuthChanged();
 }
 
@@ -49,7 +58,13 @@ export function isTokenExpired(token: string): boolean {
  */
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  let token: string | null = null;
+  try {
+    token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    // Reading storage can throw when it's blocked (private mode); treat as guest.
+    return null;
+  }
   if (!token) return null;
   if (isTokenExpired(token)) return null;
   return token;
@@ -57,7 +72,11 @@ export function getAccessToken(): string | null {
 
 export function clearAccessToken(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  try {
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    /* nothing we can do if storage is unavailable */
+  }
   emitAuthChanged();
 }
 

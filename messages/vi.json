@@ -87,7 +87,8 @@
     },
     "footer": {
       "tagline": "Nhật ký da của bạn · Bạn đồng hành AI · trước–sau & tiến bộ",
-      "copyright": "© {year} DaDiary"
+      "copyright": "© {year} DaDiary",
+      "disclaimer": "DaDiary đưa ra gợi ý chăm da mang tính tham khảo, không thay thế tư vấn y tế chuyên môn."
     },
     "theme": {
       "label": "Giao diện",
@@ -99,6 +100,17 @@
       "vietnamese": "Tiếng Việt",
       "english": "Tiếng Anh"
     }
+  },
+  "disclaimer": {
+    "ai": "Đây chỉ là gợi ý tham khảo dựa trên ảnh và thông tin bạn cung cấp. DaDiary không thay thế cho tư vấn của bác sĩ da liễu. Nếu da có vấn đề nghiêm trọng, hãy đến gặp chuyên gia.",
+    "aiShort": "Gợi ý tham khảo từ AI — không thay thế tư vấn của bác sĩ da liễu."
+  },
+  "errorBoundary": {
+    "title": "Đã có lỗi xảy ra",
+    "body": "Xin lỗi, có gì đó không ổn. Bạn thử lại nhé — nếu vẫn lỗi, hãy tải lại trang.",
+    "retry": "Thử lại",
+    "reload": "Tải lại trang",
+    "home": "Về trang chủ"
   },
   "pwa": {
     "dialogLabel": "Cài DaDiary",

@@ -2,6 +2,7 @@
 
 import { Check, Loader2, Moon, RefreshCw, Sun, X } from "lucide-react";
 
+import { AiDisclaimer } from "@/components/ui/ai-disclaimer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
@@ -132,6 +133,9 @@ export function SuggestionPreview({
           source="routine_suggest"
           contextId={suggestion.feedback_target_id}
         />
+
+        {/* AI routine is a starting point — remind users to review before saving. */}
+        <AiDisclaimer variant="short" />
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="default" onClick={onApply}>

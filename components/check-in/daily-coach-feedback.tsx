@@ -14,6 +14,7 @@ import {
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
 import { splitRoutineHints } from "@/components/check-in/routine-hint-parser";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
+import { AiDisclaimer } from "@/components/ui/ai-disclaimer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
@@ -275,6 +276,10 @@ export function DailyCoachFeedback({
             : null}
         </p>
       ) : null}
+
+      {/* Reference-only reminder near AI output (in addition to any backend
+          medical_disclaimer above, which may be absent). */}
+      <AiDisclaimer />
 
       <FeedbackButtons
         targetType="skin_analysis"

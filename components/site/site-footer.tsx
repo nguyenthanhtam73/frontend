@@ -34,8 +34,9 @@ export async function SiteFooter() {
           </Link>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-6xl border-t border-border/40 px-4 py-3 text-center text-xs text-muted-foreground sm:px-6 sm:text-left">
-        {tFooter("copyright", { year })}
+      <div className="mx-auto w-full max-w-6xl space-y-1.5 border-t border-border/40 px-4 py-3 text-center text-xs text-muted-foreground sm:px-6 sm:text-left">
+        <p className="leading-relaxed">{tFooter("disclaimer")}</p>
+        <p>{tFooter("copyright", { year })}</p>
       </div>
     </footer>
   );

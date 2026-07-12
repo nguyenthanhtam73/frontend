@@ -87,7 +87,8 @@
     },
     "footer": {
       "tagline": "Your skin diary · AI buddy · progress & before/after",
-      "copyright": "© {year} DaDiary"
+      "copyright": "© {year} DaDiary",
+      "disclaimer": "DaDiary offers skincare suggestions for reference only and does not replace professional medical advice."
     },
     "theme": {
       "label": "Theme",
@@ -99,6 +100,17 @@
       "vietnamese": "Tiếng Việt",
       "english": "English"
     }
+  },
+  "disclaimer": {
+    "ai": "This is a reference suggestion based on the photos and information you provide. DaDiary is not a substitute for advice from a dermatologist. If your skin has a serious problem, please see a professional.",
+    "aiShort": "AI reference suggestion — not a substitute for a dermatologist's advice."
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "body": "Sorry, something broke. Please try again — if it keeps happening, reload the page.",
+    "retry": "Try again",
+    "reload": "Reload page",
+    "home": "Back to home"
   },
   "pwa": {
     "dialogLabel": "Install DaDiary",
