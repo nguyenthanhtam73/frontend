@@ -329,9 +329,10 @@
       "cancelWait": "Hủy chờ",
       "viewLater": "Xem kết quả sau",
       "leaveAndViewLater": "Rời trang & xem kết quả sau",
+      "resumedBadge": "Tiếp tục từ phiên trước",
       "keepTabHint": "Bạn có thể rời tab — nhật ký đã được lưu. Quay lại trang này hoặc mở Xem da thay đổi để xem khi xong.",
-      "timeoutTitle": "Phản hồi AI chưa sẵn sàng",
-      "timeoutBody": "AI đang phân tích ảnh của bạn. Bạn có thể rời trang này và quay lại sau để xem kết quả — nhật ký của bạn đã được lưu.",
+      "timeoutTitle": "AI đang xử lý, bạn có muốn chờ thêm không?",
+      "timeoutBody": "Việc phân tích có thể mất thêm một chút thời gian. Bạn có thể tiếp tục chờ hoặc rời trang và quay lại sau.",
       "retryPolling": "Tiếp tục chờ kết quả"
     },
     "coach": {

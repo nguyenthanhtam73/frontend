@@ -536,6 +536,7 @@ export function CheckInForm() {
             progress={feedback.fakeProgress}
             statusStep={feedback.statusStep}
             isSlow={feedback.isSlow}
+            isResumed={feedback.isResumed}
             startedAt={feedback.startedAt}
             onCancelWait={feedback.cancelWait}
             onViewLater={handleViewLater}
@@ -546,6 +547,7 @@ export function CheckInForm() {
           <AiFeedbackLoading
             variant="timeout"
             progress={feedback.fakeProgress}
+            isResumed={feedback.isResumed}
             onRetryPolling={feedback.retryPolling}
             onViewLater={handleViewLater}
           />

@@ -86,6 +86,9 @@ export function useCheckInFeedback() {
   // Wall-clock start of the current poll, exposed so the loading UI can render a
   // live elapsed timer that stays accurate across page-reload resume.
   const [pollStartedAt, setPollStartedAt] = useState(0);
+  // True when this wait was resumed from a persisted session (banner tap / reload)
+  // rather than started by a fresh submit — lets the UI reassure the user.
+  const [isResumed, setIsResumed] = useState(false);
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
 
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -282,13 +285,21 @@ export function useCheckInFeedback() {
   };
 
   const beginPolling = useCallback(
-    (id: string, initial: CreateSkinCheckResponseDTO, startedAt?: number) => {
+    (
+      id: string,
+      initial: CreateSkinCheckResponseDTO,
+      startedAt?: number,
+      resumed?: boolean,
+    ) => {
       abortedRef.current = false;
       checkIdRef.current = id;
       pollingRef.current = true;
       const ts = startedAt ?? Date.now();
       pollMetaRef.current = { startedAt: ts, networkRetries: 0 };
 
+      // `undefined` means "keep current" (e.g. retry-after-timeout preserves the
+      // resumed-from-session context); an explicit value overrides it.
+      if (resumed !== undefined) setIsResumed(resumed);
       setPollStartedAt(ts);
       setCheckId(id);
       syncPayload(initial);
@@ -310,7 +321,7 @@ export function useCheckInFeedback() {
     (data: CreateSkinCheckResponseDTO) => {
       const id = data.check.id;
       devLog("submit success", { checkId: id, status: data.analysis.status });
-      beginPolling(id, data);
+      beginPolling(id, data, undefined, false);
     },
     [beginPolling],
   );
@@ -341,6 +352,7 @@ export function useCheckInFeedback() {
     setFakeProgress(0);
     setStatusStep(0);
     setIsSlow(false);
+    setIsResumed(false);
     setFailureMessage(null);
     devLog("cancelled wait");
   }, [stopPolling, syncPayload]);
@@ -378,6 +390,7 @@ export function useCheckInFeedback() {
     setFakeProgress(0);
     setStatusStep(0);
     setIsSlow(false);
+    setIsResumed(false);
     setFailureMessage(null);
   }, [stopPolling, syncPayload]);
 
@@ -417,12 +430,14 @@ export function useCheckInFeedback() {
       if (elapsedMs(pending.startedAt) >= TIMEOUT_MS) {
         checkIdRef.current = pending.checkId;
         setCheckId(pending.checkId);
+        setPollStartedAt(pending.startedAt);
+        setIsResumed(true);
         syncPayload(data);
         setPhase("timeout");
         return;
       }
 
-      beginPolling(pending.checkId, data, pending.startedAt);
+      beginPolling(pending.checkId, data, pending.startedAt, true);
     })();
 
     try {
@@ -448,6 +463,7 @@ export function useCheckInFeedback() {
     fakeProgress,
     statusStep,
     isSlow,
+    isResumed,
     startedAt: pollStartedAt,
     failureMessage,
     beginSubmit,

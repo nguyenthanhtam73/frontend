@@ -38,6 +38,7 @@ export function AiFeedbackLoading({
   progress,
   statusStep = 0,
   isSlow = false,
+  isResumed = false,
   startedAt = 0,
   onCancelWait,
   onViewLater,
@@ -47,6 +48,7 @@ export function AiFeedbackLoading({
   progress: number;
   statusStep?: number;
   isSlow?: boolean;
+  isResumed?: boolean;
   startedAt?: number;
   onCancelWait?: () => void;
   onViewLater?: () => void;
@@ -130,6 +132,12 @@ export function AiFeedbackLoading({
               )}
             </span>
             <div className="min-w-0 space-y-1">
+              {isResumed && !isSubmitting ? (
+                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20 sm:text-xs">
+                  <History className="size-3 shrink-0" aria-hidden />
+                  {t("resumedBadge")}
+                </span>
+              ) : null}
               <p className="text-sm font-semibold tracking-tight">{title}</p>
               <p
                 className={cn(

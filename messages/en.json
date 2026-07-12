@@ -329,9 +329,10 @@
       "cancelWait": "Stop waiting",
       "viewLater": "View later",
       "leaveAndViewLater": "Leave & view results later",
+      "resumedBadge": "Resumed from earlier",
       "keepTabHint": "You can leave this tab — your check-in is saved. Come back here or open Progress to see results when ready.",
-      "timeoutTitle": "AI feedback isn't ready yet",
-      "timeoutBody": "AI is still analyzing your photos. You can leave this page and come back later to see the result — your check-in is saved.",
+      "timeoutTitle": "AI is still working — keep waiting?",
+      "timeoutBody": "Analysis may take a little longer. You can keep waiting or leave and come back later.",
       "retryPolling": "Keep waiting for results"
     },
     "coach": {
