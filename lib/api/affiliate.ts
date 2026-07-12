@@ -1,5 +1,4 @@
-import { apiBaseUrl } from "@/lib/api";
-import { getApiErrorMessage } from "@/lib/api-envelope";
+import { apiPost } from "@/lib/api-client";
 import { getAccessToken } from "@/lib/auth-token";
 import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
 
@@ -14,16 +13,12 @@ export async function logAffiliateClick(
   source: AffiliateClickSource,
   contextId?: string,
 ): Promise<void> {
-  const token = getAccessToken();
-  if (!token) return;
+  if (!getAccessToken()) return;
 
-  const res = await fetch(`${apiBaseUrl}/api/v1/affiliate/clicks`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
+  // Analytics only — never bother the user (no toast) and never throw; a failed
+  // click log must not disrupt the outbound navigation the user just triggered.
+  try {
+    await apiPost("/api/v1/affiliate/clicks", {
       product_name: item.product_name,
       brand: item.brand,
       affiliate_link: item.affiliate_link,
@@ -31,11 +26,8 @@ export async function logAffiliateClick(
       priority: item.priority,
       source,
       context_id: contextId?.trim() || undefined,
-    }),
-  });
-
-  if (!res.ok) {
-    const raw = await res.json().catch(() => ({}));
-    console.warn("affiliate click log failed:", getApiErrorMessage(raw, res.statusText));
+    }, { toastOnError: false });
+  } catch {
+    /* swallow — best-effort logging */
   }
 }

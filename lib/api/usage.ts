@@ -1,15 +1,13 @@
-import { apiBaseUrl } from "@/lib/api";
-import type { ApiEnvelope } from "@/lib/api-envelope";
-import { authHeaders } from "@/lib/auth-token";
+import { apiGet } from "@/lib/api-client";
 import type { UsageQuotaDTO } from "@/lib/types/usage";
 
 export const usageQueryKey = ["me", "usage"] as const;
 
 export async function fetchUsageQuota(): Promise<UsageQuotaDTO> {
-  const res = await fetch(`${apiBaseUrl}/api/v1/me/usage`, { headers: authHeaders() });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<UsageQuotaDTO>;
-  if (!res.ok || !json.data) {
-    throw new Error(json.error?.message ?? `usage HTTP ${res.status}`);
-  }
-  return json.data;
+  // Background quota poll: silent (React Query owns UI state) but resilient —
+  // retry transient network/5xx blips a couple of times before surfacing.
+  return apiGet<UsageQuotaDTO>("/api/v1/me/usage", {
+    retries: 2,
+    toastOnError: false,
+  });
 }

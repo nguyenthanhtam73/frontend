@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
 import { fetchUserMemory, userMemoryQueryKey } from "@/lib/api/user-memory";
 import { getAccessToken } from "@/lib/auth-token";
@@ -25,9 +26,11 @@ export function MeMemoryView() {
   const t = useTranslations("meMemory");
   const formatter = useFormatter();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const user = useAuthStore((s) => s.user);
   const hasAuth = !!user || !!getAccessToken();
   const [lastFetchFresh, setLastFetchFresh] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: userMemoryQueryKey(lastFetchFresh),
@@ -115,18 +118,28 @@ export function MeMemoryView() {
           size="sm"
           variant="outline"
           className="min-h-10 shrink-0"
-          disabled={isFetching}
+          disabled={isFetching || refreshing}
           onClick={() => {
             void (async () => {
-              setLastFetchFresh(true);
-              await queryClient.fetchQuery({
-                queryKey: userMemoryQueryKey(true),
-                queryFn: () => fetchUserMemory(true),
-              });
+              // Keep the already-rendered memory visible; surface a refresh
+              // failure via a toast instead of collapsing the whole view.
+              setRefreshing(true);
+              try {
+                await queryClient.fetchQuery({
+                  queryKey: userMemoryQueryKey(true),
+                  queryFn: () => fetchUserMemory(true),
+                });
+                setLastFetchFresh(true);
+              } catch (err) {
+                const authErr = err instanceof Error && err.message === "auth";
+                toast.error(authErr ? t("needAuth") : t("loadError"));
+              } finally {
+                setRefreshing(false);
+              }
             })();
           }}
         >
-          {isFetching ? (
+          {isFetching || refreshing ? (
             <Loader2 className="size-4 animate-spin" aria-hidden />
           ) : (
             <RefreshCw className="size-4" aria-hidden />

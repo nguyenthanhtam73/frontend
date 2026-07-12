@@ -4,11 +4,11 @@ import { Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
-import { ToastBanner } from "@/components/ui/toast-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
+import { useToast } from "@/hooks/use-toast";
 import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
 
 const CATEGORY_IDS = [
@@ -38,12 +38,11 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   const [openedAt, setOpenedAt] = useState("");
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const toast = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
-    setToast(null);
     if (!name.trim()) {
       setFormError(t("nameRequired"));
       return;
@@ -65,8 +64,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
       setCategory("");
       setOpenedAt("");
       setNotes("");
-      setToast({ kind: "ok", text: t("addSuccess") });
-      setTimeout(() => setToast(null), 4000);
+      toast.success(t("addSuccess"));
     } catch (err) {
       if (err instanceof Error && err.message === "auth") {
         setFormError(t("needAuth"));
@@ -76,7 +74,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
         setFormError(t("premiumWardrobeBody"));
         return;
       }
-      setToast({ kind: "err", text: t("addError") });
+      toast.error(t("addError"));
     }
   }
 
@@ -115,15 +113,6 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
           <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("addSub")}</p>
         </div>
-
-        {toast ? (
-          <ToastBanner
-            kind={toast.kind}
-            message={toast.text}
-            onDismiss={() => setToast(null)}
-            dismissLabel={t("dismissToast")}
-          />
-        ) : null}
 
         <form ref={formRef} className="space-y-3" onSubmit={(e) => void handleSubmit(e)}>
           <Field label={t("fieldName")} htmlFor="wardrobe-name" required>

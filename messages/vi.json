@@ -1,4 +1,14 @@
 {
+  "netError": {
+    "offline": "Bạn đang ngoại tuyến. Hãy kiểm tra kết nối và thử lại.",
+    "network": "Không kết nối được máy chủ. Hãy kiểm tra mạng và thử lại.",
+    "timeout": "Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại.",
+    "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+    "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+    "server": "Máy chủ đang gặp sự cố. Vui lòng thử lại sau giây lát.",
+    "parse": "Nhận được phản hồi không hợp lệ. Vui lòng thử lại.",
+    "unknown": "Đã có lỗi xảy ra. Vui lòng thử lại."
+  },
   "metadata": {
     "root": {
       "title": "DaDiary — Nhật ký da của bạn · Bạn đồng hành AI mỗi ngày",
@@ -74,6 +84,7 @@
   },
   "common": {
     "mainNavAria": "Điều hướng chính",
+    "dismiss": "Đóng",
     "signIn": "Đăng nhập",
     "register": "Đăng ký",
     "signOut": "Đăng xuất",

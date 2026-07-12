@@ -1,4 +1,14 @@
 {
+  "netError": {
+    "offline": "You appear to be offline. Please check your connection and try again.",
+    "network": "Couldn't reach the server. Please check your connection and try again.",
+    "timeout": "The request took too long. Please try again.",
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "forbidden": "You don't have permission to do this.",
+    "server": "The server ran into a problem. Please try again in a moment.",
+    "parse": "We received an unexpected response. Please try again.",
+    "unknown": "Something went wrong. Please try again."
+  },
   "metadata": {
     "root": {
       "title": "DaDiary — Your skin diary · Friendly AI skincare buddy every day",
@@ -74,6 +84,7 @@
   },
   "common": {
     "mainNavAria": "Main navigation",
+    "dismiss": "Dismiss",
     "signIn": "Sign in",
     "register": "Sign up",
     "signOut": "Sign out",
