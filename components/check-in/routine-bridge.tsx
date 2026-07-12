@@ -517,7 +517,7 @@ function QuickColumn({
                 aria-pressed={!!s.completed}
                 aria-label={s.completed ? toggleOnLabel : toggleOffLabel}
                 className={cn(
-                  "group flex w-full min-h-11 items-center gap-2.5 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all duration-300 ease-out sm:min-h-9 sm:py-1",
+                  "group flex w-full min-h-11 items-start gap-2.5 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all duration-300 ease-out sm:min-h-9 sm:py-1",
                   s.completed
                     ? "border-primary/40 bg-primary/10 text-foreground"
                     : "border-border bg-background hover:bg-muted/60",
@@ -528,7 +528,7 @@ function QuickColumn({
               >
                 <span
                   className={cn(
-                    "inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-all duration-300 ease-out",
+                    "mt-px inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-all duration-300 ease-out",
                     s.completed
                       ? "scale-110 border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background text-transparent group-hover:border-primary/50",
@@ -542,14 +542,14 @@ function QuickColumn({
                 </span>
                 <span
                   className={cn(
-                    "min-w-0 flex-1 truncate font-medium leading-snug transition-opacity duration-200",
+                    "min-w-0 flex-1 whitespace-normal break-words font-medium leading-snug transition-opacity duration-200",
                     s.completed && "line-through opacity-70",
                   )}
                 >
                   {s.title}
                 </span>
                 {s.completed ? (
-                  <span className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  <span className="mt-px shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                     {doneLabel}
                   </span>
                 ) : null}
