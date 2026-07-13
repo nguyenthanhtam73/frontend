@@ -315,25 +315,25 @@
   "testimonials": {
     "sectionTitle": "What users say",
     "heading": "Early Beta users are seeing results",
-    "sub": "Early feedback from DaDiary testers in Vietnam — oily skin, breakouts, humid climate.",
-    "collecting": "Beta open now",
+    "sub": "Early stories from DaDiary testers in Vietnam — oily skin, breakouts, dark spots, humid climate.",
+    "collecting": "Early Beta user experiences",
     "earlyBeta": "Early Beta",
-    "footnote": "Early Beta user stories (illustrative)",
+    "footnote": "Early Beta user stories (illustrative). Real reviews will be added as Beta expands.",
     "items": {
       "t1": {
         "name": "Minh Anh",
-        "role": "Oily skin · Ho Chi Minh City",
-        "quote": "After 3 weeks of daily photo check-ins, my skin is visibly less oily — no more guessing which product works."
+        "role": "Oily, chin breakouts · Ho Chi Minh City",
+        "quote": "My skin is oily with chin breakouts. After 3 weeks of steady check-ins, AI suggested less BHA and more hydration — less midday shine and fewer angry spots."
       },
       "t2": {
         "name": "Thu Hà",
-        "role": "Acne-prone · Hanoi",
-        "quote": "AI Coach is gentle, no pressure. Before/after compare helped me see breakouts ease week by week."
+        "role": "Acne-prone, PIH · Hanoi",
+        "quote": "I'd tried many routines but never tracked results. DaDiary made progress visible after 2 weeks, especially the post-acne marks on my cheeks."
       },
       "t3": {
         "name": "Lan Phương",
-        "role": "Combination skin · Da Nang",
-        "quote": "Clear AM/PM routine with daily ticks. The shelf stopped me buying duplicate products."
+        "role": "Combination, humid climate · Da Nang",
+        "quote": "Da Nang's heat and humidity used to clog my skin. Morning check-ins and photo compare showed which light routine kept me hydrated without getting oily again by noon."
       }
     }
   },

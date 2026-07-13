@@ -33,33 +33,43 @@ export async function Testimonials() {
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground">{t("sub")}</p>
           </div>
-          <Badge variant="accent" className="w-fit shrink-0 rounded-full px-3 py-1">
+          <Badge variant="accent" className="w-fit shrink-0 rounded-full px-3 py-1 text-[11px]">
             {t("collecting")}
           </Badge>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        {/* Mobile: horizontal scroll · Desktop: 3-column grid */}
+        <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-1 snap-x snap-mandatory scroll-px-4 [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden">
           {itemKeys.map((key) => (
-            <Card key={key} className="h-full border-border/70 bg-card/95 shadow-sm">
-              <CardContent className="flex h-full flex-col gap-4 p-6">
-                <div className="flex items-center justify-between gap-2">
-                  <Quote className="size-7 text-primary/25" aria-hidden />
+            <Card
+              key={key}
+              className="relative min-w-[min(88vw,20rem)] shrink-0 snap-center border-border/70 bg-card/95 shadow-sm sm:min-w-[min(72vw,22rem)] md:min-w-0"
+            >
+              <Badge
+                variant="secondary"
+                className="absolute right-4 top-4 z-10 rounded-full px-2 py-0.5 text-[10px] font-medium"
+              >
+                {t("earlyBeta")}
+              </Badge>
+
+              <CardContent className="flex h-full flex-col gap-4 p-6 pt-7">
+                <div className="flex items-start justify-between gap-3 pr-16">
+                  <Quote className="size-6 shrink-0 text-primary/25" aria-hidden />
                   <StarRating />
                 </div>
-                <blockquote className="flex-1 text-sm leading-relaxed text-foreground/85">
+
+                <blockquote className="flex-1 text-sm leading-relaxed text-foreground/90">
                   “{t(`items.${key}.quote`)}”
                 </blockquote>
+
                 <div className="flex items-center gap-3 border-t border-border/50 pt-4">
                   <Avatar name={t(`items.${key}.name`)} size="md" />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{t(`items.${key}.name`)}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {t(`items.${key}.role`)}
                     </p>
                   </div>
-                  <Badge variant="secondary" className="shrink-0 rounded-full px-2 py-0.5 text-[10px]">
-                    {t("earlyBeta")}
-                  </Badge>
                 </div>
               </CardContent>
             </Card>

@@ -315,25 +315,25 @@
   "testimonials": {
     "sectionTitle": "Người dùng nói gì",
     "heading": "Người dùng Beta đầu tiên đã thấy khác biệt",
-    "sub": "Những phản hồi sớm từ người dùng thử DaDiary tại Việt Nam — da dầu, mụn, khí hậu nóng ẩm.",
-    "collecting": "Beta đang mở",
+    "sub": "Những chia sẻ sớm từ người dùng thử DaDiary tại Việt Nam — da dầu, mụn, thâm, khí hậu nóng ẩm.",
+    "collecting": "Chia sẻ từ người dùng Beta sớm",
     "earlyBeta": "Beta sớm",
-    "footnote": "Một số chia sẻ từ người dùng Beta sớm (minh họa)",
+    "footnote": "Một số chia sẻ từ người dùng Beta sớm (minh họa). Review thật sẽ được cập nhật khi Beta mở rộng.",
     "items": {
       "t1": {
         "name": "Minh Anh",
-        "role": "Da dầu · TP.HCM",
-        "quote": "Sau 3 tuần check-in ảnh mỗi ngày, mình thấy da bớt bóng dầu rõ rệt — không còn đoán mò sản phẩm nào hiệu quả."
+        "role": "Da dầu, hay mụn cằm · TP.HCM",
+        "quote": "Da mình dầu và hay nổi mụn ở cằm. Sau 3 tuần check-in đều, AI gợi ý giảm BHA và tăng dưỡng ẩm — da bớt bóng dầu buổi trưa và ít mụn viêm hơn."
       },
       "t2": {
         "name": "Thu Hà",
-        "role": "Da mụn · Hà Nội",
-        "quote": "AI Coach gợi ý nhẹ nhàng, không áp lực. Phần so sánh trước–sau giúp mình thấy mụn giảm dần từng tuần."
+        "role": "Da mụn, dễ thâm · Hà Nội",
+        "quote": "Mình từng thử nhiều routine nhưng không theo dõi được. DaDiary giúp mình thấy rõ da cải thiện sau 2 tuần, đặc biệt vùng thâm mụn quanh má."
       },
       "t3": {
         "name": "Lan Phương",
-        "role": "Da hỗn hợp · Đà Nẵng",
-        "quote": "Routine sáng–tối rõ ràng, tick xong là biết đã làm đủ. Tủ đồ giúp mình không mua trùng sản phẩm nữa."
+        "role": "Da hỗn hợp, nóng ẩm · Đà Nẵng",
+        "quote": "Khí hậu nóng ẩm ở Đà Nẵng làm da mình dễ bí. Check-in mỗi sáng và so sánh ảnh giúp mình biết routine nào nhẹ mà vẫn đủ ẩm, không còn đổ dầu lại giữa ngày."
       }
     }
   },
