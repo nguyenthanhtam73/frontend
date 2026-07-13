@@ -49,6 +49,14 @@
     "routine": {
       "title": "Morning & evening skincare · DaDiary",
       "description": "Build your morning & evening skincare — edit, reorder, and tick steps daily."
+    },
+    "feedbackPage": {
+      "title": "Send feedback · DaDiary",
+      "description": "Share opinions, report bugs, or suggest features during Beta."
+    },
+    "adminFeedbacks": {
+      "title": "Manage feedback · DaDiary Admin",
+      "description": "Review and triage user feedback during Beta."
     }
   },
   "auth": {
@@ -94,12 +102,20 @@
       "progress": "How your skin changes",
       "checkIn": "Skin check-in",
       "routine": "Morning & evening",
-      "howItWorks": "How it works"
+      "howItWorks": "How it works",
+      "feedback": "Send feedback",
+      "adminFeedbacks": "Manage feedback"
     },
     "footer": {
-      "tagline": "Your skin diary · AI buddy · progress & before/after",
-      "copyright": "© {year} DaDiary",
-      "disclaimer": "DaDiary offers skincare suggestions for reference only and does not replace professional medical advice."
+      "tagline": "Your skin diary · AI Coach · progress & before/after",
+      "copyright": "© {year} DaDiary. Currently in Beta.",
+      "disclaimer": "DaDiary offers skincare suggestions for reference only and does not replace professional medical advice.",
+      "betaContact": "Join Beta: sign up for free early access.",
+      "social": {
+        "navAria": "DaDiary social media",
+        "facebook": "DaDiary on Facebook",
+        "tiktok": "DaDiary on TikTok"
+      }
     },
     "theme": {
       "label": "Theme",
@@ -158,76 +174,187 @@
     "guideClose": "Close"
   },
   "hero": {
-    "badge": "DaDiary",
-    "slogan": "Your skin diary — a friendly AI skincare buddy every day",
-    "titleLead": "Care for your skin gently every day —",
-    "titleGradient": "clear before/after, morning & evening routines with a plan.",
-    "body": "DaDiary is your <b>personal skin diary + a friendly AI skincare buddy</b>: photo check-ins, simple routine notes, and practical personalized tips. Today we tune for common needs in Vietnam (oilier skin, heat & humidity, breakouts, sun-related dark spots) while staying <b>region-agnostic</b> — ready for global expansion, weather hooks, and climate context later.",
-    "ctaRoutine": "Get to know your skin",
-    "ctaCheckIn": "Check in today",
-    "stat1k": "Check-in",
-    "stat1v": "photo + how it feels",
-    "stat2k": "Buddy",
-    "stat2v": "3 cosy depth modes",
+    "badge": "Beta open — Free",
+    "slogan": "Skin diary + AI Coach",
+    "titleLead": "Track your skin every day —",
+    "titleGradient": "get tips from your AI Coach.",
+    "body": "DaDiary helps you <b>log skin with photos</b>, see progress visually, and get personalized routine tips — gentle, no pressure.",
+    "ctaPrimary": "Join Beta for free",
+    "ctaSecondary": "See how it works",
+    "betaNote": "Free during Beta · No credit card required",
+    "stat1k": "< 1 min",
+    "stat1v": "daily check-in",
+    "stat2k": "AI Coach",
+    "stat2v": "personalized tips",
     "stat3k": "Before/after",
-    "stat3v": "same angle & light",
-    "stack1": "Humid heat · oil control",
+    "stat3v": "evidence-based compare",
+    "stack1": "Oily · humid heat",
     "stack2": "Acne · dark spots",
-    "stack3": "Sunscreen · even tone"
+    "stack3": "SPF · even tone",
+    "mockupLabel": "DaDiary"
+  },
+  "problem": {
+    "sectionTitle": "The problem",
+    "heading": "Skincare shouldn't feel like guesswork",
+    "sub": "Many people try hard but still can't tell if their routine actually works.",
+    "items": {
+      "track": {
+        "title": "Hard to track progress",
+        "desc": "Skin changes a little each day — without photos and a diary, it's easy to quit before you see results."
+      },
+      "routine": {
+        "title": "Unclear if routine works",
+        "desc": "You try many products and switch often, but don't know which steps truly help."
+      },
+      "change": {
+        "title": "Skin shifts with seasons",
+        "desc": "Humidity, stress, late nights — skin is sensitive and changes; routines are hard to keep steady."
+      },
+      "products": {
+        "title": "Too much conflicting advice",
+        "desc": "Social media, friends, doctors — everyone says something different. You need tips that fit your skin and habits."
+      }
+    }
+  },
+  "solution": {
+    "badge": "Solution",
+    "sectionTitle": "DaDiary",
+    "heading": "Smart skin diary — AI Coach by your side",
+    "body": "DaDiary combines daily photo check-ins with an AI Coach so you see change, understand what works, and adjust gently over time.",
+    "points": {
+      "p1": "Quick photo + feeling check-ins — under a minute a day.",
+      "p2": "AI Coach analyzes and suggests routines for your skin type, goals, and products.",
+      "p3": "Progress charts and before/after help you see improvement over weeks and months.",
+      "p4": "Warm, encouraging tone — no judgment, no pressure to be perfect."
+    },
+    "mockup": {
+      "checkIn": "Today's check-in",
+      "coach": "AI Coach",
+      "coachSample": "Skin looks steadier than last week — keep morning sunscreen going.",
+      "progress": "7-day progress"
+    }
   },
   "features": {
-    "sectionTitle": "Core experience",
-    "heading": "Skin diary + AI buddy — for total beginners and serious skincare lovers alike.",
-    "sub": "Friendly, science-made-simple, encouraging. Routines and check-ins are built to grow weather, region-aware tips, after-sun flows, and more without rewriting core models.",
+    "sectionTitle": "Key features",
+    "heading": "Everything you need for structured skincare",
+    "sub": "Built for beginners and experienced users — simple, visual, mobile-friendly.",
     "items": {
-      "starter": {
-        "title": "Get to know your skin",
-        "desc": "Skin type, common concerns (oil, acne, spots…), goals, and habits — your buddy meets you at Beginner / Mid / Advanced."
-      },
       "checkIn": {
-        "title": "Daily skin check-in",
-        "desc": "Photos + how your skin feels; warm AI feedback and routine ideas — not a substitute for a dermatologist."
+        "title": "Quick photo check-in",
+        "desc": "1–2 photos plus how your skin feels — log in under a minute, easy to keep daily."
+      },
+      "coach": {
+        "title": "Personalized AI Coach",
+        "desc": "Tips from photos, skin type, and routine — explained simply, not a substitute for a dermatologist."
+      },
+      "progress": {
+        "title": "Visual progress tracking",
+        "desc": "Trend charts, streaks, and timeline so you see change week by week."
+      },
+      "routine": {
+        "title": "AM/PM routine suggestions",
+        "desc": "AI starter routine you can edit and tick off daily — know when you've done every step."
       },
       "cabinet": {
         "title": "Skincare shelf",
-        "desc": "Track what you use: avoid duplicate ingredients, remember opened dates, patch tests, and sunscreen."
+        "desc": "Track products in use — AI avoids duplicate ingredients and reminds SPF and patch tests."
       },
-      "timeline": {
-        "title": "Progress & before/after",
-        "desc": "Photo timeline with consistent angles/lighting — see real long-term change instead of guessing."
+      "beforeAfter": {
+        "title": "Before/after compare",
+        "desc": "Same angle and light when possible — see real improvement, not just a feeling."
       }
     }
   },
   "howItWorks": {
     "sectionTitle": "How it works",
-    "heading": "Three steps: get to know your skin → check-in & buddy → shelf & how your skin changes.",
-    "side": "Roadmap: multi-region support and optional weather/context (humidity, UV) later — the data model already reserves climate/location fields.",
+    "heading": "Four simple steps to get started",
+    "side": "No perfect routine on day one — start gently and your AI Coach adapts to your pace.",
     "steps": {
       "s1": {
         "title": "Get to know your skin",
-        "desc": "Capture skin type and recurring issues so your buddy understands your context (e.g. humid heat, oiliness, post-acne marks) without locking you to one country."
+        "desc": "Share skin type, common issues (oil, acne, spots…), and goals — AI understands your context."
       },
       "s2": {
-        "title": "Check-in + AI buddy",
-        "desc": "Daily photo + signals; warm feedback and routine hints tuned to the depth you choose."
+        "title": "Check in daily",
+        "desc": "Photo + how skin feels. The more consistent you are, the better AI reads your trends."
       },
       "s3": {
-        "title": "Skincare shelf + before/after timeline",
-        "desc": "Organize your shelf, track long-run progress, compare photos fairly. Community is like / not-for-me only — no toxicity."
+        "title": "Get AI Coach tips",
+        "desc": "Warm feedback and gentle routine tweaks — from Beginner to Advanced depth."
+      },
+      "s4": {
+        "title": "Track progress",
+        "desc": "Charts, before/after, and shelf — learn what actually works for you."
       }
     }
   },
-  "progressPreview": {
-    "sectionTitle": "Light community",
-    "heading": "Browse other check-ins — like / not-for-me only.",
-    "sub": "Light encouragement and ideas; your personal diary, timeline, and before/after live in your private flow.",
-    "cta": "See how your skin changes"
+  "benefits": {
+    "sectionTitle": "Benefits",
+    "heading": "Built for local skin and climate needs",
+    "sub": "Oily skin, breakouts, humidity, sun spots — DaDiary addresses common challenges with fitting tips.",
+    "items": {
+      "humid": {
+        "title": "Humid climate friendly",
+        "desc": "Light, non-clogging suggestions — proper cleanse, oil balance, and comfortable SPF."
+      },
+      "oily": {
+        "title": "Oily skin & pores",
+        "desc": "Track oiliness over time — see which products help balance your skin."
+      },
+      "acne": {
+        "title": "Acne & post-acne marks",
+        "desc": "Check-in photos show if breakouts ease or flare — adjust routine in time."
+      },
+      "safe": {
+        "title": "Safe & responsible",
+        "desc": "Always reminds SPF, patch tests, and seeing a clinician when skin looks unusual."
+      }
+    }
+  },
+  "testimonials": {
+    "sectionTitle": "What users say",
+    "heading": "Beta community feedback",
+    "collecting": "Collecting reviews from Beta users",
+    "footnote": "Quotes above are sample placeholders — real feedback will appear as Beta expands.",
+    "items": {
+      "t1": {
+        "name": "Minh Anh",
+        "role": "Beta tester · Oily skin",
+        "quote": "I finally saw less oil after 3 weeks — daily photo check-ins stopped the guesswork."
+      },
+      "t2": {
+        "name": "Thu Hà",
+        "role": "Beta tester · Acne-prone",
+        "quote": "AI Coach is gentle, no pressure. I love before/after — breakouts clearly eased."
+      },
+      "t3": {
+        "name": "Lan Phương",
+        "role": "Beta tester · Combination skin",
+        "quote": "Clear AM/PM routine with daily ticks. The shelf stopped me buying duplicates."
+      }
+    }
   },
   "cta": {
-    "heading": "Want to start your skin diary today?",
-    "body": "You don't need a perfect routine on day one — get to know your skin, or jump straight into a check-in. Your buddy scales with you (Beginner → Advanced).",
-    "primary": "Get to know your skin",
-    "secondary": "Check in"
+    "heading": "Ready for structured skincare?",
+    "body": "Join Beta today — full diary, AI Coach, and progress tracking. No perfect routine needed, just start.",
+    "betaFree": "Free during Beta",
+    "primary": "Join Beta for free",
+    "secondary": "Try without signing up"
+  },
+  "betaSignup": {
+    "sectionTitle": "Beta",
+    "heading": "Join the Beta waitlist",
+    "sub": "Leave your email — we'll notify you when Beta expands or new features roll out.",
+    "emailLabel": "Your email",
+    "emailPlaceholder": "you@email.com",
+    "submit": "Get Beta updates",
+    "submitting": "Sending…",
+    "privacy": "We only send Beta-related updates. No spam, no sharing with third parties.",
+    "formAria": "DaDiary Beta email signup form",
+    "requiredEmail": "Please enter your email.",
+    "invalidEmail": "Please enter a valid email address.",
+    "successTitle": "You're on the list!",
+    "successBody": "Thanks for your interest in DaDiary. We'll reach out when Beta updates are ready."
   },
   "checkIn": {
     "sectionEyebrow": "Skin check-in",
@@ -1264,5 +1391,62 @@
     "error": "Couldn't send feedback. Try again in a moment.",
     "needLogin": "Sign in to send feedback.",
     "dismiss": "Dismiss"
+  },
+  "appFeedback": {
+    "sectionLabel": "Feedback",
+    "pageTitle": "Send feedback to DaDiary",
+    "pageSub": "Your input helps us improve the AI Coach, fix bugs, and prioritize features during Beta.",
+    "typeLabel": "Feedback type",
+    "commentLabel": "Message",
+    "commentPlaceholder": "Describe your feedback, bug, or feature idea in detail…",
+    "submit": "Send feedback",
+    "submitting": "Sending…",
+    "privacy": "Your feedback is only used to improve DaDiary. We do not share it with third parties.",
+    "success": "Feedback sent — thank you!",
+    "error": "Could not send feedback. Please try again.",
+    "needAuth": "Sign in to send feedback.",
+    "signIn": "Sign in",
+    "commentTooShort": "Please enter at least 5 characters.",
+    "types": {
+      "ai_feedback": "AI feedback",
+      "bug_report": "Bug report",
+      "feature_request": "Feature request",
+      "general": "Other"
+    }
+  },
+  "adminFeedbacks": {
+    "sectionLabel": "Admin",
+    "title": "User feedback inbox",
+    "sub": "Track Beta feedback — filter by type and status, update directly from the table.",
+    "needAuth": "Sign in to access the admin page.",
+    "signIn": "Sign in",
+    "forbidden": "You do not have permission to access this page.",
+    "loadError": "Could not load feedback list.",
+    "empty": "No feedback matches the current filters.",
+    "resultCount": "{n} feedback items",
+    "filterType": "Type",
+    "filterStatus": "Status",
+    "filterAll": "All",
+    "colType": "Type",
+    "colComment": "Message",
+    "colUser": "User",
+    "colTime": "Sent at",
+    "colStatus": "Status",
+    "statusUpdated": "Status updated.",
+    "statusError": "Could not update status.",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageOf": "Page {page} / {total}",
+    "types": {
+      "ai_feedback": "AI feedback",
+      "bug_report": "Bug report",
+      "feature_request": "Feature request",
+      "general": "Other"
+    },
+    "statuses": {
+      "new": "New",
+      "read": "Read",
+      "resolved": "Resolved"
+    }
   }
 }

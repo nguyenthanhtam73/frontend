@@ -17,6 +17,7 @@ export type AuthUser = {
   provider?: string;
   is_active?: boolean;
   plan_tier?: "free" | "premium" | string;
+  is_admin?: boolean;
   created_at?: string;
 };
 

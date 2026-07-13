@@ -212,7 +212,11 @@ export function SiteHeader() {
     { href: "/check-in" as const, label: t("nav.checkIn") },
     { href: "/cabinet" as const, label: t("nav.cabinet") },
     { href: "/progress" as const, label: t("nav.progress") },
+    { href: "/feedback" as const, label: t("nav.feedback") },
     { href: "/#how" as const, label: t("nav.howItWorks") },
+    ...(user?.is_admin
+      ? [{ href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") }]
+      : []),
   ];
 
   const linkBase =

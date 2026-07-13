@@ -31,16 +31,22 @@ export async function Hero() {
           </p>
 
           <div className="flex flex-wrap items-center gap-3">
-            <ButtonLink href="/onboarding" size="lg">
-              {t("ctaRoutine")}
+            <ButtonLink
+              href="/register"
+              size="lg"
+              className="h-11 gap-2 px-6 text-base shadow-md shadow-primary/15"
+            >
+              {t("ctaPrimary")}
               <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
-            <ButtonLink href="/check-in" size="lg" variant="outline">
-              {t("ctaCheckIn")}
+            <ButtonLink href="/#how" size="lg" variant="outline" className="h-11 px-6 text-base">
+              {t("ctaSecondary")}
             </ButtonLink>
           </div>
 
-          <dl className="grid grid-cols-1 gap-5 pt-4 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-4">
+          <p className="text-xs text-muted-foreground">{t("betaNote")}</p>
+
+          <dl className="grid grid-cols-1 gap-5 pt-2 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-4">
             {[
               { k: "stat1", v: "stat1" },
               { k: "stat2", v: "stat2" },
@@ -50,7 +56,9 @@ export async function Hero() {
                 <dt className="text-xl font-semibold tracking-tight whitespace-nowrap sm:text-2xl">
                   {t(`${item.k}k`)}
                 </dt>
-                <dd className="text-pretty text-xs leading-snug text-muted-foreground">{t(`${item.k}v`)}</dd>
+                <dd className="text-pretty text-xs leading-snug text-muted-foreground">
+                  {t(`${item.k}v`)}
+                </dd>
               </div>
             ))}
           </dl>
@@ -58,12 +66,13 @@ export async function Hero() {
 
         <div className="relative isolate aspect-square w-full" aria-hidden>
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/40 to-transparent blur-2xl" />
-          <HeroStack
+          <HeroMockup
             tags={[
               { from: "0.82 0.06 330", to: "0.62 0.08 320", tag: t("stack1"), style: "left-[6%] top-[8%] -rotate-6" },
               { from: "0.58 0.09 195", to: "0.42 0.08 200", tag: t("stack2"), style: "right-[4%] top-[14%] rotate-3" },
               { from: "0.75 0.05 155", to: "0.52 0.07 175", tag: t("stack3"), style: "left-[14%] bottom-[6%] rotate-2" },
             ]}
+            appLabel={t("mockupLabel")}
           />
         </div>
       </div>
@@ -71,17 +80,29 @@ export async function Hero() {
   );
 }
 
-function HeroStack({
+function HeroMockup({
   tags,
+  appLabel,
 }: {
   tags: { from: string; to: string; tag: string; style: string }[];
+  appLabel: string;
 }) {
   return (
     <div className="relative h-full w-full">
+      <div className="absolute left-1/2 top-1/2 z-10 w-[52%] -translate-x-1/2 -translate-y-[42%] overflow-hidden rounded-[1.75rem] border-4 border-white/70 bg-card shadow-2xl ring-1 ring-black/10">
+        <div className="bg-muted/60 px-4 py-2 text-center text-[10px] font-medium text-muted-foreground">
+          {appLabel}
+        </div>
+        <div className="space-y-2 p-3">
+          <div className="h-16 rounded-xl bg-gradient-to-r from-primary/20 to-accent/30" />
+          <div className="h-10 rounded-lg bg-secondary" />
+          <div className="h-10 rounded-lg bg-secondary/80" />
+        </div>
+      </div>
       {tags.map((c) => (
         <div
           key={c.tag}
-          className={`absolute aspect-[3/4] w-[58%] overflow-hidden rounded-3xl border border-white/40 bg-card shadow-xl ring-1 ring-black/5 ${c.style}`}
+          className={`absolute aspect-[3/4] w-[48%] overflow-hidden rounded-3xl border border-white/40 bg-card shadow-xl ring-1 ring-black/5 ${c.style}`}
           style={{
             background: `linear-gradient(160deg, oklch(${c.from}) 0%, oklch(${c.to}) 100%)`,
           }}

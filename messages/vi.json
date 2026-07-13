@@ -11,8 +11,8 @@
   },
   "metadata": {
     "root": {
-      "title": "DaDiary — Nhật ký da của bạn · Bạn đồng hành AI mỗi ngày",
-      "description": "DaDiary: nhật ký da cá nhân + bạn đồng hành AI — ghi nhật ký da hằng ngày bằng ảnh, lưu chăm da sáng tối, nhận lời khuyên dễ hiểu. So sánh trước–sau và tủ đồ chăm da, với giọng điệu ấm áp, khích lệ, không áp lực."
+      "title": "DaDiary — Theo dõi da mỗi ngày · Nhận gợi ý từ AI Coach",
+      "description": "Tham gia Beta miễn phí DaDiary — nhật ký da + AI Coach cá nhân hóa. Check-in bằng ảnh, theo dõi tiến trình, gợi ý routine phù hợp da Việt (da dầu, mụn, nóng ẩm). Miễn phí trong giai đoạn Beta."
     },
     "checkIn": {
       "title": "Ghi nhật ký da · DaDiary",
@@ -49,6 +49,14 @@
     "routine": {
       "title": "Chăm da sáng tối · DaDiary",
       "description": "Soạn các bước chăm da sáng/tối — chỉnh sửa, kéo thả, tick hoàn thành mỗi ngày."
+    },
+    "feedbackPage": {
+      "title": "Gửi góp ý · DaDiary",
+      "description": "Chia sẻ ý kiến, báo lỗi hoặc đề xuất tính năng — giúp DaDiary tốt hơn trong giai đoạn Beta."
+    },
+    "adminFeedbacks": {
+      "title": "Quản lý góp ý · DaDiary Admin",
+      "description": "Xem và xử lý feedback từ người dùng Beta."
     }
   },
   "auth": {
@@ -94,12 +102,20 @@
       "progress": "Xem da thay đổi",
       "checkIn": "Ghi nhật ký da",
       "routine": "Chăm da sáng tối",
-      "howItWorks": "Cách hoạt động"
+      "howItWorks": "Cách hoạt động",
+      "feedback": "Gửi góp ý",
+      "adminFeedbacks": "Quản lý góp ý"
     },
     "footer": {
-      "tagline": "Nhật ký da của bạn · Bạn đồng hành AI · trước–sau & tiến bộ",
-      "copyright": "© {year} DaDiary",
-      "disclaimer": "DaDiary đưa ra gợi ý chăm da mang tính tham khảo, không thay thế tư vấn y tế chuyên môn."
+      "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
+      "copyright": "© {year} DaDiary. Đang trong giai đoạn Beta.",
+      "disclaimer": "DaDiary đưa ra gợi ý chăm da mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
+      "betaContact": "Tham gia Beta: đăng ký tài khoản miễn phí để trải nghiệm sớm nhất.",
+      "social": {
+        "navAria": "Mạng xã hội DaDiary",
+        "facebook": "DaDiary trên Facebook",
+        "tiktok": "DaDiary trên TikTok"
+      }
     },
     "theme": {
       "label": "Giao diện",
@@ -158,76 +174,187 @@
     "guideClose": "Đóng"
   },
   "hero": {
-    "badge": "DaDiary",
-    "slogan": "Nhật ký da của bạn — bạn đồng hành AI mỗi ngày",
-    "titleLead": "Chăm da nhẹ nhàng mỗi ngày —",
-    "titleGradient": "thấy rõ trước–sau, chăm da sáng tối có lộ trình.",
-    "body": "DaDiary là <b>nhật ký da cá nhân + bạn đồng hành AI</b>: chụp ảnh ghi nhật ký, lưu các bước chăm da, nhận lời khuyên dễ hiểu, có căn cứ. Hợp với người Việt (da dầu, nóng ẩm, hay lên mụn, thâm nắng) nhưng <b>không bó buộc một khí hậu</b> — sẵn sàng mở rộng quốc tế và kết hợp thời tiết, vùng miền sau này.",
-    "ctaRoutine": "Bắt đầu làm quen với da",
-    "ctaCheckIn": "Ghi nhật ký da hôm nay",
-    "stat1k": "Nhật ký",
-    "stat1v": "ảnh + cảm nhận",
-    "stat2k": "Bạn đồng hành",
-    "stat2v": "3 chế độ phù hợp",
+    "badge": "Beta mở — Miễn phí",
+    "slogan": "Nhật ký da + AI Coach cho làn da Việt",
+    "titleLead": "Theo dõi da mỗi ngày —",
+    "titleGradient": "nhận gợi ý từ AI Coach.",
+    "body": "DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, theo dõi tiến trình trực quan và nhận gợi ý routine cá nhân hóa — dễ hiểu, không áp lực, phù hợp khí hậu nóng ẩm.",
+    "ctaPrimary": "Tham gia Beta miễn phí",
+    "ctaSecondary": "Xem cách hoạt động",
+    "betaNote": "Miễn phí trong giai đoạn Beta · Không cần thẻ tín dụng",
+    "stat1k": "< 1 phút",
+    "stat1v": "check-in mỗi ngày",
+    "stat2k": "AI Coach",
+    "stat2v": "gợi ý cá nhân hóa",
     "stat3k": "Trước–sau",
-    "stat3v": "cùng góc / ánh sáng",
-    "stack1": "Ẩm nóng · kiểm soát dầu",
-    "stack2": "Giảm mụn · thâm",
-    "stack3": "Kem chống nắng · đều màu"
+    "stat3v": "so sánh có căn cứ",
+    "stack1": "Da dầu · nóng ẩm",
+    "stack2": "Mụn · thâm mụn",
+    "stack3": "KCN · đều màu",
+    "mockupLabel": "DaDiary"
+  },
+  "problem": {
+    "sectionTitle": "Vấn đề",
+    "heading": "Chăm da không nên phải đoán mò",
+    "sub": "Nhiều người cố gắng chăm da đều đặn nhưng vẫn không biết routine có thực sự hiệu quả hay không.",
+    "items": {
+      "track": {
+        "title": "Khó theo dõi tiến trình",
+        "desc": "Da thay đổi từng chút mỗi ngày — không có ảnh và nhật ký, bạn dễ bỏ cuộc vì không thấy kết quả rõ ràng."
+      },
+      "routine": {
+        "title": "Không biết routine có hiệu quả",
+        "desc": "Thử nhiều sản phẩm, đổi liên tục nhưng không biết bước nào thực sự giúp da ổn định hơn."
+      },
+      "change": {
+        "title": "Da dễ thay đổi theo mùa",
+        "desc": "Nóng ẩm, mưa, stress, thức khuya — da Việt nhạy cảm và hay biến đổi, khó giữ routine ổn định."
+      },
+      "products": {
+        "title": "Quá nhiều lời khuyên mâu thuẫn",
+        "desc": "Mạng xã hội, bạn bè, bác sĩ — mỗi người một ý. Bạn cần gợi ý phù hợp với da và thói quen của chính mình."
+      }
+    }
+  },
+  "solution": {
+    "badge": "Giải pháp",
+    "sectionTitle": "DaDiary",
+    "heading": "Nhật ký da thông minh — AI Coach đi cùng bạn",
+    "body": "DaDiary kết hợp check-in ảnh hằng ngày với AI Coach để bạn thấy rõ da thay đổi, hiểu routine nào phù hợp và điều chỉnh nhẹ nhàng theo từng giai đoạn.",
+    "points": {
+      "p1": "Ghi nhật ký da nhanh bằng ảnh + cảm nhận — chỉ vài chục giây mỗi ngày.",
+      "p2": "AI Coach phân tích và gợi ý routine phù hợp loại da, mục tiêu và sản phẩm bạn đang dùng.",
+      "p3": "Biểu đồ tiến trình và so sánh trước–sau giúp bạn thấy da cải thiện theo thời gian.",
+      "p4": "Giọng điệu ấm áp, khích lệ — không phán xét, không áp lực phải hoàn hảo."
+    },
+    "mockup": {
+      "checkIn": "Check-in hôm nay",
+      "coach": "AI Coach",
+      "coachSample": "Da hôm nay ổn hơn tuần trước — tiếp tục kem chống nắng buổi sáng nhé.",
+      "progress": "Tiến trình 7 ngày"
+    }
   },
   "features": {
-    "sectionTitle": "Tính năng cốt lõi",
-    "heading": "Nhật ký da + bạn đồng hành AI — cho cả người mới và người chăm da nghiêm túc.",
-    "sub": "Giọng điệu thân thiện, dễ hiểu, khích lệ. Các bước chăm da và nhật ký được thiết kế để sau này thêm thời tiết, gợi ý theo vùng, chăm da sau khi đi nắng… mà không phá kiến trúc.",
+    "sectionTitle": "Tính năng nổi bật",
+    "heading": "Mọi thứ bạn cần để chăm da có hệ thống",
+    "sub": "Thiết kế cho người mới bắt đầu và cả người đã chăm da lâu năm — đơn giản, trực quan, dễ dùng trên điện thoại.",
     "items": {
-      "starter": {
-        "title": "Làm quen với da bạn",
-        "desc": "Hỏi loại da, tình trạng hay gặp (dầu, mụn, thâm, nám…), mục tiêu và thói quen — bạn đồng hành chọn đúng nhịp với bạn (Người mới / Trung bình / Nâng cao)."
-      },
       "checkIn": {
-        "title": "Ghi nhật ký da hằng ngày",
-        "desc": "Chụp ảnh + chọn cảm nhận; bạn đồng hành AI phản hồi nhẹ nhàng, gợi ý chăm da phù hợp — không thay thế bác sĩ da liễu."
+        "title": "Check-in nhanh bằng ảnh",
+        "desc": "Chụp 1–2 ảnh và chọn cảm nhận da — ghi nhật ký trong chưa đến 1 phút, dễ duy trì mỗi ngày."
+      },
+      "coach": {
+        "title": "AI Coach cá nhân hóa",
+        "desc": "Nhận gợi ý dựa trên ảnh, loại da và routine hiện tại — giải thích dễ hiểu, không thay thế bác sĩ da liễu."
+      },
+      "progress": {
+        "title": "Theo dõi tiến trình trực quan",
+        "desc": "Biểu đồ xu hướng, chuỗi ngày check-in và dòng thời gian giúp bạn nhìn thấy da thay đổi theo tuần, tháng."
+      },
+      "routine": {
+        "title": "Gợi ý routine sáng–tối",
+        "desc": "Routine khởi đầu từ AI, có thể chỉnh sửa và tick hoàn thành mỗi ngày — biết ngay bạn đã làm đủ các bước chưa."
       },
       "cabinet": {
         "title": "Tủ đồ chăm da",
-        "desc": "Quản lý sản phẩm bạn đang dùng: tránh trùng thành phần, nhắc hạn mở, thử trước (patch test) và kem chống nắng."
+        "desc": "Lưu sản phẩm đang dùng — AI tránh gợi ý trùng thành phần và nhắc kem chống nắng, patch test."
       },
-      "timeline": {
-        "title": "Tiến bộ & trước–sau",
-        "desc": "Ghép ảnh theo thời gian, cùng góc/ánh sáng nếu được — nhìn rõ da thay đổi dài hạn, không đoán mò."
+      "beforeAfter": {
+        "title": "So sánh trước–sau",
+        "desc": "Ghép ảnh cùng góc, cùng ánh sáng — thấy rõ da cải thiện thay vì cảm giác chủ quan."
       }
     }
   },
   "howItWorks": {
     "sectionTitle": "Cách hoạt động",
-    "heading": "Ba bước: làm quen với da bạn → ghi nhật ký + bạn đồng hành → tủ đồ chăm da & xem da thay đổi.",
-    "side": "Hướng phát triển: hỗ trợ nhiều vùng, có thể gắn thời tiết & ngữ cảnh (nắng, độ ẩm, tia UV) sau này — model dữ liệu đã chừa chỗ cho khí hậu/vị trí.",
+    "heading": "Bốn bước đơn giản để bắt đầu",
+    "side": "Không cần routine hoàn hảo ngay từ đầu — cứ bắt đầu nhẹ nhàng, AI Coach sẽ điều chỉnh theo tốc độ của bạn.",
     "steps": {
       "s1": {
         "title": "Làm quen với da bạn",
-        "desc": "Khai báo cảm nhận da, loại da, vấn đề hay gặp — bạn đồng hành hiểu được hoàn cảnh của bạn (vd. nóng ẩm, dầu, thâm nám) mà vẫn dùng được khi bạn đổi nơi sống."
+        "desc": "Khai báo loại da, vấn đề hay gặp (dầu, mụn, thâm…) và mục tiêu — AI hiểu hoàn cảnh của bạn."
       },
       "s2": {
-        "title": "Ghi nhật ký da + bạn đồng hành AI",
-        "desc": "Mỗi ngày: ảnh + dấu hiệu da; nhận lời khuyên ấm áp và gợi ý chăm da phù hợp với chế độ bạn chọn."
+        "title": "Check-in mỗi ngày",
+        "desc": "Chụp ảnh + chọn cảm nhận da. Càng đều đặn, AI càng đọc được xu hướng da của bạn."
       },
       "s3": {
-        "title": "Tủ đồ chăm da + xem da thay đổi",
-        "desc": "Quản lý sản phẩm; theo dõi tiến bộ dài hạn, so trước–sau có kiểm soát. Cộng đồng chỉ thả tim/không hợp — không gay gắt."
+        "title": "Nhận gợi ý từ AI Coach",
+        "desc": "Phản hồi ấm áp, gợi ý điều chỉnh routine nhẹ nhàng — phù hợp chế độ Người mới đến Nâng cao."
+      },
+      "s4": {
+        "title": "Theo dõi tiến bộ",
+        "desc": "Xem biểu đồ, so sánh trước–sau và quản lý tủ đồ — biết routine nào thực sự hiệu quả với bạn."
       }
     }
   },
-  "progressPreview": {
-    "sectionTitle": "Cộng đồng nhẹ nhàng",
-    "heading": "Xem nhật ký của mọi người — chỉ thả tim hoặc không hợp.",
-    "sub": "Động viên và học hỏi ý tưởng chăm da; dòng thời gian cá nhân và trước–sau nằm trong nhật ký riêng của bạn.",
-    "cta": "Xem da thay đổi"
+  "benefits": {
+    "sectionTitle": "Lợi ích",
+    "heading": "Thiết kế cho làn da và khí hậu Việt Nam",
+    "sub": "Da dầu, mụn, nóng ẩm, thâm nắng — DaDiary hiểu những thách thức phổ biến và gợi ý phù hợp, không copy nguyên routine nước ngoài.",
+    "items": {
+      "humid": {
+        "title": "Phù hợp khí hậu nóng ẩm",
+        "desc": "Gợi ý nhẹ, không bí da — ưu tiên làm sạch đúng cách, kiểm soát dầu và kem chống nắng mỏng nhẹ."
+      },
+      "oily": {
+        "title": "Hỗ trợ da dầu, lỗ chân lông",
+        "desc": "Theo dõi mức độ bóng dầu theo thời gian — biết sản phẩm nào giúp da cân bằng hơn."
+      },
+      "acne": {
+        "title": "Theo dõi mụn & thâm mụn",
+        "desc": "Ảnh check-in giúp bạn thấy mụn giảm dần hay tái phát — điều chỉnh routine kịp thời, không đoán mò."
+      },
+      "safe": {
+        "title": "An toàn & có trách nhiệm",
+        "desc": "Luôn nhắc kem chống nắng, patch test và khuyến cáo gặp bác sĩ khi da có dấu hiệu bất thường."
+      }
+    }
+  },
+  "testimonials": {
+    "sectionTitle": "Người dùng nói gì",
+    "heading": "Phản hồi từ cộng đồng Beta",
+    "collecting": "Đang thu thập đánh giá từ người dùng Beta",
+    "footnote": "Các đánh giá trên là nội dung mẫu minh họa — phản hồi thật sẽ được cập nhật khi chương trình Beta mở rộng.",
+    "items": {
+      "t1": {
+        "name": "Minh Anh",
+        "role": "Beta tester · Da dầu, TP.HCM",
+        "quote": "Cuối cùng mình cũng thấy da giảm dầu sau 3 tuần — nhờ check-in ảnh mỗi ngày, không còn đoán mò nữa."
+      },
+      "t2": {
+        "name": "Thu Hà",
+        "role": "Beta tester · Da mụn, Hà Nội",
+        "quote": "AI Coach gợi ý nhẹ nhàng, không áp lực. Mình thích phần so sánh trước–sau — thấy rõ mụn giảm dần."
+      },
+      "t3": {
+        "name": "Lan Phương",
+        "role": "Beta tester · Da hỗn hợp, Đà Nẵng",
+        "quote": "Routine sáng tối rõ ràng, tick xong là biết đã làm đủ. Tủ đồ giúp mình không mua trùng sản phẩm nữa."
+      }
+    }
   },
   "cta": {
-    "heading": "Bắt đầu nhật ký da hôm nay nhé?",
-    "body": "Không cần các bước chăm da hoàn hảo ngay ngày đầu. Cứ bắt đầu làm quen hoặc ghi nhật ký luôn — bạn đồng hành AI đi cùng đúng tốc độ của bạn (Người mới → Nâng cao).",
-    "primary": "Bắt đầu làm quen với da",
-    "secondary": "Ghi nhật ký da"
+    "heading": "Sẵn sàng bắt đầu hành trình chăm da có hệ thống?",
+    "body": "Tham gia Beta ngay hôm nay — trải nghiệm đầy đủ nhật ký da, AI Coach và theo dõi tiến trình. Không cần routine hoàn hảo, chỉ cần bắt đầu.",
+    "betaFree": "Miễn phí trong giai đoạn Beta",
+    "primary": "Tham gia Beta miễn phí",
+    "secondary": "Dùng thử không cần đăng ký"
+  },
+  "betaSignup": {
+    "sectionTitle": "Beta",
+    "heading": "Tham gia Beta ngay",
+    "sub": "Để lại email — chúng tôi sẽ gửi thông tin khi Beta mở rộng hoặc có tính năng mới dành cho bạn.",
+    "emailLabel": "Email của bạn",
+    "emailPlaceholder": "tenban@email.com",
+    "submit": "Nhận thông tin Beta",
+    "submitting": "Đang gửi…",
+    "privacy": "Chúng tôi chỉ gửi thông tin liên quan đến Beta DaDiary. Không spam, không chia sẻ email cho bên thứ ba.",
+    "formAria": "Form đăng ký nhận thông tin Beta DaDiary",
+    "requiredEmail": "Vui lòng nhập email.",
+    "invalidEmail": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "successTitle": "Đã ghi nhận email!",
+    "successBody": "Cảm ơn bạn đã quan tâm DaDiary. Chúng tôi sẽ liên hệ khi có cập nhật Beta."
   },
   "checkIn": {
     "sectionEyebrow": "Ghi nhật ký da",
@@ -1264,5 +1391,62 @@
     "error": "Chưa gửi được góp ý. Thử lại sau giây lát nhé.",
     "needLogin": "Đăng nhập để gửi góp ý.",
     "dismiss": "Bỏ qua"
+  },
+  "appFeedback": {
+    "sectionLabel": "Góp ý",
+    "pageTitle": "Gửi góp ý cho DaDiary",
+    "pageSub": "Ý kiến của bạn giúp chúng tôi cải thiện AI Coach, sửa lỗi và ưu tiên tính năng trong giai đoạn Beta.",
+    "typeLabel": "Loại góp ý",
+    "commentLabel": "Nội dung",
+    "commentPlaceholder": "Mô tả chi tiết góp ý, lỗi gặp phải hoặc ý tưởng tính năng…",
+    "submit": "Gửi góp ý",
+    "submitting": "Đang gửi…",
+    "privacy": "Góp ý của bạn chỉ dùng để cải thiện DaDiary. Chúng tôi không chia sẻ nội dung cho bên thứ ba.",
+    "success": "Đã gửi góp ý — cảm ơn bạn!",
+    "error": "Chưa gửi được góp ý. Thử lại sau giây lát nhé.",
+    "needAuth": "Đăng nhập để gửi góp ý.",
+    "signIn": "Đăng nhập",
+    "commentTooShort": "Vui lòng nhập ít nhất 5 ký tự.",
+    "types": {
+      "ai_feedback": "Nhận xét AI",
+      "bug_report": "Báo lỗi",
+      "feature_request": "Đề xuất tính năng",
+      "general": "Ý kiến khác"
+    }
+  },
+  "adminFeedbacks": {
+    "sectionLabel": "Admin",
+    "title": "Quản lý góp ý người dùng",
+    "sub": "Theo dõi feedback Beta — lọc theo loại và trạng thái, cập nhật trực tiếp từ bảng.",
+    "needAuth": "Đăng nhập để truy cập trang quản trị.",
+    "signIn": "Đăng nhập",
+    "forbidden": "Bạn không có quyền truy cập trang này.",
+    "loadError": "Không tải được danh sách góp ý.",
+    "empty": "Chưa có góp ý nào phù hợp bộ lọc.",
+    "resultCount": "{n} góp ý",
+    "filterType": "Loại góp ý",
+    "filterStatus": "Trạng thái",
+    "filterAll": "Tất cả",
+    "colType": "Loại",
+    "colComment": "Nội dung",
+    "colUser": "Người dùng",
+    "colTime": "Thời gian",
+    "colStatus": "Trạng thái",
+    "statusUpdated": "Đã cập nhật trạng thái.",
+    "statusError": "Chưa cập nhật được trạng thái.",
+    "prevPage": "Trước",
+    "nextPage": "Sau",
+    "pageOf": "Trang {page} / {total}",
+    "types": {
+      "ai_feedback": "Nhận xét AI",
+      "bug_report": "Báo lỗi",
+      "feature_request": "Đề xuất tính năng",
+      "general": "Ý kiến khác"
+    },
+    "statuses": {
+      "new": "Mới",
+      "read": "Đã đọc",
+      "resolved": "Đã xử lý"
+    }
   }
 }
