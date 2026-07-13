@@ -20,7 +20,7 @@
     },
     "onboarding": {
       "title": "Get to know your skin · DaDiary",
-      "description": "Three quick steps: photos & skin, your preferences, then a personalized AM/PM starter routine."
+      "description": "Three quick steps: pick skin concerns, preview your starter routine, and begin."
     },
     "progress": {
       "title": "See how your skin changes · DaDiary",
@@ -864,13 +864,80 @@
   "onboarding": {
     "sectionLabel": "Get to know your skin",
     "title": "Starter routine",
-    "intro": "Three steps — under 90 seconds if you're quick. No comparison, no pressure.",
+    "intro": "Three steps — under 60 seconds. Pick concerns, see your routine right away, no waiting.",
     "progress": {
       "stepOf": "Step {current} of {total}",
-      "analyze": "Photos & analysis",
-      "quickInfo": "Quick info",
-      "summary": "Start",
-      "timeHint": "Usually done in under 90 seconds"
+      "skinProfile": "Your skin",
+      "starterRoutine": "Starter routine",
+      "ready": "Ready",
+      "timeHint": "Usually done in under 60 seconds"
+    },
+    "step1": {
+      "title": "What's your skin like?",
+      "subtitle": "Pick your goal and main concerns — photos are optional for sharper AI hints.",
+      "goalTitle": "Skin goal",
+      "concernsTitle": "Main concerns",
+      "concernsHint": "Pick up to 3 concerns you care about most.",
+      "concernLimit": "Selected {count}/{max}",
+      "photosOptional": "Add photos (optional)",
+      "photosOptionalHint": "2–3 face photos help the AI read better — not required.",
+      "optionalBadge": "Optional",
+      "photosReadyHint": "Photos ready — tap Continue for AI analysis.",
+      "continueWithoutPhotos": "Continue without photos",
+      "skipAnalyzeUseDefault": "Skip AI — use default routine",
+      "aiResultTitle": "AI read your photos"
+    },
+    "step2": {
+      "title": "Your starter routine, made for your skin",
+      "subtitle": "These are the first steps that fit your skin — start them this week.",
+      "personalBadge": "Made for you",
+      "whyTitle": "Why this routine fits",
+      "sourceAi": "From photos & AI",
+      "sourceManual": "From your choices",
+      "morningHint": "Cleanse · hydrate · protect",
+      "eveningHint": "Gentle cleanse · overnight repair",
+      "stepCount": "steps",
+      "viewStepDetail": "View details",
+      "updatedToast": "Routine updated to match your preferences",
+      "editAnytime": "You can edit anytime later.",
+      "useRoutine": "Use this routine",
+      "loadingTitle": "Building routine…",
+      "loadingBody": "Wait a moment or go back to the previous step."
+    },
+    "step3": {
+      "badge": "All set!",
+      "title": "Ready to start",
+      "subtitle": "You have a starter routine — next steps are simple.",
+      "routineRecap": "Your routine",
+      "nextActionsTitle": "Suggested next steps",
+      "finish": "Finish & start",
+      "actions": {
+        "checkIn": "Start today's check-in — log how your skin feels daily.",
+        "routine": "Save your routine — view details and tick steps each day.",
+        "learn": "Learn about each step — the AI coach explains why they matter."
+      }
+    },
+    "photoGuide": {
+      "title": "What photos help the AI?",
+      "goodExample": "Good photo",
+      "avoidExample": "Avoid",
+      "goodLight": "Natural light near a window",
+      "goodAngle": "Straight-on or ¾ angle",
+      "goodClean": "No makeup, light filters only",
+      "avoidFilter": "Heavy filters smoothing skin",
+      "avoidDark": "Dark, harsh flash, heavy shadows",
+      "avoidMakeup": "Heavy makeup hiding skin detail",
+      "footer": "2–3 photos is enough. They don't need to be pretty — just clear and natural."
+    },
+    "routineStep": {
+      "morning": "Morning",
+      "evening": "Evening",
+      "editMore": "Edit more",
+      "doneEditing": "Done editing",
+      "addStep": "Add step",
+      "remove": "Remove step",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "analyze": {
       "title": "Photos & analysis",

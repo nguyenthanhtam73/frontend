@@ -1,4 +1,5 @@
 import { ONBOARDING_DEFAULT_BUDGET } from "@/lib/onboarding/constants";
+import { inferSkinTypeFromConcerns } from "@/lib/onboarding/infer-skin-type";
 import type { OnboardingState } from "@/lib/stores/onboarding-store";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 
@@ -31,12 +32,14 @@ export function buildOnboardingFinishBody(
   photosSkipped: boolean,
 ): OnboardingFinishBody | null {
   const bodyConcerns = bodyConcernsFromStore(ob);
-  if (!ob.skinType || !ob.goal || !ob.skillMode || bodyConcerns.length === 0) {
+  const skinType =
+    ob.skinType ?? inferSkinTypeFromConcerns(bodyConcerns, ob.goal);
+  if (!skinType || !ob.goal || !ob.skillMode || bodyConcerns.length === 0) {
     return null;
   }
 
   const body: OnboardingFinishBody = {
-    skin_type: ob.skinType,
+    skin_type: skinType,
     undertone: ob.undertone ?? "prefer_not",
     contexts: [],
     budget: ONBOARDING_DEFAULT_BUDGET,

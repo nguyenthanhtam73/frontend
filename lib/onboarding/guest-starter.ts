@@ -19,19 +19,19 @@ function morningForProfile(
   const base =
     skin === "oily"
       ? en
-        ? ["Gel or foaming cleanser (30s, lukewarm water).", "Light oil-free moisturizer.", "Broad-spectrum SPF 30+ — reapply if outdoors."]
-        : ["Sữa rửa mặt dạng gel/bọt (30 giây, nước ấm).", "Kem dưỡng oil-free nhẹ.", "Kem chống nắng SPF 30+ — bôi lại nếu ra ngoài nhiều."]
+        ? ["Gel or foaming cleanser — 30s, lukewarm water.", "Light oil-free moisturizer — thin layer.", "Broad-spectrum SPF 30+ — reapply if outdoors."]
+        : ["Sữa rửa mặt gel/bọt — 30 giây, nước ấm.", "Kem dưỡng oil-free nhẹ — một lớp mỏng.", "Kem chống nắng SPF 30+ — bôi lại nếu ra ngoài nhiều."]
       : skin === "dry"
         ? en
-          ? ["Cream cleanser — no tight, squeaky feeling after.", "Hydrating serum or essence.", "Rich moisturizer + SPF 30+."]
-          : ["Sữa rửa mặt dạng kem — rửa xong da không được căng.", "Serum/essence cấp ẩm.", "Kem dưỡng ẩm đặc + kem chống nắng SPF 30+."]
+          ? ["Cream cleanser — no tight feeling after.", "Hydrating serum or essence — pat in gently.", "Rich moisturizer + SPF 30+ — don't skip SPF."]
+          : ["Sữa rửa mặt dạng kem — rửa xong không căng.", "Serum/essence cấp ẩm — vỗ nhẹ cho thấm.", "Kem dưỡng ẩm đặc + SPF 30+ — không bỏ qua chống nắng."]
         : skin === "sensitive"
           ? en
-            ? ["Fragrance-free gentle cleanser.", "Simple moisturizer for sensitive skin.", "Mineral SPF 30+ (patch test first)."]
-            : ["Sữa rửa mặt không mùi, dịu.", "Kem dưỡng tối giản cho da nhạy cảm.", "Kem chống nắng khoáng SPF 30+ (patch test trước)."]
+            ? ["Fragrance-free gentle cleanser — lukewarm water.", "Simple moisturizer for sensitive skin.", "Mineral SPF 30+ — patch test first."]
+            : ["Sữa rửa mặt không mùi, dịu — nước ấm.", "Kem dưỡng tối giản cho da nhạy cảm.", "Kem chống nắng khoáng SPF 30+ — patch test trước."]
           : en
-            ? ["Gentle pH-balanced cleanser.", "Light moisturizer.", "Daily SPF 30+ even near windows."]
-            : ["Sữa rửa mặt pH cân bằng, dịu.", "Kem dưỡng ẩm nhẹ.", "Kem chống nắng SPF 30+ hàng ngày (kể cả ở nhà gần cửa sổ)."];
+            ? ["Gentle pH-balanced cleanser — 30 seconds.", "Light moisturizer — while skin is still damp.", "Daily SPF 30+ — even near windows."]
+            : ["Sữa rửa mặt pH cân bằng, dịu — 30 giây.", "Kem dưỡng ẩm nhẹ — khi da còn ẩm.", "Kem chống nắng SPF 30+ hàng ngày — kể cả ở nhà gần cửa sổ."];
 
   if (goal === "clear_acne") {
     base.push(
@@ -140,8 +140,8 @@ export function buildDefaultStarterRoutine(
     skin_readback: coaching,
     rationale: bullets[0] ?? "",
     closing_reminder: en
-      ? "This is a default routine — tap «Retry with AI» on the next screen for a personalized version."
-      : "Đây là routine mặc định — bấm «Thử lại với AI» ở màn hình tiếp theo để có bản cá nhân hoá.",
+      ? "Start with these steps this week — you can refine as you learn what your skin loves."
+      : "Bắt đầu với các bước này tuần này — bạn có thể tinh chỉnh dần khi hiểu da mình hơn.",
   };
 }
 

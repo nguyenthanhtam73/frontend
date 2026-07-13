@@ -60,6 +60,18 @@ export const ONBOARDING_GUEST_TRIAL_KEY = "hasCompletedOnboardingTrial";
 /** Tracks last onboarding reset to enforce one reset per calendar day. */
 export const ONBOARDING_RESET_KEY = "dadiary_onboarding_reset_at";
 
+/** Step 1 — main concerns (user picks up to ONBOARDING_MAX_CONCERNS). */
+export const STEP1_CONCERNS = [
+  "acne",
+  "dryness",
+  "redness",
+  "hyperpigmentation",
+  "dullness",
+  "large_pores",
+] as const;
+
+export const ONBOARDING_MAX_CONCERNS = 3;
+
 /** Onboarding photo AI: at least 2 angles, up to 3. */
 export const ONBOARDING_MIN_PHOTOS = 2;
 export const ONBOARDING_MAX_PHOTOS = 3;

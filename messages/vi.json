@@ -20,7 +20,7 @@
     },
     "onboarding": {
       "title": "Làm quen với da bạn · DaDiary",
-      "description": "3 bước nhanh: ảnh & da, thông tin sở thích, rồi nhận chăm da sáng tối khởi đầu từ AI."
+      "description": "3 bước nhanh: chọn vấn đề da, xem routine khởi đầu, rồi bắt đầu chăm da."
     },
     "progress": {
       "title": "Xem da thay đổi · DaDiary",
@@ -864,13 +864,80 @@
   "onboarding": {
     "sectionLabel": "Làm quen với da bạn",
     "title": "Chăm da khởi đầu",
-    "intro": "3 bước — dưới 90 giây là xong. Không so sánh, không áp lực.",
+    "intro": "3 bước — dưới 60 giây là xong. Chọn vấn đề da, xem routine ngay, không cần chờ.",
     "progress": {
       "stepOf": "Bước {current}/{total}",
-      "analyze": "Ảnh & phân tích",
-      "quickInfo": "Thông tin nhanh",
-      "summary": "Bắt đầu",
-      "timeHint": "Thường xong trong dưới 90 giây"
+      "skinProfile": "Da bạn",
+      "starterRoutine": "Routine khởi đầu",
+      "ready": "Sẵn sàng",
+      "timeHint": "Thường xong trong dưới 60 giây"
+    },
+    "step1": {
+      "title": "Da bạn như thế nào?",
+      "subtitle": "Chọn mục tiêu và vấn đề da chính — ảnh là tùy chọn để AI gợi ý chính xác hơn.",
+      "goalTitle": "Mục tiêu da",
+      "concernsTitle": "Vấn đề da chính",
+      "concernsHint": "Chọn tối đa 3 vấn đề bạn quan tâm nhất.",
+      "concernLimit": "Đã chọn {count}/{max}",
+      "photosOptional": "Chụp ảnh (tùy chọn)",
+      "photosOptionalHint": "2–3 ảnh giúp AI đọc da chính xác hơn — nhưng không bắt buộc.",
+      "optionalBadge": "Tùy chọn",
+      "photosReadyHint": "Ảnh đủ rồi — bấm Tiếp tục để AI phân tích.",
+      "continueWithoutPhotos": "Tiếp tục không cần ảnh",
+      "skipAnalyzeUseDefault": "Bỏ qua AI — dùng routine mặc định",
+      "aiResultTitle": "AI đã đọc ảnh của bạn"
+    },
+    "step2": {
+      "title": "Routine khởi đầu dành riêng cho da bạn",
+      "subtitle": "Đây là những bước đầu tiên phù hợp với da của bạn — bắt đầu ngay tuần này.",
+      "personalBadge": "Dành riêng cho bạn",
+      "whyTitle": "Vì sao routine này phù hợp?",
+      "sourceAi": "Từ ảnh & AI",
+      "sourceManual": "Từ lựa chọn của bạn",
+      "morningHint": "Làm sạch · cấp ẩm · bảo vệ",
+      "eveningHint": "Tẩy trang nhẹ · phục hồi qua đêm",
+      "stepCount": "bước",
+      "viewStepDetail": "Xem chi tiết",
+      "updatedToast": "Routine đã được cập nhật theo ý bạn",
+      "editAnytime": "Bạn có thể chỉnh sửa bất cứ lúc nào sau này.",
+      "useRoutine": "Dùng routine này",
+      "loadingTitle": "Đang tạo routine…",
+      "loadingBody": "Chờ một chút hoặc quay lại bước trước."
+    },
+    "step3": {
+      "badge": "Xong rồi!",
+      "title": "Sẵn sàng bắt đầu",
+      "subtitle": "Bạn đã có routine khởi đầu — bước tiếp theo rất đơn giản.",
+      "routineRecap": "Routine của bạn",
+      "nextActionsTitle": "Gợi ý tiếp theo",
+      "finish": "Hoàn tất & bắt đầu",
+      "actions": {
+        "checkIn": "Bắt đầu check-in hôm nay — ghi lại cảm nhận da mỗi ngày.",
+        "routine": "Lưu routine — xem chi tiết và tick từng bước hàng ngày.",
+        "learn": "Tìm hiểu thêm về các bước — coach AI giải thích vì sao từng bước quan trọng."
+      }
+    },
+    "photoGuide": {
+      "title": "Ảnh nào giúp AI đọc tốt?",
+      "goodExample": "Ảnh tốt",
+      "avoidExample": "Tránh",
+      "goodLight": "Ánh sáng tự nhiên, gần cửa sổ",
+      "goodAngle": "Thẳng mặt hoặc nửa nghiêng",
+      "goodClean": "Không makeup, không filter mạnh",
+      "avoidFilter": "Filter làm da quá mịn / sáng",
+      "avoidDark": "Tối, flash gắt, bóng đổ nặng",
+      "avoidMakeup": "Trang điểm dày che chi tiết da",
+      "footer": "2–3 ảnh là đủ. Không cần ảnh đẹp — chỉ cần rõ và tự nhiên."
+    },
+    "routineStep": {
+      "morning": "Buổi sáng",
+      "evening": "Buổi tối",
+      "editMore": "Chỉnh sửa thêm",
+      "doneEditing": "Xong chỉnh sửa",
+      "addStep": "Thêm bước",
+      "remove": "Xóa bước",
+      "moveUp": "Lên trên",
+      "moveDown": "Xuống dưới"
     },
     "analyze": {
       "title": "Ảnh & phân tích",

@@ -4,9 +4,11 @@ import { getAccessToken } from "@/lib/auth-token";
 import {
   JUST_COMPLETED_ONBOARDING_KEY,
   ONBOARDING_GUEST_TRIAL_KEY,
+  ONBOARDING_MAX_CONCERNS,
   ONBOARDING_MAX_PHOTOS,
 } from "@/lib/onboarding/constants";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
+import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 
 /** Primary skin type (self-reported or confirmed from AI). */
@@ -24,8 +26,8 @@ export type SkillMode = "beginner" | "intermediate" | "advanced";
  */
 export type SkinInputMode = "none" | "ai" | "manual_skip" | "manual_fallback";
 
-/** Three-step onboarding: analyze (photos + skin) → quickInfo → summary. */
-export const ONBOARDING_STEPS = ["analyze", "quickInfo", "summary"] as const;
+/** Three-step onboarding: skinProfile → starterRoutine → ready. */
+export const ONBOARDING_STEPS = ["skinProfile", "starterRoutine", "ready"] as const;
 
 export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
 
@@ -59,6 +61,11 @@ export type OnboardingState = {
   analyzeErrorKind: OnboardingAiErrorKind | null;
   /** Tracks manual vs AI path on step 1 (see SkinInputMode). */
   skinInputMode: SkinInputMode;
+  /** Built on step 2 — may be edited by user before finish. */
+  starterRoutine: StarterRoutineDTO | null;
+  starterRoutineUserEdited: boolean;
+  /** User confirmed routine on step 2. */
+  starterRoutineAccepted: boolean;
   completedAt: string | null;
 };
 
@@ -79,6 +86,12 @@ type Store = OnboardingState & {
   clearPhotos: () => void;
   setAnalyzeStatus: (s: OnboardingState["analyzeStatus"], err?: OnboardingAiErrorKind | null) => void;
   setSkinInputMode: (mode: SkinInputMode) => void;
+  setStarterRoutine: (routine: StarterRoutineDTO | null) => void;
+  updateRoutineStep: (period: "morning" | "evening", index: number, text: string) => void;
+  removeRoutineStep: (period: "morning" | "evening", index: number) => void;
+  addRoutineStep: (period: "morning" | "evening", text?: string) => void;
+  moveRoutineStep: (period: "morning" | "evening", index: number, delta: -1 | 1) => void;
+  markStarterRoutineAccepted: () => void;
   reset: () => void;
   markComplete: () => void;
   /** Apply AI result to form fields + concern tags */
@@ -99,6 +112,9 @@ const initial: OnboardingState = {
   analyzeStatus: "idle",
   analyzeErrorKind: null,
   skinInputMode: "none",
+  starterRoutine: null,
+  starterRoutineUserEdited: false,
+  starterRoutineAccepted: false,
   completedAt: null,
 };
 
@@ -236,11 +252,13 @@ export const useOnboardingStore = create<Store>((set) => ({
   setCurrentRoutineText: (currentRoutineText) => set({ currentRoutineText }),
   setAiConcernTags: (aiConcernTags) => set({ aiConcernTags }),
   toggleAiConcernTag: (id) =>
-    set((s) => ({
-      aiConcernTags: s.aiConcernTags.includes(id)
-        ? s.aiConcernTags.filter((x) => x !== id)
-        : [...s.aiConcernTags, id],
-    })),
+    set((s) => {
+      if (s.aiConcernTags.includes(id)) {
+        return { aiConcernTags: s.aiConcernTags.filter((x) => x !== id) };
+      }
+      if (s.aiConcernTags.length >= ONBOARDING_MAX_CONCERNS) return s;
+      return { aiConcernTags: [...s.aiConcernTags, id] };
+    }),
   setAiSnapshot: (aiSnapshot) => set({ aiSnapshot }),
   setPhotos: (photos) => set({ photos }),
   addPhoto: (item) =>
@@ -293,6 +311,55 @@ export const useOnboardingStore = create<Store>((set) => ({
     persistSkinInputMode(skinInputMode);
     set({ skinInputMode });
   },
+  setStarterRoutine: (starterRoutine) =>
+    set({ starterRoutine, starterRoutineUserEdited: false }),
+  updateRoutineStep: (period, index, text) =>
+    set((s) => {
+      const routine = s.starterRoutine;
+      if (!routine) return s;
+      const steps = [...routine[period]];
+      if (index < 0 || index >= steps.length) return s;
+      steps[index] = text;
+      return {
+        starterRoutine: { ...routine, [period]: steps },
+        starterRoutineUserEdited: true,
+      };
+    }),
+  removeRoutineStep: (period, index) =>
+    set((s) => {
+      const routine = s.starterRoutine;
+      if (!routine) return s;
+      const steps = routine[period].filter((_, i) => i !== index);
+      return {
+        starterRoutine: { ...routine, [period]: steps },
+        starterRoutineUserEdited: true,
+      };
+    }),
+  addRoutineStep: (period, text = "") =>
+    set((s) => {
+      const routine = s.starterRoutine;
+      if (!routine) return s;
+      return {
+        starterRoutine: { ...routine, [period]: [...routine[period], text] },
+        starterRoutineUserEdited: true,
+      };
+    }),
+  moveRoutineStep: (period, index, delta) =>
+    set((s) => {
+      const routine = s.starterRoutine;
+      if (!routine) return s;
+      const steps = [...routine[period]];
+      const target = index + delta;
+      if (index < 0 || index >= steps.length || target < 0 || target >= steps.length) {
+        return s;
+      }
+      [steps[index], steps[target]] = [steps[target], steps[index]];
+      return {
+        starterRoutine: { ...routine, [period]: steps },
+        starterRoutineUserEdited: true,
+      };
+    }),
+  markStarterRoutineAccepted: () => set({ starterRoutineAccepted: true }),
   reset: () =>
     set((s) => {
       for (const p of s.photos) {

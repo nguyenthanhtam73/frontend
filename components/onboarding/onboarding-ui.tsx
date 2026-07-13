@@ -15,9 +15,9 @@ import { ONBOARDING_STEPS } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
 
 const PROGRESS_STEP_KEYS = [
-  "progress.analyze",
-  "progress.quickInfo",
-  "progress.summary",
+  "progress.skinProfile",
+  "progress.starterRoutine",
+  "progress.ready",
 ] as const;
 
 type OnboardingT = (key: string, values?: Record<string, string | number>) => string;

@@ -4,6 +4,7 @@ import { AlertTriangle, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   ONBOARDING_ANALYZE_SLOW_HINT_MS,
 } from "@/lib/onboarding/constants";
@@ -54,6 +55,9 @@ type OnboardingAiLoadingProps = {
   /** Full-card overlay — blocks interaction beneath. */
   overlay?: boolean;
   className?: string;
+  /** Skip AI wait and proceed with default routine (analyze phase only). */
+  onUseDefault?: () => void;
+  useDefaultLabel?: string;
 };
 
 /**
@@ -64,6 +68,8 @@ export function OnboardingAiLoading({
   phase,
   overlay = false,
   className,
+  onUseDefault,
+  useDefaultLabel,
 }: OnboardingAiLoadingProps) {
   const t = useTranslations("onboarding");
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -161,6 +167,12 @@ export function OnboardingAiLoading({
         </div>
         <p className="text-[11px] text-muted-foreground">{t("aiLoading.progressHint")}</p>
       </div>
+
+      {phase === "analyze" && onUseDefault && useDefaultLabel ? (
+        <Button type="button" variant="outline" size="sm" onClick={onUseDefault}>
+          {useDefaultLabel}
+        </Button>
+      ) : null}
     </div>
   );
 
