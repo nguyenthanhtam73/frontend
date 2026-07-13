@@ -9,17 +9,17 @@ export async function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.15fr_1fr]">
-        <div className="space-y-7">
-          <div className="space-y-2">
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.9fr] lg:gap-12">
+        <div className="space-y-6">
+          <div className="space-y-3">
             <Badge variant="accent" className="rounded-full px-3 py-1 text-[11px]">
               <Sparkles className="size-3" aria-hidden />
               {t("badge")}
             </Badge>
-            <p className="text-lg font-medium leading-snug text-primary sm:text-xl">{t("slogan")}</p>
+            <p className="text-sm font-medium tracking-wide text-primary/90 sm:text-base">{t("slogan")}</p>
           </div>
 
-          <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="text-balance text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.25rem] lg:leading-[1.05]">
             {t("titleLead")}{" "}
             <span className="gradient-text">{t("titleGradient")}</span>
           </h1>
@@ -64,7 +64,7 @@ export async function Hero() {
           </dl>
         </div>
 
-        <div className="relative isolate aspect-square w-full" aria-hidden>
+        <div className="relative isolate mx-auto aspect-square w-full max-w-md lg:max-w-none" aria-hidden>
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/40 to-transparent blur-2xl" />
           <HeroMockup
             tags={[
@@ -89,7 +89,7 @@ function HeroMockup({
 }) {
   return (
     <div className="relative h-full w-full">
-      <div className="absolute left-1/2 top-1/2 z-10 w-[52%] -translate-x-1/2 -translate-y-[42%] overflow-hidden rounded-[1.75rem] border-4 border-white/70 bg-card shadow-2xl ring-1 ring-black/10">
+      <div className="absolute left-1/2 top-1/2 z-10 w-[50%] -translate-x-1/2 -translate-y-[40%] overflow-hidden rounded-[1.75rem] border-4 border-white/70 bg-card shadow-2xl ring-1 ring-black/10">
         <div className="bg-muted/60 px-4 py-2 text-center text-[10px] font-medium text-muted-foreground">
           {appLabel}
         </div>

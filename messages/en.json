@@ -174,12 +174,12 @@
     "guideClose": "Close"
   },
   "hero": {
-    "badge": "Beta open — Free",
+    "badge": "Free Beta • Built for Vietnamese skin",
     "slogan": "Skin diary + AI Coach",
-    "titleLead": "Track your skin every day —",
-    "titleGradient": "get tips from your AI Coach.",
-    "body": "DaDiary helps you <b>log skin with photos</b>, see progress visually, and get personalized routine tips — gentle, no pressure.",
-    "ctaPrimary": "Join Beta for free",
+    "titleLead": "Track your skin daily —",
+    "titleGradient": "AI tells you what to do next.",
+    "body": "Oily skin, breakouts, or humidity stress? DaDiary helps you <b>log skin with photos</b>, see real progress, and get routine tips tuned for Vietnam's climate — no guesswork, no pressure.",
+    "ctaPrimary": "Start free Beta",
     "ctaSecondary": "See how it works",
     "betaNote": "Free during Beta · No credit card required",
     "stat1k": "< 1 min",
@@ -353,6 +353,9 @@
     "formAria": "DaDiary Beta email signup form",
     "requiredEmail": "Please enter your email.",
     "invalidEmail": "Please enter a valid email address.",
+    "emailAlreadyRegistered": "This email is already on the Beta waitlist.",
+    "errorGeneric": "Something went wrong. Please try again in a moment.",
+    "errorServer": "The server is temporarily unavailable. Please try again later.",
     "successTitle": "You're on the list!",
     "successBody": "Thanks for your interest in DaDiary. We'll reach out when Beta updates are ready."
   },

@@ -6,6 +6,7 @@ import { useCallback, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { betaSignupErrorKey, submitBetaSignup } from "@/lib/api/beta-signup";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,6 +37,8 @@ export function BetaSignupForm({ className }: { className?: string }) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submitting) return;
+
     const validationError = validate(email);
     if (validationError) {
       setError(validationError);
@@ -45,15 +48,20 @@ export function BetaSignupForm({ className }: { className?: string }) {
     setError(null);
     setSubmitting(true);
 
-    // Placeholder until backend is wired — brief delay feels intentional.
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    setSubmitting(false);
-    setSubmitted(true);
-    success({
-      title: t("successTitle"),
-      description: t("successBody"),
-    });
+    try {
+      await submitBetaSignup({ email: email.trim() });
+      setSubmitted(true);
+      setEmail("");
+      success({
+        title: t("successTitle"),
+        description: t("successBody"),
+      });
+    } catch (err) {
+      const key = betaSignupErrorKey(err);
+      setError(t(key));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {

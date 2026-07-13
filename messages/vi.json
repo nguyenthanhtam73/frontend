@@ -174,12 +174,12 @@
     "guideClose": "Đóng"
   },
   "hero": {
-    "badge": "Beta mở — Miễn phí",
-    "slogan": "Nhật ký da + AI Coach cho làn da Việt",
-    "titleLead": "Theo dõi da mỗi ngày —",
-    "titleGradient": "nhận gợi ý từ AI Coach.",
-    "body": "DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, theo dõi tiến trình trực quan và nhận gợi ý routine cá nhân hóa — dễ hiểu, không áp lực, phù hợp khí hậu nóng ẩm.",
-    "ctaPrimary": "Tham gia Beta miễn phí",
+    "badge": "Beta miễn phí • Dành cho da Việt",
+    "slogan": "Nhật ký da + AI Coach",
+    "titleLead": "Theo dõi da hằng ngày —",
+    "titleGradient": "AI gợi ý đúng việc cần làm.",
+    "body": "Da dầu, mụn hay thâm trong khí hậu nóng ẩm? DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, nhìn thấy tiến trình rõ ràng và nhận gợi ý routine phù hợp — không đoán mò, không áp lực.",
+    "ctaPrimary": "Dùng Beta miễn phí",
     "ctaSecondary": "Xem cách hoạt động",
     "betaNote": "Miễn phí trong giai đoạn Beta · Không cần thẻ tín dụng",
     "stat1k": "< 1 phút",
@@ -353,6 +353,9 @@
     "formAria": "Form đăng ký nhận thông tin Beta DaDiary",
     "requiredEmail": "Vui lòng nhập email.",
     "invalidEmail": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "emailAlreadyRegistered": "Email này đã được đăng ký trước đó.",
+    "errorGeneric": "Có lỗi xảy ra. Vui lòng thử lại sau giây lát.",
+    "errorServer": "Máy chủ tạm thời không phản hồi. Vui lòng thử lại sau.",
     "successTitle": "Đã ghi nhận email!",
     "successBody": "Cảm ơn bạn đã quan tâm DaDiary. Chúng tôi sẽ liên hệ khi có cập nhật Beta."
   },
