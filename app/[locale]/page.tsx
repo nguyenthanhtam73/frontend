@@ -16,9 +16,9 @@ export default function HomePage() {
       <Solution />
       <Features />
       <HowItWorks />
+      <Testimonials />
       <BetaSignup />
       <Benefits />
-      <Testimonials />
       <Cta />
     </>
   );

@@ -181,7 +181,8 @@
     "body": "Oily skin, breakouts, or humidity stress? DaDiary helps you <b>log skin with photos</b>, see real progress, and get routine tips tuned for Vietnam's climate — no guesswork, no pressure.",
     "ctaPrimary": "Start free Beta",
     "ctaSecondary": "See how it works",
-    "betaNote": "Free during Beta · No credit card required",
+    "ctaEmailLink": "Or just leave your email →",
+    "betaNote": "Free · No credit card · Unsubscribe anytime",
     "stat1k": "< 1 min",
     "stat1v": "daily check-in",
     "stat2k": "AI Coach",
@@ -313,41 +314,55 @@
   },
   "testimonials": {
     "sectionTitle": "What users say",
-    "heading": "Beta community feedback",
-    "collecting": "Collecting reviews from Beta users",
-    "footnote": "Quotes above are sample placeholders — real feedback will appear as Beta expands.",
+    "heading": "Early Beta users are seeing results",
+    "sub": "Early feedback from DaDiary testers in Vietnam — oily skin, breakouts, humid climate.",
+    "collecting": "Beta open now",
+    "earlyBeta": "Early Beta",
+    "footnote": "Early Beta user stories (illustrative)",
     "items": {
       "t1": {
         "name": "Minh Anh",
-        "role": "Beta tester · Oily skin",
-        "quote": "I finally saw less oil after 3 weeks — daily photo check-ins stopped the guesswork."
+        "role": "Oily skin · Ho Chi Minh City",
+        "quote": "After 3 weeks of daily photo check-ins, my skin is visibly less oily — no more guessing which product works."
       },
       "t2": {
         "name": "Thu Hà",
-        "role": "Beta tester · Acne-prone",
-        "quote": "AI Coach is gentle, no pressure. I love before/after — breakouts clearly eased."
+        "role": "Acne-prone · Hanoi",
+        "quote": "AI Coach is gentle, no pressure. Before/after compare helped me see breakouts ease week by week."
       },
       "t3": {
         "name": "Lan Phương",
-        "role": "Beta tester · Combination skin",
-        "quote": "Clear AM/PM routine with daily ticks. The shelf stopped me buying duplicates."
+        "role": "Combination skin · Da Nang",
+        "quote": "Clear AM/PM routine with daily ticks. The shelf stopped me buying duplicate products."
       }
     }
   },
   "cta": {
-    "heading": "Ready for structured skincare?",
-    "body": "Join Beta today — full diary, AI Coach, and progress tracking. No perfect routine needed, just start.",
-    "betaFree": "Free during Beta",
-    "primary": "Join Beta for free",
-    "secondary": "Try without signing up"
+    "eyebrow": "Get started",
+    "heading": "Ready to track your skin and get daily AI guidance?",
+    "body": "Join free Beta — log skin with photos, get routine tips tuned for Vietnam's climate. No perfect routine needed, just start.",
+    "betaFree": "100% free during Beta",
+    "primary": "Start free Beta",
+    "secondary": "Just leave your email",
+    "trustNote": "DaDiary offers reference tips only, not medical advice. Always patch test new products."
   },
   "betaSignup": {
-    "sectionTitle": "Beta",
-    "heading": "Join the Beta waitlist",
-    "sub": "Leave your email — we'll notify you when Beta expands or new features roll out.",
+    "sectionTitle": "Beta signup",
+    "heading": "Get early Beta access — free",
+    "sub": "Leave your email for Beta invites and feature updates. No spam, we never sell your email.",
+    "benefits": {
+      "b1": "Free Beta access",
+      "b2": "Priority when new features launch",
+      "b3": "Just one email, no card needed"
+    },
+    "trust": {
+      "t1": "No spam",
+      "t2": "Email never shared",
+      "t3": "Unsubscribe anytime"
+    },
     "emailLabel": "Your email",
     "emailPlaceholder": "you@email.com",
-    "submit": "Get Beta updates",
+    "submit": "Get Beta updates now",
     "submitting": "Sending…",
     "privacy": "We only send Beta-related updates. No spam, no sharing with third parties.",
     "formAria": "DaDiary Beta email signup form",

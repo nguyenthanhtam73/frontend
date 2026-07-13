@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputClassName =
-  "flex h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-base outline-none ring-ring/40 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-10 sm:text-sm";
+  "flex min-h-12 h-12 w-full min-w-0 rounded-xl border border-input bg-background px-4 text-base outline-none ring-ring/40 transition-shadow placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:min-h-11 sm:h-11 sm:text-sm";
 
 export function BetaSignupForm({ className }: { className?: string }) {
   const t = useTranslations("betaSignup");
@@ -125,7 +125,7 @@ export function BetaSignupForm({ className }: { className?: string }) {
         <Button
           type="submit"
           disabled={submitting}
-          className="h-11 w-full shrink-0 px-6 text-base sm:mt-[1.375rem] sm:w-auto"
+          className="min-h-12 h-12 w-full shrink-0 px-6 text-base shadow-md shadow-primary/15 sm:mt-[1.375rem] sm:w-auto"
         >
           {submitting ? (
             <>

@@ -3,6 +3,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button-link";
+import { Link } from "@/i18n/navigation";
 
 export async function Hero() {
   const t = await getTranslations("hero");
@@ -30,23 +31,33 @@ export async function Hero() {
             })}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <ButtonLink
               href="/register"
               size="lg"
-              className="h-11 gap-2 px-6 text-base shadow-md shadow-primary/15"
+              className="h-12 w-full gap-2 px-6 text-base shadow-lg shadow-primary/20 sm:w-auto"
             >
               {t("ctaPrimary")}
               <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
-            <ButtonLink href="/#how" size="lg" variant="outline" className="h-11 px-6 text-base">
+            <ButtonLink
+              href="/#how"
+              size="lg"
+              variant="outline"
+              className="h-12 w-full px-6 text-base sm:w-auto"
+            >
               {t("ctaSecondary")}
             </ButtonLink>
           </div>
 
-          <p className="text-xs text-muted-foreground">{t("betaNote")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("betaNote")}{" "}
+            <Link href="/#beta-signup" className="font-medium text-primary underline-offset-4 hover:underline">
+              {t("ctaEmailLink")}
+            </Link>
+          </p>
 
-          <dl className="grid grid-cols-1 gap-5 pt-2 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-4">
+          <dl className="grid grid-cols-1 gap-5 border-t border-border/50 pt-5 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-4">
             {[
               { k: "stat1", v: "stat1" },
               { k: "stat2", v: "stat2" },

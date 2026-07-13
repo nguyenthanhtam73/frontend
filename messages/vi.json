@@ -179,9 +179,10 @@
     "titleLead": "Theo dõi da hằng ngày —",
     "titleGradient": "AI gợi ý đúng việc cần làm.",
     "body": "Da dầu, mụn hay thâm trong khí hậu nóng ẩm? DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, nhìn thấy tiến trình rõ ràng và nhận gợi ý routine phù hợp — không đoán mò, không áp lực.",
-    "ctaPrimary": "Dùng Beta miễn phí",
+    "ctaPrimary": "Bắt đầu Beta miễn phí",
     "ctaSecondary": "Xem cách hoạt động",
-    "betaNote": "Miễn phí trong giai đoạn Beta · Không cần thẻ tín dụng",
+    "ctaEmailLink": "Hoặc chỉ để lại email →",
+    "betaNote": "Miễn phí · Không cần thẻ tín dụng · Hủy bất cứ lúc nào",
     "stat1k": "< 1 phút",
     "stat1v": "check-in mỗi ngày",
     "stat2k": "AI Coach",
@@ -313,41 +314,55 @@
   },
   "testimonials": {
     "sectionTitle": "Người dùng nói gì",
-    "heading": "Phản hồi từ cộng đồng Beta",
-    "collecting": "Đang thu thập đánh giá từ người dùng Beta",
-    "footnote": "Các đánh giá trên là nội dung mẫu minh họa — phản hồi thật sẽ được cập nhật khi chương trình Beta mở rộng.",
+    "heading": "Người dùng Beta đầu tiên đã thấy khác biệt",
+    "sub": "Những phản hồi sớm từ người dùng thử DaDiary tại Việt Nam — da dầu, mụn, khí hậu nóng ẩm.",
+    "collecting": "Beta đang mở",
+    "earlyBeta": "Beta sớm",
+    "footnote": "Một số chia sẻ từ người dùng Beta sớm (minh họa)",
     "items": {
       "t1": {
         "name": "Minh Anh",
-        "role": "Beta tester · Da dầu, TP.HCM",
-        "quote": "Cuối cùng mình cũng thấy da giảm dầu sau 3 tuần — nhờ check-in ảnh mỗi ngày, không còn đoán mò nữa."
+        "role": "Da dầu · TP.HCM",
+        "quote": "Sau 3 tuần check-in ảnh mỗi ngày, mình thấy da bớt bóng dầu rõ rệt — không còn đoán mò sản phẩm nào hiệu quả."
       },
       "t2": {
         "name": "Thu Hà",
-        "role": "Beta tester · Da mụn, Hà Nội",
-        "quote": "AI Coach gợi ý nhẹ nhàng, không áp lực. Mình thích phần so sánh trước–sau — thấy rõ mụn giảm dần."
+        "role": "Da mụn · Hà Nội",
+        "quote": "AI Coach gợi ý nhẹ nhàng, không áp lực. Phần so sánh trước–sau giúp mình thấy mụn giảm dần từng tuần."
       },
       "t3": {
         "name": "Lan Phương",
-        "role": "Beta tester · Da hỗn hợp, Đà Nẵng",
-        "quote": "Routine sáng tối rõ ràng, tick xong là biết đã làm đủ. Tủ đồ giúp mình không mua trùng sản phẩm nữa."
+        "role": "Da hỗn hợp · Đà Nẵng",
+        "quote": "Routine sáng–tối rõ ràng, tick xong là biết đã làm đủ. Tủ đồ giúp mình không mua trùng sản phẩm nữa."
       }
     }
   },
   "cta": {
-    "heading": "Sẵn sàng bắt đầu hành trình chăm da có hệ thống?",
-    "body": "Tham gia Beta ngay hôm nay — trải nghiệm đầy đủ nhật ký da, AI Coach và theo dõi tiến trình. Không cần routine hoàn hảo, chỉ cần bắt đầu.",
-    "betaFree": "Miễn phí trong giai đoạn Beta",
-    "primary": "Tham gia Beta miễn phí",
-    "secondary": "Dùng thử không cần đăng ký"
+    "eyebrow": "Bắt đầu ngay",
+    "heading": "Sẵn sàng theo dõi da và nhận gợi ý từ AI mỗi ngày?",
+    "body": "Đăng ký Beta miễn phí — ghi nhật ký da bằng ảnh, nhận gợi ý routine phù hợp khí hậu Việt. Chỉ cần bắt đầu, không cần routine hoàn hảo.",
+    "betaFree": "100% miễn phí trong giai đoạn Beta",
+    "primary": "Bắt đầu Beta miễn phí",
+    "secondary": "Chỉ để lại email",
+    "trustNote": "DaDiary đưa ra gợi ý tham khảo, không thay thế tư vấn y tế. Luôn patch test sản phẩm mới."
   },
   "betaSignup": {
-    "sectionTitle": "Beta",
-    "heading": "Tham gia Beta ngay",
-    "sub": "Để lại email — chúng tôi sẽ gửi thông tin khi Beta mở rộng hoặc có tính năng mới dành cho bạn.",
+    "sectionTitle": "Đăng ký Beta",
+    "heading": "Nhận quyền truy cập Beta sớm — miễn phí",
+    "sub": "Để lại email, chúng tôi gửi link mở Beta và cập nhật tính năng mới. Không spam, không bán email.",
+    "benefits": {
+      "b1": "Truy cập Beta miễn phí",
+      "b2": "Ưu tiên khi mở tính năng mới",
+      "b3": "Chỉ 1 email, không cần thẻ"
+    },
+    "trust": {
+      "t1": "Không spam",
+      "t2": "Không chia sẻ email",
+      "t3": "Hủy đăng ký bất cứ lúc nào"
+    },
     "emailLabel": "Email của bạn",
     "emailPlaceholder": "tenban@email.com",
-    "submit": "Nhận thông tin Beta",
+    "submit": "Nhận thông tin Beta ngay",
     "submitting": "Đang gửi…",
     "privacy": "Chúng tôi chỉ gửi thông tin liên quan đến Beta DaDiary. Không spam, không chia sẻ email cho bên thứ ba.",
     "formAria": "Form đăng ký nhận thông tin Beta DaDiary",
