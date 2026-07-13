@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ChevronDown, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -14,13 +14,11 @@ import { getAccessToken } from "@/lib/auth-token";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { cn } from "@/lib/utils";
 import type { FeedbackType } from "@/lib/types/feedback";
-import { FEEDBACK_TYPES } from "@/lib/types/feedback";
+
+import { FeedbackTypeSelect } from "./feedback-type-select";
 
 const MIN_COMMENT = 5;
 const MAX_COMMENT = 2000;
-
-const selectClass =
-  "w-full min-h-11 appearance-none rounded-xl border border-input bg-background px-3 py-2 pr-10 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 const textareaClass =
   "w-full min-h-[8rem] resize-y rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
@@ -146,25 +144,15 @@ export function FeedbackForm({ className }: FeedbackFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <fieldset disabled={submitting} className="space-y-4 disabled:opacity-70">
             <Field label={t("typeLabel")} htmlFor="feedback-type">
-              <div className="relative">
-                <select
-                  id="feedback-type"
-                  value={type}
-                  onChange={(e) => setType(e.target.value as FeedbackType)}
-                  className={selectClass}
-                  aria-describedby={hintId}
-                >
-                  {FEEDBACK_TYPES.map((key) => (
-                    <option key={key} value={key}>
-                      {t(`types.${key}`)}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden
-                />
-              </div>
+              <FeedbackTypeSelect
+                id="feedback-type"
+                value={type}
+                onChange={setType}
+                label={(key) => t(`types.${key}`)}
+                ariaLabel={t("typeLabel")}
+                describedBy={hintId}
+                disabled={submitting}
+              />
             </Field>
 
             <Field label={t("commentLabel")} htmlFor="feedback-comment">

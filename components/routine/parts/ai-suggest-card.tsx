@@ -27,6 +27,9 @@ export function AISuggestCard({
   labels,
   disabled = false,
   quotaLabel,
+  manualEditQuotaLabel,
+  manualEditLocked = false,
+  onManualEditQuotaClick,
 }: {
   suggesting: boolean;
   /** True while loading, cancelling, or error panel is shown. */
@@ -50,6 +53,10 @@ export function AISuggestCard({
   };
   disabled?: boolean;
   quotaLabel?: string;
+  /** Free-plan manual-edit quota — shown below AI quota so both limits are visible together. */
+  manualEditQuotaLabel?: string;
+  manualEditLocked?: boolean;
+  onManualEditQuotaClick?: () => void;
 }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-linear-to-br from-primary/10 via-accent/20 to-background p-4 shadow-sm sm:p-5">
@@ -69,7 +76,18 @@ export function AISuggestCard({
             </p>
           </div>
         </div>
-        {quotaLabel ? <UsageQuotaChip label={quotaLabel} /> : null}
+        {quotaLabel || manualEditQuotaLabel ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {quotaLabel ? <UsageQuotaChip label={quotaLabel} /> : null}
+            {manualEditQuotaLabel ? (
+              <UsageQuotaChip
+                label={manualEditQuotaLabel}
+                variant={manualEditLocked ? "warning" : "default"}
+                onClick={manualEditLocked ? onManualEditQuotaClick : undefined}
+              />
+            ) : null}
+          </div>
+        ) : null}
         <div className="space-y-1.5">
           <label
             htmlFor="ai-focus-note"

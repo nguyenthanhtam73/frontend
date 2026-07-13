@@ -9,7 +9,7 @@ import {
   type RoutineCategory,
   type RoutineStepDTO,
 } from "@/lib/types/routine";
-import { PremiumUpsellBanner, UsageQuotaChip } from "@/components/premium/premium-upsell-banner";
+import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
@@ -389,16 +389,6 @@ export function RoutineEditor() {
         />
       ) : null}
 
-      {editQuotaLabel ? (
-        <div className="flex justify-end">
-          <UsageQuotaChip
-            label={editQuotaLabel}
-            variant={editLocked ? "warning" : "default"}
-            onClick={editLocked ? engageEditQuota : undefined}
-          />
-        </div>
-      ) : null}
-
       {r.fresh ? (
         <EmptyHero
           beginnerSimple={beginnerSimple}
@@ -436,6 +426,9 @@ export function RoutineEditor() {
         }}
         disabled={suggestDisabled || suggest.suggestBusy}
         quotaLabel={suggestQuotaLabel}
+        manualEditQuotaLabel={editQuotaLabel}
+        manualEditLocked={editLocked}
+        onManualEditQuotaClick={engageEditQuota}
         error={resolveSuggestError(suggest.error)}
         onDismissError={suggest.dismissError}
         onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
