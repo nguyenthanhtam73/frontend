@@ -889,6 +889,7 @@
       "photosOptionalHint": "2–3 ảnh giúp AI đọc da chính xác hơn — nhưng không bắt buộc.",
       "optionalBadge": "Tùy chọn",
       "photosReadyHint": "Ảnh đủ rồi — bấm Tiếp tục để AI phân tích.",
+      "continueBlockedHint": "Chọn mục tiêu da và ít nhất 1 vấn đề da để bấm Tiếp tục.",
       "continueWithoutPhotos": "Tiếp tục với routine từ mục tiêu đã chọn",
       "continueWithoutPhotosHint": "Không cần chụp ảnh — bạn vẫn nhận routine khởi đầu phù hợp với mục tiêu và vấn đề da.",
       "skipAnalyzeUseDefault": "Dùng routine từ mục tiêu đã chọn",

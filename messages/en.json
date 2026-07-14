@@ -889,6 +889,7 @@
       "photosOptionalHint": "2–3 face photos help the AI read better — not required.",
       "optionalBadge": "Optional",
       "photosReadyHint": "Photos ready — tap Continue for AI analysis.",
+      "continueBlockedHint": "Pick a skin goal and at least one concern to continue.",
       "continueWithoutPhotos": "Continue with a goal-based routine",
       "continueWithoutPhotosHint": "No photos needed — you'll still get a starter routine matched to your goal and concerns.",
       "skipAnalyzeUseDefault": "Use goal-based routine",

@@ -267,10 +267,9 @@ export const useOnboardingStore = create<Store>((set) => ({
       return {
         photos: [...s.photos, item],
         aiSnapshot: null,
-        aiConcernTags: [],
         analyzeStatus: "idle",
         analyzeErrorKind: null,
-        skinInputMode: "none",
+        skinInputMode: s.skinInputMode === "ai" ? "none" : s.skinInputMode,
       };
     }),
   removePhotoAt: (index) =>
@@ -283,11 +282,12 @@ export const useOnboardingStore = create<Store>((set) => ({
           ? "none"
           : s.skinInputMode === "manual_fallback"
             ? "manual_fallback"
-            : "none";
+            : s.skinInputMode === "ai"
+              ? "none"
+              : s.skinInputMode;
       return {
         photos: next,
         aiSnapshot: null,
-        aiConcernTags: [],
         analyzeStatus: "idle",
         analyzeErrorKind: null,
         skinInputMode: nextMode,

@@ -593,6 +593,12 @@ export function OnboardingFlow() {
             )}
           </OnboardingStepPanel>
 
+          {step === "skinProfile" && !canProceedStep1(ob) && !analyzing ? (
+            <p className="mt-4 text-center text-xs leading-snug text-amber-700 dark:text-amber-300 sm:text-left">
+              {t("step1.continueBlockedHint")}
+            </p>
+          ) : null}
+
           <OnboardingStickyNav
             backLabel={t("back")}
             continueLabel={stickyContinueLabel}
