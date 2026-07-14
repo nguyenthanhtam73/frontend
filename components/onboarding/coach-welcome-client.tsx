@@ -6,14 +6,18 @@ import {
   CheckCircle2,
   Eye,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
-import { CoachWelcomeCta } from "@/components/onboarding/coach-welcome-cta";
+import {
+  CoachWelcomeCta,
+  CoachWelcomePrimaryCta,
+  CoachWelcomeStickyBar,
+} from "@/components/onboarding/coach-welcome-cta";
 import {
   CoachWelcomeSection,
-  CoachWelcomeSectionHeading,
 } from "@/components/onboarding/coach-welcome-section";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
@@ -107,106 +111,127 @@ function CoachWelcomeLoaded({
   const canFeedback =
     !isGuest && profileId && profileId !== GUEST_COACH_PROFILE_ID;
 
+  const guestVariant = showFallbackBanner ? "fallback" : "ready";
+
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 pb-4">
-      <CoachWelcomeSection>
-        <header className="space-y-3 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-            <CheckCircle2 className="size-4" aria-hidden />
-            {tReview("badge")}
-          </div>
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-            {t("title")}
-          </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">{t("introLine")}</p>
-          {completedLabel ? (
-            <p className="text-sm text-muted-foreground">
-              {tReview("completedOn", { date: completedLabel })}
+    <>
+      <div className="mx-auto w-full max-w-2xl space-y-5 pb-24 sm:space-y-6 sm:pb-6">
+        <CoachWelcomeSection>
+          <header className="space-y-2.5 text-center sm:space-y-3 sm:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="size-4" aria-hidden />
+              {tReview("badge")}
+            </div>
+            <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+              {t("celebrationTitle")}
+            </h1>
+            <p className="text-sm font-medium leading-snug text-foreground sm:text-base">
+              {t("celebrationLine")}
             </p>
-          ) : null}
-          <p className="inline-flex w-full items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5 text-xs leading-snug text-muted-foreground sm:w-auto">
+            <p className="text-sm leading-relaxed text-muted-foreground">{t("introLine")}</p>
+            {completedLabel ? (
+              <p className="text-xs text-muted-foreground">
+                {tReview("completedOn", { date: completedLabel })}
+              </p>
+            ) : null}
+          </header>
+        </CoachWelcomeSection>
+
+        {skinReadback ? (
+          <CoachWelcomeSection delayMs={40}>
+            <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.05] shadow-sm">
+              <CardContent className="space-y-2 pt-5 pb-5">
+                <div className="flex items-center gap-2">
+                  <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="size-4 text-primary" aria-hidden />
+                  </span>
+                  <p className="text-sm font-semibold text-foreground">{t("readback")}</p>
+                </div>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+                  {skinReadback}
+                </p>
+              </CardContent>
+            </Card>
+          </CoachWelcomeSection>
+        ) : null}
+
+        <CoachWelcomeSection delayMs={80}>
+          <CoachWelcomePrimaryCta />
+        </CoachWelcomeSection>
+
+        <CoachWelcomeSection delayMs={100}>
+          <StarterRoutineGenerationNotice
+            isGeneratingRoutine={isGeneratingRoutine}
+            showFallbackBanner={showFallbackBanner}
+            showRetryAi={showRetryAi}
+            isGuest={isGuest}
+            retryLoading={retryAiLoading}
+            onRetryAi={() => {
+              setRetryAiLoading(true);
+              void retryAiGeneration().finally(() => setRetryAiLoading(false));
+            }}
+          />
+        </CoachWelcomeSection>
+
+        <CoachWelcomeSection delayMs={140} id="coach-welcome-routine">
+          <div
+            className={cn(
+              "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-3.5 sm:p-5",
+              "transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
+              routineJustUpdated &&
+                "bg-emerald-500/[0.06] shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700",
+            )}
+          >
+            <StarterRoutineCards
+              starter={starter}
+              morningLabel={t("morning")}
+              eveningLabel={t("evening")}
+              noStepsLabel={t("noSteps")}
+              featured
+              sectionTitle={t("routineSectionTitle")}
+              sectionSubtitle={t("routineSectionSub")}
+            />
+          </div>
+        </CoachWelcomeSection>
+
+        <StarterRoutineSupportExtras starter={starter} delayMs={200} />
+
+        <CoachWelcomeSection delayMs={260}>
+          <ProductSuggestionsCard
+            suggestions={starter.product_suggestions}
+            source="starter_routine"
+            contextId={profileId ?? undefined}
+            maxVisible={2}
+          />
+        </CoachWelcomeSection>
+
+        <StarterRoutineSafetySection starter={starter} delayMs={320} />
+
+        {canFeedback ? (
+          <CoachWelcomeSection delayMs={380}>
+            <StarterRoutineFeedback profileId={profileId} compact />
+          </CoachWelcomeSection>
+        ) : null}
+
+        <CoachWelcomeSection delayMs={420}>
+          <CoachWelcomeCta isGuest={isGuest} guestVariant={guestVariant} />
+        </CoachWelcomeSection>
+
+        <CoachWelcomeSection delayMs={460} className="pt-1">
+          <p className="mb-2 inline-flex w-full items-center gap-2 text-xs text-muted-foreground sm:w-auto">
             <Eye className="size-3.5 shrink-0" aria-hidden />
             {tReview("readOnlyHint")}
           </p>
-        </header>
-      </CoachWelcomeSection>
-
-      <CoachWelcomeSection delayMs={60}>
-        <StarterRoutineGenerationNotice
-          isGeneratingRoutine={isGeneratingRoutine}
-          showFallbackBanner={showFallbackBanner}
-          showRetryAi={showRetryAi}
-          isGuest={isGuest}
-          retryLoading={retryAiLoading}
-          onRetryAi={() => {
-            setRetryAiLoading(true);
-            void retryAiGeneration().finally(() => setRetryAiLoading(false));
-          }}
-        />
-      </CoachWelcomeSection>
-
-      {skinReadback ? (
-        <CoachWelcomeSection delayMs={120}>
-          <CoachWelcomeSectionHeading title={t("readback")} />
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{skinReadback}</p>
-            </CardContent>
-          </Card>
-        </CoachWelcomeSection>
-      ) : null}
-
-      <CoachWelcomeSection delayMs={180} id="coach-welcome-routine">
-        <div
-          className={cn(
-            "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 sm:p-5",
-            "transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
-            routineJustUpdated &&
-              "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
-          )}
-        >
-          <StarterRoutineCards
-            starter={starter}
-            morningLabel={t("morning")}
-            eveningLabel={t("evening")}
-            noStepsLabel={t("noSteps")}
-            featured
-            sectionTitle={t("routineSectionTitle")}
-            sectionSubtitle={t("routineSectionSub")}
+          <OnboardingDeleteSection
+            isGuest={isGuest}
+            onDeleted={onReload}
+            className="mt-2 border-0 bg-transparent p-0"
           />
-        </div>
-      </CoachWelcomeSection>
-
-      <StarterRoutineSupportExtras starter={starter} delayMs={240} />
-
-      <CoachWelcomeSection delayMs={300}>
-        <ProductSuggestionsCard
-          suggestions={starter.product_suggestions}
-          source="starter_routine"
-          contextId={profileId ?? undefined}
-          maxVisible={3}
-        />
-      </CoachWelcomeSection>
-
-      <StarterRoutineSafetySection starter={starter} delayMs={360} />
-
-      {canFeedback ? (
-        <CoachWelcomeSection delayMs={420}>
-          <StarterRoutineFeedback profileId={profileId} />
         </CoachWelcomeSection>
-      ) : null}
+      </div>
 
-      <CoachWelcomeSection delayMs={480}>
-        <CoachWelcomeCta
-          isGuest={isGuest}
-          guestVariant={showFallbackBanner ? "fallback" : "ready"}
-        />
-      </CoachWelcomeSection>
-
-      <CoachWelcomeSection delayMs={540} className="pt-2">
-        <OnboardingDeleteSection isGuest={isGuest} onDeleted={onReload} />
-      </CoachWelcomeSection>
-    </div>
+      <CoachWelcomeStickyBar />
+    </>
   );
 }
 

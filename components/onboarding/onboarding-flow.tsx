@@ -120,6 +120,7 @@ export function OnboardingFlow() {
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const skipFaceCaptureWas = useRef(false);
+  const analyzeSkipRequested = useRef(false);
 
   const ob = useOnboardingStore();
   const setSkillGlobal = useSkillStore((s) => s.setMode);
@@ -204,6 +205,7 @@ export function OnboardingFlow() {
     const state = useOnboardingStore.getState();
     if (state.photos.length < ONBOARDING_MIN_PHOTOS) return true;
 
+    analyzeSkipRequested.current = false;
     state.setSkinInputMode("none");
     state.setAnalyzeStatus("loading");
     try {
@@ -218,18 +220,27 @@ export function OnboardingFlow() {
         { method: "POST", body: fd, headers },
         ONBOARDING_ANALYZE_TIMEOUT_MS,
       );
+      if (analyzeSkipRequested.current || useOnboardingStore.getState().analyzeStatus !== "loading") {
+        return false;
+      }
       const json = await parseJsonSafe(res);
       const data = assertAnalyzeSkinPayload(res, json);
+      if (analyzeSkipRequested.current || useOnboardingStore.getState().analyzeStatus !== "loading") {
+        return false;
+      }
       useOnboardingStore.getState().applyAiAnalyzeResult(data);
       setSkipFaceCapture(false);
       return true;
     } catch (err) {
+      if (analyzeSkipRequested.current) return false;
       useOnboardingStore.getState().setAnalyzeStatus("error", onboardingAiErrorKind(err));
       return false;
     }
   }
 
   function skipAnalyzeAndProceed() {
+    analyzeSkipRequested.current = true;
+    useOnboardingStore.getState().setAnalyzeStatus("idle");
     applyManualProfile(skipFaceCapture);
     buildRoutineForStep2(locale, routineLabelFn);
     setSlideDir(1);
@@ -518,7 +529,7 @@ export function OnboardingFlow() {
             phase="analyze"
             overlay
             onUseDefault={skipAnalyzeAndProceed}
-            useDefaultLabel={t("step1.skipAnalyzeUseDefault")}
+            useDefaultLabel={t("aiLoading.useDefaultNow")}
           />
         )}
         {finishing && step === "ready" && (

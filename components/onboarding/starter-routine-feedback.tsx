@@ -7,10 +7,15 @@ import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 type StarterRoutineFeedbackProps = {
   profileId: string | null | undefined;
   className?: string;
+  compact?: boolean;
 };
 
 /** Routine feedback — logged-in users only; clearer copy for starter routine. */
-export function StarterRoutineFeedback({ profileId, className }: StarterRoutineFeedbackProps) {
+export function StarterRoutineFeedback({
+  profileId,
+  className,
+  compact = false,
+}: StarterRoutineFeedbackProps) {
   const t = useTranslations("coachWelcome");
   const tFb = useTranslations("feedback");
 
@@ -21,6 +26,7 @@ export function StarterRoutineFeedback({ profileId, className }: StarterRoutineF
       targetType="starter_routine"
       targetId={profileId}
       className={className}
+      compact={compact}
       labels={{
         rateTitle: t("feedbackRoutineTitle"),
         rateHint: t("feedbackRoutineHint"),

@@ -602,6 +602,8 @@
   },
   "coachWelcome": {
     "badge": "Bạn đồng hành AI",
+    "celebrationTitle": "Chúc mừng! Routine khởi đầu đã sẵn sàng",
+    "celebrationLine": "Bạn đã hoàn thành bước quan trọng đầu tiên — giờ là lúc bắt đầu theo dõi da.",
     "title": "Chăm da khởi đầu cho bạn",
     "subtitle": "Gợi ý sáng/tối từ phần làm quen với da — thân thiện, dễ làm, không thay thế bác sĩ da liễu.",
     "introLine": "Đây là routine khởi đầu được tạo cho bạn — xem và bắt đầu check-in khi sẵn sàng nhé.",
@@ -883,23 +885,92 @@
       "photosOptionalHint": "2–3 ảnh giúp AI đọc da chính xác hơn — nhưng không bắt buộc.",
       "optionalBadge": "Tùy chọn",
       "photosReadyHint": "Ảnh đủ rồi — bấm Tiếp tục để AI phân tích.",
-      "continueWithoutPhotos": "Tiếp tục không cần ảnh",
-      "skipAnalyzeUseDefault": "Bỏ qua AI — dùng routine mặc định",
+      "continueWithoutPhotos": "Tiếp tục với routine từ mục tiêu đã chọn",
+      "continueWithoutPhotosHint": "Không cần chụp ảnh — bạn vẫn nhận routine khởi đầu phù hợp với mục tiêu và vấn đề da.",
+      "skipAnalyzeUseDefault": "Dùng routine từ mục tiêu đã chọn",
       "aiResultTitle": "AI đã đọc ảnh của bạn"
     },
     "step2": {
-      "title": "Routine khởi đầu dành riêng cho da bạn",
-      "subtitle": "Đây là những bước đầu tiên phù hợp với da của bạn — bắt đầu ngay tuần này.",
-      "personalBadge": "Dành riêng cho bạn",
-      "whyTitle": "Vì sao routine này phù hợp?",
+      "title": "Routine khởi đầu — ghép riêng cho da bạn",
+      "subtitle": "Routine này được tạo riêng dựa trên mục tiêu và vấn đề da bạn đã chọn — đây là khởi đầu phù hợp nhất lúc này.",
+      "quickWinLabel": "Sẵn sàng cho bạn",
+      "quickWinLine": "Đây là những bước đầu tiên được ghép riêng theo da và mục tiêu của bạn.",
+      "concernsFallback": "vấn đề da bạn chọn",
+      "rationaleHeadlineFallback": "Routine hỗ trợ mục tiêu {goal} — phù hợp với {concerns} và trình độ {skill} của bạn.",
+      "rationaleHeadline": {
+        "ai": {
+          "barrier": "Từ ảnh da bạn: ưu tiên làm dịu và phục hồi barrier — hướng tới {goal} khi đang gặp {concerns}.",
+          "acne": "Từ ảnh da bạn: kiểm soát dầu và làm dịu — hỗ trợ mục tiêu {goal} với tình trạng {concerns}.",
+          "glow": "Từ ảnh da bạn: cấp ẩm đều và bảo vệ mỗi ngày — nền tảng cho mục tiêu {goal}.",
+          "anti_aging": "Từ ảnh da bạn: cấp ẩm sâu và SPF hàng ngày — bảo vệ da cho {goal}.",
+          "default": "Đọc từ ảnh da bạn — ghép cho mục tiêu {goal} và {concerns}, phù hợp trình độ {skill}."
+        },
+        "manual": {
+          "barrier": "Ưu tiên làm dịu và phục hồi barrier — hướng tới {goal} khi bạn đang gặp {concerns}.",
+          "acne": "Giúp kiểm soát dầu vùng T và làm dịu da — phù hợp mục tiêu {goal} với {concerns}.",
+          "glow": "Cấp ẩm đều và bảo vệ da mỗi ngày — nền tảng cho mục tiêu {goal} của bạn.",
+          "anti_aging": "Cấp ẩm sâu và SPF hàng ngày — hỗ trợ {goal} ngay từ tuần đầu.",
+          "default": "Ghép từ mục tiêu {goal} và {concerns} — phù hợp trình độ {skill} của bạn."
+        }
+      },
+      "quickWin": {
+        "ai": {
+          "barrier": "DaDiary đã ghép routine làm dịu và cân bằng — dựa trên ảnh và tình trạng da hiện tại của bạn.",
+          "acne": "Routine ưu tiên làm sạch nhẹ và kiểm soát mụn — đọc từ ảnh bạn vừa chụp.",
+          "glow": "Routine giúp da sáng khoẻ hơn từng ngày — tinh chỉnh từ ảnh và mục tiêu của bạn.",
+          "anti_aging": "Routine bảo vệ và cấp ẩm sâu — phù hợp với da bạn trong ảnh.",
+          "default": "Routine được ghép từ ảnh da bạn — sẵn sàng để bắt đầu tuần này."
+        },
+        "manual": {
+          "barrier": "Routine này được tạo riêng để làm dịu và phục hồi da — từ mục tiêu và vấn đề bạn đã chọn.",
+          "acne": "Routine hỗ trợ giảm mụn an toàn — ghép từ mục tiêu và vấn đề da bạn vừa chia sẻ.",
+          "glow": "Routine giúp da sáng khoẻ dần — bắt đầu từ mục tiêu và vấn đề bạn chọn.",
+          "anti_aging": "Routine cấp ẩm và bảo vệ da — phù hợp với mục tiêu chống lão hoá của bạn.",
+          "default": "Đây là routine khởi đầu phù hợp nhất với da và mục tiêu của bạn lúc này."
+        }
+      },
+      "benefits": {
+        "ai": {
+          "b0_barrier": "Làm dịu trước, mạnh sau — da kịp phục hồi barrier trước khi thêm hoạt chất.",
+          "b0_acne": "Làm sạch đúng cách — giảm tắc nghẽn mà không làm da căng hay khô.",
+          "b0_glow": "Cấp ẩm + chống nắng hàng ngày — nền tảng cho da sáng khoẻ bền vững.",
+          "b0_anti_aging": "SPF mỗi sáng — bước chống lão hoá quan trọng và hiệu quả nhất.",
+          "b0_default": "Đọc từ ảnh da bạn — không phải routine chung cho mọi người.",
+          "b1": "Sáng bảo vệ, tối phục hồi — nhịp dễ nhớ, dễ làm đều mỗi ngày.",
+          "b_skill": {
+            "beginner": "Nhịp đơn giản cho người mới — ít bước, dễ duy trì ngay tuần này.",
+            "intermediate": "Cân bằng hiệu quả và an toàn — phù hợp trình độ trung bình của bạn.",
+            "advanced": "Có chỗ tinh chỉnh sâu hơn khi bạn muốn nâng cấp dần."
+          }
+        },
+        "manual": {
+          "b0_barrier": "Ưu tiên làm dịu — giảm kích ứng khi da đang nhạy cảm hoặc barrier yếu.",
+          "b0_acne": "Kiểm soát dầu vùng T nhẹ nhàng — hỗ trợ giảm mụn mà không làm khô căng.",
+          "b0_glow": "Nền tảng cấp ẩm đều — da sáng khoẻ hơn khi bạn kiên trì.",
+          "b0_anti_aging": "Cấp ẩm sâu + SPF — bảo vệ da sớm cho mục tiêu anti-aging.",
+          "b0_default": "Ghép từ mục tiêu và vấn đề bạn chọn — không đoán mò.",
+          "b1": "Ít bước, đi đều — quan trọng hơn nhiều sản phẩm trên kệ.",
+          "b_skill": {
+            "beginner": "Nhịp đơn giản cho người mới — ít bước, dễ duy trì ngay tuần này.",
+            "intermediate": "Cân bằng hiệu quả và an toàn — phù hợp trình độ trung bình của bạn.",
+            "advanced": "Có chỗ tinh chỉnh sâu hơn khi bạn muốn nâng cấp dần."
+          }
+        }
+      },
+      "personalBadge": "Đã cá nhân hoá",
+      "whyTitle": "Vì sao routine này phù hợp với bạn",
       "sourceAi": "Từ ảnh & AI",
       "sourceManual": "Từ lựa chọn của bạn",
-      "morningHint": "Làm sạch · cấp ẩm · bảo vệ",
-      "eveningHint": "Tẩy trang nhẹ · phục hồi qua đêm",
+      "morningHint": "Làm sạch → cấp ẩm → chống nắng",
+      "eveningHint": "Làm sạch nhẹ → phục hồi qua đêm",
       "stepCount": "bước",
-      "viewStepDetail": "Xem chi tiết",
-      "updatedToast": "Routine đã được cập nhật theo ý bạn",
-      "editAnytime": "Bạn có thể chỉnh sửa bất cứ lúc nào sau này.",
+      "viewStepDetail": "Thêm",
+      "hideDetail": "Thu gọn",
+      "editingHint": "Chạm bước để sửa · mũi tên để đổi thứ tự",
+      "editStepLabel": "Bước {n}",
+      "updatedToast": "Routine của bạn đã sẵn sàng ✓",
+      "updatedToastSub": "Thay đổi đã được lưu trong phiên này.",
+      "editAnytime": "Có thể chỉnh lại bất cứ lúc nào trong app.",
       "useRoutine": "Dùng routine này",
       "loadingTitle": "Đang tạo routine…",
       "loadingBody": "Chờ một chút hoặc quay lại bước trước."
@@ -1043,7 +1114,7 @@
     },
     "review": {
       "badge": "Đã hoàn tất",
-      "title": "Bạn đã hoàn tất làm quen da",
+      "title": "Tóm tắt làm quen da của bạn",
       "completedOn": "Hoàn tất ngày {date}",
       "readOnlyHint": "Chế độ xem — không thể chụp ảnh mới, chỉnh sửa thông tin da hay chạy lại onboarding.",
       "skinSection": "Phân tích da",
@@ -1158,21 +1229,35 @@
     "contextCoachLine": "Hoàn cảnh: {contexts} — gợi ý sẽ nhắc kem chống nắng/tẩy trang/phục hồi cho lịch của bạn.",
     "aiLoading": {
       "analyzeTitle": "AI đang phân tích da bạn",
-      "analyzeTime0": "AI đang phân tích ảnh da của bạn…",
-      "analyzeTime10": "Đang nhận diện loại da, tone da và các vấn đề thường gặp…",
-      "analyzeTime25": "Đang tổng hợp thông tin và chuẩn bị gợi ý…",
-      "analyzeTime40": "AI đang hoàn thiện phân tích, vui lòng chờ thêm chút nữa…",
-      "durationHint": "Thường mất 15–40 giây",
-      "slowHint": "AI đang xử lý hơi lâu hơn bình thường…",
+      "analyzeTime0": "Đang phân tích ảnh da của bạn…",
+      "analyzeTime10": "Đang nhận diện loại da và vấn đề bạn quan tâm…",
+      "analyzeTime25": "AI đang ghép routine cá nhân từ mục tiêu và vấn đề bạn chọn.",
+      "analyzeTime30": "AI đang phân tích kỹ để routine chính xác hơn cho bạn.",
+      "analyzeTime30Line1": "AI đang phân tích kỹ để routine chính xác hơn cho bạn.",
+      "analyzeTime30Line2": "Muốn bắt đầu ngay? Routine từ mục tiêu của bạn đã sẵn sàng.",
+      "durationHint": "Thường mất 15–30 giây",
+      "stepPhotos": "Phân tích ảnh",
+      "stepSkin": "Nhận diện da",
+      "stepRoutine": "Ghép routine",
+      "stepsAria": "Tiến trình phân tích AI",
+      "skipValueHint": "Bạn vẫn nhận routine khởi đầu phù hợp với mục tiêu và vấn đề da đã chọn.",
+      "skipValueHintShort": "Routine từ mục tiêu của bạn đã sẵn sàng — bấm nút bên trên.",
+      "skipConfirmAria": "Xác nhận dùng routine từ mục tiêu đã chọn",
+      "skipConfirmBenefit": "Routine khởi đầu từ mục tiêu và vấn đề bạn đã chọn.",
+      "skipConfirmNote": "AI sẽ không phân tích ảnh lần này.",
+      "skipConfirmYes": "Tiếp tục với routine này",
+      "skipConfirmNo": "Tiếp tục chờ AI",
+      "useDefaultNow": "Dùng routine từ mục tiêu đã chọn",
+      "errorFallbackHint": "Bạn vẫn có routine từ mục tiêu và vấn đề đã chọn — bấm nút bên dưới để tiếp tục.",
       "routineTitle": "AI đang tạo routine khởi đầu…",
       "routineTime0": "Đang chọn nhịp sáng/tối phù hợp với da bạn…",
       "routineTime8": "Đang cân bằng an toàn và mục tiêu da…",
       "routineTime20": "Đang viết lời nhắc cho tuần đầu…",
       "routineTime35": "Sắp xong rồi — chờ thêm chút nữa nhé…",
-      "progressHint": "AI đang xử lý — không tắt màn hình nhé.",
+      "progressHint": "Giữ màn hình mở trong lúc này nhé.",
       "errorTitle": "AI chưa phản hồi kịp",
       "routineErrorTitle": "Chưa tạo được routine cá nhân",
-      "timeoutFriendly": "Bạn có thể thử lại hoặc chọn loại da thủ công — ảnh của bạn vẫn được giữ.",
+      "timeoutFriendly": "Không sao — thử lại hoặc dùng routine mặc định. Ảnh của bạn vẫn được giữ.",
       "retry": "Thử lại",
       "manualSkin": "Chọn loại da thủ công",
       "useDefaultRoutine": "Dùng routine mặc định",
@@ -1181,11 +1266,11 @@
       "manualSkinBannerTitle": "Bạn đang chọn loại da thủ công",
       "manualSkinBannerBody": "Kết quả sẽ kém chính xác hơn so với phân tích AI. Ảnh của bạn vẫn được giữ — bạn có thể thử AI lại bất cứ lúc nào.",
       "errors": {
-        "timeout": "AI xử lý quá lâu (hơn 45 giây). Thử lại hoặc chọn cách khác bên dưới nhé.",
-        "network": "Kết nối không ổn định. Kiểm tra mạng rồi thử lại.",
-        "auth": "Phiên đăng nhập hết hạn hoặc máy chủ chưa sẵn sàng. Thử lại hoặc chọn thủ công.",
-        "server": "AI tạm thời không phản hồi. Thử lại sau vài giây nhé.",
-        "generic": "Có gì đó chưa ổn. Thử lại hoặc chọn phương án dự phòng bên dưới."
+        "timeout": "AI xử lý quá lâu (hơn 45 giây). Bạn có thể thử lại hoặc dùng routine mặc định ngay.",
+        "network": "Kết nối chưa ổn định. Kiểm tra mạng rồi thử lại, hoặc dùng routine mặc định.",
+        "auth": "Phiên đăng nhập hết hạn hoặc máy chủ chưa sẵn sàng. Thử lại hoặc dùng routine mặc định.",
+        "server": "AI tạm thời không phản hồi. Thử lại sau vài giây hoặc dùng routine mặc định.",
+        "generic": "Có gì đó chưa ổn. Thử lại hoặc dùng routine mặc định — lựa chọn của bạn vẫn được giữ."
       }
     }
   },

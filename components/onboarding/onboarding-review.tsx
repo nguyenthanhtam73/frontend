@@ -4,7 +4,11 @@ import { CheckCircle2, Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 
-import { CoachWelcomeCta } from "@/components/onboarding/coach-welcome-cta";
+import {
+  CoachWelcomeCta,
+  CoachWelcomePrimaryCta,
+  CoachWelcomeStickyBar,
+} from "@/components/onboarding/coach-welcome-cta";
 import { CoachWelcomeSection } from "@/components/onboarding/coach-welcome-section";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
@@ -104,16 +108,20 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const closeLightbox = useCallback(() => setLightboxUrl(null), []);
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6">
-      <header className="space-y-3 text-center sm:text-left">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-          <CheckCircle2 className="size-4" aria-hidden />
-          {tReview("badge")}
-        </div>
-        <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-          {tReview("title")}
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">{tCoach("introLine")}</p>
+    <>
+      <div className="mx-auto w-full max-w-2xl space-y-5 pb-24 sm:space-y-6 sm:pb-6">
+        <header className="space-y-2.5 text-center sm:space-y-3 sm:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2 className="size-4" aria-hidden />
+            {tReview("badge")}
+          </div>
+          <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+            {tCoach("celebrationTitle")}
+          </h1>
+          <p className="text-sm font-medium leading-snug text-foreground sm:text-base">
+            {tCoach("celebrationLine")}
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{tCoach("introLine")}</p>
 
         {showPhotoSection ? (
           <div className="space-y-3">
@@ -163,15 +171,29 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         ) : null}
 
         {completedLabel ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {tReview("completedOn", { date: completedLabel })}
           </p>
         ) : null}
-        <p className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          <Eye className="size-3.5 shrink-0" aria-hidden />
-          {tReview("readOnlyHint")}
-        </p>
       </header>
+
+      <CoachWelcomePrimaryCta />
+
+      {skinReadback ? (
+        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.05] shadow-sm">
+          <CardContent className="space-y-2 pt-5 pb-5">
+            <div className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+                <Sparkles className="size-4 text-primary" aria-hidden />
+              </span>
+              <p className="text-sm font-semibold text-foreground">{tCoach("readback")}</p>
+            </div>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+              {skinReadback}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardContent className="space-y-4 pt-6">
@@ -225,17 +247,6 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         </Card>
       </div>
 
-      {skinReadback ? (
-        <Card>
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {tCoach("readback")}
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{skinReadback}</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
       {data.starter ? (
         data.isGuest ? (
           <GuestReviewRoutineSection data={data} starter={data.starter} />
@@ -258,8 +269,16 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         <CoachWelcomeCta isGuest={data.isGuest} />
       </CoachWelcomeSection>
 
-      <CoachWelcomeSection delayMs={160} className="border-t border-border/50 pt-6">
-        <OnboardingDeleteSection isGuest={data.isGuest} onDeleted={onDeleted} />
+      <CoachWelcomeSection delayMs={160} className="pt-1">
+        <p className="mb-2 inline-flex w-full items-center gap-2 text-xs text-muted-foreground sm:w-auto">
+          <Eye className="size-3.5 shrink-0" aria-hidden />
+          {tReview("readOnlyHint")}
+        </p>
+        <OnboardingDeleteSection
+          isGuest={data.isGuest}
+          onDeleted={onDeleted}
+          className="mt-2 border-0 bg-transparent p-0"
+        />
       </CoachWelcomeSection>
 
       {lightboxUrl ? (
@@ -269,7 +288,10 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           onClose={closeLightbox}
         />
       ) : null}
-    </div>
+      </div>
+
+      <CoachWelcomeStickyBar />
+    </>
   );
 }
 
@@ -324,11 +346,11 @@ function LoggedInReviewRoutineSection({
             ? data.profileId
             : undefined
         }
-        maxVisible={3}
+        maxVisible={2}
       />
       <StarterRoutineSafetySection starter={starter} />
       {data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID ? (
-        <StarterRoutineFeedback profileId={data.profileId} />
+        <StarterRoutineFeedback profileId={data.profileId} compact />
       ) : null}
     </section>
   );
@@ -382,7 +404,7 @@ function GuestReviewRoutineSection({
       <ProductSuggestionsCard
         suggestions={liveStarter.product_suggestions}
         source="starter_routine"
-        maxVisible={3}
+        maxVisible={2}
       />
       <StarterRoutineSafetySection starter={liveStarter} />
     </section>

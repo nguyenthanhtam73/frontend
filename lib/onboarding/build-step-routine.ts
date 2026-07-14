@@ -18,7 +18,7 @@ export function buildStepStarterRoutine(
     : null;
 
   const rationaleText = rationaleBlock
-    ? rationaleBlock.lines.join("\n")
+    ? [rationaleBlock.headline, ...rationaleBlock.lines].join("\n")
     : locale === "en"
       ? "Built from your skin goal and main concerns — a safe base to start."
       : "Tạo từ mục tiêu da và vấn đề bạn chọn — nền tảng an toàn để bắt đầu.";

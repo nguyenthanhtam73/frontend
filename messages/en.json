@@ -602,6 +602,8 @@
   },
   "coachWelcome": {
     "badge": "AI buddy",
+    "celebrationTitle": "Congrats! Your starter routine is ready",
+    "celebrationLine": "You've finished an important first step — now it's time to start tracking your skin.",
     "title": "Your starter routine",
     "subtitle": "Morning/evening steps from your getting-to-know-your-skin answers — friendly, doable, not a substitute for a dermatologist.",
     "introLine": "This is your starter routine — review it and start your first check-in when you're ready.",
@@ -883,23 +885,92 @@
       "photosOptionalHint": "2–3 face photos help the AI read better — not required.",
       "optionalBadge": "Optional",
       "photosReadyHint": "Photos ready — tap Continue for AI analysis.",
-      "continueWithoutPhotos": "Continue without photos",
-      "skipAnalyzeUseDefault": "Skip AI — use default routine",
+      "continueWithoutPhotos": "Continue with a goal-based routine",
+      "continueWithoutPhotosHint": "No photos needed — you'll still get a starter routine matched to your goal and concerns.",
+      "skipAnalyzeUseDefault": "Use goal-based routine",
       "aiResultTitle": "AI read your photos"
     },
     "step2": {
-      "title": "Your starter routine, made for your skin",
-      "subtitle": "These are the first steps that fit your skin — start them this week.",
-      "personalBadge": "Made for you",
-      "whyTitle": "Why this routine fits",
+      "title": "Starter routine — built for your skin",
+      "subtitle": "This routine was made just for your goals and skin concerns — the best starting point for you right now.",
+      "quickWinLabel": "Ready for you",
+      "quickWinLine": "These first steps were built around your skin and goals.",
+      "concernsFallback": "your skin concerns",
+      "rationaleHeadlineFallback": "This routine supports your {goal} goal — matched to {concerns} and your {skill} level.",
+      "rationaleHeadline": {
+        "ai": {
+          "barrier": "From your photos: soothe and rebuild your barrier first — toward {goal} while addressing {concerns}.",
+          "acne": "From your photos: light oil control and calming care — supports {goal} with {concerns} in mind.",
+          "glow": "From your photos: steady hydration and daily protection — the base for your {goal} goal.",
+          "anti_aging": "From your photos: deep hydration and daily SPF — protecting skin for {goal}.",
+          "default": "Read from your photos — built for {goal} and {concerns}, suited to your {skill} level."
+        },
+        "manual": {
+          "barrier": "Soothe and repair your barrier first — toward {goal} while you’re dealing with {concerns}.",
+          "acne": "Helps control T-zone oil and calm skin — fits your {goal} goal with {concerns}.",
+          "glow": "Steady hydration and daily protection — the foundation for your {goal} goal.",
+          "anti_aging": "Deep hydration and daily SPF — supports {goal} from week one.",
+          "default": "Built from your {goal} goal and {concerns} — matched to your {skill} level."
+        }
+      },
+      "quickWin": {
+        "ai": {
+          "barrier": "DaDiary built a soothing, rebalancing routine — from your photos and current skin condition.",
+          "acne": "Gentle cleansing and breakout care — read from the photos you just shared.",
+          "glow": "Daily steps for a healthier glow — tuned from your photos and goals.",
+          "anti_aging": "Hydration and protection matched to your skin in the photos.",
+          "default": "Built from your face photos — ready to start this week."
+        },
+        "manual": {
+          "barrier": "This routine was made to soothe and repair your skin — from the goals and concerns you chose.",
+          "acne": "Supports clearer skin safely — built from the goals and concerns you just shared.",
+          "glow": "A steady path to brighter skin — from your goals and concerns.",
+          "anti_aging": "Deep hydration + SPF — aligned with your anti-aging goal.",
+          "default": "This is the best starter routine for your skin and goals right now."
+        }
+      },
+      "benefits": {
+        "ai": {
+          "b0_barrier": "Soothe first, actives later — your skin gets time to recover its barrier.",
+          "b0_acne": "Cleanse without stripping — fewer clogged pores, less tightness.",
+          "b0_glow": "Hydrate + daily SPF — the base for a healthy, lasting glow.",
+          "b0_anti_aging": "Morning SPF — your most effective long-term anti-aging step.",
+          "b0_default": "From your photos — not a one-size-fits-all template.",
+          "b1": "Protect by day, repair by night — a rhythm that’s easy to stick to.",
+          "b_skill": {
+            "beginner": "Simple pace for beginners — few steps, easy to keep up this week.",
+            "intermediate": "Balanced and safe — fits your intermediate level.",
+            "advanced": "Room to go deeper when you’re ready to level up."
+          }
+        },
+        "manual": {
+          "b0_barrier": "Soothing first — less irritation when skin is stressed or barrier is weak.",
+          "b0_acne": "Light T-zone oil control — clearer skin without the tight, dry feeling.",
+          "b0_glow": "Consistent hydration — glow builds when you stay steady.",
+          "b0_anti_aging": "Deep hydration + SPF — protect skin early for anti-aging.",
+          "b0_default": "From your goals and concerns — no guesswork.",
+          "b1": "Few steps, done daily — beats a crowded shelf.",
+          "b_skill": {
+            "beginner": "Simple pace for beginners — few steps, easy to keep up this week.",
+            "intermediate": "Balanced and safe — fits your intermediate level.",
+            "advanced": "Room to go deeper when you’re ready to level up."
+          }
+        }
+      },
+      "personalBadge": "Personalized",
+      "whyTitle": "Why this routine fits you",
       "sourceAi": "From photos & AI",
       "sourceManual": "From your choices",
-      "morningHint": "Cleanse · hydrate · protect",
-      "eveningHint": "Gentle cleanse · overnight repair",
+      "morningHint": "Cleanse → hydrate → SPF",
+      "eveningHint": "Gentle cleanse → overnight repair",
       "stepCount": "steps",
-      "viewStepDetail": "View details",
-      "updatedToast": "Routine updated to match your preferences",
-      "editAnytime": "You can edit anytime later.",
+      "viewStepDetail": "More",
+      "hideDetail": "Less",
+      "editingHint": "Tap a step to edit · arrows to reorder",
+      "editStepLabel": "Step {n}",
+      "updatedToast": "Your routine is ready ✓",
+      "updatedToastSub": "Changes saved for this session.",
+      "editAnytime": "You can adjust this anytime in the app.",
       "useRoutine": "Use this routine",
       "loadingTitle": "Building routine…",
       "loadingBody": "Wait a moment or go back to the previous step."
@@ -1158,21 +1229,35 @@
     "contextCoachLine": "Context: {contexts} — tips will mention sunscreen / cleansing / recovery for your lifestyle.",
     "aiLoading": {
       "analyzeTitle": "AI is analyzing your skin",
-      "analyzeTime0": "AI is analyzing your skin photos…",
-      "analyzeTime10": "Reading skin type, undertone, and common concerns…",
-      "analyzeTime25": "Putting it together and preparing suggestions…",
-      "analyzeTime40": "Finishing the analysis — just a little longer…",
-      "durationHint": "Usually takes 15–40 seconds",
-      "slowHint": "AI is taking a bit longer than usual…",
+      "analyzeTime0": "Analyzing your skin photos…",
+      "analyzeTime10": "Detecting your skin type and key concerns…",
+      "analyzeTime25": "AI is building your personal routine from your goal and concerns.",
+      "analyzeTime30": "AI is taking extra care so your routine fits you better.",
+      "analyzeTime30Line1": "AI is taking extra care so your routine fits you better.",
+      "analyzeTime30Line2": "Want to start now? Your goal-based routine is ready.",
+      "durationHint": "Usually takes 15–30 seconds",
+      "stepPhotos": "Analyze photos",
+      "stepSkin": "Detect skin",
+      "stepRoutine": "Build routine",
+      "stepsAria": "AI analysis progress",
+      "skipValueHint": "You'll still get a starter routine matched to your goal and skin concerns.",
+      "skipValueHintShort": "Your goal-based routine is ready — tap the button above.",
+      "skipConfirmAria": "Confirm using goal-based routine",
+      "skipConfirmBenefit": "Starter routine from your goal and concerns.",
+      "skipConfirmNote": "AI won't analyze your photos this time.",
+      "skipConfirmYes": "Continue with this routine",
+      "skipConfirmNo": "Keep waiting for AI",
+      "useDefaultNow": "Use goal-based routine",
+      "errorFallbackHint": "You still have a routine from your goal and concerns — tap below to continue.",
       "routineTitle": "AI is building your starter routine…",
       "routineTime0": "Picking AM/PM steps that fit your skin…",
       "routineTime8": "Balancing safety and your skin goal…",
       "routineTime20": "Writing gentle notes for your first week…",
       "routineTime35": "Almost there — hang on a moment…",
-      "progressHint": "AI is working — please keep this screen open.",
+      "progressHint": "Please keep this screen open for now.",
       "errorTitle": "AI didn't respond in time",
       "routineErrorTitle": "Couldn't build a personalized routine",
-      "timeoutFriendly": "You can try again or pick your skin type manually — your photos are still saved.",
+      "timeoutFriendly": "No worries — try again or use the default routine. Your photos are still saved.",
       "retry": "Try again",
       "manualSkin": "Pick skin type manually",
       "useDefaultRoutine": "Use default routine",
@@ -1181,11 +1266,11 @@
       "manualSkinBannerTitle": "You're picking your skin type manually",
       "manualSkinBannerBody": "Results may be less accurate than AI analysis. Your photos are kept — you can try AI again anytime.",
       "errors": {
-        "timeout": "AI took too long (over 45 seconds). Try again or choose another option below.",
-        "network": "Connection looks unstable. Check your network and try again.",
-        "auth": "Your session expired or the server isn't ready. Retry or pick manually.",
-        "server": "AI isn't responding right now. Try again in a few seconds.",
-        "generic": "Something didn't work. Retry or use a fallback option below."
+        "timeout": "AI took too long (over 45 seconds). Try again or use the default routine now.",
+        "network": "Connection looks unstable. Check your network and try again, or use the default routine.",
+        "auth": "Your session expired or the server isn't ready. Retry or use the default routine.",
+        "server": "AI isn't responding right now. Try again in a few seconds or use the default routine.",
+        "generic": "Something didn't work. Try again or use the default routine — your choices are still kept."
       }
     }
   },

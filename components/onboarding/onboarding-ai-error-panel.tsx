@@ -15,6 +15,8 @@ type OnboardingAiErrorPanelProps = {
   retryLabel?: string;
   secondaryLabel?: string;
   onSecondary?: () => void;
+  /** Show fallback hint encouraging default routine (analyze step). */
+  showFallbackHint?: boolean;
   className?: string;
 };
 
@@ -26,6 +28,7 @@ export function OnboardingAiErrorPanel({
   retryLabel,
   secondaryLabel,
   onSecondary,
+  showFallbackHint = false,
   className,
 }: OnboardingAiErrorPanelProps) {
   const t = useTranslations("onboarding");
@@ -46,7 +49,11 @@ export function OnboardingAiErrorPanel({
           <p className="leading-relaxed text-muted-foreground">
             {t(`aiLoading.${msgKey}` as "aiLoading.errors.timeout")}
           </p>
-          {errorKind === "timeout" ? (
+          {showFallbackHint ? (
+            <p className="text-xs leading-relaxed text-muted-foreground/90">
+              {t("aiLoading.errorFallbackHint")}
+            </p>
+          ) : errorKind === "timeout" ? (
             <p className="text-xs leading-relaxed text-muted-foreground/90">
               {t("aiLoading.timeoutFriendly")}
             </p>
@@ -54,14 +61,14 @@ export function OnboardingAiErrorPanel({
         </div>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <Button type="button" size="sm" onClick={onRetry}>
-          {retryLabel ?? t("aiLoading.retry")}
-        </Button>
         {onSecondary && secondaryLabel ? (
-          <Button type="button" size="sm" variant="outline" onClick={onSecondary}>
+          <Button type="button" size="sm" variant="secondary" className="min-h-10 flex-1 sm:flex-none" onClick={onSecondary}>
             {secondaryLabel}
           </Button>
         ) : null}
+        <Button type="button" size="sm" variant="outline" className="min-h-10 flex-1 sm:flex-none" onClick={onRetry}>
+          {retryLabel ?? t("aiLoading.retry")}
+        </Button>
       </div>
     </div>
   );

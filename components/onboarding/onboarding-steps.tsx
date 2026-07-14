@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowRight,
   Camera,
   ImagePlus,
   Sparkles,
@@ -184,14 +185,20 @@ export function OnboardingStepSkinProfile({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={onContinueWithoutPhotos}
-          disabled={analyzing}
-          className="w-full text-center text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground disabled:opacity-50"
-        >
-          {t("step1.continueWithoutPhotos")}
-        </button>
+        <div className="space-y-1.5 rounded-xl border border-primary/35 bg-background px-3 py-3 shadow-sm">
+          <button
+            type="button"
+            onClick={onContinueWithoutPhotos}
+            disabled={analyzing}
+            className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80 disabled:opacity-50"
+          >
+            <ArrowRight className="size-4 shrink-0" aria-hidden />
+            {t("step1.continueWithoutPhotos")}
+          </button>
+          <p className="text-center text-[11px] leading-snug text-muted-foreground">
+            {t("step1.continueWithoutPhotosHint")}
+          </p>
+        </div>
       </div>
 
       {analyzeFailed && !analyzing && (
@@ -199,8 +206,9 @@ export function OnboardingStepSkinProfile({
           errorKind={analyzeErrorKind ?? "unknown"}
           onRetry={onRetryAnalyze}
           retryLabel={t("photos.errorRetry")}
-          secondaryLabel={t("step1.continueWithoutPhotos")}
+          secondaryLabel={t("aiLoading.useDefaultNow")}
           onSecondary={onSkipAnalyze}
+          showFallbackHint
         />
       )}
 
