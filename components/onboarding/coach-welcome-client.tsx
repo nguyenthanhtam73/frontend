@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import {
   CoachWelcomeCta,
-  CoachWelcomePrimaryCta,
+  CoachWelcomePrimaryCtaBlock,
   CoachWelcomeStickyBar,
 } from "@/components/onboarding/coach-welcome-cta";
 import {
@@ -125,16 +125,23 @@ function CoachWelcomeLoaded({
             <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
               {t("celebrationTitle")}
             </h1>
-            <p className="text-sm font-medium leading-snug text-foreground sm:text-base">
+            <p className="text-sm font-semibold leading-snug text-foreground sm:text-base">
               {t("celebrationLine")}
             </p>
-            <p className="text-sm leading-relaxed text-muted-foreground">{t("introLine")}</p>
+            <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
+              {t("achievementLine")}
+            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{t("nextStepHint")}</p>
             {completedLabel ? (
               <p className="text-xs text-muted-foreground">
                 {tReview("completedOn", { date: completedLabel })}
               </p>
             ) : null}
           </header>
+        </CoachWelcomeSection>
+
+        <CoachWelcomeSection delayMs={40}>
+          <CoachWelcomePrimaryCtaBlock />
         </CoachWelcomeSection>
 
         {skinReadback ? (
@@ -156,10 +163,6 @@ function CoachWelcomeLoaded({
         ) : null}
 
         <CoachWelcomeSection delayMs={80}>
-          <CoachWelcomePrimaryCta />
-        </CoachWelcomeSection>
-
-        <CoachWelcomeSection delayMs={100}>
           <StarterRoutineGenerationNotice
             isGeneratingRoutine={isGeneratingRoutine}
             showFallbackBanner={showFallbackBanner}
@@ -173,10 +176,10 @@ function CoachWelcomeLoaded({
           />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={140} id="coach-welcome-routine">
+        <CoachWelcomeSection delayMs={120} id="coach-welcome-routine">
           <div
             className={cn(
-              "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-3.5 sm:p-5",
+              "rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4",
               "transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
               routineJustUpdated &&
                 "bg-emerald-500/[0.06] shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700",
@@ -187,7 +190,6 @@ function CoachWelcomeLoaded({
               morningLabel={t("morning")}
               eveningLabel={t("evening")}
               noStepsLabel={t("noSteps")}
-              featured
               sectionTitle={t("routineSectionTitle")}
               sectionSubtitle={t("routineSectionSub")}
             />
@@ -217,15 +219,15 @@ function CoachWelcomeLoaded({
           <CoachWelcomeCta isGuest={isGuest} guestVariant={guestVariant} />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={460} className="pt-1">
-          <p className="mb-2 inline-flex w-full items-center gap-2 text-xs text-muted-foreground sm:w-auto">
-            <Eye className="size-3.5 shrink-0" aria-hidden />
+        <CoachWelcomeSection delayMs={460} className="mt-4 border-t border-border/40 pt-6">
+          <p className="mb-1 inline-flex w-full items-center gap-2 text-[10px] leading-relaxed text-muted-foreground/70 sm:w-auto">
+            <Eye className="size-3 shrink-0" aria-hidden />
             {tReview("readOnlyHint")}
           </p>
           <OnboardingDeleteSection
             isGuest={isGuest}
             onDeleted={onReload}
-            className="mt-2 border-0 bg-transparent p-0"
+            variant="subtle"
           />
         </CoachWelcomeSection>
       </div>

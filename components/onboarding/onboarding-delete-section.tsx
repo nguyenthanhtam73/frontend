@@ -25,12 +25,14 @@ type OnboardingDeleteSectionProps = {
   isGuest: boolean;
   onDeleted?: () => void;
   className?: string;
+  variant?: "default" | "subtle";
 };
 
 export function OnboardingDeleteSection({
   isGuest,
   onDeleted,
   className,
+  variant = "default",
 }: OnboardingDeleteSectionProps) {
   const t = useTranslations("onboarding.review");
   const formatter = useFormatter();
@@ -98,7 +100,9 @@ export function OnboardingDeleteSection({
   return (
     <section
       className={cn(
-        "mt-8 space-y-3 rounded-xl border border-destructive/20 bg-muted/30 p-4",
+        variant === "subtle"
+          ? "space-y-2"
+          : "mt-8 space-y-3 rounded-xl border border-destructive/20 bg-muted/30 p-4",
         className,
       )}
     >
@@ -164,7 +168,12 @@ export function OnboardingDeleteSection({
           variant="ghost"
           size="sm"
           disabled={!resetAllowed}
-          className="h-auto px-0 text-destructive/80 hover:bg-transparent hover:text-destructive"
+          className={cn(
+            "h-auto px-0 hover:bg-transparent",
+            variant === "subtle"
+              ? "text-[11px] text-muted-foreground/60 hover:text-destructive/70"
+              : "text-destructive/80 hover:text-destructive",
+          )}
           onClick={() => {
             setToast(null);
             setStatus("confirming");

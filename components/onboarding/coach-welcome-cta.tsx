@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Home, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, CalendarCheck, Home, Sparkles, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ButtonLink } from "@/components/ui/button-link";
@@ -14,17 +14,40 @@ type CoachWelcomeCtaBaseProps = {
 };
 
 const primaryBtnClass =
-  "min-h-12 w-full gap-2 text-base font-semibold shadow-md sm:min-h-14";
+  "min-h-12 w-full gap-2.5 text-base font-bold shadow-lg shadow-primary/25 sm:min-h-14";
 
-/** Hero primary CTA — placed high on the page for immediate action. */
+/** Hero primary CTA — benefit-oriented, high visibility. */
 export function CoachWelcomePrimaryCta({ className }: { className?: string }) {
   const t = useTranslations("coachWelcome");
 
   return (
     <ButtonLink href="/check-in" size="lg" className={cn(primaryBtnClass, className)}>
+      <CalendarCheck className="size-5 shrink-0" aria-hidden />
       {t("ctaCheckInPrimary")}
       <ArrowRight className="size-5 shrink-0" aria-hidden />
     </ButtonLink>
+  );
+}
+
+/** Primary CTA block — title, benefit line, and button together. */
+export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string }) {
+  const t = useTranslations("coachWelcome");
+
+  return (
+    <div
+      className={cn(
+        "space-y-3 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/[0.09] via-primary/[0.04] to-emerald-500/[0.05] p-4 shadow-sm sm:p-5",
+        className,
+      )}
+    >
+      <div className="space-y-1">
+        <p className="text-sm font-bold text-foreground sm:text-base">{t("ctaBlockTitle")}</p>
+        <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          {t("ctaCheckInBenefit")}
+        </p>
+      </div>
+      <CoachWelcomePrimaryCta />
+    </div>
   );
 }
 
@@ -35,15 +58,21 @@ export function CoachWelcomeStickyBar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 p-3 backdrop-blur-sm sm:hidden",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background/95 p-3 backdrop-blur-md sm:hidden",
         className,
       )}
       aria-hidden={false}
     >
-      <ButtonLink href="/check-in" size="lg" className={primaryBtnClass}>
-        {t("ctaCheckInPrimary")}
-        <ArrowRight className="size-5 shrink-0" aria-hidden />
-      </ButtonLink>
+      <div className="mx-auto max-w-2xl space-y-1">
+        <p className="text-center text-[10px] font-medium leading-snug text-muted-foreground">
+          {t("ctaStickyBenefit")}
+        </p>
+        <ButtonLink href="/check-in" size="lg" className={primaryBtnClass}>
+          <CalendarCheck className="size-5 shrink-0" aria-hidden />
+          {t("ctaCheckInPrimary")}
+          <ArrowRight className="size-5 shrink-0" aria-hidden />
+        </ButtonLink>
+      </div>
     </div>
   );
 }
@@ -94,7 +123,7 @@ export function CoachWelcomeCta({
       {showPrimary ? (
         <div className="space-y-1 text-center sm:text-left">
           <p className="text-sm font-medium text-foreground">{t("ctaBlockTitle")}</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">{t("ctaBlockSub")}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">{t("ctaCheckInBenefit")}</p>
         </div>
       ) : null}
 

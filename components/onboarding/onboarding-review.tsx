@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import {
   CoachWelcomeCta,
-  CoachWelcomePrimaryCta,
+  CoachWelcomePrimaryCtaBlock,
   CoachWelcomeStickyBar,
 } from "@/components/onboarding/coach-welcome-cta";
 import { CoachWelcomeSection } from "@/components/onboarding/coach-welcome-section";
@@ -118,10 +118,13 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
             {tCoach("celebrationTitle")}
           </h1>
-          <p className="text-sm font-medium leading-snug text-foreground sm:text-base">
+          <p className="text-sm font-semibold leading-snug text-foreground sm:text-base">
             {tCoach("celebrationLine")}
           </p>
-          <p className="text-sm leading-relaxed text-muted-foreground">{tCoach("introLine")}</p>
+          <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
+            {tCoach("achievementLine")}
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{tCoach("nextStepHint")}</p>
 
         {showPhotoSection ? (
           <div className="space-y-3">
@@ -177,7 +180,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         ) : null}
       </header>
 
-      <CoachWelcomePrimaryCta />
+      <CoachWelcomePrimaryCtaBlock />
 
       {skinReadback ? (
         <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.05] shadow-sm">
@@ -195,9 +198,9 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         </Card>
       ) : null}
 
-      <Card>
+      <Card className="border-border/60 bg-muted/10">
         <CardContent className="space-y-4 pt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
             {tReview("skinSection")}
           </p>
           <dl className="grid gap-3 sm:grid-cols-2">
@@ -229,17 +232,17 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
+        <Card className="border-border/60 bg-muted/10">
           <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
               {tReview("skillSection")}
             </p>
             <p className="text-sm font-medium">{skillLabel}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-border/60 bg-muted/10">
           <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
               {tReview("goalSection")}
             </p>
             <p className="text-sm font-medium">{goalLabel}</p>
@@ -269,15 +272,15 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         <CoachWelcomeCta isGuest={data.isGuest} />
       </CoachWelcomeSection>
 
-      <CoachWelcomeSection delayMs={160} className="pt-1">
-        <p className="mb-2 inline-flex w-full items-center gap-2 text-xs text-muted-foreground sm:w-auto">
-          <Eye className="size-3.5 shrink-0" aria-hidden />
+      <CoachWelcomeSection delayMs={160} className="mt-4 border-t border-border/40 pt-6">
+        <p className="mb-1 inline-flex w-full items-center gap-2 text-[10px] leading-relaxed text-muted-foreground/70 sm:w-auto">
+          <Eye className="size-3 shrink-0" aria-hidden />
           {tReview("readOnlyHint")}
         </p>
         <OnboardingDeleteSection
           isGuest={data.isGuest}
           onDeleted={onDeleted}
-          className="mt-2 border-0 bg-transparent p-0"
+          variant="subtle"
         />
       </CoachWelcomeSection>
 
@@ -322,7 +325,7 @@ function LoggedInReviewRoutineSection({
       />
       <div
         className={cn(
-          "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 sm:p-5",
+          "rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4",
           routineJustUpdated &&
             "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
         )}
@@ -332,7 +335,6 @@ function LoggedInReviewRoutineSection({
           morningLabel={tCoach("morning")}
           eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
-          featured
           sectionTitle={tCoach("routineSectionTitle")}
           sectionSubtitle={tCoach("routineSectionSub")}
         />
@@ -385,7 +387,7 @@ function GuestReviewRoutineSection({
       />
       <div
         className={cn(
-          "rounded-2xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 sm:p-5",
+          "rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4",
           routineJustUpdated &&
             "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
         )}
@@ -395,7 +397,6 @@ function GuestReviewRoutineSection({
           morningLabel={tCoach("morning")}
           eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
-          featured
           sectionTitle={tCoach("routineSectionTitle")}
           sectionSubtitle={tCoach("routineSectionSub")}
         />
@@ -413,16 +414,20 @@ function GuestReviewRoutineSection({
 
 function ReviewRoutineHeader() {
   const tReview = useTranslations("onboarding.review");
+  const tCoach = useTranslations("coachWelcome");
 
   return (
     <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <Sparkles className="size-5 text-primary" aria-hidden />
-        <h2 className="text-lg font-semibold">{tReview("routineSection")}</h2>
+      <div className="min-w-0 space-y-0.5">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-4 shrink-0 text-primary/70" aria-hidden />
+          <h2 className="text-base font-semibold text-foreground/90">{tReview("routineSection")}</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">{tCoach("routineSectionSub")}</p>
       </div>
       <Link
         href="/onboarding/coach-welcome"
-        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "shrink-0 text-xs")}
       >
         {tReview("viewFullRoutine")}
       </Link>

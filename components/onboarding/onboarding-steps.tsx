@@ -2,7 +2,9 @@
 
 import {
   ArrowRight,
+  CalendarCheck,
   Camera,
+  CheckCircle2,
   ImagePlus,
   Sparkles,
   X,
@@ -31,6 +33,7 @@ import {
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
+import { cn } from "@/lib/utils";
 
 const CONCERN_IDS = [...STEP1_CONCERNS];
 
@@ -245,26 +248,30 @@ export function OnboardingStepReady() {
 
   return (
     <section className="space-y-5" aria-labelledby="onb-ready-title">
-      <div className="space-y-2 text-center sm:text-left">
+      <div className="space-y-2.5 text-center sm:text-left">
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-          <Sparkles className="size-4" aria-hidden />
+          <CheckCircle2 className="size-4" aria-hidden />
           {t("step3.badge")}
         </div>
-        <h2 id="onb-ready-title" className="text-xl font-semibold sm:text-2xl">
+        <h2 id="onb-ready-title" className="text-xl font-bold leading-tight sm:text-2xl">
           {t("step3.title")}
         </h2>
-        <p className="text-sm text-muted-foreground">{t("step3.subtitle")}</p>
+        <p className="text-sm font-semibold leading-snug text-foreground">{t("step3.subtitle")}</p>
+        <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
+          {t("step3.achievementLine")}
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{t("step3.nextStepHint")}</p>
       </div>
 
       {routine && (
-        <div className="rounded-xl border bg-muted/25 p-4">
-          <p className="mb-3 text-sm font-semibold">{t("step3.routineRecap")}</p>
+        <div className="rounded-xl border border-border/50 bg-muted/15 p-4">
+          <p className="mb-3 text-sm font-semibold text-foreground/90">{t("step3.routineRecap")}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <p className="mb-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
                 {t("routineStep.morning")}
               </p>
-              <ol className="list-decimal space-y-1 pl-4 text-sm">
+              <ol className="list-decimal space-y-1 pl-4 text-sm text-muted-foreground">
                 {routine.morning.map((s, i) => (
                   <li key={i}>{s}</li>
                 ))}
@@ -274,7 +281,7 @@ export function OnboardingStepReady() {
               <p className="mb-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
                 {t("routineStep.evening")}
               </p>
-              <ol className="list-decimal space-y-1 pl-4 text-sm">
+              <ol className="list-decimal space-y-1 pl-4 text-sm text-muted-foreground">
                 {routine.evening.map((s, i) => (
                   <li key={i}>{s}</li>
                 ))}
@@ -284,18 +291,38 @@ export function OnboardingStepReady() {
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <p className="text-sm font-semibold">{t("step3.nextActionsTitle")}</p>
         <ul className="space-y-2">
           {(["checkIn", "routine", "learn"] as const).map((key) => (
             <li
               key={key}
-              className="flex items-start gap-2.5 rounded-lg border border-border/70 bg-card/50 px-3.5 py-3 text-sm"
+              className={cn(
+                "flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm",
+                key === "checkIn"
+                  ? "border-primary/30 bg-primary/[0.06] shadow-sm"
+                  : "border-border/70 bg-card/50",
+              )}
             >
-              <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                {key === "checkIn" ? "1" : key === "routine" ? "2" : "3"}
+              <span
+                className={cn(
+                  "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                  key === "checkIn"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-primary/10 text-primary",
+                )}
+              >
+                {key === "checkIn" ? (
+                  <CalendarCheck className="size-3.5" aria-hidden />
+                ) : key === "routine" ? (
+                  "2"
+                ) : (
+                  "3"
+                )}
               </span>
-              <span>{t(`step3.actions.${key}`)}</span>
+              <span className={key === "checkIn" ? "font-medium text-foreground" : undefined}>
+                {t(`step3.actions.${key}`)}
+              </span>
             </li>
           ))}
         </ul>
