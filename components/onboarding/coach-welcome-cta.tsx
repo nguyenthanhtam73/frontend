@@ -3,6 +3,7 @@
 import { ArrowRight, CalendarCheck, Home, Sparkles, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { CoachWelcomeNextStepCard } from "@/components/onboarding/coach-welcome-payoff";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ export function CoachWelcomePrimaryCta({ className }: { className?: string }) {
   );
 }
 
-/** Primary CTA block — title, benefit line, and button together. */
+/** Primary CTA block — next step hint + button. */
 export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string }) {
   const t = useTranslations("coachWelcome");
 
@@ -40,13 +41,15 @@ export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string 
         className,
       )}
     >
-      <div className="space-y-1">
-        <p className="text-sm font-bold text-foreground sm:text-base">{t("ctaBlockTitle")}</p>
-        <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-          {t("ctaCheckInBenefit")}
-        </p>
-      </div>
+      <CoachWelcomeNextStepCard
+        label={t("nextStepLabel")}
+        hint={t("nextStepHint")}
+        benefit={t("nextStepBenefit")}
+      />
       <CoachWelcomePrimaryCta />
+      <p className="text-center text-[11px] leading-snug text-muted-foreground sm:text-xs">
+        {t("ctaCheckInBenefit")}
+      </p>
     </div>
   );
 }
@@ -65,7 +68,7 @@ export function CoachWelcomeStickyBar({ className }: { className?: string }) {
     >
       <div className="mx-auto max-w-2xl space-y-1">
         <p className="text-center text-[10px] font-medium leading-snug text-muted-foreground">
-          {t("ctaStickyBenefit")}
+          {t("nextStepHint")}
         </p>
         <ButtonLink href="/check-in" size="lg" className={primaryBtnClass}>
           <CalendarCheck className="size-5 shrink-0" aria-hidden />
@@ -121,10 +124,11 @@ export function CoachWelcomeCta({
       )}
     >
       {showPrimary ? (
-        <div className="space-y-1 text-center sm:text-left">
-          <p className="text-sm font-medium text-foreground">{t("ctaBlockTitle")}</p>
-          <p className="text-xs leading-relaxed text-muted-foreground">{t("ctaCheckInBenefit")}</p>
-        </div>
+        <CoachWelcomeNextStepCard
+          label={t("nextStepLabel")}
+          hint={t("nextStepHint")}
+          benefit={t("nextStepBenefit")}
+        />
       ) : null}
 
       {showPrimary ? <CoachWelcomePrimaryCta /> : null}

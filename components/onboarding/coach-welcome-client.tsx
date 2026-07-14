@@ -3,7 +3,6 @@
 import { useTranslations, useFormatter } from "next-intl";
 import {
   AlertCircle,
-  CheckCircle2,
   Eye,
   RefreshCw,
   Sparkles,
@@ -16,6 +15,9 @@ import {
   CoachWelcomePrimaryCtaBlock,
   CoachWelcomeStickyBar,
 } from "@/components/onboarding/coach-welcome-cta";
+import {
+  CoachWelcomeCelebrationHeader,
+} from "@/components/onboarding/coach-welcome-payoff";
 import {
   CoachWelcomeSection,
 } from "@/components/onboarding/coach-welcome-section";
@@ -117,27 +119,13 @@ function CoachWelcomeLoaded({
     <>
       <div className="mx-auto w-full max-w-2xl space-y-5 pb-24 sm:space-y-6 sm:pb-6">
         <CoachWelcomeSection>
-          <header className="space-y-2.5 text-center sm:space-y-3 sm:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-              <CheckCircle2 className="size-4" aria-hidden />
-              {tReview("badge")}
-            </div>
-            <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
-              {t("celebrationTitle")}
-            </h1>
-            <p className="text-sm font-semibold leading-snug text-foreground sm:text-base">
-              {t("celebrationLine")}
-            </p>
-            <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
-              {t("achievementLine")}
-            </p>
-            <p className="text-sm leading-relaxed text-muted-foreground">{t("nextStepHint")}</p>
-            {completedLabel ? (
-              <p className="text-xs text-muted-foreground">
-                {tReview("completedOn", { date: completedLabel })}
-              </p>
-            ) : null}
-          </header>
+          <CoachWelcomeCelebrationHeader
+            completedLabel={
+              completedLabel
+                ? tReview("completedOn", { date: completedLabel })
+                : undefined
+            }
+          />
         </CoachWelcomeSection>
 
         <CoachWelcomeSection delayMs={40}>

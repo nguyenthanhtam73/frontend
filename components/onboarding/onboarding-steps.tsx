@@ -11,6 +11,10 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import {
+  CoachWelcomeAchievementCard,
+  CoachWelcomeNextStepCard,
+} from "@/components/onboarding/coach-welcome-payoff";
 import { OnboardingAiErrorPanel } from "@/components/onboarding/onboarding-ai-error-panel";
 import {
   ConcernLimitHint,
@@ -105,6 +109,8 @@ export function OnboardingStepSkinProfile({
         onSelect={ob.setGoal}
         columns={2}
         size="large"
+        required
+        requiredLabel={t("step1.requiredBadge")}
       />
 
       <div className="space-y-2">
@@ -115,6 +121,8 @@ export function OnboardingStepSkinProfile({
           selected={ob.aiConcernTags}
           onToggle={ob.toggleAiConcernTag}
           label={(id) => concernChipLabel(t, id)}
+          required
+          requiredLabel={t("step1.requiredBadge")}
         />
         <ConcernLimitHint count={ob.aiConcernTags.length} max={ONBOARDING_MAX_CONCERNS} />
       </div>
@@ -257,10 +265,15 @@ export function OnboardingStepReady() {
           {t("step3.title")}
         </h2>
         <p className="text-sm font-semibold leading-snug text-foreground">{t("step3.subtitle")}</p>
-        <p className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2 text-sm font-medium leading-snug text-emerald-800 dark:text-emerald-200">
-          {t("step3.achievementLine")}
-        </p>
-        <p className="text-sm leading-relaxed text-muted-foreground">{t("step3.nextStepHint")}</p>
+        <CoachWelcomeAchievementCard
+          title={t("step3.achievementTitle")}
+          line={t("step3.achievementLine")}
+        />
+        <CoachWelcomeNextStepCard
+          label={t("step3.nextStepLabel")}
+          hint={t("step3.nextStepHint")}
+          benefit={t("step3.nextStepBenefit")}
+        />
       </div>
 
       {routine && (

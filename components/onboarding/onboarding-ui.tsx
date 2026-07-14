@@ -311,6 +311,8 @@ export function QuickChipGrid<T extends string>({
   columns = 2,
   hideTitle,
   size = "default",
+  required,
+  requiredLabel,
 }: {
   title: string;
   options: { id: T; label: string }[];
@@ -320,15 +322,27 @@ export function QuickChipGrid<T extends string>({
   hideTitle?: boolean;
   /** Larger tap targets for primary choices (e.g. skin goals). */
   size?: "default" | "large";
+  required?: boolean;
+  requiredLabel?: string;
 }) {
   const large = size === "large";
   return (
     <div className="space-y-2">
-      {!hideTitle ? <p className="text-sm font-semibold">{title}</p> : null}
+      {!hideTitle ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-semibold">{title}</p>
+          {required && requiredLabel ? (
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              {requiredLabel}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       <div
         className={cn("grid gap-2.5", columns === 3 ? "grid-cols-3" : "grid-cols-2")}
         role="group"
         aria-label={title}
+        aria-required={required || undefined}
       >
         {options.map((o) => (
           <button
@@ -358,6 +372,8 @@ export function ConcernChipRow({
   selected,
   onToggle,
   label,
+  required,
+  requiredLabel,
 }: {
   title: string;
   hint?: string;
@@ -365,14 +381,28 @@ export function ConcernChipRow({
   selected: string[];
   onToggle: (id: string) => void;
   label: (id: string) => string;
+  required?: boolean;
+  requiredLabel?: string;
 }) {
   return (
     <div className="space-y-2">
       <div>
-        <p className="text-sm font-semibold">{title}</p>
-        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-semibold">{title}</p>
+          {required && requiredLabel ? (
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              {requiredLabel}
+            </span>
+          ) : null}
+        </div>
+        {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
       </div>
-      <div className="flex flex-wrap gap-2" role="group" aria-label={title}>
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={title}
+        aria-required={required || undefined}
+      >
         {concernIds.map((id) => {
           const on = selected.includes(id);
           return (
