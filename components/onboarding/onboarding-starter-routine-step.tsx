@@ -264,9 +264,26 @@ function RoutineStepCard({
   const t = useTranslations("onboarding");
   const ob = useOnboardingStore();
   const [expanded, setExpanded] = useState(false);
+  const [truncated, setTruncated] = useState(false);
+  const detailRef = useRef<HTMLParagraphElement>(null);
   const parsed = parseRoutineStep(stepText);
   const Icon = routineStepIcon(parsed.icon);
   const hasDetail = Boolean(parsed.detail && parsed.detail !== parsed.title);
+
+  useEffect(() => {
+    if (!hasDetail || expanded) return;
+    const el = detailRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      setTruncated(el.scrollHeight > el.clientHeight + 1);
+    };
+    measure();
+
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [hasDetail, expanded, parsed.detail]);
 
   if (editing) {
     return (
@@ -338,24 +355,28 @@ function RoutineStepCard({
           </div>
           {hasDetail ? (
             <div className="mt-0.5">
-              {expanded ? (
-                <p className="text-xs leading-relaxed text-muted-foreground">{parsed.detail}</p>
-              ) : (
-                <p className="line-clamp-1 text-xs leading-relaxed text-muted-foreground sm:line-clamp-2">
-                  {parsed.detail}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => !v)}
-                className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary"
+              <p
+                ref={detailRef}
+                className={cn(
+                  "text-xs leading-relaxed text-muted-foreground",
+                  !expanded && "line-clamp-1 sm:line-clamp-2",
+                )}
               >
-                {expanded ? t("step2.hideDetail") : t("step2.viewStepDetail")}
-                <ChevronRight
-                  className={cn("size-3 transition-transform", expanded && "rotate-90")}
-                  aria-hidden
-                />
-              </button>
+                {parsed.detail}
+              </p>
+              {truncated || expanded ? (
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary"
+                >
+                  {expanded ? t("step2.hideDetail") : t("step2.viewStepDetail")}
+                  <ChevronRight
+                    className={cn("size-3 transition-transform", expanded && "rotate-90")}
+                    aria-hidden
+                  />
+                </button>
+              ) : null}
             </div>
           ) : (
             <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{stepText}</p>
