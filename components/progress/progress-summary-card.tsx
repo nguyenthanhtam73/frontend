@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,13 +69,7 @@ export function ProgressSummaryCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <StatTile
-            icon={<Flame className="size-3.5" aria-hidden />}
-            label={t("streak")}
-            value={String(summary.streak_days)}
-            suffix={t("daysSuffix")}
-          />
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <StatTile
             icon={<TrendIcon trend={trend} />}
             label={t("overall")}

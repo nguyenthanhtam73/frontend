@@ -31,6 +31,7 @@ import { AiSuggestLoading } from "./ai-suggest-loading";
 import { countCompletion, localId, resolveRoutineSource, validateRoutine } from "./routine-helpers";
 import { useRoutine } from "./use-routine";
 import { useRoutineSuggest, type SuggestError } from "./use-routine-suggest";
+import { streakDateKey } from "@/lib/streak/history";
 
 /**
  * Routine Management — main client component.
@@ -268,12 +269,8 @@ export function RoutineEditor() {
     [t],
   );
 
-  // Today (UTC) ISO — used by the history strip to label "today/yesterday".
-  const todayISO = useMemo(() => {
-    const now = new Date();
-    const utc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    return utc.toISOString().slice(0, 10);
-  }, []);
+  // Today (Vietnam calendar) — recompute each render so midnight VN stays correct.
+  const todayISO = streakDateKey();
 
   const hasEditorContent = useMemo(
     () =>

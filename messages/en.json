@@ -800,6 +800,125 @@
       "gaugeClarity": "Clarity",
       "gaugeBarrier": "Barrier"
     },
+    "streak": {
+      "ariaLabel": "Check-in streak",
+      "loading": "Loading your streak…",
+      "error": "Couldn't load streak right now.",
+      "retry": "Retry",
+      "currentLabel": "Current streak",
+      "daysUnit": "days",
+      "longestLabel": "Longest streak",
+      "freezesLabel": "Streak freezes left",
+      "historyLabel": "Last {n} days",
+      "historyHint": "Since you started DaDiary",
+      "historyAria": "Recent check-in days",
+      "today": "Today",
+      "endedHint": "Streak ended after {date}. Check in to start again.",
+      "status": {
+        "maintaining": "On track",
+        "at_risk": "Check in today",
+        "at_risk_auto_save": "Missed yesterday — auto-save ready",
+        "protected": "Protected",
+        "idle": "Check in to start"
+      },
+      "dayState": {
+        "checked": "Checked in",
+        "missed": "Missed",
+        "protected": "Protected",
+        "empty": "No data yet"
+      },
+      "weekday": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "freeze": {
+        "title": "Streak protection",
+        "contextIdle": "Miss one day with a freeze left and we'll save your streak on the next check-in — or use one ahead of time.",
+        "contextManual": "Use a freeze when you know you'll skip — covers today or tomorrow.",
+        "contextAutoSave": "Check in today and we'll automatically use 1 freeze to save your streak.",
+        "remaining": "{n} freezes left",
+        "exhausted": "No freezes left",
+        "activeUntil": "Protected for {date}",
+        "activeBadge": "Active",
+        "useCta": "Use 1 freeze",
+        "using": "Protecting…",
+        "confirmTitle": "Use a streak freeze?",
+        "confirmBodyToday": "You haven't checked in today. Using 1 freeze protects {date} (Vietnam time) if you miss it. This can't be undone.",
+        "confirmBodyTomorrow": "You've already checked in today. Using 1 freeze protects {date} (Vietnam time) if you skip it. This can't be undone.",
+        "confirmCancel": "Not now",
+        "confirmOk": "Use freeze",
+        "successTitle": "You used 1 streak freeze",
+        "successBodyToday": "Your streak is protected for {date}.",
+        "successBodyTomorrow": "Your streak is protected for {date}.",
+        "autoTitle": "Streak auto-protected",
+        "autoBody": "You missed one day — we automatically used 1 freeze to keep your streak.",
+        "continuedTitle": "Streak continued",
+        "continuedBody": "Nice catch-up — your streak is still going.",
+        "unusedTitle": "Checked in — freeze not needed",
+        "unusedBody": "You already checked in on the protected day. That freeze still counts as used.",
+        "errorTitle": "Couldn't use freeze",
+        "error": "Something went wrong. Please try again.",
+        "block": {
+          "no_freezes": "You've used all your freezes.",
+          "no_streak": "Start a streak with a check-in first.",
+          "already_protected": "A freeze is already active.",
+          "soft_expired": "Your streak already broke earlier — a freeze can't save it now.",
+          "catch_up_required": "Check in today so we can auto-save your streak.",
+          "bridged_catch_up": "Yesterday is already protected — check in today to continue your streak."
+        }
+      },
+      "milestone": {
+        "badge": "{n}-day milestone",
+        "daysUnit": "days",
+        "continue": "Keep going",
+        "share": {
+          "cta": "Share achievement",
+          "copy": "Copy text",
+          "title": "My {n}-day DaDiary streak",
+          "text": "I just hit {n} days on DaDiary! 🔥 Keeping a daily skincare check-in isn't easy — join me: {url} #DaDiary #SkincareStreak",
+          "copied": "Copied to clipboard",
+          "shared": "Thanks for sharing!",
+          "failed": "Couldn't share — try copying instead."
+        },
+        "items": {
+          "d3": {
+            "title": "Nice start!",
+            "body": "Three days in a row — your skin diary habit is taking root.",
+            "cheer": "3 days in — the hardest part is starting!"
+          },
+          "d7": {
+            "title": "One full week!",
+            "body": "Seven days of check-ins. Consistency like this is how real change shows up.",
+            "cheer": "7 days is a real turning point!"
+          },
+          "d14": {
+            "title": "Two weeks strong!",
+            "body": "Fourteen days of care. Your timeline is getting richer every day.",
+            "cheer": "Two weeks — you're in the groove!"
+          },
+          "d30": {
+            "title": "A whole month!",
+            "body": "Thirty days of showing up for your skin. That’s a real commitment.",
+            "cheer": "30 days — you're truly consistent!"
+          },
+          "d60": {
+            "title": "Two months of care!",
+            "body": "Sixty days — you’re building a long-term relationship with your skin.",
+            "cheer": "60 days of care — legendary rhythm!"
+          },
+          "d100": {
+            "title": "Century streak!",
+            "body": "One hundred days. This is legendary dedication — celebrate it.",
+            "cheer": "100 days?! Absolute icon status."
+          }
+        }
+      }
+    },
     "beforeAfter": {
       "title": "Before · After",
       "hint": "Comparing the oldest and newest photo in the selected window. Same lighting and angle make the comparison more honest.",

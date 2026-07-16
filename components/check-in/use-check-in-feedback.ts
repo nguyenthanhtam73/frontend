@@ -1,16 +1,20 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   fetchSkinCheckResult,
   isAnalysisSettled,
 } from "@/lib/api/skin-check";
+import { streakQueryKey } from "@/lib/api/streak";
 import {
   clearPersistedCheckInPending,
   persistCheckInPending,
   readPersistedCheckInPending,
 } from "@/lib/check-in/pending-feedback-session";
+import { useToast } from "@/hooks/use-toast";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
 /** Smart polling: 1s for first 20s, then 2.5s; hard stop at TIMEOUT_MS. */
@@ -75,6 +79,9 @@ function isAnalysisComplete(payload: CreateSkinCheckResponseDTO): boolean {
  * session resume on reload, and fake progress for the loading UI.
  */
 export function useCheckInFeedback() {
+  const queryClient = useQueryClient();
+  const { success: toastSuccess } = useToast();
+  const tStreak = useTranslations("progress.streak");
   const [phase, setPhase] = useState<CheckInFeedbackPhase>("idle");
   const [payload, setPayload] = useState<CreateSkinCheckResponseDTO | null>(
     null,
@@ -320,10 +327,37 @@ export function useCheckInFeedback() {
   const onSubmitSuccess = useCallback(
     (data: CreateSkinCheckResponseDTO) => {
       const id = data.check.id;
-      devLog("submit success", { checkId: id, status: data.analysis.status });
+      devLog("submit success", {
+        checkId: id,
+        status: data.analysis.status,
+        autoFreeze: data.streak?.auto_freeze_applied,
+      });
+      // Prefer API streak flags only — no React Query "wasCatchUp" fallback
+      // (stale alive+gap after a server reset would false-toast "continued").
+      if (data.streak?.auto_freeze_applied) {
+        toastSuccess({
+          title: tStreak("freeze.autoTitle"),
+          description: tStreak("freeze.autoBody"),
+        });
+      } else if (data.streak?.unused_freeze_cleared) {
+        toastSuccess({
+          title: tStreak("freeze.unusedTitle"),
+          description: tStreak("freeze.unusedBody"),
+        });
+      } else if (data.streak?.catch_up_continued) {
+        toastSuccess({
+          title: tStreak("freeze.continuedTitle"),
+          description: tStreak("freeze.continuedBody"),
+        });
+      }
+
+      // Streak is updated server-side on create — refresh any open Progress views.
+      void queryClient.invalidateQueries({ queryKey: streakQueryKey });
+      void queryClient.refetchQueries({ queryKey: streakQueryKey });
+
       beginPolling(id, data, undefined, false);
     },
-    [beginPolling],
+    [beginPolling, queryClient, tStreak, toastSuccess],
   );
 
   /** Enter submitting phase before the multipart POST. */

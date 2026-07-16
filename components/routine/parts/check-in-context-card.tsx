@@ -27,6 +27,7 @@ import { fetchSkinCheck } from "@/lib/api/skin-check";
 import { apiBaseUrl } from "@/lib/api";
 import { authHeaders, getAccessToken } from "@/lib/auth-token";
 import type { RoutineStepDTO } from "@/lib/types/routine";
+import { streakDateKey } from "@/lib/streak/history";
 import { cn } from "@/lib/utils";
 
 import { ApplyConfirmDialog } from "./apply-confirm-dialog";
@@ -495,8 +496,10 @@ function formatRelativeDate(
     return { label: iso, kind: "other" };
   }
   const target = Date.UTC(parts[0], parts[1] - 1, parts[2]);
-  const now = new Date();
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  // Align "today" with SkinCheck / streak Vietnam calendar keys.
+  const todayKey = streakDateKey();
+  const [ty, tm, td] = todayKey.split("-").map((p) => parseInt(p, 10));
+  const today = Date.UTC(ty, tm - 1, td);
   const diffDays = Math.round((today - target) / (1000 * 60 * 60 * 24));
   if (diffDays <= 0) return { label: t("today"), kind: "today" };
   if (diffDays === 1) return { label: t("yesterday"), kind: "yesterday" };

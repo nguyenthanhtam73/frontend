@@ -800,6 +800,125 @@
       "gaugeClarity": "Sáng & đều",
       "gaugeBarrier": "Lớp bảo vệ da"
     },
+    "streak": {
+      "ariaLabel": "Chuỗi ngày check-in",
+      "loading": "Đang tải chuỗi ngày…",
+      "error": "Không tải được chuỗi ngày lúc này.",
+      "retry": "Thử lại",
+      "currentLabel": "Chuỗi hiện tại",
+      "daysUnit": "ngày",
+      "longestLabel": "Chuỗi dài nhất",
+      "freezesLabel": "Lượt bảo vệ còn lại",
+      "historyLabel": "{n} ngày gần nhất",
+      "historyHint": "Từ khi bạn bắt đầu dùng DaDiary",
+      "historyAria": "Các ngày check-in gần đây",
+      "today": "Hôm nay",
+      "endedHint": "Chuỗi ngày đã kết thúc sau {date}. Check-in để bắt đầu lại.",
+      "status": {
+        "maintaining": "Đang duy trì",
+        "at_risk": "Check-in hôm nay",
+        "at_risk_auto_save": "Bỏ lỡ hôm qua — sẵn sàng tự cứu",
+        "protected": "Đang bảo vệ",
+        "idle": "Check-in để bắt đầu"
+      },
+      "dayState": {
+        "checked": "Đã check-in",
+        "missed": "Bỏ lỡ",
+        "protected": "Đã bảo vệ",
+        "empty": "Chưa có dữ liệu"
+      },
+      "weekday": {
+        "mon": "T2",
+        "tue": "T3",
+        "wed": "T4",
+        "thu": "T5",
+        "fri": "T6",
+        "sat": "T7",
+        "sun": "CN"
+      },
+      "freeze": {
+        "title": "Bảo vệ chuỗi ngày",
+        "contextIdle": "Bỏ lỡ 1 ngày mà còn lượt bảo vệ, check-in ngày sau sẽ tự cứu — hoặc dùng trước khi biết sẽ nghỉ.",
+        "contextManual": "Dùng bảo vệ khi biết sẽ bỏ lỡ — phủ hôm nay hoặc ngày mai.",
+        "contextAutoSave": "Check-in hôm nay, hệ thống sẽ tự dùng 1 lượt bảo vệ để giữ chuỗi ngày.",
+        "remaining": "Còn {n} lần bảo vệ",
+        "exhausted": "Đã hết lượt bảo vệ",
+        "activeUntil": "Đang bảo vệ ngày {date}",
+        "activeBadge": "Đang hiệu lực",
+        "useCta": "Dùng 1 lần bảo vệ",
+        "using": "Đang bảo vệ…",
+        "confirmTitle": "Dùng 1 lần bảo vệ chuỗi ngày?",
+        "confirmBodyToday": "Bạn chưa check-in hôm nay. Dùng 1 lần bảo vệ sẽ phủ {date} (giờ VN) nếu bạn bỏ lỡ. Không hoàn tác được.",
+        "confirmBodyTomorrow": "Bạn đã check-in hôm nay. Dùng 1 lần bảo vệ sẽ phủ {date} (giờ VN) nếu bạn quên. Không hoàn tác được.",
+        "confirmCancel": "Để sau",
+        "confirmOk": "Dùng bảo vệ",
+        "successTitle": "Bạn đã dùng 1 lần bảo vệ",
+        "successBodyToday": "Chuỗi ngày được bảo vệ cho {date}.",
+        "successBodyTomorrow": "Chuỗi ngày được bảo vệ cho {date}.",
+        "autoTitle": "Đã tự động bảo vệ chuỗi ngày",
+        "autoBody": "Bạn đã bỏ lỡ 1 ngày — hệ thống vừa tự dùng 1 lần bảo vệ để giữ chuỗi.",
+        "continuedTitle": "Chuỗi ngày tiếp tục",
+        "continuedBody": "Check-in kịp rồi — chuỗi ngày vẫn được giữ.",
+        "unusedTitle": "Đã check-in — không cần bảo vệ",
+        "unusedBody": "Bạn đã check-in đúng ngày được bảo vệ. Lượt bảo vệ vẫn bị trừ.",
+        "errorTitle": "Không dùng được bảo vệ",
+        "error": "Có lỗi xảy ra. Thử lại nhé.",
+        "block": {
+          "no_freezes": "Bạn đã hết lượt bảo vệ.",
+          "no_streak": "Hãy check-in để bắt đầu chuỗi ngày trước.",
+          "already_protected": "Đang có lượt bảo vệ đang hiệu lực.",
+          "soft_expired": "Chuỗi ngày đã gãy từ trước, không thể dùng bảo vệ nữa.",
+          "catch_up_required": "Check-in hôm nay để hệ thống tự cứu chuỗi ngày.",
+          "bridged_catch_up": "Hôm qua đã được bảo vệ — check-in hôm nay để tiếp tục chuỗi."
+        }
+      },
+      "milestone": {
+        "badge": "Mốc {n} ngày",
+        "daysUnit": "ngày",
+        "continue": "Tiếp tục",
+        "share": {
+          "cta": "Chia sẻ thành tựu",
+          "copy": "Sao chép",
+          "title": "Streak {n} ngày trên DaDiary của mình",
+          "text": "Mình vừa đạt {n} ngày streak trên DaDiary! 🔥 Duy trì chăm da mỗi ngày không dễ đâu. Cùng mình nhé: {url} #DaDiary #SkincareStreak",
+          "copied": "Đã sao chép vào clipboard",
+          "shared": "Cảm ơn bạn đã chia sẻ!",
+          "failed": "Không chia sẻ được — thử sao chép nhé."
+        },
+        "items": {
+          "d3": {
+            "title": "Khởi đầu đẹp!",
+            "body": "Ba ngày liên tiếp — thói quen nhật ký da đang bắt rễ rồi.",
+            "cheer": "3 ngày rồi — phần khó nhất là bắt đầu!"
+          },
+          "d7": {
+            "title": "Trọn một tuần!",
+            "body": "Bảy ngày check-in. Sự đều đặn như thế này mới thấy thay đổi thật.",
+            "cheer": "7 ngày là bước ngoặt rồi đó!"
+          },
+          "d14": {
+            "title": "Hai tuần vững!",
+            "body": "Mười bốn ngày chăm da. Timeline của bạn ngày càng đầy đủ.",
+            "cheer": "Hai tuần — bạn đã vào nhịp rồi!"
+          },
+          "d30": {
+            "title": "Cả một tháng!",
+            "body": "Ba mươi ngày bạn vẫn hiện diện vì làn da — đó là cam kết thật sự.",
+            "cheer": "30 ngày — bạn thật sự kiên trì!"
+          },
+          "d60": {
+            "title": "Hai tháng đồng hành!",
+            "body": "Sáu mươi ngày — bạn đang xây mối quan hệ dài hạn với làn da của mình.",
+            "cheer": "60 ngày chăm da — nhịp độ huyền thoại!"
+          },
+          "d100": {
+            "title": "Streak trăm ngày!",
+            "body": "Một trăm ngày. Đây là sự kiên trì đáng tự hào — hãy ăn mừng!",
+            "cheer": "100 ngày?! Đẳng cấp rồi đó."
+          }
+        }
+      }
+    },
     "beforeAfter": {
       "title": "Trước · Sau",
       "hint": "So ảnh cũ nhất và mới nhất trong khoảng bạn chọn. Cùng ánh sáng & góc giúp so sánh chính xác hơn.",

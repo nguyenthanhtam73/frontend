@@ -6,7 +6,7 @@ import type { SkinCoachScoreGaugesDTO } from "./skin-check";
 
 export type ProgressEntryDTO = {
   id: string;
-  check_date: string; // YYYY-MM-DD (UTC)
+  check_date: string; // YYYY-MM-DD (Vietnam calendar)
   created_at: string; // RFC3339
   title?: string;
   user_note?: string;

@@ -23,6 +23,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
 import { useCheckInFeedback } from "@/components/check-in/use-check-in-feedback";
+import { StreakMilestoneHost } from "@/components/progress/streak-milestone-celebration";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
@@ -630,6 +631,7 @@ export function CheckInForm() {
         </div>
       </div>
 
+      <StreakMilestoneHost />
     </form>
   );
 }

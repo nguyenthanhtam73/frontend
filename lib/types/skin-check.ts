@@ -50,4 +50,16 @@ export type CreateSkinCheckResponseDTO = {
   };
   analysis: SkinAnalysisDTO;
   image_urls: string[];
+  /** Present on POST create when streak was updated (not on GET poll). */
+  streak?: {
+    /** True when the system spent one freeze for a single missed day. */
+    auto_freeze_applied: boolean;
+    /** True when a prior manual freeze bridge was honored (no extra spend). */
+    catch_up_continued?: boolean;
+    /** True when user checked in on a reserved freeze day (inventory kept spent). */
+    unused_freeze_cleared?: boolean;
+    current_streak: number;
+    freezes_available: number;
+    protected_until?: string | null;
+  };
 };

@@ -20,7 +20,9 @@ import { cn } from "@/lib/utils";
 import { ProgressBeforeAfter } from "./progress-before-after";
 import { ProgressEmptyState } from "./progress-empty-state";
 import { ProgressEntryCard } from "./progress-entry-card";
+import { ProgressStreakCard } from "./progress-streak-card";
 import { ProgressSummaryCard } from "./progress-summary-card";
+import { StreakMilestoneHost } from "./streak-milestone-celebration";
 import type { SparklinePoint } from "./progress-sparkline";
 
 const rangeOptions: ProgressRangeKey[] = ["30", "90", "180", "all"];
@@ -131,6 +133,13 @@ export function ProgressTimeline() {
       .map((e) => ({ date: e.check_date, value: e.gauges!.overall as number, entryId: e.id }));
   }, [data]);
 
+  // Check-in days from the loaded timeline — supplemental for mini history.
+  // Streak reconstruct is always the baseline; this set only fills gaps.
+  const checkedDates = useMemo(() => {
+    if (!data?.entries.length) return undefined;
+    return new Set(data.entries.map((e) => e.check_date));
+  }, [data]);
+
   // Which entry card is currently highlighted (after a sparkline click). The
   // timeout ref lets us cancel a pending clear if the user clicks again quickly.
   const [highlightedEntryId, setHighlightedEntryId] = useState<string | null>(null);
@@ -155,6 +164,11 @@ export function ProgressTimeline() {
 
   return (
     <div className="space-y-6">
+      <StreakMilestoneHost />
+
+      {/* Streak lives above the range filter so it stays visible even on empty ranges. */}
+      <ProgressStreakCard checkedDates={checkedDates} historyDays={7} />
+
       <RangeChips active={range} onChange={setRange} busy={loading && Boolean(data)} />
 
       {loading && !data ? <TimelineSkeleton /> : null}
