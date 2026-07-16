@@ -34,6 +34,9 @@ export type ToastOptions = {
   variant?: ToastVariant;
   /** ms before auto-dismiss. Pass `0` or `Infinity` to keep it until dismissed. */
   duration?: number;
+  /** Optional CTA label (e.g. foreground push → Check in). */
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 /** A string is treated as the `title`; otherwise pass full options. */
@@ -45,6 +48,8 @@ export type ToastRecord = {
   description?: string;
   variant: ToastVariant;
   duration: number;
+  actionLabel?: string;
+  onAction?: () => void;
   /** Set while the exit animation plays, just before removal from the DOM. */
   exiting: boolean;
 };
@@ -158,6 +163,8 @@ export function ToastProvider({
         description: opts.description,
         variant: opts.variant ?? "default",
         duration,
+        actionLabel: opts.actionLabel,
+        onAction: opts.onAction,
         exiting: false,
       };
       setToasts((list) => {

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
+import { hasToastHandler, pushToast } from "@/lib/toast-bridge";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------
@@ -66,6 +67,7 @@ const UPDATE_POLL_MS = 60 * 60 * 1000;
  */
 export function PwaRegister() {
   const t = useTranslations("pwa");
+  const tPush = useTranslations("push");
 
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
@@ -101,7 +103,10 @@ export function PwaRegister() {
       try {
         const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
 
-        // Worker that finished installing before this listener attached.
+        // Never silent-activate a waiting worker: skipWaiting + clients.claim
+        // without a reload can briefly mismatch page JS with the new SW
+        // (push/fetch handlers). Surface the update toast instead; Apply sets
+        // pendingReloadRef so controllerchange reloads in lockstep.
         if (reg.waiting && navigator.serviceWorker.controller) {
           setWaitingWorker(reg.waiting);
         }
@@ -144,6 +149,141 @@ export function PwaRegister() {
       if (pollHandle) clearInterval(pollHandle);
     };
   }, []);
+
+  // ---------------------------------------------------------------------
+  // 1b. Service worker → page messages (works in prod + when SW registered for push)
+  // ---------------------------------------------------------------------
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("serviceWorker" in navigator)) return;
+
+    /**
+     * Soft navigate from notificationclick when WindowClient.navigate is
+     * unavailable. Preserves `/en` locale prefix when the SW sends a bare path.
+     */
+    const onPushNavigate = (event: MessageEvent) => {
+      const msg = event.data;
+      if (!msg || msg.type !== "DADIARY_PUSH_NAVIGATE") return;
+      if (msg.alreadyHere) return;
+      let path = typeof msg.url === "string" ? msg.url.trim() : "";
+      if (!path.startsWith("/")) return;
+
+      const first = window.location.pathname.split("/").filter(Boolean)[0];
+      if (first === "en" && path !== "/en" && !path.startsWith("/en/")) {
+        path = `/en${path}`;
+      }
+
+      try {
+        const next = new URL(path, window.location.origin);
+        if (next.origin !== window.location.origin) return;
+        const here = window.location.pathname.replace(/\/+$/, "") || "/";
+        const there = next.pathname.replace(/\/+$/, "") || "/";
+        if (here === there && window.location.search === next.search) return;
+        window.location.assign(next.pathname + next.search + next.hash);
+      } catch {
+        // ignore malformed paths from a stale SW
+      }
+    };
+
+    /**
+     * Foreground push: SW prefers in-app toast (OS tray often suppressed when
+     * focused). We ACK via MessageChannel only after pushToast hands off —
+     * otherwise the SW falls back to showNotification so nothing is silent.
+     */
+    const onPushForeground = (event: MessageEvent) => {
+      const msg = event.data;
+      if (!msg || msg.type !== "DADIARY_PUSH_FOREGROUND") return;
+
+      const ackPort = event.ports?.[0];
+      const ackToastShown = () => {
+        try {
+          ackPort?.postMessage({ type: "DADIARY_PUSH_FOREGROUND_ACK" });
+        } catch {
+          // SW will time out and show OS notification
+        }
+      };
+
+      // No ToastBridge yet — do not ACK; SW shows OS banner.
+      if (!hasToastHandler()) {
+        return;
+      }
+
+      const messageId =
+        typeof msg.messageId === "string" && msg.messageId.trim()
+          ? msg.messageId.trim()
+          : "";
+      if (messageId) {
+        try {
+          const key = "dadiary:last-push-message-id";
+          if (sessionStorage.getItem(key) === messageId) {
+            // Already handled this id — ACK so SW does not also OS-notify.
+            ackToastShown();
+            return;
+          }
+          sessionStorage.setItem(key, messageId);
+        } catch {
+          // private mode — rely on SW single-client post
+        }
+      }
+
+      const title = typeof msg.title === "string" && msg.title.trim() ? msg.title.trim() : "DaDiary";
+      const body = typeof msg.body === "string" ? msg.body.trim() : "";
+      let path = typeof msg.url === "string" ? msg.url.trim() : "/check-in";
+      if (!path.startsWith("/")) path = "/check-in";
+
+      const first = window.location.pathname.split("/").filter(Boolean)[0];
+      if (first === "en" && path !== "/en" && !path.startsWith("/en/")) {
+        path = `/en${path}`;
+      }
+
+      const pushType = typeof msg.pushType === "string" ? msg.pushType : "";
+      const urgent = pushType === "streak_at_risk";
+      // Check-in CTA only for evening reminders; test / other types use Open.
+      const isCheckInPush =
+        pushType === "daily_reminder" ||
+        pushType === "streak_at_risk" ||
+        // Legacy payloads without type still deep-link to check-in.
+        pushType === "";
+
+      const shown = pushToast({
+        variant: urgent ? "warning" : "info",
+        title,
+        description: body || undefined,
+        duration: urgent ? 12000 : 9000,
+        actionLabel: isCheckInPush
+          ? tPush("foregroundCheckInCta")
+          : tPush("foregroundOpenCta"),
+        onAction: () => {
+          try {
+            const next = new URL(path, window.location.origin);
+            if (next.origin !== window.location.origin) return;
+            window.location.assign(next.pathname + next.search + next.hash);
+          } catch {
+            window.location.assign(path);
+          }
+        },
+      });
+
+      if (shown) {
+        ackToastShown();
+      }
+
+      try {
+        sessionStorage.setItem("dadiary:last-push-url", path);
+      } catch {
+        // private mode
+      }
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      onPushNavigate(event);
+      onPushForeground(event);
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+    };
+  }, [tPush]);
 
   // ---------------------------------------------------------------------
   // 2. beforeinstallprompt — defer the native prompt to our own toast
@@ -196,8 +336,9 @@ export function PwaRegister() {
   const handleApplyUpdate = useCallback(() => {
     if (!waitingWorker) return;
     setUpdating(true);
+    // Reload must be armed *before* SKIP_WAITING so activation cannot leave
+    // the tab on old page JS with a new controlling SW.
     pendingReloadRef.current = true;
-    // The SW listens for SKIP_WAITING and activates; controllerchange reloads once.
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
   }, [waitingWorker]);
 

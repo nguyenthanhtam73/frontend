@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import {
   AlertCircle,
   Brain,
@@ -12,9 +12,18 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { useLocale } from "next-intl";
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 
+import { PushNotificationSetting } from "@/components/privacy/push-notification-setting";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +47,7 @@ type ResetStatus =
 
 export function PrivacyControls() {
   const t = useTranslations("privacy");
+  const locale = useLocale();
   const formatter = useFormatter();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -54,18 +64,28 @@ export function PrivacyControls() {
 
   const obClearPhotos = useOnboardingStore((s) => s.clearPhotos);
 
-  const locale = useLocale();
   const [status, setStatus] = useState<ResetStatus>({ kind: "idle" });
   const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [confirmInput, setConfirmInput] = useState("");
 
   const confirmPhrase = locale === "vi" ? "XOÁ" : "DELETE";
   const confirmReady = confirmInput.trim().toUpperCase() === confirmPhrase;
+  const deleteOpen = status.kind === "confirming" || status.kind === "deleting";
 
   const deleteBullets = useMemo(
-    () => [t("deleteBullet1"), t("deleteBullet2"), t("deleteBullet3"), t("deleteBullet4")],
+    () => [
+      t("deleteBullet1"),
+      t("deleteBullet2"),
+      t("deleteBullet3"),
+      t("deleteBullet4"),
+      t("deleteBullet5"),
+    ],
     [t],
   );
+
+  const deletePortalRef = useRef<HTMLDivElement | null>(null);
+  const deleteDialogRef = useRef<HTMLDivElement | null>(null);
+  const deleteTriggerRef = useRef<HTMLElement | null>(null);
 
   const formatTimestamp = useCallback(
     (iso: string | null) => {
@@ -81,6 +101,8 @@ export function PrivacyControls() {
   );
 
   const requestDelete = useCallback(() => {
+    const active = document.activeElement;
+    deleteTriggerRef.current = active instanceof HTMLElement ? active : null;
     setConfirmInput("");
     setStatus({ kind: "confirming" });
     setToast(null);
@@ -91,6 +113,43 @@ export function PrivacyControls() {
     setStatus({ kind: "idle" });
   }, []);
 
+  // Full-page modal (same pattern as push confirm) — inert + Escape, less mis-tap.
+  useLayoutEffect(() => {
+    if (!deleteOpen) return;
+    const portal = deletePortalRef.current;
+    if (!portal) return;
+
+    const inerted: HTMLElement[] = [];
+    for (const child of Array.from(document.body.children)) {
+      if (!(child instanceof HTMLElement) || child === portal) continue;
+      if (child.hasAttribute("inert")) continue;
+      child.setAttribute("inert", "");
+      inerted.push(child);
+    }
+
+    deleteDialogRef.current
+      ?.querySelector<HTMLElement>("#delete-confirm-input")
+      ?.focus();
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && status.kind === "confirming") {
+        e.preventDefault();
+        cancelDelete();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+      for (const el of inerted) el.removeAttribute("inert");
+      const trigger = deleteTriggerRef.current;
+      requestAnimationFrame(() => trigger?.focus?.());
+    };
+  }, [deleteOpen, status.kind, cancelDelete]);
+
   const performDelete = useCallback(async () => {
     setStatus({ kind: "deleting" });
     setToast(null);
@@ -98,6 +157,7 @@ export function PrivacyControls() {
 
     const token = getAccessToken();
     if (!token) {
+      await logout();
       clearLocalUserData();
       markDataReset();
       setStatus({ kind: "ok" });
@@ -107,9 +167,11 @@ export function PrivacyControls() {
     }
 
     try {
+      // Wipe first: push rows deleted in the same server txn. Avoids clearing
+      // push then failing wipe (account alive, no subscription).
       await deleteAllUserData();
+      await logout();
       clearLocalUserData();
-      logout();
       queryClient.removeQueries({ queryKey: wardrobeQueryKey });
       queryClient.removeQueries({ queryKey: ["me", "memory"] });
       queryClient.clear();
@@ -119,8 +181,8 @@ export function PrivacyControls() {
       startTransition(() => router.push("/login"));
     } catch (err) {
       if (err instanceof Error && err.message === "auth") {
+        await logout();
         clearLocalUserData();
-        logout();
         queryClient.clear();
         setStatus({ kind: "auth" });
         return;
@@ -145,9 +207,7 @@ export function PrivacyControls() {
               {t("settingsEyebrow")}
             </p>
             <h2 className="text-lg font-semibold tracking-tight">{t("settingsTitle")}</h2>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {t("settingsSub")}
-            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{t("settingsSub")}</p>
           </div>
         </header>
 
@@ -181,6 +241,8 @@ export function PrivacyControls() {
             text={t("dialogBullet4")}
           />
         </ul>
+
+        <PushNotificationSetting />
 
         <section className="space-y-3 rounded-xl border border-border/70 bg-card p-4">
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
@@ -246,9 +308,7 @@ export function PrivacyControls() {
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0 space-y-0.5">
               <p className="text-sm font-semibold text-destructive">{t("deleteRowTitle")}</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {t("deleteRowSub")}
-              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">{t("deleteRowSub")}</p>
               {dataResetAt ? (
                 <p className="pt-1 text-xs text-muted-foreground">
                   {t("deleteLastReset", { when: formatTimestamp(dataResetAt) })}
@@ -266,80 +326,12 @@ export function PrivacyControls() {
             />
           ) : null}
 
-          {status.kind === "confirming" || status.kind === "deleting" ? (
-            <div
-              role="alertdialog"
-              aria-labelledby="delete-confirm-title"
-              aria-describedby="delete-confirm-body"
-              className="space-y-4 rounded-lg border-2 border-destructive/50 bg-destructive/5 p-4"
-            >
-              <p id="delete-confirm-title" className="text-sm font-semibold text-destructive">
-                {t("deleteConfirmTitle")}
-              </p>
-              <p id="delete-confirm-body" className="text-xs leading-relaxed text-muted-foreground">
-                {t("deleteConfirmBody")}
-              </p>
-              <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
-                {deleteBullets.map((b) => (
-                  <li key={b}>{b}</li>
-                ))}
-              </ul>
-              <p className="text-xs font-medium text-foreground">{t("deleteAccountKept")}</p>
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="delete-confirm-input"
-                  className="text-xs font-medium text-muted-foreground"
-                >
-                  {t("deleteConfirmTypeLabel", { phrase: confirmPhrase })}
-                </label>
-                <input
-                  id="delete-confirm-input"
-                  type="text"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                  value={confirmInput}
-                  onChange={(e) => setConfirmInput(e.target.value)}
-                  disabled={status.kind === "deleting"}
-                  placeholder={confirmPhrase}
-                  className="w-full min-h-11 rounded-xl border border-destructive/40 bg-background px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus-visible:border-destructive focus-visible:ring-[3px] focus-visible:ring-destructive/25"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => void performDelete()}
-                  disabled={status.kind === "deleting" || !confirmReady}
-                >
-                  {status.kind === "deleting" ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                      {t("deleteWorking")}
-                    </>
-                  ) : (
-                    t("deleteConfirmCta")
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={cancelDelete}
-                  disabled={status.kind === "deleting"}
-                >
-                  {t("deleteCancel")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" variant="destructive" onClick={requestDelete}>
-                <Trash2 className="size-4" aria-hidden />
-                {t("deleteCta")}
-              </Button>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="destructive" onClick={requestDelete}>
+              <Trash2 className="size-4" aria-hidden />
+              {t("deleteCta")}
+            </Button>
+          </div>
 
           {status.kind === "ok" && !toast ? (
             <p
@@ -365,11 +357,103 @@ export function PrivacyControls() {
           ) : null}
         </section>
       </CardContent>
+
+      {deleteOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={deletePortalRef}
+              className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center"
+            >
+              <button
+                type="button"
+                aria-label={t("deleteConfirmCloseAria")}
+                className="absolute inset-0 bg-black/50 animate-in fade-in duration-200"
+                onClick={() => {
+                  if (status.kind === "confirming") cancelDelete();
+                }}
+              />
+              <div
+                ref={deleteDialogRef}
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="delete-confirm-title"
+                aria-describedby="delete-confirm-body"
+                className="relative w-full max-w-md space-y-4 rounded-2xl border-2 border-destructive/40 bg-background p-4 shadow-2xl animate-in fade-in-0 slide-in-from-bottom-4 duration-200"
+              >
+                <h2
+                  id="delete-confirm-title"
+                  className="text-sm font-semibold leading-snug text-destructive"
+                >
+                  {t("deleteConfirmTitle")}
+                </h2>
+                <p
+                  id="delete-confirm-body"
+                  className="text-xs leading-relaxed text-muted-foreground"
+                >
+                  {t("deleteConfirmBody")}
+                </p>
+                <ul className="list-inside list-disc space-y-1 text-xs text-muted-foreground">
+                  {deleteBullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+                <p className="text-xs font-medium text-foreground">{t("deleteAccountKept")}</p>
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="delete-confirm-input"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    {t("deleteConfirmTypeLabel", { phrase: confirmPhrase })}
+                  </label>
+                  <input
+                    id="delete-confirm-input"
+                    type="text"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    value={confirmInput}
+                    onChange={(e) => setConfirmInput(e.target.value)}
+                    disabled={status.kind === "deleting"}
+                    placeholder={confirmPhrase}
+                    className="w-full min-h-11 rounded-xl border border-destructive/40 bg-background px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none focus-visible:border-destructive focus-visible:ring-[3px] focus-visible:ring-destructive/25"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => void performDelete()}
+                    disabled={status.kind === "deleting" || !confirmReady}
+                  >
+                    {status.kind === "deleting" ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                        {t("deleteWorking")}
+                      </>
+                    ) : (
+                      t("deleteConfirmCta")
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={cancelDelete}
+                    disabled={status.kind === "deleting"}
+                  >
+                    {t("deleteCancel")}
+                  </Button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </Card>
   );
 }
 
-function PromiseLine({ icon, text }: { icon: React.ReactNode; text: string }) {
+function PromiseLine({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <li className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
       <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">

@@ -28,9 +28,19 @@ export function setToastHandler(fn: ToastHandler | null): void {
   toastHandler = fn;
 }
 
-/** Fire a toast if a handler is registered; otherwise silently drop it. */
-export function pushToast(opts: ToastOptions): void {
-  toastHandler?.(opts);
+/** True when <ToastBridge /> has registered a live dispatcher. */
+export function hasToastHandler(): boolean {
+  return toastHandler != null;
+}
+
+/**
+ * Fire a toast if a handler is registered.
+ * Returns whether the toast was handed off (SW uses this for OS fallback).
+ */
+export function pushToast(opts: ToastOptions): boolean {
+  if (!toastHandler) return false;
+  toastHandler(opts);
+  return true;
 }
 
 export function setNetErrorCopy(copy: Record<NetErrorKind, string>): void {

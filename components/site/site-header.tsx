@@ -135,11 +135,14 @@ export function SiteHeader() {
   const [authReady, setAuthReady] = useState(false);
 
   const signOut = useCallback(() => {
-    logout();
-    queryClient.clear();
-    startTransition(() => {
-      router.push("/login");
-    });
+    void (async () => {
+      // logout() always runs clearPushSubscriptionOnLogout first.
+      await logout();
+      queryClient.clear();
+      startTransition(() => {
+        router.push("/login");
+      });
+    })();
   }, [logout, queryClient, router]);
 
   useEffect(() => {

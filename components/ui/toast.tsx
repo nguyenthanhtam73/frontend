@@ -80,12 +80,26 @@ export function Toast({
     >
       <Icon className={cn("mt-0.5 size-5 shrink-0", iconClass)} aria-hidden />
 
-      <div className="min-w-0 flex-1 space-y-0.5 py-0.5">
-        {toast.title ? (
-          <p className="text-sm font-semibold leading-snug">{toast.title}</p>
-        ) : null}
-        {toast.description ? (
-          <p className="text-xs leading-relaxed text-muted-foreground">{toast.description}</p>
+      <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+        <div className="space-y-0.5">
+          {toast.title ? (
+            <p className="text-sm font-semibold leading-snug">{toast.title}</p>
+          ) : null}
+          {toast.description ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">{toast.description}</p>
+          ) : null}
+        </div>
+        {toast.actionLabel && toast.onAction ? (
+          <button
+            type="button"
+            className="text-xs font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              toast.onAction?.();
+              onClose();
+            }}
+          >
+            {toast.actionLabel}
+          </button>
         ) : null}
       </div>
 
