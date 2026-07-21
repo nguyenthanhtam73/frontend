@@ -6,9 +6,11 @@ import { useFormatter, useTranslations } from "next-intl";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Link } from "@/i18n/navigation";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
-import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +18,8 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
   const t = useTranslations("cabinet");
   const formatter = useFormatter();
   const { hasAuth, products, isLoading, isError, error, refetch, isFetching } = useWardrobe();
-  const { canWardrobeWrite } = useUsageQuota();
+  const wardrobeGate = useFeatureGate(Feature.WardrobeFull);
+  const canWardrobeWrite = wardrobeGate.allowed && !wardrobeGate.locked;
 
   if (!hasAuth) {
     return (
@@ -105,6 +108,11 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
                 <Plus className="size-4" aria-hidden />
                 {t("emptyCta")}
               </Button>
+            ) : null}
+            {wardrobeGate.locked ? (
+              <div className="mx-auto mt-4 max-w-md text-left">
+                <UpsellBanner feature={Feature.WardrobeFull} compact />
+              </div>
             ) : null}
           </div>
         ) : (

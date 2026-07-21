@@ -13,6 +13,7 @@ import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
+import { usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------
@@ -38,6 +39,8 @@ const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const SHOW_DELAY_MS = 900;
 
 export function IosInstallBanner() {
+  const pathname = usePathname();
+  const onPricing = pathname.includes("/pricing");
   const t = useTranslations("iosInstall");
 
   // `mounted` gates the portal until `document.body` exists (SSR safety).
@@ -69,10 +72,15 @@ export function IosInstallBanner() {
 
   return createPortal(
     <>
-      {/* Bottom banner */}
+      {/* Bottom banner — lift above pricing sticky billing on /pricing */}
       <div
-        className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex justify-center sm:left-auto sm:right-4 sm:max-w-sm"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className={cn(
+          "pointer-events-none fixed inset-x-3 z-50 flex justify-center sm:left-auto sm:right-4 sm:max-w-sm",
+          onPricing
+            ? "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] sm:bottom-4"
+            : "bottom-3 sm:bottom-4",
+        )}
+        style={onPricing ? undefined : { paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div
           role="dialog"

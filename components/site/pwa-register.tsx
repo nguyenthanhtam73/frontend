@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
+import { usePathname } from "@/i18n/navigation";
 import { hasToastHandler, pushToast } from "@/lib/toast-bridge";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,9 @@ const UPDATE_POLL_MS = 60 * 60 * 1000;
 export function PwaRegister() {
   const t = useTranslations("pwa");
   const tPush = useTranslations("push");
+  const pathname = usePathname();
+  // Pricing mobile sticky billing (z-60) occupies the bottom — lift toasts above it.
+  const onPricing = pathname.includes("/pricing");
 
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
@@ -357,8 +361,13 @@ export function PwaRegister() {
       <IosInstallBanner />
       {showUpdate || showInstall ? (
         <div
-          className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex flex-col items-stretch gap-2 sm:bottom-4 sm:left-auto sm:right-4 sm:max-w-sm"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          className={cn(
+            "pointer-events-none fixed inset-x-3 z-50 flex flex-col items-stretch gap-2 sm:left-auto sm:right-4 sm:max-w-sm",
+            onPricing
+              ? "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] sm:bottom-4"
+              : "bottom-3 sm:bottom-4",
+          )}
+          style={onPricing ? undefined : { paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           {showUpdate && (
             <ToastShell

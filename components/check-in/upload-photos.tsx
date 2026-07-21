@@ -7,18 +7,27 @@ import {
   ImageIcon,
   ImagePlus,
   Lightbulb,
+  Loader2,
+  Lock,
   RefreshCw,
   Trash2,
   User,
 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
 import {
   CHECKIN_PHOTO_MAX_MB,
   validateCheckInPhoto,
   type PhotoValidationError,
 } from "@/lib/check-in/photo-upload-validation";
+import {
+  isMultiPhotoDisabled,
+  shouldClearAnglePhoto,
+} from "@/lib/premium/advanced-skin-gate";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import { cn } from "@/lib/utils";
 
 export type UploadItem = { file: File; url: string };
@@ -46,7 +55,8 @@ function fileToItem(file: File): UploadItem {
   return { file, url: URL.createObjectURL(file) };
 }
 
-/** Two-slot photo upload: front face + slight angle. Mobile-first + desktop drag-drop. */
+/** Two-slot photo upload: front face + slight angle. Mobile-first + desktop drag-drop.
+ *  Angle / 2nd photo requires Premium+ (`advanced_skin_analysis`). */
 export function UploadPhotos({
   slots,
   onSlotsChange,
@@ -55,9 +65,34 @@ export function UploadPhotos({
   onSlotsChange: (slots: PhotoSlots) => void;
 }) {
   const t = useTranslations("checkIn");
+  const advancedGate = useFeatureGate(Feature.AdvancedSkinAnalysis);
+  // While plan is hydrating: disable multi-photo input but do NOT clear photos.
+  const planHydrating = advancedGate.isLoading;
+  const multiPhotoLocked = shouldClearAnglePhoto(advancedGate);
+  const multiPhotoDisabled = isMultiPhotoDisabled(advancedGate);
   const fileRefs = useRef<(HTMLInputElement | null)[]>([null, null]);
   const [slotErrors, setSlotErrors] = useState<SlotErrors>([null, null]);
+  const [showAdvancedUpsell, setShowAdvancedUpsell] = useState(false);
   const filledCount = (slots[0] ? 1 : 0) + (slots[1] ? 1 : 0);
+
+  const requestAdvancedUpsell = useCallback(() => {
+    setShowAdvancedUpsell(true);
+    requestAnimationFrame(() => {
+      document.getElementById("upsell-advanced-skin")?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  }, []);
+
+  // Drop a 2nd photo only after plan hydrate confirms the feature is locked.
+  // Never clear while isLoading — avoids wiping a Premium+ photo during flash.
+  useEffect(() => {
+    if (!multiPhotoLocked || !slots[1]) return;
+    URL.revokeObjectURL(slots[1].url);
+    onSlotsChange([slots[0], null]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear once when lock + slot[1]
+  }, [multiPhotoLocked, Boolean(slots[1])]);
 
   const errorMessage = useCallback(
     (code: PhotoValidationError) => {
@@ -110,11 +145,22 @@ export function UploadPhotos({
       const files = rawFiles ? Array.from(rawFiles) : [];
       if (files.length === 0) return;
 
+      // Hydrating / Free / Premium: block filling the angle slot (2nd photo).
+      if (multiPhotoDisabled && targetIndex === 1) {
+        if (!planHydrating) requestAdvancedUpsell();
+        return;
+      }
+
       const next: PhotoSlots = [...slots] as PhotoSlots;
       const errors: SlotErrors = [null, null];
       let fileCursor = 0;
+      let blockedSecond = false;
 
       const tryAssign = (index: PhotoSlotIndex, file: File): boolean => {
+        if (multiPhotoDisabled && index === 1) {
+          blockedSecond = true;
+          return false;
+        }
         const code = validateCheckInPhoto(file);
         if (code) {
           errors[index] = errorMessage(code);
@@ -136,10 +182,21 @@ export function UploadPhotos({
         if (fileCursor >= files.length) break;
         if (next[slotIdx] !== null) continue;
         if (!tryAssign(slotIdx, files[fileCursor]!)) {
+          if (multiPhotoDisabled && slotIdx === 1) {
+            blockedSecond = true;
+            break;
+          }
           fileCursor += 1;
           continue;
         }
         fileCursor += 1;
+      }
+
+      if (
+        !planHydrating &&
+        (blockedSecond || (multiPhotoDisabled && files.length > 1))
+      ) {
+        requestAdvancedUpsell();
       }
 
       if (fileCursor < files.length && next[0] && next[1]) {
@@ -156,7 +213,15 @@ export function UploadPhotos({
       });
       onSlotsChange(next);
     },
-    [errorMessage, onSlotsChange, slots, t],
+    [
+      errorMessage,
+      multiPhotoDisabled,
+      onSlotsChange,
+      planHydrating,
+      requestAdvancedUpsell,
+      slots,
+      t,
+    ],
   );
 
   const openPicker = useCallback(
@@ -192,39 +257,72 @@ export function UploadPhotos({
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {([0, 1] as const).map((slotIndex) => (
-          <PhotoSlotCard
-            key={slotIndex}
-            slotIndex={slotIndex}
-            item={slots[slotIndex]}
-            slotError={slotErrors[slotIndex]}
-            label={slotIndex === 0 ? t("photoSlotFront") : t("photoSlotAngle")}
-            addLabel={slotIndex === 0 ? t("photoAddFront") : t("photoAddAngle")}
-            emptyHint={
-              slotIndex === 0 ? t("photoEmptyFront") : t("photoEmptyAngle")
-            }
-            dragHint={t("photoDropHere")}
-            replaceHint={t("photoReplaceHint")}
-            retakeLabel={t("retakePhoto")}
-            removeLabel={t("removePhoto")}
-            retryLabel={t("photoRetrySlot")}
-            cameraLabel={t("photoCapture")}
-            albumLabel={t("photoLibrary")}
-            onPickFront={() => openPicker(slotIndex, "user")}
-            onPickLibrary={() => openPicker(slotIndex)}
-            onRemove={() => assignSlot(slotIndex, null)}
-            onRetake={() =>
-              openPicker(slotIndex, slotIndex === 0 ? "user" : "environment")
-            }
-            onRetry={() => openPicker(slotIndex)}
-            onFilesDrop={(files) => ingestFilesAtSlot(slotIndex, files)}
-            fileInputRef={(el) => {
-              fileRefs.current[slotIndex] = el;
-            }}
-            onFileChange={(files) => ingestFilesAtSlot(slotIndex, files)}
-          />
-        ))}
+        {([0, 1] as const).map((slotIndex) => {
+          if (slotIndex === 1 && planHydrating) {
+            return (
+              <LoadingAngleSlot
+                key={slotIndex}
+                label={t("photoSlotAngle")}
+                loadingLabel={t("photoAnglePlanLoading")}
+              />
+            );
+          }
+          if (slotIndex === 1 && multiPhotoLocked) {
+            return (
+              <LockedAngleSlot
+                key={slotIndex}
+                label={t("photoSlotAngle")}
+                lockedHint={t("photoAngleLockedHint")}
+                ctaLabel={t("photoAngleLockedCta")}
+                onUnlockClick={requestAdvancedUpsell}
+              />
+            );
+          }
+          return (
+            <PhotoSlotCard
+              key={slotIndex}
+              slotIndex={slotIndex}
+              item={slots[slotIndex]}
+              slotError={slotErrors[slotIndex]}
+              label={slotIndex === 0 ? t("photoSlotFront") : t("photoSlotAngle")}
+              addLabel={slotIndex === 0 ? t("photoAddFront") : t("photoAddAngle")}
+              emptyHint={
+                slotIndex === 0 ? t("photoEmptyFront") : t("photoEmptyAngle")
+              }
+              dragHint={t("photoDropHere")}
+              replaceHint={t("photoReplaceHint")}
+              retakeLabel={t("retakePhoto")}
+              removeLabel={t("removePhoto")}
+              retryLabel={t("photoRetrySlot")}
+              cameraLabel={t("photoCapture")}
+              albumLabel={t("photoLibrary")}
+              onPickFront={() => openPicker(slotIndex, "user")}
+              onPickLibrary={() => openPicker(slotIndex)}
+              onRemove={() => assignSlot(slotIndex, null)}
+              onRetake={() =>
+                openPicker(slotIndex, slotIndex === 0 ? "user" : "environment")
+              }
+              onRetry={() => openPicker(slotIndex)}
+              onFilesDrop={(files) => ingestFilesAtSlot(slotIndex, files)}
+              fileInputRef={(el) => {
+                fileRefs.current[slotIndex] = el;
+              }}
+              onFileChange={(files) => ingestFilesAtSlot(slotIndex, files)}
+              allowMultiple={!multiPhotoDisabled}
+            />
+          );
+        })}
       </div>
+
+      {showAdvancedUpsell && multiPhotoLocked ? (
+        <UpsellBanner
+          id="upsell-advanced-skin"
+          feature={Feature.AdvancedSkinAnalysis}
+          hideWhenAllowed={false}
+          compact
+          onDismiss={() => setShowAdvancedUpsell(false)}
+        />
+      ) : null}
 
       {filledCount > 0 ? (
         <p className="text-center text-xs text-muted-foreground">
@@ -233,6 +331,62 @@ export function UploadPhotos({
           {t("photoCountHint")}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+function LoadingAngleSlot({
+  label,
+  loadingLabel,
+}: {
+  label: string;
+  loadingLabel: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <SlotLabel label={label} recommended={false} />
+      <div
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+        className="flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted/30 px-3 py-4 text-center sm:min-h-[12rem]"
+      >
+        <span className="inline-flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-sm ring-1 ring-border/60">
+          <Loader2 className="size-5 animate-spin" aria-hidden />
+        </span>
+        <span className="text-sm font-medium text-foreground">{loadingLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function LockedAngleSlot({
+  label,
+  lockedHint,
+  ctaLabel,
+  onUnlockClick,
+}: {
+  label: string;
+  lockedHint: string;
+  ctaLabel: string;
+  onUnlockClick: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <SlotLabel label={label} recommended={false} />
+      <button
+        type="button"
+        onClick={onUnlockClick}
+        className="flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 px-3 py-4 text-center transition-colors hover:border-amber-400 hover:bg-amber-50/70 dark:border-amber-500/35 dark:bg-amber-950/20 dark:hover:bg-amber-950/35 sm:min-h-[12rem]"
+      >
+        <span className="inline-flex size-11 items-center justify-center rounded-full bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200/80 dark:bg-amber-900/50 dark:text-amber-200 dark:ring-amber-500/30">
+          <Lock className="size-5" aria-hidden />
+        </span>
+        <span className="text-sm font-medium text-foreground">{ctaLabel}</span>
+        <span className="max-w-[14rem] text-xs leading-snug text-muted-foreground">
+          {lockedHint}
+        </span>
+      </button>
     </div>
   );
 }
@@ -259,6 +413,7 @@ function PhotoSlotCard({
   onFilesDrop,
   fileInputRef,
   onFileChange,
+  allowMultiple = true,
 }: {
   slotIndex: PhotoSlotIndex;
   item: UploadItem | null;
@@ -281,6 +436,8 @@ function PhotoSlotCard({
   onFilesDrop: (files: FileList | null) => void;
   fileInputRef: (el: HTMLInputElement | null) => void;
   onFileChange: (files: FileList | null) => void;
+  /** When false, file picker accepts a single image (Free / Premium). */
+  allowMultiple?: boolean;
 }) {
   const isFront = slotIndex === 0;
   const [dragOver, setDragOver] = useState(false);
@@ -423,7 +580,7 @@ function PhotoSlotCard({
           ref={fileInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
-          multiple
+          multiple={allowMultiple}
           className="sr-only"
           onChange={(e) => {
             onFileChange(e.target.files);
@@ -507,7 +664,7 @@ function PhotoSlotCard({
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
-        multiple
+        multiple={allowMultiple}
         className="sr-only"
         onChange={(e) => {
           if (e.target.files?.length) triggerReplaceFlash();

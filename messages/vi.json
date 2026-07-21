@@ -57,6 +57,26 @@
     "adminFeedbacks": {
       "title": "Quản lý góp ý · DaDiary Admin",
       "description": "Xem và xử lý feedback từ người dùng Beta."
+    },
+    "adminUsers": {
+      "title": "Quản lý gói Premium · DaDiary Admin",
+      "description": "Tìm user và grant/revoke Premium hoặc Premium+ cho test nội bộ."
+    },
+    "pricingPage": {
+      "title": "Bảng giá · DaDiary",
+      "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
+    },
+    "paymentSuccess": {
+      "title": "Thanh toán thành công · DaDiary",
+      "description": "Gói Premium của bạn đã được kích hoạt."
+    },
+    "paymentError": {
+      "title": "Thanh toán thất bại · DaDiary",
+      "description": "Không hoàn tất được thanh toán — thử lại hoặc liên hệ hỗ trợ."
+    },
+    "paymentCancel": {
+      "title": "Đã hủy thanh toán · DaDiary",
+      "description": "Bạn đã hủy thanh toán. Có thể nâng cấp lại bất cứ lúc nào."
     }
   },
   "auth": {
@@ -103,8 +123,10 @@
       "checkIn": "Ghi nhật ký da",
       "routine": "Chăm da sáng tối",
       "howItWorks": "Cách hoạt động",
+      "pricing": "Bảng giá",
       "feedback": "Gửi góp ý",
-      "adminFeedbacks": "Quản lý góp ý"
+      "adminFeedbacks": "Quản lý góp ý",
+      "adminUsers": "Quản lý gói"
     },
     "footer": {
       "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
@@ -410,6 +432,9 @@
     "photoRetrySlot": "Thử lại",
     "photoReplaceHint": "Thả để thay ảnh",
     "photoDropTooMany": "Chỉ tối đa 2 ảnh — bỏ bớt file hoặc thay từng ô.",
+    "photoAngleLockedCta": "Mở khóa ảnh nửa nghiêng",
+    "photoAngleLockedHint": "Phân tích đa góc (2 ảnh) chỉ có trên Premium+.",
+    "photoAnglePlanLoading": "Đang kiểm tra gói…",
     "modeTogglePhoto": "Chụp ảnh",
     "modeToggleSkip": "Bỏ chụp ảnh",
     "skipModeActiveTitle": "Chế độ không chụp ảnh",
@@ -668,12 +693,174 @@
   },
   "premium": {
     "cta": "Nâng cấp Premium ngay",
-    "quotaSuggestTitle": "Đã hết lượt gợi ý AI tháng này ({limit} lần)",
-    "quotaSuggestBody": "Nâng cấp Premium để nhận gợi ý AI không giới hạn.",
+    "dismiss": "Đóng",
+    "quotaSuggestTitle": "Đã hết lượt gợi ý AI tháng này",
+    "quotaSuggestBody": "Bạn đã hết lượt gợi ý AI tháng này. Nâng cấp Premium để dùng không giới hạn.",
     "quotaEditTitle": "Đã hết lượt chỉnh routine tháng này",
-    "quotaEditBody": "Bạn đã dùng hết {limit} lần chỉnh tay trong tháng — vẫn có thể tick hoàn thành bình thường. Premium cho phép chỉnh sửa không giới hạn.",
+    "quotaEditBody": "Bạn đã dùng hết {limit} lần chỉnh tay trong tháng — vẫn tick hoàn thành bình thường. Nâng cấp Premium để chỉnh sửa không giới hạn.",
     "wardrobeTitle": "Tủ đồ đang khóa",
-    "wardrobeBody": "Gói Free chỉ xem. Nâng cấp Premium để thêm và chỉnh sửa sản phẩm trong tủ đồ."
+    "wardrobeBody": "Nâng cấp Premium để thêm & quản lý tủ đồ skincare của bạn.",
+    "progressTitle": "Lịch sử Progress bị giới hạn",
+    "progressBody": "Gói Free xem được 3 tháng gần nhất. Premium mở 12 tháng; Premium+ xem toàn bộ lịch sử.",
+    "advancedTitle": "Phân tích da nâng cao",
+    "advancedBody": "Multi-angle, deep memory và early access chỉ có trên Premium+.",
+    "exportTitle": "Xuất dữ liệu",
+    "exportBody": "Nâng cấp Premium để xuất nhật ký và bộ nhớ AI của bạn.",
+    "milestoneTitle": "Cột mốc đầy đủ",
+    "milestoneBody": "Premium mở toàn bộ cột mốc và lịch sử thành tích chăm da.",
+    "genericTitle": "Nâng cấp để mở khóa",
+    "genericBody": "Tính năng này nằm trong gói Premium hoặc Premium+."
+  },
+  "pricing": {
+    "heroTitle": "Mở khóa toàn bộ",
+    "heroTitleAccent": "AI Coach & Tủ đồ",
+    "heroSub": "Chăm da đều đặn hơn với gợi ý AI không giới hạn, tủ đồ đầy đủ và lịch sử tiến trình dài hơn — chọn gói phù hợp nhịp sống của bạn.",
+    "mostPopular": "Phổ biến nhất",
+    "upgradeCta": "Nâng cấp ngay",
+    "currentPlanBadge": "Gói hiện tại",
+    "currentPlanCta": "Đang dùng gói này",
+    "currentPlanLine": "Bạn đang dùng gói {plan}",
+    "continueFreeCta": "Tiếp tục dùng Free",
+    "waitlistCta": "Xin quyền nâng cấp sớm",
+    "downgradeCta": "Đã có gói cao hơn",
+    "freePrice": "Miễn phí",
+    "perMonth": "/tháng",
+    "billedMonthly": "Thanh toán theo tháng, hủy bất cứ lúc nào.",
+    "billedYearly": "Thanh toán {amount}/năm — tiết kiệm gần 30%.",
+    "yearlyHint": "Đang xem giá năm — tiết kiệm khoảng {percent}%.",
+    "monthlyHint": "Chuyển sang Thanh toán năm để tiết kiệm gần 30%.",
+    "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (sandbox trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
+    "checkout": {
+      "redirecting": "Đang chuyển đến thanh toán…",
+      "errorTitle": "Không mở được thanh toán",
+      "errorAuth": "Đăng nhập để nâng cấp gói Premium.",
+      "errorUnavailable": "Cổng thanh toán tạm thời chưa sẵn sàng. Thử lại sau nhé.",
+      "errorInvalid": "Thông tin gói không hợp lệ. Chọn lại gói và thử lại.",
+      "errorNetwork": "Mạng gián đoạn — kiểm tra kết nối và thử lại.",
+      "errorServer": "Máy chủ đang bận. Thử lại sau ít phút.",
+      "errorGeneric": "Không tạo được phiên thanh toán. Thử lại nhé."
+    },
+    "toggle": {
+      "aria": "Chu kỳ thanh toán",
+      "monthly": "Theo tháng",
+      "yearly": "Theo năm",
+      "saveBadge": "−{percent}%"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "tagline": "Bắt đầu nhật ký da",
+        "blurb": "Đủ để check-in mỗi ngày, tick routine và cảm nhận nhịp chăm da.",
+        "cta": "Dùng miễn phí",
+        "features": {
+          "f1": "Check-in da + coach AI sau mỗi lần ghi",
+          "f2": "3 gợi ý routine AI / tháng",
+          "f3": "5 lần chỉnh tay routine / tháng",
+          "f4": "Xem tủ đồ & Progress 3 tháng gần nhất"
+        }
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "AI Coach không giới hạn",
+        "blurb": "Mở khóa toàn bộ AI Coach & Tủ đồ — dành cho người muốn chăm da đều và chỉnh routine tự do.",
+        "features": {
+          "f1": "Gợi ý AI & chỉnh routine không giới hạn",
+          "f2": "Tủ đồ đầy đủ — thêm & quản lý sản phẩm",
+          "f3": "Progress 12 tháng + cột mốc đầy đủ",
+          "f4": "Xuất dữ liệu & trải nghiệm không quảng cáo",
+          "f5": "Ưu tiên cải tiến từ feedback Beta"
+        }
+      },
+      "premium_plus": {
+        "name": "Premium+",
+        "tagline": "Chăm da sâu hơn",
+        "blurb": "Tất cả của Premium, cộng phân tích nâng cao, deep memory và early access tính năng mới.",
+        "features": {
+          "f1": "Mọi quyền lợi Premium",
+          "f2": "Phân tích da nâng cao (multi-angle)",
+          "f3": "Deep memory — coach nhớ ngữ cảnh lâu hơn",
+          "f4": "Lịch sử Progress không giới hạn",
+          "f5": "Early access tính năng mới trước"
+        }
+      }
+    },
+    "compare": {
+      "title": "So sánh chi tiết",
+      "subtitle": "Ba gói, một mục tiêu: giúp bạn chăm da rõ ràng và đều đặn hơn.",
+      "caption": "Bảng so sánh tính năng Free, Premium và Premium+",
+      "scrollHint": "Vuốt ngang để xem đủ 3 gói",
+      "scrollLeft": "Cuộn bảng sang trái",
+      "scrollRight": "Cuộn bảng sang phải",
+      "popularCol": "Phổ biến",
+      "featureCol": "Tính năng",
+      "rows": {
+        "aiSuggest": "Gợi ý routine AI",
+        "editRoutine": "Chỉnh tay routine",
+        "wardrobe": "Tủ đồ chăm da",
+        "progress": "Lịch sử Progress",
+        "milestones": "Cột mốc thành tích",
+        "export": "Xuất dữ liệu",
+        "noAds": "Không quảng cáo",
+        "advanced": "Phân tích da nâng cao"
+      },
+      "values": {
+        "quota3": "3 / tháng",
+        "quota5": "5 / tháng",
+        "unlimited": "Không giới hạn",
+        "viewOnly": "Chỉ xem",
+        "full": "Đầy đủ",
+        "months3": "3 tháng",
+        "months12": "12 tháng",
+        "allTime": "Toàn bộ",
+        "basic": "Cơ bản",
+        "yes": "Có",
+        "no": "Không"
+      }
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "subtitle": "Ngắn gọn — để bạn chọn gói mà không bị rối.",
+      "q1": {
+        "question": "Free có dùng được AI Coach không?",
+        "answer": "Có. Free vẫn nhận coach sau check-in. Gói trả phí mở thêm gợi ý routine không giới hạn, chỉnh tay thoải mái và tủ đồ đầy đủ."
+      },
+      "q2": {
+        "question": "Thanh toán năm tiết kiệm bao nhiêu?",
+        "answer": "Khoảng 28% so với trả tháng. Bạn vẫn thấy giá quy đổi theo tháng để dễ so sánh."
+      },
+      "q3": {
+        "question": "Premium và Premium+ khác nhau chỗ nào?",
+        "answer": "Premium mở AI không giới hạn, tủ đồ và Progress 12 tháng. Premium+ thêm phân tích nâng cao, deep memory, lịch sử không giới hạn và early access."
+      },
+      "q4": {
+        "question": "Có thể đổi gói hoặc hủy sau không?",
+        "answer": "Bạn có thể nâng cấp ngay qua SePay. Hủy / đổi chu kỳ sẽ bổ sung khi billing production ổn định — trong Beta hãy gửi feedback nếu cần hỗ trợ."
+      }
+    }
+  },
+  "payment": {
+    "refreshing": "Đang cập nhật gói của bạn…",
+    "activatingTitle": "Đang kích hoạt gói…",
+    "activatingBody": "Thanh toán đã ghi nhận. Hệ thống đang mở quyền Premium — thường chỉ mất vài giây.",
+    "pendingTitle": "Đang chờ kích hoạt",
+    "pendingBody": "Thanh toán có thể đã thành công nhưng gói chưa kịp cập nhật. Bấm thử lại, hoặc vào trang chính rồi refresh sau ít phút.",
+    "retryActivate": "Kiểm tra lại gói",
+    "redirectIn": "Chuyển đến trang chính sau {seconds}s…",
+    "goDashboard": "Vào trang chính",
+    "backPricing": "Quay lại bảng giá",
+    "contactSupport": "Gửi góp ý / hỗ trợ",
+    "success": {
+      "title": "Nâng cấp thành công!",
+      "body": "Cảm ơn bạn. Gói Premium đã được kích hoạt — tận hưởng AI Coach không giới hạn và các tính năng đã mở khóa."
+    },
+    "error": {
+      "title": "Thanh toán chưa thành công",
+      "body": "Giao dịch không hoàn tất hoặc bị từ chối. Bạn có thể thử lại từ bảng giá — chưa bị trừ tiền nếu chưa xác nhận."
+    },
+    "cancel": {
+      "title": "Đã hủy thanh toán",
+      "body": "Bạn đã rời trang thanh toán. Không sao — quay lại bảng giá bất cứ lúc nào khi sẵn sàng nâng cấp."
+    }
   },
   "cabinet": {
     "sectionLabel": "Tủ đồ chăm da",
@@ -783,6 +970,17 @@
       "180": "6 tháng",
       "all": "Toàn bộ"
     },
+    "rangeLockedHint": "Gói Free xem tối đa 3 tháng — nâng cấp Premium để mở rộng",
+    "export": {
+      "cta": "Xuất dữ liệu",
+      "exporting": "Đang xuất…",
+      "lockedHint": "Nâng cấp Premium để xuất nhật ký và bộ nhớ AI",
+      "successTitle": "Đã tải file xuất",
+      "successBody": "Đã lưu {filename} trên thiết bị của bạn.",
+      "errorTitle": "Không xuất được",
+      "errorBody": "Có lỗi xảy ra. Thử lại sau nhé.",
+      "needAuth": "Đăng nhập để xuất dữ liệu của bạn."
+    },
     "summary": {
       "sectionLabel": "Tóm tắt tháng này",
       "headlineUp": "Tháng này điểm tổng tăng {pct} so với tháng trước — đẹp lắm!",
@@ -876,6 +1074,17 @@
         "badge": "Mốc {n} ngày",
         "daysUnit": "ngày",
         "continue": "Tiếp tục",
+        "list": {
+          "title": "Cột mốc thành tích",
+          "sub": "Các mốc streak bạn đã đạt — Premium mở danh sách đầy đủ.",
+          "ariaLabel": "Danh sách cột mốc streak",
+          "viewFull": "Xem danh sách đầy đủ",
+          "showBasic": "Chỉ xem mốc cơ bản",
+          "lockedHint": "Nâng cấp Premium để mở toàn bộ cột mốc",
+          "reached": "Đã đạt",
+          "premiumBadge": "Premium",
+          "remaining": "Còn {n} mốc với Premium"
+        },
         "share": {
           "cta": "Chia sẻ thành tựu",
           "copy": "Sao chép",
@@ -1848,6 +2057,54 @@
       "new": "Mới",
       "read": "Đã đọc",
       "resolved": "Đã xử lý"
+    }
+  },
+  "adminUsers": {
+    "sectionLabel": "Admin",
+    "title": "Quản lý gói Premium",
+    "sub": "Grant / revoke Premium & Premium+ cho test nội bộ. Mọi thay đổi đều được ghi log.",
+    "linkFeedbacks": "← Quản lý góp ý",
+    "authLoading": "Đang tải quyền admin…",
+    "needAuth": "Đăng nhập để truy cập trang quản trị.",
+    "signIn": "Đăng nhập",
+    "forbidden": "Bạn không có quyền truy cập trang này.",
+    "loadError": "Không tải được danh sách người dùng.",
+    "detailError": "Không tải được lịch sử đổi gói.",
+    "empty": "Không tìm thấy user phù hợp.",
+    "resultCount": "{n} người dùng",
+    "searchLabel": "Tìm user",
+    "searchPlaceholder": "Email, username hoặc tên hiển thị…",
+    "colUser": "User",
+    "colEmail": "Email",
+    "colPlan": "Gói",
+    "colCreated": "Tạo lúc",
+    "colActions": "Thao tác",
+    "adminBadge": "admin",
+    "manageCta": "Đổi gói",
+    "prevPage": "Trước",
+    "nextPage": "Sau",
+    "pageOf": "Trang {page} / {total}",
+    "detailTitle": "Chi tiết user",
+    "currentPlan": "Gói hiện tại",
+    "changePlan": "Đổi sang gói",
+    "reasonLabel": "Lý do (tuỳ chọn)",
+    "reasonPlaceholder": "VD: QA test Premium+",
+    "recentChanges": "Lịch sử đổi gói gần đây",
+    "noChanges": "Chưa có thay đổi nào.",
+    "applyPlan": "Áp dụng",
+    "close": "Đóng",
+    "confirmTitle": "Xác nhận đổi gói?",
+    "confirmBody": "Đổi gói của {email} từ {from} → {to}. Thay đổi này được ghi log.",
+    "confirmCta": "Xác nhận",
+    "cancel": "Huỷ",
+    "saving": "Đang lưu…",
+    "planUpdated": "Đã cập nhật gói thành {plan}.",
+    "planError": "Không đổi được gói — thử lại.",
+    "planUnchanged": "User đã ở gói này rồi.",
+    "plans": {
+      "free": "Free",
+      "premium": "Premium",
+      "premium_plus": "Premium+"
     }
   }
 }

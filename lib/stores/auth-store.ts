@@ -17,7 +17,9 @@ export type AuthUser = {
   avatar_url?: string;
   provider?: string;
   is_active?: boolean;
-  plan_tier?: "free" | "premium" | string;
+  plan_tier?: "free" | "premium" | "premium_plus" | string;
+  /** RFC3339 when paid plan ends; omitted for Free / lifetime admin grants. */
+  plan_expires_at?: string;
   is_admin?: boolean;
   created_at?: string;
 };

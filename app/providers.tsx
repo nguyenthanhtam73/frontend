@@ -7,6 +7,7 @@ import { useState, type ReactNode } from "react";
 import { ToastBridge } from "@/components/site/toast-bridge";
 import { Toaster } from "@/components/ui/toaster";
 import { ToastProvider } from "@/hooks/use-toast";
+import { PlanTierProvider } from "@/lib/premium/plan-tier-context";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -24,7 +25,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             ToastBridge lets the plain api-client raise toasts too. */}
         <ToastProvider position="top-right">
           <ToastBridge />
-          {children}
+          <PlanTierProvider>{children}</PlanTierProvider>
           <Toaster />
         </ToastProvider>
       </ThemeProvider>

@@ -15,7 +15,7 @@ import {
   fetchAdminFeedbacks,
   updateAdminFeedbackStatus,
 } from "@/lib/api/feedback";
-import { getAccessToken } from "@/lib/auth-token";
+import { useAdminGate } from "@/lib/hooks/use-admin-gate";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import type { FeedbackStatus, FeedbackType } from "@/lib/types/feedback";
 import { FEEDBACK_STATUSES, FEEDBACK_TYPES } from "@/lib/types/feedback";
@@ -26,12 +26,12 @@ const selectClass =
 
 export function FeedbacksAdminView() {
   const t = useTranslations("adminFeedbacks");
+  const tUsers = useTranslations("adminUsers");
   const formatter = useFormatter();
   const toast = useToast();
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const hasAuth = !!user || !!getAccessToken();
-  const isAdmin = !!user?.is_admin;
+  const { hasAuth, isAdmin, authPending } = useAdminGate();
 
   const [typeFilter, setTypeFilter] = useState<FeedbackType | "">("");
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | "">("");
@@ -50,7 +50,7 @@ export function FeedbacksAdminView() {
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: adminFeedbacksQueryKey(query),
     queryFn: () => fetchAdminFeedbacks(query),
-    enabled: hasAuth && isAdmin,
+    enabled: !authPending && hasAuth && isAdmin,
     retry: false,
   });
 
@@ -70,7 +70,22 @@ export function FeedbacksAdminView() {
     },
   });
 
-  if (!hasAuth) {
+  if (authPending) {
+    return (
+      <Card className="border-border/70">
+        <CardContent className="space-y-3 p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            {tUsers("authLoading")}
+          </div>
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!user) {
     return (
       <Card className="border-dashed border-primary/25">
         <CardContent className="space-y-3 p-6">

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { logAffiliateClick, type AffiliateClickSource } from "@/lib/api/affiliate";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
 
 type ProductSuggestionsLabels = {
@@ -45,6 +47,7 @@ export function ProductSuggestionsCard({
   maxVisible?: number;
 }) {
   const t = useTranslations("productSuggestions");
+  const noAds = useFeatureGate(Feature.NoAds);
   const [expanded, setExpanded] = useState(false);
 
   const items = useMemo(
@@ -52,6 +55,8 @@ export function ProductSuggestionsCard({
     [suggestions],
   );
 
+  // Premium / Premium+ (no_ads): never render affiliate suggestion strips.
+  if (noAds.allowed) return null;
   if (items.length === 0) return null;
 
   const L: ProductSuggestionsLabels = {

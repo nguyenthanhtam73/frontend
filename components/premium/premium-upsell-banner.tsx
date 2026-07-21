@@ -10,7 +10,7 @@ export function PremiumUpsellBanner({
   title,
   body,
   cta,
-  ctaHref = "/register",
+  ctaHref = "/pricing",
   className,
   compact,
   primaryCta = true,

@@ -1,15 +1,21 @@
 "use client";
 
+import { usePlanTier } from "@/lib/premium/plan-tier-context";
+import { normalizePlanTier } from "@/lib/premium/features";
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchUsageQuota, usageQueryKey } from "@/lib/api/usage";
 import { getAccessToken } from "@/lib/auth-token";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
-/** Monthly free-plan quotas + premium gates (wardrobe write, routine limits). */
+/**
+ * Monthly quotas + premium gates.
+ * Prefer `useFeatureGate(Feature.*)` for new UI; this hook stays for existing callers.
+ */
 export function useUsageQuota() {
   const user = useAuthStore((s) => s.user);
   const hasAuth = !!user || !!getAccessToken();
+  const plan = usePlanTier();
 
   const query = useQuery({
     queryKey: usageQueryKey,
@@ -20,19 +26,19 @@ export function useUsageQuota() {
   });
 
   const data = query.data;
-  const isPremium = data?.is_premium ?? user?.plan_tier === "premium";
+  const isPremium = data?.is_premium ?? plan.isPremium;
 
   return {
     ...query,
     isPremium,
-    canWardrobeWrite: isPremium || (data?.wardrobe?.can_write ?? false),
+    isPremiumPlus: data?.is_premium_plus ?? plan.isPremiumPlus,
+    planTier: normalizePlanTier(data?.plan_tier ?? plan.planTier),
+    canWardrobeWrite: plan.canWardrobeWrite,
     routineSuggest: data?.routine_suggest,
     routineManualEdit: data?.routine_manual_edit,
-    canRoutineSuggest:
-      isPremium || (data?.routine_suggest?.remaining ?? 0) > 0 || data?.routine_suggest?.unlimited,
-    canRoutineManualEdit:
-      isPremium ||
-      (data?.routine_manual_edit?.remaining ?? 0) > 0 ||
-      data?.routine_manual_edit?.unlimited,
+    canRoutineSuggest: plan.canRoutineSuggest,
+    canRoutineManualEdit: plan.canRoutineManualEdit,
+    progressHistoryMonths: data?.progress_history_months ?? plan.progressHistoryMonths,
+    features: data?.features ?? plan.features,
   };
 }

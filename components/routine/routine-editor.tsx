@@ -9,9 +9,10 @@ import {
   type RoutineCategory,
   type RoutineStepDTO,
 } from "@/lib/types/routine";
-import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
+import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { ToastBanner } from "@/components/ui/toast-banner";
-import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 
@@ -80,30 +81,35 @@ export function RoutineEditor() {
   const suggest = useRoutineSuggest(locale, skillMode ?? null);
   const [suggestToastDismissed, setSuggestToastDismissed] = useState(false);
   const { setSkillModeRef } = r;
-  const usage = useUsageQuota();
-  const editLocked = !usage.isPremium && !usage.canRoutineManualEdit;
-  const suggestDisabled = !usage.isPremium && !usage.canRoutineSuggest;
 
-  const editQuotaLabel = usage.isPremium
+  const suggestGate = useFeatureGate(Feature.AIRoutineSuggestion);
+  const editGate = useFeatureGate(Feature.EditRoutine);
+  const suggestDisabled = suggestGate.locked;
+  const editLocked = editGate.locked;
+
+  const editLimit = editGate.limit > 0 ? editGate.limit : 5;
+  const suggestLimit = suggestGate.limit > 0 ? suggestGate.limit : 3;
+
+  const editQuotaLabel = editGate.isPremium
     ? undefined
-    : usage.routineManualEdit
+    : !editGate.isLoading
       ? t("quotaManualEdit", {
-          used: usage.routineManualEdit.used,
-          limit: usage.routineManualEdit.limit,
+          used: editGate.used,
+          limit: editLimit,
         })
       : undefined;
 
-  const suggestQuotaLabel = usage.isPremium
+  const suggestQuotaLabel = suggestGate.isPremium
     ? t("premiumUnlimited")
-    : usage.routineSuggest
+    : !suggestGate.isLoading
       ? t("quotaSuggest", {
-          used: usage.routineSuggest.used,
-          limit: usage.routineSuggest.limit,
+          used: suggestGate.used,
+          limit: suggestLimit,
         })
       : undefined;
 
-  const editLimit = usage.routineManualEdit?.limit ?? 5;
-  const suggestLimit = usage.routineSuggest?.limit ?? 3;
+  const suggestUpsellRef = useRef<HTMLDivElement>(null);
+  const editUpsellRef = useRef<HTMLDivElement>(null);
 
   function resolveEditExceeded() {
     return t("quotaEditExceeded", { limit: editLimit });
@@ -213,8 +219,18 @@ export function RoutineEditor() {
   const [suggestQuotaEngaged, setSuggestQuotaEngaged] = useState(false);
   const [applyHintsToast, setApplyHintsToast] = useState<string | null>(null);
   const engageValidation = useCallback(() => setValidationEngaged(true), []);
-  const engageEditQuota = useCallback(() => setEditQuotaEngaged(true), []);
-  const engageSuggestQuota = useCallback(() => setSuggestQuotaEngaged(true), []);
+  const engageEditQuota = useCallback(() => {
+    setEditQuotaEngaged(true);
+    requestAnimationFrame(() => {
+      editUpsellRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
+  const engageSuggestQuota = useCallback(() => {
+    setSuggestQuotaEngaged(true);
+    requestAnimationFrame(() => {
+      suggestUpsellRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
 
   const validationLabels = useMemo(
     () => ({
@@ -365,27 +381,6 @@ export function RoutineEditor() {
         }}
       />
 
-      {!usage.isPremium && (suggestDisabled || editLocked) && (suggestQuotaEngaged || editQuotaEngaged) ? (
-        <PremiumUpsellBanner
-          title={
-            suggestDisabled && suggestQuotaEngaged
-              ? tPremium("quotaSuggestTitle", { limit: suggestLimit })
-              : tPremium("quotaEditTitle")
-          }
-          body={
-            suggestDisabled && suggestQuotaEngaged
-              ? tPremium("quotaSuggestBody")
-              : tPremium("quotaEditBody", { limit: editLimit })
-          }
-          cta={tPremium("cta")}
-          onDismiss={() => {
-            setSuggestQuotaEngaged(false);
-            setEditQuotaEngaged(false);
-          }}
-          dismissLabel={t("dismiss")}
-        />
-      ) : null}
-
       {r.fresh ? (
         <EmptyHero
           beginnerSimple={beginnerSimple}
@@ -440,6 +435,19 @@ export function RoutineEditor() {
           closeError: t("dismiss"),
         }}
       />
+
+      {suggestDisabled ? (
+        <div ref={suggestUpsellRef}>
+          <UpsellBanner
+            id="upsell-ai-routine-suggestion"
+            feature={Feature.AIRoutineSuggestion}
+            compact={!suggestQuotaEngaged}
+            onDismiss={
+              suggestQuotaEngaged ? () => setSuggestQuotaEngaged(false) : undefined
+            }
+          />
+        </div>
+      ) : null}
 
       {suggest.suggesting ? (
         <AiSuggestLoading
@@ -702,6 +710,17 @@ export function RoutineEditor() {
         />
       ) : null}
 
+      {editLocked ? (
+        <div ref={editUpsellRef}>
+          <UpsellBanner
+            id="upsell-edit-routine"
+            feature={Feature.EditRoutine}
+            compact={!editQuotaEngaged}
+            onDismiss={editQuotaEngaged ? () => setEditQuotaEngaged(false) : undefined}
+          />
+        </div>
+      ) : null}
+
       {!r.routine.saved || r.saving || r.autoSaving || savedFlash ? (
       <SaveBar
         saving={r.saving}
@@ -721,7 +740,10 @@ export function RoutineEditor() {
         onSave={() => {
           setSaveAttempted(true);
           engageValidation();
-          if (editLocked) engageEditQuota();
+          if (editLocked) {
+            engageEditQuota();
+            return;
+          }
           void r.save(skillMode);
         }}
         labels={{

@@ -27,6 +27,9 @@ export async function SiteFooter() {
           <Link className="hover:text-foreground" href="/progress">
             {tNav("progress")}
           </Link>
+          <Link className="hover:text-foreground" href="/pricing">
+            {tNav("pricing")}
+          </Link>
           <Link className="hover:text-foreground" href="/check-in">
             {tNav("checkIn")}
           </Link>

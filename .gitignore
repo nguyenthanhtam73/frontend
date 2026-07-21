@@ -34,7 +34,15 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.e2e
 !.env.example
+!.env.e2e.example
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # vercel — keep project link in git; ignore pulled env files
 .vercel/*

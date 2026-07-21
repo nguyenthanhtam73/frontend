@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-envelope";
 import { getAccessToken } from "@/lib/auth-token";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type {
   ProgressRangeKey,
   ProgressTimelineDTO,
@@ -20,12 +23,22 @@ import { cn } from "@/lib/utils";
 import { ProgressBeforeAfter } from "./progress-before-after";
 import { ProgressEmptyState } from "./progress-empty-state";
 import { ProgressEntryCard } from "./progress-entry-card";
+import { ProgressExportButton } from "./progress-export-button";
+import { ProgressMilestonesCard } from "./progress-milestones-card";
 import { ProgressStreakCard } from "./progress-streak-card";
 import { ProgressSummaryCard } from "./progress-summary-card";
 import { StreakMilestoneHost } from "./streak-milestone-celebration";
 import type { SparklinePoint } from "./progress-sparkline";
 
 const rangeOptions: ProgressRangeKey[] = ["30", "90", "180", "all"];
+
+/** Free plan: Progress history capped at ~3 months (90 days). */
+const FREE_LOCKED_RANGES: ReadonlySet<ProgressRangeKey> = new Set(["180", "all"]);
+
+function isRangeLockedForPlan(range: ProgressRangeKey, isPremium: boolean): boolean {
+  if (isPremium) return false;
+  return FREE_LOCKED_RANGES.has(range);
+}
 
 /** ProgressTimeline — client-only orchestrator for /progress.
  *
@@ -36,10 +49,24 @@ const rangeOptions: ProgressRangeKey[] = ["30", "90", "180", "all"];
  *    - Compose summary hero + Before-After + per-entry timeline list. */
 export function ProgressTimeline() {
   const t = useTranslations("progress");
+  const progressGate = useFeatureGate(Feature.ProgressFullHistory);
   const [range, setRange] = useState<ProgressRangeKey>("30");
+  const [historyUpsell, setHistoryUpsell] = useState(false);
   const [data, setData] = useState<ProgressTimelineDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  const handleRangeChange = useCallback(
+    (next: ProgressRangeKey) => {
+      if (isRangeLockedForPlan(next, progressGate.isPremium)) {
+        setHistoryUpsell(true);
+        return;
+      }
+      setHistoryUpsell(false);
+      setRange(next);
+    },
+    [progressGate.isPremium],
+  );
   // Whether the user has EVER checked in (any time), used to pick the right empty
   // state. `null` = not yet determined. A single ranged query can't tell a brand
   // new user apart from an empty range, so we resolve this via an all-time probe.
@@ -169,7 +196,26 @@ export function ProgressTimeline() {
       {/* Streak lives above the range filter so it stays visible even on empty ranges. */}
       <ProgressStreakCard checkedDates={checkedDates} historyDays={7} />
 
-      <RangeChips active={range} onChange={setRange} busy={loading && Boolean(data)} />
+      <ProgressMilestonesCard />
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <RangeChips
+          active={range}
+          onChange={handleRangeChange}
+          busy={loading && Boolean(data)}
+          isPremium={progressGate.isPremium}
+        />
+        <ProgressExportButton />
+      </div>
+      {historyUpsell && !progressGate.isPremium ? (
+        <UpsellBanner
+          id="upsell-progress-history"
+          feature={Feature.ProgressFullHistory}
+          hideWhenAllowed={false}
+          compact
+          onDismiss={() => setHistoryUpsell(false)}
+        />
+      ) : null}
 
       {loading && !data ? <TimelineSkeleton /> : null}
 
@@ -189,7 +235,7 @@ export function ProgressTimeline() {
         // encouraging first-time copy; it upgrades to "range" once history is found.
         <ProgressEmptyState
           mode={everCheckedIn ? "range" : "first"}
-          onViewAll={() => setRange("all")}
+          onViewAll={() => handleRangeChange("all")}
         />
       ) : null}
 
@@ -236,10 +282,12 @@ function RangeChips({
   active,
   onChange,
   busy = false,
+  isPremium = false,
 }: {
   active: ProgressRangeKey;
   onChange: (r: ProgressRangeKey) => void;
   busy?: boolean;
+  isPremium?: boolean;
 }) {
   const t = useTranslations("progress.range");
   const tProgress = useTranslations("progress");
@@ -252,25 +300,35 @@ function RangeChips({
         role="radiogroup"
         aria-label={tProgress("rangeAriaLabel")}
       >
-        {rangeOptions.map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            role="radio"
-            aria-checked={opt === active}
-            disabled={busy}
-            onClick={() => onChange(opt)}
-            className={cn(
-              "min-h-9 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
-              opt === active
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-              busy && "opacity-70",
-            )}
-          >
-            {t(opt)}
-          </button>
-        ))}
+        {rangeOptions.map((opt) => {
+          const locked = isRangeLockedForPlan(opt, isPremium);
+          return (
+            <button
+              key={opt}
+              type="button"
+              role="radio"
+              aria-checked={opt === active}
+              aria-disabled={locked || busy}
+              disabled={busy}
+              title={locked ? tProgress("rangeLockedHint") : undefined}
+              onClick={() => onChange(opt)}
+              className={cn(
+                "min-h-9 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors",
+                opt === active
+                  ? "border-primary bg-primary/10 text-primary"
+                  : locked
+                    ? "border-dashed border-border/80 text-muted-foreground/70 hover:border-amber-300/60 hover:bg-amber-50/50 hover:text-foreground dark:hover:bg-amber-950/20"
+                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                busy && "opacity-70",
+              )}
+            >
+              <span className="inline-flex items-center gap-1">
+                {t(opt)}
+                {locked ? <Lock className="size-3 opacity-70" aria-hidden /> : null}
+              </span>
+            </button>
+          );
+        })}
       </div>
       {busy ? (
         <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden />

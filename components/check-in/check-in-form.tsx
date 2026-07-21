@@ -288,6 +288,11 @@ export function CheckInForm() {
               showError(t("photoErrorModeration"));
             } else if (errCode === "missing_images" && skipFaceCapture) {
               showError(t("submitErrorMissingImages"));
+            } else if (
+              res.status === 403 &&
+              (errCode === "feature_denied" || errCode === "premium_required")
+            ) {
+              showError(t("photoAngleLockedHint"));
             } else if (res.status >= 500 || res.status === 0) {
               showError(t("submitErrorNetwork"));
             } else {

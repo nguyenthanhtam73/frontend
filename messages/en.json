@@ -57,6 +57,26 @@
     "adminFeedbacks": {
       "title": "Manage feedback · DaDiary Admin",
       "description": "Review and triage user feedback during Beta."
+    },
+    "adminUsers": {
+      "title": "Manage Premium plans · DaDiary Admin",
+      "description": "Search users and grant or revoke Premium / Premium+ for internal testing."
+    },
+    "pricingPage": {
+      "title": "Pricing · DaDiary",
+      "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
+    },
+    "paymentSuccess": {
+      "title": "Payment successful · DaDiary",
+      "description": "Your Premium plan is now active."
+    },
+    "paymentError": {
+      "title": "Payment failed · DaDiary",
+      "description": "We couldn't complete your payment — try again or contact support."
+    },
+    "paymentCancel": {
+      "title": "Payment cancelled · DaDiary",
+      "description": "You cancelled checkout. You can upgrade anytime."
     }
   },
   "auth": {
@@ -103,8 +123,10 @@
       "checkIn": "Skin check-in",
       "routine": "Morning & evening",
       "howItWorks": "How it works",
+      "pricing": "Pricing",
       "feedback": "Send feedback",
-      "adminFeedbacks": "Manage feedback"
+      "adminFeedbacks": "Manage feedback",
+      "adminUsers": "Manage plans"
     },
     "footer": {
       "tagline": "Your skin diary · AI Coach · progress & before/after",
@@ -410,6 +432,9 @@
     "photoRetrySlot": "Try again",
     "photoReplaceHint": "Drop to replace",
     "photoDropTooMany": "Max 2 photos — remove a file or replace one slot at a time.",
+    "photoAngleLockedCta": "Unlock angle photo",
+    "photoAngleLockedHint": "Multi-angle analysis (2 photos) is available on Premium+.",
+    "photoAnglePlanLoading": "Checking your plan…",
     "modeTogglePhoto": "Take photos",
     "modeToggleSkip": "Skip photos",
     "skipModeActiveTitle": "No-photo mode",
@@ -668,12 +693,174 @@
   },
   "premium": {
     "cta": "Upgrade to Premium now",
-    "quotaSuggestTitle": "You've used all {limit} AI suggestions this month",
-    "quotaSuggestBody": "Upgrade to Premium for unlimited AI skincare suggestions.",
+    "dismiss": "Dismiss",
+    "quotaSuggestTitle": "You've used all AI suggestions this month",
+    "quotaSuggestBody": "You've used all AI suggestions this month. Upgrade to Premium for unlimited access.",
     "quotaEditTitle": "Routine edit limit reached this month",
-    "quotaEditBody": "You've used all {limit} manual edits this month — ticking steps still works. Premium allows unlimited edits.",
+    "quotaEditBody": "You've used all {limit} manual edits this month — ticking steps still works. Upgrade to Premium for unlimited edits.",
     "wardrobeTitle": "Your shelf is locked",
-    "wardrobeBody": "Free plan is view-only. Upgrade to Premium to add and edit products in your shelf."
+    "wardrobeBody": "Upgrade to Premium to add and manage your skincare shelf.",
+    "progressTitle": "Progress history is limited",
+    "progressBody": "Free includes the last 3 months. Premium unlocks 12 months; Premium+ unlocks your full history.",
+    "advancedTitle": "Advanced skin analysis",
+    "advancedBody": "Multi-angle captures, deep memory, and early access are available on Premium+.",
+    "exportTitle": "Export your data",
+    "exportBody": "Upgrade to Premium to export your diary and AI memory.",
+    "milestoneTitle": "Full milestones",
+    "milestoneBody": "Premium unlocks the complete milestone and achievement history.",
+    "genericTitle": "Upgrade to unlock",
+    "genericBody": "This feature is included with Premium or Premium+."
+  },
+  "pricing": {
+    "heroTitle": "Unlock your full",
+    "heroTitleAccent": "AI Coach & shelf",
+    "heroSub": "Stay consistent with unlimited AI guidance, a complete skincare shelf, and longer progress history — pick the plan that fits your self-care rhythm.",
+    "mostPopular": "Most popular",
+    "upgradeCta": "Upgrade now",
+    "currentPlanBadge": "Current plan",
+    "currentPlanCta": "Your current plan",
+    "currentPlanLine": "You're on {plan}",
+    "continueFreeCta": "Continue with Free",
+    "waitlistCta": "Request early upgrade",
+    "downgradeCta": "You already have a higher plan",
+    "freePrice": "Free",
+    "perMonth": "/month",
+    "billedMonthly": "Billed monthly. Cancel anytime.",
+    "billedYearly": "Billed {amount}/year — save nearly 30%.",
+    "yearlyHint": "Yearly pricing — about {percent}% off.",
+    "monthlyHint": "Switch to yearly billing to save nearly 30%.",
+    "legalNote": "Prices shown in VND. Payments run through SePay (sandbox during Beta). After a successful payment, Premium activates automatically.",
+    "checkout": {
+      "redirecting": "Redirecting to checkout…",
+      "errorTitle": "Couldn't start checkout",
+      "errorAuth": "Sign in to upgrade to Premium.",
+      "errorUnavailable": "Checkout is temporarily unavailable. Please try again later.",
+      "errorInvalid": "That plan selection isn't valid. Pick a plan and try again.",
+      "errorNetwork": "Network issue — check your connection and retry.",
+      "errorServer": "Our servers are busy. Try again in a few minutes.",
+      "errorGeneric": "Couldn't create a checkout session. Please try again."
+    },
+    "toggle": {
+      "aria": "Billing interval",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "saveBadge": "−{percent}%"
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "tagline": "Start your skin diary",
+        "blurb": "Enough to check in daily, tick routines, and feel your care rhythm.",
+        "cta": "Start free",
+        "features": {
+          "f1": "Skin check-ins + AI coach after each entry",
+          "f2": "3 AI routine suggestions / month",
+          "f3": "5 manual routine edits / month",
+          "f4": "View shelf & last 3 months of Progress"
+        }
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "Unlimited AI Coach",
+        "blurb": "Unlock the full AI Coach & shelf — for anyone who wants freer routines and steadier care.",
+        "features": {
+          "f1": "Unlimited AI suggestions & routine edits",
+          "f2": "Full shelf — add and manage products",
+          "f3": "12 months of Progress + full milestones",
+          "f4": "Data export & an ad-free experience",
+          "f5": "Priority on Beta feedback improvements"
+        }
+      },
+      "premium_plus": {
+        "name": "Premium+",
+        "tagline": "Deeper skin care",
+        "blurb": "Everything in Premium, plus advanced analysis, deep memory, and early access to new features.",
+        "features": {
+          "f1": "Everything in Premium",
+          "f2": "Advanced skin analysis (multi-angle)",
+          "f3": "Deep memory — richer long-term coach context",
+          "f4": "Unlimited Progress history",
+          "f5": "Early access to new features"
+        }
+      }
+    },
+    "compare": {
+      "title": "Compare plans",
+      "subtitle": "Three tiers, one goal: clearer, steadier skincare.",
+      "caption": "Feature comparison for Free, Premium, and Premium+",
+      "scrollHint": "Swipe sideways to see all 3 plans",
+      "scrollLeft": "Scroll comparison table left",
+      "scrollRight": "Scroll comparison table right",
+      "popularCol": "Popular",
+      "featureCol": "Feature",
+      "rows": {
+        "aiSuggest": "AI routine suggestions",
+        "editRoutine": "Manual routine edits",
+        "wardrobe": "Skincare shelf",
+        "progress": "Progress history",
+        "milestones": "Milestones",
+        "export": "Data export",
+        "noAds": "No ads",
+        "advanced": "Advanced skin analysis"
+      },
+      "values": {
+        "quota3": "3 / month",
+        "quota5": "5 / month",
+        "unlimited": "Unlimited",
+        "viewOnly": "View only",
+        "full": "Full access",
+        "months3": "3 months",
+        "months12": "12 months",
+        "allTime": "All time",
+        "basic": "Basic",
+        "yes": "Yes",
+        "no": "No"
+      }
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Short answers so choosing a plan stays simple.",
+      "q1": {
+        "question": "Does Free include the AI Coach?",
+        "answer": "Yes. Free still gets coaching after check-ins. Paid plans unlock unlimited routine suggestions, freer edits, and a full shelf."
+      },
+      "q2": {
+        "question": "How much do I save on yearly billing?",
+        "answer": "About 28% versus paying month to month. We still show the monthly equivalent so comparison stays easy."
+      },
+      "q3": {
+        "question": "What's the difference between Premium and Premium+?",
+        "answer": "Premium unlocks unlimited AI, the full shelf, and 12 months of Progress. Premium+ adds advanced analysis, deep memory, unlimited history, and early access."
+      },
+      "q4": {
+        "question": "Can I change or cancel later?",
+        "answer": "You can upgrade now via SePay. Cancel / change billing cycles will land when production billing is stable — send feedback in Beta if you need help."
+      }
+    }
+  },
+  "payment": {
+    "refreshing": "Updating your plan…",
+    "activatingTitle": "Activating your plan…",
+    "activatingBody": "Payment received. We're unlocking Premium — this usually takes just a few seconds.",
+    "pendingTitle": "Still activating",
+    "pendingBody": "Payment may have succeeded but your plan hasn't updated yet. Retry, or go home and refresh in a minute.",
+    "retryActivate": "Check plan again",
+    "redirectIn": "Taking you to the app in {seconds}s…",
+    "goDashboard": "Go to home",
+    "backPricing": "Back to pricing",
+    "contactSupport": "Send feedback / get help",
+    "success": {
+      "title": "Upgrade successful!",
+      "body": "Thanks — your Premium plan is active. Enjoy unlimited AI Coach and the features you unlocked."
+    },
+    "error": {
+      "title": "Payment didn't go through",
+      "body": "The transaction failed or was declined. You can try again from pricing — you won't be charged if payment wasn't confirmed."
+    },
+    "cancel": {
+      "title": "Payment cancelled",
+      "body": "You left checkout. No worries — come back to pricing anytime you're ready to upgrade."
+    }
   },
   "cabinet": {
     "sectionLabel": "Skincare shelf",
@@ -783,6 +970,17 @@
       "180": "6 months",
       "all": "All time"
     },
+    "rangeLockedHint": "Free plan includes up to 3 months — upgrade to Premium for longer history",
+    "export": {
+      "cta": "Export data",
+      "exporting": "Exporting…",
+      "lockedHint": "Upgrade to Premium to export your diary and AI memory",
+      "successTitle": "Export downloaded",
+      "successBody": "Saved {filename} to your device.",
+      "errorTitle": "Export failed",
+      "errorBody": "Something went wrong. Please try again.",
+      "needAuth": "Sign in to export your data."
+    },
     "summary": {
       "sectionLabel": "This month",
       "headlineUp": "Overall score is up {pct} vs last month — keep going!",
@@ -876,6 +1074,17 @@
         "badge": "{n}-day milestone",
         "daysUnit": "days",
         "continue": "Keep going",
+        "list": {
+          "title": "Streak milestones",
+          "sub": "Milestones you've earned — Premium unlocks the full list.",
+          "ariaLabel": "Streak milestone list",
+          "viewFull": "View full list",
+          "showBasic": "Show basic only",
+          "lockedHint": "Upgrade to Premium for the full milestone catalog",
+          "reached": "Reached",
+          "premiumBadge": "Premium",
+          "remaining": "{n} more milestones with Premium"
+        },
         "share": {
           "cta": "Share achievement",
           "copy": "Copy text",
@@ -1848,6 +2057,54 @@
       "new": "New",
       "read": "Read",
       "resolved": "Resolved"
+    }
+  },
+  "adminUsers": {
+    "sectionLabel": "Admin",
+    "title": "Manage Premium plans",
+    "sub": "Grant or revoke Premium & Premium+ for internal testing. Every change is logged.",
+    "linkFeedbacks": "← Manage feedback",
+    "authLoading": "Checking admin access…",
+    "needAuth": "Sign in to access the admin page.",
+    "signIn": "Sign in",
+    "forbidden": "You do not have permission to access this page.",
+    "loadError": "Could not load users.",
+    "detailError": "Could not load plan change history.",
+    "empty": "No users match your search.",
+    "resultCount": "{n} users",
+    "searchLabel": "Search users",
+    "searchPlaceholder": "Email, username, or display name…",
+    "colUser": "User",
+    "colEmail": "Email",
+    "colPlan": "Plan",
+    "colCreated": "Created",
+    "colActions": "Actions",
+    "adminBadge": "admin",
+    "manageCta": "Change plan",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "pageOf": "Page {page} / {total}",
+    "detailTitle": "User detail",
+    "currentPlan": "Current plan",
+    "changePlan": "Change to",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "e.g. QA Premium+ test",
+    "recentChanges": "Recent plan changes",
+    "noChanges": "No changes yet.",
+    "applyPlan": "Apply",
+    "close": "Close",
+    "confirmTitle": "Confirm plan change?",
+    "confirmBody": "Change {email} from {from} → {to}. This action is logged.",
+    "confirmCta": "Confirm",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "planUpdated": "Plan updated to {plan}.",
+    "planError": "Could not update plan — try again.",
+    "planUnchanged": "User already has this plan.",
+    "plans": {
+      "free": "Free",
+      "premium": "Premium",
+      "premium_plus": "Premium+"
     }
   }
 }

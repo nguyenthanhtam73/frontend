@@ -7,9 +7,10 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
-import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
+import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { useToast } from "@/hooks/use-toast";
-import { useUsageQuota } from "@/lib/hooks/use-usage-quota";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 
 const CATEGORY_IDS = [
   "cleanser",
@@ -27,11 +28,9 @@ const inputClass =
 
 export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?: string }) {
   const t = useTranslations("cabinet");
-  const tPremium = useTranslations("premium");
   const formRef = useRef<HTMLFormElement>(null);
   const { hasAuth, createProduct, isCreating } = useWardrobe();
-  const { canWardrobeWrite, isPremium, isLoading: usageLoading, isFetched: usageReady } =
-    useUsageQuota();
+  const wardrobeGate = useFeatureGate(Feature.WardrobeFull);
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState<string>("");
@@ -43,6 +42,9 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
+    if (wardrobeGate.locked) {
+      return;
+    }
     if (!name.trim()) {
       setFormError(t("nameRequired"));
       return;
@@ -89,17 +91,31 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
     );
   }
 
-  if (!usageLoading && usageReady && !canWardrobeWrite && !isPremium) {
+  if (wardrobeGate.isLoading) {
+    return (
+      <Card id={formId}>
+        <CardContent className="space-y-3 p-5 sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            {t("addSub")}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (wardrobeGate.locked) {
     return (
       <Card id={formId} className="opacity-95">
         <CardContent className="space-y-4 p-5 sm:p-6">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
+            <p className="text-sm text-muted-foreground">{t("addSub")}</p>
           </div>
-          <PremiumUpsellBanner
-            title={tPremium("wardrobeTitle")}
-            body={tPremium("wardrobeBody")}
-            cta={tPremium("cta")}
+          <UpsellBanner
+            id="upsell-wardrobe-full"
+            feature={Feature.WardrobeFull}
           />
         </CardContent>
       </Card>
