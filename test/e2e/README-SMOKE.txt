@@ -22,4 +22,4 @@ What is covered
 - /me/usage feature gates (wardrobe, AI unlimited, export)
 - /payment/cancel + /payment/error
 - Webhook idempotency (replay)
-- Expiry → effective Free (needs E2E_SECRET)
+- Past grace expiry → effective Free (needs E2E_SECRET; force expiry ≥4d ago)

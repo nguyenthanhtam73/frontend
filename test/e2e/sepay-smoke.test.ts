@@ -202,15 +202,18 @@ test.describe("SePay sandbox smoke", () => {
     });
     await waitForPlanTier(request, session.accessToken, "premium");
 
-    // Force plan_expires_at into the past while leaving stored tier as premium.
-    const past = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    // Force plan_expires_at past the grace window (default 3d) while leaving
+    // stored tier as premium. Inside grace, EffectivePlanTier still returns Premium.
+    const pastGrace = new Date(
+      Date.now() - 4 * 24 * 60 * 60 * 1000,
+    ).toISOString();
     await forcePlan(request, {
       email: session.email,
       planTier: "premium",
-      planExpiresAt: past,
+      planExpiresAt: pastGrace,
     });
 
-    // EffectivePlanTier must expose Free on /me immediately (no cron wait).
+    // Past grace → Free on /me immediately (no cron wait).
     const me = await fetchMe(request, session.accessToken);
     expect(me.plan_tier || "free").toBe("free");
 

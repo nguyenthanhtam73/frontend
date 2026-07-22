@@ -50,9 +50,15 @@ export function BillingToggle({
         label={
           <span className="inline-flex items-center justify-center gap-1.5">
             {t("yearly")}
+            {/* Solid chip: white/dark on active teal, primary ink when idle — avoids washed accent text */}
             <Badge
-              variant="success"
-              className="px-1.5 py-0 text-[10px] font-semibold leading-none"
+              variant="outline"
+              className={cn(
+                "border-transparent px-1.5 py-0 text-[10px] font-bold leading-none",
+                value === "yearly"
+                  ? "bg-primary-foreground text-primary"
+                  : "bg-primary/15 text-primary",
+              )}
             >
               {t("saveBadge", { percent: YEARLY_SAVE_PERCENT })}
             </Badge>

@@ -62,6 +62,10 @@
       "title": "Manage Premium plans · DaDiary Admin",
       "description": "Search users and grant or revoke Premium / Premium+ for internal testing."
     },
+    "adminPayments": {
+      "title": "Payment metrics · DaDiary Admin",
+      "description": "Today’s revenue, success rate, and upcoming Premium expiries."
+    },
     "pricingPage": {
       "title": "Pricing · DaDiary",
       "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
@@ -126,7 +130,8 @@
       "pricing": "Pricing",
       "feedback": "Send feedback",
       "adminFeedbacks": "Manage feedback",
-      "adminUsers": "Manage plans"
+      "adminUsers": "Manage plans",
+      "adminPayments": "Payments"
     },
     "footer": {
       "tagline": "Your skin diary · AI Coach · progress & before/after",
@@ -720,15 +725,31 @@
     "currentPlanBadge": "Current plan",
     "currentPlanCta": "Your current plan",
     "currentPlanLine": "You're on {plan}",
+    "daysLeftLine": "About {days} days of Premium left (including grace).",
+    "graceLine": "You're in the grace period — about {days} days left.",
+    "cancel": {
+      "cta": "Cancel plan",
+      "alreadyCanceled": "You've canceled — Premium stays active until the end of this period.",
+      "confirmTitle": "Cancel Premium?",
+      "confirmBody": "You'll keep Premium until the end of your billing period (plus a short grace window). After that your account returns to Free. You can upgrade again anytime.",
+      "confirmKeep": "Keep plan",
+      "confirmCancel": "Confirm cancel",
+      "confirming": "Canceling…",
+      "successTitle": "Plan canceled",
+      "successBody": "Premium remains active until the end of this period. Thanks for using DaDiary.",
+      "errorTitle": "Couldn't cancel plan",
+      "errorNotActive": "There's no active Premium subscription to cancel.",
+      "errorGeneric": "Something went wrong while canceling. Please try again."
+    },
     "continueFreeCta": "Continue with Free",
-    "waitlistCta": "Request early upgrade",
     "downgradeCta": "You already have a higher plan",
     "freePrice": "Free",
     "perMonth": "/month",
     "billedMonthly": "Billed monthly. Cancel anytime.",
-    "billedYearly": "Billed {amount}/year — save nearly 30%.",
+    "billedYearly": "Billed {amount}/year — save about {percent}%.",
     "yearlyHint": "Yearly pricing — about {percent}% off.",
-    "monthlyHint": "Switch to yearly billing to save nearly 30%.",
+    "monthlyHint": "Switch to yearly billing to save about {percent}%.",
+    "trustLine": "Pay via SePay — your plan activates automatically after a successful payment.",
     "legalNote": "Prices shown in VND. Payments run through SePay (sandbox during Beta). After a successful payment, Premium activates automatically.",
     "checkout": {
       "redirecting": "Redirecting to checkout…",
@@ -834,7 +855,7 @@
       },
       "q4": {
         "question": "Can I change or cancel later?",
-        "answer": "You can upgrade now via SePay. Cancel / change billing cycles will land when production billing is stable — send feedback in Beta if you need help."
+        "answer": "You can upgrade now via SePay. If you're already on Premium, cancel anytime on this page — you keep access until the end of your billing period (plus a short grace window). Switch monthly/yearly when you pay again; send feedback in Beta if you need extra help."
       }
     }
   },
@@ -2105,6 +2126,50 @@
       "free": "Free",
       "premium": "Premium",
       "premium_plus": "Premium+"
+    }
+  },
+  "adminPayments": {
+    "sectionLabel": "Admin",
+    "title": "Payment metrics",
+    "sub": "Today’s checkout health (UTC), Premium subscribers, and upcoming expiries. Metrics refresh about every minute.",
+    "linkUsers": "← Manage plans",
+    "linkFeedbacks": "Manage feedback",
+    "loadError": "Could not load payment metrics.",
+    "cards": {
+      "revenue": "Revenue today",
+      "revenueHint": "Paid checkouts created today (UTC)",
+      "successRate": "Success rate",
+      "successRateHint": "{n} checkouts today",
+      "activePremium": "Active Premium",
+      "webhookErrors": "{n} webhook errors (24h)",
+      "failed": "Failed today",
+      "asOf": "As of {time}"
+    },
+    "recentTitle": "Recent payments",
+    "recentSub": "Newest SePay checkout orders. Filter by status.",
+    "statusFilter": "Status",
+    "loadingTable": "Loading payments…",
+    "empty": "No payment orders match this filter.",
+    "resultCount": "{n} orders",
+    "upcomingTitle": "Upcoming expiries (7 days)",
+    "upcomingSub": "Paid plans whose plan_expires_at falls in the next week.",
+    "upcomingEmpty": "No expiries in the next 7 days.",
+    "col": {
+      "invoice": "Invoice",
+      "plan": "Plan",
+      "amount": "Amount",
+      "status": "Status",
+      "created": "Created",
+      "email": "Email",
+      "expires": "Expires"
+    },
+    "statuses": {
+      "all": "All",
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
     }
   }
 }

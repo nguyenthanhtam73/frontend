@@ -8,7 +8,7 @@ import { useSessionStore } from "@/lib/stores/session-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { setLocalPushEnabled } from "@/lib/web-push";
 
-/** Mirrors backend `dto.UserPublic`. */
+/** Mirrors backend `dto.UserPublic` (+ subscription lifecycle from GET /me). */
 export type AuthUser = {
   id: string;
   email: string;
@@ -18,8 +18,24 @@ export type AuthUser = {
   provider?: string;
   is_active?: boolean;
   plan_tier?: "free" | "premium" | "premium_plus" | string;
-  /** RFC3339 when paid plan ends; omitted for Free / lifetime admin grants. */
+  /** RFC3339 when paid/trial period ends (before grace). */
   plan_expires_at?: string;
+  subscription_status?:
+    | "none"
+    | "trialing"
+    | "active"
+    | "canceled"
+    | "past_due"
+    | "expired"
+    | string;
+  trial_ends_at?: string;
+  canceled_at?: string;
+  grace_ends_at?: string;
+  /** Days until access ends (incl. grace). -1 = lifetime. */
+  days_left?: number;
+  in_grace?: boolean;
+  cancel_at_period_end?: boolean;
+  eligible_for_trial?: boolean;
   is_admin?: boolean;
   created_at?: string;
 };

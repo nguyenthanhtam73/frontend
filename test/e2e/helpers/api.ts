@@ -34,6 +34,13 @@ export type MeUser = {
   email: string;
   plan_tier?: string;
   plan_expires_at?: string;
+  subscription_status?: string;
+  days_left?: number;
+  in_grace?: boolean;
+  cancel_at_period_end?: boolean;
+  trial_ends_at?: string;
+  canceled_at?: string;
+  grace_ends_at?: string;
 };
 
 export type UsageQuota = {

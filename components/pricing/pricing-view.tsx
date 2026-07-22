@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { BillingToggle } from "@/components/pricing/billing-toggle";
+import { CancelSubscriptionButton } from "@/components/pricing/cancel-subscription-button";
 import { PricingCompare } from "@/components/pricing/pricing-compare";
 import { PricingFaq } from "@/components/pricing/pricing-faq";
 import { PricingPlanCard } from "@/components/pricing/pricing-plan-card";
 import { useSePayCheckout } from "@/lib/hooks/use-sepay-checkout";
 import { getAccessToken } from "@/lib/auth-token";
-import { normalizePlanTier } from "@/lib/premium/features";
+import { isPaidPlan, normalizePlanTier } from "@/lib/premium/features";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
 import type { BillingInterval } from "@/lib/premium/pricing";
 import { YEARLY_SAVE_PERCENT } from "@/lib/premium/pricing";
@@ -27,6 +28,8 @@ export function PricingView() {
   const currentPlan = isLoggedIn
     ? normalizePlanTier(planSnap.planTier ?? user?.plan_tier)
     : null;
+  const showCancel =
+    isLoggedIn && currentPlan != null && isPaidPlan(currentPlan);
 
   return (
     <div className="relative overflow-x-clip">
@@ -49,22 +52,39 @@ export function PricingView() {
             {t("heroSub")}
           </p>
           {isLoggedIn && currentPlan ? (
-            <p className="text-sm font-medium text-primary/90">
-              {t("currentPlanLine", {
-                plan: t(`plans.${currentPlan}.name`),
-              })}
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-primary/90">
+                {t("currentPlanLine", {
+                  plan: t(`plans.${currentPlan}.name`),
+                })}
+              </p>
+              {user?.days_left != null && user.days_left >= 0 && isPaidPlan(currentPlan) ? (
+                <p className="text-xs text-muted-foreground">
+                  {user.in_grace
+                    ? t("graceLine", { days: user.days_left })
+                    : t("daysLeftLine", { days: user.days_left })}
+                </p>
+              ) : null}
+              {showCancel ? (
+                <CancelSubscriptionButton
+                  cancelAtPeriodEnd={!!user?.cancel_at_period_end}
+                  className="pt-1"
+                />
+              ) : null}
+            </div>
           ) : null}
 
           {/* Desktop / tablet toggle — mobile uses sticky bottom bar */}
           <div className="hidden flex-col items-center gap-2 pt-3 sm:flex">
             <BillingToggle value={interval} onChange={setInterval} />
             {interval === "yearly" ? (
-              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+              <p className="text-xs font-medium text-primary">
                 {t("yearlyHint", { percent: YEARLY_SAVE_PERCENT })}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">{t("monthlyHint")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("monthlyHint", { percent: YEARLY_SAVE_PERCENT })}
+              </p>
             )}
           </div>
         </header>
@@ -101,6 +121,10 @@ export function PricingView() {
           />
         </div>
 
+        <p className="mx-auto mt-5 max-w-md text-center text-xs leading-relaxed text-muted-foreground sm:mt-6">
+          {t("trustLine")}
+        </p>
+
         <div className="mt-14 sm:mt-20">
           <PricingCompare />
         </div>
@@ -131,11 +155,13 @@ export function PricingView() {
             className="w-full"
           />
           {interval === "yearly" ? (
-            <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+            <p className="text-[11px] font-medium text-primary">
               {t("yearlyHint", { percent: YEARLY_SAVE_PERCENT })}
             </p>
           ) : (
-            <p className="text-[11px] text-muted-foreground">{t("monthlyHint")}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {t("monthlyHint", { percent: YEARLY_SAVE_PERCENT })}
+            </p>
           )}
         </div>
       </div>

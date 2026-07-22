@@ -62,6 +62,10 @@
       "title": "Quản lý gói Premium · DaDiary Admin",
       "description": "Tìm user và grant/revoke Premium hoặc Premium+ cho test nội bộ."
     },
+    "adminPayments": {
+      "title": "Chỉ số thanh toán · DaDiary Admin",
+      "description": "Doanh thu hôm nay, tỷ lệ thành công và gói Premium sắp hết hạn."
+    },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
       "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
@@ -126,7 +130,8 @@
       "pricing": "Bảng giá",
       "feedback": "Gửi góp ý",
       "adminFeedbacks": "Quản lý góp ý",
-      "adminUsers": "Quản lý gói"
+      "adminUsers": "Quản lý gói",
+      "adminPayments": "Thanh toán"
     },
     "footer": {
       "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
@@ -720,15 +725,31 @@
     "currentPlanBadge": "Gói hiện tại",
     "currentPlanCta": "Đang dùng gói này",
     "currentPlanLine": "Bạn đang dùng gói {plan}",
+    "daysLeftLine": "Còn khoảng {days} ngày Premium (kể cả thời gian gia hạn).",
+    "graceLine": "Đang trong thời gian gia hạn — còn khoảng {days} ngày.",
+    "cancel": {
+      "cta": "Hủy gói",
+      "alreadyCanceled": "Bạn đã hủy — Premium vẫn dùng được đến hết kỳ hiện tại.",
+      "confirmTitle": "Hủy gói Premium?",
+      "confirmBody": "Bạn vẫn dùng Premium đến hết kỳ thanh toán (và vài ngày gia hạn). Sau đó tài khoản trở về Free. Có thể nâng cấp lại bất cứ lúc nào.",
+      "confirmKeep": "Giữ gói",
+      "confirmCancel": "Xác nhận hủy",
+      "confirming": "Đang hủy…",
+      "successTitle": "Đã hủy gói",
+      "successBody": "Premium vẫn còn hiệu lực đến hết kỳ. Cảm ơn bạn đã dùng DaDiary.",
+      "errorTitle": "Không hủy được gói",
+      "errorNotActive": "Không có gói Premium đang hoạt động để hủy.",
+      "errorGeneric": "Có lỗi khi hủy gói. Thử lại sau nhé."
+    },
     "continueFreeCta": "Tiếp tục dùng Free",
-    "waitlistCta": "Xin quyền nâng cấp sớm",
     "downgradeCta": "Đã có gói cao hơn",
     "freePrice": "Miễn phí",
     "perMonth": "/tháng",
     "billedMonthly": "Thanh toán theo tháng, hủy bất cứ lúc nào.",
-    "billedYearly": "Thanh toán {amount}/năm — tiết kiệm gần 30%.",
+    "billedYearly": "Thanh toán {amount}/năm — tiết kiệm khoảng {percent}%.",
     "yearlyHint": "Đang xem giá năm — tiết kiệm khoảng {percent}%.",
-    "monthlyHint": "Chuyển sang Thanh toán năm để tiết kiệm gần 30%.",
+    "monthlyHint": "Chuyển sang Thanh toán năm để tiết kiệm khoảng {percent}%.",
+    "trustLine": "Thanh toán qua SePay — gói kích hoạt tự động sau khi trả thành công.",
     "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (sandbox trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
     "checkout": {
       "redirecting": "Đang chuyển đến thanh toán…",
@@ -834,7 +855,7 @@
       },
       "q4": {
         "question": "Có thể đổi gói hoặc hủy sau không?",
-        "answer": "Bạn có thể nâng cấp ngay qua SePay. Hủy / đổi chu kỳ sẽ bổ sung khi billing production ổn định — trong Beta hãy gửi feedback nếu cần hỗ trợ."
+        "answer": "Bạn có thể nâng cấp ngay qua SePay. Đang dùng Premium thì hủy gói ngay trên trang này — vẫn giữ quyền lợi đến hết kỳ thanh toán (và vài ngày gia hạn). Đổi chu kỳ tháng/năm khi thanh toán lại; cần hỗ trợ thêm thì gửi feedback trong Beta."
       }
     }
   },
@@ -2105,6 +2126,50 @@
       "free": "Free",
       "premium": "Premium",
       "premium_plus": "Premium+"
+    }
+  },
+  "adminPayments": {
+    "sectionLabel": "Admin",
+    "title": "Chỉ số thanh toán",
+    "sub": "Sức khỏe checkout hôm nay (UTC), số Premium đang active và gói sắp hết hạn. Làm mới khoảng mỗi phút.",
+    "linkUsers": "← Quản lý gói",
+    "linkFeedbacks": "Quản lý góp ý",
+    "loadError": "Không tải được chỉ số thanh toán.",
+    "cards": {
+      "revenue": "Doanh thu hôm nay",
+      "revenueHint": "Checkout đã paid tạo hôm nay (UTC)",
+      "successRate": "Tỷ lệ thành công",
+      "successRateHint": "{n} checkout hôm nay",
+      "activePremium": "Premium đang active",
+      "webhookErrors": "{n} lỗi webhook (24h)",
+      "failed": "Thất bại hôm nay",
+      "asOf": "Cập nhật {time}"
+    },
+    "recentTitle": "Thanh toán gần đây",
+    "recentSub": "Đơn SePay mới nhất. Lọc theo trạng thái.",
+    "statusFilter": "Trạng thái",
+    "loadingTable": "Đang tải đơn…",
+    "empty": "Không có đơn phù hợp bộ lọc.",
+    "resultCount": "{n} đơn",
+    "upcomingTitle": "Sắp hết hạn (7 ngày)",
+    "upcomingSub": "Gói trả phí có plan_expires_at trong tuần tới.",
+    "upcomingEmpty": "Không có gói hết hạn trong 7 ngày tới.",
+    "col": {
+      "invoice": "Invoice",
+      "plan": "Gói",
+      "amount": "Số tiền",
+      "status": "Trạng thái",
+      "created": "Tạo lúc",
+      "email": "Email",
+      "expires": "Hết hạn"
+    },
+    "statuses": {
+      "all": "Tất cả",
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
     }
   }
 }

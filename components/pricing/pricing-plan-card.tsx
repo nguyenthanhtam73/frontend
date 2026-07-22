@@ -10,6 +10,7 @@ import type { PlanTier } from "@/lib/premium/features";
 import {
   formatVnd,
   priceForDisplay,
+  YEARLY_SAVE_PERCENT,
   type BillingInterval,
   type PricedPlan,
 } from "@/lib/premium/pricing";
@@ -74,13 +75,17 @@ export function PricingPlanCard({
     tCommon,
   });
 
+  const isPlus = plan === "premium_plus";
+  // Highlighted Premium gets the strong lift — muted when it's also the current plan.
+  const showPopularLift = highlighted && !isCurrent;
+
   return (
     <article
       data-testid={`pricing-card-${plan}`}
       className={cn(
         "relative flex h-full flex-col rounded-2xl border bg-card/80 p-5 backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-300 ease-out sm:p-6",
         "motion-safe:hover:-translate-y-0.5",
-        highlighted
+        showPopularLift
           ? [
               "z-[1] border-primary/55",
               "bg-gradient-to-b from-primary/[0.1] via-card to-accent/25",
@@ -90,27 +95,35 @@ export function PricingPlanCard({
               "motion-safe:hover:shadow-[0_16px_48px_-12px_color-mix(in_oklab,var(--primary)_55%,transparent)]",
               "motion-safe:hover:ring-primary/45",
             ]
-          : [
-              "border-border/70 shadow-sm",
-              "hover:border-primary/30 hover:shadow-md",
-            ],
-        isCurrent && "ring-2 ring-primary/45",
+          : isPlus
+            ? [
+                "border-accent-foreground/25",
+                "bg-gradient-to-b from-accent/55 via-card/90 to-card",
+                "shadow-sm shadow-accent-foreground/10",
+                "hover:border-accent-foreground/40 hover:shadow-md",
+              ]
+            : [
+                "border-border/70 shadow-sm",
+                "hover:border-primary/30 hover:shadow-md",
+              ],
+        // Current plan: calm ring, no popular scale/shadow competition
+        isCurrent && "z-[1] border-primary/40 ring-2 ring-primary/30 shadow-sm",
         className,
       )}
     >
       {isCurrent ? (
         <Badge
-          variant="success"
-          className="absolute -top-3 left-1/2 z-[2] -translate-x-1/2 gap-1 rounded-full px-3.5 py-1 text-[11px] font-semibold shadow-md"
+          variant="default"
+          className="absolute -top-3 left-1/2 z-[2] -translate-x-1/2 gap-1 rounded-full border border-primary/20 bg-primary/12 px-3.5 py-1 text-[11px] font-semibold text-primary shadow-sm"
         >
           {tCommon("currentPlanBadge")}
         </Badge>
       ) : highlighted ? (
         <Badge
-          variant="default"
-          className="absolute -top-3.5 left-1/2 z-[2] -translate-x-1/2 gap-1 rounded-full border border-primary-foreground/15 bg-primary px-3.5 py-1.5 text-[11px] font-semibold tracking-wide shadow-md shadow-primary/35"
+          variant="outline"
+          className="absolute -top-3.5 left-1/2 z-[2] -translate-x-1/2 gap-1 rounded-full border-transparent bg-primary px-3.5 py-1.5 text-[11px] font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/35"
         >
-          <Sparkles className="size-3.5" aria-hidden />
+          <Sparkles className="size-3.5 shrink-0" aria-hidden />
           {tCommon("mostPopular")}
         </Badge>
       ) : null}
@@ -138,7 +151,10 @@ export function PricingPlanCard({
             </p>
             {interval === "yearly" ? (
               <p className="text-xs text-muted-foreground">
-                {tCommon("billedYearly", { amount: formatVnd(price.billedTotal, locale) })}
+                {tCommon("billedYearly", {
+                  amount: formatVnd(price.billedTotal, locale),
+                  percent: YEARLY_SAVE_PERCENT,
+                })}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">{tCommon("billedMonthly")}</p>
@@ -153,9 +169,11 @@ export function PricingPlanCard({
             <span
               className={cn(
                 "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
-                highlighted || isCurrent
+                showPopularLift || isCurrent
                   ? "bg-primary/15 text-primary"
-                  : "bg-muted text-muted-foreground",
+                  : isPlus
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-muted text-muted-foreground",
               )}
               aria-hidden
             >
