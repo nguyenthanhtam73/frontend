@@ -26,6 +26,7 @@ import { expect, test } from "@playwright/test";
 import {
   assertPremiumFeatures,
   createCheckout,
+  e2eForcePlanAvailable,
   fetchMe,
   fetchUsage,
   forcePlan,
@@ -33,7 +34,12 @@ import {
   registerFreeUser,
   waitForPlanTier,
 } from "./helpers/api";
-import { injectAccessToken, mockSePayFormSubmit } from "./helpers/browser";
+import {
+  injectAccessToken,
+  mockSePayFormSubmit,
+  resolveCheckoutFromUi,
+  selectBillingMonthly,
+} from "./helpers/browser";
 import { defaultPassword, e2eSecret } from "./helpers/env";
 import { sleep } from "./helpers/retry";
 
@@ -67,8 +73,8 @@ test.describe("SePay sandbox smoke", () => {
     await page.goto("/pricing");
     await expect(page.getByTestId("pricing-card-premium")).toBeVisible();
 
-    // Ensure monthly billing (default is monthly).
-    await page.getByTestId("billing-toggle-monthly").click();
+    // Ensure monthly billing (default is monthly). Header + sticky bar both render toggles.
+    await selectBillingMonthly(page);
 
     const sepay = await mockSePayFormSubmit(page);
 
@@ -83,31 +89,25 @@ test.describe("SePay sandbox smoke", () => {
 
     const checkoutResp = await checkoutRespPromise;
     expect(checkoutResp.ok(), `checkout status ${checkoutResp.status()}`).toBeTruthy();
-    const checkoutJson = (await checkoutResp.json()) as {
-      data?: {
-        invoice_number?: string;
-        amount_vnd?: number;
-        checkout_url?: string;
-        form_fields?: Record<string, string>;
-      };
-    };
-    const invoice = checkoutJson.data?.invoice_number;
-    const amount = checkoutJson.data?.amount_vnd;
-    expect(invoice).toBeTruthy();
-    expect(amount).toBe(99_000);
 
     // Form should attempt SePay sandbox redirect (we abort it).
     const posted = await sepay.waitForCheckoutPost();
     expect(posted.url).toMatch(/sepay\.vn/);
-    expect(posted.fields.order_invoice_number || posted.fields["order_invoice_number"]).toBe(
-      invoice,
-    );
-    expect(posted.fields.signature || checkoutJson.data?.form_fields?.signature).toBeTruthy();
+
+    const { invoice, amountVnd, signature } = await resolveCheckoutFromUi({
+      checkoutResp,
+      posted,
+    });
+    expect(amountVnd).toBe(99_000);
+    expect(
+      posted.fields.order_invoice_number || posted.fields["order_invoice_number"],
+    ).toBe(invoice);
+    expect(signature || posted.fields.signature).toBeTruthy();
 
     // --- Simulate SePay success IPN (money settled) ---
     const ipn = await postSePayWebhook(request, {
-      invoice: invoice!,
-      amountVnd: amount!,
+      invoice,
+      amountVnd,
     });
     expect(ipn.status).toBeLessThan(400);
 
@@ -192,6 +192,10 @@ test.describe("SePay sandbox smoke", () => {
     test.skip(
       !e2eSecret(),
       "Set E2E_SECRET / DADIARY_E2E_SECRET (and restart API) for expiry smoke",
+    );
+    test.skip(
+      !(await e2eForcePlanAvailable(request)),
+      "force-plan not mounted (expected on production — leave DADIARY_E2E_SECRET unset)",
     );
 
     const session = await registerFreeUser(request);

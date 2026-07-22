@@ -354,11 +354,47 @@ function e2eHeaders(): Record<string, string> {
   };
 }
 
+/**
+ * True when API mounted /internal/e2e/alerts (DADIARY_E2E_SECRET set).
+ * Production should return false — never enable E2E helpers there.
+ */
+export async function e2eAlertsAvailable(
+  request: APIRequestContext,
+): Promise<boolean> {
+  if (!e2eSecret()) return false;
+  const res = await request.get(`${apiURL()}/api/v1/internal/e2e/alerts`, {
+    headers: e2eHeaders(),
+  });
+  return res.ok();
+}
+
+/** True when POST /internal/e2e/force-plan is mounted (local/CI only). */
+export async function e2eForcePlanAvailable(
+  request: APIRequestContext,
+): Promise<boolean> {
+  if (!e2eSecret()) return false;
+  // Unauthorized (wrong secret) still proves the route exists; 404 = not mounted.
+  const res = await request.post(`${apiURL()}/api/v1/internal/e2e/force-plan`, {
+    headers: {
+      "X-E2E-Secret": "__probe__",
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    data: { email: "probe@e2e.dadiary.test", plan_tier: "free" },
+  });
+  return res.status() !== 404;
+}
+
 /** Clear in-memory alert buffer on the API (between cases). */
 export async function clearE2EAlerts(request: APIRequestContext): Promise<void> {
   const res = await request.delete(`${apiURL()}/api/v1/internal/e2e/alerts`, {
     headers: e2eHeaders(),
   });
+  if (res.status() === 404 || res.status() === 401 || res.status() === 503) {
+    throw new Error(
+      `e2e alerts unavailable (${res.status()}) — set matching DADIARY_E2E_SECRET on the API (not for production)`,
+    );
+  }
   if (!res.ok()) {
     throw new Error(`clear alerts ${res.status()}: ${await res.text()}`);
   }

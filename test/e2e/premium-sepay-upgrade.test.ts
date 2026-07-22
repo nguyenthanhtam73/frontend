@@ -23,6 +23,7 @@ import {
   assertPremiumFeatures,
   clearE2EAlerts,
   createCheckout,
+  e2eAlertsAvailable,
   fetchE2EAlerts,
   fetchMe,
   fetchUsage,
@@ -31,17 +32,28 @@ import {
   waitForPaymentSuccessAlert,
   waitForPlanTier,
 } from "./helpers/api";
-import { injectAccessToken, mockSePayFormSubmit } from "./helpers/browser";
+import {
+  injectAccessToken,
+  mockSePayFormSubmit,
+  resolveCheckoutFromUi,
+  selectBillingMonthly,
+} from "./helpers/browser";
 import { defaultPassword, e2eSecret } from "./helpers/env";
 import { sleep } from "./helpers/retry";
 
 test.describe.configure({ mode: "serial" });
 
 test.describe("Premium SePay upgrade + Telegram alert", () => {
-  test.beforeEach(() => {
+  test.beforeEach(async ({ request }) => {
     test.skip(
       !e2eSecret(),
       "Set E2E_SECRET and DADIARY_E2E_SECRET (same value) so /internal/e2e/alerts is available",
+    );
+    // Production must keep DADIARY_E2E_SECRET unset — skip instead of 404 mid-test.
+    const available = await e2eAlertsAvailable(request);
+    test.skip(
+      !available,
+      "API /internal/e2e/alerts not mounted (expected on production)",
     );
   });
 
@@ -70,7 +82,7 @@ test.describe("Premium SePay upgrade + Telegram alert", () => {
     // --- Pricing: Premium Monthly ---
     await page.goto("/pricing");
     await expect(page.getByTestId("pricing-card-premium")).toBeVisible();
-    await page.getByTestId("billing-toggle-monthly").click();
+    await selectBillingMonthly(page);
 
     const sepay = await mockSePayFormSubmit(page);
     const checkoutRespPromise = page.waitForResponse(
@@ -85,29 +97,24 @@ test.describe("Premium SePay upgrade + Telegram alert", () => {
 
     const checkoutResp = await checkoutRespPromise;
     expect(checkoutResp.ok(), `checkout ${checkoutResp.status()}`).toBeTruthy();
-    const checkoutJson = (await checkoutResp.json()) as {
-      data?: {
-        invoice_number?: string;
-        amount_vnd?: number;
-        form_fields?: Record<string, string>;
-      };
-    };
-    const invoice = checkoutJson.data?.invoice_number;
-    const amount = checkoutJson.data?.amount_vnd;
-    expect(invoice).toBeTruthy();
-    expect(amount).toBe(99_000);
 
     // Mocked SePay form POST (no real redirect).
     const posted = await sepay.waitForCheckoutPost();
     expect(posted.url).toMatch(/sepay\.vn/);
+
+    const { invoice, amountVnd } = await resolveCheckoutFromUi({
+      checkoutResp,
+      posted,
+    });
+    expect(amountVnd).toBe(99_000);
     expect(
       posted.fields.order_invoice_number || posted.fields["order_invoice_number"],
     ).toBe(invoice);
 
     // --- Simulate SePay ORDER_PAID (sandbox IPN) ---
     const ipn = await postSePayWebhook(request, {
-      invoice: invoice!,
-      amountVnd: amount!,
+      invoice,
+      amountVnd,
     });
     expect(ipn.status).toBeLessThan(400);
 
@@ -139,13 +146,13 @@ test.describe("Premium SePay upgrade + Telegram alert", () => {
 
     // --- Telegram path: in-memory recorder (same Event Fanout would send) ---
     const alert = await waitForPaymentSuccessAlert(request, {
-      invoice: invoice!,
-      amountVnd: amount!,
+      invoice,
+      amountVnd,
       email: session.email,
     });
     expect(alert.key).toBe("payment_success");
     expect(alert.message).toMatch(/nâng cấp/i);
-    expect(alert.message).toContain(String(amount));
+    expect(alert.message).toContain(String(amountVnd));
     // Prefer email in message when lookup succeeds; user_id is acceptable fallback.
     expect(
       (alert.message || "").includes(session.email) ||
