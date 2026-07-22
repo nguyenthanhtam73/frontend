@@ -16,6 +16,9 @@
  *   - API: simulate ORDER_PAID IPN → assert /me + /me/usage features
  *   - Browser: /payment/success polling until plan active
  *   - API: webhook idempotency + force-plan expiry → Free
+ *
+ * Telegram / payment_success alert coverage lives in premium-sepay-upgrade.test.ts
+ * (requires DADIARY_E2E_SECRET so the API mounts the in-memory alert recorder).
  */
 
 import { expect, test } from "@playwright/test";

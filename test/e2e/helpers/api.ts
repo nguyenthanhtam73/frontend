@@ -306,3 +306,109 @@ export function assertPremiumFeatures(usage: UsageQuota): void {
     throw new Error("ai_routine_suggestion should be unlimited on Premium");
   }
 }
+
+/** Assert plan_expires_at ≈ now + days (default monthly = 30). Tolerance ±2h. */
+export function assertPlanExpiresInDays(
+  planExpiresAt: string | undefined,
+  days: number,
+  opts?: { toleranceHours?: number; from?: Date },
+): void {
+  if (!planExpiresAt) {
+    throw new Error("plan_expires_at missing");
+  }
+  const exp = new Date(planExpiresAt).getTime();
+  if (Number.isNaN(exp)) {
+    throw new Error(`invalid plan_expires_at: ${planExpiresAt}`);
+  }
+  const from = (opts?.from ?? new Date()).getTime();
+  const toleranceMs = (opts?.toleranceHours ?? 2) * 60 * 60 * 1000;
+  const want = from + days * 24 * 60 * 60 * 1000;
+  const delta = Math.abs(exp - want);
+  if (delta > toleranceMs) {
+    throw new Error(
+      `plan_expires_at=${planExpiresAt} not within ±${opts?.toleranceHours ?? 2}h of +${days}d (deltaMs=${delta})`,
+    );
+  }
+}
+
+export type E2EAlert = {
+  key?: string;
+  unique_suffix?: string;
+  title?: string;
+  level?: string;
+  message?: string;
+  detail?: string;
+  fields?: Record<string, unknown>;
+};
+
+function e2eHeaders(): Record<string, string> {
+  const secret = e2eSecret();
+  if (!secret) {
+    throw new Error(
+      "E2E_SECRET / DADIARY_E2E_SECRET required for alert capture endpoints",
+    );
+  }
+  return {
+    "X-E2E-Secret": secret,
+    Accept: "application/json",
+  };
+}
+
+/** Clear in-memory alert buffer on the API (between cases). */
+export async function clearE2EAlerts(request: APIRequestContext): Promise<void> {
+  const res = await request.delete(`${apiURL()}/api/v1/internal/e2e/alerts`, {
+    headers: e2eHeaders(),
+  });
+  if (!res.ok()) {
+    throw new Error(`clear alerts ${res.status()}: ${await res.text()}`);
+  }
+}
+
+/** Fetch captured ops alerts (same path Telegram would take). */
+export async function fetchE2EAlerts(
+  request: APIRequestContext,
+  opts?: { key?: string; invoice?: string },
+): Promise<E2EAlert[]> {
+  const params = new URLSearchParams();
+  if (opts?.key) params.set("key", opts.key);
+  if (opts?.invoice) params.set("invoice", opts.invoice);
+  const qs = params.toString();
+  const path = qs
+    ? `${apiURL()}/api/v1/internal/e2e/alerts?${qs}`
+    : `${apiURL()}/api/v1/internal/e2e/alerts`;
+  const res = await request.get(path, { headers: e2eHeaders() });
+  if (!res.ok()) {
+    throw new Error(`e2e/alerts ${res.status()}: ${await res.text()}`);
+  }
+  const json = (await res.json()) as Envelope<{ alerts?: E2EAlert[] }>;
+  return json.data?.alerts ?? [];
+}
+
+/**
+ * Poll until a payment_success alert exists for invoice.
+ * Asserts message contains upgrade + amount (Telegram payload shape).
+ */
+export async function waitForPaymentSuccessAlert(
+  request: APIRequestContext,
+  opts: { invoice: string; amountVnd: number; email?: string },
+): Promise<E2EAlert> {
+  return pollUntil(`payment_success alert invoice=${opts.invoice}`, async () => {
+    const alerts = await fetchE2EAlerts(request, {
+      key: "payment_success",
+      invoice: opts.invoice,
+    });
+    if (!alerts.length) return null;
+    const hit = alerts[alerts.length - 1];
+    const msg = hit.message || "";
+    if (!/nâng cấp/i.test(msg) && !/upgrade|success/i.test(msg)) {
+      return null;
+    }
+    if (!msg.includes(String(opts.amountVnd))) {
+      return null;
+    }
+    if (hit.title && hit.title !== "Payment success") {
+      return null;
+    }
+    return hit;
+  }, { timeoutMs: 20_000, intervalMs: 400 });
+}
