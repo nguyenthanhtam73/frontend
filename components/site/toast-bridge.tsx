@@ -29,6 +29,7 @@ export function ToastBridge() {
       timeout: t("timeout"),
       unauthorized: t("unauthorized"),
       forbidden: t("forbidden"),
+      rate_limited: t("rateLimited"),
       server: t("server"),
       parse: t("parse"),
       unknown: t("unknown"),

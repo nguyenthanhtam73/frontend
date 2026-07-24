@@ -5,6 +5,7 @@
     "timeout": "The request took too long. Please try again.",
     "unauthorized": "Your session has expired. Please sign in again.",
     "forbidden": "You don't have permission to do this.",
+    "rateLimited": "You're going too fast — please wait a moment and try again.",
     "server": "The server ran into a problem. Please try again in a moment.",
     "parse": "We received an unexpected response. Please try again.",
     "unknown": "Something went wrong. Please try again."
@@ -12,7 +13,7 @@
   "metadata": {
     "root": {
       "title": "DaDiary — Your skin diary · Friendly AI skincare buddy every day",
-      "description": "Personal skin diary + a friendly AI skincare buddy: daily photo check-ins, simple morning & evening routines, and clear personalized tips. Long-term before/after and your skincare shelf — supportive, evidence-friendly, encouraging. Built to scale regions and weather, not locked to one country."
+      "description": "DaDiary Beta is open — use a full Free tier for photo check-ins, progress tracking, and AI Coach tips. Upgrade to Premium when you want unlimited AI, a full shelf, and longer history. Supportive, evidence-friendly guidance — not a substitute for medical care."
     },
     "checkIn": {
       "title": "Skin check-in · DaDiary",
@@ -201,15 +202,15 @@
     "guideClose": "Close"
   },
   "hero": {
-    "badge": "Free Beta • Built for Vietnamese skin",
+    "badge": "Beta open · Full Free core",
     "slogan": "Skin diary + AI Coach",
     "titleLead": "Track your skin daily —",
     "titleGradient": "AI tells you what to do next.",
-    "body": "Oily skin, breakouts, or humidity stress? DaDiary helps you <b>log skin with photos</b>, see real progress, and get routine tips tuned for Vietnam's climate — no guesswork, no pressure.",
-    "ctaPrimary": "Start free Beta",
+    "body": "Oily skin, breakouts, or humidity stress? DaDiary helps you <b>log skin with photos</b>, keep a streak, see progress, and get routine tips that fit. Start on Free — upgrade to Premium when you want unlimited AI.",
+    "ctaPrimary": "Start with Free",
     "ctaSecondary": "See how it works",
     "ctaEmailLink": "Or just leave your email →",
-    "betaNote": "Free · No credit card · Unsubscribe anytime",
+    "betaNote": "Free core in Beta · Premium when you need it · Card optional",
     "stat1k": "< 1 min",
     "stat1v": "daily check-in",
     "stat2k": "AI Coach",
@@ -219,7 +220,10 @@
     "stack1": "Oily · humid heat",
     "stack2": "Acne · dark spots",
     "stack3": "SPF · even tone",
-    "mockupLabel": "DaDiary"
+    "mockupLabel": "DaDiary",
+    "mockupCheckIn": "Today's check-in",
+    "mockupStreak": "7-day streak",
+    "mockupCoach": "Skin looks steadier — keep morning SPF going."
   },
   "problem": {
     "sectionTitle": "The problem",
@@ -248,19 +252,27 @@
     "badge": "Solution",
     "sectionTitle": "DaDiary",
     "heading": "Smart skin diary — AI Coach by your side",
-    "body": "DaDiary combines daily photo check-ins with an AI Coach so you see change, understand what works, and adjust gently over time.",
+    "body": "DaDiary pairs daily photo check-ins with an AI Coach so you see change, keep a streak, tick your routine, and adjust gently — Free already covers the core.",
     "points": {
-      "p1": "Quick photo + feeling check-ins — under a minute a day.",
-      "p2": "AI Coach analyzes and suggests routines for your skin type, goals, and products.",
-      "p3": "Progress charts and before/after help you see improvement over weeks and months.",
+      "p1": "Quick photo + feeling check-ins — under a minute a day, easier to keep a streak.",
+      "p2": "AI Coach replies after each check-in and suggests routines for your skin, goals, and shelf.",
+      "p3": "Progress, streaks, and before/after help you see weekly change — less guesswork.",
       "p4": "Warm, encouraging tone — no judgment, no pressure to be perfect."
     },
     "mockup": {
       "checkIn": "Today's check-in",
       "coach": "AI Coach",
       "coachSample": "Skin looks steadier than last week — keep morning sunscreen going.",
-      "progress": "7-day progress"
+      "progress": "7-day progress",
+      "streak": "7-day streak",
+      "routine": "AM routine ✓"
     }
+  },
+  "progressPreview": {
+    "sectionTitle": "Progress preview",
+    "heading": "Your skin diary looks like this",
+    "sub": "Each check-in saves photos, how skin felt, and a coach note — enough to look back a week and see if you're on track.",
+    "cta": "Start with Free"
   },
   "features": {
     "sectionTitle": "Key features",
@@ -276,8 +288,8 @@
         "desc": "Tips from photos, skin type, and routine — explained simply, not a substitute for a dermatologist."
       },
       "progress": {
-        "title": "Visual progress tracking",
-        "desc": "Trend charts, streaks, and timeline so you see change week by week."
+        "title": "Progress & streaks",
+        "desc": "Trend charts, check-in streaks, and a timeline so you see week-by-week change — Free covers recent months."
       },
       "routine": {
         "title": "AM/PM routine suggestions",
@@ -318,69 +330,69 @@
   },
   "benefits": {
     "sectionTitle": "Benefits",
-    "heading": "Built for local skin and climate needs",
-    "sub": "Oily skin, breakouts, humidity, sun spots — DaDiary addresses common challenges with fitting tips.",
+    "heading": "Built for real skincare habits",
+    "sub": "Streaks, AI Coach, AM/PM routines, and your shelf — enough to stay consistent without overwhelm. Light tips for humid weather; not a substitute for a clinician.",
     "items": {
       "humid": {
-        "title": "Humid climate friendly",
-        "desc": "Light, non-clogging suggestions — proper cleanse, oil balance, and comfortable SPF."
+        "title": "Keep a daily streak",
+        "desc": "Sub-minute check-ins make it easier to stay consistent — see how many days you've shown up, not just guess."
       },
       "oily": {
-        "title": "Oily skin & pores",
-        "desc": "Track oiliness over time — see which products help balance your skin."
+        "title": "AI Coach after every log",
+        "desc": "Warm feedback from today's photos and how skin feels — small tips, plain language, no pressure to “fix” everything overnight."
       },
       "acne": {
-        "title": "Acne & post-acne marks",
-        "desc": "Check-in photos show if breakouts ease or flare — adjust routine in time."
+        "title": "Routine + shelf, tidy",
+        "desc": "Tick AM/PM steps and save products you already own — know what you did and avoid buying duplicates."
       },
       "safe": {
         "title": "Safe & responsible",
-        "desc": "Always reminds SPF, patch tests, and seeing a clinician when skin looks unusual."
+        "desc": "Always reminds SPF, patch tests, and seeing a clinician when skin looks unusual — reference tips, not a diagnosis."
       }
     }
   },
   "testimonials": {
     "sectionTitle": "What users say",
-    "heading": "Early Beta users are seeing results",
-    "sub": "Early stories from DaDiary testers in Vietnam — oily skin, breakouts, dark spots, humid climate.",
-    "collecting": "Early Beta user experiences",
-    "earlyBeta": "Early Beta",
-    "footnote": "Early Beta user stories (illustrative). Real reviews will be added as Beta expands.",
+    "heading": "More consistent care — because progress is visible",
+    "sub": "Stories from women 20–35 in Beta: photo check-ins, streaks, and a gentle coach each day.",
+    "collecting": "Beta user stories",
+    "earlyBeta": "Beta",
+    "footnote": "Personal Beta experiences — not medical outcome promises. Everyone's skin is different.",
     "items": {
       "t1": {
-        "name": "Minh Anh",
-        "role": "Oily, chin breakouts · Ho Chi Minh City",
-        "quote": "My skin is oily with chin breakouts. After 3 weeks of steady check-ins, AI suggested less BHA and more hydration — less midday shine and fewer angry spots."
+        "name": "Ngọc Anh",
+        "role": "28 · Oily, midday shine · Ho Chi Minh City",
+        "quote": "I used to skip skincare on deadline nights. Now one evening photo + routine ticks — 12-day streak. Coach nudged less BHA when I was dry, so I guess less."
       },
       "t2": {
-        "name": "Thu Hà",
-        "role": "Acne-prone, PIH · Hanoi",
-        "quote": "I'd tried many routines but never tracked results. DaDiary made progress visible after 2 weeks, especially the post-acne marks on my cheeks."
+        "name": "Phương Linh",
+        "role": "24 · Mild acne, easy PIH · Hanoi",
+        "quote": "I don't need an app to “cure acne” — I need last week's truth. Same-angle photos showed my chin calmer; the shelf stopped me buying another toner I already own."
       },
       "t3": {
-        "name": "Lan Phương",
-        "role": "Combination, humid climate · Da Nang",
-        "quote": "Da Nang's heat and humidity used to clog my skin. Morning check-ins and photo compare showed which light routine kept me hydrated without getting oily again by noon."
+        "name": "Khánh Vy",
+        "role": "31 · Combination, humid heat · Da Nang",
+        "quote": "My skin shifts with coastal weather. Free is enough to diary and get coach notes after each check-in. I'll think about Premium only if I want freer routine edits — no pressure."
       }
     }
   },
   "cta": {
     "eyebrow": "Get started",
     "heading": "Ready to track your skin and get daily AI guidance?",
-    "body": "Join free Beta — log skin with photos, get routine tips tuned for Vietnam's climate. No perfect routine needed, just start.",
-    "betaFree": "100% free during Beta",
-    "primary": "Start free Beta",
+    "body": "Sign up for Free in Beta — photo check-ins, streaks, routine ticks, and coach notes after each log. When you want unlimited AI, a full shelf, or longer history — upgrade to Premium anytime.",
+    "betaFree": "Free core in Beta · Premium optional",
+    "primary": "Start with Free",
     "secondary": "Just leave your email",
     "trustNote": "DaDiary offers reference tips only, not medical advice. Always patch test new products."
   },
   "betaSignup": {
     "sectionTitle": "Beta signup",
-    "heading": "Get early Beta access — free",
-    "sub": "Leave your email for Beta invites and feature updates. No spam, we never sell your email.",
+    "heading": "Get Beta updates — start Free when you're ready",
+    "sub": "Leave your email for Beta links and feature news. Use Free first; Premium only if you want to unlock more.",
     "benefits": {
-      "b1": "Free Beta access",
+      "b1": "Full Free core during Beta",
       "b2": "Priority when new features launch",
-      "b3": "Just one email, no card needed"
+      "b3": "One email — Premium not required"
     },
     "trust": {
       "t1": "No spam",
@@ -446,7 +458,7 @@
     "skipModeActiveNotice": "You're using no-photo mode. Your check-in will be analyzed from tags and notes.",
     "skipModeNeedTagsHint": "Pick at least one tag or write a note to submit.",
     "skipModeReadyHint": "Ready to submit — tap Send today's feelings.",
-    "skipModeBackendNote": "Note: the server still requires at least one photo. Full no-photo mode will work once the backend is updated.",
+    "skipModeBackendNote": "No-photo check-ins use your tags and notes — the coach skips face vision.",
     "skipModeBanner": "Tag + notes only mode — no photos needed. The AI will still respond, but it's a bit less precise without a photo.",
     "skipModeBackCta": "Re-enable photo capture",
     "skipModeManageCta": "Open Privacy",
@@ -507,6 +519,8 @@
     "photoCaptureBack": "Back camera",
     "visibilityPrivate": "Only me",
     "visibilityPublic": "Public (timeline)",
+    "visibilityPublicSoon": "Public · Coming soon",
+    "visibilityPublicSoonHint": "Public timeline isn’t available yet — check-ins stay private for now.",
     "afterSubmit": "After you send: photos + notes are saved and your AI buddy responds on this page (may take a few minutes).",
     "linkCabinet": "Open skincare shelf",
     "reset": "Clear",
@@ -518,7 +532,8 @@
     "needAuth": "You need to sign in to send a check-in (connect auth on the backend for demos).",
     "networkError": "Could not reach the API (or CORS). Check `NEXT_PUBLIC_API_URL` and the backend — multipart field names are correct.",
     "submitErrorNetwork": "Couldn't submit — check your connection and try again. Your entries are still here.",
-    "submitErrorMissingImages": "The server doesn't support no-photo check-ins yet. Re-enable photos or try again after a backend update.",
+    "submitErrorRateLimited": "You're going too fast — please wait a moment and try again.",
+    "submitErrorMissingImages": "Add at least one tag or note for no-photo check-in, or switch back to photo mode.",
     "submitErrorUnknown": "Unknown error",
     "submitErrorGeneric": "Submit failed ({status}): {detail}. You can fix and retry — your data is kept.",
     "analyzingCoach": "Reading your photos and writing a friendly response — this can take a few minutes. Keep the tab open.",
@@ -719,7 +734,7 @@
   "pricing": {
     "heroTitle": "Unlock your full",
     "heroTitleAccent": "AI Coach & shelf",
-    "heroSub": "Stay consistent with unlimited AI guidance, a complete skincare shelf, and longer progress history — pick the plan that fits your self-care rhythm.",
+    "heroSub": "Free already covers check-ins, streaks, and coach notes after each log. Premium unlocks unlimited AI, a full shelf, and longer history — upgrade when you truly need it.",
     "mostPopular": "Most popular",
     "upgradeCta": "Upgrade now",
     "currentPlanBadge": "Current plan",
@@ -758,6 +773,7 @@
       "errorUnavailable": "Checkout is temporarily unavailable. Please try again later.",
       "errorInvalid": "That plan selection isn't valid. Pick a plan and try again.",
       "errorNetwork": "Network issue — check your connection and retry.",
+      "errorRateLimited": "You're going too fast — please wait a moment and try again.",
       "errorServer": "Our servers are busy. Try again in a few minutes.",
       "errorGeneric": "Couldn't create a checkout session. Please try again."
     },
@@ -842,8 +858,8 @@
       "title": "FAQ",
       "subtitle": "Short answers so choosing a plan stays simple.",
       "q1": {
-        "question": "Does Free include the AI Coach?",
-        "answer": "Yes. Free still gets coaching after check-ins. Paid plans unlock unlimited routine suggestions, freer edits, and a full shelf."
+        "question": "What does Free include in Beta?",
+        "answer": "Photo check-ins, streaks, routine ticks, shelf viewing, and AI Coach notes after each log. Free has monthly caps on AI suggestions and routine edits; Premium unlocks unlimited when you need it."
       },
       "q2": {
         "question": "How much do I save on yearly billing?",
@@ -851,11 +867,11 @@
       },
       "q3": {
         "question": "What's the difference between Premium and Premium+?",
-        "answer": "Premium unlocks unlimited AI, the full shelf, and 12 months of Progress. Premium+ adds advanced analysis, deep memory, unlimited history, and early access."
+        "answer": "Premium unlocks unlimited AI, a full shelf, 12 months of Progress, export, and no ads. Premium+ adds advanced analysis, deep memory, unlimited history, and early access."
       },
       "q4": {
         "question": "Can I change or cancel later?",
-        "answer": "You can upgrade now via SePay. If you're already on Premium, cancel anytime on this page — you keep access until the end of your billing period (plus a short grace window). Switch monthly/yearly when you pay again; send feedback in Beta if you need extra help."
+        "answer": "Upgrade anytime via SePay. On Premium, cancel on this page — you keep access until period end (plus a short grace window). Free stays available if you never upgrade."
       }
     }
   },

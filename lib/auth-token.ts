@@ -1,4 +1,5 @@
 export const AUTH_TOKEN_STORAGE_KEY = "dadiary_access_token";
+export const AUTH_REFRESH_STORAGE_KEY = "dadiary_refresh_token";
 
 /** Fired on same-document login/logout after localStorage token changes. */
 export const AUTH_CHANGED_EVENT = "dadiary-auth-changed";
@@ -8,20 +9,31 @@ function emitAuthChanged(): void {
   window.dispatchEvent(new CustomEvent(AUTH_CHANGED_EVENT));
 }
 
-/** Persists JWT access token for Authorization: Bearer (demo/local UX).
- *
- *  localStorage can throw on iOS Safari private mode or when the quota is full,
- *  so we guard the write — a failed persist shouldn't crash login. We still emit
- *  the change event so the UI reflects the (possibly not-persisted) auth state
- *  rather than hanging in a half-updated view. */
-export function setAccessToken(token: string): void {
+function safeGet(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSet(key: string, value: string): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+    localStorage.setItem(key, value);
   } catch {
-    /* storage blocked/full — session just won't survive a reload */
+    /* storage blocked/full */
   }
-  emitAuthChanged();
+}
+
+function safeRemove(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* nothing we can do if storage is unavailable */
+  }
 }
 
 /**
@@ -49,34 +61,52 @@ export function isTokenExpired(token: string): boolean {
   return Date.now() >= expMs;
 }
 
+/** Persist both tokens after login / register / refresh. */
+export function setAuthTokens(
+  accessToken: string,
+  refreshToken?: string | null,
+  opts?: { emit?: boolean },
+): void {
+  if (typeof window === "undefined") return;
+  safeSet(AUTH_TOKEN_STORAGE_KEY, accessToken);
+  if (refreshToken) {
+    safeSet(AUTH_REFRESH_STORAGE_KEY, refreshToken);
+  }
+  // Silent write on token rotation — avoids same-tab AUTH_CHANGED → /me storms.
+  // Other tabs still learn via the native `storage` event.
+  if (opts?.emit !== false) {
+    emitAuthChanged();
+  }
+}
+
+/** @deprecated Prefer setAuthTokens — kept for call sites that only have access. */
+export function setAccessToken(token: string): void {
+  setAuthTokens(token);
+}
+
 /**
- * Returns the stored access token, or null when there is none OR when a
- * leftover token has already expired. The app has no refresh flow, so an
- * expired token is useless — treating it as null keeps "logged out" users
- * (e.g. guests with a stale token) on the guest path instead of routing them
- * into authenticated requests that would hang or 401.
+ * Returns the stored access token (even if expired — caller / api-client should
+ * refresh). Returns null when missing. Clears storage when the leftover token
+ * is expired AND there is no refresh token to renew with.
  */
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  let token: string | null = null;
-  try {
-    token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
-  } catch {
-    // Reading storage can throw when it's blocked (private mode); treat as guest.
+  const token = safeGet(AUTH_TOKEN_STORAGE_KEY);
+  if (!token) return null;
+  if (isTokenExpired(token) && !getRefreshToken()) {
+    clearAccessToken();
     return null;
   }
-  if (!token) return null;
-  if (isTokenExpired(token)) return null;
   return token;
+}
+
+export function getRefreshToken(): string | null {
+  return safeGet(AUTH_REFRESH_STORAGE_KEY);
 }
 
 export function clearAccessToken(): void {
   if (typeof window === "undefined") return;
-  try {
-    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-  } catch {
-    /* nothing we can do if storage is unavailable */
-  }
+  safeRemove(AUTH_TOKEN_STORAGE_KEY);
+  safeRemove(AUTH_REFRESH_STORAGE_KEY);
   emitAuthChanged();
 }
 
@@ -85,4 +115,72 @@ export function authHeaders(): HeadersInit {
   const h: Record<string, string> = { Accept: "application/json" };
   if (t) h.Authorization = `Bearer ${t}`;
   return h;
+}
+
+type RefreshEnvelope = {
+  success?: boolean;
+  data?: {
+    tokens?: {
+      access_token?: string;
+      refresh_token?: string;
+    };
+  };
+};
+
+let refreshInflight: Promise<boolean> | null = null;
+
+/**
+ * Exchange refresh_token for a new access (+ rotated refresh). Returns true on
+ * success. Concurrent callers share one in-flight request.
+ */
+export async function refreshAccessToken(apiBase: string): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  if (refreshInflight) return refreshInflight;
+
+  refreshInflight = (async () => {
+    const refresh = getRefreshToken();
+    if (!refresh) return false;
+    try {
+      const res = await fetch(`${apiBase.replace(/\/$/, "")}/api/v1/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ refresh_token: refresh }),
+      });
+      const json = (await res.json().catch(() => ({}))) as RefreshEnvelope;
+      const access = json.data?.tokens?.access_token;
+      const nextRefresh = json.data?.tokens?.refresh_token;
+      if (!res.ok || !access) {
+        // Only wipe if this tab still holds the refresh we just tried.
+        // Another tab may have already rotated to a newer token in localStorage.
+        if (getRefreshToken() === refresh) {
+          clearAccessToken();
+        }
+        return false;
+      }
+      setAuthTokens(access, nextRefresh ?? refresh, { emit: false });
+      return true;
+    } catch {
+      // Network blip — do NOT clear tokens; caller keeps prior session.
+      return false;
+    } finally {
+      refreshInflight = null;
+    }
+  })();
+
+  return refreshInflight;
+}
+
+/**
+ * Ensure we have a non-expired access token when a refresh token is available.
+ * No-op when already fresh or when there is nothing to refresh with.
+ */
+export async function ensureFreshAccessToken(apiBase: string): Promise<string | null> {
+  const access = getAccessToken();
+  if (access && !isTokenExpired(access)) return access;
+  if (!getRefreshToken()) return access;
+  const ok = await refreshAccessToken(apiBase);
+  return ok ? getAccessToken() : null;
 }

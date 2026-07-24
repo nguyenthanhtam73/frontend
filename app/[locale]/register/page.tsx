@@ -2,15 +2,21 @@
 
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
-import { setAccessToken } from "@/lib/auth-token";
+import { getAccessToken, setAuthTokens } from "@/lib/auth-token";
+import {
+  buildAuthHrefWithIntent,
+  buildPricingCheckoutHref,
+  readCheckoutIntentFromSearch,
+} from "@/lib/premium/checkout-intent";
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY?.trim() ?? "";
 const captchaEnabled = turnstileSiteKey.length > 0;
@@ -21,8 +27,31 @@ const TurnstileWidget = dynamic(
 );
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterPageFallback />}>
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+
+function RegisterPageFallback() {
+  return (
+    <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+      <div className="h-8 w-48 animate-pulse rounded-md bg-muted mx-auto" />
+      <div className="h-64 animate-pulse rounded-xl bg-muted" />
+    </div>
+  );
+}
+
+function RegisterPageInner() {
   const t = useTranslations("auth");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const checkoutIntent = useMemo(
+    () => readCheckoutIntentFromSearch(searchParams),
+    [searchParams],
+  );
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -30,6 +59,12 @@ export default function RegisterPage() {
   const [err, setErr] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
+
+  // Already logged in + came from pricing upgrade → go straight to checkout handoff.
+  useEffect(() => {
+    if (!checkoutIntent || !getAccessToken()) return;
+    router.replace(buildPricingCheckoutHref(checkoutIntent));
+  }, [checkoutIntent, router]);
 
   const invalidateCaptcha = useCallback(() => {
     setTurnstileToken(null);
@@ -42,6 +77,7 @@ export default function RegisterPage() {
   }, []);
 
   const submitBlocked = captchaEnabled && !turnstileToken;
+  const loginHref = buildAuthHrefWithIntent("/login", checkoutIntent);
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-16">
@@ -76,9 +112,10 @@ export default function RegisterPage() {
                   body: JSON.stringify(body),
                 });
                 const json = (await res.json().catch(() => ({}))) as ApiEnvelope<{
-                  tokens?: { access_token?: string };
+                  tokens?: { access_token?: string; refresh_token?: string };
                 }>;
                 const token = json.data?.tokens?.access_token;
+                const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
                   invalidateCaptcha();
                   const code = json.error?.code?.trim();
@@ -93,8 +130,13 @@ export default function RegisterPage() {
                   }
                   return;
                 }
-                setAccessToken(token);
-                router.push("/onboarding");
+                setAuthTokens(token, refresh);
+                // Paid intent → pricing auto-checkout; otherwise normal onboarding.
+                router.push(
+                  checkoutIntent
+                    ? buildPricingCheckoutHref(checkoutIntent)
+                    : "/onboarding",
+                );
               } catch {
                 invalidateCaptcha();
                 setErr(t("networkError"));
@@ -164,7 +206,10 @@ export default function RegisterPage() {
           </form>
           <p className="text-center text-sm text-muted-foreground">
             {t("haveAccount")}{" "}
-            <Link href="/login" className="font-medium text-primary underline underline-offset-4">
+            <Link
+              href={loginHref}
+              className="font-medium text-primary underline underline-offset-4"
+            >
               {t("loginLink")}
             </Link>
           </p>

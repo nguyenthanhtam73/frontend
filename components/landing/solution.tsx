@@ -22,6 +22,8 @@ export async function Solution() {
               coach: t("mockup.coach"),
               coachSample: t("mockup.coachSample"),
               progress: t("mockup.progress"),
+              streak: t("mockup.streak"),
+              routine: t("mockup.routine"),
             }}
           />
         </div>
@@ -63,31 +65,44 @@ export async function Solution() {
 function SolutionMockup({
   labels,
 }: {
-  labels: { checkIn: string; coach: string; coachSample: string; progress: string };
+  labels: {
+    checkIn: string;
+    coach: string;
+    coachSample: string;
+    progress: string;
+    streak: string;
+    routine: string;
+  };
 }) {
   return (
     <div
       className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/50 bg-card shadow-2xl ring-1 ring-black/5"
       aria-hidden
     >
-      <div className="absolute inset-x-0 top-0 h-8 bg-muted/80" />
-      <div className="absolute left-1/2 top-2 h-1 w-16 -translate-x-1/2 rounded-full bg-border" />
-      <div className="flex h-full flex-col gap-3 p-5 pt-10">
-        <div className="rounded-2xl bg-primary/10 p-4">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-primary">
+      <div className="absolute inset-x-0 top-0 h-9 bg-gradient-to-r from-primary/10 to-accent/25" />
+      <div className="absolute left-1/2 top-2.5 h-1 w-16 -translate-x-1/2 rounded-full bg-border" />
+      <div className="flex h-full flex-col gap-3 p-5 pt-11">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
             {labels.checkIn}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="aspect-square rounded-xl bg-gradient-to-br from-primary/25 to-accent/40" />
-            <div className="aspect-square rounded-xl bg-gradient-to-br from-accent/50 to-primary/20" />
-          </div>
+          <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-[10px] font-medium text-primary">
+            {labels.streak}
+          </span>
         </div>
-        <div className="rounded-2xl border bg-background/80 p-4">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="aspect-square rounded-xl bg-gradient-to-br from-primary/30 via-accent/40 to-primary/15 ring-1 ring-white/40" />
+          <div className="aspect-square rounded-xl bg-gradient-to-br from-accent/55 via-primary/20 to-accent/30 ring-1 ring-white/40" />
+        </div>
+        <div className="rounded-2xl border border-primary/15 bg-background/90 p-3.5 shadow-sm">
           <p className="text-[11px] font-medium text-muted-foreground">{labels.coach}</p>
-          <p className="mt-2 text-sm leading-relaxed">{labels.coachSample}</p>
+          <p className="mt-1.5 text-sm leading-relaxed">{labels.coachSample}</p>
         </div>
-        <div className="mt-auto rounded-2xl bg-secondary p-4">
-          <p className="text-[11px] font-medium text-muted-foreground">{labels.progress}</p>
+        <div className="rounded-2xl border border-border/60 bg-secondary/80 p-3.5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] font-medium text-muted-foreground">{labels.progress}</p>
+            <p className="text-[10px] font-medium text-primary/80">{labels.routine}</p>
+          </div>
           <div className="mt-3 flex items-end gap-1.5">
             {[40, 55, 48, 62, 70, 68, 78].map((h, i) => (
               <div

@@ -1,19 +1,124 @@
 import type { Page } from "@playwright/test";
 
-import { AUTH_TOKEN_STORAGE_KEY } from "../../../lib/auth-token";
+import {
+  AUTH_REFRESH_STORAGE_KEY,
+  AUTH_TOKEN_STORAGE_KEY,
+} from "../../../lib/auth-token";
+import { sleep } from "./retry";
 
-/** Inject JWT so Next.js client treats the session as logged-in. */
-export async function injectAccessToken(page: Page, token: string): Promise<void> {
+/** Inject JWT (+ optional refresh) so Next.js client treats the session as logged-in. */
+export async function injectAccessToken(
+  page: Page,
+  token: string,
+  refreshToken?: string,
+): Promise<void> {
   await page.addInitScript(
-    ([key, value]) => {
+    ([accessKey, accessValue, refreshKey, refreshValue]) => {
       try {
-        localStorage.setItem(key, value);
+        localStorage.setItem(accessKey, accessValue);
+        if (refreshValue) {
+          localStorage.setItem(refreshKey, refreshValue);
+        }
       } catch {
         /* ignore */
       }
     },
-    [AUTH_TOKEN_STORAGE_KEY, token] as const,
+    [
+      AUTH_TOKEN_STORAGE_KEY,
+      token,
+      AUTH_REFRESH_STORAGE_KEY,
+      refreshToken ?? "",
+    ] as const,
   );
+}
+
+/**
+ * Seed zustand privacy store so check-in can start in skip-face mode
+ * (toggle still works; this avoids race before rehydrate).
+ */
+export async function injectSkipFaceCapture(page: Page, skip = true): Promise<void> {
+  await page.addInitScript((wantSkip) => {
+    try {
+      const key = "dadiary:privacy";
+      const payload = {
+        state: {
+          consentAcknowledged: true,
+          consentAcknowledgedAt: new Date().toISOString(),
+          skipFaceCapture: wantSkip,
+          dataResetAt: null,
+        },
+        version: 1,
+      };
+      localStorage.setItem(key, JSON.stringify(payload));
+    } catch {
+      /* ignore */
+    }
+  }, skip);
+}
+
+/**
+ * After reload/navigation: sample auth chrome while access token is present.
+ * Returns true if guest CTAs flashed (session regression).
+ */
+export async function didAuthFlashToGuest(
+  page: Page,
+  opts?: { samples?: number; intervalMs?: number },
+): Promise<boolean> {
+  const samples = opts?.samples ?? 25;
+  const intervalMs = opts?.intervalMs ?? 80;
+  for (let i = 0; i < samples; i++) {
+    const state = await page.evaluate((accessKey) => {
+      let token = false;
+      try {
+        token = Boolean(localStorage.getItem(accessKey));
+      } catch {
+        token = false;
+      }
+      const guest = Boolean(document.querySelector('[data-testid="auth-guest"]'));
+      const signed = Boolean(
+        document.querySelector('[data-testid="auth-signed-in"]'),
+      );
+      return { token, guest, signed };
+    }, AUTH_TOKEN_STORAGE_KEY);
+    if (state.token && state.guest) return true;
+    if (state.signed) return false;
+    await sleep(intervalMs);
+  }
+  return false;
+}
+
+/**
+ * Block real SePay navigation and capture the form POST payload.
+ * Call BEFORE clicking upgrade CTA.
+ */
+export async function mockSePayFormSubmit(page: Page): Promise<{
+  waitForCheckoutPost: () => Promise<{
+    url: string;
+    fields: Record<string, string>;
+  }>;
+}> {
+  let resolvePost: (v: { url: string; fields: Record<string, string> }) => void;
+  const posted = new Promise<{ url: string; fields: Record<string, string> }>((r) => {
+    resolvePost = r;
+  });
+
+  // Abort navigation to SePay hosts; still let us inspect the request body.
+  await page.route(/pay(-sandbox)?\.sepay\.vn/, async (route) => {
+    const req = route.request();
+    const fields: Record<string, string> = {};
+    const postData = req.postData() || "";
+    for (const part of postData.split("&")) {
+      if (!part) continue;
+      const [k, v = ""] = part.split("=");
+      fields[decodeURIComponent(k)] = decodeURIComponent(v.replace(/\+/g, " "));
+    }
+    resolvePost!({ url: req.url(), fields });
+    await route.abort("blockedbyclient");
+  });
+
+  return {
+    waitForCheckoutPost: () => posted,
+  };
 }
 
 /**
@@ -81,38 +186,4 @@ export async function resolveCheckoutFromUi(opts: {
     throw new Error(`checkout: invalid amount from UI: ${amountVnd}`);
   }
   return { invoice, amountVnd, signature };
-}
-
-/**
- * Block real SePay navigation and capture the form POST payload.
- * Call BEFORE clicking upgrade CTA.
- */
-export async function mockSePayFormSubmit(page: Page): Promise<{
-  waitForCheckoutPost: () => Promise<{
-    url: string;
-    fields: Record<string, string>;
-  }>;
-}> {
-  let resolvePost: (v: { url: string; fields: Record<string, string> }) => void;
-  const posted = new Promise<{ url: string; fields: Record<string, string> }>((r) => {
-    resolvePost = r;
-  });
-
-  // Abort navigation to SePay hosts; still let us inspect the request body.
-  await page.route(/pay(-sandbox)?\.sepay\.vn/, async (route) => {
-    const req = route.request();
-    const fields: Record<string, string> = {};
-    const postData = req.postData() || "";
-    for (const part of postData.split("&")) {
-      if (!part) continue;
-      const [k, v = ""] = part.split("=");
-      fields[decodeURIComponent(k)] = decodeURIComponent(v.replace(/\+/g, " "));
-    }
-    resolvePost!({ url: req.url(), fields });
-    await route.abort("blockedbyclient");
-  });
-
-  return {
-    waitForCheckoutPost: () => posted,
-  };
 }

@@ -57,6 +57,9 @@ export function useStarterRoutineLive({
   const [previewJobId, setPreviewJobId] = useState<string | undefined>(
     () => readCoachWelcomeSession()?.previewJobId,
   );
+  const [previewAccessToken, setPreviewAccessToken] = useState<string | undefined>(
+    () => readCoachWelcomeSession()?.previewAccessToken,
+  );
   const initialRoutineRef = useRef<string | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isGeneratingRef = useRef(false);
@@ -105,14 +108,17 @@ export function useStarterRoutineLive({
 
     guestJobRequestedRef.current = false;
     setPreviewJobId(undefined);
+    setPreviewAccessToken(undefined);
     beginAiTracking(session.starterRoutine, true);
     setShowFallbackBanner(false);
 
-    const jobId = await requestGuestPreviewJob(session);
-    if (jobId) {
-      setPreviewJobId(jobId);
+    const job = await requestGuestPreviewJob(session);
+    if (job) {
+      setPreviewJobId(job.jobId);
+      setPreviewAccessToken(job.accessToken);
       persistCoachWelcomePatch({
-        previewJobId: jobId,
+        previewJobId: job.jobId,
+        previewAccessToken: job.accessToken,
         starterRoutinePending: true,
         usedDefaultRoutine: false,
       });
@@ -124,7 +130,9 @@ export function useStarterRoutineLive({
   useEffect(() => {
     if (!enabled) return;
     beginAiTracking(initialStarter, initialPending);
-    setPreviewJobId(readCoachWelcomeSession()?.previewJobId);
+    const sess = readCoachWelcomeSession();
+    setPreviewJobId(sess?.previewJobId);
+    setPreviewAccessToken(sess?.previewAccessToken);
   }, [beginAiTracking, enabled, initialPending, initialStarter]);
 
   useEffect(() => {
@@ -142,8 +150,12 @@ export function useStarterRoutineLive({
 
       if (patch.previewJobId) {
         setPreviewJobId(patch.previewJobId);
+        if (patch.previewAccessToken) {
+          setPreviewAccessToken(patch.previewAccessToken);
+        }
         persistCoachWelcomePatch({
           previewJobId: patch.previewJobId,
+          previewAccessToken: patch.previewAccessToken,
           starterRoutinePending: patch.starterRoutinePending ?? true,
         });
         if (!isGeneratingRef.current) {
@@ -223,7 +235,9 @@ export function useStarterRoutineLive({
   }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest]);
 
   useEffect(() => {
-    if (!enabled || !isGeneratingRoutine || !isGuest || previewJobId) return;
+    // Need both id + secret to poll. Stale sessions may only have jobId.
+    const hasPollCreds = Boolean(previewJobId && previewAccessToken);
+    if (!enabled || !isGeneratingRoutine || !isGuest || hasPollCreds) return;
 
     const session = readCoachWelcomeSession();
     if (!session || guestJobRequestedRef.current) return;
@@ -231,18 +245,29 @@ export function useStarterRoutineLive({
     guestJobRequestedRef.current = true;
     let cancelled = false;
 
-    void requestGuestPreviewJob(session).then((jobId) => {
+    void requestGuestPreviewJob(session).then((job) => {
       if (cancelled) return;
-      if (jobId) setPreviewJobId(jobId);
+      if (job) {
+        setPreviewJobId(job.jobId);
+        setPreviewAccessToken(job.accessToken);
+      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [enabled, isGeneratingRoutine, isGuest, previewJobId]);
+  }, [enabled, isGeneratingRoutine, isGuest, previewAccessToken, previewJobId]);
 
   useEffect(() => {
-    if (!enabled || !isGeneratingRoutine || !isGuest || !previewJobId) return;
+    if (
+      !enabled ||
+      !isGeneratingRoutine ||
+      !isGuest ||
+      !previewJobId ||
+      !previewAccessToken
+    ) {
+      return;
+    }
 
     let cancelled = false;
     const poll = async () => {
@@ -250,10 +275,16 @@ export function useStarterRoutineLive({
         await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
         if (cancelled) return;
         try {
-          const res = await fetch(
+          const url = new URL(
             `${apiBaseUrl}/api/v1/onboarding/preview-routine/${encodeURIComponent(previewJobId)}`,
-            { headers: { Accept: "application/json" } },
           );
+          url.searchParams.set("token", previewAccessToken);
+          const res = await fetch(url.toString(), {
+            headers: {
+              Accept: "application/json",
+              "X-Preview-Token": previewAccessToken,
+            },
+          });
           const payload = (await res.json().catch(() => ({}))) as {
             success?: boolean;
             data?: {
@@ -273,6 +304,7 @@ export function useStarterRoutineLive({
             starterRoutine: sr,
             starterRoutinePending: false,
             previewJobId,
+            previewAccessToken,
           });
           return;
         } catch {
@@ -286,7 +318,15 @@ export function useStarterRoutineLive({
     return () => {
       cancelled = true;
     };
-  }, [applyStarterFromAi, enabled, finishPollTimeout, isGeneratingRoutine, isGuest, previewJobId]);
+  }, [
+    applyStarterFromAi,
+    enabled,
+    finishPollTimeout,
+    isGeneratingRoutine,
+    isGuest,
+    previewAccessToken,
+    previewJobId,
+  ]);
 
   return {
     starter,

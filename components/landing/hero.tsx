@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Camera, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -84,6 +84,9 @@ export async function Hero() {
               { from: "0.75 0.05 155", to: "0.52 0.07 175", tag: t("stack3"), style: "left-[14%] bottom-[6%] rotate-2" },
             ]}
             appLabel={t("mockupLabel")}
+            checkInLabel={t("mockupCheckIn")}
+            streakLabel={t("mockupStreak")}
+            coachLabel={t("mockupCoach")}
           />
         </div>
       </div>
@@ -94,20 +97,54 @@ export async function Hero() {
 function HeroMockup({
   tags,
   appLabel,
+  checkInLabel,
+  streakLabel,
+  coachLabel,
 }: {
   tags: { from: string; to: string; tag: string; style: string }[];
   appLabel: string;
+  checkInLabel: string;
+  streakLabel: string;
+  coachLabel: string;
 }) {
   return (
     <div className="relative h-full w-full">
-      <div className="absolute left-1/2 top-1/2 z-10 w-[50%] -translate-x-1/2 -translate-y-[40%] overflow-hidden rounded-[1.75rem] border-4 border-white/70 bg-card shadow-2xl ring-1 ring-black/10">
-        <div className="bg-muted/60 px-4 py-2 text-center text-[10px] font-medium text-muted-foreground">
-          {appLabel}
+      {/* Product phone frame — richer UI chrome (no PNG assets in repo yet) */}
+      <div className="absolute left-1/2 top-1/2 z-10 w-[52%] max-w-[220px] -translate-x-1/2 -translate-y-[42%] overflow-hidden rounded-[1.85rem] border-[5px] border-white/80 bg-card shadow-2xl ring-1 ring-black/10 sm:max-w-none">
+        <div className="flex items-center justify-between bg-gradient-to-r from-primary/15 to-accent/30 px-3 py-2">
+          <span className="text-[10px] font-semibold tracking-wide text-foreground/80">
+            {appLabel}
+          </span>
+          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-medium text-primary">
+            {streakLabel}
+          </span>
         </div>
-        <div className="space-y-2 p-3">
-          <div className="h-16 rounded-xl bg-gradient-to-r from-primary/20 to-accent/30" />
-          <div className="h-10 rounded-lg bg-secondary" />
-          <div className="h-10 rounded-lg bg-secondary/80" />
+        <div className="space-y-2.5 p-3">
+          <div className="overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-primary/25 via-accent/35 to-primary/10">
+            <div className="flex aspect-[5/3] flex-col items-center justify-center gap-1.5 p-3">
+              <Camera className="size-5 text-primary/70" strokeWidth={1.75} />
+              <p className="text-center text-[10px] font-medium text-foreground/80">
+                {checkInLabel}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-primary/15 bg-primary/8 px-2.5 py-2">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-primary/80">
+              AI Coach
+            </p>
+            <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-foreground/85">
+              {coachLabel}
+            </p>
+          </div>
+          <div className="flex items-end gap-1 px-0.5 pb-0.5">
+            {[36, 48, 42, 58, 64, 60, 72].map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-sm bg-primary/55"
+                style={{ height: `${h * 0.28}px` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
       {tags.map((c) => (

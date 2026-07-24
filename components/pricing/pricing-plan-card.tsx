@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import type { PlanTier } from "@/lib/premium/features";
+import { buildRegisterCheckoutHref } from "@/lib/premium/checkout-intent";
 import {
   formatVnd,
   priceForDisplay,
@@ -68,6 +69,7 @@ export function PricingPlanCard({
   const thisCardBusy = checkoutBusyPlan === plan;
   const cta = resolveCta({
     plan,
+    interval,
     isLoggedIn,
     isCurrent,
     isDowngrade,
@@ -249,6 +251,7 @@ export function PricingPlanCard({
 
 function resolveCta({
   plan,
+  interval,
   isLoggedIn,
   isCurrent,
   isDowngrade,
@@ -256,6 +259,7 @@ function resolveCta({
   tCommon,
 }: {
   plan: PlanTier;
+  interval: BillingInterval;
   isLoggedIn: boolean;
   isCurrent: boolean;
   isDowngrade: boolean;
@@ -266,7 +270,7 @@ function resolveCta({
   | { kind: "checkout"; label: string }
   | {
       kind: "link";
-      href: "/register" | "/routine" | `/register?plan=${PlanTier}`;
+      href: string;
       label: string;
     } {
   if (isCurrent) {
@@ -281,13 +285,13 @@ function resolveCta({
     }
     return { kind: "link", href: "/register", label: tPlan("cta") };
   }
-  // Paid tiers — logged-in users go to SePay; guests register first.
+  // Paid tiers — logged-in users go to SePay; guests register first (keep interval).
   if (isLoggedIn) {
     return { kind: "checkout", label: tCommon("upgradeCta") };
   }
   return {
     kind: "link",
-    href: `/register?plan=${plan}`,
+    href: buildRegisterCheckoutHref({ plan, interval }),
     label: tCommon("upgradeCta"),
   };
 }

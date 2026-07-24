@@ -81,15 +81,6 @@ export function SkipModePanel({
         </div>
       </div>
 
-      {/*
-        TODO(backend): POST /api/v1/skin-checks currently requires field "images"
-        with at least one file (see backend/internal/handler/skin_check.go).
-        When backend supports tag+notes-only check-ins, remove client-side
-        workaround and send skip_mode=true (or omit images) from check-in-form.
-      */}
-      <p className="text-[11px] leading-relaxed text-muted-foreground/80">
-        {t("skipModeBackendNote")}
-      </p>
     </div>
   );
 }

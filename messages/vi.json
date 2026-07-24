@@ -5,6 +5,7 @@
     "timeout": "Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại.",
     "unauthorized": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
     "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+    "rateLimited": "Bạn đang thao tác quá nhanh, thử lại sau.",
     "server": "Máy chủ đang gặp sự cố. Vui lòng thử lại sau giây lát.",
     "parse": "Nhận được phản hồi không hợp lệ. Vui lòng thử lại.",
     "unknown": "Đã có lỗi xảy ra. Vui lòng thử lại."
@@ -12,7 +13,7 @@
   "metadata": {
     "root": {
       "title": "DaDiary — Theo dõi da mỗi ngày · Nhận gợi ý từ AI Coach",
-      "description": "Tham gia Beta miễn phí DaDiary — nhật ký da + AI Coach cá nhân hóa. Check-in bằng ảnh, theo dõi tiến trình, gợi ý routine phù hợp da Việt (da dầu, mụn, nóng ẩm). Miễn phí trong giai đoạn Beta."
+      "description": "Đang mở Beta DaDiary — dùng Free đầy đủ để check-in bằng ảnh, theo dõi tiến trình và nhận gợi ý AI Coach. Nâng cấp Premium khi cần AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn. Phù hợp da Việt (da dầu, mụn, nóng ẩm)."
     },
     "checkIn": {
       "title": "Ghi nhật ký da · DaDiary",
@@ -201,15 +202,15 @@
     "guideClose": "Đóng"
   },
   "hero": {
-    "badge": "Beta miễn phí • Dành cho da Việt",
+    "badge": "Đang mở Beta · Free đầy đủ",
     "slogan": "Nhật ký da + AI Coach",
     "titleLead": "Theo dõi da hằng ngày —",
     "titleGradient": "AI gợi ý đúng việc cần làm.",
-    "body": "Da dầu, mụn hay thâm trong khí hậu nóng ẩm? DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, nhìn thấy tiến trình rõ ràng và nhận gợi ý routine phù hợp — không đoán mò, không áp lực.",
-    "ctaPrimary": "Bắt đầu Beta miễn phí",
+    "body": "Da dầu, mụn hay thâm trong khí hậu nóng ẩm? DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, giữ streak, xem tiến trình và nhận gợi ý routine phù hợp. Bắt đầu với Free — nâng cấp Premium khi cần AI không giới hạn.",
+    "ctaPrimary": "Bắt đầu với Free",
     "ctaSecondary": "Xem cách hoạt động",
     "ctaEmailLink": "Hoặc chỉ để lại email →",
-    "betaNote": "Miễn phí · Không cần thẻ tín dụng · Hủy bất cứ lúc nào",
+    "betaNote": "Core Free trong Beta · Premium khi cần · Không bắt buộc thẻ",
     "stat1k": "< 1 phút",
     "stat1v": "check-in mỗi ngày",
     "stat2k": "AI Coach",
@@ -219,7 +220,10 @@
     "stack1": "Da dầu · nóng ẩm",
     "stack2": "Mụn · thâm mụn",
     "stack3": "KCN · đều màu",
-    "mockupLabel": "DaDiary"
+    "mockupLabel": "DaDiary",
+    "mockupCheckIn": "Check-in hôm nay",
+    "mockupStreak": "Streak 7 ngày",
+    "mockupCoach": "Da hôm nay ổn hơn — giữ kem chống nắng buổi sáng nhé."
   },
   "problem": {
     "sectionTitle": "Vấn đề",
@@ -248,19 +252,27 @@
     "badge": "Giải pháp",
     "sectionTitle": "DaDiary",
     "heading": "Nhật ký da thông minh — AI Coach đi cùng bạn",
-    "body": "DaDiary kết hợp check-in ảnh hằng ngày với AI Coach để bạn thấy rõ da thay đổi, hiểu routine nào phù hợp và điều chỉnh nhẹ nhàng theo từng giai đoạn.",
+    "body": "DaDiary kết hợp check-in ảnh hằng ngày với AI Coach để bạn thấy rõ da thay đổi, giữ streak, tick routine và chỉnh nhẹ theo từng giai đoạn — Free đã dùng được phần lõi.",
     "points": {
-      "p1": "Ghi nhật ký da nhanh bằng ảnh + cảm nhận — chỉ vài chục giây mỗi ngày.",
-      "p2": "AI Coach phân tích và gợi ý routine phù hợp loại da, mục tiêu và sản phẩm bạn đang dùng.",
-      "p3": "Biểu đồ tiến trình và so sánh trước–sau giúp bạn thấy da cải thiện theo thời gian.",
+      "p1": "Ghi nhật ký da nhanh bằng ảnh + cảm nhận — chỉ vài chục giây mỗi ngày, giữ streak dễ hơn.",
+      "p2": "AI Coach phản hồi sau check-in và gợi ý routine phù hợp loại da, mục tiêu và tủ đồ bạn đang dùng.",
+      "p3": "Progress, streak và so sánh trước–sau giúp bạn thấy da đổi theo tuần — không đoán mò.",
       "p4": "Giọng điệu ấm áp, khích lệ — không phán xét, không áp lực phải hoàn hảo."
     },
     "mockup": {
       "checkIn": "Check-in hôm nay",
       "coach": "AI Coach",
       "coachSample": "Da hôm nay ổn hơn tuần trước — tiếp tục kem chống nắng buổi sáng nhé.",
-      "progress": "Tiến trình 7 ngày"
+      "progress": "Tiến trình 7 ngày",
+      "streak": "Streak 7 ngày",
+      "routine": "Routine sáng ✓"
     }
+  },
+  "progressPreview": {
+    "sectionTitle": "Xem trước Progress",
+    "heading": "Nhật ký da trông như thế này",
+    "sub": "Mỗi check-in lưu ảnh, cảm nhận và gợi ý coach — đủ để bạn nhìn lại tuần trước và biết mình đang đi đúng hướng.",
+    "cta": "Bắt đầu với Free"
   },
   "features": {
     "sectionTitle": "Tính năng nổi bật",
@@ -276,8 +288,8 @@
         "desc": "Nhận gợi ý dựa trên ảnh, loại da và routine hiện tại — giải thích dễ hiểu, không thay thế bác sĩ da liễu."
       },
       "progress": {
-        "title": "Theo dõi tiến trình trực quan",
-        "desc": "Biểu đồ xu hướng, chuỗi ngày check-in và dòng thời gian giúp bạn nhìn thấy da thay đổi theo tuần, tháng."
+        "title": "Theo dõi tiến trình & streak",
+        "desc": "Biểu đồ xu hướng, streak check-in và dòng thời gian giúp bạn nhìn thấy da thay đổi theo tuần — Free xem được vài tháng gần nhất."
       },
       "routine": {
         "title": "Gợi ý routine sáng–tối",
@@ -318,69 +330,69 @@
   },
   "benefits": {
     "sectionTitle": "Lợi ích",
-    "heading": "Thiết kế cho làn da và khí hậu Việt Nam",
-    "sub": "Da dầu, mụn, nóng ẩm, thâm nắng — DaDiary hiểu những thách thức phổ biến và gợi ý phù hợp, không copy nguyên routine nước ngoài.",
+    "heading": "Thiết kế cho thói quen chăm da thật",
+    "sub": "Streak, AI Coach, routine sáng–tối và tủ đồ — đủ để bạn chăm đều mà không bị rối. Gợi ý nhẹ, phù hợp nóng ẩm; không thay thế bác sĩ.",
     "items": {
       "humid": {
-        "title": "Phù hợp khí hậu nóng ẩm",
-        "desc": "Gợi ý nhẹ, không bí da — ưu tiên làm sạch đúng cách, kiểm soát dầu và kem chống nắng mỏng nhẹ."
+        "title": "Giữ streak mỗi ngày",
+        "desc": "Check-in dưới 1 phút giúp bạn không bỏ chuỗi — thấy mình đã chăm bao nhiêu ngày, dễ duy trì hơn đoán mò."
       },
       "oily": {
-        "title": "Hỗ trợ da dầu, lỗ chân lông",
-        "desc": "Theo dõi mức độ bóng dầu theo thời gian — biết sản phẩm nào giúp da cân bằng hơn."
+        "title": "AI Coach sau mỗi lần ghi",
+        "desc": "Nhận phản hồi ấm dựa trên ảnh và cảm nhận hôm nay — gợi ý nhỏ, giải thích dễ hiểu, không áp lực “phải trị khỏi”."
       },
       "acne": {
-        "title": "Theo dõi mụn & thâm mụn",
-        "desc": "Ảnh check-in giúp bạn thấy mụn giảm dần hay tái phát — điều chỉnh routine kịp thời, không đoán mò."
+        "title": "Routine + tủ đồ gọn",
+        "desc": "Tick bước sáng–tối, lưu sản phẩm đang dùng — biết mình đã làm gì và tránh mua trùng thành phần."
       },
       "safe": {
         "title": "An toàn & có trách nhiệm",
-        "desc": "Luôn nhắc kem chống nắng, patch test và khuyến cáo gặp bác sĩ khi da có dấu hiệu bất thường."
+        "desc": "Luôn nhắc kem chống nắng, patch test và gặp bác sĩ khi da có dấu hiệu bất thường — gợi ý tham khảo, không phải chẩn đoán."
       }
     }
   },
   "testimonials": {
     "sectionTitle": "Người dùng nói gì",
-    "heading": "Người dùng Beta đầu tiên đã thấy khác biệt",
-    "sub": "Những chia sẻ sớm từ người dùng thử DaDiary tại Việt Nam — da dầu, mụn, thâm, khí hậu nóng ẩm.",
-    "collecting": "Chia sẻ từ người dùng Beta sớm",
-    "earlyBeta": "Beta sớm",
-    "footnote": "Một số chia sẻ từ người dùng Beta sớm (minh họa). Review thật sẽ được cập nhật khi Beta mở rộng.",
+    "heading": "Chăm da đều hơn — vì thấy mình đang tiến",
+    "sub": "Chia sẻ từ chị em 20–35 đang dùng Beta: check-in ảnh, streak và coach nhẹ mỗi ngày.",
+    "collecting": "Chia sẻ từ người dùng Beta",
+    "earlyBeta": "Beta",
+    "footnote": "Trải nghiệm cá nhân từ người dùng Beta sớm — không phải cam kết kết quả y tế. Da mỗi người khác nhau.",
     "items": {
       "t1": {
-        "name": "Minh Anh",
-        "role": "Da dầu, hay mụn cằm · TP.HCM",
-        "quote": "Da mình dầu và hay nổi mụn ở cằm. Sau 3 tuần check-in đều, AI gợi ý giảm BHA và tăng dưỡng ẩm — da bớt bóng dầu buổi trưa và ít mụn viêm hơn."
+        "name": "Ngọc Anh",
+        "role": "28 · Da dầu, hay bóng trưa · TP.HCM",
+        "quote": "Trước mình hay quên skincare lúc deadline. Giờ check-in 1 ảnh buổi tối + tick routine — streak 12 ngày rồi. Coach nhắc giảm BHA khi da khô, mình thấy đỡ đoán mò hơn."
       },
       "t2": {
-        "name": "Thu Hà",
-        "role": "Da mụn, dễ thâm · Hà Nội",
-        "quote": "Mình từng thử nhiều routine nhưng không theo dõi được. DaDiary giúp mình thấy rõ da cải thiện sau 2 tuần, đặc biệt vùng thâm mụn quanh má."
+        "name": "Phương Linh",
+        "role": "24 · Da mụn nhẹ, dễ thâm · Hà Nội",
+        "quote": "Mình không cần app “chữa mụn”, chỉ cần nhìn lại tuần trước. So ảnh cùng góc thấy cằm dịu hơn; tủ đồ giúp mình không mua thêm toner trùng loại đang dùng."
       },
       "t3": {
-        "name": "Lan Phương",
-        "role": "Da hỗn hợp, nóng ẩm · Đà Nẵng",
-        "quote": "Khí hậu nóng ẩm ở Đà Nẵng làm da mình dễ bí. Check-in mỗi sáng và so sánh ảnh giúp mình biết routine nào nhẹ mà vẫn đủ ẩm, không còn đổ dầu lại giữa ngày."
+        "name": "Khánh Vy",
+        "role": "31 · Da hỗn hợp, nóng ẩm · Đà Nẵng",
+        "quote": "Da mình đổi theo thời tiết biển. Free đủ để ghi nhật ký và nhận coach sau mỗi lần check-in. Khi muốn chỉnh routine thoải mái hơn mình mới nghĩ tới Premium — không bị ép."
       }
     }
   },
   "cta": {
     "eyebrow": "Bắt đầu ngay",
     "heading": "Sẵn sàng theo dõi da và nhận gợi ý từ AI mỗi ngày?",
-    "body": "Đăng ký Beta miễn phí — ghi nhật ký da bằng ảnh, nhận gợi ý routine phù hợp khí hậu Việt. Chỉ cần bắt đầu, không cần routine hoàn hảo.",
-    "betaFree": "100% miễn phí trong giai đoạn Beta",
-    "primary": "Bắt đầu Beta miễn phí",
+    "body": "Đăng ký Free trong Beta — check-in bằng ảnh, giữ streak, tick routine và nhận coach sau mỗi lần ghi. Khi cần AI không giới hạn, tủ đồ đầy đủ hay lịch sử dài hơn — nâng cấp Premium bất cứ lúc nào.",
+    "betaFree": "Free core trong Beta · Premium tùy chọn",
+    "primary": "Bắt đầu với Free",
     "secondary": "Chỉ để lại email",
     "trustNote": "DaDiary đưa ra gợi ý tham khảo, không thay thế tư vấn y tế. Luôn patch test sản phẩm mới."
   },
   "betaSignup": {
     "sectionTitle": "Đăng ký Beta",
-    "heading": "Nhận quyền truy cập Beta sớm — miễn phí",
-    "sub": "Để lại email, chúng tôi gửi link mở Beta và cập nhật tính năng mới. Không spam, không bán email.",
+    "heading": "Nhận cập nhật Beta — bắt đầu Free khi sẵn sàng",
+    "sub": "Để lại email để nhận link mở Beta và tin tính năng mới. Dùng Free trước; Premium chỉ khi bạn muốn mở khóa thêm.",
     "benefits": {
-      "b1": "Truy cập Beta miễn phí",
+      "b1": "Dùng Free đầy đủ trong Beta",
       "b2": "Ưu tiên khi mở tính năng mới",
-      "b3": "Chỉ 1 email, không cần thẻ"
+      "b3": "Chỉ 1 email — Premium không bắt buộc"
     },
     "trust": {
       "t1": "Không spam",
@@ -446,7 +458,7 @@
     "skipModeActiveNotice": "Bạn đang dùng chế độ không chụp ảnh. Dữ liệu sẽ được phân tích dựa trên tag và ghi chú.",
     "skipModeNeedTagsHint": "Chọn ít nhất 1 tag hoặc ghi chú để có thể gửi.",
     "skipModeReadyHint": "Đủ điều kiện gửi — bạn có thể bấm Gửi cảm nhận hôm nay.",
-    "skipModeBackendNote": "Lưu ý: máy chủ hiện vẫn yêu cầu ít nhất 1 ảnh. Chế độ không ảnh sẽ hoạt động đầy đủ khi backend được cập nhật.",
+    "skipModeBackendNote": "Check-in không ảnh dùng tag và ghi chú — coach bỏ qua phân tích khuôn mặt.",
     "skipModeBanner": "Đang ở chế độ chỉ tag + ghi chú — không cần ảnh. AI vẫn phản hồi nhưng kém chính xác hơn so với khi có ảnh.",
     "skipModeBackCta": "Bật lại chụp ảnh",
     "skipModeManageCta": "Mở Quyền riêng tư",
@@ -507,6 +519,8 @@
     "photoCaptureBack": "Camera sau",
     "visibilityPrivate": "Chỉ mình tôi",
     "visibilityPublic": "Công khai (dòng thời gian)",
+    "visibilityPublicSoon": "Công khai · Sắp ra mắt",
+    "visibilityPublicSoonHint": "Timeline công khai chưa mở — check-in hiện chỉ riêng bạn thấy.",
     "afterSubmit": "Sau khi đăng: ảnh + ghi chú được lưu; bạn đồng hành AI trả lời ngay trong trang (có thể mất vài phút).",
     "linkCabinet": "Mở tủ đồ chăm da",
     "reset": "Xoá",
@@ -518,7 +532,8 @@
     "needAuth": "Cần đăng nhập để gửi nhật ký (kết nối tài khoản với máy chủ).",
     "networkError": "Chưa kết nối được tới máy chủ (hoặc CORS). Kiểm tra `NEXT_PUBLIC_API_URL` và backend — form đã dùng đúng field multipart.",
     "submitErrorNetwork": "Không gửi được — kiểm tra mạng và thử lại. Dữ liệu bạn nhập vẫn được giữ.",
-    "submitErrorMissingImages": "Máy chủ chưa hỗ trợ gửi không ảnh. Hãy bật lại chụp ảnh hoặc thử lại sau khi backend được cập nhật.",
+    "submitErrorRateLimited": "Bạn đang thao tác quá nhanh, thử lại sau.",
+    "submitErrorMissingImages": "Thêm ít nhất một tag hoặc ghi chú cho check-in không ảnh, hoặc bật lại chế độ chụp ảnh.",
     "submitErrorUnknown": "Lỗi không xác định",
     "submitErrorGeneric": "Gửi thất bại ({status}): {detail}. Bạn có thể sửa và thử lại — dữ liệu vẫn được giữ.",
     "analyzingCoach": "Đang đọc ảnh và soạn lời khuyên — có thể mất vài phút, bạn cứ để tab mở nhé.",
@@ -719,7 +734,7 @@
   "pricing": {
     "heroTitle": "Mở khóa toàn bộ",
     "heroTitleAccent": "AI Coach & Tủ đồ",
-    "heroSub": "Chăm da đều đặn hơn với gợi ý AI không giới hạn, tủ đồ đầy đủ và lịch sử tiến trình dài hơn — chọn gói phù hợp nhịp sống của bạn.",
+    "heroSub": "Free đã đủ để check-in, streak và coach sau mỗi lần ghi. Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn — nâng cấp khi bạn thật sự cần.",
     "mostPopular": "Phổ biến nhất",
     "upgradeCta": "Nâng cấp ngay",
     "currentPlanBadge": "Gói hiện tại",
@@ -758,6 +773,7 @@
       "errorUnavailable": "Cổng thanh toán tạm thời chưa sẵn sàng. Thử lại sau nhé.",
       "errorInvalid": "Thông tin gói không hợp lệ. Chọn lại gói và thử lại.",
       "errorNetwork": "Mạng gián đoạn — kiểm tra kết nối và thử lại.",
+      "errorRateLimited": "Bạn đang thao tác quá nhanh, thử lại sau.",
       "errorServer": "Máy chủ đang bận. Thử lại sau ít phút.",
       "errorGeneric": "Không tạo được phiên thanh toán. Thử lại nhé."
     },
@@ -842,8 +858,8 @@
       "title": "Câu hỏi thường gặp",
       "subtitle": "Ngắn gọn — để bạn chọn gói mà không bị rối.",
       "q1": {
-        "question": "Free có dùng được AI Coach không?",
-        "answer": "Có. Free vẫn nhận coach sau check-in. Gói trả phí mở thêm gợi ý routine không giới hạn, chỉnh tay thoải mái và tủ đồ đầy đủ."
+        "question": "Free trong Beta dùng được gì?",
+        "answer": "Check-in ảnh, giữ streak, tick routine, xem tủ đồ và nhận AI Coach sau mỗi lần ghi. Free có hạn mức gợi ý/chỉnh routine mỗi tháng; Premium mở không giới hạn khi bạn cần."
       },
       "q2": {
         "question": "Thanh toán năm tiết kiệm bao nhiêu?",
@@ -851,11 +867,11 @@
       },
       "q3": {
         "question": "Premium và Premium+ khác nhau chỗ nào?",
-        "answer": "Premium mở AI không giới hạn, tủ đồ và Progress 12 tháng. Premium+ thêm phân tích nâng cao, deep memory, lịch sử không giới hạn và early access."
+        "answer": "Premium mở AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu và không quảng cáo. Premium+ thêm phân tích nâng cao, deep memory, lịch sử không giới hạn và early access."
       },
       "q4": {
         "question": "Có thể đổi gói hoặc hủy sau không?",
-        "answer": "Bạn có thể nâng cấp ngay qua SePay. Đang dùng Premium thì hủy gói ngay trên trang này — vẫn giữ quyền lợi đến hết kỳ thanh toán (và vài ngày gia hạn). Đổi chu kỳ tháng/năm khi thanh toán lại; cần hỗ trợ thêm thì gửi feedback trong Beta."
+        "answer": "Nâng cấp qua SePay bất cứ lúc nào. Đang dùng Premium thì hủy ngay trên trang này — vẫn giữ quyền lợi đến hết kỳ (và vài ngày gia hạn). Không bị khóa Free nếu bạn không nâng cấp."
       }
     }
   },

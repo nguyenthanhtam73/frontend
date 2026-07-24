@@ -12,11 +12,20 @@ Commands
 --------
   npm run test:e2e:install   # once — download Chromium
   npm run test:e2e           # all e2e specs
+  npm run test:e2e -- core-smoke
   npm run test:e2e -- premium-sepay-upgrade
   npm run test:e2e:ui        # Playwright UI mode
 
 What is covered
 ---------------
+core-smoke.test.ts
+- Auth session: UI login → reload + new tab keep signed-in (no guest flash) → GET /me with JWT
+- Skip-face check-in: mode toggle → submit without photos → skip_mode=true → text-only analysis completed
+- Guest onboarding poll: preview-complete → preview_job_id + preview_access_token;
+  poll without/wrong token → 404; with token (query or X-Preview-Token) → routine ready
+- Payment success → /me full: Free → Pricing Premium Monthly → mock SePay + ORDER_PAID IPN →
+  /payment/success active → plan_tier + days_left + plan_expires_at + Premium features
+
 sepay-smoke.test.ts
 - Free user login + /pricing Premium Monthly checkout
 - Mock SePay form POST (no real payment UI)

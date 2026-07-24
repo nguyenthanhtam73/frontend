@@ -1,6 +1,12 @@
 import { apiBaseUrl } from "@/lib/api";
 import { type ApiEnvelope } from "@/lib/api-envelope";
-import { authHeaders, clearAccessToken } from "@/lib/auth-token";
+import {
+  authHeaders,
+  clearAccessToken,
+  ensureFreshAccessToken,
+  getRefreshToken,
+  refreshAccessToken,
+} from "@/lib/auth-token";
 import {
   getNetErrorCopy,
   pushToast,
@@ -136,6 +142,11 @@ async function requestOnce<T>(url: string, opts: ApiRequestOptions): Promise<T> 
     raw = false,
   } = opts;
 
+  // Proactively renew expired access before the request when possible.
+  if (auth) {
+    await ensureFreshAccessToken(apiBaseUrl);
+  }
+
   const controller = new AbortController();
   let timedOut = false;
   const timer =
@@ -200,10 +211,10 @@ async function requestOnce<T>(url: string, opts: ApiRequestOptions): Promise<T> 
       // Unparseable body: if the status is also an error, report by status,
       // otherwise it's a genuine parse error.
       if (res.status === 401) {
-        if (clearTokenOn401) clearAccessToken();
         throw new ApiError("unauthorized", { status: 401 });
       }
       if (res.status === 403) throw new ApiError("forbidden", { status: 403 });
+      if (res.status === 429) throw new ApiError("rate_limited", { status: 429 });
       if (res.status >= 500) throw new ApiError("server", { status: res.status });
       if (!res.ok) throw new ApiError("api", { status: res.status });
       throw new ApiError("parse", { status: res.status });
@@ -214,11 +225,23 @@ async function requestOnce<T>(url: string, opts: ApiRequestOptions): Promise<T> 
   const code = extractCode(json);
 
   if (res.status === 401) {
-    if (clearTokenOn401) clearAccessToken();
-    throw new ApiError("unauthorized", { status: 401, code, serverMessage, payload: json });
+    throw new ApiError("unauthorized", {
+      status: 401,
+      code,
+      serverMessage,
+      payload: json,
+    });
   }
   if (res.status === 403) {
     throw new ApiError("forbidden", { status: 403, code, serverMessage, payload: json });
+  }
+  if (res.status === 429 || code === "rate_limited") {
+    throw new ApiError("rate_limited", {
+      status: 429,
+      code: code || "rate_limited",
+      serverMessage,
+      payload: json,
+    });
   }
   if (res.status >= 500) {
     throw new ApiError("server", { status: res.status, code, serverMessage, payload: json });
@@ -260,6 +283,7 @@ export async function apiFetch<T = unknown>(
   }
 
   let attempt = 0;
+  let didRefreshRetry = false;
   for (;;) {
     try {
       return await requestOnce<T>(url, opts);
@@ -268,6 +292,22 @@ export async function apiFetch<T = unknown>(
       if (isAbortError(err) && signal?.aborted) throw err;
 
       const apiErr = err instanceof ApiError ? err : new ApiError("unknown", { cause: err });
+
+      // One silent refresh+retry on 401 when we still have a refresh token.
+      if (
+        apiErr.kind === "unauthorized" &&
+        opts.auth !== false &&
+        !didRefreshRetry &&
+        getRefreshToken() &&
+        !signal?.aborted
+      ) {
+        didRefreshRetry = true;
+        const ok = await refreshAccessToken(apiBaseUrl);
+        if (ok) continue;
+        if (opts.clearTokenOn401 !== false) clearAccessToken();
+      } else if (apiErr.kind === "unauthorized" && opts.clearTokenOn401 !== false) {
+        clearAccessToken();
+      }
 
       if (isRetryable(apiErr.kind) && attempt < retries && !signal?.aborted) {
         attempt += 1;

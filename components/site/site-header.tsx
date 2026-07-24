@@ -40,6 +40,7 @@ function isNavLinkActive(pathname: string, hash: string, href: string) {
 function AuthSkeleton() {
   return (
     <div
+      data-testid="auth-skeleton"
       className="hidden h-9 min-w-[11rem] animate-pulse rounded-md bg-muted/60 sm:block"
       aria-hidden
     />
@@ -62,7 +63,10 @@ function SignedInActions({
   accountClassName?: string;
 }) {
   return (
-    <div className={cn("flex shrink-0 items-center gap-1.5", className)}>
+    <div
+      data-testid="auth-signed-in"
+      className={cn("flex shrink-0 items-center gap-1.5", className)}
+    >
       <span
         className={cn("max-w-40 truncate text-xs text-muted-foreground", accountClassName)}
         title={email}
@@ -71,6 +75,7 @@ function SignedInActions({
       </span>
       <Button
         type="button"
+        data-testid="auth-sign-out"
         variant="ghost"
         size="sm"
         className="inline-flex min-w-[5.75rem] shrink-0 justify-center"
@@ -95,12 +100,16 @@ function GuestActions({
   compact?: boolean;
 }) {
   return (
-    <div className={cn("flex shrink-0 items-center gap-1.5", className)}>
+    <div
+      data-testid="auth-guest"
+      className={cn("flex shrink-0 items-center gap-1.5", className)}
+    >
       <ButtonLink
         href="/login"
         prefetch
         variant="ghost"
         size="sm"
+        data-testid="auth-sign-in"
         className={cn(
           "min-h-9 justify-center",
           compact ? "inline-flex px-2.5" : "hidden min-w-[4.5rem] lg:inline-flex",
@@ -227,8 +236,9 @@ export function SiteHeader() {
       : []),
   ];
 
+  // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.
   const linkBase =
-    "inline-flex whitespace-nowrap rounded-full px-3.5 py-2 text-base font-medium leading-snug transition-colors";
+    "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium leading-snug transition-colors sm:min-h-0 sm:px-3.5 sm:py-2 sm:text-base";
 
   function renderNavUl(
     ulClassName: string,
@@ -259,13 +269,17 @@ export function SiteHeader() {
     );
   }
 
-  const navStrip = renderNavUl("flex flex-nowrap items-center justify-start gap-1");
-  const navWrapped = renderNavUl("flex flex-wrap items-center justify-center gap-x-2 gap-y-2");
+  const navStrip = renderNavUl(
+    "flex flex-nowrap items-center justify-start gap-0.5 sm:gap-1",
+  );
+  const navWrapped = renderNavUl(
+    "flex flex-wrap items-center justify-center gap-x-2 gap-y-2",
+  );
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-2 sm:gap-3 sm:px-6 lg:gap-2 lg:py-3">
-        <div className="flex min-h-12 items-center gap-2 sm:min-h-14 sm:gap-3">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-4 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
+        <div className="flex min-h-11 items-center gap-2 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
             prefetch
@@ -286,13 +300,16 @@ export function SiteHeader() {
         </nav>
       </div>
 
-      <nav className="border-t border-border/40 py-2 lg:hidden" aria-label={t("mainNavAria")}>
-        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 pb-0.5 [scrollbar-width:thin] sm:px-6">
+      <nav
+        className="border-t border-border/40 py-1 lg:hidden"
+        aria-label={t("mainNavAria")}
+      >
+        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-3 [scrollbar-width:thin] sm:px-6">
           {navStrip}
         </div>
       </nav>
 
-      <div className="theme-toggle-mobile-bar flex min-h-9 flex-nowrap items-center justify-start gap-2 overflow-x-auto border-t border-border/40 px-4 py-2 [scrollbar-width:none] sm:justify-center sm:px-6 [&::-webkit-scrollbar]:hidden md:hidden">
+      <div className="theme-toggle-mobile-bar flex min-h-11 flex-nowrap items-center justify-start gap-1.5 overflow-x-auto border-t border-border/40 px-3 py-1 [scrollbar-width:none] sm:justify-center sm:px-6 sm:py-2 [&::-webkit-scrollbar]:hidden md:hidden">
         <LocaleSwitcher />
         <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
         {mobileAuth}

@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   CoachWelcomeCta,
@@ -513,6 +513,39 @@ function ReviewPhotoLightbox({
   closeLabel: string;
   onClose: () => void;
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    const focusHandle = window.requestAnimationFrame(() => {
+      closeRef.current?.focus();
+    });
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      // Single focusable control — keep Tab inside the lightbox.
+      if (e.key === "Tab") {
+        e.preventDefault();
+        closeRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.cancelAnimationFrame(focusHandle);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      previouslyFocused.current?.focus?.();
+    };
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
@@ -522,6 +555,7 @@ function ReviewPhotoLightbox({
       onClick={onClose}
     >
       <IconDismissButton
+        ref={closeRef}
         ariaLabel={closeLabel}
         onClick={onClose}
         className="absolute right-4 top-4 z-10 bg-black/50 text-white hover:bg-black/70"

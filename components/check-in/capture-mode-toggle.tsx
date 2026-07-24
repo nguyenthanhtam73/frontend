@@ -27,6 +27,7 @@ export function CaptureModeToggle({
       className="grid grid-cols-2 gap-1 rounded-xl border bg-muted/40 p-1"
     >
       <ModeTab
+        testId="checkin-mode-photo"
         active={!skipMode}
         disabled={disabled}
         icon={<Camera className="size-4 shrink-0" aria-hidden />}
@@ -34,6 +35,7 @@ export function CaptureModeToggle({
         onClick={onSelectPhoto}
       />
       <ModeTab
+        testId="checkin-mode-skip"
         active={skipMode}
         disabled={disabled}
         icon={<ImageOff className="size-4 shrink-0" aria-hidden />}
@@ -45,12 +47,14 @@ export function CaptureModeToggle({
 }
 
 function ModeTab({
+  testId,
   active,
   disabled,
   icon,
   label,
   onClick,
 }: {
+  testId: string;
   active: boolean;
   disabled?: boolean;
   icon: React.ReactNode;
@@ -61,6 +65,7 @@ function ModeTab({
     <button
       type="button"
       role="tab"
+      data-testid={testId}
       aria-selected={active}
       disabled={disabled}
       onClick={onClick}

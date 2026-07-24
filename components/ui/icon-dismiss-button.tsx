@@ -1,19 +1,20 @@
+import { forwardRef } from "react";
+
 import { cn } from "@/lib/utils";
 
 /** Icon-only dismiss/close control with a 44×44px touch target (WCAG mobile). */
-export function IconDismissButton({
-  onClick,
-  ariaLabel,
-  className,
-  children,
-}: {
-  onClick: () => void;
-  ariaLabel: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
+export const IconDismissButton = forwardRef<
+  HTMLButtonElement,
+  {
+    onClick: () => void;
+    ariaLabel: string;
+    className?: string;
+    children: React.ReactNode;
+  }
+>(function IconDismissButton({ onClick, ariaLabel, className, children }, ref) {
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
@@ -25,4 +26,4 @@ export function IconDismissButton({
       {children}
     </button>
   );
-}
+});

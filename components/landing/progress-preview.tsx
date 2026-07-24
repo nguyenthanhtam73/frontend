@@ -13,17 +13,24 @@ export async function ProgressPreview() {
     .map((src) => localizeMockSkinCheck(src, locale));
 
   return (
-    <section className="border-t border-border/60 bg-background/40">
+    <section
+      id="progress-preview"
+      className="scroll-mt-20 border-t border-border/60 bg-gradient-to-b from-accent/25 via-background/60 to-background"
+    >
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div className="space-y-3">
+          <div className="max-w-xl space-y-3">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
               {t("sectionTitle")}
             </p>
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("heading")}</h2>
-            <p className="max-w-xl text-sm text-muted-foreground">{t("sub")}</p>
+            <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+              {t("heading")}
+            </h2>
+            <p className="text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+              {t("sub")}
+            </p>
           </div>
-          <ButtonLink href="/progress" variant="ghost">
+          <ButtonLink href="/register" variant="ghost" className="shrink-0">
             {t("cta")}
             <ArrowRight className="size-4" aria-hidden />
           </ButtonLink>

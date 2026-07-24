@@ -9,13 +9,19 @@ type PreviewCompletePayload = {
     starter_routine?: StarterRoutineDTO;
     starter_routine_pending?: boolean;
     preview_job_id?: string;
+    preview_access_token?: string;
   };
+};
+
+export type GuestPreviewJob = {
+  jobId: string;
+  accessToken: string;
 };
 
 /** Start (or restart) the guest background AI job from cached onboarding answers. */
 export async function requestGuestPreviewJob(
   session: CoachWelcomePayload,
-): Promise<string | null> {
+): Promise<GuestPreviewJob | null> {
   const summary = session.reviewSummary;
   if (!summary?.skin_type || !summary.goal || !summary.skill_level) return null;
 
@@ -46,24 +52,29 @@ export async function requestGuestPreviewJob(
 
     if (!res.ok || !payload.success || !payload.data) return null;
 
-    if (payload.data.starter_routine_pending === true && payload.data.preview_job_id) {
+    const jobId = payload.data.preview_job_id;
+    const accessToken = payload.data.preview_access_token;
+    if (!jobId || !accessToken) return null;
+
+    if (payload.data.starter_routine_pending === true) {
       patchCoachWelcomeSession({
-        previewJobId: payload.data.preview_job_id,
+        previewJobId: jobId,
+        previewAccessToken: accessToken,
         starterRoutinePending: true,
       });
-      return payload.data.preview_job_id;
+      return { jobId, accessToken };
     }
 
     if (payload.data.starter_routine) {
       patchCoachWelcomeSession({
         starterRoutine: payload.data.starter_routine,
         starterRoutinePending: false,
-        previewJobId: payload.data.preview_job_id,
+        previewJobId: jobId,
+        previewAccessToken: accessToken,
       });
     }
+    return { jobId, accessToken };
   } catch {
     return null;
   }
-
-  return null;
 }

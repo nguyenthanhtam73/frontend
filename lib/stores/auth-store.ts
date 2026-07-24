@@ -2,7 +2,13 @@ import { create } from "zustand";
 
 import { apiBaseUrl } from "@/lib/api";
 import type { ApiEnvelope } from "@/lib/api-envelope";
-import { authHeaders, clearAccessToken, getAccessToken } from "@/lib/auth-token";
+import {
+  authHeaders,
+  clearAccessToken,
+  ensureFreshAccessToken,
+  getAccessToken,
+  getRefreshToken,
+} from "@/lib/auth-token";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { useSessionStore } from "@/lib/stores/session-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
@@ -48,31 +54,45 @@ type AuthState = {
   logout: () => Promise<void>;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   loading: false,
   refresh: async () => {
-    const token = getAccessToken();
-    if (!token) {
+    const hasSession = !!getAccessToken() || !!getRefreshToken();
+    if (!hasSession) {
       set({ user: null, loading: false });
       return;
     }
     set({ loading: true });
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/me`, { headers: authHeaders() });
-      const json = (await res.json().catch(() => ({}))) as ApiEnvelope<AuthUser>;
-      if (res.status === 401 || res.status === 403) {
+      // Renew access when expired so /me is not a false 401.
+      await ensureFreshAccessToken(apiBaseUrl);
+      if (!getAccessToken()) {
+        // Refresh failed permanently (invalid/revoked) — already cleared tokens.
         set({ user: null });
-        clearAccessToken();
         return;
       }
-      if (!res.ok || !json.data) {
+
+      const res = await fetch(`${apiBaseUrl}/api/v1/me`, { headers: authHeaders() });
+      const json = (await res.json().catch(() => ({}))) as ApiEnvelope<AuthUser>;
+
+      if (res.status === 401 || res.status === 403) {
+        // True auth failure — drop session.
+        clearAccessToken();
         set({ user: null });
+        return;
+      }
+      if (!res.ok) {
+        // Network-adjacent / 5xx: keep prior user to avoid flash logout.
+        return;
+      }
+      if (!json.data) {
         return;
       }
       set({ user: json.data });
     } catch {
-      set({ user: null });
+      // Offline / fetch throw — keep prior user.
+      void get().user;
     } finally {
       set({ loading: false });
     }
@@ -84,6 +104,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       await clearPushSubscriptionOnLogout();
     } catch {
       setLocalPushEnabled(false);
+    }
+
+    // Best-effort server revoke (refresh sessions) before wiping local tokens.
+    try {
+      const refresh = getRefreshToken();
+      const access = getAccessToken();
+      if (access) {
+        await fetch(`${apiBaseUrl}/api/v1/auth/logout`, {
+          method: "POST",
+          headers: {
+            ...authHeaders(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(refresh ? { refresh_token: refresh } : {}),
+        });
+      }
+    } catch {
+      /* ignore — local clear still proceeds */
     }
 
     clearAccessToken();

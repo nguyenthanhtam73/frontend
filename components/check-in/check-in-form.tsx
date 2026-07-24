@@ -79,7 +79,8 @@ export function CheckInForm() {
   const [environmentNote, setEnvironmentNote] = useState("");
   const [conditions, setConditions] = useState<string[]>([]);
   const [symptoms, setSymptoms] = useState<string[]>([]);
-  const [visibility, setVisibility] = useState<"private" | "public">("private");
+  // Public timeline is not shipped yet — always private to avoid a false privacy choice.
+  const visibility = "private" as const;
   const router = useRouter();
   const feedback = useCheckInFeedback();
   // Inline error banner replaces native alert() — much friendlier on mobile (no modal
@@ -186,7 +187,6 @@ export function CheckInForm() {
     setEnvironmentNote("");
     setConditions([]);
     setSymptoms([]);
-    setVisibility("private");
     feedback.resetFeedback();
     setErrorMsg(null);
   }
@@ -215,11 +215,6 @@ export function CheckInForm() {
             showError(t("skipModeNeedTags"));
             return;
           }
-          /*
-           * TODO(backend): When POST /api/v1/skin-checks accepts tag+notes-only
-           * check-ins, skip the images requirement below and send skip_mode flag.
-           * Until then the API returns missing_images (400).
-           */
         } else if (items.length === 0) {
           showError(t("needImage"));
           return;
@@ -228,7 +223,11 @@ export function CheckInForm() {
         scrollToFeedback();
         try {
           const fd = new FormData();
-          items.forEach((x) => fd.append("images", x.file));
+          if (skipFaceCapture) {
+            fd.append("skip_mode", "true");
+          } else {
+            items.forEach((x) => fd.append("images", x.file));
+          }
           fd.append("title", title);
           fd.append("user_note", userNote);
           fd.append("environment_note", environmentNote);
@@ -288,6 +287,8 @@ export function CheckInForm() {
               showError(t("photoErrorModeration"));
             } else if (errCode === "missing_images" && skipFaceCapture) {
               showError(t("submitErrorMissingImages"));
+            } else if (res.status === 429 || errCode === "rate_limited") {
+              showError(t("submitErrorRateLimited"));
             } else if (
               res.status === 403 &&
               (errCode === "feature_denied" || errCode === "premium_required")
@@ -420,6 +421,7 @@ export function CheckInForm() {
                     <button
                       key={id}
                       type="button"
+                      data-testid={`checkin-condition-${id}`}
                       onClick={() => toggleCondition(id)}
                       className={cn(
                         "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
@@ -494,29 +496,24 @@ export function CheckInForm() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setVisibility("private")}
-                      className={cn(
-                        "min-h-11 flex-1 rounded-xl border px-3 py-2 text-sm transition-colors sm:min-h-9 sm:rounded-md",
-                        visibility === "private"
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "hover:bg-muted",
-                      )}
+                      aria-pressed="true"
+                      className="min-h-11 flex-1 rounded-xl border border-primary bg-primary/5 px-3 py-2 text-sm text-primary sm:min-h-9 sm:rounded-md"
                     >
                       {t("visibilityPrivate")}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setVisibility("public")}
-                      className={cn(
-                        "min-h-11 flex-1 rounded-xl border px-3 py-2 text-sm transition-colors sm:min-h-9 sm:rounded-md",
-                        visibility === "public"
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "hover:bg-muted",
-                      )}
+                      disabled
+                      aria-disabled="true"
+                      title={t("visibilityPublicSoonHint")}
+                      className="min-h-11 flex-1 cursor-not-allowed rounded-xl border border-dashed px-3 py-2 text-sm text-muted-foreground opacity-70 sm:min-h-9 sm:rounded-md"
                     >
-                      {t("visibilityPublic")}
+                      {t("visibilityPublicSoon")}
                     </button>
                   </div>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                    {t("visibilityPublicSoonHint")}
+                  </p>
                 </Field>
               </div>
             </details>
@@ -623,6 +620,7 @@ export function CheckInForm() {
           </Button>
           <Button
             type="submit"
+            data-testid="checkin-submit"
             size="default"
             className="min-h-12 flex-[2] sm:min-h-9 sm:flex-initial"
             disabled={feedback.isWaiting || !canSubmit}

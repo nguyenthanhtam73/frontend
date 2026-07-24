@@ -13,6 +13,7 @@ export type AuthSession = {
   email: string;
   password: string;
   accessToken: string;
+  refreshToken?: string;
   userId: string;
   planTier: string;
 };
@@ -95,7 +96,7 @@ export async function registerFreeUser(
   }
 
   const json = (await res.json()) as Envelope<{
-    tokens?: { access_token?: string };
+    tokens?: { access_token?: string; refresh_token?: string };
     user?: { id?: string; plan_tier?: string };
   }>;
   const token = json.data?.tokens?.access_token;
@@ -105,6 +106,7 @@ export async function registerFreeUser(
     email,
     password,
     accessToken: token,
+    refreshToken: json.data?.tokens?.refresh_token,
     userId: json.data?.user?.id || "",
     planTier: json.data?.user?.plan_tier || "free",
   };
@@ -123,7 +125,7 @@ export async function loginUser(
     return r;
   });
   const json = (await res.json()) as Envelope<{
-    tokens?: { access_token?: string };
+    tokens?: { access_token?: string; refresh_token?: string };
     user?: { id?: string; plan_tier?: string };
   }>;
   const token = json.data?.tokens?.access_token;
@@ -132,6 +134,7 @@ export async function loginUser(
     email,
     password,
     accessToken: token,
+    refreshToken: json.data?.tokens?.refresh_token,
     userId: json.data?.user?.id || "",
     planTier: json.data?.user?.plan_tier || "free",
   };
@@ -305,6 +308,232 @@ export function assertPremiumFeatures(usage: UsageQuota): void {
   if (f.ai_routine_suggestion && f.ai_routine_suggestion.unlimited !== true) {
     throw new Error("ai_routine_suggestion should be unlimited on Premium");
   }
+}
+
+/**
+ * After paid IPN, /me must expose full subscription fields (not just plan_tier).
+ * Used by payment-success smoke.
+ */
+export function assertPremiumSubscriptionFields(me: MeUser): void {
+  if ((me.plan_tier || "free") !== "premium") {
+    throw new Error(
+      `/me plan_tier expected premium, got ${JSON.stringify(me.plan_tier)}`,
+    );
+  }
+  if (!me.plan_expires_at) {
+    throw new Error("/me missing plan_expires_at after Premium upgrade");
+  }
+  const exp = new Date(me.plan_expires_at).getTime();
+  if (Number.isNaN(exp)) {
+    throw new Error(`/me invalid plan_expires_at: ${me.plan_expires_at}`);
+  }
+  if (exp <= Date.now()) {
+    throw new Error(
+      `/me plan_expires_at should be in the future, got ${me.plan_expires_at}`,
+    );
+  }
+  if (typeof me.days_left !== "number" || me.days_left < 1) {
+    throw new Error(
+      `/me days_left should be a positive number, got ${JSON.stringify(me.days_left)}`,
+    );
+  }
+  // subscription_status is optional on older payloads; when present must look active-ish
+  if (
+    me.subscription_status &&
+    !/active|trialing|grace|paid/i.test(me.subscription_status)
+  ) {
+    throw new Error(
+      `/me unexpected subscription_status=${me.subscription_status}`,
+    );
+  }
+}
+
+export type SkinCheckPayload = {
+  check?: { id?: string; conditions?: string[]; user_note?: string };
+  analysis?: {
+    id?: string;
+    status?: string;
+    coach?: { summary_notes?: string; error_message?: string } | null;
+  };
+  image_urls?: string[];
+};
+
+export async function fetchSkinCheck(
+  request: APIRequestContext,
+  token: string,
+  checkId: string,
+): Promise<SkinCheckPayload> {
+  const res = await request.get(
+    `${apiURL()}/api/v1/skin-checks/${encodeURIComponent(checkId)}`,
+    { headers: authHeader(token) },
+  );
+  if (!res.ok()) {
+    throw new Error(`GET skin-check ${res.status()}: ${await res.text()}`);
+  }
+  const json = (await res.json()) as Envelope<SkinCheckPayload>;
+  if (!json.data) throw new Error("GET skin-check: empty data");
+  return json.data;
+}
+
+/** Poll until analysis reaches a terminal status (completed | failed). */
+export async function waitForSkinAnalysis(
+  request: APIRequestContext,
+  token: string,
+  checkId: string,
+  opts?: { timeoutMs?: number },
+): Promise<SkinCheckPayload> {
+  return pollUntil(
+    `skin-check analysis terminal id=${checkId}`,
+    async () => {
+      const data = await fetchSkinCheck(request, token, checkId);
+      const status = data.analysis?.status || "";
+      if (status === "completed" || status === "failed") return data;
+      return null;
+    },
+    { timeoutMs: opts?.timeoutMs ?? 90_000, intervalMs: 1_000 },
+  );
+}
+
+export type GuestPreviewCreate = {
+  previewJobId: string;
+  previewAccessToken: string;
+  starterRoutinePending?: boolean;
+};
+
+/** Guest POST /onboarding/preview-complete — returns job id + access token. */
+export async function createGuestPreviewJob(
+  request: APIRequestContext,
+  opts?: { locale?: string },
+): Promise<GuestPreviewCreate> {
+  const res = await withRetry("onboarding/preview-complete", async () => {
+    const r = await request.post(
+      `${apiURL()}/api/v1/onboarding/preview-complete`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        data: {
+          skin_type: "combo",
+          undertone: "prefer_not",
+          contexts: [],
+          budget: "mid",
+          goal: "clear_acne",
+          skill_level: "beginner",
+          body_concerns: ["acne", "dryness"],
+          current_routine: "",
+          locale: opts?.locale || "vi",
+          photos_skipped: true,
+        },
+      },
+    );
+    if (!r.ok()) {
+      throw new Error(`preview-complete ${r.status()}: ${await r.text()}`);
+    }
+    return r;
+  });
+
+  const json = (await res.json()) as Envelope<{
+    preview_job_id?: string;
+    preview_access_token?: string;
+    starter_routine_pending?: boolean;
+    starter_routine?: unknown;
+  }>;
+  const jobId = json.data?.preview_job_id;
+  const token = json.data?.preview_access_token;
+  if (!jobId || !token) {
+    throw new Error(
+      `preview-complete missing credentials: job=${jobId} token=${token ? "set" : "missing"} body=${JSON.stringify(json)}`,
+    );
+  }
+  return {
+    previewJobId: jobId,
+    previewAccessToken: token,
+    starterRoutinePending: json.data?.starter_routine_pending,
+  };
+}
+
+export type GuestPreviewPoll = {
+  status: number;
+  pending?: boolean;
+  hasRoutine?: boolean;
+  body: unknown;
+};
+
+/** Poll guest preview job. Pass empty token to assert leak-safe 404. */
+export async function pollGuestPreviewJob(
+  request: APIRequestContext,
+  opts: {
+    jobId: string;
+    token?: string;
+    headerToken?: string;
+  },
+): Promise<GuestPreviewPoll> {
+  const qs =
+    opts.token !== undefined && opts.token !== ""
+      ? `?token=${encodeURIComponent(opts.token)}`
+      : "";
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (opts.headerToken) {
+    headers["X-Preview-Token"] = opts.headerToken;
+  }
+  const res = await request.get(
+    `${apiURL()}/api/v1/onboarding/preview-routine/${encodeURIComponent(opts.jobId)}${qs}`,
+    { headers },
+  );
+  const text = await res.text();
+  let body: unknown = text;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    /* keep */
+  }
+  const env = body as Envelope<{
+    starter_routine_pending?: boolean;
+    starter_routine?: { morning?: unknown[] };
+  }>;
+  return {
+    status: res.status(),
+    pending: env.data?.starter_routine_pending,
+    hasRoutine: Boolean(
+      env.data?.starter_routine &&
+        (Array.isArray(env.data.starter_routine.morning)
+          ? env.data.starter_routine.morning.length >= 0
+          : true),
+    ),
+    body,
+  };
+}
+
+/** Wait until guest preview is ready (pending=false) or timeout. */
+export async function waitForGuestPreviewReady(
+  request: APIRequestContext,
+  opts: { jobId: string; token: string; timeoutMs?: number },
+): Promise<GuestPreviewPoll> {
+  return pollUntil(
+    `guest preview ready job=${opts.jobId}`,
+    async () => {
+      const poll = await pollGuestPreviewJob(request, {
+        jobId: opts.jobId,
+        token: opts.token,
+      });
+      if (poll.status === 404) {
+        throw new Error(
+          `guest preview 404 while polling (token/job mismatch or expired): ${JSON.stringify(poll.body)}`,
+        );
+      }
+      if (poll.status !== 200) {
+        throw new Error(
+          `guest preview unexpected status ${poll.status}: ${JSON.stringify(poll.body)}`,
+        );
+      }
+      if (poll.pending === false && poll.hasRoutine) return poll;
+      // pending true → keep waiting; pending undefined with routine also OK
+      if (poll.pending !== true && poll.hasRoutine) return poll;
+      return null;
+    },
+    { timeoutMs: opts.timeoutMs ?? 90_000, intervalMs: 1_000 },
+  );
 }
 
 /** Assert plan_expires_at ≈ now + days (default monthly = 30). Tolerance ±2h. */

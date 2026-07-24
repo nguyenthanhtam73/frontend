@@ -17,6 +17,7 @@ export type NetErrorKind =
   | "timeout"
   | "unauthorized"
   | "forbidden"
+  | "rate_limited"
   | "server"
   | "parse"
   | "unknown";

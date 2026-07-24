@@ -70,7 +70,7 @@ test.describe("Premium SePay upgrade + Telegram alert", () => {
     });
     expect(session.planTier === "free" || session.planTier === "").toBeTruthy();
 
-    await injectAccessToken(page, session.accessToken);
+    await injectAccessToken(page, session.accessToken, session.refreshToken);
 
     // --- Login UI (session cookies / client store) ---
     await page.goto("/login");

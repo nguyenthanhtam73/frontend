@@ -367,6 +367,7 @@ export function OnboardingFlow() {
             ? false
             : preview.starterRoutinePending,
           previewJobId: preview.previewJobId,
+          previewAccessToken: preview.previewAccessToken,
           coachingNotes: state.aiSnapshot?.coaching_notes?.trim() || undefined,
         });
         return;
@@ -433,6 +434,7 @@ export function OnboardingFlow() {
             if (!useOnboardingStore.getState().starterRoutineUserEdited) {
               patchCoachWelcomeSession({
                 previewJobId: preview.previewJobId,
+                previewAccessToken: preview.previewAccessToken,
                 starterRoutinePending: preview.starterRoutinePending,
                 ...(preview.starterRoutine
                   ? { starterRoutine: preview.starterRoutine, starterRoutinePending: false }

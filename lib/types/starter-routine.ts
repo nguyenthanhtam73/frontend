@@ -51,6 +51,8 @@ export type CoachWelcomePayload = {
   usedDefaultRoutine?: boolean;
   /** Guest background AI job id for polling preview-routine. */
   previewJobId?: string;
+  /** Secret required to poll preview-routine (paired with previewJobId). */
+  previewAccessToken?: string;
   /** True for local guest trial (never call /profile/skin). */
   guestPreview?: boolean;
 };

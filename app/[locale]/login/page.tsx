@@ -1,18 +1,46 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, useTransition } from "react";
+import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
-import { setAccessToken } from "@/lib/auth-token";
+import { setAuthTokens } from "@/lib/auth-token";
+import {
+  buildAuthHrefWithIntent,
+  buildPricingCheckoutHref,
+  readCheckoutIntentFromSearch,
+} from "@/lib/premium/checkout-intent";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+      <div className="mx-auto h-8 w-40 animate-pulse rounded-md bg-muted" />
+      <div className="h-56 animate-pulse rounded-xl bg-muted" />
+    </div>
+  );
+}
+
+function LoginPageInner() {
   const t = useTranslations("auth");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const checkoutIntent = useMemo(
+    () => readCheckoutIntentFromSearch(searchParams),
+    [searchParams],
+  );
   const [, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,8 +48,10 @@ export default function LoginPage() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    router.prefetch("/check-in");
-  }, [router]);
+    router.prefetch(checkoutIntent ? "/pricing" : "/check-in");
+  }, [router, checkoutIntent]);
+
+  const registerHref = buildAuthHrefWithIntent("/register", checkoutIntent);
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-16">
@@ -44,19 +74,24 @@ export default function LoginPage() {
                   body: JSON.stringify({ email, password }),
                 });
                 const json = (await res.json().catch(() => ({}))) as ApiEnvelope<{
-                  tokens?: { access_token?: string };
+                  tokens?: { access_token?: string; refresh_token?: string };
                 }>;
                 const token = json.data?.tokens?.access_token;
+                const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
                   setErr(getApiErrorMessage(json, t("errorGeneric")));
                   setLoading(false);
                   return;
                 }
-                setAccessToken(token);
+                setAuthTokens(token, refresh);
                 // Keep loading until navigation replaces this screen — avoids an
-                // idle login form while Next.js still loads /check-in.
+                // idle login form while Next.js still loads the next route.
                 startTransition(() => {
-                  router.push("/check-in");
+                  router.push(
+                    checkoutIntent
+                      ? buildPricingCheckoutHref(checkoutIntent)
+                      : "/check-in",
+                  );
                 });
               } catch {
                 setErr(t("networkError"));
@@ -104,7 +139,10 @@ export default function LoginPage() {
           </form>
           <p className="text-center text-sm text-muted-foreground">
             {t("noAccount")}{" "}
-            <Link href="/register" className="font-medium text-primary underline underline-offset-4">
+            <Link
+              href={registerHref}
+              className="font-medium text-primary underline underline-offset-4"
+            >
               {t("registerLink")}
             </Link>
           </p>

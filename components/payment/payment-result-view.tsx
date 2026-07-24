@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { fetchMePlanTierSoft, isPaidPlanTier } from "@/lib/api/payment";
+import { normalizePlanTier } from "@/lib/premium/features";
 import { usageQueryKey } from "@/lib/api/usage";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -44,11 +45,12 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
 
   const applyPaidTier = useCallback(
     async (tier: string) => {
-      const prev = useAuthStore.getState().user;
-      if (prev) {
-        useAuthStore.setState({ user: { ...prev, plan_tier: tier } });
-      } else {
-        await useAuthStore.getState().refresh();
+      // Full /me refresh so subscription fields (days_left, in_grace, …) match IPN.
+      await useAuthStore.getState().refresh();
+      // If /me failed transiently, at least surface the paid tier we already observed.
+      const cur = useAuthStore.getState().user;
+      if (cur && !isPaidPlanTier(normalizePlanTier(cur.plan_tier))) {
+        useAuthStore.setState({ user: { ...cur, plan_tier: tier } });
       }
       await queryClient.invalidateQueries({ queryKey: usageQueryKey });
     },

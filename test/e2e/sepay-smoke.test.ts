@@ -59,7 +59,7 @@ test.describe("SePay sandbox smoke", () => {
     const meFree = await fetchMe(request, session.accessToken);
     expect(meFree.plan_tier || "free").toBe("free");
 
-    await injectAccessToken(page, session.accessToken);
+    await injectAccessToken(page, session.accessToken, session.refreshToken);
 
     // --- Login UI path (smoke that /login works with same credentials) ---
     await page.goto("/login");
@@ -135,7 +135,7 @@ test.describe("SePay sandbox smoke", () => {
 
   test("2) Cancel & error callback pages render", async ({ page, request }) => {
     const session = await registerFreeUser(request);
-    await injectAccessToken(page, session.accessToken);
+    await injectAccessToken(page, session.accessToken, session.refreshToken);
 
     await page.goto("/payment/cancel");
     await expect(page.getByTestId("payment-result-cancel")).toBeVisible();

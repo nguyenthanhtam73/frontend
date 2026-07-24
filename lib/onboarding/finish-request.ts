@@ -32,6 +32,7 @@ type PreviewPayload = {
     starter_routine?: StarterRoutineDTO;
     starter_routine_pending?: boolean;
     preview_job_id?: string;
+    preview_access_token?: string;
   };
 };
 
@@ -39,6 +40,7 @@ export type GuestPreviewResult = {
   starterRoutine?: StarterRoutineDTO;
   starterRoutinePending: boolean;
   previewJobId?: string;
+  previewAccessToken?: string;
 };
 
 export async function postOnboardingComplete(
@@ -122,6 +124,7 @@ export async function postGuestPreviewComplete(
     return {
       starterRoutinePending: true,
       previewJobId: data.preview_job_id,
+      previewAccessToken: data.preview_access_token,
     };
   }
 
@@ -130,6 +133,7 @@ export async function postGuestPreviewComplete(
       starterRoutine: data.starter_routine,
       starterRoutinePending: false,
       previewJobId: data.preview_job_id,
+      previewAccessToken: data.preview_access_token,
     };
   }
 

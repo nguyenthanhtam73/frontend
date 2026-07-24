@@ -113,6 +113,7 @@ export function isPaidPlanTier(tier: PlanTier | null | undefined): boolean {
 export function sePayCheckoutErrorKey(err: unknown): string {
   if (!(err instanceof ApiError)) return "errorGeneric";
   if (err.status === 401) return "errorAuth";
+  if (err.kind === "rate_limited" || err.status === 429) return "errorRateLimited";
   if (err.code === "sepay_not_configured" || err.code === "service_unavailable") {
     return "errorUnavailable";
   }

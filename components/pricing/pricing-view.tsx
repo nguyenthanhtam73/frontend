@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { BillingToggle } from "@/components/pricing/billing-toggle";
 import { CancelSubscriptionButton } from "@/components/pricing/cancel-subscription-button";
 import { PricingCompare } from "@/components/pricing/pricing-compare";
 import { PricingFaq } from "@/components/pricing/pricing-faq";
 import { PricingPlanCard } from "@/components/pricing/pricing-plan-card";
-import { useSePayCheckout } from "@/lib/hooks/use-sepay-checkout";
+import { useRouter } from "@/i18n/navigation";
 import { getAccessToken } from "@/lib/auth-token";
+import { useSePayCheckout } from "@/lib/hooks/use-sepay-checkout";
+import {
+  readCheckoutIntentFromSearch,
+  wantsAutoCheckout,
+} from "@/lib/premium/checkout-intent";
 import { isPaidPlan, normalizePlanTier } from "@/lib/premium/features";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
 import type { BillingInterval } from "@/lib/premium/pricing";
@@ -18,8 +24,42 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** Client shell: billing interval state + plan cards + compare + FAQ. */
 export function PricingView() {
+  return (
+    <Suspense fallback={<PricingViewFallback />}>
+      <PricingViewInner />
+    </Suspense>
+  );
+}
+
+function PricingViewFallback() {
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+      <div className="mx-auto mb-10 h-10 max-w-md animate-pulse rounded-md bg-muted" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="h-80 animate-pulse rounded-2xl bg-muted" />
+        <div className="h-80 animate-pulse rounded-2xl bg-muted" />
+        <div className="h-80 animate-pulse rounded-2xl bg-muted" />
+      </div>
+    </div>
+  );
+}
+
+function PricingViewInner() {
   const t = useTranslations("pricing");
-  const [interval, setInterval] = useState<BillingInterval>("yearly");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const intent = useMemo(
+    () => readCheckoutIntentFromSearch(searchParams),
+    [searchParams],
+  );
+  const autoCheckout = useMemo(
+    () => wantsAutoCheckout(searchParams),
+    [searchParams],
+  );
+
+  const [interval, setInterval] = useState<BillingInterval>(
+    () => intent?.interval ?? "yearly",
+  );
   const user = useAuthStore((s) => s.user);
   const planSnap = usePlanTier();
   const { busy: checkoutBusy, busyPlan: checkoutBusyPlan, startCheckout } =
@@ -30,6 +70,35 @@ export function PricingView() {
     : null;
   const showCancel =
     isLoggedIn && currentPlan != null && isPaidPlan(currentPlan);
+
+  // Keep UI in sync when arriving with ?interval=
+  useEffect(() => {
+    if (intent?.interval) setInterval(intent.interval);
+  }, [intent?.interval]);
+
+  // After register/login with ?plan=&checkout=1 → start SePay once.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (autoStarted.current) return;
+    if (!autoCheckout || !intent || !isLoggedIn) return;
+    if (currentPlan === intent.plan) {
+      // Already on that plan — clean the URL, don't re-checkout.
+      router.replace("/pricing");
+      return;
+    }
+    autoStarted.current = true;
+    const { plan, interval: checkoutInterval } = intent;
+    // Strip ?checkout=1 before form POST so refresh/Back won't re-trigger.
+    router.replace("/pricing");
+    void startCheckout(plan, checkoutInterval);
+  }, [
+    autoCheckout,
+    intent,
+    isLoggedIn,
+    currentPlan,
+    startCheckout,
+    router,
+  ]);
 
   return (
     <div className="relative overflow-x-clip">
