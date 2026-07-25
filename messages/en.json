@@ -713,6 +713,8 @@
   },
   "premium": {
     "cta": "Upgrade to Premium now",
+    "betaCta": "See Beta pricing",
+    "betaBody": "Beta runs on Free. Premium is granted by the team / invite — self-serve checkout is not open yet.",
     "dismiss": "Dismiss",
     "quotaSuggestTitle": "You've used all AI suggestions this month",
     "quotaSuggestBody": "You've used all AI suggestions this month. Upgrade to Premium for unlimited access.",
@@ -735,6 +737,9 @@
     "heroTitle": "Unlock your full",
     "heroTitleAccent": "AI Coach & shelf",
     "heroSub": "Free already covers check-ins, streaks, and coach notes after each log. Premium unlocks unlimited AI, a full shelf, and longer history — upgrade when you truly need it.",
+    "heroSubBeta": "Beta is open: Free covers the core. Premium (unlimited AI, full shelf, longer history) is granted by the team / invite — self-serve payments are not open yet.",
+    "betaInviteBanner": "Self-serve checkout is off during Beta so nobody hits the test payment gateway. Want Premium? Send feedback or contact the team for an invite.",
+    "betaInviteCta": "Premium — invite in Beta",
     "mostPopular": "Most popular",
     "upgradeCta": "Upgrade now",
     "currentPlanBadge": "Current plan",
@@ -765,7 +770,9 @@
     "yearlyHint": "Yearly pricing — about {percent}% off.",
     "monthlyHint": "Switch to yearly billing to save about {percent}%.",
     "trustLine": "Pay via SePay — your plan activates automatically after a successful payment.",
+    "trustLineBeta": "Beta: no charges. Free is fully usable; Premium is granted by the team.",
     "legalNote": "Prices shown in VND. Payments run through SePay (sandbox during Beta). After a successful payment, Premium activates automatically.",
+    "legalNoteBeta": "Prices in VND are for reference. Checkout is closed in Beta — Premium is admin / invite only.",
     "checkout": {
       "redirecting": "Redirecting to checkout…",
       "errorTitle": "Couldn't start checkout",
@@ -871,7 +878,8 @@
       },
       "q4": {
         "question": "Can I change or cancel later?",
-        "answer": "Upgrade anytime via SePay. On Premium, cancel on this page — you keep access until period end (plus a short grace window). Free stays available if you never upgrade."
+        "answer": "Upgrade anytime via SePay. On Premium, cancel on this page — you keep access until period end (plus a short grace window). Free stays available if you never upgrade.",
+        "answerBeta": "Self-serve payments are closed in Beta. Free works normally; Premium is granted by the team / invite. When checkout opens, you can upgrade and cancel on this page."
       }
     }
   },

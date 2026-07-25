@@ -9,6 +9,7 @@ import {
   sePayCheckoutErrorKey,
   submitSePayCheckoutForm,
 } from "@/lib/api/payment";
+import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import type { BillingInterval, PricedPlan } from "@/lib/premium/pricing";
 
 type UseSePayCheckoutResult = {
@@ -48,6 +49,13 @@ export function useSePayCheckout(): UseSePayCheckoutResult {
   const startCheckout = useCallback(
     async (plan: PricedPlan, interval: BillingInterval) => {
       if (inflight.current) return;
+      if (!isSePayCheckoutEnabled()) {
+        toastError({
+          title: t("errorTitle"),
+          description: t("errorUnavailable"),
+        });
+        return;
+      }
       inflight.current = true;
       setBusyPlan(plan);
       try {

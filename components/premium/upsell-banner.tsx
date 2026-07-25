@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
 import { Feature, type FeatureId } from "@/lib/premium/features";
+import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 
 type UpsellBannerProps = {
@@ -51,13 +52,14 @@ export function UpsellBanner({
   }
 
   const copy = resolveCopy(feature, t, gate.limit || (feature === Feature.EditRoutine ? 5 : 3));
+  const checkoutEnabled = isSePayCheckoutEnabled();
 
   return (
     <div id={id}>
       <PremiumUpsellBanner
         title={title ?? copy.title}
-        body={body ?? copy.body}
-        cta={cta ?? t("cta")}
+        body={body ?? (checkoutEnabled ? copy.body : t("betaBody"))}
+        cta={cta ?? (checkoutEnabled ? t("cta") : t("betaCta"))}
         ctaHref={ctaHref}
         className={className}
         compact={compact}

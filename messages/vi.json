@@ -713,6 +713,8 @@
   },
   "premium": {
     "cta": "Nâng cấp Premium ngay",
+    "betaCta": "Xem bảng giá Beta",
+    "betaBody": "Beta đang dùng Free. Premium được team cấp tay / invite — chưa mở thanh toán tự phục vụ.",
     "dismiss": "Đóng",
     "quotaSuggestTitle": "Đã hết lượt gợi ý AI tháng này",
     "quotaSuggestBody": "Bạn đã hết lượt gợi ý AI tháng này. Nâng cấp Premium để dùng không giới hạn.",
@@ -735,6 +737,9 @@
     "heroTitle": "Mở khóa toàn bộ",
     "heroTitleAccent": "AI Coach & Tủ đồ",
     "heroSub": "Free đã đủ để check-in, streak và coach sau mỗi lần ghi. Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn — nâng cấp khi bạn thật sự cần.",
+    "heroSubBeta": "Đang mở Beta: Free dùng đầy đủ. Premium (AI không giới hạn, tủ đồ, lịch sử dài) sẽ được team cấp tay / invite — chưa mở thanh toán tự phục vụ.",
+    "betaInviteBanner": "Thanh toán tự phục vụ tạm tắt trong Beta để tránh cổng test. Muốn thử Premium? Gửi góp ý hoặc liên hệ team để được cấp gói.",
+    "betaInviteCta": "Premium — cấp trong Beta",
     "mostPopular": "Phổ biến nhất",
     "upgradeCta": "Nâng cấp ngay",
     "currentPlanBadge": "Gói hiện tại",
@@ -765,7 +770,9 @@
     "yearlyHint": "Đang xem giá năm — tiết kiệm khoảng {percent}%.",
     "monthlyHint": "Chuyển sang Thanh toán năm để tiết kiệm khoảng {percent}%.",
     "trustLine": "Thanh toán qua SePay — gói kích hoạt tự động sau khi trả thành công.",
+    "trustLineBeta": "Beta: chưa thu tiền. Free đủ dùng; Premium do team cấp tay.",
     "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (sandbox trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
+    "legalNoteBeta": "Giá tham khảo bằng VND. Trong Beta chưa mở cổng thanh toán — Premium chỉ cấp qua admin / invite.",
     "checkout": {
       "redirecting": "Đang chuyển đến thanh toán…",
       "errorTitle": "Không mở được thanh toán",
@@ -871,7 +878,8 @@
       },
       "q4": {
         "question": "Có thể đổi gói hoặc hủy sau không?",
-        "answer": "Nâng cấp qua SePay bất cứ lúc nào. Đang dùng Premium thì hủy ngay trên trang này — vẫn giữ quyền lợi đến hết kỳ (và vài ngày gia hạn). Không bị khóa Free nếu bạn không nâng cấp."
+        "answer": "Nâng cấp qua SePay bất cứ lúc nào. Đang dùng Premium thì hủy ngay trên trang này — vẫn giữ quyền lợi đến hết kỳ (và vài ngày gia hạn). Không bị khóa Free nếu bạn không nâng cấp.",
+        "answerBeta": "Beta chưa mở thanh toán tự phục vụ. Free dùng bình thường; Premium do team cấp tay / invite. Khi mở thu tiền, bạn có thể nâng cấp và hủy trên trang này."
       }
     }
   },

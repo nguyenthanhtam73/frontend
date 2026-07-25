@@ -51,6 +51,28 @@ export async function createSePayCheckout(
 }
 
 /**
+ * SePay requires hidden inputs in this exact order (see their checkout form docs).
+ * JSON `form_fields` maps are alphabetical — posting that order yields a blank /
+ * "Lỗi không xác định" page with no payment methods. Signature HMAC order is
+ * separate; this list is only for the HTML POST body.
+ */
+export const SEPAY_CHECKOUT_FIELD_ORDER = [
+  "order_amount",
+  "merchant",
+  "currency",
+  "operation",
+  "order_description",
+  "order_invoice_number",
+  "customer_id",
+  "payment_method",
+  "success_url",
+  "error_url",
+  "cancel_url",
+  "custom_data",
+  "signature",
+] as const;
+
+/**
  * Auto-submit a classic HTML form POST to SePay checkout/init.
  * Uses document.createElement so we never navigate away before fields are ready.
  */
@@ -76,13 +98,25 @@ export function submitSePayCheckoutForm(
   form.style.display = "none";
   form.setAttribute("data-sepay-checkout", "1");
 
-  for (const [name, value] of Object.entries(formFields)) {
-    if (!name) continue;
+  const appendHidden = (name: string, value: string) => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = name;
-    input.value = value ?? "";
+    input.value = value;
     form.appendChild(input);
+  };
+
+  const used = new Set<string>();
+  for (const name of SEPAY_CHECKOUT_FIELD_ORDER) {
+    const value = formFields[name];
+    if (value == null || value === "") continue;
+    appendHidden(name, value);
+    used.add(name);
+  }
+  // Preserve any future SePay fields without breaking order of known ones.
+  for (const [name, value] of Object.entries(formFields)) {
+    if (!name || used.has(name) || value == null || value === "") continue;
+    appendHidden(name, value);
   }
 
   document.body.appendChild(form);
@@ -114,7 +148,11 @@ export function sePayCheckoutErrorKey(err: unknown): string {
   if (!(err instanceof ApiError)) return "errorGeneric";
   if (err.status === 401) return "errorAuth";
   if (err.kind === "rate_limited" || err.status === 429) return "errorRateLimited";
-  if (err.code === "sepay_not_configured" || err.code === "service_unavailable") {
+  if (
+    err.code === "sepay_not_configured" ||
+    err.code === "service_unavailable" ||
+    err.code === "checkout_disabled"
+  ) {
     return "errorUnavailable";
   }
   if (err.code === "invalid_request") return "errorInvalid";

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import type { PlanTier } from "@/lib/premium/features";
 import { buildRegisterCheckoutHref } from "@/lib/premium/checkout-intent";
+import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import {
   formatVnd,
   priceForDisplay,
@@ -24,6 +25,8 @@ type PricingPlanCardProps = {
   /** User's current plan when logged in (undefined = guest). */
   currentPlan?: PlanTier | null;
   isLoggedIn?: boolean;
+  /** When false, paid CTAs are disabled (Beta — no self-serve SePay). */
+  checkoutEnabled?: boolean;
   /** SePay checkout in progress for this (or any) plan. */
   checkoutBusy?: boolean;
   checkoutBusyPlan?: PricedPlan | null;
@@ -49,6 +52,7 @@ export function PricingPlanCard({
   highlighted,
   currentPlan = null,
   isLoggedIn = false,
+  checkoutEnabled = isSePayCheckoutEnabled(),
   checkoutBusy = false,
   checkoutBusyPlan = null,
   onCheckout,
@@ -73,6 +77,7 @@ export function PricingPlanCard({
     isLoggedIn,
     isCurrent,
     isDowngrade,
+    checkoutEnabled,
     tPlan: t,
     tCommon,
   });
@@ -255,6 +260,7 @@ function resolveCta({
   isLoggedIn,
   isCurrent,
   isDowngrade,
+  checkoutEnabled,
   tPlan,
   tCommon,
 }: {
@@ -263,6 +269,7 @@ function resolveCta({
   isLoggedIn: boolean;
   isCurrent: boolean;
   isDowngrade: boolean;
+  checkoutEnabled: boolean;
   tPlan: ReturnType<typeof useTranslations>;
   tCommon: ReturnType<typeof useTranslations>;
 }):
@@ -284,6 +291,10 @@ function resolveCta({
       return { kind: "link", href: "/routine", label: tCommon("continueFreeCta") };
     }
     return { kind: "link", href: "/register", label: tPlan("cta") };
+  }
+  // Beta: hide self-serve SePay — Premium is admin / invite only.
+  if (!checkoutEnabled) {
+    return { kind: "disabled", label: tCommon("betaInviteCta") };
   }
   // Paid tiers — logged-in users go to SePay; guests register first (keep interval).
   if (isLoggedIn) {

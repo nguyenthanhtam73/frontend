@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { cn } from "@/lib/utils";
 
 const FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
@@ -9,6 +10,7 @@ const FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
 /** Short FAQ — native disclosure for a11y, no extra accordion dependency. */
 export function PricingFaq({ className }: { className?: string }) {
   const t = useTranslations("pricing.faq");
+  const checkoutEnabled = isSePayCheckoutEnabled();
 
   return (
     <section className={cn("space-y-5", className)} aria-labelledby="pricing-faq-heading">
@@ -42,7 +44,9 @@ export function PricingFaq({ className }: { className?: string }) {
               </span>
             </summary>
             <p className="pb-4 text-sm leading-relaxed text-muted-foreground">
-              {t(`${key}.answer`)}
+              {key === "q4" && !checkoutEnabled
+                ? t("q4.answerBeta")
+                : t(`${key}.answer`)}
             </p>
           </details>
         ))}

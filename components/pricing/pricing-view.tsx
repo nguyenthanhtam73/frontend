@@ -17,6 +17,7 @@ import {
   wantsAutoCheckout,
 } from "@/lib/premium/checkout-intent";
 import { isPaidPlan, normalizePlanTier } from "@/lib/premium/features";
+import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
 import type { BillingInterval } from "@/lib/premium/pricing";
 import { YEARLY_SAVE_PERCENT } from "@/lib/premium/pricing";
@@ -62,6 +63,7 @@ function PricingViewInner() {
   );
   const user = useAuthStore((s) => s.user);
   const planSnap = usePlanTier();
+  const checkoutEnabled = isSePayCheckoutEnabled();
   const { busy: checkoutBusy, busyPlan: checkoutBusyPlan, startCheckout } =
     useSePayCheckout();
   const isLoggedIn = !!user || !!getAccessToken();
@@ -80,6 +82,14 @@ function PricingViewInner() {
   const autoStarted = useRef(false);
   useEffect(() => {
     if (autoStarted.current) return;
+    if (!checkoutEnabled) {
+      // Beta: strip checkout intent so users never hit sandbox SePay.
+      if (autoCheckout || intent) {
+        autoStarted.current = true;
+        router.replace("/pricing");
+      }
+      return;
+    }
     if (!autoCheckout || !intent || !isLoggedIn) return;
     if (currentPlan === intent.plan) {
       // Already on that plan — clean the URL, don't re-checkout.
@@ -92,6 +102,7 @@ function PricingViewInner() {
     router.replace("/pricing");
     void startCheckout(plan, checkoutInterval);
   }, [
+    checkoutEnabled,
     autoCheckout,
     intent,
     isLoggedIn,
@@ -118,8 +129,16 @@ function PricingViewInner() {
             <span className="gradient-text">{t("heroTitleAccent")}</span>
           </h1>
           <p className="text-pretty text-[0.95rem] leading-relaxed text-muted-foreground sm:text-lg">
-            {t("heroSub")}
+            {checkoutEnabled ? t("heroSub") : t("heroSubBeta")}
           </p>
+          {!checkoutEnabled ? (
+            <p
+              data-testid="pricing-beta-banner"
+              className="mx-auto max-w-lg rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-foreground/90"
+            >
+              {t("betaInviteBanner")}
+            </p>
+          ) : null}
           {isLoggedIn && currentPlan ? (
             <div className="space-y-2">
               <p className="text-sm font-medium text-primary/90">
@@ -173,9 +192,14 @@ function PricingViewInner() {
             highlighted
             currentPlan={currentPlan}
             isLoggedIn={isLoggedIn}
+            checkoutEnabled={checkoutEnabled}
             checkoutBusy={checkoutBusy}
             checkoutBusyPlan={checkoutBusyPlan}
-            onCheckout={(plan) => void startCheckout(plan, interval)}
+            onCheckout={
+              checkoutEnabled
+                ? (plan) => void startCheckout(plan, interval)
+                : undefined
+            }
             className="order-1 in-animate animate-in fade-in slide-in-from-bottom-3 duration-500 delay-75 fill-mode-both lg:order-2"
           />
           <PricingPlanCard
@@ -183,15 +207,20 @@ function PricingViewInner() {
             interval={interval}
             currentPlan={currentPlan}
             isLoggedIn={isLoggedIn}
+            checkoutEnabled={checkoutEnabled}
             checkoutBusy={checkoutBusy}
             checkoutBusyPlan={checkoutBusyPlan}
-            onCheckout={(plan) => void startCheckout(plan, interval)}
+            onCheckout={
+              checkoutEnabled
+                ? (plan) => void startCheckout(plan, interval)
+                : undefined
+            }
             className="order-3 in-animate animate-in fade-in slide-in-from-bottom-3 duration-500 delay-150 fill-mode-both"
           />
         </div>
 
         <p className="mx-auto mt-5 max-w-md text-center text-xs leading-relaxed text-muted-foreground sm:mt-6">
-          {t("trustLine")}
+          {checkoutEnabled ? t("trustLine") : t("trustLineBeta")}
         </p>
 
         <div className="mt-14 sm:mt-20">
@@ -203,7 +232,7 @@ function PricingViewInner() {
         </div>
 
         <p className="mx-auto mt-10 max-w-lg text-center text-xs leading-relaxed text-muted-foreground sm:mt-12">
-          {t("legalNote")}
+          {checkoutEnabled ? t("legalNote") : t("legalNoteBeta")}
         </p>
       </div>
 

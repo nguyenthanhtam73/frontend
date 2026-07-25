@@ -5,7 +5,9 @@ Prereqs
 -------
 1. API running with SePay sandbox + DADIARY_E2E_SECRET
    (same value as E2E_SECRET — enables force-plan + in-memory alert recorder)
+   and DADIARY_SEPAY_CHECKOUT_ENABLED=true (Beta prod keeps this false)
 2. Next.js running with NEXT_PUBLIC_API_URL pointing at that API
+   and NEXT_PUBLIC_SEPAY_CHECKOUT_ENABLED=true (from .env.e2e)
 3. frontend/.env.e2e from .env.e2e.example
 
 Commands
