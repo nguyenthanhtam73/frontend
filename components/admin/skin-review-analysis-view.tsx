@@ -77,12 +77,14 @@ export function SkinReviewAnalysisView({
   );
 
   return (
-    <div className={cn(share ? "space-y-7" : "space-y-6", className)}>
+    <div className={cn(share ? "space-y-8 sm:space-y-7" : "space-y-6", className)}>
       <ResultSection title={t("fieldOverview")} share={share} index={1}>
         <p
           className={cn(
-            "whitespace-pre-wrap leading-relaxed text-foreground/90",
-            share ? "text-base sm:text-[1.05rem]" : "text-sm",
+            "min-w-0 break-words whitespace-pre-wrap text-foreground/90",
+            share
+              ? "text-[0.9875rem] leading-[1.65] sm:text-[1.05rem] sm:leading-relaxed"
+              : "text-sm leading-relaxed",
           )}
         >
           {a.overview?.trim() || "—"}
@@ -91,14 +93,18 @@ export function SkinReviewAnalysisView({
 
       <ResultSection title={t("fieldSkinType")} share={share} index={2}>
         <div className="flex flex-wrap gap-2">
-          <BadgeChip tone="teal">{skinTypeLabel}</BadgeChip>
-          <BadgeChip tone="blush">{severityLabel}</BadgeChip>
+          <BadgeChip tone="teal" share={share}>
+            {skinTypeLabel}
+          </BadgeChip>
+          <BadgeChip tone="blush" share={share}>
+            {severityLabel}
+          </BadgeChip>
         </div>
         {a.skin_type_note?.trim() ? (
           <p
             className={cn(
-              "mt-2 whitespace-pre-wrap leading-relaxed text-muted-foreground",
-              share ? "text-sm sm:text-[0.95rem]" : "text-sm",
+              "mt-2.5 min-w-0 break-words whitespace-pre-wrap leading-relaxed text-muted-foreground",
+              share ? "text-[0.9375rem] sm:text-[0.95rem]" : "text-sm",
             )}
           >
             {a.skin_type_note}
@@ -108,30 +114,40 @@ export function SkinReviewAnalysisView({
 
       <ResultSection title={t("fieldAttention")} share={share} index={3}>
         {a.attention_areas?.length ? (
-          <ul className={cn("space-y-2.5", share && "space-y-3")}>
+          <ul className={cn("space-y-2.5", share && "space-y-3.5")}>
             {a.attention_areas.map((area, i) => (
               <li
                 key={`${area.region}-${area.concern}-${i}`}
                 className={cn(
-                  "rounded-2xl border px-3.5 py-3 text-sm",
+                  "min-w-0 rounded-2xl border",
                   share
-                    ? "border-primary/15 bg-[color-mix(in_oklab,var(--primary)_5%,var(--background))]"
-                    : "border-border bg-background",
+                    ? "border-primary/15 bg-[color-mix(in_oklab,var(--primary)_5%,var(--background))] px-3.5 py-3.5 sm:px-4 sm:py-3.5"
+                    : "border-border bg-background px-3.5 py-3 text-sm",
                 )}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold tracking-tight">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span
+                    className={cn(
+                      "font-semibold tracking-tight",
+                      share ? "text-[0.9375rem] sm:text-sm" : "text-sm",
+                    )}
+                  >
                     {labelFromMap(t, "regions", area.region, REGION_KEYS)}
                   </span>
-                  <BadgeChip>
+                  <BadgeChip share={share}>
                     {labelFromMap(t, "concerns", area.concern, CONCERN_KEYS)}
                   </BadgeChip>
-                  <BadgeChip tone="muted">
+                  <BadgeChip tone="muted" share={share}>
                     {labelFromMap(t, "severities", area.severity, SEVERITY_KEYS)}
                   </BadgeChip>
                 </div>
                 {area.note?.trim() ? (
-                  <p className="mt-1.5 whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                  <p
+                    className={cn(
+                      "mt-2 min-w-0 break-words whitespace-pre-wrap leading-relaxed text-muted-foreground",
+                      share ? "text-[0.9375rem]" : "mt-1.5 text-sm",
+                    )}
+                  >
                     {area.note}
                   </p>
                 ) : null}
@@ -144,19 +160,34 @@ export function SkinReviewAnalysisView({
       </ResultSection>
 
       <ResultSection title={t("fieldAdditional")} share={share} index={4}>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+        <p
+          className={cn(
+            "min-w-0 break-words whitespace-pre-wrap leading-relaxed text-foreground/90",
+            share ? "text-[0.9375rem] sm:text-sm" : "text-sm",
+          )}
+        >
           {a.additional_observations?.trim() || t("noAdditional")}
         </p>
       </ResultSection>
 
       <ResultSection title={t("fieldPhotoNotes")} share={share} index={5}>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+        <p
+          className={cn(
+            "min-w-0 break-words whitespace-pre-wrap leading-relaxed text-foreground/90",
+            share ? "text-[0.9375rem] sm:text-sm" : "text-sm",
+          )}
+        >
           {a.photo_notes?.trim() || "—"}
         </p>
       </ResultSection>
 
       {a.non_diagnostic ? (
-        <p className="border-t border-border/60 pt-4 text-xs leading-relaxed text-muted-foreground">
+        <p
+          className={cn(
+            "border-t border-border/60 pt-4 leading-relaxed text-muted-foreground",
+            share ? "text-[0.8125rem] sm:text-xs" : "text-xs",
+          )}
+        >
           {a.non_diagnostic}
         </p>
       ) : null}
@@ -176,36 +207,41 @@ function ResultSection({
   index?: number;
 }) {
   return (
-    <div className={cn("space-y-2.5", share && "space-y-3")}>
+    <section className={cn("min-w-0 space-y-2.5", share && "space-y-3")}>
       <h3
         className={cn(
-          "flex items-center gap-2 font-semibold tracking-tight",
-          share ? "text-[0.95rem]" : "text-sm",
+          "flex min-w-0 items-center gap-2.5 font-semibold tracking-tight",
+          share ? "text-[1rem] sm:text-[0.95rem]" : "text-sm",
         )}
       >
         {share && index != null ? (
-          <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary/12 text-[11px] font-bold text-primary">
+          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-xs font-bold text-primary sm:size-6 sm:text-[11px]">
             {index}
           </span>
         ) : null}
-        {title}
+        <span className="min-w-0 text-balance">{title}</span>
       </h3>
       {children}
-    </div>
+    </section>
   );
 }
 
 function BadgeChip({
   children,
   tone = "default",
+  share,
 }: {
   children: ReactNode;
   tone?: "default" | "muted" | "teal" | "blush";
+  share?: boolean;
 }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex max-w-full items-center rounded-full font-medium break-words",
+        share
+          ? "px-2.5 py-1.5 text-[0.8125rem] leading-snug sm:px-2.5 sm:py-1 sm:text-xs"
+          : "px-2.5 py-1 text-xs",
         tone === "muted" && "bg-muted text-muted-foreground",
         tone === "default" && "bg-foreground/10 text-foreground",
         tone === "teal" &&
