@@ -18,7 +18,7 @@ export default async function AdminSkinReviewPage() {
   const t = await getTranslations("adminSkinReview");
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="mb-8 space-y-2">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {t("sectionLabel")}

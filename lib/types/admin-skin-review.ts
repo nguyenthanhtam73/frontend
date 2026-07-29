@@ -9,15 +9,15 @@ export type AdminSkinAttentionArea = {
   note: string;
 };
 
+/** Canonical 5-section analysis from Premium vision. */
 export type AdminSkinReviewAnalysis = {
   overview: string;
   skin_type: string;
+  skin_type_severity: string;
   attention_areas: AdminSkinAttentionArea[];
-  overall_severity: string;
-  extra_notes: string;
+  additional_observations: string;
+  photo_notes: string;
   non_diagnostic: string;
-  photo_quality: string;
-  detailed_findings: string;
 };
 
 export type AdminSkinReviewResponse = {
@@ -29,12 +29,54 @@ export type AdminSkinReviewResponse = {
   analysis: AdminSkinReviewAnalysis;
   locale: string;
   model_used: string;
+  is_public?: boolean;
+  public_slug?: string;
+  published_at?: string;
+  share_path?: string;
   created_at: string;
   updated_at: string;
+};
+
+/** Unauthenticated share payload — no admin notes, blurred images only. */
+export type PublicSkinReviewResponse = {
+  slug: string;
+  title: string;
+  analysis: AdminSkinReviewAnalysis;
+  image_urls: string[];
+  images_blurred: boolean;
+  locale: string;
+  published_at?: string;
+  share_path: string;
 };
 
 export type PatchAdminSkinReviewBody = {
   title?: string;
   notes?: string;
   status?: AdminSkinReviewStatus;
+};
+
+export type AdminSkinReviewListItem = {
+  id: string;
+  title: string;
+  status: string;
+  is_public: boolean;
+  public_slug?: string;
+  share_path?: string;
+  published_at?: string;
+  locale: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminSkinReviewListResponse = {
+  items: AdminSkinReviewListItem[];
+  total: number;
+  page: number;
+  page_size: number;
+};
+
+export type AdminSkinReviewListQuery = {
+  status?: "" | "draft" | "published";
+  page?: number;
+  page_size?: number;
 };

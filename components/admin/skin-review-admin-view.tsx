@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Sparkles } from "lucide-react";
+import { Check, Copy, Globe, Loader2, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
@@ -9,6 +9,8 @@ import {
   AdminSkinReviewUpload,
   type AdminReviewPhoto,
 } from "@/components/admin/admin-skin-review-upload";
+import { SkinReviewAdminList } from "@/components/admin/skin-review-admin-list";
+import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +19,8 @@ import { Link } from "@/i18n/navigation";
 import {
   createAdminSkinReview,
   patchAdminSkinReview,
+  publishAdminSkinReview,
+  skinReviewShareUrl,
 } from "@/lib/api/admin-skin-review";
 import { apiBaseUrl } from "@/lib/api";
 import { useAdminGate } from "@/lib/hooks/use-admin-gate";
@@ -25,6 +29,8 @@ import type {
   AdminSkinReviewStatus,
 } from "@/lib/types/admin-skin-review";
 import { cn } from "@/lib/utils";
+
+type AdminTab = "create" | "list";
 
 const inputClass =
   "min-h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
@@ -38,33 +44,6 @@ function resolveImageUrl(path: string): string {
   return path;
 }
 
-function labelSkinType(t: ReturnType<typeof useTranslations>, v: string): string {
-  const key = `skinTypes.${v}` as Parameters<typeof t>[0];
-  try {
-    return t(key);
-  } catch {
-    return v;
-  }
-}
-
-function labelSeverity(t: ReturnType<typeof useTranslations>, v: string): string {
-  const key = `severities.${v}` as Parameters<typeof t>[0];
-  try {
-    return t(key);
-  } catch {
-    return v;
-  }
-}
-
-function labelConcern(t: ReturnType<typeof useTranslations>, v: string): string {
-  const key = `concerns.${v}` as Parameters<typeof t>[0];
-  try {
-    return t(key);
-  } catch {
-    return v;
-  }
-}
-
 /** Admin Skin Review console: upload → Premium vision → observations-only result. */
 export function SkinReviewAdminView() {
   const t = useTranslations("adminSkinReview");
@@ -72,11 +51,13 @@ export function SkinReviewAdminView() {
   const toast = useToast();
   const { hasAuth, isAdmin, authPending } = useAdminGate();
 
+  const [tab, setTab] = useState<AdminTab>("create");
   const [photos, setPhotos] = useState<AdminReviewPhoto[]>([]);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<AdminSkinReviewStatus>("draft");
   const [result, setResult] = useState<AdminSkinReviewResponse | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -123,6 +104,34 @@ export function SkinReviewAdminView() {
     },
   });
 
+  const publishMutation = useMutation({
+    mutationFn: () => {
+      if (!result?.id) throw new Error("missing_id");
+      return publishAdminSkinReview(result.id);
+    },
+    onSuccess: (res) => {
+      setResult(res);
+      setStatus("published");
+      toast.success(t("publishSuccess"));
+    },
+    onError: () => {
+      toast.error(t("publishError"));
+    },
+  });
+
+  async function copyShareLink() {
+    if (!result?.public_slug) return;
+    const url = skinReviewShareUrl(result.public_slug, locale);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success(t("copySuccess"));
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(t("copyError"));
+    }
+  }
+
   if (authPending) {
     return (
       <div className="space-y-3">
@@ -158,9 +167,46 @@ export function SkinReviewAdminView() {
 
   const analyzing = analyzeMutation.isPending;
   const saving = saveMutation.isPending;
+  const publishing = publishMutation.isPending;
+  const shareUrl =
+    result?.public_slug && result.is_public
+      ? skinReviewShareUrl(result.public_slug, locale)
+      : null;
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap gap-1.5 rounded-full bg-muted/70 p-1 w-fit">
+        {(
+          [
+            ["create", "tabCreate"],
+            ["list", "tabList"],
+          ] as const
+        ).map(([value, key]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setTab(value)}
+            className={cn(
+              "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              tab === value
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t(key)}
+          </button>
+        ))}
+      </div>
+
+      {tab === "list" ? (
+        <SkinReviewAdminList
+          enabled={!authPending && hasAuth && isAdmin}
+          onOpenCreate={() => setTab("create")}
+        />
+      ) : null}
+
+      {tab === "create" ? (
+      <>
       <section className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{t("stepUpload")}</h2>
@@ -227,7 +273,7 @@ export function SkinReviewAdminView() {
           <Button
             type="button"
             variant="outline"
-            disabled={saving || analyzing}
+            disabled={saving || analyzing || publishing}
             onClick={() => saveMutation.mutate()}
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
@@ -237,8 +283,23 @@ export function SkinReviewAdminView() {
         {result ? (
           <Button
             type="button"
+            variant="secondary"
+            disabled={publishing || analyzing}
+            onClick={() => publishMutation.mutate()}
+          >
+            {publishing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Globe className="size-4" />
+            )}
+            {result.is_public ? t("republishCta") : t("publishCta")}
+          </Button>
+        ) : null}
+        {result ? (
+          <Button
+            type="button"
             variant="ghost"
-            disabled={analyzing}
+            disabled={analyzing || publishing}
             onClick={() => {
               photos.forEach((p) => URL.revokeObjectURL(p.url));
               setPhotos([]);
@@ -246,6 +307,7 @@ export function SkinReviewAdminView() {
               setTitle("");
               setNotes("");
               setStatus("draft");
+              setCopied(false);
             }}
           >
             {t("resetCta")}
@@ -253,110 +315,64 @@ export function SkinReviewAdminView() {
         ) : null}
       </div>
 
-      {result ? (
-        <SkinReviewResultPanel result={result} t={t} />
-      ) : null}
-    </div>
-  );
-}
-
-function SkinReviewResultPanel({
-  result,
-  t,
-}: {
-  result: AdminSkinReviewResponse;
-  t: ReturnType<typeof useTranslations<"adminSkinReview">>;
-}) {
-  const a = result.analysis;
-
-  return (
-    <section className="space-y-5 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">{t("stepResult")}</h2>
-        <p className="text-xs text-muted-foreground">
-          {t("resultMeta", { id: result.id, model: result.model_used || "—" })}
-        </p>
-      </div>
-
-      {result.image_urls?.length > 0 ? (
-        <ul className="flex flex-wrap gap-2">
-          {result.image_urls.map((url) => (
-            <li
-              key={url}
-              className="size-20 overflow-hidden rounded-lg border border-border bg-background"
+      {shareUrl ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-medium">{t("shareReady")}</p>
+            <p className="truncate text-xs text-muted-foreground">{shareUrl}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => void copyShareLink()}>
+              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              {copied ? t("copied") : t("copyLinkCta")}
+            </Button>
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={resolveImageUrl(url)}
-                alt=""
-                className="size-full object-cover"
-              />
-            </li>
-          ))}
-        </ul>
+              {t("openShareCta")}
+            </a>
+          </div>
+        </div>
       ) : null}
 
-      <ResultBlock title={t("fieldOverview")} body={a.overview} />
+      {result ? (
+        <section className="space-y-5 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight">{t("stepResult")}</h2>
+            <p className="text-xs text-muted-foreground">
+              {t("resultMeta", {
+                id: result.id,
+                model: result.model_used || "—",
+              })}
+            </p>
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <MetaChip label={t("fieldSkinType")} value={labelSkinType(t, a.skin_type)} />
-        <MetaChip
-          label={t("fieldSeverity")}
-          value={labelSeverity(t, a.overall_severity)}
-        />
-      </div>
+          {result.image_urls?.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {result.image_urls.map((url) => (
+                <li
+                  key={url}
+                  className="size-20 overflow-hidden rounded-lg border border-border bg-background"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveImageUrl(url)}
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
-      <div>
-        <h3 className="mb-2 text-sm font-semibold">{t("fieldAttention")}</h3>
-        {a.attention_areas?.length ? (
-          <ul className="space-y-2">
-            {a.attention_areas.map((area, i) => (
-              <li
-                key={`${area.region}-${area.concern}-${i}`}
-                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
-              >
-                <p className="font-medium">
-                  {area.region || "—"} · {labelConcern(t, area.concern)} ·{" "}
-                  {labelSeverity(t, area.severity)}
-                </p>
-                {area.note ? (
-                  <p className="mt-1 text-muted-foreground">{area.note}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">{t("noAttentionAreas")}</p>
-        )}
-      </div>
-
-      <ResultBlock title={t("fieldDetailed")} body={a.detailed_findings} />
-      <ResultBlock title={t("fieldExtra")} body={a.extra_notes} />
-
-      {a.non_diagnostic ? (
-        <p className="text-xs text-muted-foreground">{a.non_diagnostic}</p>
+          <SkinReviewAnalysisView analysis={result.analysis} />
+        </section>
       ) : null}
-    </section>
-  );
-}
-
-function ResultBlock({ title, body }: { title: string; body?: string }) {
-  if (!body?.trim()) return null;
-  return (
-    <div>
-      <h3 className="mb-1.5 text-sm font-semibold">{title}</h3>
-      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-        {body}
-      </p>
-    </div>
-  );
-}
-
-function MetaChip({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-background px-3 py-2.5">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-medium">{value}</p>
+      </>
+      ) : null}
     </div>
   );
 }
