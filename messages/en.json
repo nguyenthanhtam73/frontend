@@ -2276,6 +2276,7 @@
     "resultMeta": "ID {id} · model {model}",
     "fieldOverview": "Overview",
     "fieldSkinType": "Skin type",
+    "fieldSkinTypeNote": "Why this skin type",
     "fieldAttention": "Attention areas",
     "fieldAdditional": "Additional observations",
     "fieldPhotoNotes": "Photo notes",
@@ -2296,8 +2297,12 @@
       "pronounced": "Pronounced"
     },
     "concerns": {
+      "none": "No clear issue",
       "acne": "Acne",
+      "papules": "Papules",
+      "pustules": "Pustules",
       "dark_spots": "Dark spots",
+      "pigmentation": "Pigmentation",
       "redness": "Redness",
       "pores": "Pores",
       "texture": "Texture",

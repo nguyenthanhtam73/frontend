@@ -14,6 +14,8 @@ export type AdminSkinReviewAnalysis = {
   overview: string;
   skin_type: string;
   skin_type_severity: string;
+  /** One short sentence explaining why the skin_type was chosen (visual cues). */
+  skin_type_note?: string;
   attention_areas: AdminSkinAttentionArea[];
   additional_observations: string;
   photo_notes: string;

@@ -2276,6 +2276,7 @@
     "resultMeta": "ID {id} · model {model}",
     "fieldOverview": "Tổng quan",
     "fieldSkinType": "Loại da",
+    "fieldSkinTypeNote": "Giải thích loại da",
     "fieldAttention": "Vùng chú ý",
     "fieldAdditional": "Quan sát thêm",
     "fieldPhotoNotes": "Ghi chú ảnh",
@@ -2296,8 +2297,12 @@
       "pronounced": "Rõ"
     },
     "concerns": {
+      "none": "Không bất thường rõ",
       "acne": "Mụn",
+      "papules": "Nốt sưng (papules)",
+      "pustules": "Nốt có đầu (pustules)",
       "dark_spots": "Thâm / sạm",
+      "pigmentation": "Sắc tố / thâm",
       "redness": "Đỏ",
       "pores": "Lỗ chân lông",
       "texture": "Texture",

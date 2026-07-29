@@ -18,9 +18,13 @@ const REGION_KEYS = new Set([
 ]);
 
 const CONCERN_KEYS = new Set([
+  "none",
   "acne",
-  "dark_spots",
+  "papules",
+  "pustules",
   "redness",
+  "pigmentation",
+  "dark_spots",
   "pores",
   "dryness",
   "oiliness",
@@ -90,6 +94,16 @@ export function SkinReviewAnalysisView({
           <BadgeChip tone="teal">{skinTypeLabel}</BadgeChip>
           <BadgeChip tone="blush">{severityLabel}</BadgeChip>
         </div>
+        {a.skin_type_note?.trim() ? (
+          <p
+            className={cn(
+              "mt-2 whitespace-pre-wrap leading-relaxed text-muted-foreground",
+              share ? "text-sm sm:text-[0.95rem]" : "text-sm",
+            )}
+          >
+            {a.skin_type_note}
+          </p>
+        ) : null}
       </ResultSection>
 
       <ResultSection title={t("fieldAttention")} share={share} index={3}>
@@ -117,7 +131,9 @@ export function SkinReviewAnalysisView({
                   </BadgeChip>
                 </div>
                 {area.note?.trim() ? (
-                  <p className="mt-1.5 text-muted-foreground">{area.note}</p>
+                  <p className="mt-1.5 whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                    {area.note}
+                  </p>
                 ) : null}
               </li>
             ))}
