@@ -67,6 +67,10 @@
       "title": "Payment metrics · DaDiary Admin",
       "description": "Today’s revenue, success rate, and upcoming Premium expiries."
     },
+    "adminSkinReview": {
+      "title": "Admin Skin Review · DaDiary",
+      "description": "Upload skin photos for deep observation-only AI analysis (admin)."
+    },
     "pricingPage": {
       "title": "Pricing · DaDiary",
       "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
@@ -132,7 +136,8 @@
       "feedback": "Send feedback",
       "adminFeedbacks": "Manage feedback",
       "adminUsers": "Manage plans",
-      "adminPayments": "Payments"
+      "adminPayments": "Payments",
+      "adminSkinReview": "Skin review"
     },
     "footer": {
       "tagline": "Your skin diary · AI Coach · progress & before/after",
@@ -2194,6 +2199,78 @@
       "failed": "Failed",
       "cancelled": "Cancelled",
       "expired": "Expired"
+    }
+  },
+  "adminSkinReview": {
+    "sectionLabel": "Admin",
+    "title": "Skin Review",
+    "sub": "Upload 1–3 skin photos for deep AI observations only — no routine, products, or care steps.",
+    "linkUsers": "← Manage plans",
+    "authLoading": "Checking admin access…",
+    "needAuth": "Sign in to access the admin page.",
+    "signIn": "Sign in",
+    "forbidden": "You do not have permission to access this page.",
+    "stepUpload": "1. Photos",
+    "stepUploadSub": "Capture or upload 1–3 well-lit skin photos (front + optional angles).",
+    "stepResult": "AI observations",
+    "captureCta": "Take photo",
+    "libraryCta": "From library",
+    "photoHint": "Up to {max} photos. JPEG, PNG, WebP, or GIF.",
+    "photoAlt": "Skin photo {n}",
+    "removePhoto": "Remove photo",
+    "photoErrorEmpty": "That file is empty.",
+    "photoErrorType": "Use a JPEG, PNG, WebP, or GIF image.",
+    "photoErrorSize": "Each photo must be under {mb} MB.",
+    "photoErrorMax": "Maximum {max} photos.",
+    "photoErrorGeneric": "Could not add that photo.",
+    "titleLabel": "Title (optional)",
+    "titlePlaceholder": "e.g. Beta tester — oily T-zone",
+    "notesLabel": "Admin notes (optional)",
+    "notesPlaceholder": "Internal notes — not sent to the model as care advice.",
+    "statusLabel": "Status",
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "analyzeCta": "Analyze with AI",
+    "analyzing": "Analyzing…",
+    "analyzeSuccess": "Analysis ready.",
+    "analyzeError": "Analysis failed. Try again or check the API.",
+    "saveMetaCta": "Save title / notes / status",
+    "saveSuccess": "Saved.",
+    "saveError": "Could not save metadata.",
+    "resetCta": "New review",
+    "resultMeta": "ID {id} · model {model}",
+    "fieldOverview": "Overview",
+    "fieldSkinType": "Skin type",
+    "fieldSeverity": "Overall severity",
+    "fieldAttention": "Attention areas",
+    "fieldDetailed": "Detailed findings",
+    "fieldExtra": "Extra notes",
+    "noAttentionAreas": "No specific attention areas flagged.",
+    "skinTypes": {
+      "oily": "Oily",
+      "dry": "Dry",
+      "combination": "Combination",
+      "normal": "Normal",
+      "sensitive": "Sensitive",
+      "unclear": "Unclear"
+    },
+    "severities": {
+      "clear": "Clear",
+      "mild": "Mild",
+      "moderate": "Moderate",
+      "pronounced": "Pronounced"
+    },
+    "concerns": {
+      "acne": "Acne",
+      "dark_spots": "Dark spots",
+      "redness": "Redness",
+      "pores": "Pores",
+      "texture": "Texture",
+      "dryness": "Dryness",
+      "oiliness": "Oiliness",
+      "other": "Other"
     }
   }
 }

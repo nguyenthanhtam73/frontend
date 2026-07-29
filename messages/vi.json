@@ -67,6 +67,10 @@
       "title": "Chỉ số thanh toán · DaDiary Admin",
       "description": "Doanh thu hôm nay, tỷ lệ thành công và gói Premium sắp hết hạn."
     },
+    "adminSkinReview": {
+      "title": "Admin Skin Review · DaDiary",
+      "description": "Upload ảnh da để AI nhận xét tình trạng (chỉ admin)."
+    },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
       "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
@@ -132,7 +136,8 @@
       "feedback": "Gửi góp ý",
       "adminFeedbacks": "Quản lý góp ý",
       "adminUsers": "Quản lý gói",
-      "adminPayments": "Thanh toán"
+      "adminPayments": "Thanh toán",
+      "adminSkinReview": "Skin review"
     },
     "footer": {
       "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
@@ -2194,6 +2199,78 @@
       "failed": "Failed",
       "cancelled": "Cancelled",
       "expired": "Expired"
+    }
+  },
+  "adminSkinReview": {
+    "sectionLabel": "Admin",
+    "title": "Skin Review",
+    "sub": "Upload 1–3 ảnh da để AI nhận xét tình trạng — không sinh routine, sản phẩm hay bước chăm sóc.",
+    "linkUsers": "← Quản lý gói",
+    "authLoading": "Đang tải quyền admin…",
+    "needAuth": "Đăng nhập để truy cập trang quản trị.",
+    "signIn": "Đăng nhập",
+    "forbidden": "Bạn không có quyền truy cập trang này.",
+    "stepUpload": "1. Ảnh da",
+    "stepUploadSub": "Chụp hoặc chọn 1–3 ảnh da đủ sáng (chính diện + góc phụ nếu có).",
+    "stepResult": "Nhận xét AI",
+    "captureCta": "Chụp ảnh",
+    "libraryCta": "Chọn từ thư viện",
+    "photoHint": "Tối đa {max} ảnh. JPEG, PNG, WebP hoặc GIF.",
+    "photoAlt": "Ảnh da {n}",
+    "removePhoto": "Xóa ảnh",
+    "photoErrorEmpty": "File trống.",
+    "photoErrorType": "Chỉ nhận JPEG, PNG, WebP hoặc GIF.",
+    "photoErrorSize": "Mỗi ảnh tối đa {mb} MB.",
+    "photoErrorMax": "Tối đa {max} ảnh.",
+    "photoErrorGeneric": "Không thêm được ảnh này.",
+    "titleLabel": "Tiêu đề (tuỳ chọn)",
+    "titlePlaceholder": "vd. Tester Beta — vùng T dầu",
+    "notesLabel": "Ghi chú admin (tuỳ chọn)",
+    "notesPlaceholder": "Ghi chú nội bộ — không dùng làm hướng dẫn chăm sóc.",
+    "statusLabel": "Trạng thái",
+    "statuses": {
+      "draft": "Nháp",
+      "published": "Đã xuất bản"
+    },
+    "analyzeCta": "Gửi phân tích AI",
+    "analyzing": "Đang phân tích…",
+    "analyzeSuccess": "Đã có kết quả nhận xét.",
+    "analyzeError": "Phân tích thất bại. Thử lại hoặc kiểm tra API.",
+    "saveMetaCta": "Lưu title / notes / status",
+    "saveSuccess": "Đã lưu.",
+    "saveError": "Không lưu được metadata.",
+    "resetCta": "Review mới",
+    "resultMeta": "ID {id} · model {model}",
+    "fieldOverview": "Tổng quan tình trạng da",
+    "fieldSkinType": "Loại da",
+    "fieldSeverity": "Mức độ tổng thể",
+    "fieldAttention": "Vùng chú ý",
+    "fieldDetailed": "Chi tiết quan sát",
+    "fieldExtra": "Ghi chú quan sát thêm",
+    "noAttentionAreas": "Không có vùng chú ý nổi bật.",
+    "skinTypes": {
+      "oily": "Da dầu",
+      "dry": "Da khô",
+      "combination": "Da hỗn hợp",
+      "normal": "Da thường",
+      "sensitive": "Da nhạy cảm",
+      "unclear": "Chưa rõ"
+    },
+    "severities": {
+      "clear": "Sạch / ổn",
+      "mild": "Nhẹ",
+      "moderate": "Trung bình",
+      "pronounced": "Rõ"
+    },
+    "concerns": {
+      "acne": "Mụn",
+      "dark_spots": "Thâm / sạm",
+      "redness": "Đỏ",
+      "pores": "Lỗ chân lông",
+      "texture": "Texture",
+      "dryness": "Khô",
+      "oiliness": "Dầu",
+      "other": "Khác"
     }
   }
 }

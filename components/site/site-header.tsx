@@ -232,6 +232,7 @@ export function SiteHeader() {
           { href: "/admin/payments" as const, label: t("nav.adminPayments") },
           { href: "/admin/users" as const, label: t("nav.adminUsers") },
           { href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") },
+          { href: "/admin/skin-review" as const, label: t("nav.adminSkinReview") },
         ]
       : []),
   ];
