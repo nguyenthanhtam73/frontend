@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Copy, Share2 } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { Check, ChevronDown, Copy, Share2 } from "lucide-react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
@@ -10,12 +10,19 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
 import { absoluteUploadUrl } from "@/lib/api/admin-skin-review";
+import {
+  buildSkinReviewShareClipboard,
+  type SkinReviewShareLocale,
+  type SkinReviewShareVariant,
+} from "@/lib/skin-review-share-clipboard";
 import type { PublicSkinReviewResponse } from "@/lib/types/admin-skin-review";
 import { cn } from "@/lib/utils";
 
 /** Public Facebook-shareable skin review — teal/blush, mobile-first. */
 export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }) {
   const t = useTranslations("skinReviewShare");
+  const localeRaw = useLocale();
+  const locale: SkinReviewShareLocale = localeRaw === "en" ? "en" : "vi";
   const formatter = useFormatter();
   const toast = useToast();
   const photos = data.image_urls ?? [];
@@ -25,6 +32,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
 
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showCopyOptions, setShowCopyOptions] = useState(false);
 
   useEffect(() => {
     setCanNativeShare(
@@ -45,26 +53,51 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
     return window.location.href;
   }, []);
 
-  const copyLink = useCallback(async () => {
-    const url = pageUrl();
-    if (!url) return;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      toast.success(t("copySuccess"));
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error(t("copyError"));
-    }
-  }, [pageUrl, t, toast]);
+  const buildClipboardText = useCallback(
+    (variant: SkinReviewShareVariant, url: string) =>
+      buildSkinReviewShareClipboard({
+        overview: data.analysis?.overview ?? "",
+        link: url,
+        skinType: data.analysis?.skin_type,
+        skinTypeSeverity: data.analysis?.skin_type_severity,
+        locale,
+        variant,
+      }),
+    [
+      data.analysis?.overview,
+      data.analysis?.skin_type,
+      data.analysis?.skin_type_severity,
+      locale,
+    ],
+  );
+
+  const copyShareText = useCallback(
+    async (variant: SkinReviewShareVariant = "short") => {
+      const url = pageUrl();
+      if (!url) return;
+      const text = buildClipboardText(variant, url);
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        toast.success(
+          variant === "link" ? t("copyLinkOnlySuccess") : t("copySuccess"),
+        );
+        window.setTimeout(() => setCopied(false), 2000);
+      } catch {
+        toast.error(t("copyError"));
+      }
+    },
+    [buildClipboardText, pageUrl, t, toast],
+  );
 
   const nativeShare = useCallback(async () => {
     const url = pageUrl();
     if (!url || typeof navigator.share !== "function") return;
+    const text = buildClipboardText("short", url);
     try {
       await navigator.share({
         title: data.title?.trim() || t("title"),
-        text: t("sub"),
+        text,
         url,
       });
       toast.success(t("shareSuccess"));
@@ -72,7 +105,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
       if (err instanceof DOMException && err.name === "AbortError") return;
       toast.error(t("shareError"));
     }
-  }, [data.title, pageUrl, t, toast]);
+  }, [buildClipboardText, data.title, pageUrl, t, toast]);
 
   function photoAlt(index: number) {
     return multi ? t("photoAltN", { n: index + 1 }) : t("photoAlt");
@@ -160,35 +193,77 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
           </div>
 
           {/* Share actions — thumb-friendly, full-width on narrow screens */}
-          <div className="flex flex-col gap-2.5 border-t border-border/60 px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-2 sm:px-7">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[10.5rem]"
-              onClick={() => void copyLink()}
-              aria-label={t("copyLinkCta")}
-            >
-              {copied ? (
-                <Check className="size-4" aria-hidden />
-              ) : (
-                <Copy className="size-4" aria-hidden />
-              )}
-              {copied ? t("copied") : t("copyLinkCta")}
-            </Button>
-            {canNativeShare ? (
+          <div className="space-y-2.5 border-t border-border/60 px-4 py-4 sm:px-7">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
-                className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[8rem]"
-                onClick={() => void nativeShare()}
-                aria-label={t("shareCta")}
+                className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[14rem]"
+                onClick={() => void copyShareText("short")}
+                aria-label={t("copyCommentCta")}
               >
-                <Share2 className="size-4" aria-hidden />
-                {t("shareCta")}
+                {copied ? (
+                  <Check className="size-4" aria-hidden />
+                ) : (
+                  <Copy className="size-4" aria-hidden />
+                )}
+                {copied ? t("copied") : t("copyCommentCta")}
               </Button>
-            ) : null}
+              {canNativeShare ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[8rem]"
+                  onClick={() => void nativeShare()}
+                  aria-label={t("shareCta")}
+                >
+                  <Share2 className="size-4" aria-hidden />
+                  {t("shareCta")}
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col items-stretch gap-2 sm:items-center">
+              <button
+                type="button"
+                className="inline-flex h-9 min-h-9 touch-manipulation items-center justify-center gap-1 self-center text-[0.8125rem] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                aria-expanded={showCopyOptions}
+                onClick={() => setShowCopyOptions((v) => !v)}
+              >
+                {t("copyOptionsToggle")}
+                <ChevronDown
+                  className={cn(
+                    "size-3.5 transition-transform",
+                    showCopyOptions && "rotate-180",
+                  )}
+                  aria-hidden
+                />
+              </button>
+              {showCopyOptions ? (
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 min-h-10 touch-manipulation"
+                    onClick={() => void copyShareText("full")}
+                  >
+                    {t("copyFullCta")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 min-h-10 touch-manipulation"
+                    onClick={() => void copyShareText("link")}
+                  >
+                    {t("copyLinkOnlyCta")}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </article>
 

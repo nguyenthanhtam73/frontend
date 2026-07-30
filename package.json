@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "print:share-clipboard": "npx --yes tsx scripts/print-skin-review-share-clipboard.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install chromium"
