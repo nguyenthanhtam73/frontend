@@ -1286,17 +1286,17 @@
       "rationaleHeadlineFallback": "This routine supports your {goal} goal — matched to {concerns} and your {skill} level.",
       "rationaleHeadline": {
         "ai": {
-          "barrier": "From your photos: soothe and rebuild your barrier first — toward {goal} while addressing {concerns}.",
+          "barrier": "From your photos: soothe first when skin gets irritated easily — toward {goal} while addressing {concerns}.",
           "acne": "From your photos: light oil control and calming care — supports {goal} with {concerns} in mind.",
           "glow": "From your photos: steady hydration and daily protection — the base for your {goal} goal.",
-          "anti_aging": "From your photos: deep hydration and daily SPF — protecting skin for {goal}.",
+          "anti_aging": "From your photos: deep hydration and daily sunscreen — protecting skin for {goal}.",
           "default": "Read from your photos — built for {goal} and {concerns}, suited to your {skill} level."
         },
         "manual": {
-          "barrier": "Soothe and repair your barrier first — toward {goal} while you’re dealing with {concerns}.",
-          "acne": "Helps control T-zone oil and calm skin — fits your {goal} goal with {concerns}.",
+          "barrier": "Soothe first when skin is easily irritated — toward {goal} while you’re dealing with {concerns}.",
+          "acne": "Helps control oil on the T-zone (forehead–nose–chin) and calm skin — fits your {goal} goal with {concerns}.",
           "glow": "Steady hydration and daily protection — the foundation for your {goal} goal.",
-          "anti_aging": "Deep hydration and daily SPF — supports {goal} from week one.",
+          "anti_aging": "Deep hydration and daily sunscreen — supports {goal} from week one.",
           "default": "Built from your {goal} goal and {concerns} — matched to your {skill} level."
         }
       },
@@ -1312,16 +1312,16 @@
           "barrier": "This routine was made to soothe and repair your skin — from the goals and concerns you chose.",
           "acne": "Supports clearer skin safely — built from the goals and concerns you just shared.",
           "glow": "A steady path to brighter skin — from your goals and concerns.",
-          "anti_aging": "Deep hydration + SPF — aligned with your anti-aging goal.",
+          "anti_aging": "Deep hydration + sunscreen — aligned with your anti-aging goal.",
           "default": "This is the best starter routine for your skin and goals right now."
         }
       },
       "benefits": {
         "ai": {
-          "b0_barrier": "Soothe first, actives later — your skin gets time to recover its barrier.",
+          "b0_barrier": "Soothe first, actives later — let easily irritated skin settle before strong products.",
           "b0_acne": "Cleanse without stripping — fewer clogged pores, less tightness.",
-          "b0_glow": "Hydrate + daily SPF — the base for a healthy, lasting glow.",
-          "b0_anti_aging": "Morning SPF — your most effective long-term anti-aging step.",
+          "b0_glow": "Hydrate + daily sunscreen — the base for a healthy, lasting glow.",
+          "b0_anti_aging": "Morning sunscreen — your most effective long-term anti-aging step.",
           "b0_default": "From your photos — not a one-size-fits-all template.",
           "b1": "Protect by day, repair by night — a rhythm that’s easy to stick to.",
           "b_skill": {
@@ -1331,10 +1331,10 @@
           }
         },
         "manual": {
-          "b0_barrier": "Soothing first — less irritation when skin is stressed or barrier is weak.",
-          "b0_acne": "Light T-zone oil control — clearer skin without the tight, dry feeling.",
+          "b0_barrier": "Soothing first — less irritation when skin feels stressed or easily red.",
+          "b0_acne": "Light oil control on the T-zone — clearer skin without the tight, dry feeling.",
           "b0_glow": "Consistent hydration — glow builds when you stay steady.",
-          "b0_anti_aging": "Deep hydration + SPF — protect skin early for anti-aging.",
+          "b0_anti_aging": "Deep hydration + sunscreen — protect skin early for anti-aging.",
           "b0_default": "From your goals and concerns — no guesswork.",
           "b1": "Few steps, done daily — beats a crowded shelf.",
           "b_skill": {
@@ -1348,7 +1348,7 @@
       "whyTitle": "Why this routine fits you",
       "sourceAi": "From photos & AI",
       "sourceManual": "From your choices",
-      "morningHint": "Cleanse → hydrate → SPF",
+      "morningHint": "Cleanse → moisturizer → sunscreen",
       "eveningHint": "Gentle cleanse → overnight repair",
       "stepCount": "steps",
       "viewStepDetail": "More",
@@ -1459,7 +1459,7 @@
       "undertone": "Skin tone",
       "concerns": "Things noted",
       "goal": "Suggested goal",
-      "barrier": "Skin barrier",
+      "barrier": "How calm skin looks",
       "confidence": "Estimated confidence",
       "notes": "Buddy notes",
       "photoTips": "Photo tips",
@@ -1477,10 +1477,10 @@
       "dryness": "Dryness",
       "redness": "Redness / flush",
       "large_pores": "Larger pores",
-      "weak_barrier": "Weakened skin barrier",
+      "weak_barrier": "Easily irritated / weaker than usual",
       "dullness": "Dullness",
-      "dehydration": "Thirsty (dehydrated)",
-      "uneven_texture": "Uneven texture"
+      "dehydration": "Thirsty / lacking moisture",
+      "uneven_texture": "Uneven / bumpy-looking skin"
     },
     "back": "Back",
     "next": "Continue",
@@ -1585,7 +1585,7 @@
     "goal": {
       "glow": "Healthy glow",
       "clear_acne": "Fewer breakouts",
-      "barrier": "Repair the skin barrier",
+      "barrier": "Soothe / easily irritated skin",
       "anti_aging": "Hydration / fine lines",
       "unsure": "Not sure yet — coach me gradually"
     },
@@ -1641,10 +1641,10 @@
       "tip4": "Thorough evening cleansing helps serums and moisturizers absorb better.",
       "tip5": "Same light and angle each week makes progress photos easier to compare.",
       "tip6": "Patch test on a small area before strong actives like acids or retinol.",
-      "goalTip_glow": "For a healthy glow: steady hydration + daily SPF are the strongest foundation.",
+      "goalTip_glow": "For a healthy glow: steady hydration + daily sunscreen are the strongest foundation.",
       "goalTip_clear_acne": "For clearer skin: gentle cleansing + don't skip moisturizer — dry skin irritates more easily.",
-      "goalTip_barrier": "For barrier repair: soothe and hydrate before adding strong actives.",
-      "goalTip_anti_aging": "For hydration and fine lines: morning SPF prevents early aging better than many pricey serums.",
+      "goalTip_barrier": "For soothing easily irritated skin: calm and hydrate before adding strong actives.",
+      "goalTip_anti_aging": "For hydration and fine lines: morning sunscreen prevents early aging better than many pricey serums.",
       "goalTip_unsure": "Not sure of your goal yet? AI is reading your photos to suggest the best direction.",
       "stepPhotos": "Analyze photos",
       "stepSkin": "Detect skin",

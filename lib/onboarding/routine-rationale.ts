@@ -17,12 +17,12 @@ type LabelFn = (key: string) => string;
 
 const CONCERN_PHRASE_VI: Record<string, string> = {
   acne: "mụn",
-  dryness: "khô",
+  dryness: "da khô",
   redness: "dễ đỏ / kích ứng",
   hyperpigmentation: "thâm / sạm",
   dullness: "xỉn màu",
   large_pores: "lỗ chân lông to",
-  weak_barrier: "barrier yếu",
+  weak_barrier: "da dễ đỏ / yếu hơn bình thường",
   dehydration: "thiếu ẩm",
 };
 
@@ -33,8 +33,8 @@ const CONCERN_PHRASE_EN: Record<string, string> = {
   hyperpigmentation: "dark spots",
   dullness: "dullness",
   large_pores: "visible pores",
-  weak_barrier: "a weak barrier",
-  dehydration: "dehydration",
+  weak_barrier: "skin that gets irritated easily",
+  dehydration: "dehydrated-feeling skin",
 };
 
 function joinConcerns(concerns: string[], locale: string, max = 3): string {
@@ -69,14 +69,14 @@ function goalLabel(goal: SkinGoal, t: LabelFn): string {
   }
 }
 
-function barrierPhrase(signal: string | undefined, en: boolean): string | null {
+function calmSkinPhrase(signal: string | undefined, en: boolean): string | null {
   if (signal === "possibly_compromised") {
     return en
-      ? "your barrier may need extra soothing"
-      : "lớp bảo vệ da có thể đang cần làm dịu";
+      ? "your skin may need extra soothing right now"
+      : "da bạn có thể đang cần làm dịu thêm";
   }
   if (signal === "likely_ok") {
-    return en ? "your barrier looks fairly steady" : "lớp bảo vệ da có vẻ ổn định";
+    return en ? "your skin looks fairly steady" : "da bạn trông khá ổn định";
   }
   return null;
 }
@@ -100,23 +100,23 @@ export function buildRoutineRationale(
   const lines: string[] = [];
 
   if (source === "ai") {
-    const barrier = barrierPhrase(ob.aiSnapshot?.barrier_signal, en);
+    const calm = calmSkinPhrase(ob.aiSnapshot?.barrier_signal, en);
     headline = en
       ? `From your photos: ${skinLabel.toLowerCase()} skin, focused on ${goalText.toLowerCase()}.`
       : `Từ ảnh của bạn: da ${skinLabel.toLowerCase()}, ưu tiên ${goalText.toLowerCase()}.`;
 
-    if (barrier) {
+    if (calm) {
       lines.push(
         en
-          ? `AI noted ${barrier} — steps stay gentle, no harsh actives yet.`
-          : `AI ghi nhận ${barrier} — các bước giữ nhẹ, chưa thêm hoạt chất mạnh.`,
+          ? `AI noted ${calm} — steps stay gentle, no harsh actives yet.`
+          : `AI ghi nhận ${calm} — các bước giữ nhẹ, chưa thêm hoạt chất mạnh.`,
       );
     }
 
     lines.push(
       en
-        ? `We built around ${concernText} and your goal, with daily SPF as the anchor.`
-        : `Routine xoay quanh ${concernText} và mục tiêu của bạn, với chống nắng là trụ cột.`,
+        ? `We built around ${concernText} and your goal, with daily sunscreen as the anchor.`
+        : `Routine xoay quanh ${concernText} và mục tiêu của bạn, với kem chống nắng là trụ cột.`,
     );
 
     const confidence = ob.aiSnapshot?.confidence;
@@ -147,8 +147,8 @@ export function buildRoutineRationale(
     if (goal === "barrier" || concerns.includes("redness") || concerns.includes("dryness")) {
       lines.push(
         en
-          ? `Gentle cleanse + barrier support — no acids until skin feels calm.`
-          : `Rửa mặt dịu + hỗ trợ barrier — chưa dùng acid khi da còn căng/kích ứng.`,
+          ? `Gentle cleanse + soothing care — no acids until skin feels calm.`
+          : `Rửa mặt dịu + chăm làm dịu — chưa dùng acid khi da còn căng/kích ứng.`,
       );
     } else if (goal === "clear_acne" || concerns.includes("acne")) {
       lines.push(
@@ -166,8 +166,8 @@ export function buildRoutineRationale(
 
     lines.push(
       en
-        ? `SPF every morning — even indoors near windows.`
-        : `Chống nắng mỗi sáng — kể cả ở nhà gần cửa sổ.`,
+        ? `Sunscreen every morning — even indoors near windows.`
+        : `Kem chống nắng mỗi sáng — kể cả ở nhà gần cửa sổ.`,
     );
   }
 

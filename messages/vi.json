@@ -1286,17 +1286,17 @@
       "rationaleHeadlineFallback": "Routine hỗ trợ mục tiêu {goal} — phù hợp với {concerns} và trình độ {skill} của bạn.",
       "rationaleHeadline": {
         "ai": {
-          "barrier": "Từ ảnh da bạn: ưu tiên làm dịu và phục hồi barrier — hướng tới {goal} khi đang gặp {concerns}.",
+          "barrier": "Từ ảnh da bạn: ưu tiên làm dịu khi da dễ đỏ — hướng tới {goal} khi đang gặp {concerns}.",
           "acne": "Từ ảnh da bạn: kiểm soát dầu và làm dịu — hỗ trợ mục tiêu {goal} với tình trạng {concerns}.",
           "glow": "Từ ảnh da bạn: cấp ẩm đều và bảo vệ mỗi ngày — nền tảng cho mục tiêu {goal}.",
-          "anti_aging": "Từ ảnh da bạn: cấp ẩm sâu và SPF hàng ngày — bảo vệ da cho {goal}.",
+          "anti_aging": "Từ ảnh da bạn: cấp ẩm sâu và kem chống nắng mỗi sáng — bảo vệ da cho {goal}.",
           "default": "Đọc từ ảnh da bạn — ghép cho mục tiêu {goal} và {concerns}, phù hợp trình độ {skill}."
         },
         "manual": {
-          "barrier": "Ưu tiên làm dịu và phục hồi barrier — hướng tới {goal} khi bạn đang gặp {concerns}.",
-          "acne": "Giúp kiểm soát dầu vùng T và làm dịu da — phù hợp mục tiêu {goal} với {concerns}.",
+          "barrier": "Ưu tiên làm dịu khi da dễ đỏ / dễ kích ứng — hướng tới {goal} khi bạn đang gặp {concerns}.",
+          "acne": "Giúp kiểm soát dầu vùng chữ T (trán–mũi–cằm) và làm dịu da — phù hợp mục tiêu {goal} với {concerns}.",
           "glow": "Cấp ẩm đều và bảo vệ da mỗi ngày — nền tảng cho mục tiêu {goal} của bạn.",
-          "anti_aging": "Cấp ẩm sâu và SPF hàng ngày — hỗ trợ {goal} ngay từ tuần đầu.",
+          "anti_aging": "Cấp ẩm sâu và kem chống nắng mỗi sáng — hỗ trợ {goal} ngay từ tuần đầu.",
           "default": "Ghép từ mục tiêu {goal} và {concerns} — phù hợp trình độ {skill} của bạn."
         }
       },
@@ -1318,10 +1318,10 @@
       },
       "benefits": {
         "ai": {
-          "b0_barrier": "Làm dịu trước, mạnh sau — da kịp phục hồi barrier trước khi thêm hoạt chất.",
+          "b0_barrier": "Làm dịu trước, mạnh sau — để da hết căng/dễ đỏ trước khi thêm hoạt chất.",
           "b0_acne": "Làm sạch đúng cách — giảm tắc nghẽn mà không làm da căng hay khô.",
           "b0_glow": "Cấp ẩm + chống nắng hàng ngày — nền tảng cho da sáng khoẻ bền vững.",
-          "b0_anti_aging": "SPF mỗi sáng — bước chống lão hoá quan trọng và hiệu quả nhất.",
+          "b0_anti_aging": "Kem chống nắng mỗi sáng — bước chống lão hoá quan trọng và hiệu quả nhất.",
           "b0_default": "Đọc từ ảnh da bạn — không phải routine chung cho mọi người.",
           "b1": "Sáng bảo vệ, tối phục hồi — nhịp dễ nhớ, dễ làm đều mỗi ngày.",
           "b_skill": {
@@ -1331,10 +1331,10 @@
           }
         },
         "manual": {
-          "b0_barrier": "Ưu tiên làm dịu — giảm kích ứng khi da đang nhạy cảm hoặc barrier yếu.",
-          "b0_acne": "Kiểm soát dầu vùng T nhẹ nhàng — hỗ trợ giảm mụn mà không làm khô căng.",
+          "b0_barrier": "Ưu tiên làm dịu — giảm kích ứng khi da đang nhạy cảm hoặc dễ đỏ.",
+          "b0_acne": "Kiểm soát dầu vùng chữ T nhẹ nhàng — hỗ trợ giảm mụn mà không làm khô căng.",
           "b0_glow": "Nền tảng cấp ẩm đều — da sáng khoẻ hơn khi bạn kiên trì.",
-          "b0_anti_aging": "Cấp ẩm sâu + SPF — bảo vệ da sớm cho mục tiêu anti-aging.",
+          "b0_anti_aging": "Cấp ẩm sâu + kem chống nắng — bảo vệ da sớm cho mục tiêu chống lão hoá.",
           "b0_default": "Ghép từ mục tiêu và vấn đề bạn chọn — không đoán mò.",
           "b1": "Ít bước, đi đều — quan trọng hơn nhiều sản phẩm trên kệ.",
           "b_skill": {
@@ -1348,7 +1348,7 @@
       "whyTitle": "Vì sao routine này phù hợp với bạn",
       "sourceAi": "Từ ảnh & AI",
       "sourceManual": "Từ lựa chọn của bạn",
-      "morningHint": "Làm sạch → cấp ẩm → chống nắng",
+      "morningHint": "Rửa mặt → kem dưỡng → kem chống nắng",
       "eveningHint": "Làm sạch nhẹ → phục hồi qua đêm",
       "stepCount": "bước",
       "viewStepDetail": "Thêm",
@@ -1459,7 +1459,7 @@
       "undertone": "Tone da",
       "concerns": "Vấn đề ghi nhận",
       "goal": "Mục tiêu gợi ý",
-      "barrier": "Lớp bảo vệ da",
+      "barrier": "Độ êm của da",
       "confidence": "Độ tin cậy ước lượng",
       "notes": "Bạn đồng hành nói gì",
       "photoTips": "Gợi ý chụp ảnh",
@@ -1477,10 +1477,10 @@
       "dryness": "Khô",
       "redness": "Đỏ / dễ kích ứng",
       "large_pores": "Lỗ chân lông to",
-      "weak_barrier": "Lớp bảo vệ da yếu",
+      "weak_barrier": "Da dễ đỏ / yếu hơn bình thường",
       "dullness": "Da xỉn màu",
-      "dehydration": "Da khô bên trong",
-      "uneven_texture": "Bề mặt sần / không đều"
+      "dehydration": "Da thiếu ẩm",
+      "uneven_texture": "Da hơi sần / không đều màu"
     },
     "back": "Quay lại",
     "next": "Tiếp tục",
@@ -1585,7 +1585,7 @@
     "goal": {
       "glow": "Sáng khoẻ",
       "clear_acne": "Giảm mụn",
-      "barrier": "Phục hồi lớp bảo vệ da",
+      "barrier": "Làm dịu / da dễ kích ứng",
       "anti_aging": "Căng ẩm / nếp nhăn nhỏ",
       "unsure": "Chưa rõ — để bạn đồng hành gợi ý dần"
     },
@@ -1641,10 +1641,10 @@
       "tip4": "Tẩy trang kỹ buổi tối giúp da hấp thụ serum và kem dưỡng hiệu quả hơn.",
       "tip5": "Chụp ảnh da cùng ánh sáng và góc mỗi tuần giúp bạn thấy tiến triển rõ hơn.",
       "tip6": "Patch test trên vùng da nhỏ trước khi dùng sản phẩm mạnh như acid hoặc retinol.",
-      "goalTip_glow": "Mục tiêu sáng khoẻ: cấp ẩm đều + SPF hàng ngày là nền tảng quan trọng nhất.",
+      "goalTip_glow": "Mục tiêu sáng khoẻ: cấp ẩm đều + kem chống nắng hàng ngày là nền tảng quan trọng nhất.",
       "goalTip_clear_acne": "Mục tiêu giảm mụn: làm sạch dịu + không bỏ qua dưỡng ẩm — da khô dễ kích thích hơn.",
-      "goalTip_barrier": "Mục tiêu phục hồi barrier: ưu tiên làm dịu và giữ ẩm trước khi thêm hoạt chất mạnh.",
-      "goalTip_anti_aging": "Mục tiêu căng ẩm: SPF buổi sáng bảo vệ da khỏi lão hóa sớm hiệu quả hơn nhiều serum đắt.",
+      "goalTip_barrier": "Mục tiêu làm dịu: ưu tiên da hết căng/dễ đỏ và giữ ẩm trước khi thêm hoạt chất mạnh.",
+      "goalTip_anti_aging": "Mục tiêu căng ẩm: kem chống nắng buổi sáng bảo vệ da khỏi lão hóa sớm hiệu quả hơn nhiều serum đắt.",
       "goalTip_unsure": "Chưa rõ mục tiêu cũng không sao — AI đang đọc ảnh để gợi ý hướng phù hợp nhất.",
       "stepPhotos": "Phân tích ảnh",
       "stepSkin": "Nhận diện da",
