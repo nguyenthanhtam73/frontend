@@ -12,6 +12,7 @@ type CellValue =
   | "quota5"
   | "unlimited"
   | "viewOnly"
+  | "shelf3"
   | "full"
   | "months3"
   | "months12"

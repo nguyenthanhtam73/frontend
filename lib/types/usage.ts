@@ -13,7 +13,14 @@ export type UsageQuotaDTO = {
   is_premium: boolean;
   is_premium_plus?: boolean;
   period: string;
-  wardrobe: { can_write: boolean };
+  wardrobe: {
+    can_write: boolean;
+    can_manage?: boolean;
+    used?: number;
+    limit?: number;
+    remaining?: number;
+    unlimited?: boolean;
+  };
   routine_suggest: UsageCounterDTO;
   routine_manual_edit: UsageCounterDTO;
   progress_history_months?: number;

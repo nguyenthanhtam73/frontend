@@ -22,3 +22,15 @@ export type CreateWardrobeProductInput = {
   notes?: string;
   opened_at?: string;
 };
+
+export type UpdateWardrobeProductInput = {
+  name: string;
+  brand: string;
+  category?: string;
+  notes?: string;
+  /** YYYY-MM-DD; empty string clears the opened date. */
+  opened_at?: string;
+};
+
+/** Free shelf create cap — must match backend usage.FreeWardrobeProductLimit. */
+export const FREE_WARDROBE_PRODUCT_LIMIT = 3;

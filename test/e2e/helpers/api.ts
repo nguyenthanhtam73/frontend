@@ -48,9 +48,24 @@ export type UsageQuota = {
   plan_tier: string;
   is_premium: boolean;
   is_premium_plus: boolean;
+  wardrobe?: {
+    can_write?: boolean;
+    can_manage?: boolean;
+    used?: number;
+    limit?: number;
+    remaining?: number;
+    unlimited?: boolean;
+  };
   features?: Record<
     string,
-    { allowed?: boolean; unlimited?: boolean; remaining?: number }
+    {
+      allowed?: boolean;
+      unlimited?: boolean;
+      remaining?: number;
+      used?: number;
+      limit?: number;
+      kind?: string;
+    }
   >;
 };
 
@@ -307,6 +322,9 @@ export function assertPremiumFeatures(usage: UsageQuota): void {
   // AI suggest should be unlimited on Premium
   if (f.ai_routine_suggestion && f.ai_routine_suggestion.unlimited !== true) {
     throw new Error("ai_routine_suggestion should be unlimited on Premium");
+  }
+  if (usage.wardrobe && usage.wardrobe.can_manage !== true) {
+    throw new Error("wardrobe.can_manage should be true on Premium");
   }
 }
 

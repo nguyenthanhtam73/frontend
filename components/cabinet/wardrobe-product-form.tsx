@@ -4,27 +4,19 @@ import { Loader2, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  WardrobeCategorySelect,
+  WardrobeField,
+  wardrobeInputClass,
+} from "@/components/cabinet/wardrobe-product-fields";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
-
-const CATEGORY_IDS = [
-  "cleanser",
-  "toner",
-  "serum",
-  "moisturizer",
-  "spf",
-  "treatment",
-  "mask",
-  "other",
-] as const;
-
-const inputClass =
-  "w-full min-h-11 rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+import { FREE_WARDROBE_PRODUCT_LIMIT } from "@/lib/types/wardrobe";
 
 export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?: string }) {
   const t = useTranslations("cabinet");
@@ -38,6 +30,12 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const toast = useToast();
+
+  const freeSlotsRemaining =
+    !wardrobeGate.isPremium && !wardrobeGate.unlimited
+      ? (wardrobeGate.remaining ||
+          Math.max(0, (wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT) - wardrobeGate.used))
+      : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -72,7 +70,10 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
         setFormError(t("needAuth"));
         return;
       }
-      if (err instanceof Error && err.message === "premium_required") {
+      if (
+        err instanceof Error &&
+        (err.message === "premium_required" || err.message === "quota_exceeded")
+      ) {
         setFormError(t("premiumWardrobeBody"));
         return;
       }
@@ -112,6 +113,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
             <p className="text-sm text-muted-foreground">{t("addSub")}</p>
+            <p className="text-sm text-muted-foreground">{t("freeLimitHint", { n: FREE_WARDROBE_PRODUCT_LIMIT })}</p>
           </div>
           <UpsellBanner
             id="upsell-wardrobe-full"
@@ -128,67 +130,69 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("addSub")}</p>
+          {freeSlotsRemaining != null ? (
+            <p className="text-xs text-muted-foreground">
+              {t("freeSlotsRemaining", {
+                remaining: freeSlotsRemaining,
+                n: FREE_WARDROBE_PRODUCT_LIMIT,
+              })}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">{t("premiumUnlimitedHint")}</p>
+          )}
         </div>
 
         <form ref={formRef} className="space-y-3" onSubmit={(e) => void handleSubmit(e)}>
-          <Field label={t("fieldName")} htmlFor="wardrobe-name" required>
+          <WardrobeField label={t("fieldName")} htmlFor="wardrobe-name" required>
             <input
               id="wardrobe-name"
-              className={inputClass}
+              className={wardrobeInputClass}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("placeholderName")}
               autoComplete="off"
             />
-          </Field>
+          </WardrobeField>
 
-          <Field label={t("fieldBrand")} htmlFor="wardrobe-brand" required>
+          <WardrobeField label={t("fieldBrand")} htmlFor="wardrobe-brand" required>
             <input
               id="wardrobe-brand"
-              className={inputClass}
+              className={wardrobeInputClass}
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
               placeholder={t("placeholderBrand")}
               autoComplete="off"
             />
-          </Field>
+          </WardrobeField>
 
-          <Field label={t("fieldCategory")} htmlFor="wardrobe-category">
-            <select
+          <WardrobeField label={t("fieldCategory")} htmlFor="wardrobe-category">
+            <WardrobeCategorySelect
               id="wardrobe-category"
-              className={inputClass}
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">{t("categoryUnset")}</option>
-              {CATEGORY_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {t(`categories.${id}`)}
-                </option>
-              ))}
-            </select>
-          </Field>
+              onChange={setCategory}
+            />
+          </WardrobeField>
 
-          <Field label={t("fieldOpenedAt")} htmlFor="wardrobe-opened">
+          <WardrobeField label={t("fieldOpenedAt")} htmlFor="wardrobe-opened">
             <input
               id="wardrobe-opened"
               type="date"
-              className={inputClass}
+              className={wardrobeInputClass}
               value={openedAt}
               onChange={(e) => setOpenedAt(e.target.value)}
             />
-          </Field>
+          </WardrobeField>
 
-          <Field label={t("fieldNotes")} htmlFor="wardrobe-notes">
+          <WardrobeField label={t("fieldNotes")} htmlFor="wardrobe-notes">
             <textarea
               id="wardrobe-notes"
-              className={`${inputClass} min-h-[5rem] resize-y`}
+              className={`${wardrobeInputClass} min-h-[5rem] resize-y`}
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t("placeholderNotes")}
             />
-          </Field>
+          </WardrobeField>
 
           {formError ? (
             <p role="alert" className="text-sm text-destructive">
@@ -212,27 +216,5 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
         </form>
       </CardContent>
     </Card>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={htmlFor} className="text-xs font-medium text-muted-foreground">
-        {label}
-        {required ? <span className="text-destructive"> *</span> : null}
-      </label>
-      {children}
-    </div>
   );
 }

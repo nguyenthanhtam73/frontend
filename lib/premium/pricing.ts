@@ -41,7 +41,7 @@ export function formatVnd(amount: number, locale: string): string {
 export const COMPARE_ROWS = [
   { key: "aiSuggest", free: "quota3", premium: "unlimited", plus: "unlimited" },
   { key: "editRoutine", free: "quota5", premium: "unlimited", plus: "unlimited" },
-  { key: "wardrobe", free: "viewOnly", premium: "full", plus: "full" },
+  { key: "wardrobe", free: "shelf3", premium: "full", plus: "full" },
   { key: "progress", free: "months3", premium: "months12", plus: "allTime" },
   { key: "milestones", free: "basic", premium: "full", plus: "full" },
   { key: "export", free: "no", premium: "yes", plus: "yes" },

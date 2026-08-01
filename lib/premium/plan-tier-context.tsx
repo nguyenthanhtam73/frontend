@@ -45,6 +45,7 @@ function buildSnapshot(
   // Optimistic Free defaults before /me/usage lands (avoid locking the UI).
   const optimisticFreeSuggest = !isPremium && !hasUsagePayload;
   const optimisticFreeEdit = !isPremium && !hasUsagePayload;
+  const optimisticFreeWardrobe = !isPremium && !hasUsagePayload;
 
   return {
     planTier,
@@ -60,7 +61,10 @@ function buildSnapshot(
     canWardrobeWrite:
       features.wardrobe_full?.allowed ??
       data?.wardrobe?.can_write ??
-      isPremium,
+      (isPremium || optimisticFreeWardrobe),
+    canWardrobeManage:
+      data?.wardrobe?.can_manage ??
+      (features.wardrobe_full?.unlimited ?? isPremium),
     canRoutineSuggest:
       features.ai_routine_suggestion?.allowed ??
       (isPremium ||

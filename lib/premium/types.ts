@@ -22,7 +22,10 @@ export type FeatureGateSnapshot = {
   isFetched: boolean;
   /** Raw catalog from GET /me/usage — keyed by FeatureId. */
   features: Partial<Record<FeatureId, FeatureAccess>>;
+  /** Free: create while under shelf slot limit; Premium: always. */
   canWardrobeWrite: boolean;
+  /** Premium only — edit / delete shelf items. */
+  canWardrobeManage: boolean;
   canRoutineSuggest: boolean;
   canRoutineManualEdit: boolean;
 };

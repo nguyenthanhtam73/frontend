@@ -225,6 +225,7 @@ export function SiteHeader() {
     { href: "/cabinet" as const, label: t("nav.cabinet") },
     { href: "/progress" as const, label: t("nav.progress") },
     { href: "/pricing" as const, label: t("nav.pricing") },
+    { href: "/settings" as const, label: t("nav.settings") },
     { href: "/feedback" as const, label: t("nav.feedback") },
     { href: "/#how" as const, label: t("nav.howItWorks") },
     ...(user?.is_admin
