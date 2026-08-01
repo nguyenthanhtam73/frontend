@@ -257,7 +257,11 @@ export function UsersAdminView() {
                           </span>
                           <span className="text-xs text-muted-foreground">
                             @{row.username}
-                            {row.is_admin ? ` · ${t("adminBadge")}` : ""}
+                            {row.is_admin
+                              ? ` · ${t("adminBadge")}`
+                              : row.can_skin_review
+                                ? ` · ${t("skinReviewBadge")}`
+                                : ""}
                           </span>
                         </div>
                       </TableCell>

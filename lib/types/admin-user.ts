@@ -8,6 +8,7 @@ export type AdminUserListItem = {
   plan_tier: PlanTier | string;
   is_active: boolean;
   is_admin: boolean;
+  can_skin_review?: boolean;
   created_at: string;
   updated_at: string;
 };

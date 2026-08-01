@@ -25,7 +25,7 @@ function mapAdminError(err: unknown): never {
 
 /**
  * POST /api/v1/admin/skin-review — multipart images (1–3) + optional metadata.
- * Bypasses Free quota on the backend; requires is_admin.
+ * Bypasses Free quota on the backend; requires can_skin_review (or is_admin).
  */
 export async function createAdminSkinReview(input: {
   files: File[];

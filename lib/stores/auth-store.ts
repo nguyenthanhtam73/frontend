@@ -43,6 +43,8 @@ export type AuthUser = {
   cancel_at_period_end?: boolean;
   eligible_for_trial?: boolean;
   is_admin?: boolean;
+  /** Full admin or skin-review-only operator — may use /admin/skin-review. */
+  can_skin_review?: boolean;
   created_at?: string;
 };
 

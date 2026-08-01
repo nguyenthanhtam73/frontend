@@ -49,7 +49,7 @@ export function SkinReviewAdminView() {
   const t = useTranslations("adminSkinReview");
   const locale = useLocale();
   const toast = useToast();
-  const { hasAuth, isAdmin, authPending } = useAdminGate();
+  const { hasAuth, canSkinReview, authPending } = useAdminGate();
 
   const [tab, setTab] = useState<AdminTab>("create");
   const [photos, setPhotos] = useState<AdminReviewPhoto[]>([]);
@@ -155,7 +155,7 @@ export function SkinReviewAdminView() {
     );
   }
 
-  if (!isAdmin) {
+  if (!canSkinReview) {
     return (
       <Card>
         <CardContent className="py-8">

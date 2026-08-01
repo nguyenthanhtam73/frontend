@@ -10,6 +10,8 @@ export type AdminGateState = {
   hasAuth: boolean;
   /** True only after /me has resolved for the current session. */
   isAdmin: boolean;
+  /** Full admin or skin-review-only operator (GET /me can_skin_review). */
+  canSkinReview: boolean;
   /**
    * True while we still don't know admin status (token exists but user
    * not hydrated yet). Callers should show a skeleton — never "forbidden".
@@ -19,7 +21,7 @@ export type AdminGateState = {
 
 /**
  * Admin page gate: wait for auth hydrate before deciding forbidden.
- * Mirrors SiteHeader's refresh-on-mount so is_admin is available.
+ * Mirrors SiteHeader's refresh-on-mount so is_admin / can_skin_review are available.
  */
 export function useAdminGate(): AdminGateState {
   const user = useAuthStore((s) => s.user);
@@ -48,6 +50,7 @@ export function useAdminGate(): AdminGateState {
   return {
     hasAuth,
     isAdmin: !!user?.is_admin,
+    canSkinReview: !!user?.can_skin_review || !!user?.is_admin,
     authPending,
   };
 }
