@@ -200,7 +200,7 @@ export function SkinReviewAdminView() {
 
       {tab === "list" ? (
         <SkinReviewAdminList
-          enabled={!authPending && hasAuth && isAdmin}
+          enabled={!authPending && hasAuth && canSkinReview}
           onOpenCreate={() => setTab("create")}
         />
       ) : null}
