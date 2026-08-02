@@ -1,10 +1,20 @@
 "use client";
 
-import { Check, ChevronDown, Copy, Share2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  ImageIcon,
+  Loader2,
+  Share2,
+} from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
+import { SkinReviewShareImageCard } from "@/components/share/skin-review-share-image-card";
 import { Logo } from "@/components/site/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,15 +22,53 @@ import { Link } from "@/i18n/navigation";
 import { absoluteUploadUrl } from "@/lib/api/admin-skin-review";
 import {
   buildSkinReviewShareClipboard,
+  truncateOverview,
   type SkinReviewShareLocale,
   type SkinReviewShareVariant,
 } from "@/lib/skin-review-share-clipboard";
+import {
+  canNativeShareFiles,
+  downloadBlob,
+  fetchImageAsDataUrl,
+  nativeShareImageFile,
+  renderShareImageBlob,
+  SHARE_IMAGE_ATTENTION_MAX,
+  SHARE_IMAGE_OVERVIEW_MAX,
+  shareImageFilename,
+} from "@/lib/skin-review-share-image";
 import type { PublicSkinReviewResponse } from "@/lib/types/admin-skin-review";
 import { cn } from "@/lib/utils";
+
+const REGION_KEYS = new Set([
+  "forehead",
+  "cheeks",
+  "nose",
+  "chin",
+  "t_zone",
+  "jawline",
+  "under_eyes",
+  "other",
+]);
+const CONCERN_KEYS = new Set([
+  "none",
+  "acne",
+  "papules",
+  "pustules",
+  "redness",
+  "pigmentation",
+  "dark_spots",
+  "pores",
+  "dryness",
+  "oiliness",
+  "texture",
+  "irritation",
+  "other",
+]);
 
 /** Public Facebook-shareable skin review — teal/blush, mobile-first. */
 export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }) {
   const t = useTranslations("skinReviewShare");
+  const tAdmin = useTranslations("adminSkinReview");
   const localeRaw = useLocale();
   const locale: SkinReviewShareLocale = localeRaw === "en" ? "en" : "vi";
   const formatter = useFormatter();
@@ -30,14 +78,19 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
   const side = photos.slice(1);
   const multi = photos.length > 1;
 
+  const imageCardRef = useRef<HTMLDivElement>(null);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [canShareImageFiles, setCanShareImageFiles] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showCopyOptions, setShowCopyOptions] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [exportPhotoSrc, setExportPhotoSrc] = useState<string | null>(null);
 
   useEffect(() => {
     setCanNativeShare(
       typeof navigator !== "undefined" && typeof navigator.share === "function",
     );
+    setCanShareImageFiles(canNativeShareFiles());
   }, []);
 
   const publishedLabel = data.published_at
@@ -106,6 +159,97 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
       toast.error(t("shareError"));
     }
   }, [buildClipboardText, data.title, pageUrl, t, toast]);
+
+  const imageOverview = useMemo(
+    () =>
+      truncateOverview(
+        data.analysis?.overview ?? "",
+        SHARE_IMAGE_OVERVIEW_MAX,
+      ),
+    [data.analysis?.overview],
+  );
+
+  const attentionLines = useMemo(() => {
+    const areas = data.analysis?.attention_areas ?? [];
+    const lines: string[] = [];
+    for (const area of areas) {
+      const concern = area.concern?.trim().toLowerCase() ?? "";
+      if (!concern || concern === "none") continue;
+      const regionKey = area.region?.trim().toLowerCase() ?? "";
+      const region = REGION_KEYS.has(regionKey)
+        ? tAdmin(`regions.${regionKey}` as Parameters<typeof tAdmin>[0])
+        : area.region?.trim() || "";
+      const concernLabel = CONCERN_KEYS.has(concern)
+        ? tAdmin(`concerns.${concern}` as Parameters<typeof tAdmin>[0])
+        : area.concern.trim();
+      if (!region && !concernLabel) continue;
+      lines.push([region, concernLabel].filter(Boolean).join(" · "));
+      if (lines.length >= SHARE_IMAGE_ATTENTION_MAX) break;
+    }
+    return lines;
+  }, [data.analysis?.attention_areas, tAdmin]);
+
+  const ensureExportPhoto = useCallback(async () => {
+    if (exportPhotoSrc) return exportPhotoSrc;
+    if (!hero) return null;
+    const dataUrl = await fetchImageAsDataUrl(absoluteUploadUrl(hero));
+    // Commit data-URL before capture so html-to-image never hits a tainted canvas.
+    flushSync(() => {
+      setExportPhotoSrc(dataUrl);
+    });
+    return dataUrl;
+  }, [exportPhotoSrc, hero]);
+
+  const generateShareImage = useCallback(async () => {
+    const node = imageCardRef.current;
+    if (!node) throw new Error("image_card_missing");
+    await ensureExportPhoto();
+    return renderShareImageBlob(node);
+  }, [ensureExportPhoto]);
+
+  const downloadShareImage = useCallback(async () => {
+    if (imageBusy) return;
+    setImageBusy(true);
+    try {
+      const blob = await generateShareImage();
+      downloadBlob(blob, shareImageFilename(data.slug));
+      toast.success(t("imageDownloadSuccess"));
+    } catch {
+      toast.error(t("imageError"));
+    } finally {
+      setImageBusy(false);
+    }
+  }, [data.slug, generateShareImage, imageBusy, t, toast]);
+
+  const shareShareImage = useCallback(async () => {
+    if (imageBusy) return;
+    setImageBusy(true);
+    try {
+      const blob = await generateShareImage();
+      const filename = shareImageFilename(data.slug);
+      const title = data.title?.trim() || t("title");
+      const result = await nativeShareImageFile(blob, filename, title);
+      if (result === "shared") {
+        toast.success(t("imageShareSuccess"));
+        return;
+      }
+      if (result === "aborted") return;
+      // Fallback when files share is unavailable.
+      downloadBlob(blob, filename);
+      toast.success(t("imageDownloadSuccess"));
+    } catch {
+      toast.error(t("imageError"));
+    } finally {
+      setImageBusy(false);
+    }
+  }, [
+    data.slug,
+    data.title,
+    generateShareImage,
+    imageBusy,
+    t,
+    toast,
+  ]);
 
   function photoAlt(index: number) {
     return multi ? t("photoAltN", { n: index + 1 }) : t("photoAlt");
@@ -225,6 +369,46 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
               ) : null}
             </div>
 
+            {/* Image share — when FB groups block plain links */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[12rem]"
+                disabled={imageBusy}
+                onClick={() => void downloadShareImage()}
+                aria-label={t("downloadImageCta")}
+                aria-busy={imageBusy}
+              >
+                {imageBusy ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <Download className="size-4" aria-hidden />
+                )}
+                {imageBusy ? t("imageGenerating") : t("downloadImageCta")}
+              </Button>
+              {canShareImageFiles ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[10rem]"
+                  disabled={imageBusy}
+                  onClick={() => void shareShareImage()}
+                  aria-label={t("shareImageCta")}
+                  aria-busy={imageBusy}
+                >
+                  {imageBusy ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <ImageIcon className="size-4" aria-hidden />
+                  )}
+                  {imageBusy ? t("imageGenerating") : t("shareImageCta")}
+                </Button>
+              ) : null}
+            </div>
+
             <div className="flex flex-col items-stretch gap-2 sm:items-center">
               <button
                 type="button"
@@ -266,6 +450,25 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             </div>
           </div>
         </article>
+
+        {/* Off-screen 1080×1350 export card (aria-hidden; never shows originals). */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed top-0 left-[-10000px] z-[-1] overflow-hidden"
+        >
+          <SkinReviewShareImageCard
+            ref={imageCardRef}
+            title={data.title?.trim() || t("title")}
+            overview={imageOverview || t("sub")}
+            attentionLines={attentionLines}
+            photoSrc={exportPhotoSrc ?? (hero ? absoluteUploadUrl(hero) : null)}
+            photoAlt={photoAlt(0)}
+            disclaimer={t("imageDisclaimer")}
+            domain={t("imageDomain")}
+            attentionHeading={t("imageAttentionHeading")}
+            brandMark={t("imageBrandMark")}
+          />
+        </div>
 
         {/* CTA — large, end of page + safe-area (no sticky overlay) */}
         <section
