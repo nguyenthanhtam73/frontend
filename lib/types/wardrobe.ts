@@ -34,3 +34,12 @@ export type UpdateWardrobeProductInput = {
 
 /** Free shelf create cap — must match backend usage.FreeWardrobeProductLimit. */
 export const FREE_WARDROBE_PRODUCT_LIMIT = 3;
+
+/** POST /api/v1/wardrobe/products/scan — AI suggestion only (not persisted). */
+export type WardrobeLabelScanDTO = {
+  name: string;
+  brand: string;
+  category: string;
+  notes?: string;
+  confidence?: number;
+};

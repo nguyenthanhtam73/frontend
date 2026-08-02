@@ -1,12 +1,17 @@
 import { apiBaseUrl } from "@/lib/api";
+import { ApiError, apiPost } from "@/lib/api-client";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { authHeaders, getAccessToken } from "@/lib/auth-token";
 import type {
   CreateWardrobeProductInput,
   UpdateWardrobeProductInput,
+  WardrobeLabelScanDTO,
   WardrobeListDTO,
   WardrobeProductDTO,
 } from "@/lib/types/wardrobe";
+
+/** Vision OCR can take a while — align with onboarding analyze budget. */
+const SCAN_TIMEOUT_MS = 120_000;
 
 function throwWardrobeWriteError(res: Response, json: ApiEnvelope<unknown>, fallback: string): never {
   if (res.status === 401) {
@@ -94,6 +99,36 @@ export async function deleteWardrobeProduct(id: string): Promise<void> {
   const json = (await res.json().catch(() => ({}))) as ApiEnvelope<{ ok?: boolean }>;
   if (!res.ok) {
     throwWardrobeWriteError(res, json, "wardrobe_delete_failed");
+  }
+}
+
+/**
+ * POST /api/v1/wardrobe/products/scan — multipart field `image`.
+ * Suggests name/brand/category; does not create a shelf item.
+ */
+export async function scanWardrobeProductLabel(input: {
+  file: File;
+  locale: string;
+}): Promise<WardrobeLabelScanDTO> {
+  if (!getAccessToken()) {
+    throw new Error("auth");
+  }
+  const fd = new FormData();
+  fd.append("image", input.file);
+  fd.append("locale", input.locale);
+  try {
+    return await apiPost<WardrobeLabelScanDTO>("/api/v1/wardrobe/products/scan", fd, {
+      toastOnError: false,
+      timeoutMs: SCAN_TIMEOUT_MS,
+    });
+  } catch (err) {
+    if (err instanceof ApiError) {
+      if (err.kind === "unauthorized" || err.status === 401) throw new Error("auth");
+      if (err.code === "premium_required") throw new Error("premium_required");
+      if (err.code === "quota_exceeded") throw new Error("quota_exceeded");
+      if (err.status === 429) throw new Error("rate_limited");
+    }
+    throw err instanceof Error ? err : new Error("scan_failed");
   }
 }
 
