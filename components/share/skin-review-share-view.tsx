@@ -19,7 +19,10 @@ import { Logo } from "@/components/site/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
-import { absoluteUploadUrl } from "@/lib/api/admin-skin-review";
+import {
+  absoluteUploadUrl,
+  sameOriginUploadUrl,
+} from "@/lib/api/admin-skin-review";
 import {
   buildSkinReviewShareClipboard,
   truncateOverview,
@@ -192,7 +195,8 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
   const ensureExportPhoto = useCallback(async () => {
     if (exportPhotoSrc) return exportPhotoSrc;
     if (!hero) return null;
-    const dataUrl = await fetchImageAsDataUrl(absoluteUploadUrl(hero));
+    // Same-origin rewrite (/uploads → API) avoids cross-origin CORS for canvas.
+    const dataUrl = await fetchImageAsDataUrl(sameOriginUploadUrl(hero));
     // Commit data-URL before capture so html-to-image never hits a tainted canvas.
     flushSync(() => {
       setExportPhotoSrc(dataUrl);
@@ -461,7 +465,9 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             title={data.title?.trim() || t("title")}
             overview={imageOverview || t("sub")}
             attentionLines={attentionLines}
-            photoSrc={exportPhotoSrc ?? (hero ? absoluteUploadUrl(hero) : null)}
+            photoSrc={
+              exportPhotoSrc ?? (hero ? sameOriginUploadUrl(hero) : null)
+            }
             photoAlt={photoAlt(0)}
             disclaimer={t("imageDisclaimer")}
             domain={t("imageDomain")}

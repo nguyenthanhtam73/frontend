@@ -76,7 +76,8 @@ export async function renderShareImageBlob(
     width: SHARE_IMAGE_WIDTH,
     height: SHARE_IMAGE_HEIGHT,
     pixelRatio: 1,
-    cacheBust: true,
+    // Do NOT cacheBust: it appends ?t=… and breaks data: URLs / rewrite paths.
+    cacheBust: false,
     // Card uses inline hex — avoid inheriting oklch theme tokens that
     // some html-to-image paths serialize poorly.
     style: {

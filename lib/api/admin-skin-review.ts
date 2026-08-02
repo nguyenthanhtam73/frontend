@@ -202,6 +202,25 @@ export function absoluteUploadUrl(path: string): string {
   return `${apiBaseUrl}/${path}`;
 }
 
+/**
+ * Same-origin upload path for canvas / html-to-image export.
+ * Uses Next.js rewrite `/uploads/*` → API so the browser never needs cross-origin CORS.
+ */
+export function sameOriginUploadUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    try {
+      const u = new URL(path);
+      if (u.pathname.startsWith("/uploads/")) return u.pathname;
+    } catch {
+      /* fall through */
+    }
+    return path;
+  }
+  if (path.startsWith("/uploads/")) return path;
+  if (path.startsWith("/")) return path;
+  return `/uploads/${path}`;
+}
+
 const SITE_ORIGIN =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://dadiary.vn";
 
