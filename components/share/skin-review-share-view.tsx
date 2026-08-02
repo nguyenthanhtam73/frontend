@@ -25,7 +25,6 @@ import {
 } from "@/lib/api/admin-skin-review";
 import {
   buildSkinReviewShareClipboard,
-  truncateOverview,
   type SkinReviewShareLocale,
   type SkinReviewShareVariant,
 } from "@/lib/skin-review-share-clipboard";
@@ -35,8 +34,6 @@ import {
   fetchImageAsDataUrl,
   nativeShareImageFile,
   renderShareImageBlob,
-  SHARE_IMAGE_ATTENTION_MAX,
-  SHARE_IMAGE_OVERVIEW_MAX,
   shareImageFilename,
 } from "@/lib/skin-review-share-image";
 import type { PublicSkinReviewResponse } from "@/lib/types/admin-skin-review";
@@ -66,6 +63,15 @@ const CONCERN_KEYS = new Set([
   "texture",
   "irritation",
   "other",
+]);
+const SEVERITY_KEYS = new Set(["mild", "moderate", "pronounced", "clear"]);
+const SKIN_TYPE_KEYS = new Set([
+  "oily",
+  "dry",
+  "combination",
+  "normal",
+  "sensitive",
+  "unclear",
 ]);
 
 /** Public Facebook-shareable skin review — teal/blush, mobile-first. */
@@ -163,34 +169,64 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
     }
   }, [buildClipboardText, data.title, pageUrl, t, toast]);
 
-  const imageOverview = useMemo(
-    () =>
-      truncateOverview(
-        data.analysis?.overview ?? "",
-        SHARE_IMAGE_OVERVIEW_MAX,
-      ),
-    [data.analysis?.overview],
+  const labelEnum = useCallback(
+    (
+      prefix: "skinTypes" | "severities" | "concerns" | "regions",
+      raw: string | undefined,
+      allowed: Set<string>,
+    ) => {
+      const key = raw?.trim().toLowerCase() ?? "";
+      if (!key) return "";
+      if (!allowed.has(key)) return raw?.trim() || "";
+      return tAdmin(`${prefix}.${key}` as Parameters<typeof tAdmin>[0]);
+    },
+    [tAdmin],
   );
 
-  const attentionLines = useMemo(() => {
+  // Full analysis copy — same fields as SkinReviewAnalysisView on the web page.
+  const imageOverview = (data.analysis?.overview ?? "").trim();
+
+  const imageSkinTypeLabel = useMemo(
+    () => labelEnum("skinTypes", data.analysis?.skin_type, SKIN_TYPE_KEYS),
+    [data.analysis?.skin_type, labelEnum],
+  );
+
+  const imageSkinTypeSeverity = useMemo(
+    () =>
+      labelEnum(
+        "severities",
+        data.analysis?.skin_type_severity,
+        SEVERITY_KEYS,
+      ),
+    [data.analysis?.skin_type_severity, labelEnum],
+  );
+
+  const imageSkinTypeNote = (data.analysis?.skin_type_note ?? "").trim();
+
+  const imageAttentionItems = useMemo(() => {
     const areas = data.analysis?.attention_areas ?? [];
-    const lines: string[] = [];
-    for (const area of areas) {
-      const concern = area.concern?.trim().toLowerCase() ?? "";
-      if (!concern || concern === "none") continue;
-      const regionKey = area.region?.trim().toLowerCase() ?? "";
-      const region = REGION_KEYS.has(regionKey)
-        ? tAdmin(`regions.${regionKey}` as Parameters<typeof tAdmin>[0])
-        : area.region?.trim() || "";
-      const concernLabel = CONCERN_KEYS.has(concern)
-        ? tAdmin(`concerns.${concern}` as Parameters<typeof tAdmin>[0])
-        : area.concern.trim();
-      if (!region && !concernLabel) continue;
-      lines.push([region, concernLabel].filter(Boolean).join(" · "));
-      if (lines.length >= SHARE_IMAGE_ATTENTION_MAX) break;
-    }
-    return lines;
-  }, [data.analysis?.attention_areas, tAdmin]);
+    return areas
+      .map((area) => {
+        const region = labelEnum("regions", area.region, REGION_KEYS);
+        const concern = labelEnum("concerns", area.concern, CONCERN_KEYS);
+        const severity = labelEnum("severities", area.severity, SEVERITY_KEYS);
+        if (!region && !concern) return null;
+        return {
+          region: region || "—",
+          concern,
+          severity,
+          note: area.note?.trim() || undefined,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item != null);
+  }, [data.analysis?.attention_areas, labelEnum]);
+
+  const imageAdditional = (
+    data.analysis?.additional_observations ?? ""
+  ).trim();
+  const imagePhotoNotes = (data.analysis?.photo_notes ?? "").trim();
+  const imageDisclaimer =
+    data.analysis?.non_diagnostic?.trim() || t("imageDisclaimer");
 
   const ensureExportPhoto = useCallback(async () => {
     if (exportPhotoSrc) return exportPhotoSrc;
@@ -455,24 +491,34 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
           </div>
         </article>
 
-        {/* Off-screen 1080×1350 export card (aria-hidden; never shows originals). */}
+        {/* Off-screen 1080×auto export card (aria-hidden; never shows originals). */}
         <div
           aria-hidden
           className="pointer-events-none fixed top-0 left-[-10000px] z-[-1] overflow-hidden"
         >
           <SkinReviewShareImageCard
             ref={imageCardRef}
+            brandMark={t("imageBrandMark")}
             title={data.title?.trim() || t("title")}
-            overview={imageOverview || t("sub")}
-            attentionLines={attentionLines}
+            analysisLabel={t("analysisLabel")}
             photoSrc={
               exportPhotoSrc ?? (hero ? sameOriginUploadUrl(hero) : null)
             }
             photoAlt={photoAlt(0)}
-            disclaimer={t("imageDisclaimer")}
+            overviewHeading={tAdmin("fieldOverview")}
+            overview={imageOverview || t("sub")}
+            skinTypeHeading={tAdmin("fieldSkinType")}
+            skinTypeLabel={imageSkinTypeLabel}
+            skinTypeSeverity={imageSkinTypeSeverity}
+            skinTypeNote={imageSkinTypeNote}
+            attentionHeading={tAdmin("fieldAttention")}
+            attentionItems={imageAttentionItems}
+            additionalHeading={tAdmin("fieldAdditional")}
+            additional={imageAdditional}
+            photoNotesHeading={tAdmin("fieldPhotoNotes")}
+            photoNotes={imagePhotoNotes}
+            disclaimer={imageDisclaimer}
             domain={t("imageDomain")}
-            attentionHeading={t("imageAttentionHeading")}
-            brandMark={t("imageBrandMark")}
           />
         </div>
 

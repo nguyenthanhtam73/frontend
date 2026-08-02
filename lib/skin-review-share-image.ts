@@ -1,21 +1,17 @@
 /**
  * Client-side PNG export for /share/skin-review/[slug].
  *
- * Canvas size: 1080×1350 (4:5) — Facebook story/feed friendly, mobile-first.
+ * Width: 1080px (FB/IG friendly). Height grows with the full analysis —
+ * same sections/copy as the public web share page (no teaser truncation).
  * Rendered from an off-screen DOM card via html-to-image (no backend render).
  */
 
 import { toBlob } from "html-to-image";
 
-/** Facebook-friendly portrait — 4:5 story / feed. */
+/** Facebook/IG-friendly width. */
 export const SHARE_IMAGE_WIDTH = 1080;
-export const SHARE_IMAGE_HEIGHT = 1350;
-
-/** Overview length on the share image (keeps card readable). */
-export const SHARE_IMAGE_OVERVIEW_MAX = 160;
-
-/** Max attention bullets printed on the image. */
-export const SHARE_IMAGE_ATTENTION_MAX = 3;
+/** Soft minimum height target (9:16); card grows taller for full copy. */
+export const SHARE_IMAGE_MIN_HEIGHT = 1920;
 
 export async function fetchImageAsDataUrl(url: string): Promise<string> {
   const res = await fetch(url, { mode: "cors", credentials: "omit" });
@@ -72,17 +68,17 @@ export async function renderShareImageBlob(
 ): Promise<Blob> {
   await waitForShareCardImages(node);
 
+  const height = Math.max(SHARE_IMAGE_MIN_HEIGHT, Math.ceil(node.scrollHeight));
   const blob = await toBlob(node, {
     width: SHARE_IMAGE_WIDTH,
-    height: SHARE_IMAGE_HEIGHT,
+    height,
     pixelRatio: 1,
     // Do NOT cacheBust: it appends ?t=… and breaks data: URLs / rewrite paths.
     cacheBust: false,
-    // Card uses inline hex — avoid inheriting oklch theme tokens that
-    // some html-to-image paths serialize poorly.
     style: {
       opacity: "1",
       transform: "none",
+      height: `${height}px`,
     },
   });
   if (!blob) throw new Error("image_render_empty");
@@ -111,7 +107,6 @@ export function canNativeShareFiles(): boolean {
     return false;
   }
   if (typeof navigator.canShare !== "function") {
-    // Older iOS: try share with files and let caller catch.
     return true;
   }
   try {
