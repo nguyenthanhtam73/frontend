@@ -141,8 +141,11 @@ function main() {
   if (defaultOut !== shortOut) {
     throw new Error("omitting variant must equal variant: short");
   }
-  if (defaultOut.includes("Trên ảnh nghi") || defaultOut.includes("Da hỗn hợp")) {
+  if (defaultOut.includes("Trông nghi") || defaultOut.includes("Da hỗn hợp")) {
     throw new Error("short must not include skin type line");
+  }
+  if (defaultOut.includes("Chi tiết:")) {
+    throw new Error("short must not use Chi tiết: label");
   }
 
   const viFull = buildSkinReviewShareClipboard({
@@ -153,11 +156,14 @@ function main() {
     locale: "vi",
     variant: "full",
   });
-  if (!viFull.includes("Trên ảnh nghi da hỗn hợp nhẹ.")) {
+  if (!viFull.includes("Trông nghi da hỗn hợp nhẹ.")) {
     throw new Error(`VI full soft skin hint missing:\n${viFull}`);
   }
-  if (viFull.includes("Gợi ý loại da")) {
-    throw new Error("VI full must not use hard skin-type wording");
+  if (viFull.includes("Gợi ý loại da") || viFull.includes("Trên ảnh nghi")) {
+    throw new Error("VI full must not use hard/report skin-type wording");
+  }
+  if (!viFull.includes("Xem đủ hơn tại:")) {
+    throw new Error("VI full should use Xem đủ hơn tại: link label");
   }
 
   const enShort = buildSkinReviewShareClipboard({
@@ -166,14 +172,17 @@ function main() {
     locale: "en",
     variant: "short",
   });
-  if (!enShort.startsWith("Quick look")) {
+  if (!enShort.startsWith("Took a look")) {
     throw new Error("EN short frame should be English");
   }
   if (!enShort.includes("Hôm nay da hơi")) {
     throw new Error("EN short should keep VI overview verbatim");
   }
-  if (!enShort.includes("Details:")) {
-    throw new Error("EN short should use Details: link label");
+  if (!enShort.includes("Link:")) {
+    throw new Error("EN short should use Link: label");
+  }
+  if (enShort.includes("Details:")) {
+    throw new Error("EN short must not use Details: label");
   }
 
   console.log("--- soft asserts: PASS ---");

@@ -91,7 +91,7 @@ function fillTemplate(
     .replaceAll("{skinType}", vars.skinTypeHint);
 }
 
-/** Soft line e.g. VI: "Trên ảnh nghi da hỗn hợp nhẹ." — empty if no usable type. */
+/** Soft line e.g. VI: "Trông nghi da hỗn hợp nhẹ." — empty if no usable type. */
 export function buildSoftSkinTypeHint(
   locale: SkinReviewShareLocale,
   skinTypeKey?: string,
