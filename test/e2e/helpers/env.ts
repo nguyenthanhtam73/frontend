@@ -16,7 +16,7 @@ export function sepaySecret(): string {
   return (
     process.env.E2E_SEPAY_SECRET_KEY ||
     process.env.DADIARY_SEPAY_SECRET_KEY ||
-    "spsk_test_UHoXRUQEfLBChDYghS6AE8B6V9HQpErZ"
+    "spsk_test_etsH4PdQCBM7KvtTCjkJ5GpLjqYwMX89"
   );
 }
 

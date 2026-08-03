@@ -15,9 +15,9 @@ const LINK = "https://dadiary.vn/share/skin-review/demo-slug-abc";
 
 /** Demo overview stays Vietnamese (as AI usually returns) even for EN frames. */
 const OVERVIEW_LONG =
-  "Hôm nay da hơi 'party' nhẹ nha. Trên trán thấy vài nốt đỏ nhỏ, chắc khoảng 3–4 nốt, nằm rải rác. Mũi thì không có gì quá nổi bật, nhìn khá êm. Má bên trái lại có một cụm nốt đỏ, khoảng 5–6 nốt, nhìn hơi nổi bật. Cằm thì có vài nốt nhỏ nữa. Nói chung, má và cằm đang 'ồn ào' nhất, còn mũi thì yên bình hơn.";
+  "Má đang nổi khá rõ, đừng bảo không sao. Trên trán thấy vài nốt đỏ nhỏ, chắc khoảng 3–4 nốt, nằm rải rác. Mũi thì không có gì quá nổi bật, nhìn khá ổn. Má bên trái lại có một cụm nốt đỏ, khoảng 5–6 nốt, nhìn hơi nổi bật. Cằm cũng có vài nốt nhỏ nữa — không phải chỉ má đâu. Trên ảnh này má và cằm đang cần nhìn lại nhất, mũi thì yên hơn.";
 
-const OVERVIEW_SHORT = "Má hơi drama nhẹ, còn lại nhìn ổn.";
+const OVERVIEW_SHORT = "Má đang nổi khá rõ, còn lại nhìn ổn hơn.";
 
 function section(title: string, body: string) {
   console.log(`=== ${title} ===`);
