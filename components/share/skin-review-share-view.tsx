@@ -25,6 +25,9 @@ import {
 } from "@/lib/api/admin-skin-review";
 import {
   buildSkinReviewShareClipboard,
+  DEFAULT_SHARE_VARIANT,
+  shareVariantIncludesLink,
+  normalizeShareVariant,
   type SkinReviewShareLocale,
   type SkinReviewShareVariant,
 } from "@/lib/skin-review-share-clipboard";
@@ -130,16 +133,21 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
   );
 
   const copyShareText = useCallback(
-    async (variant: SkinReviewShareVariant = "short") => {
+    async (variant: SkinReviewShareVariant = DEFAULT_SHARE_VARIANT) => {
       const url = pageUrl();
       if (!url) return;
       const text = buildClipboardText(variant, url);
+      const resolved = normalizeShareVariant(variant);
       try {
         await navigator.clipboard.writeText(text);
         setCopied(true);
-        toast.success(
-          variant === "link" ? t("copyLinkOnlySuccess") : t("copySuccess"),
-        );
+        const toastKey =
+          resolved === "link"
+            ? "copyLinkOnlySuccess"
+            : shareVariantIncludesLink(resolved)
+              ? "copySuccessWithLink"
+              : "copySuccess";
+        toast.success(t(toastKey));
         window.setTimeout(() => setCopied(false), 2000);
       } catch {
         toast.error(t("copyError"));
@@ -151,7 +159,8 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
   const nativeShare = useCallback(async () => {
     const url = pageUrl();
     if (!url || typeof navigator.share !== "function") return;
-    const text = buildClipboardText("short", url);
+    // Text without URL — native share passes `url` separately.
+    const text = buildClipboardText("short_no_link", url);
     try {
       await navigator.share({
         title: data.title?.trim() || t("title"),
@@ -380,7 +389,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
                 variant="outline"
                 size="lg"
                 className="h-11 w-full min-h-11 touch-manipulation sm:w-auto sm:min-w-[14rem]"
-                onClick={() => void copyShareText("short")}
+                onClick={() => void copyShareText("short_no_link")}
                 aria-label={t("copyCommentCta")}
               >
                 {copied ? (
@@ -462,15 +471,15 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
                 />
               </button>
               {showCopyOptions ? (
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:justify-center">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="h-10 min-h-10 touch-manipulation"
-                    onClick={() => void copyShareText("full")}
+                    onClick={() => void copyShareText("short_with_link")}
                   >
-                    {t("copyFullCta")}
+                    {t("copyCommentWithLinkCta")}
                   </Button>
                   <Button
                     type="button"
@@ -480,6 +489,24 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
                     onClick={() => void copyShareText("link")}
                   >
                     {t("copyLinkOnlyCta")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 min-h-10 touch-manipulation"
+                    onClick={() => void copyShareText("full_no_link")}
+                  >
+                    {t("copyFullNoLinkCta")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 min-h-10 touch-manipulation"
+                    onClick={() => void copyShareText("full_with_link")}
+                  >
+                    {t("copyFullWithLinkCta")}
                   </Button>
                 </div>
               ) : null}

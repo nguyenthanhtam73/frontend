@@ -10,16 +10,55 @@ import type { AdminSkinReviewAnalysis } from "./types/admin-skin-review";
 export type SkinReviewShareLocale = "vi" | "en";
 /** @deprecated Prefer SkinReviewShareVariant */
 export type SkinReviewShareCopyMode = SkinReviewShareVariant;
-export type SkinReviewShareVariant = "short" | "full" | "link";
+/**
+ * Clipboard variants for FB-friendly share.
+ * Default is short_no_link (many groups block URLs in comments).
+ */
+export type SkinReviewShareVariant =
+  | "short_no_link"
+  | "short_with_link"
+  | "full_no_link"
+  | "full_with_link"
+  | "link"
+  /** @deprecated → short_no_link */
+  | "short"
+  /** @deprecated → full_with_link */
+  | "full";
 
-export const DEFAULT_SHARE_VARIANT: SkinReviewShareVariant = "short";
+export type ResolvedShareVariant =
+  | "short_no_link"
+  | "short_with_link"
+  | "full_no_link"
+  | "full_with_link"
+  | "link";
+
+export const DEFAULT_SHARE_VARIANT: ResolvedShareVariant = "short_no_link";
 /** Soft caps for generated body (not opener/link/cta). */
 export const SHORT_BODY_MAX = 180;
 export const FULL_BODY_MAX = 280;
 /** @deprecated use SHORT_BODY_MAX — kept for older print scripts */
 export const SHORT_OVERVIEW_MAX = SHORT_BODY_MAX;
-/** @deprecated use FULL_BODY_MAX */
+/** @deprecated use FULL_OVERVIEW_MAX */
 export const FULL_OVERVIEW_MAX = FULL_BODY_MAX;
+
+/** Normalize legacy short/full aliases. */
+export function normalizeShareVariant(
+  variant?: SkinReviewShareVariant | null,
+): ResolvedShareVariant {
+  if (!variant || variant === "short") return "short_no_link";
+  if (variant === "full") return "full_with_link";
+  return variant;
+}
+
+export function shareVariantIncludesLink(
+  variant: ResolvedShareVariant,
+): boolean {
+  return variant === "short_with_link" || variant === "full_with_link";
+}
+
+export function shareVariantIsFull(variant: ResolvedShareVariant): boolean {
+  return variant === "full_no_link" || variant === "full_with_link";
+}
 
 const SKIN_TYPE_KEYS = [
   "oily",
@@ -50,7 +89,7 @@ export type BuildSkinReviewShareClipboardInput = {
   /** Skin type enum — full variant soft hint only. */
   skinType?: string;
   skinTypeSeverity?: string;
-  /** Default: short */
+  /** Default: short_no_link (no URL — FB group friendly). */
   variant?: SkinReviewShareVariant;
   /** @deprecated Use `variant` */
   mode?: SkinReviewShareVariant;
@@ -333,12 +372,14 @@ function capitalize(s: string): string {
 
 /**
  * Build the exact string written to the clipboard / passed to navigator.share.
- * Default variant is short.
+ * Default variant is short_no_link (opener + body + CTA, no URL).
  */
 export function buildSkinReviewShareClipboard(
   input: BuildSkinReviewShareClipboardInput,
 ): string {
-  const variant = input.variant ?? input.mode ?? DEFAULT_SHARE_VARIANT;
+  const variant = normalizeShareVariant(
+    input.variant ?? input.mode ?? DEFAULT_SHARE_VARIANT,
+  );
   const link = input.link.trim();
   if (variant === "link") return link;
 
@@ -351,13 +392,15 @@ export function buildSkinReviewShareClipboard(
   const skinTypeSeverity =
     input.skinTypeSeverity ?? analysis?.skin_type_severity;
 
+  const bodyKind = shareVariantIsFull(variant) ? "full" : "short";
   const bodyRaw = buildShareBodyFromAnalysis(
     analysis,
     locale,
-    variant === "full" ? "full" : "short",
+    bodyKind,
     input.overview ?? "",
   );
-  const defaultMax = variant === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
+  const defaultMax =
+    bodyKind === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
   const body = truncateOverview(bodyRaw, input.bodyMax ?? defaultMax);
 
   const problemConcerns = (analysis?.attention_areas ?? [])
@@ -369,12 +412,15 @@ export function buildSkinReviewShareClipboard(
   const lines: string[] = [templates.opener];
   if (body) lines.push(body);
 
-  if (variant === "full") {
+  if (shareVariantIsFull(variant)) {
     const hint = buildSoftSkinTypeHint(locale, skinType, skinTypeSeverity);
     if (hint) lines.push(hint);
   }
 
-  lines.push(templates.linkLine.replaceAll("{link}", link));
+  if (shareVariantIncludesLink(variant) && link) {
+    lines.push(templates.linkLine.replaceAll("{link}", link));
+  }
+
   lines.push(cta);
 
   return lines.join("\n");

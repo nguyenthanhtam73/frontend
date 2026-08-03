@@ -96,6 +96,15 @@ function section(title: string, body: string) {
   console.log("");
 }
 
+function hasShareUrl(text: string): boolean {
+  return (
+    /https?:\/\//i.test(text) ||
+    /dadiary\.vn\/share/i.test(text) ||
+    text.includes("Xem đủ hơn tại:") ||
+    text.includes("See more here:")
+  );
+}
+
 function main() {
   console.log(`default variant: ${DEFAULT_SHARE_VARIANT}`);
   console.log(`short body max: ${SHORT_BODY_MAX}`);
@@ -106,7 +115,7 @@ function main() {
     ["B full-face", FULL_FACE],
   ] as const) {
     section(
-      `VI ${label} · short (default)`,
+      `VI ${label} · short_no_link (default)`,
       buildSkinReviewShareClipboard({
         analysis,
         link: LINK,
@@ -114,21 +123,30 @@ function main() {
       }),
     );
     section(
-      `VI ${label} · short`,
+      `VI ${label} · short_with_link`,
       buildSkinReviewShareClipboard({
         analysis,
         link: LINK,
         locale: "vi",
-        variant: "short",
+        variant: "short_with_link",
       }),
     );
     section(
-      `VI ${label} · full`,
+      `VI ${label} · full_no_link`,
       buildSkinReviewShareClipboard({
         analysis,
         link: LINK,
         locale: "vi",
-        variant: "full",
+        variant: "full_no_link",
+      }),
+    );
+    section(
+      `VI ${label} · full_with_link`,
+      buildSkinReviewShareClipboard({
+        analysis,
+        link: LINK,
+        locale: "vi",
+        variant: "full_with_link",
       }),
     );
     section(
@@ -141,140 +159,163 @@ function main() {
       }),
     );
     section(
-      `EN ${label} · short`,
+      `EN ${label} · short_no_link`,
       buildSkinReviewShareClipboard({
         analysis,
         link: LINK,
         locale: "en",
-        variant: "short",
+        variant: "short_no_link",
       }),
     );
     section(
-      `EN ${label} · full`,
+      `EN ${label} · short_with_link`,
       buildSkinReviewShareClipboard({
         analysis,
         link: LINK,
         locale: "en",
-        variant: "full",
+        variant: "short_with_link",
       }),
     );
   }
 
   // Soft asserts
-  if (DEFAULT_SHARE_VARIANT !== "short") {
-    throw new Error("default variant must be short");
+  if (DEFAULT_SHARE_VARIANT !== "short_no_link") {
+    throw new Error("default variant must be short_no_link");
   }
 
-  const aShort = buildSkinReviewShareClipboard({
+  const aDefault = buildSkinReviewShareClipboard({
     analysis: FOREHEAD_ONLY,
     link: LINK,
     locale: "vi",
   });
-  const aShortExplicit = buildSkinReviewShareClipboard({
+  const aNoLink = buildSkinReviewShareClipboard({
     analysis: FOREHEAD_ONLY,
     link: LINK,
     locale: "vi",
-    variant: "short",
+    variant: "short_no_link",
   });
-  if (aShort !== aShortExplicit) {
-    throw new Error("omitting variant must equal variant: short");
+  if (aDefault !== aNoLink) {
+    throw new Error("omitting variant must equal short_no_link");
   }
-  const aShortLow = aShort.toLowerCase();
+  const aShortLow = aDefault.toLowerCase();
   if (!aShortLow.includes("trán") || !aShortLow.includes("nốt đỏ sưng")) {
-    throw new Error(`forehead-only short should mention trán + nốt đỏ sưng:\n${aShort}`);
+    throw new Error(
+      `forehead-only short_no_link should mention trán + nốt đỏ sưng:\n${aDefault}`,
+    );
   }
-  if (aShort.includes("papules") || aShort.includes("not_visible")) {
-    throw new Error("short must not leak jargon/enum keys");
+  if (aDefault.includes("papules") || aDefault.includes("not_visible")) {
+    throw new Error("short_no_link must not leak jargon/enum keys");
   }
-  if (!aShort.includes("Xem đủ hơn tại:")) {
-    throw new Error("VI short must include link label");
+  if (hasShareUrl(aDefault)) {
+    throw new Error(
+      `default short_no_link must not include http / share URL:\n${aDefault}`,
+    );
   }
-  if (!aShort.includes("Check-in") && !aShort.includes("DaDiary")) {
-    throw new Error("VI short should include soft DaDiary CTA");
+  if (!aDefault.includes("Check-in") && !aDefault.includes("DaDiary")) {
+    throw new Error("VI short_no_link should include soft DaDiary CTA");
   }
-  // short must not include soft skin-type line
+  if (!aDefault.includes("(web)")) {
+    throw new Error("VI CTA should mention DaDiary (web) without URL");
+  }
   if (
-    aShort.includes("Trông nghi") ||
-    aShort.includes("Trên ảnh chưa rõ loại da")
+    aDefault.includes("Trông nghi") ||
+    aDefault.includes("Trên ảnh chưa rõ loại da")
   ) {
-    throw new Error("short must not include skin type hint");
+    throw new Error("short_no_link must not include skin type hint");
   }
 
-  const aFull = buildSkinReviewShareClipboard({
+  const aWithLink = buildSkinReviewShareClipboard({
     analysis: FOREHEAD_ONLY,
     link: LINK,
     locale: "vi",
-    variant: "full",
+    variant: "short_with_link",
   });
-  if (!aFull.includes("Trên ảnh chưa rõ loại da.")) {
-    throw new Error(`full (unclear) should use photo-unclear line:\n${aFull}`);
-  }
-  if (
-    aFull.includes("Trông nghi") ||
-    aFull.includes("chưa rõ loại nhẹ") ||
-    aFull.toLowerCase().includes("unclear skin type")
-  ) {
-    throw new Error(`full (unclear) must not compose soft type+severity:\n${aFull}`);
+  if (!aWithLink.includes(LINK) || !aWithLink.includes("Xem đủ hơn tại:")) {
+    throw new Error(`short_with_link must include URL:\n${aWithLink}`);
   }
 
-  const bShort = buildSkinReviewShareClipboard({
+  const aFullNoLink = buildSkinReviewShareClipboard({
+    analysis: FOREHEAD_ONLY,
+    link: LINK,
+    locale: "vi",
+    variant: "full_no_link",
+  });
+  if (!aFullNoLink.includes("Trên ảnh chưa rõ loại da.")) {
+    throw new Error(
+      `full_no_link (unclear) should use photo-unclear line:\n${aFullNoLink}`,
+    );
+  }
+  if (hasShareUrl(aFullNoLink)) {
+    throw new Error(`full_no_link must not include URL:\n${aFullNoLink}`);
+  }
+
+  const aFullWithLink = buildSkinReviewShareClipboard({
+    analysis: FOREHEAD_ONLY,
+    link: LINK,
+    locale: "vi",
+    variant: "full_with_link",
+  });
+  if (!aFullWithLink.includes(LINK)) {
+    throw new Error(`full_with_link must include URL:\n${aFullWithLink}`);
+  }
+  if (
+    aFullWithLink.includes("chưa rõ loại nhẹ") ||
+    aFullWithLink.toLowerCase().includes("unclear skin type")
+  ) {
+    throw new Error(
+      `full must not compose soft type+severity:\n${aFullWithLink}`,
+    );
+  }
+
+  const bDefault = buildSkinReviewShareClipboard({
     analysis: FULL_FACE,
     link: LINK,
     locale: "vi",
-    variant: "short",
   });
-  const bShortLow = bShort.toLowerCase();
+  const bShortLow = bDefault.toLowerCase();
   if (!bShortLow.includes("má") || !bShortLow.includes("nốt")) {
-    throw new Error(`full-face short should mention má/nốt:\n${bShort}`);
+    throw new Error(`full-face short_no_link should mention má/nốt:\n${bDefault}`);
   }
-  // not_visible hint should NOT invent missing regions on full face
-  if (bShort.includes("không thấy trên ảnh này")) {
-    throw new Error("full-face short should not claim missing regions");
+  if (bDefault.includes("không thấy trên ảnh này")) {
+    throw new Error("full-face short_no_link should not claim missing regions");
   }
-  if (
-    bShort.includes("Trông nghi") ||
-    bShort.includes("Trên ảnh chưa rõ loại da")
-  ) {
-    throw new Error("full-face short must not include skin type hint");
+  if (hasShareUrl(bDefault)) {
+    throw new Error(`full-face default must not include URL:\n${bDefault}`);
   }
 
   const bFull = buildSkinReviewShareClipboard({
     analysis: FULL_FACE,
     link: LINK,
     locale: "vi",
-    variant: "full",
+    variant: "full_no_link",
   });
   if (!bFull.includes("Trông nghi da hỗn hợp nhẹ.")) {
     throw new Error(`full (combination) should keep soft type line:\n${bFull}`);
   }
 
-  const enFullUnclear = buildSkinReviewShareClipboard({
+  const enDefault = buildSkinReviewShareClipboard({
     analysis: FOREHEAD_ONLY,
     link: LINK,
     locale: "en",
-    variant: "full",
   });
-  if (
-    !enFullUnclear.includes("Skin type isn’t clear from these photos.") &&
-    !enFullUnclear.includes("Skin type isn't clear from these photos.")
-  ) {
-    throw new Error(`EN full (unclear) line missing:\n${enFullUnclear}`);
+  if (!enDefault.startsWith("Took a look")) {
+    throw new Error("EN short_no_link frame should be English");
   }
-  if (enFullUnclear.toLowerCase().includes("unclear skin type")) {
-    throw new Error(`EN full must not say unclear skin type:\n${enFullUnclear}`);
+  if (hasShareUrl(enDefault)) {
+    throw new Error(`EN default must not include URL:\n${enDefault}`);
+  }
+  if (!enDefault.includes("(web)")) {
+    throw new Error("EN CTA should mention DaDiary (web) without URL");
   }
 
-  const enShort = buildSkinReviewShareClipboard({
+  const enWithLink = buildSkinReviewShareClipboard({
     analysis: FOREHEAD_ONLY,
     link: LINK,
     locale: "en",
-    variant: "short",
+    variant: "short_with_link",
   });
-  if (!enShort.startsWith("Took a look")) {
-    throw new Error("EN short frame should be English");
-  }
-  if (!enShort.includes("See more here:")) {
-    throw new Error("EN short should use See more here: label");
+  if (!enWithLink.includes("See more here:") || !enWithLink.includes(LINK)) {
+    throw new Error(`EN short_with_link should include URL:\n${enWithLink}`);
   }
 
   const truncated = truncateOverview("a".repeat(300), 40);
