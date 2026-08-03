@@ -2360,7 +2360,8 @@
       "pronounced": "Rõ"
     },
     "concerns": {
-      "none": "Không bất thường rõ / không thấy trên ảnh",
+      "none": "Không bất thường rõ",
+      "not_visible": "Không thấy trên ảnh",
       "acne": "Mụn",
       "papules": "Nốt đỏ sưng",
       "pustules": "Nốt có đầu trắng",

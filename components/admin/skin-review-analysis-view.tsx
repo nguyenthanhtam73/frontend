@@ -19,6 +19,7 @@ const REGION_KEYS = new Set([
 
 const CONCERN_KEYS = new Set([
   "none",
+  "not_visible",
   "acne",
   "papules",
   "pustules",

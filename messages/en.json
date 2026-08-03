@@ -2360,7 +2360,8 @@
       "pronounced": "Pronounced"
     },
     "concerns": {
-      "none": "No clear issue / not visible on photo",
+      "none": "No clear issue",
+      "not_visible": "Not visible on photo",
       "acne": "Breakouts",
       "papules": "Red bumps",
       "pustules": "Whiteheads",
