@@ -99,10 +99,13 @@ export type BuildSkinReviewShareClipboardInput = {
 type ShareTemplates = {
   opener: string;
   linkLine: string;
-  ctaCheckin: string;
-  ctaStreak: string;
-  ctaCoach: string;
-  ctaDefault: string;
+  /** Shared CTA for all comment variants (no URL). */
+  cta: string;
+  /** @deprecated Aliases of `cta` — kept for older JSON / callers */
+  ctaCheckin?: string;
+  ctaStreak?: string;
+  ctaCoach?: string;
+  ctaDefault?: string;
   skinTypeHint: string;
   /** Used when type is unclear / unknown — no severity. */
   skinTypeHintUnclear: string;
@@ -265,28 +268,6 @@ function buildRegionClause(
   return `${region} ${verb} ${concern}${cueBit}`;
 }
 
-function pickCtaKey(
-  problemConcerns: string[],
-): "ctaCheckin" | "ctaStreak" | "ctaCoach" | "ctaDefault" {
-  const set = new Set(problemConcerns.map((c) => c.toLowerCase()));
-  if (
-    ["acne", "papules", "pustules", "redness", "irritation"].some((k) =>
-      set.has(k),
-    )
-  ) {
-    return "ctaCheckin";
-  }
-  if (
-    ["oiliness", "dryness", "texture", "pores", "pigmentation", "dark_spots"].some(
-      (k) => set.has(k),
-    )
-  ) {
-    return "ctaStreak";
-  }
-  if (problemConcerns.length > 0) return "ctaCoach";
-  return "ctaDefault";
-}
-
 /**
  * Generate 1–3 human body sentences from analysis (or overview fallback).
  */
@@ -403,11 +384,11 @@ export function buildSkinReviewShareClipboard(
     bodyKind === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
   const body = truncateOverview(bodyRaw, input.bodyMax ?? defaultMax);
 
-  const problemConcerns = (analysis?.attention_areas ?? [])
-    .filter((a) => isProblemConcern(a.concern ?? ""))
-    .map((a) => a.concern);
-  const ctaKey = pickCtaKey(problemConcerns);
-  const cta = templates[ctaKey];
+  const cta =
+    templates.cta ||
+    templates.ctaCheckin ||
+    templates.ctaDefault ||
+    "";
 
   const lines: string[] = [templates.opener];
   if (body) lines.push(body);
@@ -421,7 +402,7 @@ export function buildSkinReviewShareClipboard(
     lines.push(templates.linkLine.replaceAll("{link}", link));
   }
 
-  lines.push(cta);
+  if (cta) lines.push(cta);
 
   return lines.join("\n");
 }

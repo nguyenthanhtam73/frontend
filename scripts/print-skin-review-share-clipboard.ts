@@ -211,11 +211,10 @@ function main() {
       `default short_no_link must not include http / share URL:\n${aDefault}`,
     );
   }
-  if (!aDefault.includes("Check-in") && !aDefault.includes("DaDiary")) {
-    throw new Error("VI short_no_link should include soft DaDiary CTA");
-  }
-  if (!aDefault.includes("(web)")) {
-    throw new Error("VI CTA should mention DaDiary (web) without URL");
+  const viCta =
+    "Dùng DaDiary check-in vài ngày, nhìn lại ảnh trước–sau là biết tình trạng da có cải thiện hơn không.";
+  if (!aDefault.includes(viCta)) {
+    throw new Error(`VI short_no_link should use shared CTA:\n${aDefault}`);
   }
   if (
     aDefault.includes("Trông nghi") ||
@@ -304,8 +303,13 @@ function main() {
   if (hasShareUrl(enDefault)) {
     throw new Error(`EN default must not include URL:\n${enDefault}`);
   }
-  if (!enDefault.includes("(web)")) {
-    throw new Error("EN CTA should mention DaDiary (web) without URL");
+  const enCta =
+    "Use DaDiary to check in for a few days, then look at before-and-after photos to see if your skin is improving.";
+  if (!enDefault.includes(enCta)) {
+    throw new Error(`EN short_no_link should use shared CTA:\n${enDefault}`);
+  }
+  if (!aWithLink.includes(viCta)) {
+    throw new Error(`VI short_with_link should use same CTA:\n${aWithLink}`);
   }
 
   const enWithLink = buildSkinReviewShareClipboard({
