@@ -2287,7 +2287,7 @@
     "photoErrorMax": "Tối đa {max} ảnh.",
     "photoErrorGeneric": "Không thêm được ảnh này.",
     "titleLabel": "Tiêu đề (tuỳ chọn)",
-    "titlePlaceholder": "vd. Tester Beta — vùng T dầu",
+    "titlePlaceholder": "vd. Tester Beta — trán mũi cằm dầu",
     "notesLabel": "Ghi chú admin (tuỳ chọn)",
     "notesPlaceholder": "Ghi chú nội bộ — không dùng làm hướng dẫn chăm sóc.",
     "statusLabel": "Trạng thái",
@@ -2380,7 +2380,7 @@
       "cheeks": "Má",
       "nose": "Mũi",
       "chin": "Cằm",
-      "t_zone": "Vùng T",
+      "t_zone": "Trán–mũi–cằm",
       "jawline": "Hàm",
       "under_eyes": "Dưới mắt",
       "other": "Khác"
