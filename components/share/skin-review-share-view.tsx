@@ -118,6 +118,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
   const buildClipboardText = useCallback(
     (variant: SkinReviewShareVariant, url: string) =>
       buildSkinReviewShareClipboard({
+        analysis: data.analysis,
         overview: data.analysis?.overview ?? "",
         link: url,
         skinType: data.analysis?.skin_type,
@@ -125,12 +126,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
         locale,
         variant,
       }),
-    [
-      data.analysis?.overview,
-      data.analysis?.skin_type,
-      data.analysis?.skin_type_severity,
-      locale,
-    ],
+    [data.analysis, locale],
   );
 
   const copyShareText = useCallback(

@@ -1,10 +1,11 @@
 /**
- * Pure clipboard builders for /share/skin-review/[slug].
- * Frame templates live in messages/{vi,en}.json; overview body stays as AI returned.
+ * Clipboard builders for /share/skin-review/[slug].
+ * Frame strings live in messages/{vi,en}.json; body is generated from analysis.
  */
 
 import en from "../messages/en.json";
 import vi from "../messages/vi.json";
+import type { AdminSkinReviewAnalysis } from "./types/admin-skin-review";
 
 export type SkinReviewShareLocale = "vi" | "en";
 /** @deprecated Prefer SkinReviewShareVariant */
@@ -12,8 +13,13 @@ export type SkinReviewShareCopyMode = SkinReviewShareVariant;
 export type SkinReviewShareVariant = "short" | "full" | "link";
 
 export const DEFAULT_SHARE_VARIANT: SkinReviewShareVariant = "short";
-export const SHORT_OVERVIEW_MAX = 100;
-export const FULL_OVERVIEW_MAX = 160;
+/** Soft caps for generated body (not opener/link/cta). */
+export const SHORT_BODY_MAX = 180;
+export const FULL_BODY_MAX = 280;
+/** @deprecated use SHORT_BODY_MAX — kept for older print scripts */
+export const SHORT_OVERVIEW_MAX = SHORT_BODY_MAX;
+/** @deprecated use FULL_BODY_MAX */
+export const FULL_OVERVIEW_MAX = FULL_BODY_MAX;
 
 const SKIN_TYPE_KEYS = [
   "oily",
@@ -26,32 +32,50 @@ const SKIN_TYPE_KEYS = [
 
 const SEVERITY_KEYS = ["mild", "moderate", "pronounced"] as const;
 
+const SEVERITY_RANK: Record<string, number> = {
+  pronounced: 3,
+  moderate: 2,
+  mild: 1,
+};
+
 export type BuildSkinReviewShareClipboardInput = {
-  overview: string;
   link: string;
-  /**
-   * Skin type enum key (oily|dry|combination|…).
-   * Used only for full variant soft hint — never in short.
-   */
-  skinType?: string;
-  /** Severity enum key (mild|moderate|pronounced) — softens the full hint. */
-  skinTypeSeverity?: string;
   locale: SkinReviewShareLocale;
+  /** Full analysis — preferred source for body. */
+  analysis?: Partial<AdminSkinReviewAnalysis> | null;
+  /**
+   * @deprecated Fallback when analysis is missing — treated as overview-only body.
+   */
+  overview?: string;
+  /** Skin type enum — full variant soft hint only. */
+  skinType?: string;
+  skinTypeSeverity?: string;
   /** Default: short */
   variant?: SkinReviewShareVariant;
   /** @deprecated Use `variant` */
   mode?: SkinReviewShareVariant;
-  /** Override overview max (defaults: short 100, full 160). */
-  overviewMax?: number;
+  bodyMax?: number;
 };
 
 type ShareTemplates = {
-  commentTemplateFull: string;
-  commentTemplateShort: string;
-  commentTemplateWithSkinType: string;
+  opener: string;
+  linkLine: string;
+  ctaCheckin: string;
+  ctaStreak: string;
+  ctaCoach: string;
+  ctaDefault: string;
   skinTypeHint: string;
+  /** Used when type is unclear / unknown — no severity. */
+  skinTypeHintUnclear: string;
   skinTypeHintLabels: Record<string, string>;
   skinTypeHintSeverities: Record<string, string>;
+  regionWords: Record<string, string>;
+  concernWords: Record<string, string>;
+  missingRegionsHint: string;
+  /** Legacy keys kept so old JSON still type-checks during migrate */
+  commentTemplateShort?: string;
+  commentTemplateFull?: string;
+  commentTemplateWithSkinType?: string;
 };
 
 const TEMPLATES: Record<SkinReviewShareLocale, ShareTemplates> = {
@@ -60,15 +84,16 @@ const TEMPLATES: Record<SkinReviewShareLocale, ShareTemplates> = {
 };
 
 /**
- * Collapse overview for FB comment.
+ * Collapse text for FB comment length.
  * When truncated, result length including "…" is ≤ max.
  */
-export function truncateOverview(raw: string, max = SHORT_OVERVIEW_MAX): string {
+export function truncateOverview(raw: string, max = SHORT_BODY_MAX): string {
   const text = raw.trim().replace(/\s+/g, " ");
   if (!text) return "";
-  if (text.length <= max) return text;
-  const budget = Math.max(1, max - 1); // room for …
-  const slice = text.slice(0, budget);
+  if ([...text].length <= max) return text;
+  const chars = [...text];
+  const budget = Math.max(1, max - 1);
+  const slice = chars.slice(0, budget).join("");
   const breakAt = Math.max(
     slice.lastIndexOf(". "),
     slice.lastIndexOf("! "),
@@ -80,16 +105,7 @@ export function truncateOverview(raw: string, max = SHORT_OVERVIEW_MAX): string 
   return `${cut.trimEnd().replace(/[,;:\-–—]$/, "")}…`;
 }
 
-function fillTemplate(
-  template: string,
-  vars: { overview: string; link: string; skinTypeHint: string },
-): string {
-  return template
-    .replaceAll("{overview}", vars.overview)
-    .replaceAll("{link}", vars.link)
-    .replaceAll("{skinTypeHint}", vars.skinTypeHint)
-    .replaceAll("{skinType}", vars.skinTypeHint);
-}
+const UNCLEAR_SKIN_TYPES = new Set(["unclear", "unknown"]);
 
 /** Soft line e.g. VI: "Trông nghi da hỗn hợp nhẹ." — empty if no usable type. */
 export function buildSoftSkinTypeHint(
@@ -98,9 +114,18 @@ export function buildSoftSkinTypeHint(
   severityKey?: string,
 ): string {
   const key = skinTypeKey?.trim().toLowerCase() ?? "";
-  if (!key || !(SKIN_TYPE_KEYS as readonly string[]).includes(key)) return "";
+  if (!key) return "";
 
   const templates = TEMPLATES[locale === "en" ? "en" : "vi"];
+
+  // Unclear / unknown: fixed line, never compose with severity
+  // ("chưa rõ loại nhẹ" / "mild unclear skin type").
+  if (UNCLEAR_SKIN_TYPES.has(key)) {
+    return templates.skinTypeHintUnclear.trim();
+  }
+
+  if (!(SKIN_TYPE_KEYS as readonly string[]).includes(key)) return "";
+
   const label = templates.skinTypeHintLabels[key];
   if (!label) return "";
 
@@ -118,6 +143,194 @@ export function buildSoftSkinTypeHint(
   return templates.skinTypeHint.replaceAll("{skinType}", skinType);
 }
 
+function word(
+  map: Record<string, string>,
+  key: string,
+  fallback?: string,
+): string {
+  const k = key.trim().toLowerCase();
+  return map[k] || fallback || k;
+}
+
+function isProblemConcern(concern: string): boolean {
+  const c = concern.trim().toLowerCase();
+  return !!c && c !== "none" && c !== "not_visible" && c !== "clear";
+}
+
+function isNotVisible(concern: string): boolean {
+  return concern.trim().toLowerCase() === "not_visible";
+}
+
+/** Pull light cues from a note without pasting the whole AI paragraph. */
+function extractCues(
+  note: string,
+  concernKey: string,
+  locale: SkinReviewShareLocale,
+): string[] {
+  const n = note.toLowerCase();
+  const concern = concernKey.toLowerCase();
+  const cues: string[] = [];
+  if (locale === "vi") {
+    const count = note.match(/khoảng\s+(\d+\s*[-–]\s*\d+|\d+)/i);
+    if (count) cues.push(`khoảng ${count[1].replace(/\s+/g, "")}`);
+    else if (/cụm/.test(n)) cues.push("thành cụm");
+    else if (/rải/.test(n)) cues.push("rải");
+    if (/đầu trắng|có mũ/.test(n)) cues.push("có chỗ đầu trắng");
+    // Avoid repeating shine when concern is already oiliness
+    if (/bóng/.test(n) && concern !== "oiliness") cues.push("hơi bóng");
+    if (/thâm|đốm nâu/.test(n) && !["pigmentation", "dark_spots"].includes(concern))
+      cues.push("có thâm");
+  } else {
+    const count = note.match(/(?:about|around)?\s*(\d+\s*[-–]\s*\d+|\d+)/i);
+    if (count) cues.push(`about ${count[1].replace(/\s+/g, "")}`);
+    else if (/cluster/.test(n)) cues.push("in a cluster");
+    else if (/scatter/.test(n)) cues.push("scattered");
+    if (/whitehead|white head/.test(n)) cues.push("some whiteheads");
+    if (/shin|oil/.test(n) && concern !== "oiliness") cues.push("a bit shiny");
+  }
+  return cues.slice(0, 2);
+}
+
+function buildRegionClause(
+  regionKey: string,
+  concernKey: string,
+  note: string,
+  locale: SkinReviewShareLocale,
+  templates: ShareTemplates,
+): string {
+  const region = word(templates.regionWords, regionKey, regionKey);
+  const concern = word(templates.concernWords, concernKey, concernKey);
+  const cues = extractCues(note, concernKey, locale);
+  const noteLow = note.toLowerCase();
+  const c = concernKey.toLowerCase();
+  if (locale === "vi") {
+    if (c === "oiliness") {
+      return `${region} hơi bóng`;
+    }
+    const intens =
+      /nhiều|dày|cụm|rải/.test(noteLow) || /\d/.test(noteLow)
+        ? "đang nổi khá nhiều"
+        : "đang có";
+    const cueBit = cues.length ? `, ${cues.join(", ")}` : "";
+    return `${region} ${intens} ${concern}${cueBit}`;
+  }
+  if (c === "oiliness") {
+    return `${region} looks a bit shiny`;
+  }
+  const verb = /many|cluster|scattered|dense|\d/.test(noteLow)
+    ? regionKey.toLowerCase() === "cheeks"
+      ? "have quite a few"
+      : "has quite a few"
+    : "shows";
+  const cueBit = cues.length ? ` (${cues.join(", ")})` : "";
+  return `${region} ${verb} ${concern}${cueBit}`;
+}
+
+function pickCtaKey(
+  problemConcerns: string[],
+): "ctaCheckin" | "ctaStreak" | "ctaCoach" | "ctaDefault" {
+  const set = new Set(problemConcerns.map((c) => c.toLowerCase()));
+  if (
+    ["acne", "papules", "pustules", "redness", "irritation"].some((k) =>
+      set.has(k),
+    )
+  ) {
+    return "ctaCheckin";
+  }
+  if (
+    ["oiliness", "dryness", "texture", "pores", "pigmentation", "dark_spots"].some(
+      (k) => set.has(k),
+    )
+  ) {
+    return "ctaStreak";
+  }
+  if (problemConcerns.length > 0) return "ctaCoach";
+  return "ctaDefault";
+}
+
+/**
+ * Generate 1–3 human body sentences from analysis (or overview fallback).
+ */
+export function buildShareBodyFromAnalysis(
+  analysis: Partial<AdminSkinReviewAnalysis> | null | undefined,
+  locale: SkinReviewShareLocale,
+  variant: "short" | "full",
+  overviewFallback = "",
+): string {
+  const templates = TEMPLATES[locale === "en" ? "en" : "vi"];
+  const areas = analysis?.attention_areas ?? [];
+
+  const problems = areas
+    .filter((a) => isProblemConcern(a.concern ?? ""))
+    .sort(
+      (a, b) =>
+        (SEVERITY_RANK[b.severity?.toLowerCase() ?? ""] ?? 0) -
+        (SEVERITY_RANK[a.severity?.toLowerCase() ?? ""] ?? 0),
+    );
+
+  const missing = areas
+    .filter((a) => isNotVisible(a.concern ?? ""))
+    .map((a) => word(templates.regionWords, a.region, a.region))
+    .filter(Boolean);
+
+  const parts: string[] = [];
+
+  if (problems.length > 0) {
+    const take = variant === "short" ? Math.min(2, problems.length) : Math.min(3, problems.length);
+    const clauses = problems
+      .slice(0, take)
+      .map((a) =>
+        buildRegionClause(a.region, a.concern, a.note ?? "", locale, templates),
+      );
+    const joined =
+      clauses.length === 1
+        ? `${clauses[0]}.`
+        : clauses.length === 2
+          ? `${clauses[0]}; ${clauses[1]}.`
+          : `${clauses[0]}; ${clauses[1]}; ${clauses[2]}.`;
+    parts.push(capitalize(joined));
+  } else if (overviewFallback.trim()) {
+    // Soft paraphrase: first 1–2 sentences of overview
+    const sentences = overviewFallback
+      .trim()
+      .split(/(?<=[.!?…])\s+/)
+      .filter(Boolean);
+    parts.push(sentences.slice(0, variant === "short" ? 1 : 2).join(" "));
+  } else if (analysis?.overview?.trim()) {
+    const sentences = analysis.overview
+      .trim()
+      .split(/(?<=[.!?…])\s+/)
+      .filter(Boolean);
+    parts.push(sentences.slice(0, variant === "short" ? 1 : 2).join(" "));
+  }
+
+  // Optional short missing-regions hint (only when photo is clearly partial)
+  if (
+    missing.length >= 2 &&
+    problems.length > 0 &&
+    problems.length <= 2 &&
+    missing.length >= areas.length - problems.length
+  ) {
+    const list =
+      locale === "vi"
+        ? missing.slice(0, 3).join("/")
+        : missing
+            .slice(0, 3)
+            .map((r) => r.replace(/^the\s+/i, ""))
+            .join("/");
+    parts.push(
+      capitalize(templates.missingRegionsHint.replaceAll("{regions}", list)),
+    );
+  }
+
+  return parts.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 /**
  * Build the exact string written to the clipboard / passed to navigator.share.
  * Default variant is short.
@@ -132,31 +345,37 @@ export function buildSkinReviewShareClipboard(
   const locale: SkinReviewShareLocale =
     input.locale === "en" ? "en" : "vi";
   const templates = TEMPLATES[locale];
-  const defaultMax =
-    variant === "short" ? SHORT_OVERVIEW_MAX : FULL_OVERVIEW_MAX;
-  const overview = truncateOverview(
-    input.overview,
-    input.overviewMax ?? defaultMax,
-  );
 
-  if (variant === "short") {
-    return fillTemplate(templates.commentTemplateShort, {
-      overview,
-      link,
-      skinTypeHint: "",
-    });
-  }
+  const analysis = input.analysis ?? null;
+  const skinType = input.skinType ?? analysis?.skin_type;
+  const skinTypeSeverity =
+    input.skinTypeSeverity ?? analysis?.skin_type_severity;
 
-  // full — optional soft skin-type line; overview stays AI original language
-  const skinTypeHint = buildSoftSkinTypeHint(
+  const bodyRaw = buildShareBodyFromAnalysis(
+    analysis,
     locale,
-    input.skinType,
-    input.skinTypeSeverity,
+    variant === "full" ? "full" : "short",
+    input.overview ?? "",
   );
-  const vars = { overview, link, skinTypeHint };
+  const defaultMax = variant === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
+  const body = truncateOverview(bodyRaw, input.bodyMax ?? defaultMax);
 
-  if (skinTypeHint) {
-    return fillTemplate(templates.commentTemplateWithSkinType, vars);
+  const problemConcerns = (analysis?.attention_areas ?? [])
+    .filter((a) => isProblemConcern(a.concern ?? ""))
+    .map((a) => a.concern);
+  const ctaKey = pickCtaKey(problemConcerns);
+  const cta = templates[ctaKey];
+
+  const lines: string[] = [templates.opener];
+  if (body) lines.push(body);
+
+  if (variant === "full") {
+    const hint = buildSoftSkinTypeHint(locale, skinType, skinTypeSeverity);
+    if (hint) lines.push(hint);
   }
-  return fillTemplate(templates.commentTemplateFull, vars);
+
+  lines.push(templates.linkLine.replaceAll("{link}", link));
+  lines.push(cta);
+
+  return lines.join("\n");
 }
