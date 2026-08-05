@@ -49,6 +49,14 @@ const FOREHEAD_ONLY: AdminSkinReviewAnalysis = {
   ],
   additional_observations: "Chỉ xét được trán.",
   photo_notes: "Ảnh crop chỉ một dải trán.",
+  possible_causes: [
+    "Thường gặp khi dầu + bít tắc ở trán.",
+    "Đôi khi liên quan kích ứng — không chắc 100% chỉ từ một ảnh.",
+  ],
+  soothing_tips: [
+    "Đừng nặn ổ đang sưng.",
+    "Rửa mặt dịu, tạm tránh active mạnh.",
+  ],
   non_diagnostic: "Chỉ nói từ ảnh, không phải chẩn đoán.",
 };
 
@@ -87,6 +95,15 @@ const FULL_FACE: AdminSkinReviewAnalysis = {
   ],
   additional_observations: "Chủ yếu nốt má–cằm và bóng trán.",
   photo_notes: "Góc thẳng, đủ sáng.",
+  possible_causes: [
+    "Thường gặp khi dầu + bít tắc quanh má–cằm.",
+    "Đôi khi liên quan nóng ẩm — không chắc 100% chỉ từ một ảnh.",
+  ],
+  soothing_tips: [
+    "Không nặn cụm đang sưng.",
+    "Rửa dịu, tạm tránh active mạnh; nhớ chống nắng.",
+    "Ổ to, đau hoặc kéo dài thì nên khám da liễu.",
+  ],
   non_diagnostic: "Nói từ ảnh thôi, không phải chẩn đoán.",
 };
 

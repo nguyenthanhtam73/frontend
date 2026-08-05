@@ -9,7 +9,7 @@ export type AdminSkinAttentionArea = {
   note: string;
 };
 
-/** Canonical 5-section analysis from Premium vision. */
+/** Canonical analysis from Premium vision (+ public causes/tips). */
 export type AdminSkinReviewAnalysis = {
   overview: string;
   skin_type: string;
@@ -19,6 +19,10 @@ export type AdminSkinReviewAnalysis = {
   attention_areas: AdminSkinAttentionArea[];
   additional_observations: string;
   photo_notes: string;
+  /** 1–2 soft non-certain causes for public share. */
+  possible_causes?: string[];
+  /** 2–3 gentle avoid/do tips for public share (no brands/meds). */
+  soothing_tips?: string[];
   non_diagnostic: string;
 };
 

@@ -76,10 +76,17 @@ export function SkinReviewAnalysisView({
     a.skin_type_severity,
     SEVERITY_KEYS,
   );
+  const causes = (a.possible_causes ?? []).map((s) => s.trim()).filter(Boolean);
+  const tips = (a.soothing_tips ?? []).map((s) => s.trim()).filter(Boolean);
+  let section = 0;
+  const nextIndex = () => {
+    section += 1;
+    return section;
+  };
 
   return (
     <div className={cn(share ? "space-y-8 sm:space-y-7" : "space-y-6", className)}>
-      <ResultSection title={t("fieldOverview")} share={share} index={1}>
+      <ResultSection title={t("fieldOverview")} share={share} index={nextIndex()}>
         <p
           className={cn(
             "min-w-0 break-words whitespace-pre-wrap text-foreground/90",
@@ -92,7 +99,7 @@ export function SkinReviewAnalysisView({
         </p>
       </ResultSection>
 
-      <ResultSection title={t("fieldSkinType")} share={share} index={2}>
+      <ResultSection title={t("fieldSkinType")} share={share} index={nextIndex()}>
         <div className="flex flex-wrap gap-2">
           <BadgeChip tone="teal" share={share}>
             {skinTypeLabel}
@@ -113,7 +120,7 @@ export function SkinReviewAnalysisView({
         ) : null}
       </ResultSection>
 
-      <ResultSection title={t("fieldAttention")} share={share} index={3}>
+      <ResultSection title={t("fieldAttention")} share={share} index={nextIndex()}>
         {a.attention_areas?.length ? (
           <ul className={cn("space-y-2.5", share && "space-y-3.5")}>
             {a.attention_areas.map((area, i) => (
@@ -160,7 +167,7 @@ export function SkinReviewAnalysisView({
         )}
       </ResultSection>
 
-      <ResultSection title={t("fieldAdditional")} share={share} index={4}>
+      <ResultSection title={t("fieldAdditional")} share={share} index={nextIndex()}>
         <p
           className={cn(
             "min-w-0 break-words whitespace-pre-wrap leading-relaxed text-foreground/90",
@@ -171,7 +178,7 @@ export function SkinReviewAnalysisView({
         </p>
       </ResultSection>
 
-      <ResultSection title={t("fieldPhotoNotes")} share={share} index={5}>
+      <ResultSection title={t("fieldPhotoNotes")} share={share} index={nextIndex()}>
         <p
           className={cn(
             "min-w-0 break-words whitespace-pre-wrap leading-relaxed text-foreground/90",
@@ -181,6 +188,18 @@ export function SkinReviewAnalysisView({
           {a.photo_notes?.trim() || "—"}
         </p>
       </ResultSection>
+
+      {causes.length > 0 ? (
+        <ResultSection title={t("fieldPossibleCauses")} share={share} index={nextIndex()}>
+          <BulletList items={causes} share={share} />
+        </ResultSection>
+      ) : null}
+
+      {tips.length > 0 ? (
+        <ResultSection title={t("fieldSoothingTips")} share={share} index={nextIndex()}>
+          <BulletList items={tips} share={share} />
+        </ResultSection>
+      ) : null}
 
       {a.non_diagnostic ? (
         <p
@@ -193,6 +212,32 @@ export function SkinReviewAnalysisView({
         </p>
       ) : null}
     </div>
+  );
+}
+
+function BulletList({
+  items,
+  share,
+}: {
+  items: string[];
+  share?: boolean;
+}) {
+  return (
+    <ul
+      className={cn(
+        "list-disc space-y-1.5 pl-5 text-foreground/90",
+        share ? "space-y-2 text-[0.9375rem] sm:text-sm" : "text-sm",
+      )}
+    >
+      {items
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((item, i) => (
+          <li key={`${i}-${item.slice(0, 24)}`} className="min-w-0 break-words leading-relaxed">
+            {item}
+          </li>
+        ))}
+    </ul>
   );
 }
 

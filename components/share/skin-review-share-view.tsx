@@ -230,6 +230,14 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
     data.analysis?.additional_observations ?? ""
   ).trim();
   const imagePhotoNotes = (data.analysis?.photo_notes ?? "").trim();
+  const imagePossibleCauses = (data.analysis?.possible_causes ?? [])
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  const imageSoothingTips = (data.analysis?.soothing_tips ?? [])
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 3);
   const imageDisclaimer =
     data.analysis?.non_diagnostic?.trim() || t("imageDisclaimer");
 
@@ -540,6 +548,10 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             additional={imageAdditional}
             photoNotesHeading={tAdmin("fieldPhotoNotes")}
             photoNotes={imagePhotoNotes}
+            possibleCausesHeading={tAdmin("fieldPossibleCauses")}
+            possibleCauses={imagePossibleCauses}
+            soothingTipsHeading={tAdmin("fieldSoothingTips")}
+            soothingTips={imageSoothingTips}
             disclaimer={imageDisclaimer}
             domain={t("imageDomain")}
           />

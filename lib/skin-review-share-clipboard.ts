@@ -396,13 +396,80 @@ export function buildSkinReviewShareClipboard(
   if (shareVariantIsFull(variant)) {
     const hint = buildSoftSkinTypeHint(locale, skinType, skinTypeSeverity);
     if (hint) lines.push(hint);
+    const causeLine = formatShareCauses(analysis?.possible_causes, locale, 2);
+    if (causeLine) lines.push(causeLine);
   }
 
-  if (shareVariantIncludesLink(variant) && link) {
-    lines.push(templates.linkLine.replaceAll("{link}", link));
+  const linkLine =
+    shareVariantIncludesLink(variant) && link
+      ? templates.linkLine.replaceAll("{link}", link)
+      : "";
+
+  // Tips after observations / before CTA. Short variants: 1–2 very short tips if room.
+  // Budget includes linkLine for short_with_link so URL doesn't push past soft cap.
+  const tipBudget =
+    bodyKind === "short" ? Math.min(2, SHORT_TIP_BUDGET) : FULL_TIP_BUDGET;
+  const tipsLine = formatShareTips(analysis?.soothing_tips, locale, tipBudget);
+  if (tipsLine) {
+    const used = [...lines, tipsLine, linkLine, cta].filter(Boolean).join("\n");
+    if (bodyKind === "full" || [...used].length <= SHORT_CLIP_SOFT_MAX) {
+      lines.push(tipsLine);
+    }
   }
 
+  if (linkLine) lines.push(linkLine);
   if (cta) lines.push(cta);
 
   return lines.join("\n");
+}
+
+const SHORT_TIP_BUDGET = 2;
+const FULL_TIP_BUDGET = 3;
+/** Soft cap for short clipboard total (opener+body+tips+cta+linkLine when present). */
+export const SHORT_CLIP_SOFT_MAX = 420;
+
+function formatShareCauses(
+  causes: string[] | undefined,
+  locale: SkinReviewShareLocale,
+  max: number,
+): string {
+  const items = (causes ?? [])
+    .map((s) => s.trim().replace(/\s+/g, " "))
+    .filter(Boolean)
+    .slice(0, max)
+    .map((s) => truncateOverview(s, 90));
+  if (!items.length) return "";
+  if (locale === "en") {
+    return items.length === 1
+      ? `Often linked to: ${uncapitalize(items[0])}`
+      : `Often linked to: ${uncapitalize(items[0])}; ${uncapitalize(items[1])}`;
+  }
+  return items.length === 1
+    ? `Hay gặp khi: ${uncapitalize(items[0])}`
+    : `Hay gặp khi: ${uncapitalize(items[0])}; ${uncapitalize(items[1])}`;
+}
+
+function formatShareTips(
+  tips: string[] | undefined,
+  locale: SkinReviewShareLocale,
+  max: number,
+): string {
+  const items = (tips ?? [])
+    .map((s) => s.trim().replace(/\s+/g, " "))
+    .filter(Boolean)
+    .slice(0, max)
+    .map((s) => truncateOverview(s, locale === "en" ? 70 : 64));
+  if (!items.length) return "";
+  const joined = items.join(locale === "en" ? " · " : " · ");
+  return locale === "en" ? `Gentle tip: ${joined}` : `Gợi ý nhẹ: ${joined}`;
+}
+
+function uncapitalize(s: string): string {
+  if (!s) return s;
+  // Strip leading soft hedges so the joined line reads cleanly.
+  const stripped = s
+    .replace(/^(thường gặp khi|đôi khi liên quan|often shows up when|sometimes linked to)\s+/i, "")
+    .replace(/^[:\-\s]+/, "");
+  if (!stripped) return s;
+  return stripped.charAt(0).toLowerCase() + stripped.slice(1);
 }

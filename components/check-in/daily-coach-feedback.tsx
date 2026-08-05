@@ -1,10 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Ban,
   Lightbulb,
+  ListChecks,
   Moon,
   RefreshCw,
   ShieldCheck,
@@ -19,7 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { getAccessToken } from "@/lib/auth-token";
-import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
+import type {
+  CoachCareSuggestionDTO,
+  CreateSkinCheckResponseDTO,
+} from "@/lib/types/skin-check";
 
 /** Strip "Sáng:" / "PM:" style prefixes when the card header already shows AM/PM. */
 function stripRoutinePrefix(line: string): string {
@@ -78,6 +83,11 @@ export function DailyCoachFeedback({
       g.clarity != null ||
       g.barrier != null ||
       g.overall != null);
+  const care = groupCareSuggestions(c.care_suggestions);
+  const hasCare = care.morning.length + care.evening.length + care.today.length > 0;
+  // Prefer care_suggestions block; keep legacy tips only when checklist is empty.
+  const showLegacyTips =
+    !hasCare && !!c.improvements && c.improvements.length > 0;
 
   return (
     <div
@@ -130,6 +140,46 @@ export function DailyCoachFeedback({
                 <ScoreBar label={t("gaugeBarrier")} value={g!.barrier} />
               ) : null}
             </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {hasCare ? (
+        <Card
+          className="border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent"
+          data-care-suggestions
+        >
+          <CardContent className="space-y-4 pt-5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <ListChecks className="size-4 text-primary" aria-hidden />
+                {t("careSuggestions")}
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t("careSuggestionsHint")}
+              </p>
+            </div>
+            <CareSlotBlock
+              title={t("careSlotMorning")}
+              icon={<Sun className="size-4 text-amber-500" aria-hidden />}
+              items={care.morning}
+              whyLabel={t("careWhy")}
+              safetyLabel={t("careSafety")}
+            />
+            <CareSlotBlock
+              title={t("careSlotEvening")}
+              icon={<Moon className="size-4 text-indigo-500" aria-hidden />}
+              items={care.evening}
+              whyLabel={t("careWhy")}
+              safetyLabel={t("careSafety")}
+            />
+            <CareSlotBlock
+              title={t("careSlotToday")}
+              icon={<ListChecks className="size-4 text-primary" aria-hidden />}
+              items={care.today}
+              whyLabel={t("careWhy")}
+              safetyLabel={t("careSafety")}
+            />
           </CardContent>
         </Card>
       ) : null}
@@ -192,15 +242,15 @@ export function DailyCoachFeedback({
         </Card>
       ) : null}
 
-      {c.improvements && c.improvements.length > 0 ? (
+      {showLegacyTips ? (
         <Card>
           <CardContent className="space-y-3 pt-5">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Lightbulb className="size-4 text-amber-600" aria-hidden />
-              {t("tips")}
+              {t("careSuggestions")}
             </div>
             <ul className="space-y-3">
-              {c.improvements.map((im, idx) => (
+              {c.improvements!.map((im, idx) => (
                 <li
                   key={`tip-${idx}-${im.tip.slice(0, 24)}`}
                   className="rounded-xl border bg-muted/30 p-3 text-sm transition-colors hover:bg-muted/50"
@@ -285,6 +335,72 @@ export function DailyCoachFeedback({
         targetType="skin_analysis"
         targetId={a.id}
       />
+    </div>
+  );
+}
+
+function groupCareSuggestions(items: CoachCareSuggestionDTO[] | undefined) {
+  const morning: CoachCareSuggestionDTO[] = [];
+  const evening: CoachCareSuggestionDTO[] = [];
+  const today: CoachCareSuggestionDTO[] = [];
+  for (const raw of items ?? []) {
+    const step = raw.step?.trim();
+    if (!step) continue;
+    const item: CoachCareSuggestionDTO = {
+      slot: raw.slot,
+      step,
+      why: raw.why?.trim() || undefined,
+      safety_note: raw.safety_note?.trim() || undefined,
+    };
+    const slot = (raw.slot || "today").toLowerCase();
+    if (slot === "morning" || slot === "am") morning.push(item);
+    else if (slot === "evening" || slot === "pm") evening.push(item);
+    else today.push(item);
+  }
+  return { morning, evening, today };
+}
+
+function CareSlotBlock({
+  title,
+  icon,
+  items,
+  whyLabel,
+  safetyLabel,
+}: {
+  title: string;
+  icon: ReactNode;
+  items: CoachCareSuggestionDTO[];
+  whyLabel: string;
+  safetyLabel: string;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      <ul className="space-y-2.5">
+        {items.map((item, i) => (
+          <li
+            key={`${item.slot}-${item.step.slice(0, 20)}-${i}`}
+            className="rounded-xl border border-border/70 bg-background/70 p-3 text-sm"
+          >
+            <p className="font-medium leading-snug">{item.step}</p>
+            {item.why ? (
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                <span className="font-semibold text-foreground/80">{whyLabel}</span>{" "}
+                {item.why}
+              </p>
+            ) : null}
+            {item.safety_note ? (
+              <p className="mt-1 text-xs leading-relaxed text-amber-800/90 dark:text-amber-200/90">
+                <span className="font-semibold">{safetyLabel}</span> {item.safety_note}
+              </p>
+            ) : null}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

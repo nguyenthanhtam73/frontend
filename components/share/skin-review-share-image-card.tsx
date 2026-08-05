@@ -40,6 +40,10 @@ export type SkinReviewShareImageCardProps = {
   additional: string;
   photoNotesHeading: string;
   photoNotes: string;
+  possibleCausesHeading: string;
+  possibleCauses: string[];
+  soothingTipsHeading: string;
+  soothingTips: string[];
   disclaimer: string;
   domain: string;
 };
@@ -66,11 +70,17 @@ export const SkinReviewShareImageCard = forwardRef<
     additional,
     photoNotesHeading,
     photoNotes,
+    possibleCausesHeading,
+    possibleCauses,
+    soothingTipsHeading,
+    soothingTips,
     disclaimer,
     domain,
   },
   ref,
 ) {
+  const causes = possibleCauses.map((s) => s.trim()).filter(Boolean).slice(0, 2);
+  const tips = soothingTips.map((s) => s.trim()).filter(Boolean).slice(0, 3);
   return (
     <div
       ref={ref}
@@ -225,100 +235,125 @@ export const SkinReviewShareImageCard = forwardRef<
           </h2>
         </div>
 
-        <Section index={1} heading={overviewHeading}>
-          <p style={bodyStyle}>{overview || "—"}</p>
-        </Section>
+        {(() => {
+          let n = 0;
+          const idx = () => {
+            n += 1;
+            return n;
+          };
+          return (
+            <>
+              <Section index={idx()} heading={overviewHeading}>
+                <p style={bodyStyle}>{overview || "—"}</p>
+              </Section>
 
-        {(skinTypeLabel || skinTypeNote) && (
-          <Section index={2} heading={skinTypeHeading}>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 10,
-              }}
-            >
-              {skinTypeLabel ? <Chip tone="teal">{skinTypeLabel}</Chip> : null}
-              {skinTypeSeverity ? (
-                <Chip tone="blush">{skinTypeSeverity}</Chip>
-              ) : null}
-            </div>
-            {skinTypeNote ? (
-              <p style={{ ...mutedBodyStyle, marginTop: 12 }}>{skinTypeNote}</p>
-            ) : null}
-          </Section>
-        )}
-
-        {attentionItems.length > 0 ? (
-          <Section index={3} heading={attentionHeading}>
-            <ul
-              style={{
-                margin: 0,
-                padding: 0,
-                listStyle: "none",
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-              }}
-            >
-              {attentionItems.map((item, i) => (
-                <li
-                  key={`${item.region}-${item.concern}-${i}`}
-                  style={{
-                    padding: "16px 18px",
-                    borderRadius: 20,
-                    background: "rgba(47, 143, 140, 0.05)",
-                    border: "1px solid rgba(47, 143, 140, 0.14)",
-                  }}
-                >
+              {skinTypeLabel || skinTypeNote ? (
+                <Section index={idx()} heading={skinTypeHeading}>
                   <div
                     style={{
                       display: "flex",
                       flexWrap: "wrap",
-                      alignItems: "center",
-                      gap: 8,
+                      gap: 10,
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: 24,
-                        fontWeight: 700,
-                        letterSpacing: "-0.015em",
-                        color: "#1C2E32",
-                        lineHeight: 1.25,
-                      }}
-                    >
-                      {item.region}
-                    </span>
-                    {item.concern ? (
-                      <Chip tone="teal">{item.concern}</Chip>
-                    ) : null}
-                    {item.severity ? (
-                      <Chip tone="muted">{item.severity}</Chip>
+                    {skinTypeLabel ? <Chip tone="teal">{skinTypeLabel}</Chip> : null}
+                    {skinTypeSeverity ? (
+                      <Chip tone="blush">{skinTypeSeverity}</Chip>
                     ) : null}
                   </div>
-                  {item.note ? (
-                    <p style={{ ...mutedBodyStyle, marginTop: 10 }}>
-                      {item.note}
+                  {skinTypeNote ? (
+                    <p style={{ ...mutedBodyStyle, marginTop: 12 }}>
+                      {skinTypeNote}
                     </p>
                   ) : null}
-                </li>
-              ))}
-            </ul>
-          </Section>
-        ) : null}
+                </Section>
+              ) : null}
 
-        {additional ? (
-          <Section index={4} heading={additionalHeading}>
-            <p style={bodyStyle}>{additional}</p>
-          </Section>
-        ) : null}
+              {attentionItems.length > 0 ? (
+                <Section index={idx()} heading={attentionHeading}>
+                  <ul
+                    style={{
+                      margin: 0,
+                      padding: 0,
+                      listStyle: "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 14,
+                    }}
+                  >
+                    {attentionItems.map((item, i) => (
+                      <li
+                        key={`${item.region}-${item.concern}-${i}`}
+                        style={{
+                          padding: "16px 18px",
+                          borderRadius: 20,
+                          background: "rgba(47, 143, 140, 0.05)",
+                          border: "1px solid rgba(47, 143, 140, 0.14)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 24,
+                              fontWeight: 700,
+                              letterSpacing: "-0.015em",
+                              color: "#1C2E32",
+                              lineHeight: 1.25,
+                            }}
+                          >
+                            {item.region}
+                          </span>
+                          {item.concern ? (
+                            <Chip tone="teal">{item.concern}</Chip>
+                          ) : null}
+                          {item.severity ? (
+                            <Chip tone="muted">{item.severity}</Chip>
+                          ) : null}
+                        </div>
+                        {item.note ? (
+                          <p style={{ ...mutedBodyStyle, marginTop: 10 }}>
+                            {item.note}
+                          </p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              ) : null}
 
-        {photoNotes ? (
-          <Section index={5} heading={photoNotesHeading}>
-            <p style={bodyStyle}>{photoNotes}</p>
-          </Section>
-        ) : null}
+              {additional ? (
+                <Section index={idx()} heading={additionalHeading}>
+                  <p style={bodyStyle}>{additional}</p>
+                </Section>
+              ) : null}
+
+              {photoNotes ? (
+                <Section index={idx()} heading={photoNotesHeading}>
+                  <p style={bodyStyle}>{photoNotes}</p>
+                </Section>
+              ) : null}
+
+              {causes.length > 0 ? (
+                <Section index={idx()} heading={possibleCausesHeading}>
+                  <CompactBullets items={causes} />
+                </Section>
+              ) : null}
+
+              {tips.length > 0 ? (
+                <Section index={idx()} heading={soothingTipsHeading}>
+                  <CompactBullets items={tips} />
+                </Section>
+              ) : null}
+            </>
+          );
+        })()}
       </div>
 
       {/* 4. Footer — disclaimer then domain CTA */}
@@ -428,6 +463,35 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+function CompactBullets({ items }: { items: string[] }) {
+  return (
+    <ul
+      style={{
+        margin: 0,
+        padding: "0 0 0 28px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      {items.map((item, i) => (
+        <li
+          key={`${i}-${item.slice(0, 20)}`}
+          style={{
+            fontSize: 26,
+            fontWeight: 500,
+            lineHeight: 1.4,
+            color: "#24383C",
+            wordBreak: "break-word",
+          }}
+        >
+          {item}
+        </li>
+      ))}
+    </ul>
   );
 }
 

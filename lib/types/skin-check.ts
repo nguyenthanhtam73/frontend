@@ -4,6 +4,15 @@ import type { ProductSuggestionDTO } from "./product-suggestion";
 
 export type CoachImprovementDTO = { tip: string; why: string };
 
+/** In-app detailed care step (NOT used on public /share/skin-review). */
+export type CoachCareSuggestionDTO = {
+  /** morning | evening | today */
+  slot: string;
+  step: string;
+  why?: string;
+  safety_note?: string;
+};
+
 export type SkinCoachScoreGaugesDTO = {
   overall?: number;
   hydration?: number;
@@ -18,6 +27,8 @@ export type SkinCoachDetailDTO = {
   concern_alignment?: string;
   skin_score_gauges?: SkinCoachScoreGaugesDTO;
   improvements?: CoachImprovementDTO[];
+  /** Detailed in-app care checklist (richer than public soothing_tips). */
+  care_suggestions?: CoachCareSuggestionDTO[];
   routine_hints?: string[];
   avoid_or_patch?: string[];
   safety_reminders?: string[];
