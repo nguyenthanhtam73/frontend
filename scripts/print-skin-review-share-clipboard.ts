@@ -228,10 +228,19 @@ function main() {
       `default short_no_link must not include http / share URL:\n${aDefault}`,
     );
   }
-  const viCta =
-    "Dùng DaDiary check-in vài ngày, nhìn lại ảnh trước–sau là biết tình trạng da có cải thiện hơn không.";
-  if (!aDefault.includes(viCta)) {
-    throw new Error(`VI short_no_link should use shared CTA:\n${aDefault}`);
+  const viCtaLine1 =
+    "Đây chỉ là nhận xét từ ảnh hôm nay — muốn biết da có cải thiện không thì cần theo dõi thêm vài ngày.";
+  const viCtaLine2 =
+    "Mình dùng DaDiary để check-in ảnh và so trước–sau, đơn giản thôi chứ không thay bác sĩ.";
+  if (!aDefault.includes(viCtaLine1) || !aDefault.includes(viCtaLine2)) {
+    throw new Error(`VI short_no_link should use shared 2-line CTA:\n${aDefault}`);
+  }
+  if (/https?:\/\//i.test(viCtaLine1 + viCtaLine2)) {
+    throw new Error("CTA must not contain a URL");
+  }
+  // Old one-liner CTA must be gone (same idea, replaced wording).
+  if (aDefault.includes("Dùng DaDiary check-in vài ngày")) {
+    throw new Error(`VI short_no_link still has old CTA:\n${aDefault}`);
   }
   if (
     aDefault.includes("Trông nghi") ||
@@ -320,13 +329,23 @@ function main() {
   if (hasShareUrl(enDefault)) {
     throw new Error(`EN default must not include URL:\n${enDefault}`);
   }
-  const enCta =
-    "Use DaDiary to check in for a few days, then look at before-and-after photos to see if your skin is improving.";
-  if (!enDefault.includes(enCta)) {
-    throw new Error(`EN short_no_link should use shared CTA:\n${enDefault}`);
+  const enCtaLine1 =
+    "This is just an observation from today’s photos — you’ll need a few more days of tracking to know if things are improving.";
+  const enCtaLine2 =
+    "I use DaDiary to check in with photos and compare before-and-after; simple, and not a substitute for a doctor.";
+  if (!enDefault.includes(enCtaLine1) || !enDefault.includes(enCtaLine2)) {
+    throw new Error(`EN short_no_link should use shared 2-line CTA:\n${enDefault}`);
   }
-  if (!aWithLink.includes(viCta)) {
+  if (
+    !aWithLink.includes(viCtaLine1) ||
+    !aWithLink.includes(viCtaLine2)
+  ) {
     throw new Error(`VI short_with_link should use same CTA:\n${aWithLink}`);
+  }
+  // Link stays on its own line — not inside the closing CTA.
+  const ctaBlock = aWithLink.slice(aWithLink.indexOf(viCtaLine1));
+  if (ctaBlock.includes(LINK) || /https?:\/\//i.test(ctaBlock)) {
+    throw new Error(`CTA block must not embed URL:\n${ctaBlock}`);
   }
 
   const enWithLink = buildSkinReviewShareClipboard({
