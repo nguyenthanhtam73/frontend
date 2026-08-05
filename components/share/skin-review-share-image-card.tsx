@@ -133,17 +133,17 @@ export const SkinReviewShareImageCard = forwardRef<
         </div>
       </header>
 
-      {/* 2. Photo — hero strip, then text report (matches web: photos → analysis) */}
+      {/* 2. Photo — full frame, sharp (user must recognize their own shot) */}
       <div
         style={{
           position: "relative",
           width: "100%",
-          height: 420,
           borderRadius: 32,
           overflow: "hidden",
           background: "#D5E6E4",
           flexShrink: 0,
           boxShadow: "0 20px 44px -26px rgba(47, 143, 140, 0.5)",
+          minHeight: photoSrc ? undefined : 420,
         }}
       >
         {photoSrc ? (
@@ -153,26 +153,15 @@ export const SkinReviewShareImageCard = forwardRef<
             alt={photoAlt}
             crossOrigin="anonymous"
             style={{
-              position: "absolute",
-              inset: 0,
+              display: "block",
               width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center top",
-              filter: "blur(2.5px)",
-              transform: "scale(1.07)",
+              height: "auto",
+              maxHeight: 1080,
+              objectFit: "contain",
+              objectPosition: "center",
             }}
           />
         ) : null}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(28,46,50,0.05) 0%, transparent 40%, rgba(28,46,50,0.28) 100%)",
-          }}
-        />
         <div
           style={{
             position: "absolute",

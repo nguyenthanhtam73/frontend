@@ -352,7 +352,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
                 side.length > 0 && "sm:grid-cols-[1.4fr_1fr]",
               )}
             >
-              <BlurPhoto
+              <SharePhoto
                 src={absoluteUploadUrl(hero)}
                 alt={photoAlt(0)}
                 aspect={
@@ -371,7 +371,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
                 >
                   {side.map((url, i) => (
                     <li key={url} className="min-h-0 min-w-0">
-                      <BlurPhoto
+                      <SharePhoto
                         src={absoluteUploadUrl(url)}
                         alt={photoAlt(i + 1)}
                         aspect="aspect-[4/5] sm:aspect-[4/3] sm:h-full sm:min-h-0"
@@ -600,7 +600,8 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
   );
 }
 
-function BlurPhoto({
+/** Full sharp photo so the owner can recognize their own check-in shot. */
+function SharePhoto({
   src,
   alt,
   aspect,
@@ -622,14 +623,9 @@ function BlurPhoto({
       <img
         src={src}
         alt={alt}
-        className="absolute inset-0 size-full object-cover object-center blur-[2px] scale-[1.04]"
+        className="absolute inset-0 size-full object-contain object-center"
         loading={priority ? "eager" : "lazy"}
         decoding={priority ? "sync" : "async"}
-      />
-      {/* Soft vignette — edges only, face center stays clear of overlays */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,color-mix(in_oklab,var(--foreground)_14%,transparent)_100%)]"
       />
       {/* Watermark — top-right corner only */}
       <div className="pointer-events-none absolute right-2 top-2 flex max-w-[42%] items-center gap-1 rounded-full bg-background/75 px-1.5 py-0.5 backdrop-blur-md ring-1 ring-border/50 sm:right-2.5 sm:top-2.5 sm:gap-1.5 sm:px-2 sm:py-1">
