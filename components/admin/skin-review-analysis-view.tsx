@@ -50,9 +50,9 @@ function labelFromMap(
   v: string,
   allowed: Set<string>,
 ): string {
-  const key = v?.trim();
+  const key = v?.trim().toLowerCase() ?? "";
   if (!key) return "—";
-  if (!allowed.has(key)) return key;
+  if (!allowed.has(key)) return v?.trim() || "—";
   return t(`${prefix}.${key}` as Parameters<typeof t>[0]);
 }
 
