@@ -7,6 +7,7 @@ import type {
   AdminSkinReviewResponse,
   PatchAdminSkinReviewBody,
   PublicSkinReviewResponse,
+  ReanalyzeAdminSkinReviewBody,
   SuggestAdminSkinReviewAnswerBody,
   SuggestAdminSkinReviewAnswerResponse,
 } from "@/lib/types/admin-skin-review";
@@ -15,8 +16,8 @@ import type {
 const ANALYZE_TIMEOUT_MS = 120_000;
 /** Blur generation on publish can take a few seconds. */
 const PUBLISH_TIMEOUT_MS = 60_000;
-/** Text draft for public Q&A reply. */
-const SUGGEST_ANSWER_TIMEOUT_MS = 60_000;
+/** Text draft for public Q&A reply (may include reanalyze). */
+const SUGGEST_ANSWER_TIMEOUT_MS = 120_000;
 
 function mapAdminError(err: unknown): never {
   if (err instanceof ApiError) {
@@ -105,8 +106,31 @@ export async function patchAdminSkinReview(
 }
 
 /**
+ * POST /api/v1/admin/skin-review/:id/reanalyze
+ * Re-run vision on saved images with the current (or override) user_question.
+ */
+export async function reanalyzeAdminSkinReview(
+  id: string,
+  body: ReanalyzeAdminSkinReviewBody = {},
+): Promise<AdminSkinReviewResponse> {
+  if (!getAccessToken()) {
+    throw new Error("auth");
+  }
+  try {
+    return await apiPost<AdminSkinReviewResponse>(
+      `/api/v1/admin/skin-review/${id}/reanalyze`,
+      body,
+      { toastOnError: false, timeoutMs: ANALYZE_TIMEOUT_MS },
+    );
+  } catch (err) {
+    mapAdminError(err);
+  }
+}
+
+/**
  * POST /api/v1/admin/skin-review/:id/suggest-answer
- * AI draft reply from user_question + saved analysis (not persisted).
+ * AI draft reply from user_question + saved analysis (answer not persisted).
+ * Pass refresh_analysis when the question changed after the first analyze.
  */
 export async function suggestAdminSkinReviewAnswer(
   id: string,

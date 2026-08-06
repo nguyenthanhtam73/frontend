@@ -55,7 +55,7 @@ const FOREHEAD_ONLY: AdminSkinReviewAnalysis = {
   ],
   soothing_tips: [
     "Đừng nặn ổ đang sưng.",
-    "Rửa mặt dịu, tạm tránh active mạnh.",
+    "Rửa mặt dịu, tạm nghỉ sản phẩm trị mụn mạnh đang dùng.",
   ],
   non_diagnostic: "Chỉ nói từ ảnh, không phải chẩn đoán.",
 };
@@ -101,7 +101,7 @@ const FULL_FACE: AdminSkinReviewAnalysis = {
   ],
   soothing_tips: [
     "Không nặn cụm đang sưng.",
-    "Rửa dịu, tạm tránh active mạnh; nhớ chống nắng.",
+    "Rửa dịu, tạm nghỉ sản phẩm mạnh đang dùng; nhớ chống nắng.",
     "Ổ to, đau hoặc kéo dài thì nên khám da liễu.",
   ],
   non_diagnostic: "Nói từ ảnh thôi, không phải chẩn đoán.",

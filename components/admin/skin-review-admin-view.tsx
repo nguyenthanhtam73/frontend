@@ -22,6 +22,7 @@ import {
   createAdminSkinReview,
   patchAdminSkinReview,
   publishAdminSkinReview,
+  reanalyzeAdminSkinReview,
   skinReviewShareUrl,
   suggestAdminSkinReviewAnswer,
 } from "@/lib/api/admin-skin-review";
@@ -61,6 +62,8 @@ export function SkinReviewAdminView() {
   const [answer, setAnswer] = useState("");
   const [status, setStatus] = useState<AdminSkinReviewStatus>("draft");
   const [result, setResult] = useState<AdminSkinReviewResponse | null>(null);
+  /** Question that was last fed into vision — used to auto-refresh analysis. */
+  const [analyzedWithQuestion, setAnalyzedWithQuestion] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -76,18 +79,37 @@ export function SkinReviewAdminView() {
       user_question?: string;
       /** Auto-draft after analyze — do not overwrite if admin already typed. */
       onlyIfEmpty?: boolean;
+      refresh_analysis?: boolean;
     }) => {
       const id = vars?.id ?? result?.id;
       if (!id) throw new Error("missing_id");
       const q = (vars?.user_question ?? userQuestion).trim();
       if (!q) throw new Error("missing_question");
-      return suggestAdminSkinReviewAnswer(id, { user_question: q }).then(
-        (res) => ({ ...res, _id: id, _onlyIfEmpty: Boolean(vars?.onlyIfEmpty) }),
-      );
+      const refresh =
+        vars?.refresh_analysis ??
+        q !== analyzedWithQuestion.trim();
+      return suggestAdminSkinReviewAnswer(id, {
+        user_question: q,
+        refresh_analysis: refresh,
+      }).then((res) => ({
+        ...res,
+        _id: id,
+        _onlyIfEmpty: Boolean(vars?.onlyIfEmpty),
+        _question: q,
+        _refreshed: refresh,
+      }));
     },
     onSuccess: (res) => {
       // Ignore late responses after Reset / opening another review.
       if (!result?.id || res._id !== result.id) return;
+      if (res.analysis) {
+        setResult((prev) =>
+          prev && prev.id === res._id ? { ...prev, analysis: res.analysis! } : prev,
+        );
+      }
+      if (res._refreshed) {
+        setAnalyzedWithQuestion(res._question);
+      }
       if (res._onlyIfEmpty) {
         setAnswer((prev) => (prev.trim() ? prev : (res.answer ?? "")));
       } else {
@@ -101,6 +123,24 @@ export function SkinReviewAdminView() {
           ? t("needUserQuestion")
           : t("suggestAnswerError");
       toast.error(msg);
+    },
+  });
+
+  const reanalyzeMutation = useMutation({
+    mutationFn: () => {
+      if (!result?.id) throw new Error("missing_id");
+      return reanalyzeAdminSkinReview(result.id, {
+        user_question: userQuestion.trim() || undefined,
+      });
+    },
+    onSuccess: (res) => {
+      setResult(res);
+      setUserQuestion(res.user_question ?? "");
+      setAnalyzedWithQuestion((res.user_question ?? "").trim());
+      toast.success(t("reanalyzeSuccess"));
+    },
+    onError: () => {
+      toast.error(t("reanalyzeError"));
     },
   });
 
@@ -120,6 +160,7 @@ export function SkinReviewAdminView() {
       const q = (res.user_question ?? userQuestion).trim();
       setUserQuestion(res.user_question ?? "");
       setAnswer(res.answer ?? "");
+      setAnalyzedWithQuestion(q);
       toast.success(t("analyzeSuccess"));
       // Auto-draft the public reply when a FB question is present.
       if (q && !(res.answer ?? "").trim()) {
@@ -127,6 +168,7 @@ export function SkinReviewAdminView() {
           id: res.id,
           user_question: q,
           onlyIfEmpty: true,
+          refresh_analysis: false,
         });
       }
     },
@@ -257,9 +299,11 @@ export function SkinReviewAdminView() {
   }
 
   const analyzing = analyzeMutation.isPending;
+  const reanalyzing = reanalyzeMutation.isPending;
   const saving = saveMutation.isPending;
   const publishing = publishMutation.isPending;
   const suggesting = suggestMutation.isPending;
+  const visionBusy = analyzing || reanalyzing || suggesting;
   const shareUrl =
     result?.public_slug && result.is_public
       ? skinReviewShareUrl(result.public_slug, locale)
@@ -353,7 +397,7 @@ export function SkinReviewAdminView() {
             value={userQuestion}
             onChange={(e) => setUserQuestion(e.target.value)}
             placeholder={t("userQuestionPlaceholder")}
-            disabled={analyzing || publishing}
+            disabled={visionBusy || publishing}
             rows={3}
             maxLength={2000}
           />
@@ -383,7 +427,7 @@ export function SkinReviewAdminView() {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={t("answerPlaceholder")}
-              disabled={analyzing || publishing || suggesting}
+              disabled={visionBusy || publishing}
               rows={4}
               maxLength={4000}
             />
@@ -392,9 +436,7 @@ export function SkinReviewAdminView() {
             <Button
               type="button"
               variant="outline"
-              disabled={
-                suggesting || analyzing || publishing || !userQuestion.trim()
-              }
+              disabled={visionBusy || publishing || !userQuestion.trim()}
               onClick={() => suggestMutation.mutate(undefined)}
             >
               {suggesting ? (
@@ -402,7 +444,22 @@ export function SkinReviewAdminView() {
               ) : (
                 <Sparkles className="size-4" />
               )}
-              {suggesting ? t("suggestingAnswer") : t("suggestAnswerCta")}
+              {suggesting
+                ? userQuestion.trim() !== analyzedWithQuestion.trim()
+                  ? t("suggestingAnswerRefresh")
+                  : t("suggestingAnswer")
+                : t("suggestAnswerCta")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={visionBusy || publishing}
+              onClick={() => reanalyzeMutation.mutate()}
+            >
+              {reanalyzing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : null}
+              {reanalyzing ? t("reanalyzing") : t("reanalyzeCta")}
             </Button>
           </div>
           <SkinReviewQaBlock
@@ -437,7 +494,7 @@ export function SkinReviewAdminView() {
           <Button
             type="button"
             variant="outline"
-            disabled={saving || analyzing || publishing || suggesting}
+            disabled={saving || visionBusy || publishing}
             onClick={() => saveMutation.mutate()}
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
@@ -448,7 +505,7 @@ export function SkinReviewAdminView() {
           <Button
             type="button"
             variant="secondary"
-            disabled={publishing || analyzing || saving || suggesting}
+            disabled={publishing || visionBusy || saving}
             onClick={() => publishMutation.mutate()}
           >
             {publishing ? (
@@ -463,7 +520,7 @@ export function SkinReviewAdminView() {
           <Button
             type="button"
             variant="ghost"
-            disabled={analyzing || publishing}
+            disabled={visionBusy || publishing}
             onClick={() => {
               photos.forEach((p) => URL.revokeObjectURL(p.url));
               setPhotos([]);
@@ -472,6 +529,7 @@ export function SkinReviewAdminView() {
               setNotes("");
               setUserQuestion("");
               setAnswer("");
+              setAnalyzedWithQuestion("");
               setStatus("draft");
               setCopied(false);
             }}

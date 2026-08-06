@@ -71,10 +71,18 @@ export type PatchAdminSkinReviewBody = {
 
 export type SuggestAdminSkinReviewAnswerBody = {
   user_question?: string;
+  /** Re-run vision with the question before drafting the answer. */
+  refresh_analysis?: boolean;
 };
 
 export type SuggestAdminSkinReviewAnswerResponse = {
   answer: string;
+  /** Present when tips/laterality were aligned or vision was refreshed. */
+  analysis?: AdminSkinReviewAnalysis;
+};
+
+export type ReanalyzeAdminSkinReviewBody = {
+  user_question?: string;
 };
 
 export type AdminSkinReviewListItem = {

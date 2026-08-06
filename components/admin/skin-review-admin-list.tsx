@@ -68,6 +68,7 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
   const [detail, setDetail] = useState<AdminSkinReviewResponse | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editAnswer, setEditAnswer] = useState("");
+  const [detailAnalyzedQuestion, setDetailAnalyzedQuestion] = useState("");
 
   const query = useMemo(
     () => ({ status, page, page_size: 20 }),
@@ -85,11 +86,16 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
     if (!detail) {
       setEditQuestion("");
       setEditAnswer("");
+      setDetailAnalyzedQuestion("");
       return;
     }
     setEditQuestion(detail.user_question ?? "");
     setEditAnswer(detail.answer ?? "");
-  }, [detail]);
+    // Assume saved question was used at analyze time; editing the question then Suggest
+    // will refresh. (If Q was saved after analyze without reanalyze, use "Phân tích lại"
+    // / Suggest after a small edit, or re-open after reanalyze.)
+    setDetailAnalyzedQuestion((detail.user_question ?? "").trim());
+  }, [detail?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- reset edit state per opened review
 
   const unpublishMutation = useMutation({
     mutationFn: (id: string) => unpublishAdminSkinReview(id),
@@ -174,13 +180,28 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
   });
 
   const suggestQaMutation = useMutation({
-    mutationFn: (vars: { id: string; user_question: string }) =>
+    mutationFn: (vars: {
+      id: string;
+      user_question: string;
+      refresh_analysis: boolean;
+    }) =>
       suggestAdminSkinReviewAnswer(vars.id, {
         user_question: vars.user_question,
+        refresh_analysis: vars.refresh_analysis,
       }),
     onSuccess: (res, vars) => {
       if (detail?.id !== vars.id) return;
       setEditAnswer(res.answer ?? "");
+      if (res.analysis) {
+        setDetail((prev) =>
+          prev && prev.id === vars.id
+            ? { ...prev, analysis: res.analysis! }
+            : prev,
+        );
+      }
+      if (vars.refresh_analysis) {
+        setDetailAnalyzedQuestion(vars.user_question.trim());
+      }
       toast.success(t("suggestAnswerSuccess"));
     },
     onError: (err) => {
@@ -476,9 +497,11 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                     toast.error(t("needUserQuestion"));
                     return;
                   }
+                  const refresh = q !== detailAnalyzedQuestion.trim();
                   suggestQaMutation.mutate({
                     id: detail.id,
                     user_question: q,
+                    refresh_analysis: refresh,
                   });
                 }}
               >
@@ -488,7 +511,9 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                   <Sparkles className="size-3.5" />
                 )}
                 {suggestQaMutation.isPending
-                  ? t("suggestingAnswer")
+                  ? editQuestion.trim() !== detailAnalyzedQuestion.trim()
+                    ? t("suggestingAnswerRefresh")
+                    : t("suggestingAnswer")
                   : t("suggestAnswerCta")}
               </Button>
               <Button
