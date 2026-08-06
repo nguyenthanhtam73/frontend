@@ -11,18 +11,20 @@ import {
 } from "@/components/admin/admin-skin-review-upload";
 import { SkinReviewAdminList } from "@/components/admin/skin-review-admin-list";
 import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
+import { SkinReviewQaBlock } from "@/components/share/skin-review-qa-block";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
+import { apiBaseUrl } from "@/lib/api";
 import {
   createAdminSkinReview,
   patchAdminSkinReview,
   publishAdminSkinReview,
   skinReviewShareUrl,
+  suggestAdminSkinReviewAnswer,
 } from "@/lib/api/admin-skin-review";
-import { apiBaseUrl } from "@/lib/api";
 import { useAdminGate } from "@/lib/hooks/use-admin-gate";
 import type {
   AdminSkinReviewResponse,
@@ -55,6 +57,8 @@ export function SkinReviewAdminView() {
   const [photos, setPhotos] = useState<AdminReviewPhoto[]>([]);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [userQuestion, setUserQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
   const [status, setStatus] = useState<AdminSkinReviewStatus>("draft");
   const [result, setResult] = useState<AdminSkinReviewResponse | null>(null);
   const [copied, setCopied] = useState(false);
@@ -73,10 +77,14 @@ export function SkinReviewAdminView() {
         locale,
         title,
         notes,
+        user_question: userQuestion,
+        answer,
         status,
       }),
     onSuccess: (res) => {
       setResult(res);
+      setUserQuestion(res.user_question ?? "");
+      setAnswer(res.answer ?? "");
       toast.success(t("analyzeSuccess"));
     },
     onError: (err) => {
@@ -95,10 +103,18 @@ export function SkinReviewAdminView() {
   const saveMutation = useMutation({
     mutationFn: () => {
       if (!result?.id) throw new Error("missing_id");
-      return patchAdminSkinReview(result.id, { title, notes, status });
+      return patchAdminSkinReview(result.id, {
+        title,
+        notes,
+        user_question: userQuestion,
+        answer,
+        status,
+      });
     },
     onSuccess: (res) => {
       setResult(res);
+      setUserQuestion(res.user_question ?? "");
+      setAnswer(res.answer ?? "");
       toast.success(t("saveSuccess"));
     },
     onError: () => {
@@ -106,13 +122,44 @@ export function SkinReviewAdminView() {
     },
   });
 
-  const publishMutation = useMutation({
+  const suggestMutation = useMutation({
     mutationFn: () => {
       if (!result?.id) throw new Error("missing_id");
-      return publishAdminSkinReview(result.id);
+      const q = userQuestion.trim();
+      if (!q) throw new Error("missing_question");
+      return suggestAdminSkinReviewAnswer(result.id, { user_question: q });
+    },
+    onSuccess: (res) => {
+      setAnswer(res.answer ?? "");
+      toast.success(t("suggestAnswerSuccess"));
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error && err.message === "missing_question"
+          ? t("needUserQuestion")
+          : t("suggestAnswerError");
+      toast.error(msg);
+    },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      if (!result?.id) throw new Error("missing_id");
+      // Persist Q&A + meta first — suggest/answer only live in local state until PATCH.
+      const saved = await patchAdminSkinReview(result.id, {
+        title,
+        notes,
+        user_question: userQuestion,
+        answer,
+        status,
+      });
+      const published = await publishAdminSkinReview(saved.id);
+      return published;
     },
     onSuccess: (res) => {
       setResult(res);
+      setUserQuestion(res.user_question ?? "");
+      setAnswer(res.answer ?? "");
       setStatus("published");
       toast.success(t("publishSuccess"));
     },
@@ -170,6 +217,7 @@ export function SkinReviewAdminView() {
   const analyzing = analyzeMutation.isPending;
   const saving = saveMutation.isPending;
   const publishing = publishMutation.isPending;
+  const suggesting = suggestMutation.isPending;
   const shareUrl =
     result?.public_slug && result.is_public
       ? skinReviewShareUrl(result.public_slug, locale)
@@ -256,7 +304,67 @@ export function SkinReviewAdminView() {
             rows={3}
           />
         </label>
+        <label className="block space-y-1.5 text-sm sm:col-span-2">
+          <span className="font-medium">{t("userQuestionLabel")}</span>
+          <input
+            className={inputClass}
+            value={userQuestion}
+            onChange={(e) => setUserQuestion(e.target.value)}
+            placeholder={t("userQuestionPlaceholder")}
+            disabled={analyzing || publishing}
+            maxLength={2000}
+          />
+          <span className="text-xs text-muted-foreground">
+            {t("userQuestionHint")}
+          </span>
+        </label>
       </section>
+
+      {result ? (
+        <section className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight">
+              {t("qaSectionTitle")}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("qaSectionSub")}</p>
+          </div>
+          <label className="block space-y-1.5 text-sm">
+            <span className="font-medium">{t("answerLabel")}</span>
+            <textarea
+              className={cn(inputClass, "min-h-28 py-2")}
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder={t("answerPlaceholder")}
+              disabled={analyzing || publishing || suggesting}
+              rows={4}
+              maxLength={4000}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={
+                suggesting || analyzing || publishing || !userQuestion.trim()
+              }
+              onClick={() => suggestMutation.mutate()}
+            >
+              {suggesting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Sparkles className="size-4" />
+              )}
+              {suggesting ? t("suggestingAnswer") : t("suggestAnswerCta")}
+            </Button>
+          </div>
+          <SkinReviewQaBlock
+            questionLabel={t("fieldUserQuestion")}
+            answerLabel={t("fieldAnswer")}
+            userQuestion={userQuestion}
+            answer={answer}
+          />
+        </section>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <Button
@@ -281,7 +389,7 @@ export function SkinReviewAdminView() {
           <Button
             type="button"
             variant="outline"
-            disabled={saving || analyzing || publishing}
+            disabled={saving || analyzing || publishing || suggesting}
             onClick={() => saveMutation.mutate()}
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : null}
@@ -292,7 +400,7 @@ export function SkinReviewAdminView() {
           <Button
             type="button"
             variant="secondary"
-            disabled={publishing || analyzing}
+            disabled={publishing || analyzing || saving || suggesting}
             onClick={() => publishMutation.mutate()}
           >
             {publishing ? (
@@ -314,6 +422,8 @@ export function SkinReviewAdminView() {
               setResult(null);
               setTitle("");
               setNotes("");
+              setUserQuestion("");
+              setAnswer("");
               setStatus("draft");
               setCopied(false);
             }}

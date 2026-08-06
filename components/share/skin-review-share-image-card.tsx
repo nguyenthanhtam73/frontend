@@ -28,6 +28,10 @@ export type SkinReviewShareImageCardProps = {
   analysisLabel: string;
   photoSrc: string | null;
   photoAlt: string;
+  userQuestionHeading: string;
+  userQuestion: string;
+  answerHeading: string;
+  answer: string;
   overviewHeading: string;
   overview: string;
   skinTypeHeading: string;
@@ -58,6 +62,10 @@ export const SkinReviewShareImageCard = forwardRef<
     analysisLabel,
     photoSrc,
     photoAlt,
+    userQuestionHeading,
+    userQuestion,
+    answerHeading,
+    answer,
     overviewHeading,
     overview,
     skinTypeHeading,
@@ -81,6 +89,10 @@ export const SkinReviewShareImageCard = forwardRef<
 ) {
   const causes = possibleCauses.map((s) => s.trim()).filter(Boolean).slice(0, 2);
   const tips = soothingTips.map((s) => s.trim()).filter(Boolean).slice(0, 3);
+  // Soft caps so a 4k answer does not blow the 1080px feed card.
+  const q = clampShareImageText(userQuestion, 280);
+  const a = clampShareImageText(answer, 520);
+  const hasQa = Boolean(q || a);
   return (
     <div
       ref={ref}
@@ -223,6 +235,83 @@ export const SkinReviewShareImageCard = forwardRef<
             {title}
           </h2>
         </div>
+
+        {hasQa ? (
+          <div
+            style={{
+              padding: "22px 24px",
+              borderRadius: 24,
+              background: "rgba(47, 143, 140, 0.07)",
+              border: "1px solid rgba(47, 143, 140, 0.2)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 18,
+            }}
+          >
+            {q ? (
+              <div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#5A7176",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {userQuestionHeading}
+                </p>
+                <p
+                  style={{
+                    margin: "10px 0 0",
+                    fontSize: 26,
+                    fontWeight: 500,
+                    lineHeight: 1.45,
+                    color: "#4A6166",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {q}
+                </p>
+              </div>
+            ) : null}
+            {a ? (
+              <div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#2F8F8C",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {answerHeading}
+                </p>
+                <p
+                  style={{
+                    margin: "10px 0 0",
+                    /* One step above body (28) — bold, high contrast for mobile feed */
+                    fontSize: 34,
+                    fontWeight: 700,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.35,
+                    color: "#142428",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {a}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {(() => {
           let n = 0;
@@ -382,6 +471,24 @@ export const SkinReviewShareImageCard = forwardRef<
     </div>
   );
 });
+
+/** Truncate for PNG export only (web share page still shows full text). */
+function clampShareImageText(raw: string, maxChars: number): string {
+  const text = raw.trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  const chars = [...text];
+  if (chars.length <= maxChars) return text;
+  const budget = Math.max(1, maxChars - 1);
+  const slice = chars.slice(0, budget).join("");
+  const breakAt = Math.max(
+    slice.lastIndexOf(". "),
+    slice.lastIndexOf("! "),
+    slice.lastIndexOf("? "),
+    slice.lastIndexOf(" "),
+  );
+  const cut = breakAt > 40 ? slice.slice(0, breakAt) : slice;
+  return `${cut.trimEnd()}…`;
+}
 
 const bodyStyle: CSSProperties = {
   margin: 0,

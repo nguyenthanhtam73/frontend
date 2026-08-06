@@ -7,12 +7,16 @@ import type {
   AdminSkinReviewResponse,
   PatchAdminSkinReviewBody,
   PublicSkinReviewResponse,
+  SuggestAdminSkinReviewAnswerBody,
+  SuggestAdminSkinReviewAnswerResponse,
 } from "@/lib/types/admin-skin-review";
 
 /** AI vision can take a while — match onboarding analyze budget. */
 const ANALYZE_TIMEOUT_MS = 120_000;
 /** Blur generation on publish can take a few seconds. */
 const PUBLISH_TIMEOUT_MS = 60_000;
+/** Text draft for public Q&A reply. */
+const SUGGEST_ANSWER_TIMEOUT_MS = 60_000;
 
 function mapAdminError(err: unknown): never {
   if (err instanceof ApiError) {
@@ -32,6 +36,8 @@ export async function createAdminSkinReview(input: {
   locale: string;
   title?: string;
   notes?: string;
+  user_question?: string;
+  answer?: string;
   status?: "draft" | "published";
 }): Promise<AdminSkinReviewResponse> {
   if (!getAccessToken()) {
@@ -47,6 +53,10 @@ export async function createAdminSkinReview(input: {
   fd.append("locale", input.locale);
   if (input.title?.trim()) fd.append("title", input.title.trim());
   if (input.notes?.trim()) fd.append("notes", input.notes.trim());
+  if (input.user_question?.trim()) {
+    fd.append("user_question", input.user_question.trim());
+  }
+  if (input.answer?.trim()) fd.append("answer", input.answer.trim());
   if (input.status) fd.append("status", input.status);
 
   try {
@@ -75,7 +85,7 @@ export async function fetchAdminSkinReview(
   }
 }
 
-/** PATCH /api/v1/admin/skin-review/:id — title / notes / status */
+/** PATCH /api/v1/admin/skin-review/:id — title / notes / user_question / answer / status */
 export async function patchAdminSkinReview(
   id: string,
   body: PatchAdminSkinReviewBody,
@@ -88,6 +98,28 @@ export async function patchAdminSkinReview(
       `/api/v1/admin/skin-review/${id}`,
       body,
       { toastOnError: false },
+    );
+  } catch (err) {
+    mapAdminError(err);
+  }
+}
+
+/**
+ * POST /api/v1/admin/skin-review/:id/suggest-answer
+ * AI draft reply from user_question + saved analysis (not persisted).
+ */
+export async function suggestAdminSkinReviewAnswer(
+  id: string,
+  body: SuggestAdminSkinReviewAnswerBody = {},
+): Promise<SuggestAdminSkinReviewAnswerResponse> {
+  if (!getAccessToken()) {
+    throw new Error("auth");
+  }
+  try {
+    return await apiPost<SuggestAdminSkinReviewAnswerResponse>(
+      `/api/v1/admin/skin-review/${id}/suggest-answer`,
+      body,
+      { toastOnError: false, timeoutMs: SUGGEST_ANSWER_TIMEOUT_MS },
     );
   } catch (err) {
     mapAdminError(err);
@@ -164,9 +196,10 @@ export async function fetchPublicSkinReview(
   slug: string,
 ): Promise<PublicSkinReviewResponse> {
   const path = `/api/v1/public/skin-review/${encodeURIComponent(slug)}`;
+  // No ISR cache — admin may PATCH Q&A on a live share; stale payload would hide updates.
   const res = await fetch(`${apiBaseUrl}${path}`, {
     headers: { Accept: "application/json" },
-    next: { revalidate: 60 },
+    cache: "no-store",
   });
   if (res.status === 404) {
     throw new Error("not_found");

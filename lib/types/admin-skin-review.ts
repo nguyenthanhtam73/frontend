@@ -30,6 +30,10 @@ export type AdminSkinReviewResponse = {
   id: string;
   title: string;
   notes: string;
+  /** FB/group question the admin is answering (public when set). */
+  user_question?: string;
+  /** Admin/AI reply shown on share + PNG (public when set). */
+  answer?: string;
   status: AdminSkinReviewStatus | string;
   image_urls: string[];
   analysis: AdminSkinReviewAnalysis;
@@ -47,6 +51,8 @@ export type AdminSkinReviewResponse = {
 export type PublicSkinReviewResponse = {
   slug: string;
   title: string;
+  user_question?: string;
+  answer?: string;
   analysis: AdminSkinReviewAnalysis;
   image_urls: string[];
   images_blurred: boolean;
@@ -58,7 +64,17 @@ export type PublicSkinReviewResponse = {
 export type PatchAdminSkinReviewBody = {
   title?: string;
   notes?: string;
+  user_question?: string;
+  answer?: string;
   status?: AdminSkinReviewStatus;
+};
+
+export type SuggestAdminSkinReviewAnswerBody = {
+  user_question?: string;
+};
+
+export type SuggestAdminSkinReviewAnswerResponse = {
+  answer: string;
 };
 
 export type AdminSkinReviewListItem = {

@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
+import { SkinReviewQaBlock } from "@/components/share/skin-review-qa-block";
 import { SkinReviewShareImageCard } from "@/components/share/skin-review-share-image-card";
 import { Logo } from "@/components/site/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -124,13 +125,15 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
       buildSkinReviewShareClipboard({
         analysis: data.analysis,
         overview: data.analysis?.overview ?? "",
+        userQuestion: data.user_question,
+        answer: data.answer,
         link: url,
         skinType: data.analysis?.skin_type,
         skinTypeSeverity: data.analysis?.skin_type_severity,
         locale,
         variant,
       }),
-    [data.analysis, locale],
+    [data.analysis, data.answer, data.user_question, locale],
   );
 
   const copyShareText = useCallback(
@@ -383,11 +386,20 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             </div>
           ) : null}
 
-          <div className="space-y-1 border-t border-border/60 px-4 py-5 sm:px-7 sm:py-8">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary sm:mb-5 sm:tracking-[0.2em]">
-              {t("analysisLabel")}
-            </p>
-            <SkinReviewAnalysisView analysis={data.analysis} variant="share" />
+          <div className="space-y-4 border-t border-border/60 px-4 py-5 sm:px-7 sm:py-8">
+            <SkinReviewQaBlock
+              questionLabel={t("fieldUserQuestion")}
+              answerLabel={t("fieldAnswer")}
+              userQuestion={data.user_question}
+              answer={data.answer}
+              variant="share"
+            />
+            <div className="space-y-1">
+              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary sm:mb-5 sm:tracking-[0.2em]">
+                {t("analysisLabel")}
+              </p>
+              <SkinReviewAnalysisView analysis={data.analysis} variant="share" />
+            </div>
           </div>
 
           {/* Share actions — thumb-friendly, full-width on narrow screens */}
@@ -537,6 +549,10 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
               exportPhotoSrc ?? (hero ? sameOriginUploadUrl(hero) : null)
             }
             photoAlt={photoAlt(0)}
+            userQuestionHeading={t("fieldUserQuestion")}
+            userQuestion={(data.user_question ?? "").trim()}
+            answerHeading={t("fieldAnswer")}
+            answer={(data.answer ?? "").trim()}
             overviewHeading={tAdmin("fieldOverview")}
             overview={imageOverview || t("sub")}
             skinTypeHeading={tAdmin("fieldSkinType")}

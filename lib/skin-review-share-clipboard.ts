@@ -86,6 +86,10 @@ export type BuildSkinReviewShareClipboardInput = {
    * @deprecated Fallback when analysis is missing — treated as overview-only body.
    */
   overview?: string;
+  /** Public FB question (optional). */
+  userQuestion?: string;
+  /** Public admin/AI answer (optional) — emphasized in clipboard. */
+  answer?: string;
   /** Skin type enum — full variant soft hint only. */
   skinType?: string;
   skinTypeSeverity?: string;
@@ -106,6 +110,8 @@ type ShareTemplates = {
   ctaStreak?: string;
   ctaCoach?: string;
   ctaDefault?: string;
+  fieldUserQuestion?: string;
+  fieldAnswer?: string;
   skinTypeHint: string;
   /** Used when type is unclear / unknown — no severity. */
   skinTypeHintUnclear: string;
@@ -382,7 +388,12 @@ export function buildSkinReviewShareClipboard(
   );
   const defaultMax =
     bodyKind === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
-  const body = truncateOverview(bodyRaw, input.bodyMax ?? defaultMax);
+  // When Q&A is present, shrink analysis body so the reply stays the hero.
+  const hasQa = Boolean(
+    input.userQuestion?.trim() || input.answer?.trim(),
+  );
+  const bodyMax = input.bodyMax ?? (hasQa ? Math.min(defaultMax, 120) : defaultMax);
+  const body = truncateOverview(bodyRaw, bodyMax);
 
   const cta =
     templates.cta ||
@@ -391,6 +402,13 @@ export function buildSkinReviewShareClipboard(
     "";
 
   const lines: string[] = [templates.opener];
+  const qaLines = formatShareQaBlock(
+    templates,
+    input.userQuestion,
+    input.answer,
+    bodyKind,
+  );
+  if (qaLines) lines.push(qaLines);
   if (body) lines.push(body);
 
   if (shareVariantIsFull(variant)) {
@@ -427,6 +445,31 @@ const SHORT_TIP_BUDGET = 2;
 const FULL_TIP_BUDGET = 3;
 /** Soft cap for short clipboard total (opener+body+tips+cta+linkLine when present). */
 export const SHORT_CLIP_SOFT_MAX = 420;
+
+/** Q&A block for FB clipboard — answer truncated longer than question. */
+function formatShareQaBlock(
+  templates: ShareTemplates,
+  userQuestion: string | undefined,
+  answer: string | undefined,
+  bodyKind: "short" | "full",
+): string {
+  const q = userQuestion?.trim().replace(/\s+/g, " ") ?? "";
+  const a = answer?.trim().replace(/\s+/g, " ") ?? "";
+  if (!q && !a) return "";
+
+  const qLabel = templates.fieldUserQuestion?.trim() || "Question";
+  const aLabel = templates.fieldAnswer?.trim() || "Answer";
+  const qMax = bodyKind === "full" ? 160 : 100;
+  const aMax = bodyKind === "full" ? 280 : 200;
+  const parts: string[] = [];
+  if (q) {
+    parts.push(`${qLabel}: ${truncateOverview(q, qMax)}`);
+  }
+  if (a) {
+    parts.push(`${aLabel}: ${truncateOverview(a, aMax)}`);
+  }
+  return parts.join("\n");
+}
 
 function formatShareCauses(
   causes: string[] | undefined,

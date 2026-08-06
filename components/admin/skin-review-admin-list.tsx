@@ -1,10 +1,19 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, ExternalLink, Eye, GlobeOff, Loader2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  Eye,
+  GlobeOff,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { SkinReviewQaBlock } from "@/components/share/skin-review-qa-block";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -20,7 +29,9 @@ import {
   adminSkinReviewsQueryKey,
   fetchAdminSkinReview,
   fetchAdminSkinReviews,
+  patchAdminSkinReview,
   skinReviewShareUrl,
+  suggestAdminSkinReviewAnswer,
   unpublishAdminSkinReview,
 } from "@/lib/api/admin-skin-review";
 import type {
@@ -30,6 +41,9 @@ import type {
 import { cn } from "@/lib/utils";
 
 import { SkinReviewAnalysisView } from "./skin-review-analysis-view";
+
+const detailInputClass =
+  "min-h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 type StatusFilter = "" | "draft" | "published";
 
@@ -50,6 +64,8 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
   const [page, setPage] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<AdminSkinReviewResponse | null>(null);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editAnswer, setEditAnswer] = useState("");
 
   const query = useMemo(
     () => ({ status, page, page_size: 20 }),
@@ -62,6 +78,16 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
     enabled,
     retry: false,
   });
+
+  useEffect(() => {
+    if (!detail) {
+      setEditQuestion("");
+      setEditAnswer("");
+      return;
+    }
+    setEditQuestion(detail.user_question ?? "");
+    setEditAnswer(detail.answer ?? "");
+  }, [detail]);
 
   const unpublishMutation = useMutation({
     mutationFn: (id: string) => unpublishAdminSkinReview(id),
@@ -78,6 +104,48 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
     onSuccess: (res) => setDetail(res),
     onError: () => toast.error(t("detailError")),
   });
+
+  const saveQaMutation = useMutation({
+    mutationFn: (vars: { id: string; user_question: string; answer: string }) =>
+      patchAdminSkinReview(vars.id, {
+        user_question: vars.user_question,
+        answer: vars.answer,
+      }),
+    onSuccess: (res, vars) => {
+      // Ignore stale responses if admin already opened another review.
+      if (detail?.id !== vars.id) return;
+      setDetail(res);
+      setEditQuestion(res.user_question ?? "");
+      setEditAnswer(res.answer ?? "");
+      toast.success(t("saveSuccess"));
+      void queryClient.invalidateQueries({ queryKey: ["admin", "skin-reviews"] });
+    },
+    onError: () => toast.error(t("saveError")),
+  });
+
+  const suggestQaMutation = useMutation({
+    mutationFn: (vars: { id: string; user_question: string }) =>
+      suggestAdminSkinReviewAnswer(vars.id, {
+        user_question: vars.user_question,
+      }),
+    onSuccess: (res, vars) => {
+      if (detail?.id !== vars.id) return;
+      setEditAnswer(res.answer ?? "");
+      toast.success(t("suggestAnswerSuccess"));
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error && err.message === "missing_question"
+          ? t("needUserQuestion")
+          : t("suggestAnswerError");
+      toast.error(msg);
+    },
+  });
+
+  const detailBusy =
+    detailMutation.isPending ||
+    saveQaMutation.isPending ||
+    suggestQaMutation.isPending;
 
   async function copyLink(item: AdminSkinReviewListItem) {
     if (!item.public_slug) return;
@@ -203,7 +271,7 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                           type="button"
                           size="sm"
                           variant="ghost"
-                          disabled={detailMutation.isPending}
+                          disabled={detailBusy}
                           onClick={() => detailMutation.mutate(item.id)}
                           aria-label={t("viewDetail")}
                         >
@@ -305,6 +373,98 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
               {t("closeDetail")}
             </Button>
           </div>
+
+          <section className="space-y-3 rounded-xl border border-border bg-background/60 p-4">
+            <div>
+              <h4 className="text-sm font-semibold tracking-tight">
+                {t("qaSectionTitle")}
+              </h4>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("qaSectionSub")}
+              </p>
+            </div>
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-medium">{t("userQuestionLabel")}</span>
+              <input
+                className={detailInputClass}
+                value={editQuestion}
+                onChange={(e) => setEditQuestion(e.target.value)}
+                placeholder={t("userQuestionPlaceholder")}
+                disabled={saveQaMutation.isPending || suggestQaMutation.isPending}
+                maxLength={2000}
+              />
+            </label>
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-medium">{t("answerLabel")}</span>
+              <textarea
+                className={cn(detailInputClass, "min-h-28 py-2")}
+                value={editAnswer}
+                onChange={(e) => setEditAnswer(e.target.value)}
+                placeholder={t("answerPlaceholder")}
+                disabled={saveQaMutation.isPending || suggestQaMutation.isPending}
+                rows={4}
+                maxLength={4000}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={
+                  suggestQaMutation.isPending ||
+                  saveQaMutation.isPending ||
+                  !editQuestion.trim()
+                }
+                onClick={() => {
+                  if (!detail?.id) return;
+                  const q = editQuestion.trim();
+                  if (!q) {
+                    toast.error(t("needUserQuestion"));
+                    return;
+                  }
+                  suggestQaMutation.mutate({
+                    id: detail.id,
+                    user_question: q,
+                  });
+                }}
+              >
+                {suggestQaMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="size-3.5" />
+                )}
+                {suggestQaMutation.isPending
+                  ? t("suggestingAnswer")
+                  : t("suggestAnswerCta")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={saveQaMutation.isPending || suggestQaMutation.isPending}
+                onClick={() => {
+                  if (!detail?.id) return;
+                  saveQaMutation.mutate({
+                    id: detail.id,
+                    user_question: editQuestion,
+                    answer: editAnswer,
+                  });
+                }}
+              >
+                {saveQaMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : null}
+                {t("saveQaCta")}
+              </Button>
+            </div>
+            <SkinReviewQaBlock
+              questionLabel={t("fieldUserQuestion")}
+              answerLabel={t("fieldAnswer")}
+              userQuestion={editQuestion}
+              answer={editAnswer}
+            />
+          </section>
+
           <SkinReviewAnalysisView analysis={detail.analysis} />
         </div>
       ) : null}
