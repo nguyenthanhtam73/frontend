@@ -6,6 +6,7 @@ import {
   Copy,
   ExternalLink,
   Eye,
+  Globe,
   GlobeOff,
   Loader2,
   Sparkles,
@@ -30,6 +31,7 @@ import {
   fetchAdminSkinReview,
   fetchAdminSkinReviews,
   patchAdminSkinReview,
+  publishAdminSkinReview,
   skinReviewShareUrl,
   suggestAdminSkinReviewAnswer,
   unpublishAdminSkinReview,
@@ -106,11 +108,22 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
   });
 
   const saveQaMutation = useMutation({
-    mutationFn: (vars: { id: string; user_question: string; answer: string }) =>
-      patchAdminSkinReview(vars.id, {
+    mutationFn: (vars: {
+      id: string;
+      user_question: string;
+      answer: string;
+      is_public?: boolean;
+    }) => {
+      const q = vars.user_question.trim();
+      const a = vars.answer.trim();
+      if (vars.is_public && q && !a) {
+        throw new Error("missing_answer");
+      }
+      return patchAdminSkinReview(vars.id, {
         user_question: vars.user_question,
         answer: vars.answer,
-      }),
+      });
+    },
     onSuccess: (res, vars) => {
       // Ignore stale responses if admin already opened another review.
       if (detail?.id !== vars.id) return;
@@ -120,7 +133,44 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
       toast.success(t("saveSuccess"));
       void queryClient.invalidateQueries({ queryKey: ["admin", "skin-reviews"] });
     },
-    onError: () => toast.error(t("saveError")),
+    onError: (err) => {
+      const msg =
+        err instanceof Error && err.message === "missing_answer"
+          ? t("publishNeedsAnswer")
+          : t("saveError");
+      toast.error(msg);
+    },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async (vars: {
+      id: string;
+      user_question: string;
+      answer: string;
+    }) => {
+      const q = vars.user_question.trim();
+      const a = vars.answer.trim();
+      if (q && !a) throw new Error("missing_answer");
+      await patchAdminSkinReview(vars.id, {
+        user_question: vars.user_question,
+        answer: vars.answer,
+      });
+      return publishAdminSkinReview(vars.id);
+    },
+    onSuccess: (res) => {
+      setDetail(res);
+      setEditQuestion(res.user_question ?? "");
+      setEditAnswer(res.answer ?? "");
+      toast.success(t("publishSuccess"));
+      void queryClient.invalidateQueries({ queryKey: ["admin", "skin-reviews"] });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error && err.message === "missing_answer"
+          ? t("publishNeedsAnswer")
+          : t("publishError");
+      toast.error(msg);
+    },
   });
 
   const suggestQaMutation = useMutation({
@@ -145,7 +195,8 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
   const detailBusy =
     detailMutation.isPending ||
     saveQaMutation.isPending ||
-    suggestQaMutation.isPending;
+    suggestQaMutation.isPending ||
+    publishMutation.isPending;
 
   async function copyLink(item: AdminSkinReviewListItem) {
     if (!item.public_slug) return;
@@ -383,14 +434,20 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                 {t("qaSectionSub")}
               </p>
             </div>
+            {editQuestion.trim() && !editAnswer.trim() ? (
+              <p className="text-sm font-medium text-destructive">
+                {t("answerRequiredHint")}
+              </p>
+            ) : null}
             <label className="block space-y-1.5 text-sm">
               <span className="font-medium">{t("userQuestionLabel")}</span>
-              <input
-                className={detailInputClass}
+              <textarea
+                className={cn(detailInputClass, "min-h-20 py-2")}
                 value={editQuestion}
                 onChange={(e) => setEditQuestion(e.target.value)}
                 placeholder={t("userQuestionPlaceholder")}
-                disabled={saveQaMutation.isPending || suggestQaMutation.isPending}
+                disabled={detailBusy}
+                rows={3}
                 maxLength={2000}
               />
             </label>
@@ -401,7 +458,7 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                 value={editAnswer}
                 onChange={(e) => setEditAnswer(e.target.value)}
                 placeholder={t("answerPlaceholder")}
-                disabled={saveQaMutation.isPending || suggestQaMutation.isPending}
+                disabled={detailBusy}
                 rows={4}
                 maxLength={4000}
               />
@@ -411,11 +468,7 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={
-                  suggestQaMutation.isPending ||
-                  saveQaMutation.isPending ||
-                  !editQuestion.trim()
-                }
+                disabled={detailBusy || !editQuestion.trim()}
                 onClick={() => {
                   if (!detail?.id) return;
                   const q = editQuestion.trim();
@@ -441,13 +494,14 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
               <Button
                 type="button"
                 size="sm"
-                disabled={saveQaMutation.isPending || suggestQaMutation.isPending}
+                disabled={detailBusy}
                 onClick={() => {
                   if (!detail?.id) return;
                   saveQaMutation.mutate({
                     id: detail.id,
                     user_question: editQuestion,
                     answer: editAnswer,
+                    is_public: detail.is_public,
                   });
                 }}
               >
@@ -455,6 +509,27 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : null}
                 {t("saveQaCta")}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={detailBusy}
+                onClick={() => {
+                  if (!detail?.id) return;
+                  publishMutation.mutate({
+                    id: detail.id,
+                    user_question: editQuestion,
+                    answer: editAnswer,
+                  });
+                }}
+              >
+                {publishMutation.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Globe className="size-3.5" />
+                )}
+                {detail.is_public ? t("republishCta") : t("publishCta")}
               </Button>
             </div>
             <SkinReviewQaBlock

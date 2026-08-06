@@ -388,10 +388,8 @@ export function buildSkinReviewShareClipboard(
   );
   const defaultMax =
     bodyKind === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
-  // When Q&A is present, shrink analysis body so the reply stays the hero.
-  const hasQa = Boolean(
-    input.userQuestion?.trim() || input.answer?.trim(),
-  );
+  // When a reply is present, shrink analysis body so the answer stays the hero.
+  const hasQa = Boolean(input.answer?.trim());
   const bodyMax = input.bodyMax ?? (hasQa ? Math.min(defaultMax, 120) : defaultMax);
   const body = truncateOverview(bodyRaw, bodyMax);
 
@@ -455,7 +453,8 @@ function formatShareQaBlock(
 ): string {
   const q = userQuestion?.trim().replace(/\s+/g, " ") ?? "";
   const a = answer?.trim().replace(/\s+/g, " ") ?? "";
-  if (!q && !a) return "";
+  // Clipboard only ships Q&A when a reply exists (orphan question is incomplete).
+  if (!a) return "";
 
   const qLabel = templates.fieldUserQuestion?.trim() || "Question";
   const aLabel = templates.fieldAnswer?.trim() || "Answer";
@@ -465,9 +464,7 @@ function formatShareQaBlock(
   if (q) {
     parts.push(`${qLabel}: ${truncateOverview(q, qMax)}`);
   }
-  if (a) {
-    parts.push(`${aLabel}: ${truncateOverview(a, aMax)}`);
-  }
+  parts.push(`${aLabel}: ${truncateOverview(a, aMax)}`);
   return parts.join("\n");
 }
 

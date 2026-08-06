@@ -2310,6 +2310,8 @@
     "suggestAnswerSuccess": "Draft ready — edit and save.",
     "suggestAnswerError": "Could not suggest an answer. Try again.",
     "needUserQuestion": "Enter the user question before suggesting an answer.",
+    "answerRequiredHint": "Question is set — add an Answer (Suggest answer, then edit/save) before publishing.",
+    "publishNeedsAnswer": "If there is a question, an answer is required before publish.",
     "saveQaCta": "Save question / answer",
     "fieldUserQuestion": "Question",
     "fieldAnswer": "Answer",

@@ -90,8 +90,9 @@ export const SkinReviewShareImageCard = forwardRef<
   const causes = possibleCauses.map((s) => s.trim()).filter(Boolean).slice(0, 2);
   const tips = soothingTips.map((s) => s.trim()).filter(Boolean).slice(0, 3);
   // Soft caps so a 4k answer does not blow the 1080px feed card.
-  const q = clampShareImageText(userQuestion, 280);
+  // Orphan question (no answer) is incomplete for public PNG — hide it.
   const a = clampShareImageText(answer, 520);
+  const q = a ? clampShareImageText(userQuestion, 280) : "";
   const hasQa = Boolean(q || a);
   return (
     <div

@@ -70,6 +70,40 @@ export function SkinReviewAdminView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- revoke only on unmount
   }, []);
 
+  const suggestMutation = useMutation({
+    mutationFn: (vars?: {
+      id?: string;
+      user_question?: string;
+      /** Auto-draft after analyze — do not overwrite if admin already typed. */
+      onlyIfEmpty?: boolean;
+    }) => {
+      const id = vars?.id ?? result?.id;
+      if (!id) throw new Error("missing_id");
+      const q = (vars?.user_question ?? userQuestion).trim();
+      if (!q) throw new Error("missing_question");
+      return suggestAdminSkinReviewAnswer(id, { user_question: q }).then(
+        (res) => ({ ...res, _id: id, _onlyIfEmpty: Boolean(vars?.onlyIfEmpty) }),
+      );
+    },
+    onSuccess: (res) => {
+      // Ignore late responses after Reset / opening another review.
+      if (!result?.id || res._id !== result.id) return;
+      if (res._onlyIfEmpty) {
+        setAnswer((prev) => (prev.trim() ? prev : (res.answer ?? "")));
+      } else {
+        setAnswer(res.answer ?? "");
+      }
+      toast.success(t("suggestAnswerSuccess"));
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof Error && err.message === "missing_question"
+          ? t("needUserQuestion")
+          : t("suggestAnswerError");
+      toast.error(msg);
+    },
+  });
+
   const analyzeMutation = useMutation({
     mutationFn: () =>
       createAdminSkinReview({
@@ -83,9 +117,18 @@ export function SkinReviewAdminView() {
       }),
     onSuccess: (res) => {
       setResult(res);
+      const q = (res.user_question ?? userQuestion).trim();
       setUserQuestion(res.user_question ?? "");
       setAnswer(res.answer ?? "");
       toast.success(t("analyzeSuccess"));
+      // Auto-draft the public reply when a FB question is present.
+      if (q && !(res.answer ?? "").trim()) {
+        suggestMutation.mutate({
+          id: res.id,
+          user_question: q,
+          onlyIfEmpty: true,
+        });
+      }
     },
     onError: (err) => {
       const msg =
@@ -103,6 +146,12 @@ export function SkinReviewAdminView() {
   const saveMutation = useMutation({
     mutationFn: () => {
       if (!result?.id) throw new Error("missing_id");
+      const q = userQuestion.trim();
+      const a = answer.trim();
+      // Live shares must keep Q⇒A; drafts may save question before answer.
+      if (result.is_public && q && !a) {
+        throw new Error("missing_answer");
+      }
       return patchAdminSkinReview(result.id, {
         title,
         notes,
@@ -117,27 +166,11 @@ export function SkinReviewAdminView() {
       setAnswer(res.answer ?? "");
       toast.success(t("saveSuccess"));
     },
-    onError: () => {
-      toast.error(t("saveError"));
-    },
-  });
-
-  const suggestMutation = useMutation({
-    mutationFn: () => {
-      if (!result?.id) throw new Error("missing_id");
-      const q = userQuestion.trim();
-      if (!q) throw new Error("missing_question");
-      return suggestAdminSkinReviewAnswer(result.id, { user_question: q });
-    },
-    onSuccess: (res) => {
-      setAnswer(res.answer ?? "");
-      toast.success(t("suggestAnswerSuccess"));
-    },
     onError: (err) => {
       const msg =
-        err instanceof Error && err.message === "missing_question"
-          ? t("needUserQuestion")
-          : t("suggestAnswerError");
+        err instanceof Error && err.message === "missing_answer"
+          ? t("publishNeedsAnswer")
+          : t("saveError");
       toast.error(msg);
     },
   });
@@ -145,6 +178,11 @@ export function SkinReviewAdminView() {
   const publishMutation = useMutation({
     mutationFn: async () => {
       if (!result?.id) throw new Error("missing_id");
+      const q = userQuestion.trim();
+      const a = answer.trim();
+      if (q && !a) {
+        throw new Error("missing_answer");
+      }
       // Persist Q&A + meta first — suggest/answer only live in local state until PATCH.
       const saved = await patchAdminSkinReview(result.id, {
         title,
@@ -163,8 +201,12 @@ export function SkinReviewAdminView() {
       setStatus("published");
       toast.success(t("publishSuccess"));
     },
-    onError: () => {
-      toast.error(t("publishError"));
+    onError: (err) => {
+      const msg =
+        err instanceof Error && err.message === "missing_answer"
+          ? t("publishNeedsAnswer")
+          : t("publishError");
+      toast.error(msg);
     },
   });
 
@@ -306,12 +348,13 @@ export function SkinReviewAdminView() {
         </label>
         <label className="block space-y-1.5 text-sm sm:col-span-2">
           <span className="font-medium">{t("userQuestionLabel")}</span>
-          <input
-            className={inputClass}
+          <textarea
+            className={cn(inputClass, "min-h-24 py-2")}
             value={userQuestion}
             onChange={(e) => setUserQuestion(e.target.value)}
             placeholder={t("userQuestionPlaceholder")}
             disabled={analyzing || publishing}
+            rows={3}
             maxLength={2000}
           />
           <span className="text-xs text-muted-foreground">
@@ -327,6 +370,11 @@ export function SkinReviewAdminView() {
               {t("qaSectionTitle")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{t("qaSectionSub")}</p>
+            {userQuestion.trim() && !answer.trim() ? (
+              <p className="mt-2 text-sm font-medium text-destructive">
+                {t("answerRequiredHint")}
+              </p>
+            ) : null}
           </div>
           <label className="block space-y-1.5 text-sm">
             <span className="font-medium">{t("answerLabel")}</span>
@@ -347,7 +395,7 @@ export function SkinReviewAdminView() {
               disabled={
                 suggesting || analyzing || publishing || !userQuestion.trim()
               }
-              onClick={() => suggestMutation.mutate()}
+              onClick={() => suggestMutation.mutate(undefined)}
             >
               {suggesting ? (
                 <Loader2 className="size-4 animate-spin" />

@@ -2310,6 +2310,8 @@
     "suggestAnswerSuccess": "Đã có bản nháp trả lời — sửa rồi lưu nhé.",
     "suggestAnswerError": "Không gợi ý được trả lời. Thử lại.",
     "needUserQuestion": "Nhập câu hỏi của user trước khi gợi ý trả lời.",
+    "answerRequiredHint": "Đã có câu hỏi — cần câu Trả lời (bấm Gợi ý trả lời rồi sửa/lưu) trước khi publish.",
+    "publishNeedsAnswer": "Có câu hỏi thì phải có câu trả lời trước khi publish.",
     "saveQaCta": "Lưu câu hỏi / trả lời",
     "fieldUserQuestion": "Câu hỏi",
     "fieldAnswer": "Trả lời",

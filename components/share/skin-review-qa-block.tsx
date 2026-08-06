@@ -21,11 +21,12 @@ export function SkinReviewQaBlock({
   className,
   variant = "default",
 }: Props) {
-  const q = userQuestion?.trim() ?? "";
+  const qRaw = userQuestion?.trim() ?? "";
   const a = answer?.trim() ?? "";
-  if (!q && !a) return null;
-
   const share = variant === "share";
+  // Public share: never show an orphan question without a reply.
+  const q = share && qRaw && !a ? "" : qRaw;
+  if (!q && !a) return null;
 
   return (
     <section
