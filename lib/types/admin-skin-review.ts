@@ -19,7 +19,7 @@ export type AdminSkinReviewAnalysis = {
   attention_areas: AdminSkinAttentionArea[];
   additional_observations: string;
   photo_notes: string;
-  /** 1–2 soft non-certain causes for public share. */
+  /** 1–2 direct public causes (no hedge closers). */
   possible_causes?: string[];
   /** 2–3 gentle avoid/do tips for public share (no brands/meds). */
   soothing_tips?: string[];
