@@ -228,18 +228,26 @@ function main() {
       `default short_no_link must not include http / share URL:\n${aDefault}`,
     );
   }
-  const viCtaLine1 =
-    "Đây chỉ là nhận xét từ ảnh hôm nay — muốn biết da có cải thiện không thì cần theo dõi thêm vài ngày.";
-  const viCtaLine2 =
-    "Mình dùng DaDiary để check-in ảnh và so trước–sau, đơn giản thôi chứ không thay bác sĩ.";
-  if (!aDefault.includes(viCtaLine1) || !aDefault.includes(viCtaLine2)) {
-    throw new Error(`VI short_no_link should use shared 2-line CTA:\n${aDefault}`);
+  const viOpener =
+    "Mình xem giúp từ ảnh nha — chỉ quan sát, không phải chẩn đoán.";
+  const viCta =
+    "Đây mới chỉ là một ảnh. Muốn có lộ trình chăm sóc da theo ngày thì dùng DaDiary nhé.";
+  if (!aDefault.startsWith(viOpener)) {
+    throw new Error(`VI short_no_link opener mismatch:\n${aDefault}`);
   }
-  if (/https?:\/\//i.test(viCtaLine1 + viCtaLine2)) {
+  if (!aDefault.endsWith(viCta) || !aDefault.includes(viCta)) {
+    throw new Error(`VI short_no_link should end with new CTA:\n${aDefault}`);
+  }
+  if (/https?:\/\//i.test(viCta)) {
     throw new Error("CTA must not contain a URL");
   }
-  // Old one-liner CTA must be gone (same idea, replaced wording).
-  if (aDefault.includes("Dùng DaDiary check-in vài ngày")) {
+  // Old CTAs must be gone.
+  if (
+    aDefault.includes("Mình dùng DaDiary để check-in ảnh") ||
+    aDefault.includes("không thay bác sĩ") ||
+    aDefault.includes("muốn biết da có cải thiện không thì cần theo dõi thêm vài ngày") ||
+    aDefault.includes("Dùng DaDiary check-in vài ngày")
+  ) {
     throw new Error(`VI short_no_link still has old CTA:\n${aDefault}`);
   }
   if (
@@ -329,21 +337,28 @@ function main() {
   if (hasShareUrl(enDefault)) {
     throw new Error(`EN default must not include URL:\n${enDefault}`);
   }
-  const enCtaLine1 =
-    "This is just an observation from today’s photos — you’ll need a few more days of tracking to know if things are improving.";
-  const enCtaLine2 =
-    "I use DaDiary to check in with photos and compare before-and-after; simple, and not a substitute for a doctor.";
-  if (!enDefault.includes(enCtaLine1) || !enDefault.includes(enCtaLine2)) {
-    throw new Error(`EN short_no_link should use shared 2-line CTA:\n${enDefault}`);
+  const enOpener =
+    "Took a look from the photos for you — observations only, not a diagnosis.";
+  const enCta =
+    "This is just one photo. Use DaDiary if you want a day-by-day skin-care plan.";
+  if (!enDefault.startsWith(enOpener)) {
+    throw new Error(`EN short_no_link opener mismatch:\n${enDefault}`);
+  }
+  if (!enDefault.endsWith(enCta) || !enDefault.includes(enCta)) {
+    throw new Error(`EN short_no_link should end with new CTA:\n${enDefault}`);
   }
   if (
-    !aWithLink.includes(viCtaLine1) ||
-    !aWithLink.includes(viCtaLine2)
+    enDefault.includes("I use DaDiary to check in") ||
+    enDefault.includes("not a substitute for a doctor") ||
+    enDefault.includes("few more days of tracking")
   ) {
+    throw new Error(`EN short_no_link still has old CTA:\n${enDefault}`);
+  }
+  if (!aWithLink.includes(viCta)) {
     throw new Error(`VI short_with_link should use same CTA:\n${aWithLink}`);
   }
   // Link stays on its own line — not inside the closing CTA.
-  const ctaBlock = aWithLink.slice(aWithLink.indexOf(viCtaLine1));
+  const ctaBlock = aWithLink.slice(aWithLink.indexOf(viCta));
   if (ctaBlock.includes(LINK) || /https?:\/\//i.test(ctaBlock)) {
     throw new Error(`CTA block must not embed URL:\n${ctaBlock}`);
   }
