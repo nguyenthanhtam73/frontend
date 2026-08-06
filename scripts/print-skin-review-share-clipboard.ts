@@ -214,15 +214,6 @@ function main() {
   if (aDefault !== aNoLink) {
     throw new Error("omitting variant must equal short_no_link");
   }
-  const aShortLow = aDefault.toLowerCase();
-  if (!aShortLow.includes("trán") || !aShortLow.includes("nốt đỏ sưng")) {
-    throw new Error(
-      `forehead-only short_no_link should mention trán + nốt đỏ sưng:\n${aDefault}`,
-    );
-  }
-  if (aDefault.includes("papules") || aDefault.includes("not_visible")) {
-    throw new Error("short_no_link must not leak jargon/enum keys");
-  }
   if (hasShareUrl(aDefault)) {
     throw new Error(
       `default short_no_link must not include http / share URL:\n${aDefault}`,
@@ -232,29 +223,26 @@ function main() {
     "Mình xem giúp từ ảnh nha — chỉ quan sát, không phải chẩn đoán.";
   const viCta =
     "Đây mới chỉ là một ảnh. Muốn có lộ trình chăm sóc da theo ngày thì dùng DaDiary nhé.";
-  if (!aDefault.startsWith(viOpener)) {
-    throw new Error(`VI short_no_link opener mismatch:\n${aDefault}`);
-  }
-  if (!aDefault.endsWith(viCta) || !aDefault.includes(viCta)) {
-    throw new Error(`VI short_no_link should end with new CTA:\n${aDefault}`);
+  const viShortOnly = `${viOpener}\n${viCta}`;
+  if (aDefault !== viShortOnly) {
+    throw new Error(
+      `VI short_no_link must be opener + CTA only:\n${aDefault}`,
+    );
   }
   if (/https?:\/\//i.test(viCta)) {
     throw new Error("CTA must not contain a URL");
   }
-  // Old CTAs must be gone.
+  // Old CTAs / analysis body must stay out of the default copy.
   if (
     aDefault.includes("Mình dùng DaDiary để check-in ảnh") ||
     aDefault.includes("không thay bác sĩ") ||
     aDefault.includes("muốn biết da có cải thiện không thì cần theo dõi thêm vài ngày") ||
-    aDefault.includes("Dùng DaDiary check-in vài ngày")
+    aDefault.includes("Dùng DaDiary check-in vài ngày") ||
+    aDefault.includes("trán") ||
+    aDefault.includes("Câu hỏi") ||
+    aDefault.includes("Trả lời")
   ) {
-    throw new Error(`VI short_no_link still has old CTA:\n${aDefault}`);
-  }
-  if (
-    aDefault.includes("Trông nghi") ||
-    aDefault.includes("Trên ảnh chưa rõ loại da")
-  ) {
-    throw new Error("short_no_link must not include skin type hint");
+    throw new Error(`VI short_no_link still has extra content:\n${aDefault}`);
   }
 
   const aWithLink = buildSkinReviewShareClipboard({
@@ -305,12 +293,10 @@ function main() {
     link: LINK,
     locale: "vi",
   });
-  const bShortLow = bDefault.toLowerCase();
-  if (!bShortLow.includes("má") || !bShortLow.includes("nốt")) {
-    throw new Error(`full-face short_no_link should mention má/nốt:\n${bDefault}`);
-  }
-  if (bDefault.includes("không thấy trên ảnh này")) {
-    throw new Error("full-face short_no_link should not claim missing regions");
+  if (bDefault !== viShortOnly) {
+    throw new Error(
+      `full-face short_no_link must stay opener + CTA only:\n${bDefault}`,
+    );
   }
   if (hasShareUrl(bDefault)) {
     throw new Error(`full-face default must not include URL:\n${bDefault}`);
@@ -331,9 +317,6 @@ function main() {
     link: LINK,
     locale: "en",
   });
-  if (!enDefault.startsWith("Took a look")) {
-    throw new Error("EN short_no_link frame should be English");
-  }
   if (hasShareUrl(enDefault)) {
     throw new Error(`EN default must not include URL:\n${enDefault}`);
   }
@@ -341,18 +324,20 @@ function main() {
     "Took a look from the photos for you — observations only, not a diagnosis.";
   const enCta =
     "This is just one photo. Use DaDiary if you want a day-by-day skin-care plan.";
-  if (!enDefault.startsWith(enOpener)) {
-    throw new Error(`EN short_no_link opener mismatch:\n${enDefault}`);
-  }
-  if (!enDefault.endsWith(enCta) || !enDefault.includes(enCta)) {
-    throw new Error(`EN short_no_link should end with new CTA:\n${enDefault}`);
+  const enShortOnly = `${enOpener}\n${enCta}`;
+  if (enDefault !== enShortOnly) {
+    throw new Error(
+      `EN short_no_link must be opener + CTA only:\n${enDefault}`,
+    );
   }
   if (
     enDefault.includes("I use DaDiary to check in") ||
     enDefault.includes("not a substitute for a doctor") ||
-    enDefault.includes("few more days of tracking")
+    enDefault.includes("few more days of tracking") ||
+    enDefault.includes("Question") ||
+    enDefault.includes("Answer")
   ) {
-    throw new Error(`EN short_no_link still has old CTA:\n${enDefault}`);
+    throw new Error(`EN short_no_link still has extra content:\n${enDefault}`);
   }
   if (!aWithLink.includes(viCta)) {
     throw new Error(`VI short_with_link should use same CTA:\n${aWithLink}`);
