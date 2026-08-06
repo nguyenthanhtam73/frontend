@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
+import { skinReviewTipsHeadingKey } from "@/lib/skin-review-tips-heading";
 import type { AdminSkinReviewAnalysis } from "@/lib/types/admin-skin-review";
 import { cn } from "@/lib/utils";
 
@@ -196,7 +197,11 @@ export function SkinReviewAnalysisView({
       ) : null}
 
       {tips.length > 0 ? (
-        <ResultSection title={t("fieldSoothingTips")} share={share} index={nextIndex()}>
+        <ResultSection
+          title={t(skinReviewTipsHeadingKey(a))}
+          share={share}
+          index={nextIndex()}
+        >
           <BulletList items={tips} share={share} />
         </ResultSection>
       ) : null}

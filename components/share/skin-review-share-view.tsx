@@ -40,6 +40,7 @@ import {
   renderShareImageBlob,
   shareImageFilename,
 } from "@/lib/skin-review-share-image";
+import { skinReviewTipsHeadingKey } from "@/lib/skin-review-tips-heading";
 import type { PublicSkinReviewResponse } from "@/lib/types/admin-skin-review";
 import { cn } from "@/lib/utils";
 
@@ -565,7 +566,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             photoNotes={imagePhotoNotes}
             possibleCausesHeading={tAdmin("fieldPossibleCauses")}
             possibleCauses={imagePossibleCauses}
-            soothingTipsHeading={tAdmin("fieldSoothingTips")}
+            soothingTipsHeading={tAdmin(skinReviewTipsHeadingKey(data.analysis))}
             soothingTips={imageSoothingTips}
             disclaimer={imageDisclaimer}
             domain={t("imageDomain")}
