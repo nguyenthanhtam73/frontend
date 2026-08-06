@@ -73,7 +73,7 @@
     },
     "adminSkinReview": {
       "title": "Admin Skin Review · DaDiary",
-      "description": "Upload skin photos for deep observation-only AI analysis (admin)."
+      "description": "Upload 1 clear skin photo for deep observation-only AI analysis (admin)."
     },
     "pricingPage": {
       "title": "Pricing · DaDiary",
@@ -2274,20 +2274,21 @@
   "adminSkinReview": {
     "sectionLabel": "Admin",
     "title": "Skin Review",
-    "sub": "Upload 1–3 skin photos for deep AI observations only — no routine, products, or care steps.",
+    "sub": "Upload 1 clear skin photo for deep AI observations only — no routine, products, or care steps.",
     "linkUsers": "← Manage plans",
     "authLoading": "Checking admin access…",
     "needAuth": "Sign in to access the admin page.",
     "signIn": "Sign in",
     "forbidden": "You do not have permission to access this page.",
     "stepUpload": "1. Photos",
-    "stepUploadSub": "Capture or upload 1–3 well-lit skin photos (front + optional angles).",
+    "stepUploadSub": "Capture 1 well-lit skin photo of the area to review (front or close-up).",
     "stepResult": "AI observations",
     "captureCta": "Take photo",
     "libraryCta": "From library",
-    "photoHint": "Up to {max} photos. JPEG, PNG, WebP, or GIF.",
+    "photoHint": "1 clear photo required. Optional extra angles (max {max}). JPEG, PNG, WebP, or GIF.",
     "photoAlt": "Skin photo {n}",
     "removePhoto": "Remove photo",
+    "needOnePhoto": "Upload 1 skin photo before analyzing.",
     "photoErrorEmpty": "That file is empty.",
     "photoErrorType": "Use a JPEG, PNG, WebP, or GIF image.",
     "photoErrorSize": "Each photo must be under {mb} MB.",

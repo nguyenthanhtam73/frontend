@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils";
 
 export type AdminReviewPhoto = { file: File; url: string };
 
+/** Required minimum for analyze submit. */
+export const MIN_ADMIN_SKIN_REVIEW_PHOTOS = 1;
+/** Optional extra angles; analyze works with exactly 1. */
 export const MAX_ADMIN_SKIN_REVIEW_PHOTOS = 3;
 
 type Props = {
@@ -29,7 +32,7 @@ type Props = {
 };
 
 /**
- * Admin photo picker: 1–3 slots, camera + album, no Premium gate.
+ * Admin photo picker: 1 required, up to 3 optional, camera + album, no Premium gate.
  * Reuses check-in validation + onboarding compression.
  */
 export function AdminSkinReviewUpload({ photos, onChange, disabled }: Props) {

@@ -24,7 +24,7 @@ function mapAdminError(err: unknown): never {
 }
 
 /**
- * POST /api/v1/admin/skin-review — multipart images (1–3) + optional metadata.
+ * POST /api/v1/admin/skin-review — multipart images (1 required, up to 3) + optional metadata.
  * Bypasses Free quota on the backend; requires can_skin_review (or is_admin).
  */
 export async function createAdminSkinReview(input: {
@@ -36,6 +36,9 @@ export async function createAdminSkinReview(input: {
 }): Promise<AdminSkinReviewResponse> {
   if (!getAccessToken()) {
     throw new Error("auth");
+  }
+  if (!input.files?.length) {
+    throw new Error("missing_images");
   }
   const fd = new FormData();
   for (const f of input.files) {

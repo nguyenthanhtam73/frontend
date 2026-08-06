@@ -73,7 +73,7 @@
     },
     "adminSkinReview": {
       "title": "Admin Skin Review · DaDiary",
-      "description": "Upload ảnh da để AI nhận xét tình trạng (chỉ admin)."
+      "description": "Tải 1 ảnh da rõ để AI nhận xét tình trạng (chỉ admin)."
     },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
@@ -2274,20 +2274,21 @@
   "adminSkinReview": {
     "sectionLabel": "Admin",
     "title": "Skin Review",
-    "sub": "Upload 1–3 ảnh da để AI nhận xét tình trạng — không sinh routine, sản phẩm hay bước chăm sóc.",
+    "sub": "Tải 1 ảnh da rõ để AI nhận xét tình trạng — không sinh routine, sản phẩm hay bước chăm sóc.",
     "linkUsers": "← Quản lý gói",
     "authLoading": "Đang tải quyền admin…",
     "needAuth": "Đăng nhập để truy cập trang quản trị.",
     "signIn": "Đăng nhập",
     "forbidden": "Bạn không có quyền truy cập trang này.",
     "stepUpload": "1. Ảnh da",
-    "stepUploadSub": "Chụp hoặc chọn 1–3 ảnh da đủ sáng (chính diện + góc phụ nếu có).",
+    "stepUploadSub": "Chụp 1 ảnh da đủ sáng, rõ vùng cần nhận xét (chính diện hoặc close-up).",
     "stepResult": "Nhận xét AI",
     "captureCta": "Chụp ảnh",
     "libraryCta": "Chọn từ thư viện",
-    "photoHint": "Tối đa {max} ảnh. JPEG, PNG, WebP hoặc GIF.",
+    "photoHint": "Cần 1 ảnh rõ. Có thể thêm góc phụ (tối đa {max}). JPEG, PNG, WebP hoặc GIF.",
     "photoAlt": "Ảnh da {n}",
     "removePhoto": "Xóa ảnh",
+    "needOnePhoto": "Cần tải 1 ảnh da trước khi phân tích.",
     "photoErrorEmpty": "File trống.",
     "photoErrorType": "Chỉ nhận JPEG, PNG, WebP hoặc GIF.",
     "photoErrorSize": "Mỗi ảnh tối đa {mb} MB.",

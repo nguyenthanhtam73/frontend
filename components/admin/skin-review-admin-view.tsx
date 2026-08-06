@@ -85,7 +85,9 @@ export function SkinReviewAdminView() {
           ? t("forbidden")
           : err instanceof Error && err.message === "auth"
             ? t("needAuth")
-            : t("analyzeError");
+            : err instanceof Error && err.message === "missing_images"
+              ? t("needOnePhoto")
+              : t("analyzeError");
       toast.error(msg);
     },
   });
@@ -259,8 +261,14 @@ export function SkinReviewAdminView() {
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          disabled={analyzing || photos.length < 1}
-          onClick={() => analyzeMutation.mutate()}
+          disabled={analyzing}
+          onClick={() => {
+            if (photos.length < 1) {
+              toast.error(t("needOnePhoto"));
+              return;
+            }
+            analyzeMutation.mutate();
+          }}
         >
           {analyzing ? (
             <Loader2 className="size-4 animate-spin" />
