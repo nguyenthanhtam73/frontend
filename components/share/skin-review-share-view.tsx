@@ -49,6 +49,7 @@ const REGION_KEYS = new Set([
   "cheeks",
   "nose",
   "chin",
+  "neck",
   "t_zone",
   "jawline",
   "under_eyes",
