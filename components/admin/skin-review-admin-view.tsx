@@ -592,7 +592,10 @@ export function SkinReviewAdminView() {
             </ul>
           ) : null}
 
-          <SkinReviewAnalysisView analysis={result.analysis} />
+          <SkinReviewAnalysisView
+            analysis={result.analysis}
+            userQuestion={result.user_question ?? userQuestion}
+          />
         </section>
       ) : null}
       </>

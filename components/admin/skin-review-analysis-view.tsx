@@ -61,10 +61,13 @@ function labelFromMap(
 /** Shared 5-section observations panel (admin + public share). */
 export function SkinReviewAnalysisView({
   analysis,
+  userQuestion,
   className,
   variant = "default",
 }: {
   analysis: AdminSkinReviewAnalysis;
+  /** Optional — helps tips heading when analysis mislabels peri-oral thâm as acute lip irritation. */
+  userQuestion?: string | null;
   className?: string;
   variant?: "default" | "share";
 }) {
@@ -199,7 +202,7 @@ export function SkinReviewAnalysisView({
 
       {tips.length > 0 ? (
         <ResultSection
-          title={t(skinReviewTipsHeadingKey(a))}
+          title={t(skinReviewTipsHeadingKey(a, userQuestion))}
           share={share}
           index={nextIndex()}
         >

@@ -565,7 +565,10 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
             />
           </section>
 
-          <SkinReviewAnalysisView analysis={detail.analysis} />
+          <SkinReviewAnalysisView
+            analysis={detail.analysis}
+            userQuestion={detail.user_question ?? editQuestion}
+          />
         </div>
       ) : null}
     </div>

@@ -398,7 +398,11 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
               <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary sm:mb-5 sm:tracking-[0.2em]">
                 {t("analysisLabel")}
               </p>
-              <SkinReviewAnalysisView analysis={data.analysis} variant="share" />
+              <SkinReviewAnalysisView
+                analysis={data.analysis}
+                userQuestion={data.user_question}
+                variant="share"
+              />
             </div>
           </div>
 
@@ -567,7 +571,9 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             photoNotes={imagePhotoNotes}
             possibleCausesHeading={tAdmin("fieldPossibleCauses")}
             possibleCauses={imagePossibleCauses}
-            soothingTipsHeading={tAdmin(skinReviewTipsHeadingKey(data.analysis))}
+            soothingTipsHeading={tAdmin(
+              skinReviewTipsHeadingKey(data.analysis, data.user_question),
+            )}
             soothingTips={imageSoothingTips}
             disclaimer={imageDisclaimer}
             domain={t("imageDomain")}
