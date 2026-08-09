@@ -287,7 +287,10 @@ function RoutineStepCard({
 
   if (editing) {
     return (
-      <li className="space-y-2 rounded-lg border border-border/80 bg-background p-2.5">
+      <li
+        className="space-y-2 rounded-lg border border-border/80 bg-background p-2.5"
+        data-testid={`onboarding-starter-step-${period}-${index}`}
+      >
         <div className="flex items-center gap-1.5">
           <span
             className={cn(
@@ -307,6 +310,7 @@ function RoutineStepCard({
           value={stepText}
           onChange={(e) => ob.updateRoutineStep(period, index, e.target.value)}
           rows={2}
+          data-testid={`onboarding-starter-input-${period}-${index}`}
           className="min-h-[4rem] w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none ring-ring/40 focus:ring-2"
         />
         <div className="grid grid-cols-3 gap-1.5">
@@ -334,7 +338,10 @@ function RoutineStepCard({
   }
 
   return (
-    <li className="rounded-lg border border-border/60 bg-background/90 px-2.5 py-2.5">
+    <li
+      className="rounded-lg border border-border/60 bg-background/90 px-2.5 py-2.5"
+      data-testid={`onboarding-starter-step-${period}-${index}`}
+    >
       <div className="flex items-start gap-2.5">
         <span
           className={cn(
@@ -351,7 +358,12 @@ function RoutineStepCard({
             <span className="text-[11px] font-bold tabular-nums text-muted-foreground">
               {index + 1}
             </span>
-            <p className="text-sm font-semibold leading-snug text-foreground">{parsed.title}</p>
+            <p
+              className="text-sm font-semibold leading-snug text-foreground"
+              data-testid={`onboarding-starter-text-${period}-${index}`}
+            >
+              {parsed.title}
+            </p>
           </div>
           {hasDetail ? (
             <div className="mt-0.5">
@@ -408,6 +420,7 @@ function RoutinePeriodSection({
           ? "border-amber-400/35 bg-gradient-to-b from-amber-500/[0.08] to-background"
           : "border-indigo-400/35 bg-gradient-to-b from-indigo-500/[0.08] to-background",
       )}
+      data-testid={`onboarding-starter-${period}`}
     >
       <div
         className={cn(
@@ -658,7 +671,11 @@ export function OnboardingStepStarterRoutine({
   const skillLabel = t(`skill.${resolvedSkill}.short` as `skill.beginner.short`);
 
   return (
-    <section className="space-y-3.5 sm:space-y-4" aria-labelledby="onb-routine-title">
+    <section
+      className="space-y-3.5 sm:space-y-4"
+      aria-labelledby="onb-routine-title"
+      data-testid="onboarding-step-starter-routine"
+    >
       <div className="space-y-1.5">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/8 px-2.5 py-1 text-[11px] font-bold text-primary sm:text-xs">
           <Sparkles className="size-3.5" aria-hidden />
@@ -734,6 +751,7 @@ export function OnboardingStepStarterRoutine({
           size="lg"
           className="h-11 w-full gap-2 text-sm font-semibold sm:min-h-12"
           onClick={onToggleEditing}
+          data-testid="onboarding-starter-edit-toggle"
         >
           <Pencil className="size-4" aria-hidden />
           {editing ? t("routineStep.doneEditing") : t("routineStep.editMore")}

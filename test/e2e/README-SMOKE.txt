@@ -15,11 +15,28 @@ Commands
   npm run test:e2e:install   # once — download Chromium
   npm run test:e2e           # all e2e specs
   npm run test:e2e -- core-smoke
+  npm run test:e2e -- onboarding-smoke
   npm run test:e2e -- premium-sepay-upgrade
   npm run test:e2e:ui        # Playwright UI mode
 
 What is covered
 ---------------
+onboarding-smoke.test.ts (P1 + P2)
+- 1a) Token inject: edit AM/PM → finish → GET /profile/skin snapshot contains marks →
+  /routine + reload still shows edits
+- 1b) Login UI incomplete → /onboarding → skip-face edit → finish → same API + /routine asserts
+  (skipGoto — no redundant /onboarding navigation after login)
+- 2) Gate-only: incomplete login → /onboarding; marketing `/` stays open; /check-in redirects
+- 3) Complete login (register + POST /profile/onboarding/complete) → lands on /check-in
+- 4) Skip / “enter app” → /check-in; GET /me onboarding_skipped=true; reload + localStorage
+  clear still respects server skip (home not bounced to /onboarding)
+  Requires API with users.onboarding_skipped (AutoMigrate or migrations/013_*.sql).
+  After pull: restart the Go API so AutoMigrate adds the column (or run 013_*.up.sql).
+  If e2e #4 fails on onboarding_skipped, the column is missing — restart API first.
+  Fixtures: incomplete = register only; complete = register + completeOnboardingViaApi()
+  Snapshot assert: GET /api/v1/profile/skin → onboarding_snapshot.starter_routine.{morning,evening}
+  Reset: DELETE /profile/onboarding (helper deleteOnboardingViaApi) if you need to re-run UI onboard
+
 core-smoke.test.ts
 - Auth session: UI login → reload + new tab keep signed-in (no guest flash) → GET /me with JWT
 - Skip-face check-in: mode toggle → submit without photos → skip_mode=true → text-only analysis completed

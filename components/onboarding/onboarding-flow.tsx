@@ -30,10 +30,14 @@ import { buildDefaultStarterRoutine } from "@/lib/onboarding/guest-starter";
 import {
   postGuestPreviewComplete,
   postOnboardingComplete,
-  postOnboardingCompleteBackground,
 } from "@/lib/onboarding/finish-request";
 import { buildOnboardingFinishBody } from "@/lib/onboarding/finish-body";
+import {
+  clearOnboardingSkipped,
+  persistOnboardingSkipped,
+} from "@/lib/onboarding/skip";
 import { inferSkinTypeFromConcerns } from "@/lib/onboarding/infer-skin-type";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   assertAnalyzeSkinPayload,
   fetchOnboardingAi,
@@ -115,6 +119,9 @@ export function OnboardingFlow() {
   const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<OnboardingAiErrorKind | "save_failed" | null>(null);
+  /** Which finish path last failed — drives Retry / secondary actions. */
+  const [finishErrorSource, setFinishErrorSource] = useState<"ai" | "default" | null>(null);
+  const [skippingToApp, setSkippingToApp] = useState(false);
   const [routineEditing, setRoutineEditing] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -170,7 +177,7 @@ export function OnboardingFlow() {
 
   const step = steps[idx];
   const analyzing = ob.analyzeStatus === "loading";
-  const blockInteraction = analyzing || finishing;
+  const blockInteraction = analyzing || finishing || skippingToApp;
 
   const openCamera = useCallback(() => {
     setSkipFaceCapture(false);
@@ -339,17 +346,25 @@ export function OnboardingFlow() {
   async function finish() {
     if (finishing) return;
     setFinishError(null);
+    setFinishErrorSource(null);
 
     const state = useOnboardingStore.getState();
     const photosSkipped = skipFaceCapture || state.photos.length === 0;
-    const finishBody = buildOnboardingFinishBody(state, locale, photosSkipped);
+    const userRoutine =
+      state.starterRoutine ?? buildDefaultStarterRoutine(state, locale);
+    // Build payload (incl. edited morning/evening) before any navigation.
+    const finishBody = buildOnboardingFinishBody(
+      state,
+      locale,
+      photosSkipped,
+      userRoutine,
+    );
     if (!finishBody) {
       setFinishError("save_failed");
+      setFinishErrorSource("ai");
       return;
     }
 
-    const userRoutine =
-      state.starterRoutine ?? buildDefaultStarterRoutine(state, locale);
     const token = getAccessToken();
     setFinishing(true);
 
@@ -379,6 +394,19 @@ export function OnboardingFlow() {
         photosSkipped,
         token,
       );
+      const auth = useAuthStore.getState();
+      clearOnboardingSkipped(auth.user?.id);
+      // Optimistic: avoid gate bouncing check-in before /me refresh lands.
+      if (auth.user) {
+        useAuthStore.setState({
+          user: {
+            ...auth.user,
+            onboarding_completed: true,
+            onboarding_skipped: false,
+          },
+        });
+      }
+      void auth.refresh();
       await goToCoachWelcome({
         profileId: result.profileId,
         starterRoutine: state.starterRoutineUserEdited
@@ -391,6 +419,7 @@ export function OnboardingFlow() {
         reviewSummary: { photo_urls: result.photoUrls },
       });
     } catch (err) {
+      setFinishErrorSource("ai");
       if (err instanceof OnboardingAiError && err.kind === "auth") {
         setFinishError("auth");
       } else {
@@ -404,23 +433,31 @@ export function OnboardingFlow() {
   async function finishWithDefaultRoutine() {
     if (finishing) return;
     setFinishError(null);
+    setFinishErrorSource(null);
 
     const state = useOnboardingStore.getState();
     const photosSkipped = skipFaceCapture || state.photos.length === 0;
-    const finishBody = buildOnboardingFinishBody(state, locale, photosSkipped);
+    const fallback = state.starterRoutine ?? buildDefaultStarterRoutine(state, locale);
+    state.setStarterRoutine(fallback);
+    const finishBody = buildOnboardingFinishBody(
+      useOnboardingStore.getState(),
+      locale,
+      photosSkipped,
+      fallback,
+    );
     if (!finishBody) {
       setFinishError("save_failed");
+      setFinishErrorSource("default");
       return;
     }
 
-    const fallback = state.starterRoutine ?? buildDefaultStarterRoutine(state, locale);
-    state.setStarterRoutine(fallback);
     const coachingNotes = state.aiSnapshot?.coaching_notes?.trim() || undefined;
     const token = getAccessToken();
 
     setFinishing(true);
     try {
       if (!token) {
+        // Guest: navigate immediately with local fallback; preview job patches session.
         await goToCoachWelcome({
           profileId: GUEST_COACH_PROFILE_ID,
           guestPreview: true,
@@ -448,32 +485,72 @@ export function OnboardingFlow() {
         return;
       }
 
-      await goToCoachWelcome({
-        starterRoutine: fallback,
-        starterRoutinePending: false,
-        usedDefaultRoutine: true,
-        coachingNotes,
-      });
-
-      postOnboardingCompleteBackground(
+      // Auth: await complete before navigate so profileId / feedback are ready.
+      const result = await postOnboardingComplete(
         finishBody,
         state.photos,
         photosSkipped,
         token,
-        (result) => {
-          if (!useOnboardingStore.getState().starterRoutineUserEdited) {
-            patchCoachWelcomeSession({
-              profileId: result.profileId,
-              starterRoutine: result.starterRoutine,
-              starterRoutinePending: result.starterRoutinePending,
-              reviewSummary: { photo_urls: result.photoUrls },
-            });
-          }
-        },
       );
+      const auth = useAuthStore.getState();
+      clearOnboardingSkipped(auth.user?.id);
+      if (auth.user) {
+        useAuthStore.setState({
+          user: {
+            ...auth.user,
+            onboarding_completed: true,
+            onboarding_skipped: false,
+          },
+        });
+      }
+      void auth.refresh();
+
+      await goToCoachWelcome({
+        profileId: result.profileId,
+        starterRoutine: result.starterRoutine ?? fallback,
+        starterRoutinePending: result.starterRoutinePending,
+        usedDefaultRoutine: true,
+        coachingNotes,
+        reviewSummary: { photo_urls: result.photoUrls },
+      });
+    } catch (err) {
+      setFinishErrorSource("default");
+      if (err instanceof OnboardingAiError && err.kind === "auth") {
+        setFinishError("auth");
+      } else {
+        setFinishError(onboardingAiErrorKind(err));
+      }
     } finally {
       setFinishing(false);
     }
+  }
+
+  async function skipOnboardingToApp() {
+    if (skippingToApp) return;
+    setSkippingToApp(true);
+    let userId = useAuthStore.getState().user?.id;
+    if (!userId && getAccessToken()) {
+      await useAuthStore.getState().refresh();
+      userId = useAuthStore.getState().user?.id;
+    }
+    if (!userId) {
+      // No session identity yet — don't enter a gate bounce loop.
+      setSkippingToApp(false);
+      return;
+    }
+    try {
+      await persistOnboardingSkipped(userId);
+      const auth = useAuthStore.getState();
+      if (auth.user) {
+        useAuthStore.setState({
+          user: { ...auth.user, onboarding_skipped: true },
+        });
+      }
+    } catch {
+      // Local flag already written — still leave so the user is not trapped.
+    }
+    // Keep disabled through navigation; unmount clears state.
+    router.push("/check-in");
   }
 
   const stickyContinueLabel =
@@ -513,6 +590,8 @@ export function OnboardingFlow() {
     );
   }
 
+  const showSkipToApp = Boolean(getAccessToken());
+
   return (
     <div className="mx-auto w-full max-w-2xl space-y-5 px-4 sm:space-y-6 sm:px-0">
       <div className="space-y-2 text-center sm:text-left">
@@ -521,6 +600,20 @@ export function OnboardingFlow() {
         </p>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{t("title")}</h1>
         <p className="text-sm text-muted-foreground sm:text-base">{t("intro")}</p>
+        {showSkipToApp ? (
+          <p className="pt-1">
+            <button
+              type="button"
+              disabled={skippingToApp}
+              onClick={() => void skipOnboardingToApp()}
+              data-testid="onboarding-skip-to-app"
+              aria-busy={skippingToApp}
+              className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-60"
+            >
+              {skippingToApp ? tAuth("submitting") : t("skipToApp")}
+            </button>
+          </p>
+        ) : null}
       </div>
 
       <OnboardingProgress idx={idx} t={t} />
@@ -570,17 +663,46 @@ export function OnboardingFlow() {
                   finishError === "save_failed" ? (
                     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
                       <p className="font-medium">{tAuth("finishNetworkError")}</p>
-                      <Button type="button" size="sm" className="mt-2" onClick={() => void finish()}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() =>
+                          void (finishErrorSource === "default"
+                            ? finishWithDefaultRoutine()
+                            : finish())
+                        }
+                      >
                         {t("aiLoading.retry")}
                       </Button>
                     </div>
                   ) : finishError === "auth" ? (
                     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
                       <p className="font-medium">{tAuth("finishNeedAuth")}</p>
-                      <Button type="button" size="sm" className="mt-2" onClick={() => void finish()}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() =>
+                          void (finishErrorSource === "default"
+                            ? finishWithDefaultRoutine()
+                            : finish())
+                        }
+                      >
                         {t("aiLoading.retry")}
                       </Button>
                     </div>
+                  ) : finishErrorSource === "default" ? (
+                    // Panel renders secondary first — put default retry there so
+                    // "Try again" stays the emphasized action after Use default.
+                    <OnboardingAiErrorPanel
+                      titleKey="aiLoading.routineErrorTitle"
+                      errorKind={finishError}
+                      onRetry={() => void finish()}
+                      retryLabel={t("aiLoading.retryAiRoutine")}
+                      secondaryLabel={t("aiLoading.retry")}
+                      onSecondary={() => void finishWithDefaultRoutine()}
+                    />
                   ) : (
                     <OnboardingAiErrorPanel
                       titleKey="aiLoading.routineErrorTitle"

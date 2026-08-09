@@ -1321,6 +1321,7 @@
     "sectionLabel": "Get to know your skin",
     "title": "Starter routine",
     "intro": "Three steps — under 60 seconds. Pick concerns, see your routine right away, no waiting.",
+    "skipToApp": "Skip for now — enter the app",
     "progress": {
       "stepOf": "Step {current} of {total}",
       "skinProfile": "Your skin",
@@ -1741,6 +1742,7 @@
       "retry": "Try again",
       "manualSkin": "Pick skin type manually",
       "useDefaultRoutine": "Use default routine",
+      "retryAiRoutine": "Retry with AI",
       "retryAnalyzeAi": "Analyze photos with AI again",
       "retryAnalyzeAiShort": "Analyze again with AI",
       "manualSkinBannerTitle": "You're picking your skin type manually",

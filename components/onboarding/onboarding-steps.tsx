@@ -91,7 +91,11 @@ export function OnboardingStepSkinProfile({
   const ob = useOnboardingStore();
 
   return (
-    <section className="space-y-5" aria-labelledby="onb-skin-title">
+    <section
+      className="space-y-5"
+      aria-labelledby="onb-skin-title"
+      data-testid="onboarding-step-skin-profile"
+    >
       <div className="space-y-2">
         <h2 id="onb-skin-title" className="text-lg font-semibold">
           {t("step1.title")}
@@ -111,6 +115,7 @@ export function OnboardingStepSkinProfile({
         size="large"
         required
         requiredLabel={t("step1.requiredBadge")}
+        testIdPrefix="onboarding-goal"
       />
 
       <div className="space-y-2">
@@ -123,6 +128,7 @@ export function OnboardingStepSkinProfile({
           label={(id) => concernChipLabel(t, id)}
           required
           requiredLabel={t("step1.requiredBadge")}
+          testIdPrefix="onboarding-concern"
         />
         <ConcernLimitHint count={ob.aiConcernTags.length} max={ONBOARDING_MAX_CONCERNS} />
       </div>
@@ -201,6 +207,7 @@ export function OnboardingStepSkinProfile({
             type="button"
             onClick={onContinueWithoutPhotos}
             disabled={analyzing}
+            data-testid="onboarding-continue-without-photos"
             className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80 disabled:opacity-50"
           >
             <ArrowRight className="size-4 shrink-0" aria-hidden />
@@ -255,7 +262,11 @@ export function OnboardingStepReady() {
   const routine = useOnboardingStore((s) => s.starterRoutine);
 
   return (
-    <section className="space-y-5" aria-labelledby="onb-ready-title">
+    <section
+      className="space-y-5"
+      aria-labelledby="onb-ready-title"
+      data-testid="onboarding-step-ready"
+    >
       <div className="space-y-2.5 text-center sm:text-left">
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
           <CheckCircle2 className="size-4" aria-hidden />
@@ -277,26 +288,33 @@ export function OnboardingStepReady() {
       </div>
 
       {routine && (
-        <div className="rounded-xl border border-border/50 bg-muted/15 p-4">
+        <div
+          className="rounded-xl border border-border/50 bg-muted/15 p-4"
+          data-testid="onboarding-ready-recap"
+        >
           <p className="mb-3 text-sm font-semibold text-foreground/90">{t("step3.routineRecap")}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div>
+            <div data-testid="onboarding-ready-morning">
               <p className="mb-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
                 {t("routineStep.morning")}
               </p>
               <ol className="list-decimal space-y-1 pl-4 text-sm text-muted-foreground">
                 {routine.morning.map((s, i) => (
-                  <li key={i}>{s}</li>
+                  <li key={i} data-testid={`onboarding-ready-morning-${i}`}>
+                    {s}
+                  </li>
                 ))}
               </ol>
             </div>
-            <div>
+            <div data-testid="onboarding-ready-evening">
               <p className="mb-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
                 {t("routineStep.evening")}
               </p>
               <ol className="list-decimal space-y-1 pl-4 text-sm text-muted-foreground">
                 {routine.evening.map((s, i) => (
-                  <li key={i}>{s}</li>
+                  <li key={i} data-testid={`onboarding-ready-evening-${i}`}>
+                    {s}
+                  </li>
                 ))}
               </ol>
             </div>

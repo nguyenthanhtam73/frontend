@@ -17,6 +17,7 @@ export function AutoGrowTextarea({
   readOnly = false,
   onLockedAttempt,
   id,
+  "data-testid": dataTestId,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -27,6 +28,7 @@ export function AutoGrowTextarea({
   readOnly?: boolean;
   onLockedAttempt?: () => void;
   id?: string;
+  "data-testid"?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement | null>(null);
 
@@ -61,6 +63,7 @@ export function AutoGrowTextarea({
     <textarea
       ref={ref}
       id={id}
+      data-testid={dataTestId}
       value={value}
       onChange={(e) => {
         const next = allowNewlines ? e.target.value : e.target.value.replace(/\r?\n/g, " ");

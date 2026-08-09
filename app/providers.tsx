@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { useState, type ReactNode } from "react";
 
+import { OnboardingGate } from "@/components/onboarding/onboarding-gate";
 import { ToastBridge } from "@/components/site/toast-bridge";
 import { Toaster } from "@/components/ui/toaster";
 import { ToastProvider } from "@/hooks/use-toast";
@@ -25,7 +26,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
             ToastBridge lets the plain api-client raise toasts too. */}
         <ToastProvider position="top-right">
           <ToastBridge />
-          <PlanTierProvider>{children}</PlanTierProvider>
+          <PlanTierProvider>
+            <OnboardingGate />
+            {children}
+          </PlanTierProvider>
           <Toaster />
         </ToastProvider>
       </ThemeProvider>

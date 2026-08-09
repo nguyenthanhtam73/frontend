@@ -45,6 +45,10 @@ export type AuthUser = {
   is_admin?: boolean;
   /** Full admin or skin-review-only operator — may use /admin/skin-review. */
   can_skin_review?: boolean;
+  /** True when skin profile / onboarding snapshot exists (from GET /me). */
+  onboarding_completed?: boolean;
+  /** True when user chose enter-app without finishing (from GET /me). */
+  onboarding_skipped?: boolean;
   created_at?: string;
 };
 

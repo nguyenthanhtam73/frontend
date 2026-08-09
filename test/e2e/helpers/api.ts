@@ -42,6 +42,10 @@ export type MeUser = {
   trial_ends_at?: string;
   canceled_at?: string;
   grace_ends_at?: string;
+  /** Present after P2 — true when skin profile / onboarding snapshot exists. */
+  onboarding_completed?: boolean;
+  /** Server flag when user chose enter-app without finishing onboarding. */
+  onboarding_skipped?: boolean;
 };
 
 export type UsageQuota = {
@@ -166,6 +170,151 @@ export async function fetchMe(
   const json = (await res.json()) as Envelope<MeUser>;
   if (!json.data) throw new Error("/me: empty data");
   return json.data;
+}
+
+/** Persist onboarding via public API (skip-face friendly). */
+export async function completeOnboardingViaApi(
+  request: APIRequestContext,
+  token: string,
+  opts?: {
+    locale?: string;
+    morning?: string[];
+    evening?: string[];
+    goal?: string;
+    bodyConcerns?: string[];
+  },
+): Promise<{ profileId: string; pending: boolean }> {
+  const body: Record<string, unknown> = {
+    skin_type: "combo",
+    undertone: "prefer_not",
+    contexts: [],
+    budget: "mid",
+    goal: opts?.goal || "clear_acne",
+    skill_level: "beginner",
+    body_concerns: opts?.bodyConcerns || ["acne", "dryness"],
+    current_routine: "",
+    locale: opts?.locale || "vi",
+    photos_skipped: true,
+  };
+  if (opts?.morning?.length) body.morning = opts.morning;
+  if (opts?.evening?.length) body.evening = opts.evening;
+
+  const res = await withRetry("profile/onboarding/complete", async () => {
+    const r = await request.post(
+      `${apiURL()}/api/v1/profile/onboarding/complete`,
+      { headers: authHeader(token), data: body },
+    );
+    if (!r.ok()) {
+      throw new Error(`onboarding/complete ${r.status()}: ${await r.text()}`);
+    }
+    return r;
+  });
+
+  const json = (await res.json()) as Envelope<{
+    profile?: { id?: string };
+    starter_routine_pending?: boolean;
+  }>;
+  const profileId = json.data?.profile?.id;
+  if (!profileId) {
+    throw new Error(`onboarding/complete missing profile id: ${JSON.stringify(json)}`);
+  }
+  return {
+    profileId,
+    pending: json.data?.starter_routine_pending === true,
+  };
+}
+
+/** Reset onboarding so the user is incomplete again (JWT). */
+export async function deleteOnboardingViaApi(
+  request: APIRequestContext,
+  token: string,
+): Promise<void> {
+  const res = await request.delete(`${apiURL()}/api/v1/profile/onboarding`, {
+    headers: authHeader(token),
+  });
+  // 404 = already incomplete — treat as success for fixtures
+  if (res.status() === 404) return;
+  if (!res.ok()) {
+    throw new Error(`DELETE onboarding ${res.status()}: ${await res.text()}`);
+  }
+}
+
+export type SkinProfileDTO = {
+  id?: string;
+  skin_type?: string;
+  onboarding_snapshot?: unknown;
+};
+
+/** GET /api/v1/profile/skin — onboarding snapshot lives in onboarding_snapshot.starter_routine. */
+export async function fetchSkinProfile(
+  request: APIRequestContext,
+  token: string,
+): Promise<SkinProfileDTO> {
+  const res = await request.get(`${apiURL()}/api/v1/profile/skin`, {
+    headers: authHeader(token),
+  });
+  if (!res.ok()) {
+    throw new Error(`GET /profile/skin ${res.status()}: ${await res.text()}`);
+  }
+  const json = (await res.json()) as Envelope<SkinProfileDTO>;
+  if (!json.data) throw new Error("GET /profile/skin: empty data");
+  return json.data;
+}
+
+type SnapshotStarter = {
+  morning?: unknown;
+  evening?: unknown;
+};
+
+/** Read starter_routine.morning/evening from SkinProfile.onboarding_snapshot. */
+export function starterStepsFromSkinProfile(profile: SkinProfileDTO): {
+  morning: string[];
+  evening: string[];
+} {
+  const raw = profile.onboarding_snapshot;
+  let snap: Record<string, unknown> | null = null;
+  if (typeof raw === "string") {
+    try {
+      snap = JSON.parse(raw) as Record<string, unknown>;
+    } catch {
+      snap = null;
+    }
+  } else if (raw && typeof raw === "object") {
+    snap = raw as Record<string, unknown>;
+  }
+  const sr = (snap?.starter_routine ?? null) as SnapshotStarter | null;
+  const asLines = (v: unknown): string[] =>
+    Array.isArray(v)
+      ? v.map((x) => String(x ?? "").trim()).filter(Boolean)
+      : [];
+  return {
+    morning: asLines(sr?.morning),
+    evening: asLines(sr?.evening),
+  };
+}
+
+/**
+ * Assert persisted snapshot contains edited marks (P1 regression guard).
+ * Throws with a clear message when UI could pass but API snapshot diverged.
+ */
+export function assertSnapshotContainsEditedSteps(
+  profile: SkinProfileDTO,
+  marks: { morning: string; evening: string },
+): void {
+  const { morning, evening } = starterStepsFromSkinProfile(profile);
+  const amHit = morning.some((s) => s.includes(marks.morning));
+  const pmHit = evening.some((s) => s.includes(marks.evening));
+  if (!amHit || !pmHit) {
+    throw new Error(
+      [
+        "P1 regression: GET /profile/skin onboarding_snapshot.starter_routine missing UI edits.",
+        `want morning≈${JSON.stringify(marks.morning)} evening≈${JSON.stringify(marks.evening)}`,
+        `got morning=${JSON.stringify(morning)}`,
+        `got evening=${JSON.stringify(evening)}`,
+        `profile_id=${profile.id ?? "?"} skin_type=${profile.skin_type ?? "?"}`,
+      ].join(" "),
+    );
+  }
 }
 
 export async function fetchUsage(

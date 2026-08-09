@@ -17,6 +17,7 @@ import {
   buildPricingCheckoutHref,
   readCheckoutIntentFromSearch,
 } from "@/lib/premium/checkout-intent";
+import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY?.trim() ?? "";
 const captchaEnabled = turnstileSiteKey.length > 0;
@@ -113,6 +114,7 @@ function RegisterPageInner() {
                 });
                 const json = (await res.json().catch(() => ({}))) as ApiEnvelope<{
                   tokens?: { access_token?: string; refresh_token?: string };
+                  user?: AuthUser;
                 }>;
                 const token = json.data?.tokens?.access_token;
                 const refresh = json.data?.tokens?.refresh_token;
@@ -131,6 +133,11 @@ function RegisterPageInner() {
                   return;
                 }
                 setAuthTokens(token, refresh);
+                if (json.data?.user) {
+                  useAuthStore.setState({ user: json.data.user, loading: false });
+                } else {
+                  void useAuthStore.getState().refresh();
+                }
                 // Paid intent → pricing auto-checkout; otherwise normal onboarding.
                 router.push(
                   checkoutIntent

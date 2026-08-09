@@ -7,14 +7,19 @@ import { useFormatter, useTranslations } from "next-intl";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Button } from "@/components/ui/button";
 import { deleteOnboarding } from "@/lib/api/profile";
-import { ONBOARDING_GUEST_TRIAL_KEY, ONBOARDING_RESET_KEY } from "@/lib/onboarding/constants";
+import { ONBOARDING_RESET_KEY } from "@/lib/onboarding/constants";
 import { clearOnboardingSessionCache } from "@/lib/onboarding/review-data";
 import {
   canResetOnboardingToday,
   markOnboardingResetPerformed,
 } from "@/lib/onboarding/reset-limit";
+import { clearOnboardingSkipped } from "@/lib/onboarding/skip";
 import { getAccessToken } from "@/lib/auth-token";
-import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import {
+  clearGuestOnboardingTrial,
+  useOnboardingStore,
+} from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -62,11 +67,8 @@ export function OnboardingDeleteSection({
     resetOnboarding();
     setSkillMode(null);
     clearOnboardingSessionCache();
-    try {
-      localStorage.removeItem(ONBOARDING_GUEST_TRIAL_KEY);
-    } catch {
-      /* ignore */
-    }
+    clearOnboardingSkipped(useAuthStore.getState().user?.id);
+    clearGuestOnboardingTrial();
     markOnboardingResetPerformed();
   }, [resetOnboarding, setSkillMode]);
 
@@ -86,6 +88,17 @@ export function OnboardingDeleteSection({
     try {
       await deleteOnboarding();
       clearLocalOnboarding();
+      const auth = useAuthStore.getState();
+      if (auth.user) {
+        useAuthStore.setState({
+          user: {
+            ...auth.user,
+            onboarding_completed: false,
+            onboarding_skipped: false,
+          },
+        });
+      }
+      void auth.refresh();
       setStatus("idle");
       setToast({ kind: "ok", text: t("deleteSuccess") });
       onDeleted?.();

@@ -6,6 +6,22 @@ import {
 } from "../../../lib/auth-token";
 import { sleep } from "./retry";
 
+/** Fill login form and wait for post-login navigation. */
+export async function loginViaUi(
+  page: Page,
+  email: string,
+  password: string,
+  opts?: { expectPath?: RegExp },
+): Promise<void> {
+  await page.goto("/login");
+  await page.locator("#login-email").fill(email);
+  await page.locator("#login-password").fill(password);
+  await page.locator('button[type="submit"]').click();
+  await page.waitForURL(opts?.expectPath ?? /\/(onboarding|check-in|pricing)/, {
+    timeout: 20_000,
+  });
+}
+
 /** Inject JWT (+ optional refresh) so Next.js client treats the session as logged-in. */
 export async function injectAccessToken(
   page: Page,

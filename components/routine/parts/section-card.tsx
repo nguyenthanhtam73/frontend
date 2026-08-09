@@ -141,7 +141,10 @@ export function SectionCard({
   );
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-md">
+    <Card
+      className="overflow-hidden transition-shadow hover:shadow-md"
+      data-testid={`routine-section-${section}`}
+    >
       <CardContent className="space-y-3 p-3.5 sm:space-y-4 sm:p-6">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -221,6 +224,7 @@ export function SectionCard({
               return (
                 <li
                   key={step.id}
+                  data-testid={`routine-step-${section}-${idx}`}
                   draggable={stepDragEnabled}
                   onDragStart={
                     stepDragEnabled
@@ -272,6 +276,7 @@ export function SectionCard({
                   )}
                 >
                   <StepRow
+                    section={section}
                     index={idx}
                     total={steps.length}
                     step={step}
@@ -442,6 +447,7 @@ function MobileStepActions({
 }
 
 function StepRow({
+  section,
   index,
   total,
   step,
@@ -458,6 +464,7 @@ function StepRow({
   labels,
   highlightEmptyTitle = false,
 }: {
+  section: StepSection;
   index: number;
   total: number;
   step: RoutineStepDTO;
@@ -534,6 +541,7 @@ function StepRow({
             placeholder={labels.placeholder}
             readOnly={locked}
             onLockedAttempt={onEditLockedAttempt}
+            data-testid={`routine-step-title-${section}-${index}`}
             className={cn(
               "block w-full rounded-xl border bg-background px-3 py-2.5 text-base leading-snug outline-none ring-ring/40 transition focus:border-primary focus:ring-2 sm:rounded-lg sm:py-2 sm:text-sm",
               step.completed ? "text-muted-foreground line-through" : "",

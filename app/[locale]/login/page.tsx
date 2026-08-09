@@ -10,11 +10,13 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
+import { postLoginDestination } from "@/lib/onboarding/post-auth-destination";
 import {
   buildAuthHrefWithIntent,
   buildPricingCheckoutHref,
   readCheckoutIntentFromSearch,
 } from "@/lib/premium/checkout-intent";
+import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
 
 export default function LoginPage() {
   return (
@@ -48,7 +50,8 @@ function LoginPageInner() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    router.prefetch(checkoutIntent ? "/pricing" : "/check-in");
+    router.prefetch(checkoutIntent ? "/pricing" : "/onboarding");
+    if (!checkoutIntent) router.prefetch("/check-in");
   }, [router, checkoutIntent]);
 
   const registerHref = buildAuthHrefWithIntent("/register", checkoutIntent);
@@ -75,6 +78,7 @@ function LoginPageInner() {
                 });
                 const json = (await res.json().catch(() => ({}))) as ApiEnvelope<{
                   tokens?: { access_token?: string; refresh_token?: string };
+                  user?: AuthUser;
                 }>;
                 const token = json.data?.tokens?.access_token;
                 const refresh = json.data?.tokens?.refresh_token;
@@ -84,14 +88,18 @@ function LoginPageInner() {
                   return;
                 }
                 setAuthTokens(token, refresh);
+                if (json.data?.user) {
+                  useAuthStore.setState({ user: json.data.user, loading: false });
+                } else {
+                  void useAuthStore.getState().refresh();
+                }
+                const nextPath = checkoutIntent
+                  ? buildPricingCheckoutHref(checkoutIntent)
+                  : postLoginDestination(json.data?.user);
                 // Keep loading until navigation replaces this screen — avoids an
                 // idle login form while Next.js still loads the next route.
                 startTransition(() => {
-                  router.push(
-                    checkoutIntent
-                      ? buildPricingCheckoutHref(checkoutIntent)
-                      : "/check-in",
-                  );
+                  router.push(nextPath);
                 });
               } catch {
                 setErr(t("networkError"));

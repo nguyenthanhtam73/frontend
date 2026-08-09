@@ -139,18 +139,3 @@ export async function postGuestPreviewComplete(
 
   throw new OnboardingAiError("server");
 }
-
-/** Fire-and-forget profile save after user chose default routine. */
-export function postOnboardingCompleteBackground(
-  finishBody: OnboardingFinishBody,
-  photos: PhotoItem[],
-  photosSkipped: boolean,
-  token: string,
-  onSuccess: (result: OnboardingCompleteResult) => void,
-): void {
-  void postOnboardingComplete(finishBody, photos, photosSkipped, token)
-    .then(onSuccess)
-    .catch(() => {
-      /* user already on coach-welcome with default routine */
-    });
-}

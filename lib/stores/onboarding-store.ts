@@ -3,13 +3,15 @@ import { create } from "zustand";
 import { getAccessToken } from "@/lib/auth-token";
 import {
   JUST_COMPLETED_ONBOARDING_KEY,
+  ONBOARDING_GUEST_TRIAL_COOKIE,
   ONBOARDING_GUEST_TRIAL_KEY,
   ONBOARDING_MAX_CONCERNS,
   ONBOARDING_MAX_PHOTOS,
 } from "@/lib/onboarding/constants";
+import { readDeviceFlag, writeDeviceFlag } from "@/lib/onboarding/device-persist";
+import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
-import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 
 /** Primary skin type (self-reported or confirmed from AI). */
 export type SkinTypeCard = "dry" | "oily" | "combo" | "normal" | "sensitive" | "prefer_not";
@@ -178,10 +180,11 @@ const goalSet = new Set<SkinGoal>(["glow", "clear_acne", "barrier", "anti_aging"
 export function hasGuestCompletedOnboardingTrial(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem(ONBOARDING_GUEST_TRIAL_KEY) === "true";
+    if (localStorage.getItem(ONBOARDING_GUEST_TRIAL_KEY) === "true") return true;
   } catch {
-    return false;
+    /* ignore */
   }
+  return readDeviceFlag(ONBOARDING_GUEST_TRIAL_COOKIE);
 }
 
 /** Persist one-time guest trial flag (logged-in users are not limited). */
@@ -192,6 +195,18 @@ export function markGuestOnboardingTrialComplete(): void {
   } catch {
     /* private mode / quota */
   }
+  writeDeviceFlag(ONBOARDING_GUEST_TRIAL_COOKIE, true);
+}
+
+/** Clear guest trial markers (settings reset / delete onboarding). */
+export function clearGuestOnboardingTrial(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(ONBOARDING_GUEST_TRIAL_KEY);
+  } catch {
+    /* ignore */
+  }
+  writeDeviceFlag(ONBOARDING_GUEST_TRIAL_COOKIE, false);
 }
 
 /** Guest = no JWT; logged-in users may repeat onboarding freely. */

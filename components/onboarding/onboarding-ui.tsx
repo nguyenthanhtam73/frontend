@@ -108,6 +108,7 @@ export function OnboardingStickyNav({
       className="mt-6 border-t border-border/70 pt-4"
       role="navigation"
       aria-label={continueLabel}
+      data-testid="onboarding-sticky-nav"
     >
       <div
         className={cn(
@@ -122,6 +123,7 @@ export function OnboardingStickyNav({
             size="lg"
             onClick={onBack}
             disabled={backDisabled}
+            data-testid="onboarding-nav-back"
             className="min-h-12 shrink-0 gap-1.5 px-3 sm:min-w-[7rem] sm:px-4"
           >
             <ArrowLeft className="size-4 shrink-0" aria-hidden />
@@ -134,6 +136,7 @@ export function OnboardingStickyNav({
             size="lg"
             onClick={onContinue}
             disabled={continueDisabled || continueLoading}
+            data-testid="onboarding-nav-continue"
             className={cn(
               "gap-2 font-semibold shadow-md",
               singleCta || primaryEmphasis
@@ -313,6 +316,7 @@ export function QuickChipGrid<T extends string>({
   size = "default",
   required,
   requiredLabel,
+  testIdPrefix,
 }: {
   title: string;
   options: { id: T; label: string }[];
@@ -324,10 +328,12 @@ export function QuickChipGrid<T extends string>({
   size?: "default" | "large";
   required?: boolean;
   requiredLabel?: string;
+  /** When set, each option gets data-testid={`${testIdPrefix}-${id}`. */
+  testIdPrefix?: string;
 }) {
   const large = size === "large";
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid={testIdPrefix ? `${testIdPrefix}-group` : undefined}>
       {!hideTitle ? (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold">{title}</p>
@@ -349,6 +355,7 @@ export function QuickChipGrid<T extends string>({
             key={o.id}
             type="button"
             onClick={() => onSelect(o.id)}
+            data-testid={testIdPrefix ? `${testIdPrefix}-${o.id}` : undefined}
             className={cn(
               "touch-manipulation rounded-xl border text-center font-medium transition-all active:scale-[0.98]",
               large ? "min-h-[3.25rem] px-3 py-3.5 text-[15px] leading-snug" : "min-h-12 px-3 py-3 text-sm",
@@ -374,6 +381,7 @@ export function ConcernChipRow({
   label,
   required,
   requiredLabel,
+  testIdPrefix,
 }: {
   title: string;
   hint?: string;
@@ -383,9 +391,10 @@ export function ConcernChipRow({
   label: (id: string) => string;
   required?: boolean;
   requiredLabel?: string;
+  testIdPrefix?: string;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid={testIdPrefix ? `${testIdPrefix}-group` : undefined}>
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold">{title}</p>
@@ -410,6 +419,7 @@ export function ConcernChipRow({
               key={id}
               type="button"
               onClick={() => onToggle(id)}
+              data-testid={testIdPrefix ? `${testIdPrefix}-${id}` : undefined}
               className={cn(
                 "min-h-11 touch-manipulation rounded-full border px-4 py-2.5 text-sm font-medium transition-all active:scale-[0.98]",
                 on

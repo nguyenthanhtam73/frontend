@@ -1321,6 +1321,7 @@
     "sectionLabel": "Làm quen với da bạn",
     "title": "Chăm da khởi đầu",
     "intro": "3 bước — dưới 60 giây là xong. Chọn vấn đề da, xem routine ngay, không cần chờ.",
+    "skipToApp": "Bỏ qua — vào ứng dụng",
     "progress": {
       "stepOf": "Bước {current}/{total}",
       "skinProfile": "Da bạn",
@@ -1741,6 +1742,7 @@
       "retry": "Thử lại",
       "manualSkin": "Chọn loại da thủ công",
       "useDefaultRoutine": "Dùng routine mặc định",
+      "retryAiRoutine": "Thử lại với AI",
       "retryAnalyzeAi": "Phân tích ảnh lại với AI",
       "retryAnalyzeAiShort": "Phân tích lại bằng AI",
       "manualSkinBannerTitle": "Bạn đang chọn loại da thủ công",

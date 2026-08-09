@@ -57,8 +57,17 @@ export const JUST_COMPLETED_ONBOARDING_KEY = "dadiary_just_completed_onboarding"
 /** Guest (no login) may complete onboarding once; value `"true"` when used. */
 export const ONBOARDING_GUEST_TRIAL_KEY = "hasCompletedOnboardingTrial";
 
+/** Cookie twin of ONBOARDING_GUEST_TRIAL_KEY (survives some localStorage clears). */
+export const ONBOARDING_GUEST_TRIAL_COOKIE = "dadiary_guest_onboarding_trial";
+
 /** Tracks last onboarding reset to enforce one reset per calendar day. */
 export const ONBOARDING_RESET_KEY = "dadiary_onboarding_reset_at";
+
+/**
+ * Per-user flag: auth user skipped onboarding (enter app without completing).
+ * Value is `"1"`; key suffix is the user id.
+ */
+export const ONBOARDING_SKIPPED_KEY_PREFIX = "dadiary_onboarding_skipped:";
 
 /** Step 1 — main concerns (user picks up to ONBOARDING_MAX_CONCERNS). */
 export const STEP1_CONCERNS = [

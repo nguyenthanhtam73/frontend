@@ -61,7 +61,8 @@ test.describe("Core product smoke", () => {
     await page.locator("#login-email").fill(session.email);
     await page.locator("#login-password").fill(session.password);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL(/\/(check-in|routine|pricing|cabinet)?/, {
+    // Fresh users land on /onboarding (P2 gate); completed users may hit /check-in.
+    await page.waitForURL(/\/(onboarding|check-in|routine|pricing|cabinet)/, {
       timeout: 20_000,
     });
 
