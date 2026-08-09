@@ -521,7 +521,10 @@ export function OnboardingStepStarterRoutine({
 
   const skinLabel = rationale ? t(`skinType.${rationale.skinType as "combo"}`) : "—";
 
-  const whyLines = rationale?.lines?.slice(0, 2) ?? [];
+  const whyLines = (rationale?.lines ?? [])
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 3);
   const hasWhy = whyLines.length > 0;
   const badgeKey =
     carePhase === "manual" ? "step2.personalBadgeManual" : "step2.personalBadge";
@@ -648,31 +651,39 @@ export function OnboardingStepStarterRoutine({
         </p>
       ) : null}
 
-      {hasWhy || routine.week_notes ? (
-        <details className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
+      {hasWhy ? (
+        <details
+          className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2"
+          data-testid="onboarding-routine-rationale"
+        >
           <summary className="cursor-pointer text-xs font-semibold text-foreground/90">
             {t("step2.whyTitle")}
           </summary>
           <div className="mt-2 space-y-2">
-            {whyLines.length ? (
-              <ul className="space-y-1">
-                {whyLines.map((line) => (
-                  <li
-                    key={line}
-                    className="text-xs leading-relaxed text-foreground/85"
-                  >
-                    · {line}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {routine.week_notes ? (
+            <ul className="space-y-1">
+              {whyLines.map((line) => (
+                <li
+                  key={line}
+                  className="text-xs leading-relaxed text-foreground/85"
+                >
+                  · {line}
+                </li>
+              ))}
+            </ul>
+            {routine.week_notes?.trim() ? (
               <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
                 {routine.week_notes}
               </p>
             ) : null}
           </div>
         </details>
+      ) : routine.week_notes?.trim() ? (
+        <p
+          className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2 text-xs leading-relaxed text-muted-foreground"
+          data-testid="onboarding-week-notes"
+        >
+          {routine.week_notes}
+        </p>
       ) : null}
 
       <div className="space-y-1 pt-0.5">

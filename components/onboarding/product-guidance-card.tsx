@@ -105,6 +105,7 @@ function GuidanceCard({
   maxBenefits,
   compactMobile,
   smUp,
+  carePhase,
 }: {
   item: ProductGuidanceItemDTO;
   idx: number;
@@ -117,21 +118,30 @@ function GuidanceCard({
   maxBenefits: number;
   compactMobile: boolean;
   smUp: boolean;
+  carePhase?: string;
 }) {
   const affiliate = hasAffiliate(item, hideCommerce);
-  // CTA cards stay open; role-only cards collapse on mobile when compact.
-  const preferCollapsed = compactMobile && !affiliate && !smUp;
+  // Mobile compact: card 0 expanded; later cards collapsed (CTA + role) —
+  // keep title, why, and Shopee link visible; tuck benefits/caution behind toggle.
+  const preferCollapsed = compactMobile && !smUp && idx > 0;
   const [detailsOpen, setDetailsOpen] = useState(!preferCollapsed);
 
   useEffect(() => {
     setDetailsOpen(!preferCollapsed);
   }, [preferCollapsed]);
 
+  const calmFirst =
+    String(carePhase ?? item.phase ?? "").toLowerCase() === "calm_first";
+  const stepLabel =
+    item.step === "moisturize" && calmFirst
+      ? t("steps.moisturizeCalm")
+      : t(`steps.${item.step}` as "steps.cleanse");
+
   const title = affiliate
     ? [item.brand, item.product_name].filter(Boolean).join(" · ") ||
       item.name_or_category
     : hideCommerce
-      ? genericRoleLabel(item.step, item.category, locale)
+      ? genericRoleLabel(item.step, item.category, locale, carePhase)
       : item.name_or_category;
   const why = scrubText(
     item.why,
@@ -176,7 +186,7 @@ function GuidanceCard({
     Boolean(how) && variant !== "coach" && (!compactMobile || smUp);
   const showExtras = detailsOpen || !preferCollapsed;
   const hasCollapsibleExtras =
-    preferCollapsed && (benefits.length > 0 || Boolean(caution));
+    preferCollapsed && (benefits.length > 0 || Boolean(caution) || Boolean(how));
 
   return (
     <li
@@ -190,7 +200,7 @@ function GuidanceCard({
     >
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
         <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-          {t(`steps.${item.step}` as "steps.cleanse")}
+          {stepLabel}
         </span>
         {affiliate ? (
           <Badge
@@ -329,8 +339,8 @@ export function ProductGuidanceSection({
   /** Step 2: keep section expanded so CTA cards stay above the fold. */
   forceExpanded = false,
   /**
-   * Step 2 mobile density: hide how on xs for CTA cards; collapse role-only
-   * cards to title + why until “more details”.
+   * Step 2 mobile density: first card expanded; later cards collapsed to
+   * title + why (+ CTA link) until “more details”. How hidden on xs.
    */
   compactMobile = false,
   maxBenefits = 4,
@@ -364,6 +374,7 @@ export function ProductGuidanceSection({
   // Hide CTAs while plan is loading so Premium never flashes Shopee / brand names.
   const hideCommerce = noAds.isLoading || noAds.allowed;
   const smUp = useIsSmUp();
+  const carePhase = enrichContext?.phase;
 
   const enriched = useMemo(
     () =>
@@ -411,6 +422,7 @@ export function ProductGuidanceSection({
           maxBenefits={maxBenefits}
           compactMobile={compactMobile}
           smUp={smUp}
+          carePhase={carePhase}
         />
       ))}
     </ul>
@@ -435,14 +447,13 @@ export function ProductGuidanceSection({
             className="mt-0.5 size-4 shrink-0 text-emerald-700 dark:text-emerald-300"
             aria-hidden
           />
-          <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="min-w-0 flex-1">
             <h3
               id="onb-product-guidance-title"
               className="text-sm font-semibold"
             >
               {t("title")}
             </h3>
-            <p className="text-xs text-muted-foreground">{t("hint")}</p>
           </div>
           <ChevronDown
             className={cn(
@@ -458,14 +469,13 @@ export function ProductGuidanceSection({
             className="mt-0.5 size-4 shrink-0 text-emerald-700 dark:text-emerald-300"
             aria-hidden
           />
-          <div className="min-w-0 space-y-0.5">
+          <div className="min-w-0">
             <h3
               id="onb-product-guidance-title"
               className="text-sm font-semibold"
             >
               {t("title")}
             </h3>
-            <p className="text-xs text-muted-foreground">{t("hint")}</p>
           </div>
         </div>
       )}

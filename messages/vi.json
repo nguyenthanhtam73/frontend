@@ -670,7 +670,6 @@
   },
   "coachProductGuidance": {
     "title": "Gợi ý tùy chọn",
-    "hint": "Tối đa 2 sản phẩm khớp catalog hôm nay — bỏ qua bất cứ lúc nào.",
     "affiliateBadge": "Affiliate",
     "genericBadge": "Tip",
     "whyLabel": "Vì sao hợp da bạn",
@@ -683,6 +682,7 @@
     "steps": {
       "cleanse": "Rửa mặt",
       "moisturize": "Dưỡng ẩm",
+      "moisturizeCalm": "Dưỡng / làm dịu",
       "spf": "Chống nắng",
       "treat": "Điều trị",
       "soothe": "Làm dịu"
@@ -1414,7 +1414,6 @@
     },
     "productGuidance": {
       "title": "Hướng sản phẩm cho da bạn",
-      "hint": "Vì sao hợp da bạn, công dụng, cách dùng và lưu ý — tối đa 2 link Shopee khi khớp catalog. Không bắt buộc mua.",
       "affiliateBadge": "Affiliate",
       "genericBadge": "Gợi ý chung",
       "whyLabel": "Vì sao hợp da bạn",
@@ -1427,6 +1426,7 @@
       "steps": {
         "cleanse": "Rửa mặt",
         "moisturize": "Dưỡng ẩm",
+        "moisturizeCalm": "Dưỡng / làm dịu",
         "spf": "Chống nắng",
         "treat": "Điều trị",
         "soothe": "Làm dịu"

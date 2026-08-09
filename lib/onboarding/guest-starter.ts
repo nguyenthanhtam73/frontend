@@ -370,6 +370,98 @@ function isCalmScaffoldPhase(phase: StarterCarePhase): boolean {
   return phase === "calm_first" || phase === "manual";
 }
 
+function isMoisturizerCategory(item: ProductGuidanceItemDTO): boolean {
+  const cat = String(item.category ?? "").toLowerCase();
+  const step = String(item.step ?? "").toLowerCase();
+  return cat === "moisturizer" || step === "moisturize";
+}
+
+function stripCommerceFields(
+  item: ProductGuidanceItemDTO,
+): ProductGuidanceItemDTO {
+  return {
+    ...item,
+    affiliate_product_id: undefined,
+    product_name: undefined,
+    brand: undefined,
+    affiliate_link: undefined,
+    price_range: undefined,
+  };
+}
+
+/**
+ * Fold calm_first soothe into moisturize so Step 2 stays 3 cards (cleanse /
+ * moist+soothe / spf). Merges benefits/why only — never re-labels a toner/serum
+ * Shopee CTA as “moisturize” (catalog category must stay honest).
+ */
+export function mergeCalmFirstSootheIntoMoisturize(
+  items: ProductGuidanceItemDTO[],
+): ProductGuidanceItemDTO[] {
+  const soothe = items.filter((i) => String(i.step ?? "").toLowerCase() === "soothe");
+  if (!soothe.length) return items;
+  const rest = items.filter((i) => String(i.step ?? "").toLowerCase() !== "soothe");
+  const moistIdx = rest.findIndex(
+    (i) => String(i.step ?? "").toLowerCase() === "moisturize",
+  );
+  const donor = soothe[0];
+  if (moistIdx < 0) {
+    // Promote role card only; drop toner/serum commerce so step badge stays truthful.
+    const promoted = stripCommerceFields({
+      ...donor,
+      step: "moisturize",
+      category: "moisturizer",
+      name_or_category:
+        donor.name_or_category?.trim() ||
+        donor.product_name?.trim() ||
+        donor.why?.trim() ||
+        "Moisturizer",
+    });
+    // If donor was already a moisturizer-tagged soothe (rare), keep commerce.
+    if (isMoisturizerCategory(donor) && donor.affiliate_link?.trim()) {
+      return [
+        ...rest,
+        {
+          ...promoted,
+          affiliate_product_id: donor.affiliate_product_id,
+          product_name: donor.product_name,
+          brand: donor.brand,
+          affiliate_link: donor.affiliate_link,
+          price_range: donor.price_range,
+        },
+      ];
+    }
+    return [...rest, promoted];
+  }
+  const moist = { ...rest[moistIdx] };
+  const benefits = [...(moist.benefits ?? [])];
+  for (const b of donor.benefits ?? []) {
+    const t = b.trim();
+    if (!t) continue;
+    if (benefits.length >= 4) break;
+    if (!benefits.some((x) => x.toLowerCase() === t.toLowerCase())) {
+      benefits.push(t);
+    }
+  }
+  moist.benefits = benefits.slice(0, 4);
+  // Only inherit commerce when the donor is actually a moisturizer SKU.
+  if (
+    !moist.affiliate_link?.trim() &&
+    donor.affiliate_link?.trim() &&
+    isMoisturizerCategory(donor)
+  ) {
+    moist.affiliate_product_id = donor.affiliate_product_id;
+    moist.product_name = donor.product_name;
+    moist.brand = donor.brand;
+    moist.affiliate_link = donor.affiliate_link;
+    moist.price_range = donor.price_range;
+  }
+  if (!moist.why?.trim() && donor.why?.trim()) {
+    moist.why = donor.why;
+  }
+  rest[moistIdx] = moist;
+  return rest;
+}
+
 /** Drop treat / strong-active guidance cards when phase is calm_first / manual. */
 export function filterGuidanceForPhase(
   items: ProductGuidanceItemDTO[] | undefined,
@@ -377,11 +469,11 @@ export function filterGuidanceForPhase(
 ): ProductGuidanceItemDTO[] | undefined {
   if (!items?.length) return items;
   if (!isCalmScaffoldPhase(phase)) return items;
-  return items.filter((item) => {
+  const filtered = items.filter((item) => {
     const step = String(item.step ?? "").toLowerCase();
     if (step === "treat") return false;
     // Identity fields only — do NOT scan `why`/`caution` (calm copy often says
-    // “chưa BHA/retinol”, which must not drop the soothe/moisturizer card).
+    // “chưa BHA/retinol”, which must not drop the moisturizer card).
     const blob = [item.name_or_category, item.product_name, item.category]
       .filter(Boolean)
       .join(" ")
@@ -390,6 +482,7 @@ export function filterGuidanceForPhase(
       blob,
     );
   });
+  return mergeCalmFirstSootheIntoMoisturize(filtered);
 }
 
 /** Drop treat suggestions when scaffolding is calm-only. */
@@ -499,12 +592,23 @@ export function withAnalyzeCommerce(
 }
 
 /** Role title without brand — used by no_ads strip and ProductGuidanceSection. */
-export function genericRoleLabel(step: string, category: string, locale: string): string {
+export function genericRoleLabel(
+  step: string,
+  category: string,
+  locale: string,
+  phase?: string,
+): string {
   const en = locale.toLowerCase().startsWith("en");
+  const calm =
+    String(phase ?? "").toLowerCase() === "calm_first" ||
+    String(phase ?? "").toLowerCase() === "manual";
   switch (step.trim().toLowerCase()) {
     case "cleanse":
       return en ? "Gentle cleanser" : "Sữa rửa mặt dịu";
     case "moisturize":
+      if (calm) {
+        return en ? "Soothing moisturizer" : "Kem dưỡng làm dịu";
+      }
       return en ? "Moisturizer" : "Kem dưỡng ẩm";
     case "spf":
       return en ? "Morning sunscreen" : "Kem chống nắng";
@@ -567,7 +671,12 @@ export function stripStarterCommerceForNoAds(
       brand: undefined,
       affiliate_link: undefined,
       price_range: undefined,
-      name_or_category: genericRoleLabel(item.step, item.category, locale),
+      name_or_category: genericRoleLabel(
+        item.step,
+        item.category,
+        locale,
+        item.phase,
+      ),
       why: scrub(item.why, "why"),
       how_to_use: scrub(item.how_to_use, "how"),
       caution: scrub(item.caution, "caution") || undefined,

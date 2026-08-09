@@ -12,6 +12,30 @@ function isEn(locale: string) {
   return locale.toLowerCase().startsWith("en");
 }
 
+/** Strip repeating “Với vùng má…:” / “For cheeks…:” openers — context lives in summary. */
+export function stripRepeatedContextPrefix(why: string, en: boolean): string {
+  const trimmed = why.trim();
+  if (!trimmed) return trimmed;
+  const low = trimmed.toLowerCase();
+  const prefixes = en ? ["for ", "với "] : ["với ", "for "];
+  for (const p of prefixes) {
+    if (!low.startsWith(p)) continue;
+    const rest = trimmed.slice(p.length);
+    for (const sep of [" — ", " – ", " - ", ": ", "—"] as const) {
+      const i = rest.indexOf(sep);
+      if (i > 0 && i < 80) {
+        const after = rest.slice(i + sep.length).trim();
+        if (!after) continue;
+        if (en) {
+          return after.charAt(0).toUpperCase() + after.slice(1);
+        }
+        return after;
+      }
+    }
+  }
+  return trimmed;
+}
+
 /** Client-side safety net when analyze payload is thin — never invents affiliate links. */
 export function enrichProductGuidanceItems(
   items: ProductGuidanceItemDTO[] | undefined,
@@ -21,7 +45,10 @@ export function enrichProductGuidanceItems(
   const en = isEn(ctx.locale);
   const phase = String(ctx.phase || "").toLowerCase() || "calm_first";
   return items.map((item) => {
-    const why = item.why?.trim() || defaultWhy(item.step, phase, ctx, en);
+    const rawWhy = item.why?.trim() || "";
+    const why = rawWhy
+      ? stripRepeatedContextPrefix(rawWhy, en)
+      : defaultWhy(item.step, phase, en);
     let benefits = (item.benefits ?? []).map((b) => b.trim()).filter(Boolean);
     if (benefits.length < 2) {
       benefits = mergeBenefits(benefits, defaultBenefits(item.step, phase, en));
@@ -47,65 +74,36 @@ function mergeBenefits(existing: string[], defaults: string[]): string[] {
   return out;
 }
 
-function regionBit(regions: string[] | undefined, en: boolean): string {
-  if (!regions?.length) return "";
-  const map: Record<string, { en: string; vi: string }> = {
-    cheeks: { en: "cheeks", vi: "má" },
-    t_zone: { en: "T-zone", vi: "chữ T" },
-    forehead: { en: "forehead", vi: "trán" },
-  };
-  const labels = regions.slice(0, 2).map((r) => {
-    const hit = map[r.toLowerCase()];
-    return hit ? (en ? hit.en : hit.vi) : r;
-  });
-  return en ? labels.join(" & ") : labels.join(" và ");
-}
-
-function defaultWhy(
-  step: string,
-  phase: string,
-  ctx: EnrichCtx,
-  en: boolean,
-): string {
-  const region = regionBit(ctx.regions, en);
-  const dense = String(ctx.severity || "").toLowerCase() === "dense";
-  const situ = en
-    ? [region && `on ${region}`, dense && "dense inflammation"]
-        .filter(Boolean)
-        .join(", ") || "your current skin phase"
-    : [region && `vùng ${region}`, dense && "viêm dày / đỏ"]
-        .filter(Boolean)
-        .join(", ") || "giai đoạn da hiện tại";
-
+function defaultWhy(step: string, phase: string, en: boolean): string {
   switch (step) {
     case "cleanse":
       return en
-        ? `For ${situ} — cleanse gently; don’t scrub or push acids on inflamed spots.`
-        : `Với ${situ} — rửa dịu, không chà / không đẩy acid lên vùng đang sưng.`;
+        ? "Cleanse gently — don’t scrub or push acids on inflamed spots."
+        : "Rửa nhẹ — không chà / không đẩy acid lên vùng đang sưng.";
     case "soothe":
       return en
-        ? `For ${situ} — calm redness before any actives.`
-        : `Với ${situ} — làm dịu đỏ/căng trước khi nghĩ tới hoạt chất.`;
+        ? "Calm redness and tightness before any actives."
+        : "Làm dịu đỏ / căng trước khi nghĩ tới hoạt chất.";
     case "moisturize":
       return phase === "calm_first"
         ? en
-          ? `For ${situ} — repair comfort first; strong treat can wait.`
-          : `Với ${situ} — phục hồi / êm da trước, chưa treat mạnh.`
+          ? "Soothe redness and support the barrier — strong treat can wait."
+          : "Dịu đỏ, hỗ trợ barrier — chưa treat mạnh."
         : en
-          ? `For ${situ} — moisturizer keeps comfort around any single active.`
-          : `Với ${situ} — dưỡng ẩm giữ da êm quanh hoạt chất (nếu có).`;
+          ? "Moisturizer keeps comfort around any single active."
+          : "Dưỡng ẩm giữ da êm quanh hoạt chất (nếu có).";
     case "spf":
       return en
-        ? `For ${situ} — daily SPF protects healing skin and limits new dark marks.`
-        : `Với ${situ} — SPF mỗi sáng bảo vệ da phục hồi và giảm thâm mới.`;
+        ? "Daily SPF protects reactive skin and limits new dark marks."
+        : "SPF mỗi sáng bảo vệ da đang kích và giảm thâm mới.";
     case "treat":
       return en
-        ? `For ${situ} — at most one active; never stack the same night.`
-        : `Với ${situ} — tối đa 1 hoạt chất; không stack cùng đêm.`;
+        ? "At most one active — never stack the same night."
+        : "Tối đa 1 hoạt chất — không stack cùng đêm.";
     default:
       return en
-        ? `Fits ${situ} for this care step.`
-        : `Phù hợp ${situ} cho bước chăm sóc này.`;
+        ? "Fits this care step for your current phase."
+        : "Phù hợp bước này theo giai đoạn da hiện tại.";
   }
 }
 
@@ -118,8 +116,8 @@ function defaultBenefits(step: string, phase: string, en: boolean): string[] {
   if (step === "moisturize") {
     return phase === "calm_first"
       ? en
-        ? ["Supports barrier repair", "Reduces tight feel", "Comfort on inflamed zones"]
-        : ["Hỗ trợ barrier", "Giảm khô căng", "Êm vùng đang viêm"]
+        ? ["Calms redness / tight feel", "Supports barrier repair", "Comfort on inflamed zones"]
+        : ["Làm dịu đỏ / căng", "Hỗ trợ barrier", "Êm vùng đang viêm"]
       : en
         ? ["Supports the barrier", "Easier active tolerance", "Overnight comfort"]
         : ["Hỗ trợ barrier", "Dễ chịu hơn khi có treat", "Êm da qua đêm"];

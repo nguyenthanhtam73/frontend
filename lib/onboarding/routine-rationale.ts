@@ -215,7 +215,7 @@ export function buildRoutineRationale(
 
   return {
     headline,
-    lines: lines.slice(0, 2),
+    lines: lines.map((l) => l.trim()).filter(Boolean).slice(0, 3),
     source,
     skinType,
     goal,
