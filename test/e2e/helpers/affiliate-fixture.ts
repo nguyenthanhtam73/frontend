@@ -57,9 +57,10 @@ export function denseCalmFirstAnalyzeFixture(): OnboardingSkinAnalyzeDTO {
       step: "cleanse",
       category: "cleanser",
       name_or_category: `${CATALOG_CLEANSE.brand} · ${CATALOG_CLEANSE.product_name}`,
-      why: "Rửa sạch dầu và bụi nhẹ khi da đang viêm dày.",
-      benefits: ["Làm sạch nhẹ", "Phù hợp da dầu / hỗn hợp"],
-      how_to_use: "Sáng và tối, massage 20–30 giây rồi rửa sạch.",
+      why: "Với vùng má viêm dày: rửa dịu — không chà / không đẩy acid lên nốt đang sưng.",
+      benefits: ["Làm sạch nhẹ", "Ít châm trên da đang kích", "Không chà vùng sưng"],
+      how_to_use: "Nước ấm, khoảng 30 giây, miết nhẹ — sáng và tối.",
+      caution: "Làm dịu trước: tuần này chưa BHA/retinoid. Không nặn / không cậy.",
       affiliate_product_id: CATALOG_CLEANSE.id,
       product_name: CATALOG_CLEANSE.product_name,
       brand: CATALOG_CLEANSE.brand,
@@ -70,17 +71,19 @@ export function denseCalmFirstAnalyzeFixture(): OnboardingSkinAnalyzeDTO {
       step: "moisturize",
       category: "moisturizer",
       name_or_category: "Kem dưỡng ẩm dịu",
-      why: "Khóa ẩm / hàng rào khi da đang cần làm dịu.",
-      benefits: ["Hỗ trợ hàng rào", "Giảm cảm giác căng"],
-      how_to_use: "Thoa mỏng sau cleanse, trước SPF buổi sáng.",
+      why: "Với má viêm dày: ưu tiên phục hồi barrier trước — chưa treat mạnh.",
+      benefits: ["Hỗ trợ barrier", "Giảm khô căng", "Êm vùng đang viêm"],
+      how_to_use: "Thoa khi da còn hơi ẩm; đủ trên vùng đỏ / khô.",
+      caution: "Tuần này chưa stack hoạt chất mạnh. Không nặn.",
     }),
     guidanceItem({
       step: "spf",
       category: "spf",
       name_or_category: `${CATALOG_SPF.brand} · ${CATALOG_SPF.product_name}`,
-      why: "Chống nắng mỗi sáng khi da đang xử lý viêm.",
-      benefits: ["Bảo vệ UV", "Kết cấu mỏng"],
-      how_to_use: "Thoa đủ lớp cuối routine sáng.",
+      why: "Với da đang viêm: SPF mỗi sáng bảo vệ vùng phục hồi và giảm thâm mới.",
+      benefits: ["Bảo vệ UV", "Giảm nguy cơ thâm mới", "Che nắng da đang kích"],
+      how_to_use: "Mỗi sáng, bước cuối — kể cả gần cửa sổ.",
+      caution: "Vẫn cần SPF khi da viêm — bỏ active mạnh, không bỏ nắng.",
       affiliate_product_id: CATALOG_SPF.id,
       product_name: CATALOG_SPF.product_name,
       brand: CATALOG_SPF.brand,
@@ -121,5 +124,23 @@ export function denseCalmFirstAnalyzeFixture(): OnboardingSkinAnalyzeDTO {
     phase: "calm_first",
     summary: "Da đang viêm dày — ưu tiên làm dịu, chưa thêm hoạt chất mạnh.",
     product_guidance,
+  };
+}
+
+/** Mild / can_add_active — PM may include at most one optional active. */
+export function canAddActiveAnalyzeFixture(): OnboardingSkinAnalyzeDTO {
+  const base = denseCalmFirstAnalyzeFixture();
+  return {
+    ...base,
+    severity_level: "mild",
+    phase: "can_add_active",
+    concern_types: ["comedones", "oiliness"],
+    main_concerns: ["comedones"],
+    summary: "Da ổn hơn — có thể cân nhắc tối đa 1 hoạt chất nhẹ vào tối.",
+    coaching_notes: "E2E fixture: can_add_active — one optional PM active.",
+    product_guidance: (base.product_guidance ?? []).map((g) => ({
+      ...g,
+      phase: "can_add_active",
+    })),
   };
 }

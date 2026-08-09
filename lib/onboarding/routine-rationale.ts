@@ -1,3 +1,4 @@
+import { resolveStarterCarePhase } from "@/lib/onboarding/guest-starter";
 import { inferSkinTypeFromConcerns } from "@/lib/onboarding/infer-skin-type";
 import type { OnboardingState, SkinGoal } from "@/lib/stores/onboarding-store";
 
@@ -69,19 +70,53 @@ function goalLabel(goal: SkinGoal, t: LabelFn): string {
   }
 }
 
-function calmSkinPhrase(signal: string | undefined, en: boolean): string | null {
-  if (signal === "possibly_compromised") {
-    return en
-      ? "your skin may need extra soothing right now"
-      : "da bạn có thể đang cần làm dịu thêm";
+/** Avoid "da da hỗn hợp" when i18n label already starts with "Da ". */
+function skinPhrase(skinLabel: string, en: boolean): string {
+  const trimmed = skinLabel.trim();
+  if (!trimmed) return en ? "your skin" : "da bạn";
+  if (en) {
+    const low = trimmed.toLowerCase();
+    return low.endsWith("skin") ? low : `${low} skin`;
   }
-  if (signal === "likely_ok") {
-    return en ? "your skin looks fairly steady" : "da bạn trông khá ổn định";
-  }
+  // VI labels are like "Da hỗn hợp" — don't prefix another "da".
+  if (/^da\b/i.test(trimmed)) return trimmed.toLowerCase();
+  return `da ${trimmed.toLowerCase()}`;
+}
+
+function regionPhrase(
+  regions: string[] | undefined,
+  en: boolean,
+): string | null {
+  if (!regions?.length) return null;
+  const map: Record<string, { en: string; vi: string }> = {
+    cheeks: { en: "cheeks", vi: "má" },
+    t_zone: { en: "T-zone", vi: "vùng chữ T" },
+    forehead: { en: "forehead", vi: "trán" },
+    chin: { en: "chin", vi: "cằm" },
+    nose: { en: "nose", vi: "mũi" },
+    jaw: { en: "jaw", vi: "hàm" },
+  };
+  const labels = regions.slice(0, 2).map((r) => {
+    const key = String(r).toLowerCase();
+    const hit = map[key];
+    return hit ? (en ? hit.en : hit.vi) : key.replace(/_/g, " ");
+  });
+  if (!labels.length) return null;
+  return en ? labels.join(" & ") : labels.join(" và ");
+}
+
+function severityPhrase(
+  severity: string | undefined,
+  en: boolean,
+): string | null {
+  const s = String(severity ?? "").toLowerCase();
+  if (s === "dense") return en ? "dense / very visible" : "dày / rõ";
+  if (s === "moderate") return en ? "moderate" : "vừa";
+  if (s === "mild") return en ? "mild" : "nhẹ";
   return null;
 }
 
-/** 2–4 tight lines explaining why this routine fits the user's profile. */
+/** 1–3 tight lines explaining why this routine fits the user's profile. */
 export function buildRoutineRationale(
   ob: OnboardingState,
   locale: string,
@@ -95,48 +130,61 @@ export function buildRoutineRationale(
   const goalText = goalLabel(goal as SkinGoal, t);
   const concernText = joinConcerns(concerns, locale);
   const source: RoutineRationaleSource = ob.aiSnapshot ? "ai" : "manual";
+  const phase = resolveStarterCarePhase(ob);
+  const skin = skinPhrase(skinLabel, en);
 
   let headline: string;
   const lines: string[] = [];
 
   if (source === "ai") {
-    const calm = calmSkinPhrase(ob.aiSnapshot?.barrier_signal, en);
-    headline = en
-      ? `From your photos: ${skinLabel.toLowerCase()} skin, focused on ${goalText.toLowerCase()}.`
-      : `Từ ảnh của bạn: da ${skinLabel.toLowerCase()}, ưu tiên ${goalText.toLowerCase()}.`;
+    const summary = ob.aiSnapshot?.summary?.trim();
+    const regions = regionPhrase(ob.aiSnapshot?.primary_regions, en);
+    const sev = severityPhrase(
+      typeof ob.aiSnapshot?.severity_level === "string"
+        ? ob.aiSnapshot.severity_level
+        : undefined,
+      en,
+    );
 
-    if (calm) {
+    if (summary) {
+      headline = summary.length > 160 ? `${summary.slice(0, 157).trim()}…` : summary;
+    } else {
+      headline = en
+        ? `From your photos: ${skin}, focused on ${goalText.toLowerCase()}.`
+        : `Từ ảnh của bạn: ${skin}, ưu tiên ${goalText.toLowerCase()}.`;
+    }
+
+    if (regions || sev) {
       lines.push(
         en
-          ? `AI noted ${calm} — steps stay gentle, no harsh actives yet.`
-          : `AI ghi nhận ${calm} — các bước giữ nhẹ, chưa thêm hoạt chất mạnh.`,
+          ? `Focus${regions ? ` on ${regions}` : ""}${sev ? ` · ${sev}` : ""} — matched to what the photos show.`
+          : `Ưu tiên${regions ? ` vùng ${regions}` : ""}${sev ? ` · mức ${sev}` : ""} — bám theo ảnh vừa phân tích.`,
       );
     }
 
-    lines.push(
-      en
-        ? `We built around ${concernText} and your goal, with daily sunscreen as the anchor.`
-        : `Routine xoay quanh ${concernText} và mục tiêu của bạn, với kem chống nắng là trụ cột.`,
-    );
-
-    const confidence = ob.aiSnapshot?.confidence;
-    if (confidence != null && confidence >= 0.6) {
+    if (phase === "calm_first") {
       lines.push(
         en
-          ? `Morning: cleanse → hydrate → protect. Evening: gentle reset, then repair.`
-          : `Sáng: làm sạch → cấp ẩm → bảo vệ. Tối: làm sạch nhẹ, rồi phục hồi.`,
+          ? "Morning: cleanse → moisturize → SPF. Evening: gentle cleanse → repair — no strong actives yet."
+          : "Sáng: sạch → ẩm → SPF. Tối: sạch nhẹ → phục hồi — chưa thêm hoạt chất mạnh.",
+      );
+    } else if (phase === "can_add_active") {
+      lines.push(
+        en
+          ? "Morning: cleanse → moisturize → SPF. Evening: cleanse → at most one active → moisturize."
+          : "Sáng: sạch → ẩm → SPF. Tối: sạch → tối đa 1 hoạt chất → dưỡng ẩm.",
       );
     } else {
       lines.push(
         en
-          ? `You can tweak any step below — this is your starting point, not a fixed rule.`
-          : `Bạn có thể chỉnh từng bước bên dưới — đây là điểm khởi đầu, không phải quy tắc cứng.`,
+          ? `Built around ${concernText} and your goal, with daily sunscreen as the anchor.`
+          : `Routine xoay quanh ${concernText} và mục tiêu của bạn, với kem chống nắng là trụ cột.`,
       );
     }
   } else {
     headline = en
-      ? `Built for ${skinLabel.toLowerCase()} skin aiming for ${goalText.toLowerCase()}.`
-      : `Tạo cho da ${skinLabel.toLowerCase()}, hướng tới ${goalText.toLowerCase()}.`;
+      ? `Built for ${skin} aiming for ${goalText.toLowerCase()}.`
+      : `Tạo cho ${skin}, hướng tới ${goalText.toLowerCase()}.`;
 
     lines.push(
       en
@@ -147,33 +195,27 @@ export function buildRoutineRationale(
     if (goal === "barrier" || concerns.includes("redness") || concerns.includes("dryness")) {
       lines.push(
         en
-          ? `Gentle cleanse + soothing care — no acids until skin feels calm.`
-          : `Rửa mặt dịu + chăm làm dịu — chưa dùng acid khi da còn căng/kích ứng.`,
+          ? "Morning: cleanse → moisturize → SPF. Evening: gentle cleanse → repair — no acids yet."
+          : "Sáng: sạch → ẩm → SPF. Tối: sạch nhẹ → phục hồi — chưa dùng acid.",
       );
     } else if (goal === "clear_acne" || concerns.includes("acne")) {
       lines.push(
         en
-          ? `Oil control without stripping — spot treat only when skin is settled.`
-          : `Kiểm soát dầu không làm khô căng — chấm mụn chỉ khi da đã ổn.`,
+          ? "Morning: cleanse → moisturize → SPF. Evening: cleanse → repair — calm first this week."
+          : "Sáng: sạch → ẩm → SPF. Tối: sạch → phục hồi — tuần này ưu tiên làm dịu.",
       );
     } else {
       lines.push(
         en
-          ? `A simple AM/PM base you can stick to this week.`
-          : `Nền sáng/tối đơn giản — dễ duy trì ngay tuần này.`,
+          ? "A simple AM/PM base you can stick to this week."
+          : "Nền sáng/tối đơn giản — dễ duy trì ngay tuần này.",
       );
     }
-
-    lines.push(
-      en
-        ? `Sunscreen every morning — even indoors near windows.`
-        : `Kem chống nắng mỗi sáng — kể cả ở nhà gần cửa sổ.`,
-    );
   }
 
   return {
     headline,
-    lines: lines.slice(0, 3),
+    lines: lines.slice(0, 2),
     source,
     skinType,
     goal,

@@ -16,16 +16,25 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FriendlyNotice } from "@/components/onboarding/onboarding-ui";
+import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import { Button } from "@/components/ui/button";
-import { starterCareNote } from "@/lib/onboarding/guest-starter";
+import {
+  filterGuidanceForPhase,
+  guidanceMentionsNoPick,
+  resolveStarterCarePhase,
+  starterCareNote,
+  type StarterCarePhase,
+} from "@/lib/onboarding/guest-starter";
 import {
   parseRoutineStep,
   routineStepIcon,
 } from "@/lib/onboarding/parse-routine-step";
 import { buildRoutineRationale } from "@/lib/onboarding/routine-rationale";
+import { useManualProductGuidance } from "@/lib/onboarding/use-manual-product-guidance";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
 
+/** Concern ids with an `onboarding.aiConcerns.*` translation. */
 const STEP_CONCERN_IDS = [
   "acne",
   "dryness",
@@ -33,6 +42,9 @@ const STEP_CONCERN_IDS = [
   "hyperpigmentation",
   "dullness",
   "large_pores",
+  "weak_barrier",
+  "dehydration",
+  "uneven_texture",
 ] as const;
 
 function PersonalizationChips({
@@ -221,7 +233,7 @@ function RoutineStepCard({
                 ref={detailRef}
                 className={cn(
                   "text-xs leading-relaxed text-muted-foreground",
-                  !expanded && "line-clamp-1 sm:line-clamp-2",
+                  !expanded && "line-clamp-2",
                 )}
               >
                 {parsed.detail}
@@ -240,23 +252,34 @@ function RoutineStepCard({
                 </button>
               ) : null}
             </div>
-          ) : (
-            <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">{stepText}</p>
-          )}
+          ) : null}
         </div>
       </div>
     </li>
   );
 }
 
+function eveningHintKey(phase: StarterCarePhase):
+  | "step2.eveningHint"
+  | "step2.eveningHintCalm"
+  | "step2.eveningHintActive" {
+  if (phase === "calm_first" || phase === "manual") {
+    return "step2.eveningHintCalm";
+  }
+  if (phase === "can_add_active") return "step2.eveningHintActive";
+  return "step2.eveningHint";
+}
+
 function RoutinePeriodSection({
   period,
   steps,
   editing,
+  carePhase,
 }: {
   period: "morning" | "evening";
   steps: string[];
   editing: boolean;
+  carePhase: StarterCarePhase;
 }) {
   const t = useTranslations("onboarding");
   const ob = useOnboardingStore();
@@ -291,7 +314,9 @@ function RoutinePeriodSection({
             {isMorning ? t("routineStep.morning") : t("routineStep.evening")}
           </h3>
           <p className="text-xs text-muted-foreground">
-            {isMorning ? t("step2.morningHint") : t("step2.eveningHint")}
+            {isMorning
+              ? t("step2.morningHint")
+              : t(eveningHintKey(carePhase))}
           </p>
         </div>
         <div
@@ -398,7 +423,84 @@ export function OnboardingStepStarterRoutine({
     [rationale, t],
   );
 
-  const careNote = useMemo(() => starterCareNote(goal, locale), [goal, locale]);
+  const carePhase = useMemo(
+    () =>
+      resolveStarterCarePhase({
+        aiSnapshot,
+        aiConcernTags,
+        goal,
+        skinType,
+      } as Parameters<typeof resolveStarterCarePhase>[0]),
+    [aiSnapshot, aiConcernTags, goal, skinType],
+  );
+
+  // Photo analysis is the richest source, but users who skip it must still see
+  // what to buy and why — so fall back to answer-driven guidance from the server.
+  const fromPhotos =
+    aiSnapshot?.product_guidance?.length
+      ? aiSnapshot.product_guidance
+      : routine?.product_guidance?.length
+        ? routine.product_guidance
+        : undefined;
+
+  const manualGuidance = useManualProductGuidance({
+    enabled: !fromPhotos,
+    locale,
+    goal,
+    skinType,
+    concerns: aiConcernTags,
+  });
+
+  const guidanceItems = useMemo(
+    () =>
+      filterGuidanceForPhase(
+        fromPhotos ?? manualGuidance.result?.product_guidance,
+        carePhase,
+      ),
+    [fromPhotos, manualGuidance.result, carePhase],
+  );
+
+  const careNote = useMemo(
+    () =>
+      starterCareNote(goal, locale, carePhase, {
+        guidanceHasNoPickCaution: guidanceMentionsNoPick(guidanceItems),
+      }),
+    [goal, locale, carePhase, guidanceItems],
+  );
+
+  const summaryLine = useMemo(() => {
+    const fromAi = aiSnapshot?.summary?.trim();
+    if (fromAi) return fromAi;
+    return rationale?.headline?.trim() || "";
+  }, [aiSnapshot?.summary, rationale?.headline]);
+
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [summaryTruncated, setSummaryTruncated] = useState(false);
+  const summaryRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = summaryRef.current;
+    if (!el || summaryExpanded) {
+      setSummaryTruncated(false);
+      return;
+    }
+    const measure = () => {
+      setSummaryTruncated(el.scrollHeight > el.clientHeight + 1);
+    };
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [summaryLine, summaryExpanded]);
+
+  const [maxBenefits, setMaxBenefits] = useState(2);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const apply = () => setMaxBenefits(mq.matches ? 3 : 2);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (wasEditingRef.current && !editing && userEdited) {
@@ -420,23 +522,25 @@ export function OnboardingStepStarterRoutine({
   const skinLabel = rationale ? t(`skinType.${rationale.skinType as "combo"}`) : "—";
 
   const whyLines = rationale?.lines?.slice(0, 2) ?? [];
-  const hasWhy =
-    Boolean(rationale?.headline?.trim()) || whyLines.length > 0;
+  const hasWhy = whyLines.length > 0;
+  const badgeKey =
+    carePhase === "manual" ? "step2.personalBadgeManual" : "step2.personalBadge";
 
   return (
     <section
       className="space-y-3 sm:space-y-3.5"
       aria-labelledby="onb-routine-title"
       data-testid="onboarding-step-starter-routine"
+      data-care-phase={carePhase}
     >
-      {/* Compact header — AM/PM must win the first viewport on mobile. */}
+      {/* Compact header — summary + guidance + AM/PM win the first viewport. */}
       <div className="space-y-1">
         <div
           className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-2.5 py-1 text-[11px] font-bold text-foreground"
           data-testid="onboarding-starter-personal-badge"
         >
           <Sparkles className="size-3.5 text-primary" aria-hidden />
-          {t("step2.personalBadge")}
+          {t(badgeKey as "step2.personalBadge")}
         </div>
         <h2
           id="onb-routine-title"
@@ -449,6 +553,31 @@ export function OnboardingStepStarterRoutine({
           goalLabel={goalLabel}
           concernLabels={concernLabels.slice(0, 2)}
         />
+        {summaryLine ? (
+          <div>
+            <p
+              ref={summaryRef}
+              className={cn(
+                "text-xs leading-relaxed text-muted-foreground",
+                !summaryExpanded && "line-clamp-2",
+              )}
+              data-testid="onboarding-starter-summary"
+            >
+              {summaryLine}
+            </p>
+            {summaryTruncated || summaryExpanded ? (
+              <button
+                type="button"
+                onClick={() => setSummaryExpanded((v) => !v)}
+                className="mt-0.5 text-[11px] font-medium text-primary"
+              >
+                {summaryExpanded
+                  ? t("step2.summaryCollapse")
+                  : t("step2.summaryExpand")}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {editing && (
@@ -475,9 +604,39 @@ export function OnboardingStepStarterRoutine({
         </div>
       )}
 
+      {guidanceItems && guidanceItems.length > 0 ? (
+        <ProductGuidanceSection
+          items={guidanceItems}
+          source="starter_routine"
+          forceExpanded
+          compactMobile
+          maxBenefits={maxBenefits}
+          sectionTestId="starter-product-guidance"
+          enrichContext={{
+            phase: carePhase === "manual" ? "calm_first" : carePhase,
+            severity:
+              typeof aiSnapshot?.severity_level === "string"
+                ? aiSnapshot.severity_level
+                : undefined,
+            regions: aiSnapshot?.primary_regions,
+            concerns: aiConcernTags,
+          }}
+        />
+      ) : null}
+
       <div className="space-y-2.5">
-        <RoutinePeriodSection period="morning" steps={routine.morning} editing={editing} />
-        <RoutinePeriodSection period="evening" steps={routine.evening} editing={editing} />
+        <RoutinePeriodSection
+          period="morning"
+          steps={routine.morning}
+          editing={editing}
+          carePhase={carePhase}
+        />
+        <RoutinePeriodSection
+          period="evening"
+          steps={routine.evening}
+          editing={editing}
+          carePhase={carePhase}
+        />
       </div>
 
       {careNote ? (
@@ -495,11 +654,6 @@ export function OnboardingStepStarterRoutine({
             {t("step2.whyTitle")}
           </summary>
           <div className="mt-2 space-y-2">
-            {rationale?.headline ? (
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {rationale.headline}
-              </p>
-            ) : null}
             {whyLines.length ? (
               <ul className="space-y-1">
                 {whyLines.map((line) => (

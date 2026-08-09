@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 
 import {
   CoachWelcomeAchievementCard,
@@ -35,6 +36,10 @@ import {
   QUICK_GOALS,
   STEP1_CONCERNS,
 } from "@/lib/onboarding/constants";
+import {
+  filterGuidanceForPhase,
+  resolveCarePhaseFromAnalysis,
+} from "@/lib/onboarding/guest-starter";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
@@ -90,6 +95,14 @@ export function OnboardingStepSkinProfile({
   const tPrivacy = useTranslations("privacy");
   const tCheckIn = useTranslations("checkIn");
   const ob = useOnboardingStore();
+
+  const step1Guidance = useMemo(() => {
+    if (!aiSnapshot?.product_guidance?.length) return undefined;
+    return filterGuidanceForPhase(
+      aiSnapshot.product_guidance,
+      resolveCarePhaseFromAnalysis(aiSnapshot),
+    );
+  }, [aiSnapshot]);
 
   return (
     <section
@@ -238,7 +251,7 @@ export function OnboardingStepSkinProfile({
             title={t("step1.aiResultTitle")}
           />
           <ProductGuidanceSection
-            items={aiSnapshot.product_guidance}
+            items={step1Guidance}
             collapseOnMobile
             maxBenefits={2}
           />

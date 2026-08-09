@@ -26,11 +26,11 @@ export function buildStepStarterRoutine(
   const encouragement =
     ob.aiSnapshot != null
       ? locale === "en"
-        ? "Your routine was shaped by your photos and choices — start with these steps this week."
-        : "Routine được tạo từ ảnh và lựa chọn của bạn — bắt đầu với các bước này tuần này."
+        ? "Starter from your photos and goals — tweak any step below."
+        : "Gợi ý ban đầu từ ảnh và mục tiêu — chỉnh từng bước bên dưới thoải mái."
       : locale === "en"
-        ? "Your routine matches what you told us — small daily steps add up."
-        : "Routine phù hợp với những gì bạn đã chọn — mỗi ngày một chút là đủ.";
+        ? "Starter from your goals and concerns — not a photo-based routine."
+        : "Gợi ý ban đầu từ mục tiêu và vấn đề bạn chọn — chưa dựa trên ảnh.";
 
   return {
     ...base,

@@ -4,10 +4,135 @@ import {
   type SkinGoal,
   type SkinTypeCard,
 } from "@/lib/stores/onboarding-store";
+import type { OnboardingCarePhase } from "@/lib/types/onboarding-ai";
+import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 
 function isEn(locale: string) {
-  return locale === "en";
+  return locale === "en" || locale.toLowerCase().startsWith("en");
+}
+
+/** Title — detail lines so Step 2 never shows title === subtitle. */
+function step(title: string, detail: string): string {
+  return `${title} — ${detail}`;
+}
+
+export type StarterCarePhase = OnboardingCarePhase | "manual";
+
+/**
+ * Resolve care phase for Step-2 scaffolding.
+ * Prefer analyze-skin phase; dense + inflammatory ⇒ calm_first; no AI ⇒ manual.
+ */
+export function resolveStarterCarePhase(ob: OnboardingState): StarterCarePhase {
+  const snap = ob.aiSnapshot;
+  if (!snap) return "manual";
+
+  const phase = String(snap.phase ?? "").trim().toLowerCase();
+  if (phase === "calm_first" || phase === "can_add_active") {
+    return phase;
+  }
+
+  const severity = String(snap.severity_level ?? "").trim().toLowerCase();
+  const types = (snap.concern_types ?? snap.main_concerns ?? []).map((t) =>
+    String(t).toLowerCase(),
+  );
+  const inflammatory = types.some((t) =>
+    /inflammatory|irritat|redness|acne|pustule|papule|cystic/.test(t),
+  );
+  // Align with BE derivePhase: dense / moderate+inflammatory → calm; lean calm when uncertain.
+  if (severity === "dense") return "calm_first";
+  if (severity === "moderate" && inflammatory) return "calm_first";
+  if (severity === "mild") return "can_add_active";
+  if (severity === "moderate") return "can_add_active";
+  return "calm_first";
+}
+
+function morningCalmFirst(locale: string, skin: SkinTypeCard | null): string[] {
+  const en = isEn(locale);
+  if (skin === "oily") {
+    return en
+      ? [
+          step("Gentle gel cleanser", "clear oil lightly — no scrubbing"),
+          step("Light oil-free moisturizer", "thin layer for comfort"),
+          step("Morning sunscreen", "even if you stay mostly indoors"),
+        ]
+      : [
+          step("Sữa rửa mặt gel dịu", "làm sạch dầu nhẹ — không chà mạnh"),
+          step("Kem dưỡng nhẹ không dầu", "một lớp mỏng cho da đỡ bóng mà vẫn êm"),
+          step("Kem chống nắng mỗi sáng", "kể cả khi ở nhà gần cửa sổ"),
+        ];
+  }
+  if (skin === "dry") {
+    return en
+      ? [
+          step("Cream cleanser", "wash gently so skin doesn’t feel tight"),
+          step("Hydrating moisturizer", "pat in while skin is still damp"),
+          step("Morning sunscreen", "lock comfort and protect daily"),
+        ]
+      : [
+          step("Sữa rửa mặt dạng kem", "rửa nhẹ — xong không bị căng"),
+          step("Kem dưỡng cấp ẩm", "vỗ nhẹ khi da còn ẩm"),
+          step("Kem chống nắng mỗi sáng", "giữ ẩm và bảo vệ mỗi ngày"),
+        ];
+  }
+  if (skin === "sensitive") {
+    return en
+      ? [
+          step("Fragrance-free cleanser", "lukewarm water only"),
+          step("Simple moisturizer", "short formula for easily irritated skin"),
+          step("Mineral sunscreen", "patch-test on the jaw if unsure"),
+        ]
+      : [
+          step("Sữa rửa mặt không mùi", "nước ấm là đủ"),
+          step("Kem dưỡng tối giản", "công thức ngắn cho da dễ kích ứng"),
+          step("Kem chống nắng khoáng", "thử ít ở hàm nếu hay nhạy"),
+        ];
+  }
+  return en
+    ? [
+        step("Gentle cleanser", "about 30 seconds, lukewarm water"),
+        step("Light moisturizer", "thin layer while skin is still damp"),
+        step("Morning sunscreen", "even near windows at home"),
+      ]
+    : [
+        step("Sữa rửa mặt dịu", "khoảng 30 giây, nước ấm"),
+        step("Kem dưỡng ẩm nhẹ", "khi da còn hơi ẩm"),
+        step("Kem chống nắng mỗi sáng", "kể cả ở nhà gần cửa sổ"),
+      ];
+}
+
+function eveningCalmFirst(locale: string): string[] {
+  const en = isEn(locale);
+  return en
+    ? [
+        step("Gentle cleanse", "remove sunscreen without stripping"),
+        step("Repair moisturizer", "soothe overnight — no strong actives yet"),
+      ]
+    : [
+        step("Rửa mặt dịu", "gỡ kem chống nắng nhẹ, không làm khô căng"),
+        step("Kem dưỡng phục hồi", "êm da qua đêm — chưa thêm hoạt chất mạnh"),
+      ];
+}
+
+function eveningCanAddActive(locale: string): string[] {
+  const en = isEn(locale);
+  return en
+    ? [
+        step("Cleanse", "remove sunscreen gently"),
+        step(
+          "Optional: one BHA or retinoid",
+          "not both the same night — skip if skin stings",
+        ),
+        step("Moisturizer", "seal comfort overnight after the active"),
+      ]
+    : [
+        step("Rửa mặt", "gỡ kem chống nắng nhẹ nhàng"),
+        step(
+          "Tuỳ chọn: tối đa 1 BHA hoặc retinoid",
+          "không dùng chung một đêm — bỏ qua nếu da rát",
+        ),
+        step("Kem dưỡng ẩm", "khóa ẩm sau bước hoạt chất"),
+      ];
 }
 
 function morningForProfile(
@@ -20,77 +145,52 @@ function morningForProfile(
     skin === "oily"
       ? en
         ? [
-            "Gel cleanser — clears oil without scrubbing hard.",
-            "Light oil-free moisturizer — a thin layer keeps skin comfortable.",
-            "Morning sunscreen — protects even if you stay mostly indoors.",
+            step("Gel cleanser", "clears oil without scrubbing hard"),
+            step("Light oil-free moisturizer", "a thin layer keeps skin comfortable"),
+            step("Morning sunscreen", "protects even if you stay mostly indoors"),
           ]
         : [
-            "Sữa rửa mặt dạng gel — làm sạch dầu, không chà mạnh.",
-            "Kem dưỡng nhẹ không dầu — một lớp mỏng cho da đỡ bóng mà vẫn êm.",
-            "Kem chống nắng buổi sáng — bảo vệ da kể cả khi ở nhà gần cửa sổ.",
+            step("Sữa rửa mặt dạng gel", "làm sạch dầu, không chà mạnh"),
+            step("Kem dưỡng nhẹ không dầu", "một lớp mỏng cho da đỡ bóng mà vẫn êm"),
+            step("Kem chống nắng buổi sáng", "bảo vệ da kể cả khi ở nhà gần cửa sổ"),
           ]
       : skin === "dry"
         ? en
           ? [
-              "Cream cleanser — wash gently so skin doesn’t feel tight.",
-              "Hydrating serum or essence — pat in while skin is still damp.",
-              "Rich moisturizer + morning sunscreen — lock in comfort and protect.",
+              step("Cream cleanser", "wash gently so skin doesn’t feel tight"),
+              step("Hydrating moisturizer", "pat in while skin is still damp"),
+              step("Morning sunscreen", "lock in comfort and protect"),
             ]
           : [
-              "Sữa rửa mặt dạng kem — rửa nhẹ, xong không bị căng.",
-              "Serum/essence cấp ẩm — vỗ nhẹ khi da còn ẩm.",
-              "Kem dưỡng ẩm đặc + kem chống nắng — giữ ẩm và bảo vệ mỗi sáng.",
+              step("Sữa rửa mặt dạng kem", "rửa nhẹ, xong không bị căng"),
+              step("Kem dưỡng cấp ẩm", "vỗ nhẹ khi da còn ẩm"),
+              step("Kem chống nắng mỗi sáng", "giữ ẩm và bảo vệ"),
             ]
         : skin === "sensitive"
           ? en
             ? [
-                "Fragrance-free gentle cleanser — lukewarm water only.",
-                "Simple moisturizer for easily irritated skin — keep the formula short.",
-                "Mineral sunscreen — try a little on the jaw first if you’re unsure.",
+                step("Fragrance-free cleanser", "lukewarm water only"),
+                step("Simple moisturizer", "short formula for easily irritated skin"),
+                step("Mineral sunscreen", "patch-test on the jaw if unsure"),
               ]
             : [
-                "Sữa rửa mặt không mùi, dịu — nước ấm là đủ.",
-                "Kem dưỡng tối giản cho da dễ kích ứng — công thức ngắn, ít thứ.",
-                "Kem chống nắng khoáng — thử ít ở hàm trước nếu bạn hay nhạy.",
+                step("Sữa rửa mặt không mùi", "nước ấm là đủ"),
+                step("Kem dưỡng tối giản", "công thức ngắn cho da dễ kích ứng"),
+                step("Kem chống nắng khoáng", "thử ít ở hàm nếu hay nhạy"),
               ]
           : en
             ? [
-                "Gentle cleanser — about 30 seconds, lukewarm water.",
-                "Light moisturizer — while skin is still a bit damp.",
-                "Daily morning sunscreen — even near windows at home.",
+                step("Gentle cleanser", "about 30 seconds, lukewarm water"),
+                step("Light moisturizer", "while skin is still a bit damp"),
+                step("Daily morning sunscreen", "even near windows at home"),
               ]
             : [
-                "Sữa rửa mặt dịu — khoảng 30 giây, nước ấm.",
-                "Kem dưỡng ẩm nhẹ — khi da còn hơi ẩm.",
-                "Kem chống nắng mỗi sáng — kể cả ở nhà gần cửa sổ.",
+                step("Sữa rửa mặt dịu", "khoảng 30 giây, nước ấm"),
+                step("Kem dưỡng ẩm nhẹ", "khi da còn hơi ẩm"),
+                step("Kem chống nắng mỗi sáng", "kể cả ở nhà gần cửa sổ"),
               ];
 
-  if (goal === "clear_acne") {
-    base.push(
-      en
-        ? "If skin feels calm: spot treat only on active red bumps."
-        : "Nếu da ổn: chỉ chấm lên nốt đỏ đang sưng.",
-    );
-  } else if (goal === "barrier") {
-    base.push(
-      en
-        ? "Skip strong acids until skin feels comfortable again."
-        : "Tạm bỏ acid mạnh cho đến khi da hết căng / dễ đỏ.",
-    );
-  } else if (goal === "glow") {
-    base.push(
-      en
-        ? "Optional: vitamin C in the morning — add only one new product per week."
-        : "Tuỳ chọn: vitamin C buổi sáng — mỗi tuần chỉ thêm 1 sản phẩm mới.",
-    );
-  } else if (goal === "anti_aging") {
-    base.push(
-      en
-        ? "Morning sunscreen is your best long-term step — keep it daily."
-        : "Kem chống nắng mỗi sáng là bước chống lão hoá quan trọng nhất — dùng đều.",
-    );
-  }
-
+  void goal; // goal shapes evening / week notes; AM stays cleanse→moist→SPF
   return base.slice(0, 3);
 }
 
@@ -100,96 +200,228 @@ function eveningForProfile(
   locale: string,
 ): string[] {
   const en = isEn(locale);
-  const lines =
-    skin === "oily"
-      ? en
-        ? [
-            "Double cleanse if you wore sunscreen or makeup — remove the day gently.",
-            "Light moisturizer — enough comfort, not a heavy coat.",
-            "Mild exfoliating liquid 2–3×/week only when skin is calm — try a small patch first.",
-          ]
-        : [
-            "Tẩy trang kép nếu có makeup hoặc kem chống nắng — gỡ nhẹ cả ngày.",
-            "Kem dưỡng nhẹ — đủ êm, không phủ dày.",
-            "Dung dịch tẩy da chết nhẹ 2–3 lần/tuần khi da ổn — thử ít ở vùng nhỏ trước.",
-          ]
-      : skin === "dry"
-        ? en
-          ? [
-              "Oil or balm cleanse, then a gentle second wash.",
-              "Hydrating toner or essence — pat, don’t rub.",
-              "Richer moisturizer on dry nights — seal comfort overnight.",
-            ]
-          : [
-              "Tẩy trang dầu/balm, rồi rửa lại nhẹ.",
-              "Toner/essence cấp ẩm — vỗ, đừng chà.",
-              "Kem dưỡng đặc hơn khi da khô — giữ ẩm qua đêm.",
-            ]
-        : skin === "sensitive"
-          ? en
-            ? [
-                "Gentle single cleanse — one soft wash is enough.",
-                "Soothing moisturizer — calm first when skin feels easily irritated.",
-                "No new strong actives this week — let skin settle.",
-              ]
-            : [
-                "Rửa mặt dịu một bước — một lần nhẹ là đủ.",
-                "Kem dưỡng làm dịu — ưu tiên khi da dễ đỏ / dễ kích ứng.",
-                "Tuần này chưa thêm hoạt chất mạnh — để da ngồi yên trước.",
-              ]
-          : en
-            ? [
-                "Cleanse and remove sunscreen.",
-                "Moisturizer — simple overnight comfort.",
-                "At most one active (retinol or acid) — not on the same night you try a new product.",
-              ]
-            : [
-                "Rửa mặt và gỡ kem chống nắng.",
-                "Kem dưỡng ẩm — đủ êm cho đêm.",
-                "Tối đa 1 hoạt chất (retinol hoặc acid) — không trùng đêm thử sản phẩm mới.",
-              ];
 
-  // Acne goal: keep week-1 evening calm — actives are optional later, not a default tick.
-  if (goal === "clear_acne") {
-    return (
-      en
-        ? [
-            "Cleanse and remove sunscreen.",
-            "Light moisturizer — comfort overnight.",
-            "No strong actives this week — let skin settle first.",
-          ]
-        : [
-            "Rửa mặt và gỡ kem chống nắng.",
-            "Kem dưỡng ẩm nhẹ — đủ êm qua đêm.",
-            "Tuần này chưa thêm hoạt chất mạnh — để da ổn trước.",
-          ]
-    ).slice(0, 3);
+  // Acne / barrier: week-1 evening stays calm without photo phase.
+  if (goal === "clear_acne" || goal === "barrier") {
+    return eveningCalmFirst(locale);
   }
 
-  if (goal === "barrier") {
-    lines.push(
-      en
-        ? "Focus on soothing layers — comfort before strong actives."
-        : "Ưu tiên lớp làm dịu — êm da trước khi thêm hoạt chất mạnh.",
-    );
+  if (skin === "oily") {
+    return en
+      ? [
+          step("Double cleanse if needed", "remove sunscreen or makeup gently"),
+          step("Light moisturizer", "enough comfort, not a heavy coat"),
+          step(
+            "Optional: mild exfoliant 2–3×/week",
+            "only when skin is calm — patch test first",
+          ),
+        ]
+      : [
+          step("Tẩy trang kép nếu cần", "gỡ makeup hoặc kem chống nắng nhẹ"),
+          step("Kem dưỡng nhẹ", "đủ êm, không phủ dày"),
+          step(
+            "Tuỳ chọn: tẩy da chết nhẹ 2–3 lần/tuần",
+            "chỉ khi da ổn — thử ít ở vùng nhỏ trước",
+          ),
+        ];
+  }
+  if (skin === "dry") {
+    return en
+      ? [
+          step("Oil or balm cleanse", "then a gentle second wash"),
+          step("Hydrating toner or essence", "pat — don’t rub"),
+          step("Richer moisturizer", "seal comfort on dry nights"),
+        ]
+      : [
+          step("Tẩy trang dầu/balm", "rồi rửa lại nhẹ"),
+          step("Toner/essence cấp ẩm", "vỗ — đừng chà"),
+          step("Kem dưỡng đặc hơn", "giữ ẩm qua đêm khi da khô"),
+        ];
+  }
+  if (skin === "sensitive") {
+    return eveningCalmFirst(locale);
   }
 
-  // "Don't pick" is a care note under the list in Step 2 — not a tickable evening step.
-  return lines.slice(0, 3);
+  return en
+    ? [
+        step("Cleanse", "remove sunscreen gently"),
+        step("Moisturizer", "simple overnight comfort"),
+        step(
+          "Optional: one active",
+          "BHA or retinoid — not both the same night",
+        ),
+      ]
+    : [
+        step("Rửa mặt", "gỡ kem chống nắng nhẹ"),
+        step("Kem dưỡng ẩm", "đủ êm qua đêm"),
+        step(
+          "Tuỳ chọn: tối đa 1 hoạt chất",
+          "BHA hoặc retinoid — không dùng chung một đêm",
+        ),
+      ];
 }
 
-/** Non-step care note shown under AM/PM lists (not tickable). */
+function morningForPhase(
+  phase: StarterCarePhase,
+  skin: SkinTypeCard | null,
+  goal: SkinGoal | null,
+  locale: string,
+): string[] {
+  if (phase === "calm_first" || phase === "can_add_active") {
+    return morningCalmFirst(locale, skin);
+  }
+  return morningForProfile(skin, goal, locale);
+}
+
+function eveningForPhase(
+  phase: StarterCarePhase,
+  skin: SkinTypeCard | null,
+  goal: SkinGoal | null,
+  locale: string,
+): string[] {
+  // Manual (no photo) matches BE calm_first — never scaffold optional actives.
+  if (phase === "calm_first" || phase === "manual") {
+    return eveningCalmFirst(locale);
+  }
+  if (phase === "can_add_active") return eveningCanAddActive(locale);
+  return eveningForProfile(skin, goal, locale);
+}
+
+function weekNoteForPhase(
+  phase: StarterCarePhase,
+  skillMode: OnboardingState["skillMode"],
+  locale: string,
+): string {
+  const en = isEn(locale);
+  if (phase === "calm_first" || phase === "manual") {
+    return en
+      ? "This week: calm first — no strong actives. Consistency beats complexity."
+      : "Tuần này: làm dịu trước — chưa thêm hoạt chất mạnh. Đều đặn quan trọng hơn nhiều bước.";
+  }
+  if (phase === "can_add_active") {
+    return en
+      ? "If you add an active: at most one at night — never stack acids the same evening."
+      : "Nếu thêm hoạt chất: tối đa 1 bước tối — không chồng nhiều acid cùng đêm.";
+  }
+  if (skillMode === "beginner") {
+    return en
+      ? "Keep morning to 3 steps this week — consistency beats complexity."
+      : "Tuần này giữ sáng 3 bước — đều đặn quan trọng hơn nhiều bước.";
+  }
+  if (skillMode === "advanced") {
+    return en
+      ? "When layering acids/retinol, go slow and note how skin feels the next day."
+      : "Khi xen kẽ acid/retinol, đi chậm và ghi lại cảm giác da hôm sau.";
+  }
+  return en
+    ? "Journal 5–7 days before changing multiple products."
+    : "Ghi nhật ký 5–7 ngày trước khi đổi nhiều sản phẩm cùng lúc.";
+}
+
+/** True when guidance copy already covers the no-pick care note. */
+export function guidanceMentionsNoPick(
+  items: ProductGuidanceItemDTO[] | undefined,
+): boolean {
+  if (!items?.length) return false;
+  return items.some((item) => {
+    const blob = [item.caution, item.why, item.how_to_use]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return /không nặn|không cậy|don'?t pick|do not pick|no picking|don'?t squeeze/.test(
+      blob,
+    );
+  });
+}
+
+/** Non-step care note under AM/PM (not tickable). */
 export function starterCareNote(
   goal: SkinGoal | null,
   locale: string,
+  phase?: StarterCarePhase,
+  opts?: { guidanceHasNoPickCaution?: boolean },
 ): string | null {
-  if (goal !== "clear_acne") return null;
-  return isEn(locale)
-    ? "Care note: don’t pick or squeeze — cleanse gently and pat dry."
-    : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô.";
+  const en = isEn(locale);
+  // Never contradict can_add_active evening (one optional active is allowed).
+  if (phase === "can_add_active") {
+    if (goal === "clear_acne" || opts?.guidanceHasNoPickCaution) {
+      return en
+        ? "Care note: don’t pick or squeeze — cleanse gently and pat dry."
+        : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô.";
+    }
+    return null;
+  }
+  if (phase === "calm_first" || phase === "manual" || goal === "clear_acne") {
+    // Keep the note under AM/PM even when cards already caution “không nặn”
+    // (different surface; e2e + scanability). Shorten to avoid triple copy.
+    if (opts?.guidanceHasNoPickCaution) {
+      return en
+        ? "Care note: don’t pick or squeeze — cleanse gently and pat dry."
+        : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô.";
+    }
+    return en
+      ? "Care note: don’t pick or squeeze — cleanse gently and pat dry. No strong actives this week."
+      : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô. Tuần này chưa thêm hoạt chất mạnh.";
+  }
+  return null;
 }
 
-/** Safe offline routine tailored to skin type + goal + skill. */
+function isCalmScaffoldPhase(phase: StarterCarePhase): boolean {
+  return phase === "calm_first" || phase === "manual";
+}
+
+/** Drop treat / strong-active guidance cards when phase is calm_first / manual. */
+export function filterGuidanceForPhase(
+  items: ProductGuidanceItemDTO[] | undefined,
+  phase: StarterCarePhase,
+): ProductGuidanceItemDTO[] | undefined {
+  if (!items?.length) return items;
+  if (!isCalmScaffoldPhase(phase)) return items;
+  return items.filter((item) => {
+    const step = String(item.step ?? "").toLowerCase();
+    if (step === "treat") return false;
+    // Identity fields only — do NOT scan `why`/`caution` (calm copy often says
+    // “chưa BHA/retinol”, which must not drop the soothe/moisturizer card).
+    const blob = [item.name_or_category, item.product_name, item.category]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return !/\b(bha|aha|retinol|retinoid|benzoyl|salicylic|treating active)\b|\bbp\b/.test(
+      blob,
+    );
+  });
+}
+
+/** Drop treat suggestions when scaffolding is calm-only. */
+export function filterSuggestionsForPhase<
+  T extends { step?: string; product_name?: string; category?: string },
+>(items: T[] | undefined, phase: StarterCarePhase): T[] | undefined {
+  if (!items?.length) return items;
+  if (!isCalmScaffoldPhase(phase)) return items;
+  return items.filter((item) => {
+    if (String(item.step ?? "").toLowerCase() === "treat") return false;
+    const blob = [item.product_name, item.category]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return !/\b(bha|aha|retinol|retinoid|benzoyl|salicylic)\b|\bbp\b/.test(blob);
+  });
+}
+
+/** Care phase from analyze payload alone (Welcome merge / Step 1). */
+export function resolveCarePhaseFromAnalysis(analysis?: {
+  phase?: string | null;
+  severity_level?: string | null;
+  concern_types?: string[] | null;
+  main_concerns?: string[] | null;
+} | null): StarterCarePhase {
+  if (!analysis) return "manual";
+  return resolveStarterCarePhase({
+    aiSnapshot: analysis as OnboardingState["aiSnapshot"],
+  } as OnboardingState);
+}
+
+/** Safe offline / analyze-aware routine for Step 2. */
 export function buildDefaultStarterRoutine(
   ob: OnboardingState,
   locale: string,
@@ -197,40 +429,35 @@ export function buildDefaultStarterRoutine(
   const bullets = buildStarterPackBullets(ob);
   const en = isEn(locale);
   const coaching = ob.aiSnapshot?.coaching_notes?.trim() ?? "";
+  const phase = resolveStarterCarePhase(ob);
 
-  const morning = morningForProfile(ob.skinType, ob.goal, locale);
-  const evening = eveningForProfile(ob.skinType, ob.goal, locale);
-
-  const skillNote =
-    ob.skillMode === "beginner"
-      ? en
-        ? "Keep morning to 3 steps this week — consistency beats complexity."
-        : "Tuần này giữ sáng 3 bước — đều đặn quan trọng hơn nhiều bước."
-      : ob.skillMode === "advanced"
-        ? en
-          ? "When layering acids/retinol, go slow and note how skin feels the next day."
-          : "Khi xen kẽ acid/retinol, đi chậm và ghi lại cảm giác da hôm sau."
-        : en
-          ? "Journal 5–7 days before changing multiple products."
-          : "Ghi nhật ký 5–7 ngày trước khi đổi nhiều sản phẩm cùng lúc.";
+  const morning = morningForPhase(phase, ob.skinType, ob.goal, locale);
+  const evening = eveningForPhase(phase, ob.skinType, ob.goal, locale);
+  const guidance = filterGuidanceForPhase(
+    ob.aiSnapshot?.product_guidance,
+    phase,
+  );
 
   return {
     morning,
     evening,
-    week_notes: skillNote,
+    week_notes: weekNoteForPhase(phase, ob.skillMode, locale),
     safety_notes: en
       ? "General skincare guidance only — not medical advice. Stop and see a dermatologist if burning, swelling, or spreading rash."
       : "Chỉ là gợi ý chăm sóc da chung — không thay thế bác sĩ. Ngừng và đi khám nếu cháy rát, sưng hoặc phát ban lan.",
     encouragement: en
       ? "You're starting with a solid, safe base — small daily steps add up."
       : "Bạn đang bắt đầu với nền tảng an toàn — mỗi ngày một chút là đủ.",
-    skin_readback: coaching,
+    skin_readback: coaching || ob.aiSnapshot?.summary?.trim() || "",
     rationale: bullets[0] ?? "",
     closing_reminder: en
       ? "Start with these steps this week — you can refine as you learn what your skin loves."
       : "Bắt đầu với các bước này tuần này — bạn có thể tinh chỉnh dần khi hiểu da mình hơn.",
-    product_guidance: ob.aiSnapshot?.product_guidance,
-    product_suggestions: ob.aiSnapshot?.product_suggestions,
+    product_guidance: guidance,
+    product_suggestions: filterSuggestionsForPhase(
+      ob.aiSnapshot?.product_suggestions,
+      phase,
+    ),
   };
 }
 
@@ -240,20 +467,34 @@ export function withAnalyzeCommerce(
   analysis?: {
     product_guidance?: StarterRoutineDTO["product_guidance"];
     product_suggestions?: StarterRoutineDTO["product_suggestions"];
+    phase?: string | null;
+    severity_level?: string | null;
+    concern_types?: string[] | null;
+    main_concerns?: string[] | null;
   } | null,
 ): StarterRoutineDTO {
   if (!analysis) return starter;
-  const guidance = analysis.product_guidance;
-  const suggestions = analysis.product_suggestions;
-  if ((!guidance || guidance.length === 0) && (!suggestions || suggestions.length === 0)) {
-    return starter;
-  }
+  const phase = resolveCarePhaseFromAnalysis(analysis);
+  const hasAnalyzeCommerce =
+    Boolean(analysis.product_guidance?.length) ||
+    Boolean(analysis.product_suggestions?.length);
+  if (!hasAnalyzeCommerce) return starter;
+
+  const guidance = filterGuidanceForPhase(analysis.product_guidance, phase);
+  const suggestions = filterSuggestionsForPhase(
+    analysis.product_suggestions,
+    phase,
+  );
+  // Never fall back to starter's unfiltered treat commerce when analyze existed
+  // but phase-filter emptied it — keep filtered (possibly empty) results.
   return {
     ...starter,
-    product_guidance: guidance?.length ? guidance : starter.product_guidance,
+    product_guidance: guidance?.length
+      ? guidance
+      : filterGuidanceForPhase(starter.product_guidance, phase),
     product_suggestions: suggestions?.length
       ? suggestions
-      : starter.product_suggestions,
+      : filterSuggestionsForPhase(starter.product_suggestions, phase),
   };
 }
 
@@ -344,7 +585,6 @@ export function stripStarterCommerceForNoAds(
 
 /**
  * Welcome starter: Free merges Step-1 analyze commerce; Premium never rehydrates brands.
- * Prefer API-stripped pack commerce when no_ads, keep AM/PM from local edits.
  */
 export function resolveWelcomeStarter(opts: {
   userRoutine: StarterRoutineDTO | null | undefined;
@@ -358,7 +598,6 @@ export function resolveWelcomeStarter(opts: {
 }): StarterRoutineDTO {
   const base = opts.userRoutine ?? opts.packStarter;
   if (opts.noAds) {
-    // Prefer server-stripped pack commerce fields when present; always strip local brands.
     const merged: StarterRoutineDTO = {
       ...base,
       product_guidance:
