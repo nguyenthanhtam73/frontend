@@ -71,6 +71,10 @@
       "title": "Payment metrics · DaDiary Admin",
       "description": "Today’s revenue, success rate, and upcoming Premium expiries."
     },
+    "adminAffiliate": {
+      "title": "Affiliate clicks · DaDiary Admin",
+      "description": "Shopee click counts by SKU — last 7 days, 30 days, and all time."
+    },
     "adminSkinReview": {
       "title": "Admin Skin Review · DaDiary",
       "description": "Upload 1 clear skin photo for deep observation-only AI analysis (admin)."
@@ -142,6 +146,7 @@
       "adminFeedbacks": "Manage feedback",
       "adminUsers": "Manage plans",
       "adminPayments": "Payments",
+      "adminAffiliate": "Affiliate",
       "adminSkinReview": "Skin review"
     },
     "footer": {
@@ -659,8 +664,25 @@
     "priorityMedium": "Also consider",
     "viewProduct": "View on Shopee",
     "reasonLabel": "Why we suggest this",
+    "howLabel": "How to use",
     "showMore": "Show {count} more",
     "showLess": "Show less"
+  },
+  "coachProductGuidance": {
+    "title": "Optional picks",
+    "hint": "At most 2 catalog matches for today — skip anytime.",
+    "affiliateBadge": "Affiliate",
+    "genericBadge": "Tip",
+    "whyLabel": "Why",
+    "howLabel": "How",
+    "viewShopee": "View on Shopee",
+    "steps": {
+      "cleanse": "Cleanse",
+      "moisturize": "Moisturize",
+      "spf": "Sunscreen",
+      "treat": "Treat",
+      "soothe": "Soothe"
+    }
   },
   "coachWelcome": {
     "badge": "AI buddy",
@@ -1345,11 +1367,66 @@
       "continueWithoutPhotos": "Continue with a goal-based routine",
       "continueWithoutPhotosHint": "No photos needed — you'll still get a starter routine matched to your goal and concerns.",
       "skipAnalyzeUseDefault": "Use goal-based routine",
-      "aiResultTitle": "AI read your photos"
+      "aiResultTitle": "How your skin looks right now"
+    },
+    "skinReadback": {
+      "title": "How your skin looks right now",
+      "severityLabel": "Severity",
+      "phaseLabel": "Phase",
+      "regionsLabel": "Regions in photos",
+      "concernTypesLabel": "Visible cues",
+      "severity": {
+        "mild": "Mild",
+        "moderate": "Moderate",
+        "dense": "Dense / heavy"
+      },
+      "phase": {
+        "calm_first": "Calm first",
+        "can_add_active": "Can add one active"
+      },
+      "regions": {
+        "cheeks": "Cheeks",
+        "t_zone": "T-zone",
+        "forehead": "Forehead",
+        "nose": "Nose",
+        "chin": "Chin",
+        "jaw": "Jaw",
+        "perioral": "Around the mouth",
+        "temples": "Temples"
+      },
+      "concernTypes": {
+        "inflammatory_acne": "Inflamed breakouts",
+        "comedones": "Comedones",
+        "pih": "Dark marks",
+        "redness_irritation": "Redness / irritation",
+        "wrinkles": "Fine lines",
+        "dry_lips": "Dry lips",
+        "oiliness": "Oiliness",
+        "dryness": "Dryness",
+        "large_pores": "Visible pores",
+        "uneven_tone": "Uneven tone",
+        "texture": "Uneven texture"
+      }
+    },
+    "productGuidance": {
+      "title": "Product guidance",
+      "hint": "Up to 2 Shopee picks that match your phase — other tips stay role-based. Never required to buy.",
+      "affiliateBadge": "Affiliate",
+      "genericBadge": "General tip",
+      "whyLabel": "Why it fits",
+      "howLabel": "How to use",
+      "viewShopee": "View on Shopee",
+      "steps": {
+        "cleanse": "Cleanse",
+        "moisturize": "Moisturize",
+        "spf": "Sunscreen",
+        "treat": "Treat",
+        "soothe": "Soothe"
+      }
     },
     "step2": {
-      "title": "Starter routine — built for your skin",
-      "subtitle": "This routine was made just for your goals and skin concerns — the best starting point for you right now.",
+      "title": "Starter routine",
+      "subtitle": "A morning–evening starting point from your goals and (if available) photo analysis — edit freely.",
       "quickWinLabel": "Ready for you",
       "quickWinLine": "These first steps were built around your skin and goals.",
       "concernsFallback": "your skin concerns",
@@ -1414,21 +1491,23 @@
           }
         }
       },
-      "personalBadge": "Personalized",
+      "personalBadge": "Starter suggestion from goals + photos",
+      "aiSummaryTitle": "Photo summary",
       "whyTitle": "Why this routine fits you",
-      "sourceAi": "From photos & AI",
+      "sourceAi": "From photos & choices",
       "sourceManual": "From your choices",
       "morningHint": "Cleanse → moisturizer → sunscreen",
       "eveningHint": "Gentle cleanse → overnight repair",
       "stepCount": "steps",
       "viewStepDetail": "More",
       "hideDetail": "Less",
-      "editingHint": "Tap a step to edit · arrows to reorder",
+      "editingHint": "Editing mode — change text below; use arrows to reorder",
       "editStepLabel": "Step {n}",
       "updatedToast": "Your routine is ready ✓",
       "updatedToastSub": "Changes saved for this session.",
       "editAnytime": "You can adjust this anytime in the app.",
       "useRoutine": "Use this routine",
+      "saveAndUseRoutine": "Save & use this routine",
       "loadingTitle": "Building routine…",
       "loadingBody": "Wait a moment or go back to the previous step."
     },
@@ -2272,6 +2351,28 @@
       "cancelled": "Cancelled",
       "expired": "Expired"
     }
+  },
+  "adminAffiliate": {
+    "sectionLabel": "Admin",
+    "title": "Affiliate clicks",
+    "sub": "Shopee clicks by SKU — tune the catalog. Refreshes about every minute.",
+    "linkPayments": "← Payments",
+    "linkUsers": "Manage plans",
+    "loadError": "Could not load affiliate metrics.",
+    "kpi7d": "Clicks · 7 days",
+    "kpi30d": "Clicks · 30 days",
+    "kpiTotal": "Total clicks",
+    "tableTitle": "Top SKUs",
+    "empty": "No clicks yet.",
+    "colSku": "SKU",
+    "colLink": "Link",
+    "openLink": "Open",
+    "col7d": "7d",
+    "col30d": "30d",
+    "colTotal": "Total",
+    "colLast": "Last click",
+    "asOf": "Updated {date}",
+    "refresh": "Refresh"
   },
   "adminSkinReview": {
     "sectionLabel": "Admin",

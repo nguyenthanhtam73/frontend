@@ -13,6 +13,7 @@ import { CoachWelcomeCelebrationHeader } from "@/components/onboarding/coach-wel
 import { CoachWelcomeSection } from "@/components/onboarding/coach-welcome-section";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
+import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
 import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
 import {
@@ -326,16 +327,29 @@ function LoggedInReviewRoutineSection({
         />
       </div>
       <StarterRoutineSupportExtras starter={starter} />
-      <ProductSuggestionsCard
-        suggestions={starter.product_suggestions}
-        source="starter_routine"
-        contextId={
-          data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
-            ? data.profileId
-            : undefined
-        }
-        maxVisible={2}
-      />
+      {starter.product_guidance && starter.product_guidance.length > 0 ? (
+        <ProductGuidanceSection
+          items={starter.product_guidance}
+          source="starter_routine"
+          contextId={
+            data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
+              ? data.profileId
+              : undefined
+          }
+          maxBenefits={2}
+        />
+      ) : (
+        <ProductSuggestionsCard
+          suggestions={starter.product_suggestions}
+          source="starter_routine"
+          contextId={
+            data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
+              ? data.profileId
+              : undefined
+          }
+          maxVisible={2}
+        />
+      )}
       <StarterRoutineSafetySection starter={starter} />
       {data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID ? (
         <StarterRoutineFeedback profileId={data.profileId} compact />
@@ -388,11 +402,19 @@ function GuestReviewRoutineSection({
         />
       </div>
       <StarterRoutineSupportExtras starter={liveStarter} />
-      <ProductSuggestionsCard
-        suggestions={liveStarter.product_suggestions}
-        source="starter_routine"
-        maxVisible={2}
-      />
+      {liveStarter.product_guidance && liveStarter.product_guidance.length > 0 ? (
+        <ProductGuidanceSection
+          items={liveStarter.product_guidance}
+          source="starter_routine"
+          maxBenefits={2}
+        />
+      ) : (
+        <ProductSuggestionsCard
+          suggestions={liveStarter.product_suggestions}
+          source="starter_routine"
+          maxVisible={2}
+        />
+      )}
       <StarterRoutineSafetySection starter={liveStarter} />
     </section>
   );

@@ -231,6 +231,7 @@ export function SiteHeader() {
     ...(user?.is_admin
       ? [
           { href: "/admin/payments" as const, label: t("nav.adminPayments") },
+          { href: "/admin/affiliate" as const, label: t("nav.adminAffiliate") },
           { href: "/admin/users" as const, label: t("nav.adminUsers") },
           { href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") },
         ]

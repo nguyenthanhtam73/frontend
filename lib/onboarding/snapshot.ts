@@ -1,5 +1,6 @@
 import type { SkinProfileResponse } from "@/lib/types/profile";
 import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
+import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 
@@ -47,6 +48,9 @@ export function parseSnapshotStarter(
     closing_reminder: String(sr.closing_reminder ?? ""),
     product_suggestions: Array.isArray(sr.product_suggestions)
       ? (sr.product_suggestions as ProductSuggestionDTO[])
+      : undefined,
+    product_guidance: Array.isArray(sr.product_guidance)
+      ? (sr.product_guidance as ProductGuidanceItemDTO[])
       : undefined,
   };
 }

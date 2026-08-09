@@ -7,4 +7,10 @@ export type ProductSuggestionDTO = {
   price_range: string;
   /** high | medium */
   priority: string;
+  product_id?: string;
+  step?: string;
+  phase?: string;
+  benefits?: string[];
+  how_to_use?: string;
+  caution?: string;
 };

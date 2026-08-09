@@ -414,6 +414,20 @@ export const useOnboardingStore = create<Store>((set) => ({
     }),
 }));
 
+/** Dev/e2e: inject dense analyze fixture without photo upload (Playwright). */
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  (
+    window as unknown as {
+      __DADIARY_E2E__?: {
+        applyAiAnalyzeResult: (data: OnboardingSkinAnalyzeDTO) => void;
+      };
+    }
+  ).__DADIARY_E2E__ = {
+    applyAiAnalyzeResult: (data) =>
+      useOnboardingStore.getState().applyAiAnalyzeResult(data),
+  };
+}
+
 /** Client-side DaDiary starter routine bullets until API persists SkinProfile. */
 export function buildStarterPackBullets(s: OnboardingState): string[] {
   const lines: string[] = [];

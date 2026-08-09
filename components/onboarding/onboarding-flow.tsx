@@ -26,7 +26,12 @@ import { getAccessToken, AUTH_CHANGED_EVENT } from "@/lib/auth-token";
 import { buildStepStarterRoutine } from "@/lib/onboarding/build-step-routine";
 import { appendOnboardingPhotos } from "@/lib/onboarding/compress-photo";
 import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
-import { buildDefaultStarterRoutine } from "@/lib/onboarding/guest-starter";
+import {
+  buildDefaultStarterRoutine,
+  resolveWelcomeStarter,
+} from "@/lib/onboarding/guest-starter";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import {
   postGuestPreviewComplete,
   postOnboardingComplete,
@@ -113,6 +118,12 @@ export function OnboardingFlow() {
   const tAuth = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
+  const noAdsGate = useFeatureGate(Feature.NoAds);
+  // Confirmed no_ads, OR known Premium while /me/usage still loading (tier from auth
+  // is available earlier). Never treat bare isLoading as Premium — that strips Free.
+  const blockAnalyzeCommerceMerge =
+    (noAdsGate.allowed && !noAdsGate.isLoading) ||
+    (noAdsGate.isLoading && noAdsGate.isPremium);
 
   const [guestTrialBlocked, setGuestTrialBlocked] = useState<boolean | null>(null);
   const [idx, setIdx] = useState(0);
@@ -319,15 +330,29 @@ export function OnboardingFlow() {
       }
     }
 
+    const baseReview = pack.reviewSummary ?? buildReviewSummaryFromStore(state);
+    const reviewSummary = {
+      ...baseReview,
+      photo_urls: photosSkipped ? undefined : photoUrls,
+      photos_skipped: photosSkipped,
+      // Premium: drop analyze from session cache so reload can't rehydrate brands.
+      skin_analysis: blockAnalyzeCommerceMerge
+        ? undefined
+        : baseReview.skin_analysis,
+    };
     const full: CoachWelcomePayload = {
       ...pack,
-      starterRoutine: userRoutine ?? pack.starterRoutine,
+      starterRoutine: resolveWelcomeStarter({
+        userRoutine,
+        packStarter: pack.starterRoutine,
+        analysis: blockAnalyzeCommerceMerge
+          ? null
+          : (state.aiSnapshot ?? baseReview.skin_analysis),
+        noAds: blockAnalyzeCommerceMerge,
+        locale,
+      }),
       locale,
-      reviewSummary: {
-        ...(pack.reviewSummary ?? buildReviewSummaryFromStore(state)),
-        photo_urls: photosSkipped ? undefined : photoUrls,
-        photos_skipped: photosSkipped,
-      },
+      reviewSummary,
     };
 
     try {
@@ -560,7 +585,7 @@ export function OnboardingFlow() {
         : t("next")
       : step === "starterRoutine"
         ? routineEditing
-          ? t("step2.useRoutine")
+          ? t("step2.saveAndUseRoutine")
           : t("step2.useRoutine")
         : finishing
           ? tAuth("submitting")

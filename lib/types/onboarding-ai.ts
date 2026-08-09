@@ -1,3 +1,6 @@
+import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
+import type { ProductSuggestionDTO } from "@/lib/types/product-suggestion";
+
 /** Structured vision cues from onboarding photo analysis. */
 export type OnboardingSkinObservations = {
   overall_skin_type: string;
@@ -10,6 +13,9 @@ export type OnboardingSkinObservations = {
   acne_status: string;
   oiliness_level: string;
 };
+
+export type OnboardingSeverityLevel = "mild" | "moderate" | "dense";
+export type OnboardingCarePhase = "calm_first" | "can_add_active";
 
 /** Mirrors backend dto.OnboardingSkinAnalyzeResponse */
 export type OnboardingSkinAnalyzeDTO = {
@@ -31,4 +37,16 @@ export type OnboardingSkinAnalyzeDTO = {
   main_concerns?: string[];
   skin_tone?: string;
   model_used: string;
+  /** mild | moderate | dense */
+  severity_level?: OnboardingSeverityLevel | string;
+  /** cheeks | t_zone | forehead | … */
+  primary_regions?: string[];
+  /** inflammatory_acne | comedones | pih | … */
+  concern_types?: string[];
+  /** calm_first | can_add_active */
+  phase?: OnboardingCarePhase | string;
+  /** Photo-specific summary (not timeline promises). */
+  summary?: string;
+  product_guidance?: ProductGuidanceItemDTO[];
+  product_suggestions?: ProductSuggestionDTO[];
 };

@@ -1,6 +1,7 @@
 /** Matches backend `StarterRoutineResponse` / persisted `starter_routine` in onboarding snapshot. */
 
 import type { ProductSuggestionDTO } from "./product-suggestion";
+import type { ProductGuidanceItemDTO } from "./product-guidance";
 import type { OnboardingSkinAnalyzeDTO } from "./onboarding-ai";
 export type StarterRoutineDTO = {
   morning: string[];
@@ -12,6 +13,8 @@ export type StarterRoutineDTO = {
   rationale: string;
   closing_reminder: string;
   product_suggestions?: ProductSuggestionDTO[];
+  /** Same hybrid shape as Step 1 analyze — prefer this on welcome for funnel consistency. */
+  product_guidance?: ProductGuidanceItemDTO[];
 };
 
 export const COACH_WELCOME_STORAGE_KEY = "dadiary_coach_welcome_v1";

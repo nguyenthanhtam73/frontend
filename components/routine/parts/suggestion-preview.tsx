@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
+import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import {
   normalizeCategory,
   type RoutineCategory,
@@ -128,11 +129,21 @@ export function SuggestionPreview({
           </p>
         ) : null}
 
-        <ProductSuggestionsCard
-          suggestions={suggestion.product_suggestions}
-          source="routine_suggest"
-          contextId={suggestion.feedback_target_id}
-        />
+        {suggestion.product_guidance && suggestion.product_guidance.length > 0 ? (
+          <ProductGuidanceSection
+            items={suggestion.product_guidance}
+            contextId={suggestion.feedback_target_id}
+            source="routine_suggest"
+            variant="coach"
+            maxBenefits={2}
+          />
+        ) : (
+          <ProductSuggestionsCard
+            suggestions={suggestion.product_suggestions}
+            source="routine_suggest"
+            contextId={suggestion.feedback_target_id}
+          />
+        )}
 
         {/* AI routine is a starting point — remind users to review before saving. */}
         <AiDisclaimer variant="short" />

@@ -16,6 +16,7 @@ Commands
   npm run test:e2e           # all e2e specs
   npm run test:e2e -- core-smoke
   npm run test:e2e -- onboarding-smoke
+  npm run test:e2e -- affiliate-funnel-smoke
   npm run test:e2e -- premium-sepay-upgrade
   npm run test:e2e:ui        # Playwright UI mode
 
@@ -36,6 +37,19 @@ onboarding-smoke.test.ts (P1 + P2)
   Fixtures: incomplete = register only; complete = register + completeOnboardingViaApi()
   Snapshot assert: GET /api/v1/profile/skin → onboarding_snapshot.starter_routine.{morning,evening}
   Reset: DELETE /profile/onboarding (helper deleteOnboardingViaApi) if you need to re-run UI onboard
+
+affiliate-funnel-smoke.test.ts (product guidance + Shopee affiliate)
+- 1) Free + dense calm_first fixture (window.__DADIARY_E2E__.applyAiAnalyzeResult):
+  phase/severity badges, cleanse+moisturize+SPF cards, no treat/BHA, ≤2 catalog CTAs
+  (data-testid=onboarding-affiliate-cta, links must be https://s.shopee.vn/…)
+- 2) Premium no_ads: forcePlan(premium) → guidance tips OK, zero Shopee CTA / no brand cards
+- 3) Free click CTA → POST /affiliate/clicks source=starter_routine; admin
+  GET /admin/metrics/affiliate clicks_total increases for catalog product_id
+  Requires E2E_ADMIN_EMAIL ∈ DADIARY_ADMIN_EMAILS on the API
+- 4) Mobile 390×844 Step 2: AM/PM visible early; personal badge not “Đã cá nhân hoá”;
+  “Không nặn” is care note (onboarding-care-note-no-pick), not a tickable step
+  Fixtures: Free=register only; Premium=register+forcePlan; dense=JSON inject (no photo)
+  Run: npm run test:e2e -- affiliate-funnel-smoke
 
 core-smoke.test.ts
 - Auth session: UI login → reload + new tab keep signed-in (no guest flash) → GET /me with JWT

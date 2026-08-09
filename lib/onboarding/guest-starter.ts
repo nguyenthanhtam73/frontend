@@ -149,13 +149,7 @@ function eveningForProfile(
                 "Tối đa 1 hoạt chất (retinol hoặc acid) — không trùng đêm thử sản phẩm mới.",
               ];
 
-  if (goal === "clear_acne") {
-    lines.unshift(
-      en
-        ? "Don’t pick — cleanse gently and pat dry."
-        : "Không nặn mụn — rửa nhẹ và thấm khô.",
-    );
-  } else if (goal === "barrier") {
+  if (goal === "barrier") {
     lines.push(
       en
         ? "Focus on soothing layers — comfort before strong actives."
@@ -163,7 +157,19 @@ function eveningForProfile(
     );
   }
 
+  // "Don't pick" is a care note under the list in Step 2 — not a tickable evening step.
   return lines.slice(0, 3);
+}
+
+/** Non-step care note shown under AM/PM lists (not tickable). */
+export function starterCareNote(
+  goal: SkinGoal | null,
+  locale: string,
+): string | null {
+  if (goal !== "clear_acne") return null;
+  return isEn(locale)
+    ? "Care note: don’t pick or squeeze — cleanse gently and pat dry."
+    : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô.";
 }
 
 /** Safe offline routine tailored to skin type + goal + skill. */
@@ -206,7 +212,145 @@ export function buildDefaultStarterRoutine(
     closing_reminder: en
       ? "Start with these steps this week — you can refine as you learn what your skin loves."
       : "Bắt đầu với các bước này tuần này — bạn có thể tinh chỉnh dần khi hiểu da mình hơn.",
+    product_guidance: ob.aiSnapshot?.product_guidance,
+    product_suggestions: ob.aiSnapshot?.product_suggestions,
   };
+}
+
+/** Prefer Step-1 analyze commerce so welcome matches the funnel. */
+export function withAnalyzeCommerce(
+  starter: StarterRoutineDTO,
+  analysis?: {
+    product_guidance?: StarterRoutineDTO["product_guidance"];
+    product_suggestions?: StarterRoutineDTO["product_suggestions"];
+  } | null,
+): StarterRoutineDTO {
+  if (!analysis) return starter;
+  const guidance = analysis.product_guidance;
+  const suggestions = analysis.product_suggestions;
+  if ((!guidance || guidance.length === 0) && (!suggestions || suggestions.length === 0)) {
+    return starter;
+  }
+  return {
+    ...starter,
+    product_guidance: guidance?.length ? guidance : starter.product_guidance,
+    product_suggestions: suggestions?.length
+      ? suggestions
+      : starter.product_suggestions,
+  };
+}
+
+/** Role title without brand — used by no_ads strip and ProductGuidanceSection. */
+export function genericRoleLabel(step: string, category: string, locale: string): string {
+  const en = locale.toLowerCase().startsWith("en");
+  switch (step.trim().toLowerCase()) {
+    case "cleanse":
+      return en ? "Gentle cleanser" : "Sữa rửa mặt dịu";
+    case "moisturize":
+      return en ? "Moisturizer" : "Kem dưỡng ẩm";
+    case "spf":
+      return en ? "Morning sunscreen" : "Kem chống nắng";
+    case "soothe":
+      return en ? "Soothing layer" : "Lớp làm dịu";
+    case "treat":
+      return en ? "One active (optional)" : "1 hoạt chất (tuỳ chọn)";
+    default:
+      if (category.trim()) return category.trim();
+      return en ? "Product tip" : "Gợi ý sản phẩm";
+  }
+}
+
+type ScrubKind = "why" | "how" | "caution" | "benefit";
+
+function scrubFallback(kind: ScrubKind, locale: string): string {
+  const en = locale.toLowerCase().startsWith("en");
+  switch (kind) {
+    case "how":
+      return en
+        ? "Use gently as directed for this step."
+        : "Dùng nhẹ theo hướng dẫn cho bước này.";
+    case "caution":
+      return en
+        ? "Stop if irritation increases. Not a prescription."
+        : "Ngưng nếu càng kích ứng. Không phải kê đơn.";
+    case "benefit":
+      return en ? "Supports this care step." : "Hỗ trợ bước chăm sóc này.";
+    default:
+      return en
+        ? "Fits this step for your current skin phase."
+        : "Phù hợp bước này theo giai đoạn da hiện tại.";
+  }
+}
+
+/** Clear affiliate fields for Premium no_ads — keep AM/PM + generic role cards. */
+export function stripStarterCommerceForNoAds(
+  starter: StarterRoutineDTO,
+  locale: string,
+): StarterRoutineDTO {
+  const guidance = starter.product_guidance?.map((item) => {
+    const brand = item.brand?.trim().toLowerCase() ?? "";
+    const product = item.product_name?.trim().toLowerCase() ?? "";
+    const scrub = (text: string | undefined, kind: ScrubKind) => {
+      const t = text?.trim() ?? "";
+      if (!t) return "";
+      const low = t.toLowerCase();
+      if (
+        (brand.length >= 3 && low.includes(brand)) ||
+        (product.length >= 3 && low.includes(product))
+      ) {
+        return scrubFallback(kind, locale);
+      }
+      return t;
+    };
+    return {
+      ...item,
+      affiliate_product_id: undefined,
+      product_name: undefined,
+      brand: undefined,
+      affiliate_link: undefined,
+      price_range: undefined,
+      name_or_category: genericRoleLabel(item.step, item.category, locale),
+      why: scrub(item.why, "why"),
+      how_to_use: scrub(item.how_to_use, "how"),
+      caution: scrub(item.caution, "caution") || undefined,
+      benefits: (item.benefits ?? [])
+        .map((b) => scrub(b, "benefit"))
+        .filter(Boolean),
+    };
+  });
+  return {
+    ...starter,
+    product_suggestions: undefined,
+    product_guidance: guidance,
+  };
+}
+
+/**
+ * Welcome starter: Free merges Step-1 analyze commerce; Premium never rehydrates brands.
+ * Prefer API-stripped pack commerce when no_ads, keep AM/PM from local edits.
+ */
+export function resolveWelcomeStarter(opts: {
+  userRoutine: StarterRoutineDTO | null | undefined;
+  packStarter: StarterRoutineDTO;
+  analysis?: {
+    product_guidance?: StarterRoutineDTO["product_guidance"];
+    product_suggestions?: StarterRoutineDTO["product_suggestions"];
+  } | null;
+  noAds: boolean;
+  locale: string;
+}): StarterRoutineDTO {
+  const base = opts.userRoutine ?? opts.packStarter;
+  if (opts.noAds) {
+    // Prefer server-stripped pack commerce fields when present; always strip local brands.
+    const merged: StarterRoutineDTO = {
+      ...base,
+      product_guidance:
+        opts.packStarter.product_guidance ?? base.product_guidance,
+      product_suggestions: opts.packStarter.product_suggestions,
+    };
+    return stripStarterCommerceForNoAds(merged, opts.locale);
+  }
+  return withAnalyzeCommerce(base, opts.analysis);
 }
 
 /** @deprecated Use buildDefaultStarterRoutine */

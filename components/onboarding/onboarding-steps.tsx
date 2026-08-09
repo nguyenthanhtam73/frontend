@@ -6,7 +6,6 @@ import {
   Camera,
   CheckCircle2,
   ImagePlus,
-  Sparkles,
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -20,6 +19,8 @@ import {
   ConcernLimitHint,
   OnboardingPhotoGuide,
 } from "@/components/onboarding/onboarding-photo-guide";
+import { OnboardingSkinReadback } from "@/components/onboarding/onboarding-skin-readback";
+import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import {
   ConcernChipRow,
   FriendlyNotice,
@@ -231,13 +232,18 @@ export function OnboardingStepSkinProfile({
       )}
 
       {aiSnapshot && !analyzing && (
-        <div className="space-y-3 rounded-xl border border-primary/25 bg-primary/[0.04] p-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" aria-hidden />
-            <p className="text-sm font-semibold">{t("step1.aiResultTitle")}</p>
-          </div>
+        <div className="space-y-3">
+          <OnboardingSkinReadback
+            snapshot={aiSnapshot}
+            title={t("step1.aiResultTitle")}
+          />
+          <ProductGuidanceSection
+            items={aiSnapshot.product_guidance}
+            collapseOnMobile
+            maxBenefits={2}
+          />
           <AiDisclaimer variant="short" />
-          <details className="text-sm">
+          <details className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm">
             <summary className="cursor-pointer font-medium">
               {t("aiReview.aiNotesToggle")} · {Math.round(aiSnapshot.confidence * 100)}%
             </summary>
@@ -247,7 +253,9 @@ export function OnboardingStepSkinProfile({
                 <span className="text-foreground">{barrierLabel(t, aiSnapshot.barrier_signal)}</span>
               </p>
               {aiSnapshot.coaching_notes ? (
-                <p className="leading-relaxed text-foreground">{aiSnapshot.coaching_notes}</p>
+                <p className="whitespace-pre-wrap leading-relaxed text-foreground">
+                  {aiSnapshot.coaching_notes}
+                </p>
               ) : null}
             </div>
           </details>

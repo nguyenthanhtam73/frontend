@@ -55,8 +55,9 @@ export function ProductSuggestionsCard({
     [suggestions],
   );
 
-  // Premium / Premium+ (no_ads): never render affiliate suggestion strips.
-  if (noAds.allowed) return null;
+  // Premium / Premium+ (no_ads): never render affiliate strips.
+  // Also hide while plan is loading so Premium never flashes SKU names.
+  if (noAds.isLoading || noAds.allowed) return null;
   if (items.length === 0) return null;
 
   const L: ProductSuggestionsLabels = {
@@ -135,6 +136,24 @@ export function ProductSuggestionsCard({
                       {item.reason}
                     </p>
                   </div>
+                ) : null}
+                {item.benefits && item.benefits.length > 0 ? (
+                  <ul className="mt-2 space-y-0.5">
+                    {item.benefits.map((b) => (
+                      <li key={b} className="text-xs text-foreground/90">
+                        · {b}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {item.how_to_use ? (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground/80">{t("howLabel")}: </span>
+                    {item.how_to_use}
+                  </p>
+                ) : null}
+                {item.caution ? (
+                  <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">{item.caution}</p>
                 ) : null}
                 {link ? (
                   <a

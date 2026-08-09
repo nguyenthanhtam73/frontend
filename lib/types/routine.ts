@@ -1,5 +1,6 @@
 /** Matches backend `dto.RoutineStep`. */
 
+import type { ProductGuidanceItemDTO } from "./product-guidance";
 import type { ProductSuggestionDTO } from "./product-suggestion";
 export type RoutineStepDTO = {
   /** Stable id — frontend generates one for new steps (uuid v4) so React keys
@@ -46,6 +47,8 @@ export type SuggestRoutineDTO = {
    *  as `target_id` when posting thumbs-up/down feedback. */
   feedback_target_id?: string;
   product_suggestions?: ProductSuggestionDTO[];
+  product_guidance?: ProductGuidanceItemDTO[];
+  care_phase?: string;
 };
 
 /** POST /routines/suggest — async job created. */

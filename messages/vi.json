@@ -71,6 +71,10 @@
       "title": "Chỉ số thanh toán · DaDiary Admin",
       "description": "Doanh thu hôm nay, tỷ lệ thành công và gói Premium sắp hết hạn."
     },
+    "adminAffiliate": {
+      "title": "Affiliate clicks · DaDiary Admin",
+      "description": "Thống kê click Shopee theo SKU — 7 ngày, 30 ngày và tổng."
+    },
     "adminSkinReview": {
       "title": "Admin Skin Review · DaDiary",
       "description": "Tải 1 ảnh da rõ để AI nhận xét tình trạng (chỉ admin)."
@@ -142,6 +146,7 @@
       "adminFeedbacks": "Quản lý góp ý",
       "adminUsers": "Quản lý gói",
       "adminPayments": "Thanh toán",
+      "adminAffiliate": "Affiliate",
       "adminSkinReview": "Skin review"
     },
     "footer": {
@@ -659,8 +664,25 @@
     "priorityMedium": "Tham khảo",
     "viewProduct": "Xem trên Shopee",
     "reasonLabel": "Vì sao gợi ý",
+    "howLabel": "Cách dùng",
     "showMore": "Xem thêm ({count} sản phẩm)",
     "showLess": "Thu gọn"
+  },
+  "coachProductGuidance": {
+    "title": "Gợi ý tùy chọn",
+    "hint": "Tối đa 2 sản phẩm khớp catalog hôm nay — bỏ qua bất cứ lúc nào.",
+    "affiliateBadge": "Affiliate",
+    "genericBadge": "Tip",
+    "whyLabel": "Vì sao",
+    "howLabel": "Cách dùng",
+    "viewShopee": "Xem trên Shopee",
+    "steps": {
+      "cleanse": "Rửa mặt",
+      "moisturize": "Dưỡng ẩm",
+      "spf": "Chống nắng",
+      "treat": "Điều trị",
+      "soothe": "Làm dịu"
+    }
   },
   "coachWelcome": {
     "badge": "Bạn đồng hành AI",
@@ -1345,11 +1367,66 @@
       "continueWithoutPhotos": "Tiếp tục với routine từ mục tiêu đã chọn",
       "continueWithoutPhotosHint": "Không cần chụp ảnh — bạn vẫn nhận routine khởi đầu phù hợp với mục tiêu và vấn đề da.",
       "skipAnalyzeUseDefault": "Dùng routine từ mục tiêu đã chọn",
-      "aiResultTitle": "AI đã đọc ảnh của bạn"
+      "aiResultTitle": "Da bạn đang thế nào"
+    },
+    "skinReadback": {
+      "title": "Da bạn đang thế nào",
+      "severityLabel": "Mức độ",
+      "phaseLabel": "Giai đoạn",
+      "regionsLabel": "Vùng trên ảnh",
+      "concernTypesLabel": "Dấu hiệu",
+      "severity": {
+        "mild": "Nhẹ",
+        "moderate": "Vừa",
+        "dense": "Dày / rõ"
+      },
+      "phase": {
+        "calm_first": "Làm dịu trước",
+        "can_add_active": "Có thể thêm 1 hoạt chất"
+      },
+      "regions": {
+        "cheeks": "Má",
+        "t_zone": "Trán–mũi–cằm",
+        "forehead": "Trán",
+        "nose": "Mũi",
+        "chin": "Cằm",
+        "jaw": "Hàm",
+        "perioral": "Quanh miệng",
+        "temples": "Thái dương"
+      },
+      "concernTypes": {
+        "inflammatory_acne": "Mụn viêm",
+        "comedones": "Mụn cồi",
+        "pih": "Thâm",
+        "redness_irritation": "Đỏ–kích ứng",
+        "wrinkles": "Nếp",
+        "dry_lips": "Khô môi",
+        "oiliness": "Dầu",
+        "dryness": "Khô",
+        "large_pores": "Lỗ chân lông to",
+        "uneven_tone": "Không đều màu",
+        "texture": "Da sần / không mịn"
+      }
+    },
+    "productGuidance": {
+      "title": "Hướng sản phẩm",
+      "hint": "Tối đa 2 gợi ý Shopee khớp giai đoạn da — phần còn lại chỉ là tip theo bước. Không bắt buộc mua.",
+      "affiliateBadge": "Affiliate",
+      "genericBadge": "Gợi ý chung",
+      "whyLabel": "Vì sao hợp",
+      "howLabel": "Cách dùng",
+      "viewShopee": "Xem trên Shopee",
+      "steps": {
+        "cleanse": "Rửa mặt",
+        "moisturize": "Dưỡng ẩm",
+        "spf": "Chống nắng",
+        "treat": "Điều trị",
+        "soothe": "Làm dịu"
+      }
     },
     "step2": {
-      "title": "Routine khởi đầu — ghép riêng cho da bạn",
-      "subtitle": "Routine này được tạo riêng dựa trên mục tiêu và vấn đề da bạn đã chọn — đây là khởi đầu phù hợp nhất lúc này.",
+      "title": "Routine khởi đầu",
+      "subtitle": "Gợi ý bước sáng–tối theo mục tiêu và (nếu có) ảnh bạn vừa phân tích — chỉnh lại thoải mái.",
       "quickWinLabel": "Sẵn sàng cho bạn",
       "quickWinLine": "Đây là những bước đầu tiên được ghép riêng theo da và mục tiêu của bạn.",
       "concernsFallback": "vấn đề da bạn chọn",
@@ -1414,21 +1491,23 @@
           }
         }
       },
-      "personalBadge": "Đã cá nhân hoá",
+      "personalBadge": "Gợi ý ban đầu theo mục tiêu + ảnh",
+      "aiSummaryTitle": "Tóm tắt từ ảnh",
       "whyTitle": "Vì sao routine này phù hợp với bạn",
-      "sourceAi": "Từ ảnh & AI",
+      "sourceAi": "Từ ảnh & lựa chọn",
       "sourceManual": "Từ lựa chọn của bạn",
       "morningHint": "Rửa mặt → kem dưỡng → kem chống nắng",
       "eveningHint": "Làm sạch nhẹ → phục hồi qua đêm",
       "stepCount": "bước",
       "viewStepDetail": "Thêm",
       "hideDetail": "Thu gọn",
-      "editingHint": "Chạm bước để sửa · mũi tên để đổi thứ tự",
+      "editingHint": "Đang chỉnh sửa — dùng ô bên dưới để sửa chữ, mũi tên để đổi thứ tự",
       "editStepLabel": "Bước {n}",
       "updatedToast": "Routine của bạn đã sẵn sàng ✓",
       "updatedToastSub": "Thay đổi đã được lưu trong phiên này.",
       "editAnytime": "Có thể chỉnh lại bất cứ lúc nào trong app.",
       "useRoutine": "Dùng routine này",
+      "saveAndUseRoutine": "Lưu & dùng routine này",
       "loadingTitle": "Đang tạo routine…",
       "loadingBody": "Chờ một chút hoặc quay lại bước trước."
     },
@@ -2272,6 +2351,28 @@
       "cancelled": "Cancelled",
       "expired": "Expired"
     }
+  },
+  "adminAffiliate": {
+    "sectionLabel": "Admin",
+    "title": "Affiliate clicks",
+    "sub": "Click Shopee theo SKU — tối ưu catalog. Làm mới khoảng mỗi phút.",
+    "linkPayments": "← Thanh toán",
+    "linkUsers": "Quản lý gói",
+    "loadError": "Không tải được chỉ số affiliate.",
+    "kpi7d": "Click 7 ngày",
+    "kpi30d": "Click 30 ngày",
+    "kpiTotal": "Tổng click",
+    "tableTitle": "Top SKU",
+    "empty": "Chưa có click nào.",
+    "colSku": "SKU",
+    "colLink": "Link",
+    "openLink": "Mở",
+    "col7d": "7 ngày",
+    "col30d": "30 ngày",
+    "colTotal": "Tổng",
+    "colLast": "Click gần nhất",
+    "asOf": "Cập nhật {date}",
+    "refresh": "Làm mới"
   },
   "adminSkinReview": {
     "sectionLabel": "Admin",

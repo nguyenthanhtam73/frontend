@@ -1,5 +1,6 @@
 /** POST /api/v1/skin-checks → data envelope (typed subset for UI). */
 
+import type { ProductGuidanceItemDTO } from "./product-guidance";
 import type { ProductSuggestionDTO } from "./product-suggestion";
 
 export type CoachImprovementDTO = { tip: string; why: string };
@@ -34,6 +35,8 @@ export type SkinCoachDetailDTO = {
   safety_reminders?: string[];
   medical_disclaimer?: string;
   product_suggestions?: ProductSuggestionDTO[];
+  product_guidance?: ProductGuidanceItemDTO[];
+  care_phase?: string;
   error_message?: string;
 };
 

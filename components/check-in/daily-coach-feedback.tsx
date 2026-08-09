@@ -16,6 +16,7 @@ import {
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
 import { splitRoutineHints } from "@/components/check-in/routine-hint-parser";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
+import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import { AiDisclaimer } from "@/components/ui/ai-disclaimer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -271,11 +272,21 @@ export function DailyCoachFeedback({
         </Card>
       ) : null}
 
-      <ProductSuggestionsCard
-        suggestions={c.product_suggestions}
-        source="daily_feedback"
-        contextId={a.id}
-      />
+      {c.product_guidance && c.product_guidance.length > 0 ? (
+        <ProductGuidanceSection
+          items={c.product_guidance}
+          contextId={a.id}
+          source="daily_feedback"
+          variant="coach"
+          maxBenefits={2}
+        />
+      ) : (
+        <ProductSuggestionsCard
+          suggestions={c.product_suggestions}
+          source="daily_feedback"
+          contextId={a.id}
+        />
+      )}
 
       {c.avoid_or_patch && c.avoid_or_patch.length > 0 ? (
         <Card className="border-orange-500/20">

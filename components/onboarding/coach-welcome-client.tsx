@@ -10,6 +10,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
+import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import {
   CoachWelcomeCta,
   CoachWelcomePrimaryCtaBlock,
@@ -187,12 +188,21 @@ function CoachWelcomeLoaded({
         <StarterRoutineSupportExtras starter={starter} delayMs={200} />
 
         <CoachWelcomeSection delayMs={260}>
-          <ProductSuggestionsCard
-            suggestions={starter.product_suggestions}
-            source="starter_routine"
-            contextId={profileId ?? undefined}
-            maxVisible={2}
-          />
+          {starter.product_guidance && starter.product_guidance.length > 0 ? (
+            <ProductGuidanceSection
+              items={starter.product_guidance}
+              source="starter_routine"
+              contextId={profileId ?? undefined}
+              maxBenefits={2}
+            />
+          ) : (
+            <ProductSuggestionsCard
+              suggestions={starter.product_suggestions}
+              source="starter_routine"
+              contextId={profileId ?? undefined}
+              maxVisible={2}
+            />
+          )}
         </CoachWelcomeSection>
 
         <StarterRoutineSafetySection starter={starter} delayMs={320} />
