@@ -419,15 +419,20 @@ export function OnboardingStepStarterRoutine({
 
   const skinLabel = rationale ? t(`skinType.${rationale.skinType as "combo"}`) : "—";
 
+  const whyLines = rationale?.lines?.slice(0, 2) ?? [];
+  const hasWhy =
+    Boolean(rationale?.headline?.trim()) || whyLines.length > 0;
+
   return (
     <section
-      className="space-y-3.5 sm:space-y-4"
+      className="space-y-3 sm:space-y-3.5"
       aria-labelledby="onb-routine-title"
       data-testid="onboarding-step-starter-routine"
     >
-      <div className="space-y-1.5">
+      {/* Compact header — AM/PM must win the first viewport on mobile. */}
+      <div className="space-y-1">
         <div
-          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-2.5 py-1 text-[11px] font-bold text-foreground sm:text-xs"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/30 px-2.5 py-1 text-[11px] font-bold text-foreground"
           data-testid="onboarding-starter-personal-badge"
         >
           <Sparkles className="size-3.5 text-primary" aria-hidden />
@@ -435,38 +440,16 @@ export function OnboardingStepStarterRoutine({
         </div>
         <h2
           id="onb-routine-title"
-          className="text-lg font-bold leading-tight tracking-tight sm:text-2xl"
+          className="text-lg font-bold leading-tight tracking-tight sm:text-xl"
         >
           {t("step2.title")}
         </h2>
-        <p className="text-sm leading-snug text-muted-foreground sm:text-[15px]">
-          {t("step2.subtitle")}
-        </p>
+        <PersonalizationChips
+          skinLabel={skinLabel}
+          goalLabel={goalLabel}
+          concernLabels={concernLabels.slice(0, 2)}
+        />
       </div>
-
-      {/* One compact personalization line — avoid stacking readback + chips + rationale. */}
-      <PersonalizationChips
-        skinLabel={skinLabel}
-        goalLabel={goalLabel}
-        concernLabels={concernLabels.slice(0, 2)}
-      />
-      {rationale?.headline ? (
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {rationale.headline}
-        </p>
-      ) : null}
-      {rationale?.lines?.length ? (
-        <ul className="space-y-1">
-          {rationale.lines.slice(0, 2).map((line) => (
-            <li
-              key={line}
-              className="text-xs leading-relaxed text-foreground/85"
-            >
-              · {line}
-            </li>
-          ))}
-        </ul>
-      ) : null}
 
       {editing && (
         <p className="rounded-lg border border-dashed border-primary/30 bg-primary/[0.04] px-3 py-2 text-center text-xs font-medium text-primary">
@@ -506,13 +489,39 @@ export function OnboardingStepStarterRoutine({
         </p>
       ) : null}
 
-      {routine.week_notes ? (
-        <p className="whitespace-pre-wrap rounded-lg border border-border/50 bg-muted/25 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-          {routine.week_notes}
-        </p>
+      {hasWhy || routine.week_notes ? (
+        <details className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2">
+          <summary className="cursor-pointer text-xs font-semibold text-foreground/90">
+            {t("step2.whyTitle")}
+          </summary>
+          <div className="mt-2 space-y-2">
+            {rationale?.headline ? (
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {rationale.headline}
+              </p>
+            ) : null}
+            {whyLines.length ? (
+              <ul className="space-y-1">
+                {whyLines.map((line) => (
+                  <li
+                    key={line}
+                    className="text-xs leading-relaxed text-foreground/85"
+                  >
+                    · {line}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {routine.week_notes ? (
+              <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                {routine.week_notes}
+              </p>
+            ) : null}
+          </div>
+        </details>
       ) : null}
 
-      <div className="space-y-1.5 pt-0.5">
+      <div className="space-y-1 pt-0.5">
         <Button
           type="button"
           variant={editing ? "default" : "outline"}

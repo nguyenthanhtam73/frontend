@@ -257,10 +257,10 @@ test.describe("Affiliate funnel smoke", () => {
     await expect(am).toBeVisible();
     await expect(pm).toBeVisible();
 
-    // AM/PM should be in the first viewport — not buried under long marketing.
+    // AM/PM should win the first viewport (header is compact; rationale is collapsed).
     const amBox = await am.boundingBox();
     expect(amBox, "AM section missing geometry").toBeTruthy();
-    expect(amBox!.y).toBeLessThan(700);
+    expect(amBox!.y).toBeLessThan(420);
 
     const badge = page.getByTestId("onboarding-starter-personal-badge");
     await expect(badge).toBeVisible();

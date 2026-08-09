@@ -149,6 +149,23 @@ function eveningForProfile(
                 "Tối đa 1 hoạt chất (retinol hoặc acid) — không trùng đêm thử sản phẩm mới.",
               ];
 
+  // Acne goal: keep week-1 evening calm — actives are optional later, not a default tick.
+  if (goal === "clear_acne") {
+    return (
+      en
+        ? [
+            "Cleanse and remove sunscreen.",
+            "Light moisturizer — comfort overnight.",
+            "No strong actives this week — let skin settle first.",
+          ]
+        : [
+            "Rửa mặt và gỡ kem chống nắng.",
+            "Kem dưỡng ẩm nhẹ — đủ êm qua đêm.",
+            "Tuần này chưa thêm hoạt chất mạnh — để da ổn trước.",
+          ]
+    ).slice(0, 3);
+  }
+
   if (goal === "barrier") {
     lines.push(
       en
