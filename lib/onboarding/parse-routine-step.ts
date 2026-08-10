@@ -40,17 +40,18 @@ export function routineStepIcon(kind: RoutineStepIconKind): LucideIcon {
 
 function inferIcon(text: string): RoutineStepIconKind {
   const lower = text.toLowerCase();
-  if (
-    /spf|chống nắng|sunscreen|kem chống|broad-spectrum|khoáng spf/.test(lower)
-  ) {
-    return "spf";
-  }
+  // Cleanse before SPF: evening “gỡ kem chống nắng…” must stay cleanser, not SPF.
   if (
     /cleanser|rửa mặt|sữa rửa|tẩy trang|cleanse|double cleanse|gel\/bọt|dạng kem/.test(
       lower,
     )
   ) {
     return "cleanser";
+  }
+  if (
+    /spf|chống nắng|sunscreen|kem chống|broad-spectrum|khoáng spf/.test(lower)
+  ) {
+    return "spf";
   }
   if (
     /serum|essence|toner|vitamin c|bha|pha|retinol|acid|hoạt chất|spot treatment|chấm điều trị|điều trị mụn/.test(

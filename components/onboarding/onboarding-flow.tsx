@@ -30,8 +30,6 @@ import {
   buildDefaultStarterRoutine,
   resolveWelcomeStarter,
 } from "@/lib/onboarding/guest-starter";
-import { Feature } from "@/lib/premium/features";
-import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import {
   postGuestPreviewComplete,
   postOnboardingComplete,
@@ -118,12 +116,8 @@ export function OnboardingFlow() {
   const tAuth = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
-  const noAdsGate = useFeatureGate(Feature.NoAds);
-  // Confirmed no_ads, OR known Premium while /me/usage still loading (tier from auth
-  // is available earlier). Never treat bare isLoading as Premium — that strips Free.
-  const blockAnalyzeCommerceMerge =
-    (noAdsGate.allowed && !noAdsGate.isLoading) ||
-    (noAdsGate.isLoading && noAdsGate.isPremium);
+  // Product affiliate intros stay for Premium (same as Free) — never strip merge.
+  const blockAnalyzeCommerceMerge = false;
 
   const [guestTrialBlocked, setGuestTrialBlocked] = useState<boolean | null>(null);
   const [idx, setIdx] = useState(0);

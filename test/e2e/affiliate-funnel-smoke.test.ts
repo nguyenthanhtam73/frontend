@@ -136,7 +136,7 @@ test.describe("Affiliate funnel smoke", () => {
     }
   });
 
-  test("2) Premium no_ads → no Shopee CTA / no brand commerce cards", async ({
+  test("2) Premium → same product affiliate intros as Free", async ({
     page,
     request,
   }) => {
@@ -159,17 +159,16 @@ test.describe("Affiliate funnel smoke", () => {
     await waitForUsageGate(page);
     await injectAiAnalyzeFixture(page, denseCalmFirstAnalyzeFixture());
 
-    // Premium no_ads + commerceOnly → no product-guidance strip on Step 1.
-    await expect(guidanceSection(page)).toHaveCount(0);
+    // Premium keeps catalog CTAs / brand tips (same commerce surface as Free).
     await expect
       .poll(async () => affiliateCtas(page).count(), {
-        timeout: 8_000,
+        timeout: 15_000,
         intervals: [200, 400, 800],
       })
-      .toBe(0);
-    await expect(page.getByText(/xem trên shopee/i)).toHaveCount(0);
-    await expect(page.getByText(/CeraVe/i)).toHaveCount(0);
-    await expect(page.getByText(/Biore/i)).toHaveCount(0);
+      .toBeGreaterThan(0);
+    await expect(page.getByText(/xem trên shopee/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
   });
 
   test("3) Click Shopee CTA → POST clicks + admin metrics product_id", async ({

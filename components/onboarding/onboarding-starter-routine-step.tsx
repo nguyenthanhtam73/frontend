@@ -38,8 +38,6 @@ import {
 } from "@/lib/onboarding/parse-routine-step";
 import { buildRoutineRationale } from "@/lib/onboarding/routine-rationale";
 import { useManualProductGuidance } from "@/lib/onboarding/use-manual-product-guidance";
-import { Feature } from "@/lib/premium/features";
-import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
 
@@ -143,7 +141,10 @@ function RoutineStepCard({
   const parsed = parseRoutineStep(stepText);
   const Icon = routineStepIcon(parsed.icon);
   const hasDetail = Boolean(parsed.detail && parsed.detail !== parsed.title);
-  const affiliate = productTip?.affiliate;
+  const tip = productTip;
+  const affiliate = tip?.affiliate;
+  const softLabels = tip?.softLabels?.filter(Boolean) ?? [];
+  const isSoftTip = Boolean(tip && !affiliate && softLabels.length > 0);
 
   useEffect(() => {
     if (!hasDetail || expanded) return;
@@ -216,10 +217,10 @@ function RoutineStepCard({
     <li
       className={cn(
         "rounded-lg border bg-background/90 px-2.5 py-2.5",
-        affiliate ? "border-violet-500/30" : "border-border/60",
+        tip?.affiliate ? "border-violet-500/30" : "border-border/60",
       )}
       data-testid={`onboarding-starter-step-${period}-${index}`}
-      data-guidance-step={productTip?.guidanceStep || undefined}
+      data-guidance-step={tip?.guidanceStep || undefined}
     >
       <div className="flex items-start gap-2.5">
         <span
@@ -271,73 +272,83 @@ function RoutineStepCard({
             </div>
           ) : null}
 
-          {productTip ? (
+          {tip ? (
             <div
               className={cn(
                 "mt-2 space-y-1 rounded-lg border px-2.5 py-2",
                 affiliate
                   ? "border-violet-500/30 bg-violet-500/[0.04]"
-                  : "border-border/50 bg-muted/20",
+                  : "border-border/60 bg-muted/25",
               )}
               data-testid="guidance-card"
+              data-tip-kind={affiliate ? "affiliate" : "soft"}
             >
-              <p
-                className={cn(
-                  "text-sm font-semibold leading-snug",
-                  affiliate
-                    ? "text-violet-900 dark:text-violet-100"
-                    : "text-foreground",
-                )}
-              >
-                {productTip.label}
-              </p>
-              {productTip.why ? (
-                <p
-                  className="text-sm leading-relaxed text-foreground/85"
-                  data-testid="guidance-why"
-                >
-                  {productTip.why}
-                </p>
-              ) : null}
-              {productTip.benefit ? (
-                <p
-                  className="text-sm leading-relaxed text-muted-foreground"
-                  data-testid="guidance-benefit"
-                >
-                  {productTip.benefit}
-                </p>
-              ) : null}
-              {affiliate ? (
-                <a
-                  href={affiliate.affiliate_link}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
-                  data-testid="affiliate-cta"
-                  data-legacy-testid="onboarding-affiliate-cta"
-                  data-affiliate-product-id={affiliate.product_id}
-                  data-affiliate-source="starter_routine"
-                  data-affiliate-step={productTip.guidanceStep || ""}
-                  onClick={() => {
-                    void logAffiliateClick(
-                      {
-                        product_name: affiliate.product_name,
-                        brand: affiliate.brand,
-                        reason: affiliate.why,
-                        affiliate_link: affiliate.affiliate_link,
-                        price_range: affiliate.price_range,
-                        priority: "high",
-                        product_id: affiliate.product_id,
-                      },
-                      "starter_routine",
-                    );
-                  }}
-                >
-                  {tGuide("viewShopee")}
-                  {affiliate.price_range ? ` · ${affiliate.price_range}` : ""}
-                  <ExternalLink className="size-3.5" aria-hidden />
-                </a>
-              ) : null}
+              {isSoftTip ? (
+                <>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                    {tGuide("softTipBadge")}
+                  </p>
+                  <ul className="space-y-0.5">
+                    {softLabels.map((name, i) => (
+                      <li key={`${name}-${i}`}>
+                        {i > 0 ? (
+                          <span className="mr-1 text-xs text-muted-foreground">
+                            {tGuide("softTipOr")}
+                          </span>
+                        ) : null}
+                        <span className="text-sm font-medium leading-snug text-foreground">
+                          {name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold leading-snug text-violet-900 dark:text-violet-100">
+                    {tip.label}
+                  </p>
+                  {tip.why ? (
+                    <p
+                      className="text-sm leading-relaxed text-foreground/85"
+                      data-testid="guidance-why"
+                    >
+                      {tip.why}
+                    </p>
+                  ) : null}
+                  {affiliate ? (
+                    <a
+                      href={affiliate.affiliate_link}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
+                      data-testid="affiliate-cta"
+                      data-legacy-testid="onboarding-affiliate-cta"
+                      data-affiliate-product-id={affiliate.product_id}
+                      data-affiliate-source="starter_routine"
+                      data-affiliate-step={tip.guidanceStep || ""}
+                      onClick={() => {
+                        void logAffiliateClick(
+                          {
+                            product_name: affiliate.product_name,
+                            brand: affiliate.brand,
+                            reason: affiliate.why,
+                            affiliate_link: affiliate.affiliate_link,
+                            price_range: affiliate.price_range,
+                            priority: "high",
+                            product_id: affiliate.product_id,
+                          },
+                          "starter_routine",
+                        );
+                      }}
+                    >
+                      {tGuide("viewShopee")}
+                      {affiliate.price_range ? ` · ${affiliate.price_range}` : ""}
+                      <ExternalLink className="size-3.5" aria-hidden />
+                    </a>
+                  ) : null}
+                </>
+              )}
             </div>
           ) : null}
         </div>
@@ -562,11 +573,6 @@ export function OnboardingStepStarterRoutine({
     [fromPhotos, manualGuidance.result, carePhase],
   );
 
-  const noAds = useFeatureGate(Feature.NoAds);
-  const hideCommerce =
-    (noAds.allowed && !noAds.isLoading) ||
-    (noAds.isLoading && noAds.isPremium);
-
   const enrichedGuidance = useMemo(
     () =>
       enrichProductGuidanceItems(guidanceItems, {
@@ -590,7 +596,6 @@ export function OnboardingStepStarterRoutine({
       routine.morning,
       routine.evening,
       enrichedGuidance,
-      hideCommerce,
       carePhase === "manual" ? "calm_first" : carePhase,
       {
         locale,
@@ -601,9 +606,10 @@ export function OnboardingStepStarterRoutine({
             : undefined,
         regions: aiSnapshot?.primary_regions,
         concerns: aiConcernTags,
+        skinType: skinType ?? undefined,
       },
     );
-  }, [routine, enrichedGuidance, hideCommerce, carePhase, locale, aiSnapshot, aiConcernTags]);
+  }, [routine, enrichedGuidance, carePhase, locale, aiSnapshot, aiConcernTags, skinType]);
 
   const affiliateCtaCount = useMemo(
     () => countRoutineAffiliateCtas(stepTips),
@@ -756,9 +762,7 @@ export function OnboardingStepStarterRoutine({
           carePhase={carePhase}
           productTips={stepTips.morning}
           emptyCommerceHint={
-            !hideCommerce && affiliateCtaCount === 0
-              ? t("step2.commerceEmptyHint")
-              : null
+            affiliateCtaCount === 0 ? t("step2.commerceEmptyHint") : null
           }
         />
         <RoutinePeriodSection

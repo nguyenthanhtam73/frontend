@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { logAffiliateClick, type AffiliateClickSource } from "@/lib/api/affiliate";
 import { enrichProductGuidanceItems } from "@/lib/onboarding/enrich-product-guidance";
 import { genericRoleLabel } from "@/lib/onboarding/guest-starter";
-import { Feature } from "@/lib/premium/features";
-import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
 import { cn } from "@/lib/utils";
 
@@ -386,13 +384,8 @@ export function ProductGuidanceSection({
   const tCoach = useTranslations("coachProductGuidance");
   const t = variant === "coach" ? tCoach : tOnb;
   const locale = useLocale();
-  const noAds = useFeatureGate(Feature.NoAds);
-  // Hide Shopee only for confirmed Premium no_ads (or known Premium while
-  // /me/usage is still loading). Never treat bare isLoading as Premium — that
-  // was hiding Free CTAs behind “Gợi ý chung”.
-  const hideCommerce =
-    (noAds.allowed && !noAds.isLoading) ||
-    (noAds.isLoading && noAds.isPremium);
+  // Product affiliate intros for every plan (Premium = Free).
+  const hideCommerce = false;
   const smUp = useIsSmUp();
   const carePhase = enrichContext?.phase;
 

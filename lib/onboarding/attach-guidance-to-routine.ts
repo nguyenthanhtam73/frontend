@@ -1,19 +1,20 @@
+import { buildPersonalizedStepWhy } from "@/lib/onboarding/personalize-step-tip";
 import {
-  buildPersonalizedStepBenefit,
-  buildPersonalizedStepWhy,
-} from "@/lib/onboarding/personalize-step-tip";
+  formatShortCatalogLabel,
+  pickCatalogSoftLabels,
+} from "@/lib/onboarding/pick-catalog-soft-label";
 import type { RoutineStepIconKind } from "@/lib/onboarding/parse-routine-step";
 import { parseRoutineStep } from "@/lib/onboarding/parse-routine-step";
 import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
 
 export type RoutineStepProductTip = {
   guidanceStep: string;
-  /** Role or product label shown above why. */
+  /** Affiliate / soft product title (short). */
   label: string;
-  /** Why this fits the user’s skin. */
+  /** Soft (non-CTA) suggestions — render as 1–2 short lines. */
+  softLabels?: string[];
+  /** One short why line (affiliate tips only). */
   why: string;
-  /** One short “helps you” line. */
-  benefit: string;
   affiliate?: {
     product_id: string;
     product_name: string;
@@ -30,6 +31,16 @@ export type AttachGuidanceCtx = {
   severity?: string;
   regions?: string[];
   concerns?: string[];
+  skinType?: string;
+};
+
+/** Lower = higher CTA priority (cleanser + SPF beat moisturizer). */
+const CTA_ROLE_PRIORITY: Record<string, number> = {
+  cleanse: 0,
+  spf: 1,
+  moisturize: 2,
+  soothe: 3,
+  treat: 4,
 };
 
 function iconToGuidanceStep(icon: RoutineStepIconKind): string | null {
@@ -50,7 +61,6 @@ function iconToGuidanceStep(icon: RoutineStepIconKind): string | null {
   }
 }
 
-/** Scaffold fallback when icon inference fails (user edited weird titles). */
 function positionalGuidanceStep(
   period: "morning" | "evening",
   index: number,
@@ -95,59 +105,22 @@ function pickGuidance(
   return undefined;
 }
 
-function fallbackRoleLabel(step: string, locale: string): string {
-  const en = locale.toLowerCase().startsWith("en");
-  switch (step) {
-    case "cleanse":
-      return en ? "Gentle cleanser" : "Sữa rửa mặt dịu";
-    case "moisturize":
-      return en ? "Soothing moisturizer" : "Kem dưỡng làm dịu";
-    case "spf":
-      return en ? "Gentle morning sunscreen" : "Kem chống nắng dịu buổi sáng";
-    case "treat":
-      return en ? "One treatment (optional)" : "1 sản phẩm trị (tuỳ chọn)";
-    case "soothe":
-      return en ? "Soothing layer" : "Lớp làm dịu";
-    default:
-      return en ? "Product tip" : "Gợi ý sản phẩm";
-  }
-}
-
-/** Soft product example when catalog has no affiliate CTA for this role. */
-function exampleProductLabel(step: string, locale: string): string {
-  const en = locale.toLowerCase().startsWith("en");
-  switch (step) {
-    case "cleanse":
-      return en
-        ? "CeraVe · Foaming Facial Cleanser (or similar gentle wash)"
-        : "CeraVe · Sữa rửa mặt tạo bọt (hoặc loại dịu tương tự)";
-    case "moisturize":
-    case "soothe":
-      return en
-        ? "La Roche-Posay · Cicaplast Baume B5+ (or similar repair cream)"
-        : "La Roche-Posay · Kem phục hồi Cicaplast Baume B5+ (hoặc kem phục hồi tương tự)";
-    case "spf":
-      return en
-        ? "La Roche-Posay · Anthelios (or a gentle face sunscreen)"
-        : "La Roche-Posay · Anthelios (hoặc kem chống nắng mặt dịu tương tự)";
-    case "treat":
-      return en
-        ? "One mild BHA (optional — only when skin is calm)"
-        : "1 BHA nhẹ (tuỳ chọn — chỉ khi da đã êm)";
-    default:
-      return fallbackRoleLabel(step, locale);
-  }
-}
+type StepRef = {
+  key: string;
+  period: "morning" | "evening";
+  index: number;
+  role: string;
+  g?: ProductGuidanceItemDTO;
+};
 
 /**
- * Map enriched product_guidance onto AM/PM routine lines.
- * Always attaches a skin-personal tip (label + why + benefit); affiliate CTAs ≤2.
+ * Map product_guidance onto AM/PM routine lines.
+ * ≤2 Shopee CTAs (prefer cleanse + SPF). Soft tips only for roles not already covered.
  */
 export function attachGuidanceToRoutineSteps(
   morning: string[],
   evening: string[],
   guidance: ProductGuidanceItemDTO[] | undefined,
-  hideCommerce: boolean,
   carePhase: string = "calm_first",
   tipCtx: AttachGuidanceCtx = { locale: "vi" },
 ): {
@@ -161,14 +134,12 @@ export function attachGuidanceToRoutineSteps(
     byStep.set(step, g);
   }
 
-  let affiliateSlots = 0;
-  const usedProductIds = new Set<string>();
   const phase = tipCtx.phase || carePhase;
 
-  const mapPeriod = (
+  const collect = (
     period: "morning" | "evening",
     steps: string[],
-  ): (RoutineStepProductTip | null)[] =>
+  ): StepRef[] =>
     steps.map((text, index) => {
       const parsed = parseRoutineStep(text);
       const fromIcon = iconToGuidanceStep(parsed.icon);
@@ -178,62 +149,119 @@ export function attachGuidanceToRoutineSteps(
         steps.length,
         carePhase,
       );
-      const role = fromIcon ?? fromPos;
-      if (!role) return null;
-      const g = pickGuidance(byStep, role);
-      const guidanceStep = String(g?.step || role).toLowerCase();
+      const role = (fromIcon ?? fromPos) || "";
+      return {
+        key: `${period}:${index}`,
+        period,
+        index,
+        role,
+        g: role ? pickGuidance(byStep, role) : undefined,
+      };
+    });
 
-      const link = g?.affiliate_link?.trim();
-      const productId = g?.affiliate_product_id?.trim();
-      const canAff =
-        !hideCommerce &&
-        Boolean(link && productId) &&
-        affiliateSlots < 2 &&
-        productId !== undefined &&
-        !usedProductIds.has(productId);
+  const morningRefs = collect("morning", morning);
+  const eveningRefs = collect("evening", evening);
+  const allRefs = [...morningRefs, ...eveningRefs];
 
-      const productLabel = canAff
-        ? [g?.brand, g?.product_name].filter(Boolean).join(" · ")
-        : g?.name_or_category?.trim() ||
-          exampleProductLabel(guidanceStep, tipCtx.locale);
+  const ctaKeys = new Set<string>();
+  const usedProductIds = new Set<string>();
+  const candidates = allRefs
+    .map((ref) => {
+      const link = ref.g?.affiliate_link?.trim();
+      const id = ref.g?.affiliate_product_id?.trim();
+      if (!link || !id) return null;
+      return { ref, link, id };
+    })
+    .filter(Boolean) as { ref: StepRef; link: string; id: string }[];
 
-      const personalCtx = {
+  candidates.sort((a, b) => {
+    const pa = CTA_ROLE_PRIORITY[a.ref.role] ?? 9;
+    const pb = CTA_ROLE_PRIORITY[b.ref.role] ?? 9;
+    if (pa !== pb) return pa - pb;
+    if (a.ref.period !== b.ref.period) {
+      return a.ref.period === "morning" ? -1 : 1;
+    }
+    return a.ref.index - b.ref.index;
+  });
+
+  for (const c of candidates) {
+    if (ctaKeys.size >= 2) break;
+    if (usedProductIds.has(c.id)) continue;
+    ctaKeys.add(c.ref.key);
+    usedProductIds.add(c.id);
+  }
+
+  const rolesCovered = new Set<string>();
+  for (const c of candidates) {
+    if (ctaKeys.has(c.ref.key)) rolesCovered.add(c.ref.role);
+  }
+
+  const toTip = (ref: StepRef): RoutineStepProductTip | null => {
+    if (!ref.role) return null;
+    const g = ref.g;
+    const guidanceStep = ref.role;
+    const link = g?.affiliate_link?.trim();
+    const productId = g?.affiliate_product_id?.trim();
+    const canAff =
+      ctaKeys.has(ref.key) && Boolean(link && productId) && productId !== undefined;
+
+    if (canAff && link && productId) {
+      const productLabel = formatShortCatalogLabel({
+        brand: g?.brand,
+        product_name: g?.product_name || g?.name_or_category,
+      });
+      const why = buildPersonalizedStepWhy(guidanceStep, {
         locale: tipCtx.locale,
         phase,
         severity: tipCtx.severity,
         regions: tipCtx.regions,
         concerns: tipCtx.concerns,
-        // Always name the product in why — affiliate or soft example.
         productLabel,
-      };
-
-      const tip: RoutineStepProductTip = {
+      });
+      rolesCovered.add(guidanceStep);
+      return {
         guidanceStep,
         label: productLabel,
-        why: buildPersonalizedStepWhy(guidanceStep, personalCtx),
-        benefit: buildPersonalizedStepBenefit(guidanceStep, personalCtx),
-      };
-
-      if (canAff && link && productId) {
-        affiliateSlots += 1;
-        usedProductIds.add(productId);
-        tip.affiliate = {
+        why,
+        affiliate: {
           product_id: productId,
           product_name: g?.product_name || g?.name_or_category || productLabel,
           brand: g?.brand || "",
           affiliate_link: link,
           price_range: g?.price_range || "",
-          why: tip.why,
-        };
-        tip.label = productLabel;
-      }
+          why,
+        },
+      };
+    }
 
-      return tip;
+    // Skip soft tip when this role already has a CTA or soft tip (less mobile clutter).
+    if (rolesCovered.has(guidanceStep)) return null;
+
+    const softLabels = pickCatalogSoftLabels(guidanceStep, {
+      locale: tipCtx.locale,
+      phase,
+      concerns: tipCtx.concerns,
+      skinType: tipCtx.skinType,
+      excludeIds: usedProductIds,
+      prefer: {
+        id: productId,
+        brand: g?.brand,
+        product_name: g?.product_name,
+      },
     });
+    if (!softLabels.length) return null;
+    rolesCovered.add(guidanceStep);
+    return {
+      guidanceStep,
+      label: softLabels[0],
+      softLabels,
+      why: "",
+    };
+  };
 
   return {
-    morning: mapPeriod("morning", morning),
-    evening: mapPeriod("evening", evening),
+    morning: morningRefs.map(toTip),
+    evening: eveningRefs.map(toTip),
   };
 }
 
