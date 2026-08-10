@@ -62,8 +62,6 @@ type StarterRoutineCardsProps = {
  */
 export function StarterRoutineCards({
   starter,
-  morningLabel: _morningLabel,
-  eveningLabel: _eveningLabel,
   noStepsLabel,
   featured = false,
   sectionTitle,
