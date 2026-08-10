@@ -103,6 +103,12 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const undertoneLabel = data.undertone
     ? t(`undertone.${data.undertone}` as `undertone.cool`)
     : "—";
+  const skinTypeNote = data.skinType
+    ? tReview(`skinTypeNote.${data.skinType}` as `skinTypeNote.dry`)
+    : undefined;
+  const undertoneNote = data.undertone
+    ? tReview(`undertoneNote.${data.undertone}` as `undertoneNote.warm`)
+    : undefined;
   const goalLabel = data.goal ? t(`goal.${data.goal}` as `goal.glow`) : "—";
   const skillLabel =
     data.skillLevel && data.skillLevel !== "unspecified"
@@ -163,11 +169,16 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
             </h2>
           </div>
           <dl className="divide-y divide-border/45">
-            <ReviewFactRow label={tReview("skinType")} value={skinTypeLabel} />
+            <ReviewFactRow
+              label={tReview("skinType")}
+              value={skinTypeLabel}
+              note={skinTypeNote}
+            />
             {data.undertone ? (
               <ReviewFactRow
                 label={tReview("undertone")}
                 value={undertoneLabel}
+                note={undertoneNote}
               />
             ) : null}
             {concernLabels.length > 0 ? (
@@ -393,15 +404,30 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   );
 }
 
-function ReviewFactRow({ label, value }: { label: string; value: string }) {
+function ReviewFactRow({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+}) {
   return (
-    <div className="flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 sm:px-5 sm:py-4">
-      <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="text-base font-semibold leading-snug text-foreground sm:text-right sm:text-[1.05rem]">
-        {value}
-      </dd>
+    <div className="flex flex-col gap-1 px-4 py-3.5 sm:gap-1.5 sm:px-5 sm:py-4">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+        <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </dt>
+        <dd className="text-base font-semibold leading-snug text-foreground sm:text-right sm:text-[1.05rem]">
+          {value}
+        </dd>
+      </div>
+      {note ? (
+        <p className="text-xs leading-relaxed text-muted-foreground sm:max-w-[92%] sm:self-end sm:text-right">
+          {note}
+        </p>
+      ) : null}
     </div>
   );
 }

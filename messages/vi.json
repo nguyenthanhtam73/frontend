@@ -1676,6 +1676,22 @@
       "skinSection": "Phân tích da",
       "skinType": "Loại da",
       "undertone": "Tone da",
+      "skinTypeNote": {
+        "dry": "Da hay cảm giác căng, thiếu nước — cần kem dưỡng ẩm nhiều hơn.",
+        "oily": "Da dễ bóng nhờn (nhất là trán–mũi–cằm) — rửa nhẹ, đừng dùng sản phẩm làm khô quá mức.",
+        "combo": "Có chỗ khô, có chỗ dầu (thường má khô, trán–mũi dầu) — chăm khác nhau theo vùng.",
+        "normal": "Da khá ổn định, không quá dầu cũng không quá khô — routine đơn giản là đủ để bắt đầu.",
+        "sensitive": "Da dễ đỏ, rát hoặc khó chịu khi thử đồ mới / thời tiết đổi — nên dùng sản phẩm dịu, ít kích ứng.",
+        "prefer_not": "Bạn chưa chọn loại da cụ thể — vẫn dùng được routine chung, nhẹ và an toàn."
+      },
+      "undertoneNote": {
+        "cool": "Sắc da nghiêng hồng hoặc hơi xanh (gọi là “tone lạnh”). Hay dùng khi chọn kem nền / son cho hợp màu da.",
+        "warm": "Sắc da nghiêng vàng hoặc vàng cam (gọi là “tone ấm”). Hay dùng khi chọn kem nền / son cho hợp màu da — không liên quan da đang nóng hay viêm.",
+        "neutral": "Không nghiêng rõ hồng hay vàng — nhiều màu kem nền / son đều dễ hợp.",
+        "deep": "Da thuộc nhóm sẫm màu hơn — chủ yếu để gợi ý độ đậm nhạt của kem nền / sản phẩm trang điểm.",
+        "fair": "Da thuộc nhóm sáng màu hơn — chủ yếu để gợi ý độ đậm nhạt của kem nền / sản phẩm trang điểm.",
+        "prefer_not": "Bạn chưa chọn tone da — không sao, phần chăm da hàng ngày vẫn dùng bình thường."
+      },
       "concerns": "Mối quan tâm",
       "skillSection": "Kinh nghiệm chăm da",
       "goalSection": "Mục tiêu da",

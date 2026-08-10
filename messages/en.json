@@ -1676,6 +1676,22 @@
       "skinSection": "Skin analysis",
       "skinType": "Skin type",
       "undertone": "Skin tone",
+      "skinTypeNote": {
+        "dry": "Skin often feels tight or thirsty — it usually needs more moisturizer.",
+        "oily": "Skin gets shiny easily (especially forehead–nose–chin) — wash gently; don’t over-dry it.",
+        "combo": "Some areas feel dry, others oily (often dry cheeks, oily forehead/nose) — treat zones differently.",
+        "normal": "Skin feels fairly steady — not very oily or very dry. A simple routine is enough to start.",
+        "sensitive": "Skin gets red, stingy, or uncomfortable with new products or weather changes — stick to gentle products.",
+        "prefer_not": "You didn’t pick a specific skin type — a gentle general routine still works."
+      },
+      "undertoneNote": {
+        "cool": "Your skin color leans pink or bluish (called a “cool” undertone). Mostly helpful when choosing foundation or lipstick shades.",
+        "warm": "Your skin color leans yellow or golden (called a “warm” undertone). Mostly helpful when choosing foundation or lipstick — it does not mean your skin feels hot or inflamed.",
+        "neutral": "Not clearly pink or yellow — many foundation/lipstick shades tend to look fine.",
+        "deep": "Your skin is on the deeper side — mainly used to suggest how light or deep makeup shades should be.",
+        "fair": "Your skin is on the lighter side — mainly used to suggest how light or deep makeup shades should be.",
+        "prefer_not": "You skipped skin tone — that’s fine. Your daily skincare routine still works as usual."
+      },
       "concerns": "Concerns",
       "skillSection": "Skincare experience",
       "goalSection": "Skin goal",
