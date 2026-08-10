@@ -127,6 +127,7 @@ function RoutineStepCard({
   productTip,
   stepTestId,
   compactTips = false,
+  emphasize = false,
   sameAsMorning = false,
 }: {
   stepText: string;
@@ -138,14 +139,16 @@ function RoutineStepCard({
   stepTestId?: string;
   /** Coach-welcome: shorter tip (label + why or Shopee) — skip help line. */
   compactTips?: boolean;
+  /** Larger type + full tip copy (coach-welcome). */
+  emphasize?: boolean;
   /** Evening step reuses the same AM product — show reuse hint instead of full commerce. */
   sameAsMorning?: boolean;
 }) {
   const t = useTranslations("onboarding");
   const tGuide = useTranslations("onboarding.productGuidance");
   const ob = useOnboardingStore();
-  const [expanded, setExpanded] = useState(false);
-  const [shopOpen, setShopOpen] = useState(false);
+  const [expanded, setExpanded] = useState(!compactTips || emphasize);
+  const [shopOpen, setShopOpen] = useState(!compactTips);
   const [truncated, setTruncated] = useState(false);
   const detailRef = useRef<HTMLParagraphElement>(null);
   const parsed = parseRoutineStep(stepText);
@@ -158,6 +161,24 @@ function RoutineStepCard({
   const testId =
     stepTestId ?? `onboarding-starter-step-${period}-${index}`;
   const visibleSoft = compactTips ? softLabels.slice(0, 1) : softLabels;
+  const titleClass = emphasize
+    ? "text-base font-semibold leading-snug text-foreground sm:text-lg"
+    : "text-sm font-semibold leading-snug text-foreground";
+  const detailClass = emphasize
+    ? "text-base leading-relaxed text-foreground/85"
+    : "text-sm leading-relaxed text-muted-foreground";
+  const tipTextClass = emphasize
+    ? "text-base leading-relaxed text-foreground/90"
+    : "text-sm leading-snug text-foreground/85";
+  const tipHelpClass = emphasize
+    ? "text-base leading-relaxed text-muted-foreground"
+    : "text-sm leading-relaxed text-muted-foreground";
+  const tipLabelClass = emphasize
+    ? "text-base font-semibold leading-snug text-violet-900 dark:text-violet-100"
+    : "text-sm font-semibold leading-snug text-violet-900 dark:text-violet-100";
+  const softNameClass = emphasize
+    ? "text-base font-semibold leading-snug text-foreground"
+    : "text-sm leading-snug";
 
   useEffect(() => {
     if (!hasDetail || expanded) return;
@@ -229,7 +250,8 @@ function RoutineStepCard({
   return (
     <li
       className={cn(
-        "rounded-lg border bg-background/90 px-2.5 py-2.5",
+        "rounded-lg border bg-background/90",
+        emphasize ? "px-3.5 py-3.5" : "px-2.5 py-2.5",
         tip?.affiliate ? "border-violet-500/30" : "border-border/60",
       )}
       data-testid={testId}
@@ -238,38 +260,46 @@ function RoutineStepCard({
       <div className="flex items-start gap-2.5">
         <span
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-lg",
+            "flex shrink-0 items-center justify-center rounded-lg",
+            emphasize ? "size-11" : "size-10",
             period === "morning"
               ? "bg-amber-500/12 text-amber-600 dark:text-amber-400"
               : "bg-indigo-500/12 text-indigo-600 dark:text-indigo-400",
           )}
         >
-          <Icon className="size-[1.125rem]" aria-hidden />
+          <Icon className={emphasize ? "size-5" : "size-[1.125rem]"} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[11px] font-bold tabular-nums text-muted-foreground">
+            <span
+              className={cn(
+                "font-bold tabular-nums text-muted-foreground",
+                emphasize ? "text-sm" : "text-[11px]",
+              )}
+            >
               {index + 1}
             </span>
             <p
-              className="text-sm font-semibold leading-snug text-foreground"
+              className={titleClass}
               data-testid={`onboarding-starter-text-${period}-${index}`}
             >
               {parsed.title}
             </p>
           </div>
           {hasDetail ? (
-            <div className="mt-0.5">
+            <div className="mt-1">
               <p
                 ref={detailRef}
                 className={cn(
-                  "text-sm leading-relaxed text-muted-foreground",
-                  !expanded && (compactTips ? "line-clamp-1" : "line-clamp-2"),
+                  detailClass,
+                  !expanded &&
+                    !emphasize &&
+                    (compactTips ? "line-clamp-1" : "line-clamp-2"),
                 )}
               >
                 {parsed.detail}
               </p>
-              {truncated || expanded ? (
+              {!emphasize && (truncated || expanded) ? (
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
@@ -291,7 +321,9 @@ function RoutineStepCard({
                 "rounded-lg border",
                 compactTips
                   ? "mt-1.5 space-y-0.5 px-2 py-1.5"
-                  : "mt-2 space-y-1 px-2.5 py-2",
+                  : emphasize
+                    ? "mt-2.5 space-y-1.5 px-3 py-2.5"
+                    : "mt-2 space-y-1 px-2.5 py-2",
                 affiliate
                   ? "border-violet-500/30 bg-violet-500/[0.04]"
                   : "border-sky-500/40 bg-sky-500/[0.06]",
@@ -301,8 +333,13 @@ function RoutineStepCard({
               data-tip-density={compactTips ? "compact" : "full"}
               data-same-as-morning={sameAsMorning ? "true" : undefined}
             >
-              {sameAsMorning && compactTips ? (
-                <p className="text-xs leading-snug text-muted-foreground">
+              {sameAsMorning ? (
+                <p
+                  className={cn(
+                    "leading-snug text-muted-foreground",
+                    emphasize ? "text-base" : "text-xs",
+                  )}
+                >
                   <span className="font-medium text-foreground">
                     {tip.label || visibleSoft[0]}
                   </span>
@@ -312,13 +349,18 @@ function RoutineStepCard({
               ) : isSoftTip ? (
                 <>
                   {!compactTips ? (
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700/80 dark:text-sky-300/90">
+                    <p
+                      className={cn(
+                        "font-bold uppercase tracking-wide text-sky-700/80 dark:text-sky-300/90",
+                        emphasize ? "text-xs" : "text-[10px]",
+                      )}
+                    >
                       {tGuide("softTipBadge")}
                     </p>
                   ) : null}
                   <ul className="space-y-0.5">
                     {visibleSoft.map((name, i) => (
-                      <li key={`${name}-${i}`} className="text-sm leading-snug">
+                      <li key={`${name}-${i}`} className={softNameClass}>
                         {i > 0 ? (
                           <span className="text-muted-foreground">
                             {tGuide("softTipOr")}{" "}
@@ -331,7 +373,7 @@ function RoutineStepCard({
                   {tip.why && (!compactTips || shopOpen) ? (
                     <p
                       className={cn(
-                        "text-sm leading-snug text-foreground/85",
+                        tipTextClass,
                         compactTips && "line-clamp-2 text-xs text-muted-foreground",
                       )}
                       data-testid="guidance-why"
@@ -340,10 +382,7 @@ function RoutineStepCard({
                     </p>
                   ) : null}
                   {!compactTips && tip.help ? (
-                    <p
-                      className="text-sm leading-relaxed text-muted-foreground"
-                      data-testid="guidance-help"
-                    >
+                    <p className={tipHelpClass} data-testid="guidance-help">
                       {tip.help}
                     </p>
                   ) : null}
@@ -364,13 +403,11 @@ function RoutineStepCard({
                 </>
               ) : (
                 <>
-                  <p className="text-sm font-semibold leading-snug text-violet-900 dark:text-violet-100">
-                    {tip.label}
-                  </p>
+                  <p className={tipLabelClass}>{tip.label}</p>
                   {(!compactTips || shopOpen) && tip.why ? (
                     <p
                       className={cn(
-                        "text-sm leading-snug text-foreground/85",
+                        tipTextClass,
                         compactTips && "line-clamp-2 text-xs text-muted-foreground",
                       )}
                       data-testid="guidance-why"
@@ -379,10 +416,7 @@ function RoutineStepCard({
                     </p>
                   ) : null}
                   {!compactTips && tip.help ? (
-                    <p
-                      className="text-sm leading-relaxed text-muted-foreground"
-                      data-testid="guidance-help"
-                    >
+                    <p className={tipHelpClass} data-testid="guidance-help">
                       {tip.help}
                     </p>
                   ) : null}
@@ -406,7 +440,10 @@ function RoutineStepCard({
                       href={affiliate.affiliate_link}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
+                      className={cn(
+                        "inline-flex items-center gap-1.5 font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300",
+                        emphasize ? "min-h-10 text-base" : "min-h-9 text-sm",
+                      )}
                       data-testid="affiliate-cta"
                       data-legacy-testid="onboarding-affiliate-cta"
                       data-affiliate-product-id={affiliate.product_id}
@@ -463,6 +500,7 @@ export function OnboardingRoutinePeriodSection({
   sectionTestId,
   stepTestIdPrefix,
   compactTips = false,
+  emphasize = false,
   morningProductTips,
 }: {
   period: "morning" | "evening";
@@ -478,6 +516,8 @@ export function OnboardingRoutinePeriodSection({
   stepTestIdPrefix?: string;
   /** Coach-welcome denser-page mode: shorter tips. */
   compactTips?: boolean;
+  /** Larger headings + full tip copy (coach-welcome). */
+  emphasize?: boolean;
   /** Morning tips — used to mark evening duplicates as “same as AM”. */
   morningProductTips?: (RoutineStepProductTip | null)[];
 }) {
@@ -505,24 +545,40 @@ export function OnboardingRoutinePeriodSection({
     >
       <div
         className={cn(
-          "flex items-center gap-2.5 border-b px-3 py-2.5",
+          "flex items-center gap-2.5 border-b",
+          emphasize ? "px-3.5 py-3" : "px-3 py-2.5",
           isMorning ? "border-amber-500/15 bg-amber-500/8" : "border-indigo-500/15 bg-indigo-500/8",
         )}
       >
         <span
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-xl",
+            "flex shrink-0 items-center justify-center rounded-xl",
+            emphasize ? "size-11" : "size-10",
             isMorning ? "bg-amber-500 text-white" : "bg-indigo-600 text-white dark:bg-indigo-500",
           )}
         >
-          {isMorning ? <Sun className="size-5" aria-hidden /> : <Moon className="size-5" aria-hidden />}
+          {isMorning ? (
+            <Sun className="size-5" aria-hidden />
+          ) : (
+            <Moon className="size-5" aria-hidden />
+          )}
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold tracking-tight sm:text-base">
+          <h3
+            className={cn(
+              "font-bold tracking-tight",
+              emphasize ? "text-lg sm:text-xl" : "text-sm sm:text-base",
+            )}
+          >
             {isMorning ? t("routineStep.morning") : t("routineStep.evening")}
           </h3>
           {!compactTips ? (
-            <p className="text-xs text-muted-foreground">
+            <p
+              className={cn(
+                "text-muted-foreground",
+                emphasize ? "text-sm leading-relaxed sm:text-base" : "text-xs",
+              )}
+            >
               {isMorning
                 ? t("step2.morningHint")
                 : t(eveningHintKey(carePhase))}
@@ -537,20 +593,26 @@ export function OnboardingRoutinePeriodSection({
         >
           <span
             className={cn(
-              "text-xl font-bold tabular-nums leading-none",
+              "font-bold tabular-nums leading-none",
+              emphasize ? "text-2xl" : "text-xl",
               isMorning ? "text-amber-700 dark:text-amber-300" : "text-indigo-700 dark:text-indigo-300",
             )}
           >
             {steps.length}
           </span>
-          <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+          <span
+            className={cn(
+              "font-semibold uppercase text-muted-foreground",
+              emphasize ? "text-xs" : "text-[10px]",
+            )}
+          >
             {t("step2.stepCount")}
           </span>
         </div>
       </div>
 
-      <div className="space-y-2 p-2.5 sm:p-3">
-        <ol className="space-y-2">
+      <div className={cn(emphasize ? "space-y-3 p-3 sm:p-3.5" : "space-y-2 p-2.5 sm:p-3")}>
+        <ol className={cn(emphasize ? "space-y-3" : "space-y-2")}>
           {steps.map((step, i) => (
             <RoutineStepCard
               key={`${period}-${i}-${step.slice(0, 12)}`}
@@ -563,6 +625,7 @@ export function OnboardingRoutinePeriodSection({
                 stepTestIdPrefix ? `${stepTestIdPrefix}-${i}` : undefined
               }
               compactTips={compactTips}
+              emphasize={emphasize}
               sameAsMorning={
                 !isMorning &&
                 morningKeys.has(tipFingerprint(productTips?.[i] ?? null))

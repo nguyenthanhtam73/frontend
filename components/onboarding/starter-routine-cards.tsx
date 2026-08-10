@@ -68,8 +68,13 @@ type StarterRoutineCardsProps = {
   skinType?: string;
   /** Onboarding Step 2 only — muted Shopee catalog hint. */
   showCommerceEmptyHint?: boolean;
-  /** Shorter product tips (coach-welcome / review). Default true. */
+  /**
+   * Shorter product tips (collapse shop hints). Default true for dense pages;
+   * coach-welcome should pass false to show full purchase tips.
+   */
   compactTips?: boolean;
+  /** Larger type + always-expanded step copy (coach-welcome payoff). */
+  emphasize?: boolean;
   className?: string;
 };
 
@@ -90,6 +95,7 @@ export function StarterRoutineCards({
   skinType,
   showCommerceEmptyHint = false,
   compactTips = true,
+  emphasize = false,
   className,
 }: StarterRoutineCardsProps) {
   const tOnb = useTranslations("onboarding");
@@ -166,16 +172,30 @@ export function StarterRoutineCards({
 
   const emptyMorning =
     starter.morning.length === 0 ? (
-      <p className="px-3 py-2 text-sm text-muted-foreground">{noStepsLabel}</p>
+      <p
+        className={cn(
+          "px-3 py-2 text-muted-foreground",
+          emphasize ? "text-base" : "text-sm",
+        )}
+      >
+        {noStepsLabel}
+      </p>
     ) : null;
   const emptyEvening =
     starter.evening.length === 0 ? (
-      <p className="px-3 py-2 text-sm text-muted-foreground">{noStepsLabel}</p>
+      <p
+        className={cn(
+          "px-3 py-2 text-muted-foreground",
+          emphasize ? "text-base" : "text-sm",
+        )}
+      >
+        {noStepsLabel}
+      </p>
     ) : null;
 
   const body = (
     <div
-      className={cn("space-y-2.5", className)}
+      className={cn(emphasize ? "space-y-4" : "space-y-2.5", className)}
       data-testid="coach-welcome-starter-cards"
     >
       {starter.morning.length > 0 ? (
@@ -188,6 +208,7 @@ export function StarterRoutineCards({
           sectionTestId="coach-welcome-morning"
           stepTestIdPrefix="coach-welcome-morning"
           compactTips={compactTips}
+          emphasize={emphasize}
           emptyCommerceHint={
             showCommerceEmptyHint && affiliateCtaCount === 0
               ? tOnb("step2.commerceEmptyHint")
@@ -207,6 +228,7 @@ export function StarterRoutineCards({
           sectionTestId="coach-welcome-evening"
           stepTestIdPrefix="coach-welcome-evening"
           compactTips={compactTips}
+          emphasize={emphasize}
           morningProductTips={stepTips.morning}
         />
       ) : (
@@ -218,14 +240,24 @@ export function StarterRoutineCards({
   if (!featured && !sectionTitle) return body;
 
   return (
-    <div className="space-y-3" data-testid="coach-welcome-starter">
+    <div className={cn("space-y-3", emphasize && "space-y-4")} data-testid="coach-welcome-starter">
       {sectionTitle ? (
-        <div className="space-y-0.5">
-          <h2 className="text-base font-bold tracking-tight sm:text-lg">
+        <div className="space-y-1">
+          <h2
+            className={cn(
+              "font-bold tracking-tight",
+              emphasize ? "text-xl sm:text-2xl" : "text-base sm:text-lg",
+            )}
+          >
             {sectionTitle}
           </h2>
           {sectionSubtitle ? (
-            <p className="text-xs text-muted-foreground sm:text-sm">
+            <p
+              className={cn(
+                "text-muted-foreground",
+                emphasize ? "text-sm leading-relaxed sm:text-base" : "text-xs sm:text-sm",
+              )}
+            >
               {sectionSubtitle}
             </p>
           ) : null}

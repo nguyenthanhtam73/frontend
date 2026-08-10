@@ -406,6 +406,8 @@ function CoachWelcomeLoaded({
               starter={starter}
               noStepsLabel={t("noSteps")}
               featured
+              compactTips={false}
+              emphasize
               sectionTitle={t("routineSectionTitle")}
               sectionSubtitle={t("routineSectionSub")}
               carePhaseHint={phaseHint}
@@ -442,6 +444,7 @@ function CoachWelcomeLoaded({
           skinReadback={skinReadback}
         />
 
+        {/* Suggestions wall only when steps can't carry folded tips — avoids duplicate commerce. */}
         {!starterHasFoldableGuidance(starter) &&
         starter.product_suggestions &&
         starter.product_suggestions.length > 0 ? (
@@ -450,7 +453,8 @@ function CoachWelcomeLoaded({
               suggestions={starter.product_suggestions}
               source="starter_routine"
               contextId={profileId ?? undefined}
-              maxVisible={2}
+              maxVisible={99}
+              emphasize
             />
           </CoachWelcomeSection>
         ) : null}
