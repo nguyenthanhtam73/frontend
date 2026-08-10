@@ -9,6 +9,8 @@ type TipCtx = {
   productLabel?: string;
   /** Catalog product id when known (for ingredient/fit notes). */
   productId?: string;
+  /** morning | evening — shapes why/help copy */
+  period?: "morning" | "evening";
 };
 
 function isEn(locale: string) {
@@ -82,14 +84,34 @@ function catalogFitNote(productId: string | undefined, en: boolean): string {
   return en ? hit.en : hit.vi;
 }
 
-function roleFitFallback(step: string, en: boolean, calm: boolean): string {
+function roleFitFallback(
+  step: string,
+  en: boolean,
+  calm: boolean,
+  period?: "morning" | "evening",
+): string {
+  const evening = period === "evening";
   switch (String(step).toLowerCase()) {
     case "cleanse":
+      if (evening) {
+        return en
+          ? "Gently wash off leftover sunscreen and the day’s dirt — don’t leave skin tight."
+          : "Rửa nhẹ để gỡ kem chống nắng và bụi trong ngày — đừng để da khô căng.";
+      }
       return en
         ? "Pick a gentle cleanser — no scrubbing on swollen spots."
         : "Chọn sữa rửa dịu — không chà lên chỗ đang sưng.";
     case "moisturize":
     case "soothe":
+      if (evening) {
+        return calm
+          ? en
+            ? "Overnight repair cream — this week skip strong acne actives."
+            : "Kem phục hồi qua đêm — tuần này chưa thêm sản phẩm trị mụn mạnh."
+          : en
+            ? "Night moisturizer keeps comfort while skin recovers."
+            : "Kem dưỡng tối giữ da êm trong lúc da nghỉ.";
+      }
       return calm
         ? en
           ? "Repair-style cream calms redness before strong acne treatments."
@@ -125,7 +147,8 @@ export function buildPersonalizedStepWhy(
     String(ctx.phase || "").toLowerCase() === "calm_first" ||
     String(ctx.phase || "").toLowerCase() === "manual";
   const fit =
-    catalogFitNote(ctx.productId, en) || roleFitFallback(step, en, calm);
+    catalogFitNote(ctx.productId, en) ||
+    roleFitFallback(step, en, calm, ctx.period);
   return `${opener}: ${fit}`;
 }
 
@@ -140,13 +163,27 @@ export function buildPersonalizedStepHelp(
   const calm =
     String(ctx.phase || "").toLowerCase() === "calm_first" ||
     String(ctx.phase || "").toLowerCase() === "manual";
+  const evening = ctx.period === "evening";
   switch (String(step).toLowerCase()) {
     case "cleanse":
-      return en
-        ? "Helps: remove oil/dirt gently so spots don’t get angrier."
-        : "Giúp ích: sạch dầu/bụi nhẹ, ít làm chỗ sưng càng đỏ.";
+      return evening
+        ? en
+          ? "Helps: clear leftover SPF and day dirt without stripping overnight."
+          : "Giúp ích: gỡ SPF/bụi còn sót, da không khô căng trước khi ngủ."
+        : en
+          ? "Helps: remove oil/dirt gently so spots don’t get angrier."
+          : "Giúp ích: sạch dầu/bụi nhẹ, ít làm chỗ sưng càng đỏ.";
     case "moisturize":
     case "soothe":
+      if (evening) {
+        return calm
+          ? en
+            ? "Helps: soothe overnight and keep the barrier calm this week."
+            : "Giúp ích: dịu da qua đêm và giữ hàng rào ổn định tuần này."
+          : en
+            ? "Helps: overnight comfort while skin recovers."
+            : "Giúp ích: giữ da êm qua đêm trong lúc phục hồi.";
+      }
       return calm
         ? en
           ? "Helps: calm redness and reduce tight, dry feel overnight/day."

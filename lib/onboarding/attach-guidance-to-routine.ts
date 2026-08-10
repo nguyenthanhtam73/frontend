@@ -193,15 +193,20 @@ export function attachGuidanceToRoutineSteps(
     usedProductIds.add(c.id);
   }
 
+  // Per period+role so evening still gets tips after morning covered the same role.
   const rolesCovered = new Set<string>();
+  const coverKey = (period: string, role: string) => `${period}:${role}`;
   for (const c of candidates) {
-    if (ctaKeys.has(c.ref.key)) rolesCovered.add(c.ref.role);
+    if (ctaKeys.has(c.ref.key)) {
+      rolesCovered.add(coverKey(c.ref.period, c.ref.role));
+    }
   }
 
   const toTip = (ref: StepRef): RoutineStepProductTip | null => {
     if (!ref.role) return null;
     const g = ref.g;
     const guidanceStep = ref.role;
+    const covered = coverKey(ref.period, guidanceStep);
     const link = g?.affiliate_link?.trim();
     const productId = g?.affiliate_product_id?.trim();
     const canAff =
@@ -220,10 +225,11 @@ export function attachGuidanceToRoutineSteps(
         concerns: tipCtx.concerns,
         productLabel,
         productId,
+        period: ref.period,
       };
       const why = buildPersonalizedStepWhy(guidanceStep, personalCtx);
       const help = buildPersonalizedStepHelp(guidanceStep, personalCtx);
-      rolesCovered.add(guidanceStep);
+      rolesCovered.add(covered);
       return {
         guidanceStep,
         label: productLabel,
@@ -240,8 +246,8 @@ export function attachGuidanceToRoutineSteps(
       };
     }
 
-    // Skip soft tip when this role already has a CTA or soft tip (less mobile clutter).
-    if (rolesCovered.has(guidanceStep)) return null;
+    // Skip soft tip only when this period already has a tip for the same role.
+    if (rolesCovered.has(covered)) return null;
 
     const softPicks = pickCatalogSoftPicks(guidanceStep, {
       locale: tipCtx.locale,
@@ -265,8 +271,9 @@ export function attachGuidanceToRoutineSteps(
       concerns: tipCtx.concerns,
       productLabel: softLabels[0],
       productId: softPicks[0]?.id,
+      period: ref.period,
     };
-    rolesCovered.add(guidanceStep);
+    rolesCovered.add(covered);
     return {
       guidanceStep,
       label: softLabels[0],
