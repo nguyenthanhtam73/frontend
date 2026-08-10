@@ -63,4 +63,6 @@ export type CoachWelcomePayload = {
    * Coach-welcome / claim hydrate from IDB when this is true.
    */
   guestPhotosIdb?: boolean;
+  /** True after background claim photo upload failed — show retry on coach-welcome. */
+  photosAttachFailed?: boolean;
 };

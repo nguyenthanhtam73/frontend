@@ -142,6 +142,23 @@ describe("claim-guest-coach-welcome", () => {
     assert.equal(payload!.photos.length, 1);
   });
 
+  it("falls back body_concerns from goal when summary has none", () => {
+    const session = sampleGuestSession();
+    session.reviewSummary = {
+      ...session.reviewSummary!,
+      body_concerns: [],
+      skin_analysis: {
+        ...session.reviewSummary!.skin_analysis!,
+        concerns: [],
+        concern_types: [],
+      },
+    };
+    const body = buildFinishBodyFromGuestSession(session);
+    assert.ok(body);
+    assert.ok(body!.body_concerns.length > 0);
+    assert.equal(body!.body_concerns[0], "acne");
+  });
+
   it("rehydrates legacy data-URL photos", () => {
     const withPhotos = sampleGuestSession({
       reviewSummary: {

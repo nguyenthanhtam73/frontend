@@ -15,6 +15,7 @@ import {
   type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
+import { clearCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import {
   clearJustCompletedOnboarding,
   hasGuestCompletedOnboardingTrial,
@@ -116,13 +117,10 @@ export function loadGuestReviewFromSession(): OnboardingReviewData | null {
 export function clearOnboardingSessionCache(): void {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.removeItem(COACH_WELCOME_STORAGE_KEY);
     sessionStorage.removeItem("dadiary_onboarding_exit_anim");
     clearJustCompletedOnboarding();
   } catch {
     /* ignore */
   }
-  void import("@/lib/onboarding/guest-photo-idb").then((m) =>
-    m.clearGuestClaimPhotos(),
-  );
+  clearCoachWelcomeSession();
 }

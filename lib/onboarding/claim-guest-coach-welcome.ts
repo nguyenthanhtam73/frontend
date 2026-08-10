@@ -5,6 +5,7 @@ import {
   postOnboardingPhotos,
 } from "@/lib/onboarding/finish-request";
 import {
+  clearCoachWelcomeSession,
   patchCoachWelcomeSession,
   readCoachWelcomeSession,
 } from "@/lib/onboarding/coach-welcome-session";
@@ -14,6 +15,8 @@ import {
   revokeGuestPhotoPreviews,
 } from "@/lib/onboarding/guest-photo-idb";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
+import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
+import { fetchSkinProfile } from "@/lib/api/profile";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import {
   GUEST_COACH_PROFILE_ID,
@@ -70,6 +73,24 @@ export function isClaimableGuestCoachSession(
   return am.length > 0 || pm.length > 0;
 }
 
+/** Map goal → at least one body concern (finish-body requires non-empty). */
+function concernsFromGoal(goal: string | null): string[] {
+  const g = (goal ?? "").toLowerCase();
+  if (!g) return ["dullness"];
+  if (g.includes("acne") || g.includes("clear")) return ["acne"];
+  if (g.includes("pigment") || g.includes("bright") || g.includes("glow")) {
+    return ["hyperpigmentation"];
+  }
+  if (g.includes("red") || g.includes("calm") || g.includes("sensitive")) {
+    return ["redness"];
+  }
+  if (g.includes("dry") || g.includes("barrier") || g.includes("hydrat")) {
+    return ["dryness"];
+  }
+  if (g.includes("pore") || g.includes("oil")) return ["large_pores"];
+  return ["dullness"];
+}
+
 function stableConcerns(session: CoachWelcomePayload): string[] {
   const summary = session.reviewSummary;
   const fromBody = (summary?.body_concerns ?? [])
@@ -100,7 +121,7 @@ function stableConcerns(session: CoachWelcomePayload): string[] {
     });
     return [...new Set(mapped)];
   }
-  return [];
+  return concernsFromGoal(resolveGoal(session));
 }
 
 function trimOrUndef(s: string | undefined): string | undefined {
@@ -265,6 +286,9 @@ export type ClaimGuestResult = {
   starterRoutinePending: boolean;
 };
 
+/** Serialize claim so double-tap Save / parallel callers can't CompleteOnboarding twice. */
+let claimInFlight: Promise<ClaimGuestResult | null> | null = null;
+
 async function attachGuestPhotosInBackground(
   accessToken: string,
   photos: PhotoItem[],
@@ -275,6 +299,7 @@ async function attachGuestPhotosInBackground(
     patchCoachWelcomeSession(
       {
         guestPhotosIdb: false,
+        photosAttachFailed: false,
         reviewSummary: {
           photos_skipped: false,
           photo_urls: photoUrls,
@@ -284,7 +309,49 @@ async function attachGuestPhotosInBackground(
     );
     await clearGuestClaimPhotos();
   } catch {
+    // Server already has photos_skipped=true from the JSON claim.
+    // Keep guestPhotosIdb so this browser can still hydrate IDB previews.
+    patchCoachWelcomeSession({ photosAttachFailed: true });
     onFailed?.();
+  } finally {
+    revokeGuestPhotoPreviews(photos);
+  }
+}
+
+/**
+ * Retry uploading guest claim photos from IndexedDB after a background attach fail.
+ * Returns public photo URLs on success, null on failure / nothing to upload.
+ */
+export async function retryAttachGuestClaimPhotos(
+  accessToken: string,
+): Promise<string[] | null> {
+  const session = readCoachWelcomeSession();
+  if (!session || sessionLooksLikeGuestTrial(session)) return null;
+
+  const photos = await resolveGuestClaimPhotos(session);
+  if (!photos.length) {
+    // Keep photosAttachFailed so the retry banner stays until photos exist again.
+    return null;
+  }
+
+  try {
+    const photoUrls = await postOnboardingPhotos(photos, accessToken);
+    patchCoachWelcomeSession(
+      {
+        guestPhotosIdb: false,
+        photosAttachFailed: false,
+        reviewSummary: {
+          photos_skipped: false,
+          photo_urls: photoUrls,
+        },
+      },
+      { replacePhotoUrls: true },
+    );
+    await clearGuestClaimPhotos();
+    return photoUrls;
+  } catch {
+    patchCoachWelcomeSession({ photosAttachFailed: true });
+    return null;
   } finally {
     revokeGuestPhotoPreviews(photos);
   }
@@ -301,86 +368,127 @@ export async function claimGuestCoachWelcomeIfNeeded(
     onPhotosAttachFailed?: () => void;
   },
 ): Promise<ClaimGuestResult | null> {
-  if (opts?.alreadyCompleted) return null;
-
-  const session = readCoachWelcomeSession();
-  if (!isClaimableGuestCoachSession(session) || !session) return null;
-
-  const photos = await resolveGuestClaimPhotos(session);
-  const claim = buildGuestClaimPayload(session, photos);
-  if (!claim) {
-    revokeGuestPhotoPreviews(photos);
+  // Existing account: never claim; drop leftover guest trial so coach-welcome
+  // loads the real profile instead of painting guest CTAs/routine.
+  if (opts?.alreadyCompleted) {
+    if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+      clearCoachWelcomeSession();
+    }
     return null;
   }
 
-  // Fast path: never block login/register on multipart upload.
-  const result = await postOnboardingComplete(
-    claim.finishBody,
-    [],
-    true,
-    accessToken,
-  );
+  if (claimInFlight) return claimInFlight;
 
-  const claimedStarter = {
-    ...session.starterRoutine,
-    ...result.starterRoutine,
-    product_guidance:
-      result.starterRoutine.product_guidance?.length
-        ? result.starterRoutine.product_guidance
-        : session.starterRoutine.product_guidance,
-    product_suggestions:
-      result.starterRoutine.product_suggestions?.length
-        ? result.starterRoutine.product_suggestions
-        : session.starterRoutine.product_suggestions,
-  };
+  claimInFlight = (async () => {
+    // Defense in depth: never overwrite an already-completed profile via Save CTA
+    // (auth store may still be null on cold load — also check /profile/skin).
+    if (useAuthStore.getState().user?.onboarding_completed === true) {
+      if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+        clearCoachWelcomeSession();
+      }
+      return null;
+    }
+    try {
+      const prof = await fetchSkinProfile();
+      if (prof && isOnboardingComplete(prof)) {
+        if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+          clearCoachWelcomeSession();
+        }
+        return null;
+      }
+    } catch {
+      /* network/auth — fall through; CompleteOnboarding will fail loudly if needed */
+    }
 
-  const photosSkipped = claim.finishBody.photos_skipped === true;
-  const claimedPhotoUrls = result.photoUrls?.length
-    ? result.photoUrls
-    : photosSkipped
-      ? []
-      : normalizeReviewPhotoUrls(session.reviewSummary?.photo_urls);
+    const session = readCoachWelcomeSession();
+    if (!isClaimableGuestCoachSession(session) || !session) return null;
 
-  patchCoachWelcomeSession(
-    {
-      profileId: result.profileId,
-      guestPreview: false,
-      guestPhotosIdb: photos.length > 0,
-      starterRoutine: claimedStarter,
-      starterRoutinePending: result.starterRoutinePending,
-      previewJobId: undefined,
-      previewAccessToken: undefined,
-      reviewSummary: {
-        ...session.reviewSummary,
-        photos_skipped: photosSkipped,
-        photo_urls: claimedPhotoUrls,
-      },
-    },
-    { replacePhotoUrls: true },
-  );
+    const photos = await resolveGuestClaimPhotos(session);
+    const claim = buildGuestClaimPayload(session, photos);
+    if (!claim) {
+      revokeGuestPhotoPreviews(photos);
+      return null;
+    }
 
-  const auth = useAuthStore.getState();
-  if (auth.user) {
-    useAuthStore.setState({
-      user: {
-        ...auth.user,
-        onboarding_completed: true,
-        onboarding_skipped: false,
-      },
-    });
-  }
-  void auth.refresh();
+    const deferredPhotos = photos.length > 0;
+    // JSON complete never includes multipart — keep server honest until attach.
+    // Local session may still hydrate IDB previews when deferredPhotos is true.
+    const finishBody: OnboardingFinishBody = {
+      ...claim.finishBody,
+      photos_skipped: true,
+    };
 
-  if (photos.length > 0) {
-    void attachGuestPhotosInBackground(
+    // Fast path: never block login/register on multipart upload.
+    const result = await postOnboardingComplete(
+      finishBody,
+      [],
+      true,
       accessToken,
-      photos,
-      opts?.onPhotosAttachFailed,
     );
-  }
 
-  return {
-    profileId: result.profileId,
-    starterRoutinePending: result.starterRoutinePending,
-  };
+    const claimedStarter = {
+      ...session.starterRoutine,
+      ...result.starterRoutine,
+      product_guidance:
+        result.starterRoutine.product_guidance?.length
+          ? result.starterRoutine.product_guidance
+          : session.starterRoutine.product_guidance,
+      product_suggestions:
+        result.starterRoutine.product_suggestions?.length
+          ? result.starterRoutine.product_suggestions
+          : session.starterRoutine.product_suggestions,
+    };
+
+    patchCoachWelcomeSession(
+      {
+        profileId: result.profileId,
+        guestPreview: false,
+        guestPhotosIdb: deferredPhotos,
+        photosAttachFailed: false,
+        usedDefaultRoutine: false,
+        starterRoutine: claimedStarter,
+        starterRoutinePending: result.starterRoutinePending,
+        previewJobId: undefined,
+        previewAccessToken: undefined,
+        reviewSummary: {
+          ...session.reviewSummary,
+          // Local: show IDB while attach runs; server stays skipped until attach.
+          photos_skipped: !deferredPhotos,
+          photo_urls: [],
+        },
+      },
+      { replacePhotoUrls: true },
+    );
+
+    const auth = useAuthStore.getState();
+    if (auth.user) {
+      useAuthStore.setState({
+        user: {
+          ...auth.user,
+          onboarding_completed: true,
+          onboarding_skipped: false,
+        },
+      });
+    }
+    void auth.refresh();
+
+    if (deferredPhotos) {
+      void attachGuestPhotosInBackground(
+        accessToken,
+        photos,
+        opts?.onPhotosAttachFailed,
+      );
+    } else {
+      void clearGuestClaimPhotos();
+    }
+
+    return {
+      profileId: result.profileId,
+      starterRoutinePending: result.starterRoutinePending,
+    };
+  })().finally(() => {
+    claimInFlight = null;
+  });
+
+  return claimInFlight;
 }

@@ -4,27 +4,23 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-/** Fade-in section wrapper for coach-welcome / review pages. */
+/** Soft fade for coach-welcome / review sections. */
 export function CoachWelcomeSection({
   children,
   className,
-  delayMs = 0,
   id,
 }: {
   children: ReactNode;
   className?: string;
-  /** Stagger entrance animations between sections. */
-  delayMs?: number;
   id?: string;
 }) {
   return (
     <section
       id={id}
       className={cn(
-        "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:fill-mode-both",
+        "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200",
         className,
       )}
-      style={delayMs > 0 ? { animationDelay: `${delayMs}ms` } : undefined}
     >
       {children}
     </section>

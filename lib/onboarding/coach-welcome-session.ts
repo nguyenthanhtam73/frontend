@@ -29,6 +29,22 @@ export function isGuestCoachSession(
   return !hasToken;
 }
 
+/** Drop coach-welcome session + guest photo IDB (leftover trial after auth). */
+export function clearCoachWelcomeSession(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(COACH_WELCOME_STORAGE_KEY);
+    window.dispatchEvent(
+      new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: {} }),
+    );
+  } catch {
+    /* ignore */
+  }
+  void import("@/lib/onboarding/guest-photo-idb").then((m) =>
+    m.clearGuestClaimPhotos(),
+  );
+}
+
 export function isCoachWelcomeRoutinePending(): boolean {
   return readCoachWelcomeSession()?.starterRoutinePending === true;
 }

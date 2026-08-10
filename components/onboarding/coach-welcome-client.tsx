@@ -37,17 +37,29 @@ import {
 } from "@/components/onboarding/starter-routine-extras";
 import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
 import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
+import { useToast } from "@/hooks/use-toast";
 import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
-import { readCoachWelcomeSession, isGuestCoachSession } from "@/lib/onboarding/coach-welcome-session";
+import {
+  clearCoachWelcomeSession,
+  readCoachWelcomeSession,
+  isGuestCoachSession,
+} from "@/lib/onboarding/coach-welcome-session";
+import {
+  claimGuestCoachWelcomeIfNeeded,
+  isClaimableGuestCoachSession,
+  retryAttachGuestClaimPhotos,
+  sessionLooksLikeGuestTrial,
+} from "@/lib/onboarding/claim-guest-coach-welcome";
 import { buildCoachWelcomeFromProfile } from "@/lib/onboarding/coach-welcome-from-profile";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
 import { consumeJustCompletedOnboarding } from "@/lib/stores/onboarding-store";
 import {
@@ -85,6 +97,34 @@ type LoadedCoachWelcome = {
   analysisConcerns?: string[];
 };
 
+/** Sync hydrate from sessionStorage — avoids skeleton flash when navigating from review. */
+function loadedFromCoachSession(
+  session: CoachWelcomePayload,
+  token: string | null,
+): LoadedCoachWelcome {
+  const isGuest = isGuestCoachSession(session, Boolean(token));
+  const sessionNotes =
+    session.coachingNotes?.trim() ||
+    session.reviewSummary?.skin_analysis?.coaching_notes?.trim() ||
+    session.starterRoutine.skin_readback?.trim() ||
+    "";
+  return {
+    profileId: session.profileId ?? null,
+    starter: session.starterRoutine,
+    pending: session.starterRoutinePending === true,
+    completedAt: session.reviewSummary?.completed_at ?? null,
+    isGuest,
+    coachingNotes: sessionNotes || undefined,
+    photoUrls: normalizeReviewPhotoUrls(session.reviewSummary?.photo_urls ?? []),
+    analysisPhase: session.reviewSummary?.skin_analysis?.phase ?? null,
+    analysisSeverity: session.reviewSummary?.skin_analysis?.severity_level ?? null,
+    analysisRegions: session.reviewSummary?.skin_analysis?.primary_regions,
+    analysisConcerns: session.reviewSummary?.skin_analysis?.main_concerns?.length
+      ? session.reviewSummary.skin_analysis.main_concerns
+      : undefined,
+  };
+}
+
 function CoachWelcomeLoaded({
   profileId: initialProfileId,
   starter: initialStarter,
@@ -97,14 +137,22 @@ function CoachWelcomeLoaded({
   analysisSeverity: initialSeverity,
   analysisRegions: initialRegions,
   analysisConcerns: initialConcerns,
-}: LoadedCoachWelcome) {
+  onAccountClaimed,
+}: LoadedCoachWelcome & { onAccountClaimed?: () => void }) {
   const t = useTranslations("coachWelcome");
+  const tAuth = useTranslations("auth");
   const tReview = useTranslations("onboarding.review");
   const formatter = useFormatter();
+  const toast = useToast();
   const [profileId, setProfileId] = useState(initialProfileId);
   const [livePhotoUrls, setLivePhotoUrls] = useState<string[] | null>(null);
   const [idbPhotoUrls, setIdbPhotoUrls] = useState<string[]>([]);
   const [retryAiLoading, setRetryAiLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [retryPhotosLoading, setRetryPhotosLoading] = useState(false);
+  const [photosAttachFailed, setPhotosAttachFailed] = useState(
+    () => readCoachWelcomeSession()?.photosAttachFailed === true,
+  );
   const {
     starter,
     isGeneratingRoutine,
@@ -118,7 +166,14 @@ function CoachWelcomeLoaded({
   });
   const session = readCoachWelcomeSession();
   const showRetryAi =
-    (showFallbackBanner || session?.usedDefaultRoutine === true) && !isGeneratingRoutine;
+    isGuest &&
+    (showFallbackBanner || session?.usedDefaultRoutine === true) &&
+    !isGeneratingRoutine;
+  const pendingAccountClaim =
+    isGuest &&
+    Boolean(getAccessToken()) &&
+    isClaimableGuestCoachSession(session);
+  const signedIn = Boolean(getAccessToken());
   const analysis = session?.reviewSummary?.skin_analysis;
 
   useEffect(() => {
@@ -126,11 +181,21 @@ function CoachWelcomeLoaded({
   }, [initialProfileId]);
 
   useEffect(() => {
+    // Catch attach-fail patches that may have landed before this listener mounted.
+    setPhotosAttachFailed(
+      readCoachWelcomeSession()?.photosAttachFailed === true,
+    );
+  }, []);
+
+  useEffect(() => {
     const onSessionPatch = (event: Event) => {
       const patch = (event as CustomEvent<Partial<CoachWelcomePayload>>).detail;
       if (patch?.profileId) setProfileId(patch.profileId);
+      if (patch?.photosAttachFailed === true) setPhotosAttachFailed(true);
+      if (patch?.photosAttachFailed === false) setPhotosAttachFailed(false);
       const nextPhotos = patch?.reviewSummary?.photo_urls;
       if (nextPhotos?.length) {
+        setPhotosAttachFailed(false);
         setLivePhotoUrls(
           normalizeReviewPhotoUrls(nextPhotos).map(absUploadUrl),
         );
@@ -238,6 +303,50 @@ function CoachWelcomeLoaded({
         ? analysis.main_concerns
         : analysis?.concern_types;
 
+  const handleSaveToAccount = () => {
+    const token = getAccessToken();
+    if (!token || saveLoading) return;
+    setSaveLoading(true);
+    void claimGuestCoachWelcomeIfNeeded(token, {
+      onPhotosAttachFailed: () => {
+        setPhotosAttachFailed(true);
+        toast.warning(tAuth("claimGuestPhotosFailed"));
+      },
+    })
+      .then((claim) => {
+        if (!claim) {
+          toast.error(tAuth("claimGuestFailed"));
+          return;
+        }
+        onAccountClaimed?.();
+      })
+      .catch(() => {
+        toast.error(tAuth("claimGuestFailed"));
+      })
+      .finally(() => setSaveLoading(false));
+  };
+
+  const handleRetryPhotos = () => {
+    const token = getAccessToken();
+    if (!token || retryPhotosLoading) return;
+    setRetryPhotosLoading(true);
+    void retryAttachGuestClaimPhotos(token)
+      .then((urls) => {
+        if (!urls?.length) {
+          toast.warning(t("retryPhotosFailed"));
+          return;
+        }
+        toast.success(t("retryPhotosSuccess"));
+      })
+      .catch(() => {
+        toast.warning(t("retryPhotosFailed"));
+      })
+      .finally(() => setRetryPhotosLoading(false));
+  };
+
+  const showRetryPhotos =
+    !isGuest && photosAttachFailed && !isGeneratingRoutine;
+
   return (
     <>
       <div className="mx-auto w-full max-w-2xl space-y-4 pb-24 sm:space-y-5 sm:pb-6">
@@ -245,7 +354,7 @@ function CoachWelcomeLoaded({
           <CoachWelcomeCelebrationHeader />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={40}>
+        <CoachWelcomeSection>
           <StarterRoutineGenerationNotice
             isGeneratingRoutine={isGeneratingRoutine}
             showFallbackBanner={showFallbackBanner}
@@ -257,15 +366,40 @@ function CoachWelcomeLoaded({
               void retryAiGeneration().finally(() => setRetryAiLoading(false));
             }}
           />
+          {showRetryPhotos ? (
+            <div
+              className="mt-3 space-y-2 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-3 text-sm leading-relaxed text-amber-950/80 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100/90"
+              role="status"
+              data-testid="coach-welcome-retry-photos"
+            >
+              <p>{t("retryPhotosNotice")}</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-1.5 border-amber-300/80 bg-background/80"
+                disabled={retryPhotosLoading}
+                onClick={handleRetryPhotos}
+              >
+                <RefreshCw
+                  className={`size-3.5 ${retryPhotosLoading ? "animate-spin" : ""}`}
+                  aria-hidden
+                />
+                {retryPhotosLoading
+                  ? t("retryPhotosLoading")
+                  : t("retryPhotosCta")}
+              </Button>
+            </div>
+          ) : null}
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={80} id="coach-welcome-routine">
+        <CoachWelcomeSection id="coach-welcome-routine">
           <div
             className={cn(
               "space-y-0",
-              "transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
+              "transition-all duration-500 motion-safe:animate-in motion-safe:fade-in",
               routineJustUpdated &&
-                "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700 sm:p-3",
+                "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-500 sm:p-3",
             )}
           >
             <StarterRoutineCards
@@ -283,12 +417,18 @@ function CoachWelcomeLoaded({
           </div>
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={100}>
-          <CoachWelcomePrimaryCtaBlock isGuest={isGuest} />
+        <CoachWelcomeSection>
+          <CoachWelcomePrimaryCtaBlock
+            isGuest={isGuest}
+            signedIn={signedIn}
+            pendingAccountClaim={pendingAccountClaim}
+            saveLoading={saveLoading}
+            onSaveToAccount={handleSaveToAccount}
+          />
         </CoachWelcomeSection>
 
         {skinReadback ? (
-          <CoachWelcomeSection delayMs={120}>
+          <CoachWelcomeSection>
             <CoachWelcomeSkinReadback
               text={skinReadback}
               photos={displayPhotoUrls.length ? displayPhotoUrls : undefined}
@@ -299,14 +439,13 @@ function CoachWelcomeLoaded({
 
         <StarterRoutineSupportExtras
           starter={starter}
-          delayMs={160}
           skinReadback={skinReadback}
         />
 
         {!starterHasFoldableGuidance(starter) &&
         starter.product_suggestions &&
         starter.product_suggestions.length > 0 ? (
-          <CoachWelcomeSection delayMs={200}>
+          <CoachWelcomeSection>
             <ProductSuggestionsCard
               suggestions={starter.product_suggestions}
               source="starter_routine"
@@ -316,19 +455,26 @@ function CoachWelcomeLoaded({
           </CoachWelcomeSection>
         ) : null}
 
-        <StarterRoutineSafetySection starter={starter} delayMs={240} />
+        <StarterRoutineSafetySection starter={starter} />
 
         {canFeedback ? (
-          <CoachWelcomeSection delayMs={280}>
+          <CoachWelcomeSection>
             <StarterRoutineFeedback profileId={profileId} compact />
           </CoachWelcomeSection>
         ) : null}
 
-        <CoachWelcomeSection delayMs={320}>
-          <CoachWelcomeCta isGuest={isGuest} guestVariant={guestVariant} />
+        <CoachWelcomeSection>
+          <CoachWelcomeCta
+            isGuest={isGuest}
+            signedIn={signedIn}
+            pendingAccountClaim={pendingAccountClaim}
+            saveLoading={saveLoading}
+            onSaveToAccount={handleSaveToAccount}
+            guestVariant={guestVariant}
+          />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={360} className="mt-4 border-t border-border/40 pt-6">
+        <CoachWelcomeSection className="mt-4 border-t border-border/40 pt-6">
           {completedLabel ? (
             <CoachWelcomeCelebrationHeader
               metaOnly
@@ -347,15 +493,49 @@ function CoachWelcomeLoaded({
         </CoachWelcomeSection>
       </div>
 
-      <CoachWelcomeStickyBar isGuest={isGuest} />
+      <CoachWelcomeStickyBar
+        isGuest={isGuest}
+        signedIn={signedIn}
+        pendingAccountClaim={pendingAccountClaim}
+        saveLoading={saveLoading}
+        onSaveToAccount={handleSaveToAccount}
+      />
     </>
   );
 }
 
 export function CoachWelcomeClient() {
   const t = useTranslations("coachWelcome");
-  const [loading, setLoading] = useState(true);
-  const [loaded, setLoaded] = useState<LoadedCoachWelcome | null>(null);
+  // Sync-read session on first client render so review → coach-welcome skips skeleton.
+  // Completed account + leftover guest trial → skip paint (load clears + fetches profile).
+  // Incomplete + guest trial (e.g. claim failed) → keep paint so trial isn't wiped.
+  const [loaded, setLoaded] = useState<LoadedCoachWelcome | null>(() => {
+    if (typeof window === "undefined") return null;
+    const session = readCoachWelcomeSession();
+    if (!session?.starterRoutine) return null;
+    const token = getAccessToken();
+    if (
+      token &&
+      sessionLooksLikeGuestTrial(session) &&
+      useAuthStore.getState().user?.onboarding_completed === true
+    ) {
+      return null;
+    }
+    return loadedFromCoachSession(session, token);
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const session = readCoachWelcomeSession();
+    if (!session?.starterRoutine) return true;
+    if (
+      getAccessToken() &&
+      sessionLooksLikeGuestTrial(session) &&
+      useAuthStore.getState().user?.onboarding_completed === true
+    ) {
+      return true;
+    }
+    return false;
+  });
   const [view, setView] = useState<"ok" | "anon" | "empty" | "error">("ok");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -363,87 +543,85 @@ export function CoachWelcomeClient() {
     consumeJustCompletedOnboarding();
   }, []);
 
+  /** Enrich notes/photos from profile without blanking the already-painted session UI. */
+  const enrichFromProfile = useCallback(async (base: LoadedCoachWelcome) => {
+    const token = getAccessToken();
+    if (!token || base.isGuest) return;
+
+    const hasRichNotes = Boolean(base.coachingNotes?.trim());
+    const hasPhotos = Boolean(base.photoUrls?.length);
+    if (hasRichNotes && hasPhotos) return;
+
+    try {
+      const prof = await fetchSkinProfile();
+      if (!prof || !isOnboardingComplete(prof)) return;
+      const fromProf = buildCoachWelcomeFromProfile(prof);
+      if (!fromProf) return;
+      setLoaded((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          profileId: fromProf.profileId || prev.profileId,
+          pending: prev.pending || fromProf.pending,
+          completedAt: prev.completedAt || fromProf.completedAt,
+          coachingNotes: hasRichNotes
+            ? prev.coachingNotes
+            : fromProf.coachingNotes || prev.coachingNotes,
+          photoUrls:
+            hasPhotos && prev.photoUrls?.length
+              ? prev.photoUrls
+              : fromProf.photoUrls?.length
+                ? fromProf.photoUrls
+                : prev.photoUrls,
+          analysisPhase: prev.analysisPhase ?? fromProf.analysisPhase,
+          analysisSeverity:
+            prev.analysisSeverity ?? fromProf.analysisHints.severity,
+          analysisRegions:
+            prev.analysisRegions ?? fromProf.analysisHints.regions,
+          analysisConcerns:
+            prev.analysisConcerns ?? fromProf.analysisHints.concerns,
+        };
+      });
+    } catch {
+      /* keep session paint */
+    }
+  }, []);
+
   const load = useCallback(async () => {
-    setLoading(true);
     setErrorMsg(null);
     setView("ok");
-    setLoaded(null);
 
     const session = readCoachWelcomeSession();
     const token = getAccessToken();
 
+    // Fast path: paint session immediately (review → coach-welcome), enrich later.
+    // Completed accounts: wipe leftover guest trials (wrong routine/CTAs).
+    // Incomplete + still-claimable trial: keep session for "Save to account" CTA.
     if (session?.starterRoutine) {
-      const isGuest = isGuestCoachSession(session, Boolean(token));
-      const sessionNotes =
-        session.coachingNotes?.trim() ||
-        session.reviewSummary?.skin_analysis?.coaching_notes?.trim() ||
-        session.starterRoutine.skin_readback?.trim() ||
-        "";
-      const sessionPhotos = normalizeReviewPhotoUrls(
-        session.reviewSummary?.photo_urls ?? [],
-      );
-
-      // Logged-in + thin session: enrich notes/photos from persisted profile.
-      // Treat skin_readback-only as "thin" so we still pull richer coaching_notes.
-      const hasRichSessionNotes = Boolean(
-        session.coachingNotes?.trim() ||
-          session.reviewSummary?.skin_analysis?.coaching_notes?.trim(),
-      );
-      if (token && !isGuest && (!hasRichSessionNotes || sessionPhotos.length === 0)) {
-        try {
-          const prof = await fetchSkinProfile();
-          if (prof && isOnboardingComplete(prof)) {
-            const fromProf = buildCoachWelcomeFromProfile(prof);
-            if (fromProf) {
-              setLoaded({
-                profileId: fromProf.profileId,
-                starter: session.starterRoutine,
-                pending: session.starterRoutinePending === true || fromProf.pending,
-                completedAt:
-                  session.reviewSummary?.completed_at ?? fromProf.completedAt,
-                isGuest: false,
-                coachingNotes: hasRichSessionNotes
-                  ? sessionNotes
-                  : fromProf.coachingNotes || sessionNotes || undefined,
-                photoUrls:
-                  sessionPhotos.length > 0 ? sessionPhotos : fromProf.photoUrls,
-                analysisPhase:
-                  session.reviewSummary?.skin_analysis?.phase ??
-                  fromProf.analysisPhase,
-                analysisSeverity:
-                  session.reviewSummary?.skin_analysis?.severity_level ??
-                  fromProf.analysisHints.severity,
-                analysisRegions:
-                  session.reviewSummary?.skin_analysis?.primary_regions ??
-                  fromProf.analysisHints.regions,
-                analysisConcerns:
-                  (session.reviewSummary?.skin_analysis?.main_concerns
-                    ?.length
-                    ? session.reviewSummary.skin_analysis.main_concerns
-                    : undefined) ?? fromProf.analysisHints.concerns,
-              });
-              setLoading(false);
-              return;
-            }
-          }
-        } catch {
-          /* fall through to session-only */
+      if (token && sessionLooksLikeGuestTrial(session)) {
+        const alreadyCompleted =
+          useAuthStore.getState().user?.onboarding_completed === true;
+        if (alreadyCompleted) {
+          clearCoachWelcomeSession();
+        } else {
+          // Keep trial for "Save to account" — do not auto-claim here (avoids
+          // racing a second CompleteOnboarding with the CTA button).
+          const fromSession = loadedFromCoachSession(session, token);
+          setLoaded(fromSession);
+          setLoading(false);
+          return;
         }
+      } else {
+        const fromSession = loadedFromCoachSession(session, token);
+        setLoaded(fromSession);
+        setLoading(false);
+        void enrichFromProfile(fromSession);
+        return;
       }
-
-      setLoaded({
-        profileId: session.profileId ?? null,
-        starter: session.starterRoutine,
-        pending: session.starterRoutinePending === true,
-        completedAt: session.reviewSummary?.completed_at ?? null,
-        isGuest,
-        coachingNotes: sessionNotes || undefined,
-        photoUrls: sessionPhotos,
-        analysisPhase: session.reviewSummary?.skin_analysis?.phase ?? null,
-      });
-      setLoading(false);
-      return;
     }
+
+    setLoading(true);
+    setLoaded(null);
 
     if (!token) {
       const guestReview = loadGuestReviewFromSession();
@@ -506,11 +684,21 @@ export function CoachWelcomeClient() {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [enrichFromProfile, t]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Cold load often has token before /me hydrates user. When completed flag
+  // arrives, wipe leftover guest trial and reload the real profile.
+  const onboardingCompleted = useAuthStore((s) => s.user?.onboarding_completed);
+  useEffect(() => {
+    if (onboardingCompleted !== true) return;
+    if (!sessionLooksLikeGuestTrial(readCoachWelcomeSession())) return;
+    clearCoachWelcomeSession();
+    void load();
+  }, [onboardingCompleted, load]);
 
   if (loading) {
     return (
@@ -573,5 +761,19 @@ export function CoachWelcomeClient() {
     );
   }
 
-  return <CoachWelcomeLoaded {...loaded} />;
+  return (
+    <CoachWelcomeLoaded
+      key={`${loaded.profileId ?? "none"}-${loaded.isGuest ? "guest" : "user"}`}
+      {...loaded}
+      onAccountClaimed={() => {
+        const session = readCoachWelcomeSession();
+        const token = getAccessToken();
+        if (!session?.starterRoutine) {
+          void load();
+          return;
+        }
+        setLoaded(loadedFromCoachSession(session, token));
+      }}
+    />
+  );
 }

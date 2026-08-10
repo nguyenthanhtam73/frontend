@@ -103,6 +103,10 @@ export function useStarterRoutineLive({
   }, []);
 
   const retryAiGeneration = useCallback(async () => {
+    // Authed profiles lock starter via CompleteOnboarding — guest preview API
+    // cannot upgrade a persisted routine. Retry is guest-only.
+    if (!isGuest) return;
+
     const session = readCoachWelcomeSession();
     if (!session?.starterRoutine) return;
 
@@ -125,7 +129,7 @@ export function useStarterRoutineLive({
     } else {
       finishPollTimeout();
     }
-  }, [beginAiTracking, finishPollTimeout]);
+  }, [beginAiTracking, finishPollTimeout, isGuest]);
 
   useEffect(() => {
     if (!enabled) return;

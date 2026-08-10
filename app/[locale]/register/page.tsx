@@ -4,7 +4,7 @@ import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -77,6 +77,7 @@ function RegisterPageInner() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
   const toast = useToast();
+  const [, startTransition] = useTransition();
 
   // Already logged in + came from pricing upgrade → go straight to checkout handoff.
   useEffect(() => {
@@ -149,6 +150,7 @@ function RegisterPageInner() {
                   } else {
                     setErr(getApiErrorMessage(json, t("errorGeneric")));
                   }
+                  setLoading(false);
                   return;
                 }
                 setAuthTokens(token, refresh);
@@ -176,18 +178,18 @@ function RegisterPageInner() {
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
-                // Paid intent → pricing; claimed guest trial → coach-welcome; else ?next=.
-                router.push(
-                  checkoutIntent
-                    ? buildPricingCheckoutHref(checkoutIntent)
-                    : claimed
-                      ? GUEST_CLAIM_RETURN_PATH
-                      : resolveAuthReturnDestination(json.data?.user, returnPath),
-                );
+                const nextPath = checkoutIntent
+                  ? buildPricingCheckoutHref(checkoutIntent)
+                  : claimed || hadClaimableGuest
+                    ? GUEST_CLAIM_RETURN_PATH
+                    : resolveAuthReturnDestination(json.data?.user, returnPath);
+                // Keep loading until navigation replaces this screen.
+                startTransition(() => {
+                  router.push(nextPath);
+                });
               } catch {
                 invalidateCaptcha();
                 setErr(t("networkError"));
-              } finally {
                 setLoading(false);
               }
             }}

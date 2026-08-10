@@ -132,7 +132,7 @@ function LoginPageInner() {
                 }
                 const nextPath = checkoutIntent
                   ? buildPricingCheckoutHref(checkoutIntent)
-                  : claimed
+                  : claimed || hadClaimableGuest
                     ? GUEST_CLAIM_RETURN_PATH
                     : resolveAuthReturnDestination(json.data?.user, returnPath);
                 // Keep loading until navigation replaces this screen — avoids an

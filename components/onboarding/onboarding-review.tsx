@@ -35,7 +35,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
 import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
@@ -88,8 +88,13 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const tCoach = useTranslations("coachWelcome");
   const tCheckIn = useTranslations("checkIn");
   const formatter = useFormatter();
+  const router = useRouter();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [photosVisible, setPhotosVisible] = useState(false);
+
+  useEffect(() => {
+    router.prefetch("/onboarding/coach-welcome");
+  }, [router]);
 
   const completedLabel = (() => {
     const d = new Date(data.completedAt);
@@ -333,7 +338,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         ) : null}
 
         {data.isGuest ? (
-          <CoachWelcomeSection delayMs={40}>
+          <CoachWelcomeSection>
             <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
               <CardContent className="space-y-3 pt-6 text-sm leading-relaxed text-muted-foreground">
                 <p>{tCoach("guestPreviewHint")}</p>
@@ -362,7 +367,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           </CoachWelcomeSection>
         ) : null}
 
-        <CoachWelcomeSection delayMs={80}>
+        <CoachWelcomeSection>
           <div className="flex justify-center">
             <Link
               href="/"
@@ -373,7 +378,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           </div>
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={120} className="mt-4 border-t border-border/40 pt-6">
+        <CoachWelcomeSection className="mt-4 border-t border-border/40 pt-6">
           {completedLabel ? (
             <CoachWelcomeCelebrationHeader
               metaOnly
@@ -424,7 +429,7 @@ function ReviewFactRow({
         </dd>
       </div>
       {note ? (
-        <p className="text-xs leading-relaxed text-muted-foreground sm:max-w-[92%] sm:self-end sm:text-right">
+        <p className="text-sm leading-relaxed text-muted-foreground sm:max-w-[92%] sm:self-end sm:text-right">
           {note}
         </p>
       ) : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
 import { OnboardingReview } from "@/components/onboarding/onboarding-review";
@@ -28,10 +28,23 @@ const OnboardingFlow = dynamic(
 
 type PageMode = "loading" | "review" | "flow" | "redirecting";
 
+function revokeBlobUrls(urls: string[]): void {
+  for (const u of urls) {
+    if (u.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(u);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
 export function OnboardingPageClient() {
   const router = useRouter();
   const [mode, setMode] = useState<PageMode>("loading");
   const [reviewData, setReviewData] = useState<OnboardingReviewData | null>(null);
+  const idbBlobUrlsRef = useRef<string[]>([]);
 
   const resolveMode = useCallback(async () => {
     if (hasJustCompletedOnboarding()) {
@@ -41,6 +54,9 @@ export function OnboardingPageClient() {
     }
 
     setMode("loading");
+    revokeBlobUrls(idbBlobUrlsRef.current);
+    idbBlobUrlsRef.current = [];
+
     const token = getAccessToken();
     if (token) {
       try {
@@ -76,7 +92,9 @@ export function OnboardingPageClient() {
           );
           const items = await loadGuestClaimPhotos();
           if (items.length) {
-            guestReview.photoUrls = items.map((p) => p.preview);
+            const blobs = items.map((p) => p.preview);
+            idbBlobUrlsRef.current = blobs;
+            guestReview.photoUrls = blobs;
           }
         } catch {
           /* ignore */
@@ -95,7 +113,11 @@ export function OnboardingPageClient() {
     void resolveMode();
     const onAuthChanged = () => void resolveMode();
     window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-    return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+      revokeBlobUrls(idbBlobUrlsRef.current);
+      idbBlobUrlsRef.current = [];
+    };
   }, [resolveMode]);
 
   if (mode === "loading" || mode === "redirecting") {
@@ -107,6 +129,8 @@ export function OnboardingPageClient() {
       <OnboardingReview
         data={reviewData}
         onDeleted={() => {
+          revokeBlobUrls(idbBlobUrlsRef.current);
+          idbBlobUrlsRef.current = [];
           setReviewData(null);
           setMode("flow");
         }}

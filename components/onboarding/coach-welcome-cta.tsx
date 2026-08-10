@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, CalendarCheck, Home, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, CalendarCheck, Home, Save, Sparkles, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { CoachWelcomeNextStepCard } from "@/components/onboarding/coach-welcome-payoff";
+import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Link } from "@/i18n/navigation";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
@@ -12,6 +13,12 @@ import { cn } from "@/lib/utils";
 
 type CoachWelcomeCtaBaseProps = {
   isGuest: boolean;
+  /** True when an access token is present (even if guest trial UI is still showing). */
+  signedIn?: boolean;
+  /** Logged-in but guest trial not claimed yet — show Save instead of auth links. */
+  pendingAccountClaim?: boolean;
+  saveLoading?: boolean;
+  onSaveToAccount?: () => void;
   guestVariant?: "ready" | "fallback";
   className?: string;
 };
@@ -22,27 +29,76 @@ const primaryBtnClass =
 /** Guest auth return — claim runs on register/login, then welcome. */
 const GUEST_AUTH_NEXT = GUEST_CLAIM_RETURN_PATH;
 
-/** Hero primary CTA — guests go to register (claim trial → coach-welcome). */
+function SaveToAccountButton({
+  className,
+  loading,
+  onSave,
+  size = "lg",
+}: {
+  className?: string;
+  loading?: boolean;
+  onSave?: () => void;
+  size?: "lg" | "default";
+}) {
+  const t = useTranslations("coachWelcome");
+  return (
+    <Button
+      type="button"
+      size={size}
+      className={cn(primaryBtnClass, className)}
+      disabled={loading || !onSave}
+      onClick={onSave}
+      data-testid="coach-welcome-save-to-account"
+    >
+      <Save className="size-5 shrink-0" aria-hidden />
+      {loading ? t("ctaSaveToAccountLoading") : t("ctaSaveToAccount")}
+      {!loading ? <ArrowRight className="size-5 shrink-0" aria-hidden /> : null}
+    </Button>
+  );
+}
+
+/** Hero primary CTA — guests go to register; pending claim → save; else check-in. */
 export function CoachWelcomePrimaryCta({
   className,
   isGuest = false,
+  signedIn = false,
+  pendingAccountClaim = false,
+  saveLoading = false,
+  onSaveToAccount,
 }: {
   className?: string;
   isGuest?: boolean;
+  signedIn?: boolean;
+  pendingAccountClaim?: boolean;
+  saveLoading?: boolean;
+  onSaveToAccount?: () => void;
 }) {
   const t = useTranslations("coachWelcome");
-  const href = isGuest
+
+  if (pendingAccountClaim) {
+    return (
+      <SaveToAccountButton
+        className={className}
+        loading={saveLoading}
+        onSave={onSaveToAccount}
+      />
+    );
+  }
+
+  // Never send an already-signed-in user back to register.
+  const showGuestAuth = isGuest && !signedIn;
+  const href = showGuestAuth
     ? buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)
     : "/check-in";
 
   return (
     <ButtonLink href={href} size="lg" className={cn(primaryBtnClass, className)}>
-      {isGuest ? (
+      {showGuestAuth ? (
         <UserPlus className="size-5 shrink-0" aria-hidden />
       ) : (
         <CalendarCheck className="size-5 shrink-0" aria-hidden />
       )}
-      {isGuest ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
+      {showGuestAuth ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
       <ArrowRight className="size-5 shrink-0" aria-hidden />
     </ButtonLink>
   );
@@ -52,11 +108,30 @@ export function CoachWelcomePrimaryCta({
 export function CoachWelcomePrimaryCtaBlock({
   className,
   isGuest = false,
+  signedIn = false,
+  pendingAccountClaim = false,
+  saveLoading = false,
+  onSaveToAccount,
 }: {
   className?: string;
   isGuest?: boolean;
+  signedIn?: boolean;
+  pendingAccountClaim?: boolean;
+  saveLoading?: boolean;
+  onSaveToAccount?: () => void;
 }) {
   const t = useTranslations("coachWelcome");
+  const showGuestAuth = isGuest && !signedIn && !pendingAccountClaim;
+  const hint = pendingAccountClaim
+    ? t("nextStepHintPendingClaim")
+    : showGuestAuth
+      ? t("nextStepHintGuest")
+      : t("nextStepHint");
+  const benefit = pendingAccountClaim
+    ? t("nextStepBenefitPendingClaim")
+    : showGuestAuth
+      ? t("nextStepBenefitGuest")
+      : t("nextStepBenefit");
 
   return (
     <div
@@ -68,14 +143,24 @@ export function CoachWelcomePrimaryCtaBlock({
     >
       <CoachWelcomeNextStepCard
         label={t("nextStepLabel")}
-        hint={isGuest ? t("nextStepHintGuest") : t("nextStepHint")}
-        benefit={isGuest ? t("nextStepBenefitGuest") : t("nextStepBenefit")}
+        hint={hint}
+        benefit={benefit}
       />
-      <CoachWelcomePrimaryCta isGuest={isGuest} />
+      <CoachWelcomePrimaryCta
+        isGuest={isGuest}
+        signedIn={signedIn}
+        pendingAccountClaim={pendingAccountClaim}
+        saveLoading={saveLoading}
+        onSaveToAccount={onSaveToAccount}
+      />
       <p className="text-center text-[11px] leading-snug text-muted-foreground sm:text-xs">
-        {isGuest ? t("ctaGuestCheckInBenefit") : t("ctaCheckInBenefit")}
+        {pendingAccountClaim
+          ? t("ctaSaveToAccountBenefit")
+          : showGuestAuth
+            ? t("ctaGuestCheckInBenefit")
+            : t("ctaCheckInBenefit")}
       </p>
-      {isGuest ? (
+      {showGuestAuth ? (
         <Link
           href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
           className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
@@ -88,16 +173,25 @@ export function CoachWelcomePrimaryCtaBlock({
   );
 }
 
-/** Sticky mobile bar — check-in (auth) or register→check-in (guest). */
+/** Sticky mobile bar — check-in / register / save-to-account. */
 export function CoachWelcomeStickyBar({
   className,
   isGuest = false,
+  signedIn = false,
+  pendingAccountClaim = false,
+  saveLoading = false,
+  onSaveToAccount,
 }: {
   className?: string;
   isGuest?: boolean;
+  signedIn?: boolean;
+  pendingAccountClaim?: boolean;
+  saveLoading?: boolean;
+  onSaveToAccount?: () => void;
 }) {
   const t = useTranslations("coachWelcome");
-  const href = isGuest
+  const showGuestAuth = isGuest && !signedIn && !pendingAccountClaim;
+  const href = showGuestAuth
     ? buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)
     : "/check-in";
 
@@ -110,15 +204,22 @@ export function CoachWelcomeStickyBar({
       data-testid="coach-welcome-sticky-cta"
     >
       <div className="mx-auto max-w-2xl">
-        <ButtonLink href={href} size="lg" className={primaryBtnClass}>
-          {isGuest ? (
-            <UserPlus className="size-5 shrink-0" aria-hidden />
-          ) : (
-            <CalendarCheck className="size-5 shrink-0" aria-hidden />
-          )}
-          {isGuest ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
-          <ArrowRight className="size-5 shrink-0" aria-hidden />
-        </ButtonLink>
+        {pendingAccountClaim ? (
+          <SaveToAccountButton
+            loading={saveLoading}
+            onSave={onSaveToAccount}
+          />
+        ) : (
+          <ButtonLink href={href} size="lg" className={primaryBtnClass}>
+            {showGuestAuth ? (
+              <UserPlus className="size-5 shrink-0" aria-hidden />
+            ) : (
+              <CalendarCheck className="size-5 shrink-0" aria-hidden />
+            )}
+            {showGuestAuth ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
+            <ArrowRight className="size-5 shrink-0" aria-hidden />
+          </ButtonLink>
+        )}
       </div>
     </div>
   );
@@ -151,14 +252,19 @@ export function CoachWelcomeSecondaryLinks({ className }: { className?: string }
   );
 }
 
-/** Full CTA block — guest signup + secondary links (primary shown separately above). */
+/** Full CTA block — guest signup / save + secondary links. */
 export function CoachWelcomeCta({
   isGuest,
+  signedIn = false,
+  pendingAccountClaim = false,
+  saveLoading = false,
+  onSaveToAccount,
   guestVariant = "ready",
   showPrimary = false,
   className,
 }: CoachWelcomeCtaBaseProps & { showPrimary?: boolean }) {
   const t = useTranslations("coachWelcome");
+  const showGuestAuth = isGuest && !signedIn && !pendingAccountClaim;
 
   return (
     <div
@@ -170,33 +276,80 @@ export function CoachWelcomeCta({
       {showPrimary ? (
         <CoachWelcomeNextStepCard
           label={t("nextStepLabel")}
-          hint={isGuest ? t("nextStepHintGuest") : t("nextStepHint")}
-          benefit={isGuest ? t("nextStepBenefitGuest") : t("nextStepBenefit")}
+          hint={
+            pendingAccountClaim
+              ? t("nextStepHintPendingClaim")
+              : showGuestAuth
+                ? t("nextStepHintGuest")
+                : t("nextStepHint")
+          }
+          benefit={
+            pendingAccountClaim
+              ? t("nextStepBenefitPendingClaim")
+              : showGuestAuth
+                ? t("nextStepBenefitGuest")
+                : t("nextStepBenefit")
+          }
         />
       ) : null}
 
-      {showPrimary ? <CoachWelcomePrimaryCta isGuest={isGuest} /> : null}
+      {showPrimary ? (
+        <CoachWelcomePrimaryCta
+          isGuest={isGuest}
+          signedIn={signedIn}
+          pendingAccountClaim={pendingAccountClaim}
+          saveLoading={saveLoading}
+          onSaveToAccount={onSaveToAccount}
+        />
+      ) : null}
 
       {isGuest ? (
         <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/[0.03] px-3.5 py-3">
           <p className="text-sm leading-relaxed text-foreground/90">
-            {guestVariant === "ready" ? t("guestRoutineReadyCta") : t("guestRoutineFallbackCta")}
+            {pendingAccountClaim
+              ? t("pendingClaimRoutineCta")
+              : showGuestAuth
+                ? guestVariant === "ready"
+                  ? t("guestRoutineReadyCta")
+                  : t("guestRoutineFallbackCta")
+                : t("pendingClaimRoutineCta")}
           </p>
-          <ButtonLink
-            href={buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)}
-            size="default"
-            variant="secondary"
-            className="min-h-11 w-full gap-2 font-semibold"
-          >
-            <UserPlus className="size-4 shrink-0" aria-hidden />
-            {t("guestSaveRoutineCta")}
-          </ButtonLink>
-          <Link
-            href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
-            className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            {t("guestSignInExistingCta")}
-          </Link>
+          {pendingAccountClaim ? (
+            <SaveToAccountButton
+              size="default"
+              className="min-h-11 shadow-md"
+              loading={saveLoading}
+              onSave={onSaveToAccount}
+            />
+          ) : showGuestAuth ? (
+            <>
+              <ButtonLink
+                href={buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)}
+                size="default"
+                variant="secondary"
+                className="min-h-11 w-full gap-2 font-semibold"
+              >
+                <UserPlus className="size-4 shrink-0" aria-hidden />
+                {t("guestSaveRoutineCta")}
+              </ButtonLink>
+              <Link
+                href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
+                className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                {t("guestSignInExistingCta")}
+              </Link>
+            </>
+          ) : (
+            <ButtonLink
+              href="/check-in"
+              size="default"
+              variant="secondary"
+              className="min-h-11 w-full gap-2 font-semibold"
+            >
+              <CalendarCheck className="size-4 shrink-0" aria-hidden />
+              {t("ctaCheckInPrimary")}
+            </ButtonLink>
+          )}
         </div>
       ) : null}
 

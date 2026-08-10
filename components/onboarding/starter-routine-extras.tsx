@@ -13,12 +13,10 @@ import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 /** Rationale + encouragement + first-week notes (after folded AM/PM tips). */
 export function StarterRoutineSupportExtras({
   starter,
-  delayMs = 0,
   /** Hide rationale when it repeats the skin readback above. */
   skinReadback,
 }: {
   starter: StarterRoutineDTO;
-  delayMs?: number;
   skinReadback?: string;
 }) {
   const t = useTranslations("coachWelcome");
@@ -43,12 +41,10 @@ export function StarterRoutineSupportExtras({
 
   if (!showRationale && !showEncouragement && !showWeekNotes) return null;
 
-  let delay = delayMs;
-
   return (
     <>
       {showRationale ? (
-        <CoachWelcomeSection delayMs={delay}>
+        <CoachWelcomeSection>
           <Card>
             <CardContent className="space-y-2 pt-5 pb-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -61,7 +57,7 @@ export function StarterRoutineSupportExtras({
       ) : null}
 
       {showEncouragement ? (
-        <CoachWelcomeSection delayMs={(delay += showRationale ? 40 : 0)}>
+        <CoachWelcomeSection>
           <Card className="border-primary/15 bg-primary/[0.03]">
             <CardContent className="space-y-2 pt-5 pb-5" data-testid="coach-welcome-encouragement">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -74,11 +70,7 @@ export function StarterRoutineSupportExtras({
       ) : null}
 
       {showWeekNotes ? (
-        <CoachWelcomeSection
-          delayMs={
-            delay + (showRationale || showEncouragement ? 40 : 0)
-          }
-        >
+        <CoachWelcomeSection>
           <Card>
             <CardContent className="space-y-2 pt-5 pb-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -95,10 +87,8 @@ export function StarterRoutineSupportExtras({
 
 export function StarterRoutineSafetySection({
   starter,
-  delayMs = 0,
 }: {
   starter: StarterRoutineDTO;
-  delayMs?: number;
 }) {
   const t = useTranslations("coachWelcome");
   const items = useMemo(
@@ -111,7 +101,7 @@ export function StarterRoutineSafetySection({
   return (
     <>
       {starter.safety_notes?.trim() ? (
-        <CoachWelcomeSection delayMs={delayMs} id="coach-welcome-safety">
+        <CoachWelcomeSection id="coach-welcome-safety">
           <Card className="border-emerald-500/20 bg-emerald-500/5">
             <CardContent className="space-y-3 pt-5 pb-5">
               <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-200">
@@ -145,15 +135,13 @@ export function StarterRoutineSafetySection({
 /** @deprecated Use StarterRoutineSupportExtras + StarterRoutineSafetySection */
 export function StarterRoutineExtras({
   starter,
-  delayMs = 0,
 }: {
   starter: StarterRoutineDTO;
-  delayMs?: number;
 }) {
   return (
     <>
-      <StarterRoutineSupportExtras starter={starter} delayMs={delayMs} />
-      <StarterRoutineSafetySection starter={starter} delayMs={delayMs + 80} />
+      <StarterRoutineSupportExtras starter={starter} />
+      <StarterRoutineSafetySection starter={starter} />
     </>
   );
 }
