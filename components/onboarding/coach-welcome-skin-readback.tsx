@@ -53,6 +53,7 @@ function sectionLabelKey(
 
 /**
  * Long coach skin notes — short verdict first, clinical detail behind expand.
+ * Pass `alwaysExpanded` on archive/review to show every section without a toggle.
  */
 export function CoachWelcomeSkinReadback({
   text,
@@ -60,6 +61,7 @@ export function CoachWelcomeSkinReadback({
   photos,
   photoAlt,
   phaseHint,
+  alwaysExpanded = false,
 }: {
   text: string;
   className?: string;
@@ -68,14 +70,18 @@ export function CoachWelcomeSkinReadback({
   photoAlt?: (n: number) => string;
   /** e.g. calm_first → calm-first chip from analysis. */
   phaseHint?: string | null;
+  /** When true, render all sections (no collapse control). */
+  alwaysExpanded?: boolean;
 }) {
   const t = useTranslations("coachWelcome");
   const trimmed = text.trim();
   const sections = useMemo(() => parseCoachNoteSections(trimmed), [trimmed]);
   const verdict = useMemo(() => pickCoachVerdict(sections), [sections]);
   const observe = sections.find((s) => s.kind === "observe");
-  const needsCollapse = trimmed.length > 140 || sections.length > 1;
-  const [expanded, setExpanded] = useState(false);
+  const needsCollapse =
+    !alwaysExpanded && (trimmed.length > 140 || sections.length > 1);
+  const [expanded, setExpanded] = useState(alwaysExpanded);
+  const showFull = alwaysExpanded || expanded;
 
   if (!trimmed) return null;
 
@@ -100,7 +106,7 @@ export function CoachWelcomeSkinReadback({
       )}
       data-testid="coach-welcome-skin-readback"
     >
-      <CardContent className="space-y-3 pt-4 pb-4 sm:pt-5 sm:pb-5">
+      <CardContent className="space-y-3 pt-4 pb-4 sm:space-y-4 sm:pt-5 sm:pb-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
@@ -138,7 +144,7 @@ export function CoachWelcomeSkinReadback({
           </div>
         ) : null}
 
-        {!expanded ? (
+        {!showFull ? (
           <div className="space-y-2">
             <p
               className="text-sm font-medium leading-relaxed text-foreground"
@@ -148,9 +154,16 @@ export function CoachWelcomeSkinReadback({
             </p>
           </div>
         ) : (
-          <div className="space-y-3" data-testid="coach-welcome-readback-full">
+          <div
+            className={cn("space-y-3", alwaysExpanded && "space-y-3.5 sm:space-y-4")}
+            data-testid="coach-welcome-readback-full"
+          >
             {sections.map((section, i) => (
-              <ReadbackSectionBlock key={`${section.kind}-${i}`} section={section} />
+              <ReadbackSectionBlock
+                key={`${section.kind}-${i}`}
+                section={section}
+                roomy={alwaysExpanded}
+              />
             ))}
           </div>
         )}
@@ -175,7 +188,13 @@ export function CoachWelcomeSkinReadback({
   );
 }
 
-function ReadbackSectionBlock({ section }: { section: CoachNoteSection }) {
+function ReadbackSectionBlock({
+  section,
+  roomy = false,
+}: {
+  section: CoachNoteSection;
+  roomy?: boolean;
+}) {
   const t = useTranslations("coachWelcome");
   const labelKey = sectionLabelKey(section.kind);
   const Icon = sectionIcon(section.kind);
@@ -184,24 +203,27 @@ function ReadbackSectionBlock({ section }: { section: CoachNoteSection }) {
   return (
     <div
       className={cn(
-        "rounded-xl border px-3 py-2.5",
+        "rounded-xl border",
+        roomy ? "px-3.5 py-3.5 sm:px-4 sm:py-4" : "px-3 py-2.5",
         isVerdict
           ? "border-primary/25 bg-primary/[0.06]"
           : "border-border/50 bg-muted/20",
       )}
     >
       {labelKey ? (
-        <div className="mb-1.5 flex items-center gap-1.5">
+        <div className={cn("flex items-center gap-1.5", roomy ? "mb-2" : "mb-1.5")}>
           <Icon
             className={cn(
-              "size-3.5 shrink-0",
+              "shrink-0",
+              roomy ? "size-4" : "size-3.5",
               isVerdict ? "text-primary" : "text-muted-foreground",
             )}
             aria-hidden
           />
           <p
             className={cn(
-              "text-[10px] font-bold uppercase tracking-wide",
+              "font-bold uppercase tracking-wide",
+              roomy ? "text-[11px]" : "text-[10px]",
               isVerdict ? "text-primary" : "text-muted-foreground",
             )}
           >
@@ -211,7 +233,8 @@ function ReadbackSectionBlock({ section }: { section: CoachNoteSection }) {
       ) : null}
       <p
         className={cn(
-          "text-sm leading-relaxed whitespace-pre-wrap",
+          "leading-relaxed whitespace-pre-wrap",
+          roomy ? "text-[15px] leading-7" : "text-sm",
           isVerdict ? "font-medium text-foreground" : "text-foreground/90",
         )}
       >

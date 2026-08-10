@@ -1695,8 +1695,10 @@
       "deleteNeedAuth": "Sign in to delete server-side data.",
       "dismissToast": "Dismiss",
       "photosSection": "Photos you took",
-      "showPhotos": "View photos",
+      "showPhotos": "Show photos",
       "hidePhotos": "Hide photos",
+      "photosHiddenHint": "Photos are hidden — tap the eye button when you want to see them again.",
+      "viewFullRoutineHint": "Opens the full starter screen: morning / evening steps and product tips.",
       "photosSkipped": "You skipped taking photos.",
       "photosExpired": "Photos are no longer available in this session (old tab or after reload). Redo onboarding if you need to see them again.",
       "closePhoto": "Close photo"

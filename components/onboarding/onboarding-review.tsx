@@ -1,8 +1,25 @@
 "use client";
 
-import { ArrowRight, Eye, Moon, Sun, X } from "lucide-react";
+import {
+  ArrowRight,
+  Droplets,
+  Eye,
+  EyeOff,
+  Moon,
+  Sparkles,
+  Sun,
+  Target,
+  X,
+} from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   CoachWelcomeCelebrationHeader,
@@ -72,6 +89,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const tCheckIn = useTranslations("checkIn");
   const formatter = useFormatter();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [photosVisible, setPhotosVisible] = useState(false);
 
   const completedLabel = (() => {
     const d = new Date(data.completedAt);
@@ -116,127 +134,175 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl space-y-5 pb-10 sm:space-y-6">
-        <header className="space-y-1.5 text-center sm:text-left">
+      <div className="mx-auto w-full max-w-2xl space-y-6 pb-10 sm:space-y-7">
+        <header className="space-y-2 text-center sm:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {tReview("badge")}
           </div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-[1.75rem]">
             {tReview("archiveTitle")}
           </h1>
-          <p className="text-sm text-muted-foreground">{tReview("archiveSub")}</p>
+          <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+            {tReview("archiveSub")}
+          </p>
         </header>
 
-        <Card className="border-border/60 bg-muted/10">
-          <CardContent className="space-y-4 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+        <section
+          aria-labelledby="review-skin-heading"
+          className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-b from-muted/35 to-background"
+        >
+          <div className="border-b border-border/50 px-4 py-3 sm:px-5">
+            <h2
+              id="review-skin-heading"
+              className="flex items-center gap-2 text-sm font-semibold text-foreground"
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-800 dark:text-emerald-200">
+                <Droplets className="size-4" aria-hidden />
+              </span>
               {tReview("skinSection")}
-            </p>
-            <dl className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <dt className="text-xs text-muted-foreground">{tReview("skinType")}</dt>
-                <dd className="text-sm font-medium">{skinTypeLabel}</dd>
+            </h2>
+          </div>
+          <dl className="divide-y divide-border/45">
+            <ReviewFactRow label={tReview("skinType")} value={skinTypeLabel} />
+            {data.undertone ? (
+              <ReviewFactRow
+                label={tReview("undertone")}
+                value={undertoneLabel}
+              />
+            ) : null}
+            {concernLabels.length > 0 ? (
+              <div className="px-4 py-3.5 sm:px-5 sm:py-4">
+                <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {tReview("concerns")}
+                </dt>
+                <dd className="mt-2.5 flex flex-wrap gap-2">
+                  {concernLabels.map((c) => (
+                    <span
+                      key={c}
+                      className="inline-flex min-h-8 items-center rounded-lg border border-border/80 bg-background px-3 py-1 text-sm font-medium text-foreground shadow-sm"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </dd>
               </div>
-              {data.undertone ? (
-                <div>
-                  <dt className="text-xs text-muted-foreground">{tReview("undertone")}</dt>
-                  <dd className="text-sm font-medium">{undertoneLabel}</dd>
-                </div>
-              ) : null}
-              {concernLabels.length > 0 ? (
-                <div className="sm:col-span-2">
-                  <dt className="text-xs text-muted-foreground">{tReview("concerns")}</dt>
-                  <dd className="mt-1 flex flex-wrap gap-1.5">
-                    {concernLabels.map((c) => (
-                      <span
-                        key={c}
-                        className="rounded-full border bg-muted/50 px-2.5 py-0.5 text-xs font-medium"
-                      >
-                        {c}
-                      </span>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </CardContent>
-        </Card>
+            ) : null}
+          </dl>
+        </section>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="border-border/60 bg-muted/10">
-            <CardContent className="space-y-2 pt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
-                {tReview("skillSection")}
-              </p>
-              <p className="text-sm font-medium">{skillLabel}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-muted/10">
-            <CardContent className="space-y-2 pt-6">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
-                {tReview("goalSection")}
-              </p>
-              <p className="text-sm font-medium">{goalLabel}</p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <ReviewHighlightCard
+            icon={<Sparkles className="size-4" aria-hidden />}
+            label={tReview("skillSection")}
+            value={skillLabel}
+            tone="amber"
+          />
+          <ReviewHighlightCard
+            icon={<Target className="size-4" aria-hidden />}
+            label={tReview("goalSection")}
+            value={goalLabel}
+            tone="sky"
+          />
         </div>
 
         {data.photosSkipped ? (
           <p className="text-sm text-muted-foreground">{tReview("photosSkipped")}</p>
         ) : hasPhotos ? (
-          <section aria-label={tReview("photosSection")} className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {tReview("photosSection")}
-            </p>
-            <ReviewPhotoGrid
-              urls={photoUrls}
-              altLabel={(n) => tCheckIn("altPhoto", { n })}
-              eagerLoad
-              onOpen={setLightboxUrl}
-            />
+          <section
+            aria-label={tReview("photosSection")}
+            className="rounded-2xl border border-border/70 bg-muted/15 px-4 py-3.5 sm:px-5"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-foreground">
+                {tReview("photosSection")}
+                <span className="ml-2 text-xs font-medium text-muted-foreground">
+                  ({photoUrls.length})
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setPhotosVisible((v) => !v)}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "inline-flex min-h-9 shrink-0 gap-1.5",
+                )}
+                aria-expanded={photosVisible}
+                data-testid="review-toggle-photos"
+              >
+                {photosVisible ? (
+                  <EyeOff className="size-4" aria-hidden />
+                ) : (
+                  <Eye className="size-4" aria-hidden />
+                )}
+                {photosVisible ? tReview("hidePhotos") : tReview("showPhotos")}
+              </button>
+            </div>
+            {photosVisible ? (
+              <div className="mt-3.5">
+                <ReviewPhotoGrid
+                  urls={photoUrls}
+                  altLabel={(n) => tCheckIn("altPhoto", { n })}
+                  eagerLoad
+                  onOpen={setLightboxUrl}
+                />
+              </div>
+            ) : (
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                {tReview("photosHiddenHint")}
+              </p>
+            )}
           </section>
         ) : photosLost ? (
           <p className="text-sm text-muted-foreground">{tReview("photosExpired")}</p>
         ) : null}
 
         {skinReadback ? (
-          <CoachWelcomeSkinReadback text={skinReadback} />
+          <CoachWelcomeSkinReadback text={skinReadback} alwaysExpanded />
         ) : null}
 
         {data.starter ? (
-          <Card className="border-primary/20 bg-primary/[0.03]">
-            <CardContent className="space-y-3 pt-5 pb-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-sm font-semibold">{tReview("routineSummaryTitle")}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {tReview("routineSummaryBody", { am: amCount, pm: pmCount })}
-                  </p>
-                  <div className="flex flex-wrap gap-3 pt-1 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <Sun className="size-3.5 text-amber-600" aria-hidden />
-                      {tCoach("morning")}: {amCount}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Moon className="size-3.5 text-indigo-600" aria-hidden />
-                      {tCoach("evening")}: {pmCount}
-                    </span>
-                  </div>
+          <section
+            aria-labelledby="review-routine-cta"
+            className="overflow-hidden rounded-2xl border-2 border-primary/35 bg-gradient-to-br from-primary/[0.09] via-background to-amber-500/[0.06] p-4 shadow-sm sm:p-5"
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h2
+                  id="review-routine-cta"
+                  className="text-base font-bold tracking-tight text-foreground sm:text-lg"
+                >
+                  {tReview("routineSummaryTitle")}
+                </h2>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {tReview("routineSummaryBody", { am: amCount, pm: pmCount })}
+                </p>
+                <div className="flex flex-wrap gap-2 pt-0.5">
+                  <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 text-xs font-semibold text-amber-900 dark:text-amber-100">
+                    <Sun className="size-3.5" aria-hidden />
+                    {tCoach("morning")}: {amCount}
+                  </span>
+                  <span className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                    <Moon className="size-3.5" aria-hidden />
+                    {tCoach("evening")}: {pmCount}
+                  </span>
                 </div>
               </div>
               <Link
                 href="/onboarding/coach-welcome"
                 className={cn(
-                  buttonVariants({ variant: "default", size: "default" }),
-                  "inline-flex w-full gap-2 sm:w-auto",
+                  buttonVariants({ variant: "default", size: "lg" }),
+                  "inline-flex h-12 w-full gap-2 text-base font-semibold shadow-md sm:h-14 sm:text-[1.05rem]",
                 )}
                 data-testid="review-view-full-routine"
               >
                 {tReview("viewFullRoutine")}
-                <ArrowRight className="size-4" aria-hidden />
+                <ArrowRight className="size-5 shrink-0" aria-hidden />
               </Link>
-            </CardContent>
-          </Card>
+              <p className="text-center text-xs text-muted-foreground sm:text-left">
+                {tReview("viewFullRoutineHint")}
+              </p>
+            </div>
+          </section>
         ) : null}
 
         {data.starter ? (
@@ -286,7 +352,6 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         ) : null}
 
         <CoachWelcomeSection delayMs={80}>
-          {/* Archive footer: home only — avoid "review skin" self-link on this page. */}
           <div className="flex justify-center">
             <Link
               href="/"
@@ -325,6 +390,61 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         ) : null}
       </div>
     </>
+  );
+}
+
+function ReviewFactRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 sm:px-5 sm:py-4">
+      <dt className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="text-base font-semibold leading-snug text-foreground sm:text-right sm:text-[1.05rem]">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function ReviewHighlightCard({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  tone: "amber" | "sky";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border px-4 py-4 sm:px-5 sm:py-5",
+        tone === "amber"
+          ? "border-amber-500/25 bg-gradient-to-br from-amber-500/[0.1] to-background"
+          : "border-sky-500/25 bg-gradient-to-br from-sky-500/[0.1] to-background",
+      )}
+    >
+      <div className="mb-2.5 flex items-center gap-2">
+        <span
+          className={cn(
+            "flex size-8 items-center justify-center rounded-full",
+            tone === "amber"
+              ? "bg-amber-500/15 text-amber-800 dark:text-amber-100"
+              : "bg-sky-500/15 text-sky-800 dark:text-sky-100",
+          )}
+        >
+          {icon}
+        </span>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+      </div>
+      <p className="text-lg font-bold leading-snug tracking-tight text-foreground sm:text-xl">
+        {value}
+      </p>
+    </div>
   );
 }
 

@@ -1695,8 +1695,10 @@
       "deleteNeedAuth": "Cần đăng nhập để xóa dữ liệu trên máy chủ.",
       "dismissToast": "Đóng",
       "photosSection": "Ảnh đã chụp",
-      "showPhotos": "Xem ảnh",
+      "showPhotos": "Hiện ảnh",
       "hidePhotos": "Ẩn ảnh",
+      "photosHiddenHint": "Ảnh đang ẩn — bấm nút mắt để xem lại khi cần.",
+      "viewFullRoutineHint": "Mở màn hình routine đầy đủ: từng bước sáng / tối và gợi ý sản phẩm.",
       "photosSkipped": "Bạn đã bỏ qua chụp ảnh.",
       "photosExpired": "Ảnh không còn trong phiên này (tab cũ hoặc đã reload). Làm lại onboarding nếu bạn cần xem lại ảnh.",
       "closePhoto": "Đóng ảnh"
