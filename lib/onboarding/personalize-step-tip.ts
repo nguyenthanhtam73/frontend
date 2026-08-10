@@ -1,4 +1,4 @@
-/** Short why lines for Step 2 affiliate product tips (one line only). */
+/** Why / help lines for Step 2 product tips (affiliate + soft). */
 
 type TipCtx = {
   locale: string;
@@ -7,6 +7,8 @@ type TipCtx = {
   regions?: string[];
   concerns?: string[];
   productLabel?: string;
+  /** Catalog product id when known (for ingredient/fit notes). */
+  productId?: string;
 };
 
 function isEn(locale: string) {
@@ -38,50 +40,131 @@ function concernBit(concerns: string[] | undefined, en: boolean): string {
       : `${labels[0]} và ${labels[1]}`;
 }
 
-/** One short why line (skin context, no repeating the product name). */
+function skinOpener(ctx: TipCtx, en: boolean): string {
+  const concern = concernBit(ctx.concerns, en);
+  if (concern) {
+    return en ? `For skin with ${concern}` : `Với da đang ${concern}`;
+  }
+  return en ? "For your skin right now" : "Với da hiện tại của bạn";
+}
+
+/** Known catalog fit notes (ingredients / why this SKU). */
+function catalogFitNote(productId: string | undefined, en: boolean): string {
+  const id = String(productId || "").toLowerCase();
+  const notes: Record<string, { en: string; vi: string }> = {
+    "cerave-foaming-cleanser": {
+      en: "Has ceramides to cleanse without stripping the barrier.",
+      vi: "Có ceramides: sạch nhẹ, ít làm mỏng hàng rào da.",
+    },
+    "cerave-hydrating-cleanser": {
+      en: "Creamy cleanse with ceramides — gentler when skin feels tight.",
+      vi: "Dạng kem + ceramides — dịu hơn khi da dễ khô căng.",
+    },
+    "lrp-cicaplast-b5": {
+      en: "Panthenol + madecassoside help calm red, irritated spots.",
+      vi: "Panthenol + madecassoside: dịu đỏ, hỗ trợ chỗ đang kích ứng.",
+    },
+    "neutrogena-hydro-boost": {
+      en: "Light hyaluronic gel — comfort without a heavy feel.",
+      vi: "Gel HA nhẹ: cấp ẩm, ít bí da.",
+    },
+    "biore-uv-aqua-rich": {
+      en: "Light SPF50 gel — daily protection that suits oilier/combo skin.",
+      vi: "SPF50 dạng gel mỏng: chống nắng mỗi ngày, hợp da dầu/hỗn hợp.",
+    },
+    "boj-relief-sun": {
+      en: "Gentle mineral-leaning SPF with rice extract — kinder if skin is reactive.",
+      vi: "SPF dịu (hướng khoáng) + chiết xuất gạo — dễ chịu hơn nếu da hay nhạy.",
+    },
+  };
+  const hit = notes[id];
+  if (!hit) return "";
+  return en ? hit.en : hit.vi;
+}
+
+function roleFitFallback(step: string, en: boolean, calm: boolean): string {
+  switch (String(step).toLowerCase()) {
+    case "cleanse":
+      return en
+        ? "Pick a gentle cleanser — no scrubbing on swollen spots."
+        : "Chọn sữa rửa dịu — không chà lên chỗ đang sưng.";
+    case "moisturize":
+    case "soothe":
+      return calm
+        ? en
+          ? "Repair-style cream calms redness before strong acne treatments."
+          : "Kem phục hồi giúp dịu đỏ trước khi dùng trị mụn mạnh."
+        : en
+          ? "Moisturizer keeps comfort around any single treatment."
+          : "Kem dưỡng giữ da êm quanh bước trị (nếu có).";
+    case "spf":
+      return en
+        ? "Daily gentle SPF limits new dark marks (window light counts too)."
+        : "SPF dịu mỗi sáng hạn chế thâm mới (cả nắng cửa sổ).";
+    case "treat":
+      return en
+        ? "At most one mild treatment product per night."
+        : "Tối đa một sản phẩm trị nhẹ mỗi đêm.";
+    default:
+      return en
+        ? "Supports this care step for your skin now."
+        : "Hỗ trợ bước chăm sóc theo da hiện tại.";
+  }
+}
+
+/**
+ * Why this product/role fits the user’s skin (1–2 short sentences).
+ */
 export function buildPersonalizedStepWhy(
   step: string,
   ctx: TipCtx,
 ): string {
   const en = isEn(ctx.locale);
-  const concern = concernBit(ctx.concerns, en);
+  const opener = skinOpener(ctx, en);
   const calm =
     String(ctx.phase || "").toLowerCase() === "calm_first" ||
     String(ctx.phase || "").toLowerCase() === "manual";
-  const skin = concern
-    ? en
-      ? `Fits skin with ${concern}`
-      : `Phù hợp da đang ${concern}`
-    : en
-      ? "Fits your skin right now"
-      : "Phù hợp da hiện tại";
+  const fit =
+    catalogFitNote(ctx.productId, en) || roleFitFallback(step, en, calm);
+  return `${opener}: ${fit}`;
+}
 
+/**
+ * What it helps with (benefit) — keep short and concrete.
+ */
+export function buildPersonalizedStepHelp(
+  step: string,
+  ctx: TipCtx,
+): string {
+  const en = isEn(ctx.locale);
+  const calm =
+    String(ctx.phase || "").toLowerCase() === "calm_first" ||
+    String(ctx.phase || "").toLowerCase() === "manual";
   switch (String(step).toLowerCase()) {
     case "cleanse":
       return en
-        ? `${skin}: cleans gently — don’t scrub swollen spots.`
-        : `${skin}: rửa sạch nhẹ — đừng chà chỗ đang sưng.`;
+        ? "Helps: remove oil/dirt gently so spots don’t get angrier."
+        : "Giúp ích: sạch dầu/bụi nhẹ, ít làm chỗ sưng càng đỏ.";
     case "moisturize":
     case "soothe":
-      if (calm) {
-        return en
-          ? `${skin}: calms redness — strong acne treatments can wait.`
-          : `${skin}: dịu đỏ / giữ êm — tuần này chưa cần trị mụn mạnh.`;
-      }
-      return en
-        ? `${skin}: keeps comfort around any single treatment step.`
-        : `${skin}: giữ da êm nếu có một bước trị.`;
+      return calm
+        ? en
+          ? "Helps: calm redness and reduce tight, dry feel overnight/day."
+          : "Giúp ích: dịu đỏ và giảm khô căng trong ngày/qua đêm."
+        : en
+          ? "Helps: keep the barrier comfortable around treatment."
+          : "Giúp ích: giữ hàng rào da êm quanh bước trị.";
     case "spf":
       return en
-        ? `${skin}: daily SPF limits new dark marks (window light counts too).`
-        : `${skin}: SPF mỗi sáng hạn chế thâm mới (cả nắng cửa sổ).`;
+        ? "Helps: daily UV protection and fewer new post-acne dark marks."
+        : "Giúp ích: chống nắng mỗi ngày và hạn chế thâm mới sau mụn.";
     case "treat":
       return en
-        ? `${skin}: at most one treatment product per night.`
-        : `${skin}: tối đa một sản phẩm trị mỗi đêm.`;
+        ? "Helps: clear congestion slowly — one change at a time."
+        : "Giúp ích: giảm tắc nghẽn dần — chỉ đổi một thứ một lúc.";
     default:
       return en
-        ? `${skin}: supports this care step.`
-        : `${skin}: hỗ trợ bước chăm sóc này.`;
+        ? "Helps: support this step without overloading skin."
+        : "Giúp ích: hỗ trợ bước này mà không chất thêm da.";
   }
 }

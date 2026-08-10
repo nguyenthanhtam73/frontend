@@ -87,7 +87,7 @@ export function parseRoutineStep(raw: string): ParsedRoutineStep {
     const match = text.match(pattern);
     if (match) {
       const title = match[1].trim();
-      const detail = match[2].trim();
+      const detail = plainifyStepDetail(match[2].trim());
       return { title, detail, icon: inferIcon(title + " " + detail) };
     }
   }
@@ -100,7 +100,14 @@ export function parseRoutineStep(raw: string): ParsedRoutineStep {
 
   return {
     title: short,
-    detail: text.length > 52 ? text : undefined,
+    detail: text.length > 52 ? plainifyStepDetail(text) : undefined,
     icon,
   };
+}
+
+/** Rewrite vague scaffold phrases so older saved routines still read clearly. */
+function plainifyStepDetail(detail: string): string {
+  return detail
+    .replace(/\brửa ngắn\b/gi, "khoảng 30 giây, nước ấm")
+    .replace(/\bshort wash\b/gi, "about 30 seconds, lukewarm water");
 }

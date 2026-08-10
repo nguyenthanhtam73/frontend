@@ -1,7 +1,7 @@
-import { buildPersonalizedStepWhy } from "@/lib/onboarding/personalize-step-tip";
+import { buildPersonalizedStepHelp, buildPersonalizedStepWhy } from "@/lib/onboarding/personalize-step-tip";
 import {
   formatShortCatalogLabel,
-  pickCatalogSoftLabels,
+  pickCatalogSoftPicks,
 } from "@/lib/onboarding/pick-catalog-soft-label";
 import type { RoutineStepIconKind } from "@/lib/onboarding/parse-routine-step";
 import { parseRoutineStep } from "@/lib/onboarding/parse-routine-step";
@@ -13,8 +13,10 @@ export type RoutineStepProductTip = {
   label: string;
   /** Soft (non-CTA) suggestions — render as 1–2 short lines. */
   softLabels?: string[];
-  /** One short why line (affiliate tips only). */
+  /** Why this product/role fits the user’s skin. */
   why: string;
+  /** What it helps + key fit (ingredients / formula). */
+  help: string;
   affiliate?: {
     product_id: string;
     product_name: string;
@@ -210,19 +212,23 @@ export function attachGuidanceToRoutineSteps(
         brand: g?.brand,
         product_name: g?.product_name || g?.name_or_category,
       });
-      const why = buildPersonalizedStepWhy(guidanceStep, {
+      const personalCtx = {
         locale: tipCtx.locale,
         phase,
         severity: tipCtx.severity,
         regions: tipCtx.regions,
         concerns: tipCtx.concerns,
         productLabel,
-      });
+        productId,
+      };
+      const why = buildPersonalizedStepWhy(guidanceStep, personalCtx);
+      const help = buildPersonalizedStepHelp(guidanceStep, personalCtx);
       rolesCovered.add(guidanceStep);
       return {
         guidanceStep,
         label: productLabel,
         why,
+        help,
         affiliate: {
           product_id: productId,
           product_name: g?.product_name || g?.name_or_category || productLabel,
@@ -237,7 +243,7 @@ export function attachGuidanceToRoutineSteps(
     // Skip soft tip when this role already has a CTA or soft tip (less mobile clutter).
     if (rolesCovered.has(guidanceStep)) return null;
 
-    const softLabels = pickCatalogSoftLabels(guidanceStep, {
+    const softPicks = pickCatalogSoftPicks(guidanceStep, {
       locale: tipCtx.locale,
       phase,
       concerns: tipCtx.concerns,
@@ -249,13 +255,24 @@ export function attachGuidanceToRoutineSteps(
         product_name: g?.product_name,
       },
     });
-    if (!softLabels.length) return null;
+    if (!softPicks.length) return null;
+    const softLabels = softPicks.map(formatShortCatalogLabel);
+    const personalCtx = {
+      locale: tipCtx.locale,
+      phase,
+      severity: tipCtx.severity,
+      regions: tipCtx.regions,
+      concerns: tipCtx.concerns,
+      productLabel: softLabels[0],
+      productId: softPicks[0]?.id,
+    };
     rolesCovered.add(guidanceStep);
     return {
       guidanceStep,
       label: softLabels[0],
       softLabels,
-      why: "",
+      why: buildPersonalizedStepWhy(guidanceStep, personalCtx),
+      help: buildPersonalizedStepHelp(guidanceStep, personalCtx),
     };
   };
 

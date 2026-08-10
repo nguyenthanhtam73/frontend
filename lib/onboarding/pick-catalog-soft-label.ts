@@ -120,9 +120,9 @@ export function formatShortCatalogLabel(entry: {
 }
 
 /**
- * Pick up to 2 short catalog labels for a routine role (no CTA required).
+ * Pick up to 2 catalog entries for a routine role (no CTA required).
  */
-export function pickCatalogSoftLabels(
+export function pickCatalogSoftPicks(
   role: string,
   opts: {
     locale: string;
@@ -132,7 +132,7 @@ export function pickCatalogSoftLabels(
     excludeIds?: Set<string>;
     prefer?: { id?: string; brand?: string; product_name?: string };
   },
-): string[] {
+): AffiliateCatalogEntry[] {
   const exclude = opts.excludeIds ?? new Set<string>();
   const phase = opts.phase || "calm_first";
 
@@ -181,13 +181,21 @@ export function pickCatalogSoftLabels(
     }
   }
 
-  return picks.slice(0, 2).map(formatShortCatalogLabel);
+  return picks.slice(0, 2);
+}
+
+/** Labels only — prefer pickCatalogSoftPicks when ids are needed. */
+export function pickCatalogSoftLabels(
+  role: string,
+  opts: Parameters<typeof pickCatalogSoftPicks>[1],
+): string[] {
+  return pickCatalogSoftPicks(role, opts).map(formatShortCatalogLabel);
 }
 
 /** @deprecated use pickCatalogSoftLabels */
 export function pickCatalogSoftLabel(
   role: string,
-  opts: Parameters<typeof pickCatalogSoftLabels>[1],
+  opts: Parameters<typeof pickCatalogSoftPicks>[1],
 ): string | null {
   const labels = pickCatalogSoftLabels(role, opts);
   if (!labels.length) return null;

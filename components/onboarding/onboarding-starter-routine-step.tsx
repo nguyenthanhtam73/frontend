@@ -300,6 +300,22 @@ function RoutineStepCard({
                       </li>
                     ))}
                   </ul>
+                  {tip.why ? (
+                    <p
+                      className="text-sm leading-relaxed text-foreground/85"
+                      data-testid="guidance-why"
+                    >
+                      {tip.why}
+                    </p>
+                  ) : null}
+                  {tip.help ? (
+                    <p
+                      className="text-sm leading-relaxed text-muted-foreground"
+                      data-testid="guidance-help"
+                    >
+                      {tip.help}
+                    </p>
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -312,6 +328,14 @@ function RoutineStepCard({
                       data-testid="guidance-why"
                     >
                       {tip.why}
+                    </p>
+                  ) : null}
+                  {tip.help ? (
+                    <p
+                      className="text-sm leading-relaxed text-muted-foreground"
+                      data-testid="guidance-help"
+                    >
+                      {tip.help}
                     </p>
                   ) : null}
                   {affiliate ? (
