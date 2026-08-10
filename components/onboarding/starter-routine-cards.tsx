@@ -67,6 +67,8 @@ type StarterRoutineCardsProps = {
   skinType?: string;
   /** Onboarding Step 2 only — muted Shopee catalog hint. */
   showCommerceEmptyHint?: boolean;
+  /** Shorter product tips (coach-welcome / review). Default true. */
+  compactTips?: boolean;
   className?: string;
 };
 
@@ -86,6 +88,7 @@ export function StarterRoutineCards({
   regions,
   skinType,
   showCommerceEmptyHint = false,
+  compactTips = true,
   className,
 }: StarterRoutineCardsProps) {
   const tOnb = useTranslations("onboarding");
@@ -176,6 +179,7 @@ export function StarterRoutineCards({
           productTips={stepTips.morning}
           sectionTestId="coach-welcome-morning"
           stepTestIdPrefix="coach-welcome-morning"
+          compactTips={compactTips}
           emptyCommerceHint={
             showCommerceEmptyHint && affiliateCtaCount === 0
               ? tOnb("step2.commerceEmptyHint")
@@ -194,6 +198,7 @@ export function StarterRoutineCards({
           productTips={stepTips.evening}
           sectionTestId="coach-welcome-evening"
           stepTestIdPrefix="coach-welcome-evening"
+          compactTips={compactTips}
         />
       ) : (
         <div data-testid="coach-welcome-evening">{emptyEvening}</div>

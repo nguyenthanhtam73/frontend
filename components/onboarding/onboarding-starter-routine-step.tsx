@@ -119,6 +119,7 @@ function RoutineStepCard({
   editing,
   productTip,
   stepTestId,
+  compactTips = false,
 }: {
   stepText: string;
   index: number;
@@ -127,6 +128,8 @@ function RoutineStepCard({
   productTip?: RoutineStepProductTip | null;
   /** Defaults to `onboarding-starter-step-{period}-{index}`. */
   stepTestId?: string;
+  /** Coach-welcome: shorter tip (label + why or Shopee) — skip help line. */
+  compactTips?: boolean;
 }) {
   const t = useTranslations("onboarding");
   const tGuide = useTranslations("onboarding.productGuidance");
@@ -143,6 +146,7 @@ function RoutineStepCard({
   const isSoftTip = Boolean(tip && !affiliate && softLabels.length > 0);
   const testId =
     stepTestId ?? `onboarding-starter-step-${period}-${index}`;
+  const visibleSoft = compactTips ? softLabels.slice(0, 1) : softLabels;
 
   useEffect(() => {
     if (!hasDetail || expanded) return;
@@ -249,7 +253,7 @@ function RoutineStepCard({
                 ref={detailRef}
                 className={cn(
                   "text-sm leading-relaxed text-muted-foreground",
-                  !expanded && "line-clamp-2",
+                  !expanded && (compactTips ? "line-clamp-1" : "line-clamp-2"),
                 )}
               >
                 {parsed.detail}
@@ -273,21 +277,27 @@ function RoutineStepCard({
           {tip ? (
             <div
               className={cn(
-                "mt-2 space-y-1 rounded-lg border px-2.5 py-2",
+                "rounded-lg border",
+                compactTips
+                  ? "mt-1.5 space-y-0.5 px-2 py-1.5"
+                  : "mt-2 space-y-1 px-2.5 py-2",
                 affiliate
                   ? "border-violet-500/30 bg-violet-500/[0.04]"
                   : "border-sky-500/40 bg-sky-500/[0.06]",
               )}
               data-testid="guidance-card"
               data-tip-kind={affiliate ? "affiliate" : "soft"}
+              data-tip-density={compactTips ? "compact" : "full"}
             >
               {isSoftTip ? (
                 <>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700/80 dark:text-sky-300/90">
-                    {tGuide("softTipBadge")}
-                  </p>
+                  {!compactTips ? (
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700/80 dark:text-sky-300/90">
+                      {tGuide("softTipBadge")}
+                    </p>
+                  ) : null}
                   <ul className="space-y-0.5">
-                    {softLabels.map((name, i) => (
+                    {visibleSoft.map((name, i) => (
                       <li key={`${name}-${i}`} className="text-sm leading-snug">
                         {i > 0 ? (
                           <span className="text-muted-foreground">
@@ -300,13 +310,16 @@ function RoutineStepCard({
                   </ul>
                   {tip.why ? (
                     <p
-                      className="text-sm leading-relaxed text-foreground/85"
+                      className={cn(
+                        "text-sm leading-snug text-foreground/85",
+                        compactTips && "line-clamp-2 text-xs text-muted-foreground",
+                      )}
                       data-testid="guidance-why"
                     >
                       {tip.why}
                     </p>
                   ) : null}
-                  {tip.help ? (
+                  {!compactTips && tip.help ? (
                     <p
                       className="text-sm leading-relaxed text-muted-foreground"
                       data-testid="guidance-help"
@@ -322,13 +335,16 @@ function RoutineStepCard({
                   </p>
                   {tip.why ? (
                     <p
-                      className="text-sm leading-relaxed text-foreground/85"
+                      className={cn(
+                        "text-sm leading-snug text-foreground/85",
+                        compactTips && "line-clamp-2 text-xs text-muted-foreground",
+                      )}
                       data-testid="guidance-why"
                     >
                       {tip.why}
                     </p>
                   ) : null}
-                  {tip.help ? (
+                  {!compactTips && tip.help ? (
                     <p
                       className="text-sm leading-relaxed text-muted-foreground"
                       data-testid="guidance-help"
@@ -341,7 +357,7 @@ function RoutineStepCard({
                       href={affiliate.affiliate_link}
                       target="_blank"
                       rel="noopener noreferrer sponsored"
-                      className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
+                      className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
                       data-testid="affiliate-cta"
                       data-legacy-testid="onboarding-affiliate-cta"
                       data-affiliate-product-id={affiliate.product_id}
@@ -397,6 +413,7 @@ export function OnboardingRoutinePeriodSection({
   emptyCommerceHint,
   sectionTestId,
   stepTestIdPrefix,
+  compactTips = false,
 }: {
   period: "morning" | "evening";
   steps: string[];
@@ -409,6 +426,8 @@ export function OnboardingRoutinePeriodSection({
   sectionTestId?: string;
   /** If set, each step uses `{prefix}-{index}` (e.g. onboarding-ready-morning-0). */
   stepTestIdPrefix?: string;
+  /** Coach-welcome denser-page mode: shorter tips. */
+  compactTips?: boolean;
 }) {
   const t = useTranslations("onboarding");
   const ob = useOnboardingStore();
@@ -442,11 +461,13 @@ export function OnboardingRoutinePeriodSection({
           <h3 className="text-sm font-bold tracking-tight sm:text-base">
             {isMorning ? t("routineStep.morning") : t("routineStep.evening")}
           </h3>
-          <p className="text-xs text-muted-foreground">
-            {isMorning
-              ? t("step2.morningHint")
-              : t(eveningHintKey(carePhase))}
-          </p>
+          {!compactTips ? (
+            <p className="text-xs text-muted-foreground">
+              {isMorning
+                ? t("step2.morningHint")
+                : t(eveningHintKey(carePhase))}
+            </p>
+          ) : null}
         </div>
         <div
           className={cn(
@@ -481,6 +502,7 @@ export function OnboardingRoutinePeriodSection({
               stepTestId={
                 stepTestIdPrefix ? `${stepTestIdPrefix}-${i}` : undefined
               }
+              compactTips={compactTips}
             />
           ))}
         </ol>

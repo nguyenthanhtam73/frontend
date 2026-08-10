@@ -30,16 +30,17 @@ export function CoachWelcomePrimaryCta({ className }: { className?: string }) {
   );
 }
 
-/** Primary CTA block — next step hint + button. */
+/** Primary CTA block — desktop / tablet. Mobile uses sticky bar instead. */
 export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string }) {
   const t = useTranslations("coachWelcome");
 
   return (
     <div
       className={cn(
-        "space-y-3 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/[0.09] via-primary/[0.04] to-emerald-500/[0.05] p-4 shadow-sm sm:p-5",
+        "hidden space-y-3 rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/[0.09] via-primary/[0.04] to-emerald-500/[0.05] p-4 shadow-sm sm:block sm:p-5",
         className,
       )}
+      data-testid="coach-welcome-primary-cta-block"
     >
       <CoachWelcomeNextStepCard
         label={t("nextStepLabel")}
@@ -54,7 +55,7 @@ export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string 
   );
 }
 
-/** Sticky mobile bar — keeps check-in visible while scrolling. */
+/** Sticky mobile bar — sole check-in CTA on small screens. */
 export function CoachWelcomeStickyBar({ className }: { className?: string }) {
   const t = useTranslations("coachWelcome");
 
@@ -64,12 +65,9 @@ export function CoachWelcomeStickyBar({ className }: { className?: string }) {
         "fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background/95 p-3 backdrop-blur-md sm:hidden",
         className,
       )}
-      aria-hidden={false}
+      data-testid="coach-welcome-sticky-cta"
     >
-      <div className="mx-auto max-w-2xl space-y-1">
-        <p className="text-center text-[10px] font-medium leading-snug text-muted-foreground">
-          {t("nextStepHint")}
-        </p>
+      <div className="mx-auto max-w-2xl">
         <ButtonLink href="/check-in" size="lg" className={primaryBtnClass}>
           <CalendarCheck className="size-5 shrink-0" aria-hidden />
           {t("ctaCheckInPrimary")}
