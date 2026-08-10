@@ -17,6 +17,29 @@ export function postLoginDestination(user: AuthUserLike): "/onboarding" | "/chec
   return "/onboarding";
 }
 
+/**
+ * Honor `?next=` after auth, but never dump incomplete users onto gated
+ * surfaces (check-in / routine / …) — OnboardingGate would bounce them anyway.
+ */
+export function resolveAuthReturnDestination(
+  user: AuthUserLike,
+  returnPath: string | null | undefined,
+): string {
+  const fallback = postLoginDestination(user);
+  if (!returnPath) return fallback;
+
+  const incomplete =
+    Boolean(user?.id) &&
+    !user?.onboarding_completed &&
+    !(user?.onboarding_skipped || (user?.id ? hasSkippedOnboarding(user.id) : false));
+
+  const bare = returnPath.split("?")[0]?.split("#")[0] || returnPath;
+  if (incomplete && isOnboardingGatedPath(bare)) {
+    return "/onboarding";
+  }
+  return returnPath;
+}
+
 /** App routes that should yield to /onboarding when profile is incomplete. */
 export function isOnboardingGatedPath(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";

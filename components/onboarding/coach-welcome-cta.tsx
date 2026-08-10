@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { CoachWelcomeNextStepCard } from "@/components/onboarding/coach-welcome-payoff";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Link } from "@/i18n/navigation";
+import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
+import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { cn } from "@/lib/utils";
 
 type CoachWelcomeCtaBaseProps = {
@@ -17,21 +19,43 @@ type CoachWelcomeCtaBaseProps = {
 const primaryBtnClass =
   "min-h-12 w-full gap-2.5 text-base font-bold shadow-lg shadow-primary/25 sm:min-h-14";
 
-/** Hero primary CTA — benefit-oriented, high visibility. */
-export function CoachWelcomePrimaryCta({ className }: { className?: string }) {
+/** Guest auth return — claim runs on register/login, then welcome. */
+const GUEST_AUTH_NEXT = GUEST_CLAIM_RETURN_PATH;
+
+/** Hero primary CTA — guests go to register (claim trial → coach-welcome). */
+export function CoachWelcomePrimaryCta({
+  className,
+  isGuest = false,
+}: {
+  className?: string;
+  isGuest?: boolean;
+}) {
   const t = useTranslations("coachWelcome");
+  const href = isGuest
+    ? buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)
+    : "/check-in";
 
   return (
-    <ButtonLink href="/check-in" size="lg" className={cn(primaryBtnClass, className)}>
-      <CalendarCheck className="size-5 shrink-0" aria-hidden />
-      {t("ctaCheckInPrimary")}
+    <ButtonLink href={href} size="lg" className={cn(primaryBtnClass, className)}>
+      {isGuest ? (
+        <UserPlus className="size-5 shrink-0" aria-hidden />
+      ) : (
+        <CalendarCheck className="size-5 shrink-0" aria-hidden />
+      )}
+      {isGuest ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
       <ArrowRight className="size-5 shrink-0" aria-hidden />
     </ButtonLink>
   );
 }
 
 /** Primary CTA block — desktop / tablet. Mobile uses sticky bar instead. */
-export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string }) {
+export function CoachWelcomePrimaryCtaBlock({
+  className,
+  isGuest = false,
+}: {
+  className?: string;
+  isGuest?: boolean;
+}) {
   const t = useTranslations("coachWelcome");
 
   return (
@@ -44,20 +68,38 @@ export function CoachWelcomePrimaryCtaBlock({ className }: { className?: string 
     >
       <CoachWelcomeNextStepCard
         label={t("nextStepLabel")}
-        hint={t("nextStepHint")}
-        benefit={t("nextStepBenefit")}
+        hint={isGuest ? t("nextStepHintGuest") : t("nextStepHint")}
+        benefit={isGuest ? t("nextStepBenefitGuest") : t("nextStepBenefit")}
       />
-      <CoachWelcomePrimaryCta />
+      <CoachWelcomePrimaryCta isGuest={isGuest} />
       <p className="text-center text-[11px] leading-snug text-muted-foreground sm:text-xs">
-        {t("ctaCheckInBenefit")}
+        {isGuest ? t("ctaGuestCheckInBenefit") : t("ctaCheckInBenefit")}
       </p>
+      {isGuest ? (
+        <Link
+          href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
+          className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          data-testid="coach-welcome-guest-login-link"
+        >
+          {t("guestSignInExistingCta")}
+        </Link>
+      ) : null}
     </div>
   );
 }
 
-/** Sticky mobile bar — sole check-in CTA on small screens. */
-export function CoachWelcomeStickyBar({ className }: { className?: string }) {
+/** Sticky mobile bar — check-in (auth) or register→check-in (guest). */
+export function CoachWelcomeStickyBar({
+  className,
+  isGuest = false,
+}: {
+  className?: string;
+  isGuest?: boolean;
+}) {
   const t = useTranslations("coachWelcome");
+  const href = isGuest
+    ? buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)
+    : "/check-in";
 
   return (
     <div
@@ -68,9 +110,13 @@ export function CoachWelcomeStickyBar({ className }: { className?: string }) {
       data-testid="coach-welcome-sticky-cta"
     >
       <div className="mx-auto max-w-2xl">
-        <ButtonLink href="/check-in" size="lg" className={primaryBtnClass}>
-          <CalendarCheck className="size-5 shrink-0" aria-hidden />
-          {t("ctaCheckInPrimary")}
+        <ButtonLink href={href} size="lg" className={primaryBtnClass}>
+          {isGuest ? (
+            <UserPlus className="size-5 shrink-0" aria-hidden />
+          ) : (
+            <CalendarCheck className="size-5 shrink-0" aria-hidden />
+          )}
+          {isGuest ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
           <ArrowRight className="size-5 shrink-0" aria-hidden />
         </ButtonLink>
       </div>
@@ -124,12 +170,12 @@ export function CoachWelcomeCta({
       {showPrimary ? (
         <CoachWelcomeNextStepCard
           label={t("nextStepLabel")}
-          hint={t("nextStepHint")}
-          benefit={t("nextStepBenefit")}
+          hint={isGuest ? t("nextStepHintGuest") : t("nextStepHint")}
+          benefit={isGuest ? t("nextStepBenefitGuest") : t("nextStepBenefit")}
         />
       ) : null}
 
-      {showPrimary ? <CoachWelcomePrimaryCta /> : null}
+      {showPrimary ? <CoachWelcomePrimaryCta isGuest={isGuest} /> : null}
 
       {isGuest ? (
         <div className="space-y-2 rounded-xl border border-primary/15 bg-primary/[0.03] px-3.5 py-3">
@@ -137,7 +183,7 @@ export function CoachWelcomeCta({
             {guestVariant === "ready" ? t("guestRoutineReadyCta") : t("guestRoutineFallbackCta")}
           </p>
           <ButtonLink
-            href="/register"
+            href={buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)}
             size="default"
             variant="secondary"
             className="min-h-11 w-full gap-2 font-semibold"
@@ -146,7 +192,7 @@ export function CoachWelcomeCta({
             {t("guestSaveRoutineCta")}
           </ButtonLink>
           <Link
-            href="/login"
+            href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
             className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
             {t("guestSignInExistingCta")}

@@ -1,12 +1,17 @@
 "use client";
 
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import {
   AlertCircle,
   Eye,
   RefreshCw,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import {
@@ -35,10 +40,13 @@ import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
+import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
 import { readCoachWelcomeSession, isGuestCoachSession } from "@/lib/onboarding/coach-welcome-session";
-import { isOnboardingComplete, isStarterRoutinePending, parseSnapshotStarter } from "@/lib/onboarding/snapshot";
+import { buildCoachWelcomeFromProfile } from "@/lib/onboarding/coach-welcome-from-profile";
+import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
+import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
 import { consumeJustCompletedOnboarding } from "@/lib/stores/onboarding-store";
@@ -50,6 +58,19 @@ import {
 } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
 
+function absUploadUrl(url: string): string {
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("blob:") ||
+    url.startsWith("data:")
+  ) {
+    return url;
+  }
+  const base = apiBaseUrl.replace(/\/$/, "");
+  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 type LoadedCoachWelcome = {
   profileId: string | null;
   starter: StarterRoutineDTO;
@@ -57,6 +78,11 @@ type LoadedCoachWelcome = {
   completedAt: string | null;
   isGuest: boolean;
   coachingNotes?: string;
+  photoUrls?: string[];
+  analysisPhase?: string | null;
+  analysisSeverity?: string | null;
+  analysisRegions?: string[];
+  analysisConcerns?: string[];
 };
 
 function CoachWelcomeLoaded({
@@ -66,12 +92,18 @@ function CoachWelcomeLoaded({
   completedAt,
   isGuest,
   coachingNotes,
-  onReload,
-}: LoadedCoachWelcome & { onReload: () => void }) {
+  photoUrls: initialPhotoUrls,
+  analysisPhase: initialPhase,
+  analysisSeverity: initialSeverity,
+  analysisRegions: initialRegions,
+  analysisConcerns: initialConcerns,
+}: LoadedCoachWelcome) {
   const t = useTranslations("coachWelcome");
   const tReview = useTranslations("onboarding.review");
   const formatter = useFormatter();
   const [profileId, setProfileId] = useState(initialProfileId);
+  const [livePhotoUrls, setLivePhotoUrls] = useState<string[] | null>(null);
+  const [idbPhotoUrls, setIdbPhotoUrls] = useState<string[]>([]);
   const [retryAiLoading, setRetryAiLoading] = useState(false);
   const {
     starter,
@@ -97,6 +129,24 @@ function CoachWelcomeLoaded({
     const onSessionPatch = (event: Event) => {
       const patch = (event as CustomEvent<Partial<CoachWelcomePayload>>).detail;
       if (patch?.profileId) setProfileId(patch.profileId);
+      const nextPhotos = patch?.reviewSummary?.photo_urls;
+      if (nextPhotos?.length) {
+        setLivePhotoUrls(
+          normalizeReviewPhotoUrls(nextPhotos).map(absUploadUrl),
+        );
+        setIdbPhotoUrls((prev) => {
+          for (const u of prev) {
+            if (u.startsWith("blob:")) {
+              try {
+                URL.revokeObjectURL(u);
+              } catch {
+                /* ignore */
+              }
+            }
+          }
+          return [];
+        });
+      }
     };
     window.addEventListener(COACH_WELCOME_SESSION_EVENT, onSessionPatch);
     return () =>
@@ -118,26 +168,84 @@ function CoachWelcomeLoaded({
 
   const guestVariant = showFallbackBanner ? "fallback" : "ready";
 
+  const photoUrls = useMemo(() => {
+    if (livePhotoUrls?.length) return livePhotoUrls;
+    const fromProps = initialPhotoUrls?.length
+      ? initialPhotoUrls
+      : normalizeReviewPhotoUrls(session?.reviewSummary?.photo_urls ?? []);
+    return fromProps.map(absUploadUrl);
+  }, [
+    livePhotoUrls,
+    initialPhotoUrls,
+    session?.reviewSummary?.photo_urls,
+  ]);
+
+  useEffect(() => {
+    const shouldLoadIdb =
+      Boolean(session?.guestPhotosIdb) ||
+      (isGuest &&
+        session?.reviewSummary?.photos_skipped !== true &&
+        photoUrls.length === 0);
+    if (!shouldLoadIdb || photoUrls.length > 0) return;
+    if (session?.reviewSummary?.photos_skipped === true) return;
+    let cancelled = false;
+    let created: string[] = [];
+    void (async () => {
+      const { loadGuestClaimPhotos, revokeGuestPhotoPreviews } = await import(
+        "@/lib/onboarding/guest-photo-idb"
+      );
+      const items = await loadGuestClaimPhotos();
+      if (cancelled) {
+        revokeGuestPhotoPreviews(items);
+        return;
+      }
+      created = items.map((p) => p.preview);
+      setIdbPhotoUrls(created);
+    })();
+    return () => {
+      cancelled = true;
+      for (const u of created) {
+        if (u.startsWith("blob:")) {
+          try {
+            URL.revokeObjectURL(u);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    };
+  }, [
+    isGuest,
+    session?.guestPhotosIdb,
+    session?.reviewSummary?.photos_skipped,
+    photoUrls.length,
+  ]);
+
+  const displayPhotoUrls = photoUrls.length ? photoUrls : idbPhotoUrls;
+
+  const phaseHint =
+    initialPhase || analysis?.phase || null;
+  const severityHint =
+    initialSeverity || analysis?.severity_level || undefined;
+  const regionsHint =
+    initialRegions?.length
+      ? initialRegions
+      : analysis?.primary_regions;
+  const concernsHint =
+    initialConcerns?.length
+      ? initialConcerns
+      : analysis?.main_concerns?.length
+        ? analysis.main_concerns
+        : analysis?.concern_types;
+
   return (
     <>
       <div className="mx-auto w-full max-w-2xl space-y-4 pb-24 sm:space-y-5 sm:pb-6">
         <CoachWelcomeSection>
-          <CoachWelcomeCelebrationHeader
-            completedLabel={
-              completedLabel
-                ? tReview("completedOn", { date: completedLabel })
-                : undefined
-            }
-          />
+          <CoachWelcomeCelebrationHeader />
         </CoachWelcomeSection>
 
-        {skinReadback ? (
-          <CoachWelcomeSection delayMs={40}>
-            <CoachWelcomeSkinReadback text={skinReadback} />
-          </CoachWelcomeSection>
-        ) : null}
-
-        <CoachWelcomeSection delayMs={80}>
+        <CoachWelcomeSection delayMs={40}>
           <StarterRoutineGenerationNotice
             isGeneratingRoutine={isGeneratingRoutine}
             showFallbackBanner={showFallbackBanner}
@@ -151,7 +259,7 @@ function CoachWelcomeLoaded({
           />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={120} id="coach-welcome-routine">
+        <CoachWelcomeSection delayMs={80} id="coach-welcome-routine">
           <div
             className={cn(
               "space-y-0",
@@ -166,29 +274,39 @@ function CoachWelcomeLoaded({
               featured
               sectionTitle={t("routineSectionTitle")}
               sectionSubtitle={t("routineSectionSub")}
-              carePhaseHint={analysis?.phase}
-              concerns={
-                analysis?.main_concerns?.length
-                  ? analysis.main_concerns
-                  : analysis?.concern_types
-              }
-              severity={analysis?.severity_level}
-              regions={analysis?.primary_regions}
+              carePhaseHint={phaseHint}
+              concerns={concernsHint}
+              severity={severityHint}
+              regions={regionsHint}
               skinType={session?.reviewSummary?.skin_type}
             />
           </div>
         </CoachWelcomeSection>
 
+        <CoachWelcomeSection delayMs={100}>
+          <CoachWelcomePrimaryCtaBlock isGuest={isGuest} />
+        </CoachWelcomeSection>
+
+        {skinReadback ? (
+          <CoachWelcomeSection delayMs={120}>
+            <CoachWelcomeSkinReadback
+              text={skinReadback}
+              photos={displayPhotoUrls.length ? displayPhotoUrls : undefined}
+              phaseHint={phaseHint}
+            />
+          </CoachWelcomeSection>
+        ) : null}
+
         <StarterRoutineSupportExtras
           starter={starter}
-          delayMs={200}
+          delayMs={160}
           skinReadback={skinReadback}
         />
 
         {!starterHasFoldableGuidance(starter) &&
         starter.product_suggestions &&
         starter.product_suggestions.length > 0 ? (
-          <CoachWelcomeSection delayMs={240}>
+          <CoachWelcomeSection delayMs={200}>
             <ProductSuggestionsCard
               suggestions={starter.product_suggestions}
               source="starter_routine"
@@ -198,36 +316,38 @@ function CoachWelcomeLoaded({
           </CoachWelcomeSection>
         ) : null}
 
-        <StarterRoutineSafetySection starter={starter} delayMs={280} />
-
-        <CoachWelcomeSection delayMs={320}>
-          <CoachWelcomePrimaryCtaBlock />
-        </CoachWelcomeSection>
+        <StarterRoutineSafetySection starter={starter} delayMs={240} />
 
         {canFeedback ? (
-          <CoachWelcomeSection delayMs={360}>
+          <CoachWelcomeSection delayMs={280}>
             <StarterRoutineFeedback profileId={profileId} compact />
           </CoachWelcomeSection>
         ) : null}
 
-        <CoachWelcomeSection delayMs={400}>
+        <CoachWelcomeSection delayMs={320}>
           <CoachWelcomeCta isGuest={isGuest} guestVariant={guestVariant} />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={440} className="mt-4 border-t border-border/40 pt-6">
+        <CoachWelcomeSection delayMs={360} className="mt-4 border-t border-border/40 pt-6">
+          {completedLabel ? (
+            <CoachWelcomeCelebrationHeader
+              metaOnly
+              completedLabel={tReview("completedOn", { date: completedLabel })}
+              className="mb-2"
+            />
+          ) : null}
           <p className="mb-1 inline-flex w-full items-center gap-2 text-[10px] leading-relaxed text-muted-foreground/70 sm:w-auto">
             <Eye className="size-3 shrink-0" aria-hidden />
             {tReview("readOnlyHint")}
           </p>
           <OnboardingDeleteSection
             isGuest={isGuest}
-            onDeleted={onReload}
             variant="subtle"
           />
         </CoachWelcomeSection>
       </div>
 
-      <CoachWelcomeStickyBar />
+      <CoachWelcomeStickyBar isGuest={isGuest} />
     </>
   );
 }
@@ -254,13 +374,72 @@ export function CoachWelcomeClient() {
 
     if (session?.starterRoutine) {
       const isGuest = isGuestCoachSession(session, Boolean(token));
+      const sessionNotes =
+        session.coachingNotes?.trim() ||
+        session.reviewSummary?.skin_analysis?.coaching_notes?.trim() ||
+        session.starterRoutine.skin_readback?.trim() ||
+        "";
+      const sessionPhotos = normalizeReviewPhotoUrls(
+        session.reviewSummary?.photo_urls ?? [],
+      );
+
+      // Logged-in + thin session: enrich notes/photos from persisted profile.
+      // Treat skin_readback-only as "thin" so we still pull richer coaching_notes.
+      const hasRichSessionNotes = Boolean(
+        session.coachingNotes?.trim() ||
+          session.reviewSummary?.skin_analysis?.coaching_notes?.trim(),
+      );
+      if (token && !isGuest && (!hasRichSessionNotes || sessionPhotos.length === 0)) {
+        try {
+          const prof = await fetchSkinProfile();
+          if (prof && isOnboardingComplete(prof)) {
+            const fromProf = buildCoachWelcomeFromProfile(prof);
+            if (fromProf) {
+              setLoaded({
+                profileId: fromProf.profileId,
+                starter: session.starterRoutine,
+                pending: session.starterRoutinePending === true || fromProf.pending,
+                completedAt:
+                  session.reviewSummary?.completed_at ?? fromProf.completedAt,
+                isGuest: false,
+                coachingNotes: hasRichSessionNotes
+                  ? sessionNotes
+                  : fromProf.coachingNotes || sessionNotes || undefined,
+                photoUrls:
+                  sessionPhotos.length > 0 ? sessionPhotos : fromProf.photoUrls,
+                analysisPhase:
+                  session.reviewSummary?.skin_analysis?.phase ??
+                  fromProf.analysisPhase,
+                analysisSeverity:
+                  session.reviewSummary?.skin_analysis?.severity_level ??
+                  fromProf.analysisHints.severity,
+                analysisRegions:
+                  session.reviewSummary?.skin_analysis?.primary_regions ??
+                  fromProf.analysisHints.regions,
+                analysisConcerns:
+                  (session.reviewSummary?.skin_analysis?.main_concerns
+                    ?.length
+                    ? session.reviewSummary.skin_analysis.main_concerns
+                    : undefined) ?? fromProf.analysisHints.concerns,
+              });
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {
+          /* fall through to session-only */
+        }
+      }
+
       setLoaded({
         profileId: session.profileId ?? null,
         starter: session.starterRoutine,
         pending: session.starterRoutinePending === true,
         completedAt: session.reviewSummary?.completed_at ?? null,
         isGuest,
-        coachingNotes: session.coachingNotes,
+        coachingNotes: sessionNotes || undefined,
+        photoUrls: sessionPhotos,
+        analysisPhase: session.reviewSummary?.skin_analysis?.phase ?? null,
       });
       setLoading(false);
       return;
@@ -269,6 +448,8 @@ export function CoachWelcomeClient() {
     if (!token) {
       const guestReview = loadGuestReviewFromSession();
       if (guestReview?.starter) {
+        const guestSession = readCoachWelcomeSession();
+        const analysis = guestSession?.reviewSummary?.skin_analysis;
         setLoaded({
           profileId: guestReview.profileId,
           starter: guestReview.starter,
@@ -276,6 +457,13 @@ export function CoachWelcomeClient() {
           completedAt: guestReview.completedAt,
           isGuest: true,
           coachingNotes: guestReview.coachingNotes,
+          photoUrls: guestReview.photoUrls,
+          analysisPhase: analysis?.phase ?? null,
+          analysisSeverity: analysis?.severity_level ?? null,
+          analysisRegions: analysis?.primary_regions,
+          analysisConcerns: analysis?.main_concerns?.length
+            ? analysis.main_concerns
+            : guestReview.concerns,
         });
         setLoading(false);
         return;
@@ -289,14 +477,20 @@ export function CoachWelcomeClient() {
     try {
       const prof = await fetchSkinProfile();
       if (prof && isOnboardingComplete(prof)) {
-        const sr = parseSnapshotStarter(prof.onboarding_snapshot);
-        if (sr) {
+        const fromProf = buildCoachWelcomeFromProfile(prof);
+        if (fromProf) {
           setLoaded({
-            profileId: prof.id,
-            starter: sr,
-            pending: isStarterRoutinePending(prof.onboarding_snapshot),
-            completedAt: prof.updated_at || prof.created_at,
+            profileId: fromProf.profileId,
+            starter: fromProf.starter,
+            pending: fromProf.pending,
+            completedAt: fromProf.completedAt,
             isGuest: false,
+            coachingNotes: fromProf.coachingNotes,
+            photoUrls: fromProf.photoUrls,
+            analysisPhase: fromProf.analysisPhase,
+            analysisSeverity: fromProf.analysisHints.severity,
+            analysisRegions: fromProf.analysisHints.regions,
+            analysisConcerns: fromProf.analysisHints.concerns,
           });
           return;
         }
@@ -379,5 +573,5 @@ export function CoachWelcomeClient() {
     );
   }
 
-  return <CoachWelcomeLoaded {...loaded} onReload={() => void load()} />;
+  return <CoachWelcomeLoaded {...loaded} />;
 }

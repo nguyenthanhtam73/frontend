@@ -50,6 +50,7 @@ import {
   type OnboardingAiErrorKind,
 } from "@/lib/onboarding/onboarding-ai";
 import { resolveReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
+import { saveGuestClaimPhotos } from "@/lib/onboarding/guest-photo-idb";
 import { buildReviewSummaryFromStore } from "@/lib/onboarding/review-data";
 import {
   ONBOARDING_ANALYZE_TIMEOUT_MS,
@@ -311,29 +312,63 @@ export function OnboardingFlow() {
     const state = useOnboardingStore.getState();
     const photosSkipped = skipFaceCapture || state.photos.length === 0;
     const userRoutine = state.starterRoutine;
+    const guestish =
+      !getAccessToken() ||
+      pack.guestPreview === true ||
+      pack.profileId === GUEST_COACH_PROFILE_ID;
 
     let photoUrls: string[] | undefined;
+    let guestPhotosIdb = false;
     if (!photosSkipped) {
-      try {
-        photoUrls = await resolveReviewPhotoUrls(
-          state.photos.slice(0, ONBOARDING_MAX_PHOTOS),
-          pack.reviewSummary?.photo_urls,
-        );
-      } catch {
-        photoUrls = pack.reviewSummary?.photo_urls;
+      if (guestish) {
+        // Prefer IndexedDB over sessionStorage data URLs (quota + blob revoke).
+        try {
+          const n = await saveGuestClaimPhotos(
+            state.photos.slice(0, ONBOARDING_MAX_PHOTOS),
+          );
+          guestPhotosIdb = n > 0;
+        } catch {
+          guestPhotosIdb = false;
+        }
+        if (!guestPhotosIdb) {
+          try {
+            photoUrls = await resolveReviewPhotoUrls(
+              state.photos.slice(0, ONBOARDING_MAX_PHOTOS),
+              pack.reviewSummary?.photo_urls,
+            );
+          } catch {
+            photoUrls = pack.reviewSummary?.photo_urls;
+          }
+        }
+      } else {
+        try {
+          photoUrls = await resolveReviewPhotoUrls(
+            state.photos.slice(0, ONBOARDING_MAX_PHOTOS),
+            pack.reviewSummary?.photo_urls,
+          );
+        } catch {
+          photoUrls = pack.reviewSummary?.photo_urls;
+        }
       }
     }
 
     const baseReview = pack.reviewSummary ?? buildReviewSummaryFromStore(state);
+    let sessionPhotoUrls: string[] | undefined;
+    if (!photosSkipped && !guestPhotosIdb && photoUrls?.length) {
+      const persistent = photoUrls.filter((u) => !u.startsWith("data:"));
+      // Prefer /uploads paths; fall back to data URLs only when IDB save failed.
+      sessionPhotoUrls = persistent.length ? persistent : photoUrls;
+    }
     const reviewSummary = {
       ...baseReview,
-      photo_urls: photosSkipped ? undefined : photoUrls,
+      photo_urls: sessionPhotoUrls,
       photos_skipped: photosSkipped,
       // Premium: drop analyze from session cache so reload can't rehydrate brands.
       skin_analysis: blockAnalyzeCommerceMerge
         ? undefined
         : baseReview.skin_analysis,
     };
+
     const full: CoachWelcomePayload = {
       ...pack,
       starterRoutine: resolveWelcomeStarter({
@@ -347,6 +382,7 @@ export function OnboardingFlow() {
       }),
       locale,
       reviewSummary,
+      guestPhotosIdb: guestPhotosIdb || undefined,
     };
 
     try {
@@ -354,7 +390,27 @@ export function OnboardingFlow() {
       sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
       markJustCompletedOnboarding();
     } catch {
-      /* storage full */
+      /* storage full — IDB photos still available for claim */
+      try {
+        const slim: CoachWelcomePayload = {
+          ...full,
+          reviewSummary: {
+            ...full.reviewSummary,
+            photo_urls: undefined,
+            skin_analysis: full.reviewSummary?.skin_analysis
+              ? {
+                  ...full.reviewSummary.skin_analysis,
+                  // keep coaching notes; strip bulky guidance if needed
+                }
+              : undefined,
+          },
+        };
+        sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(slim));
+        sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
+        markJustCompletedOnboarding();
+      } catch {
+        /* ignore */
+      }
     }
 
     if (state.skillMode) setSkillGlobal(state.skillMode);

@@ -13,6 +13,7 @@ import { enrichProductGuidanceItems } from "@/lib/onboarding/enrich-product-guid
 import {
   filterGuidanceForPhase,
   resolveCarePhaseFromAnalysis,
+  starterCareNote,
   type StarterCarePhase,
 } from "@/lib/onboarding/guest-starter";
 import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
@@ -156,6 +157,13 @@ export function StarterRoutineCards({
     [stepTips],
   );
 
+  const sharedCareNote = useMemo(() => {
+    if (!compactTips || !featured) return null;
+    return starterCareNote(null, locale, carePhase, {
+      guidanceHasNoPickCaution: false,
+    });
+  }, [compactTips, featured, locale, carePhase]);
+
   const emptyMorning =
     starter.morning.length === 0 ? (
       <p className="px-3 py-2 text-sm text-muted-foreground">{noStepsLabel}</p>
@@ -199,6 +207,7 @@ export function StarterRoutineCards({
           sectionTestId="coach-welcome-evening"
           stepTestIdPrefix="coach-welcome-evening"
           compactTips={compactTips}
+          morningProductTips={stepTips.morning}
         />
       ) : (
         <div data-testid="coach-welcome-evening">{emptyEvening}</div>
@@ -221,6 +230,14 @@ export function StarterRoutineCards({
             </p>
           ) : null}
         </div>
+      ) : null}
+      {sharedCareNote ? (
+        <p
+          className="rounded-lg border border-emerald-500/25 bg-emerald-500/[0.06] px-3 py-2 text-xs leading-relaxed text-foreground/90"
+          data-testid="coach-welcome-shared-care-note"
+        >
+          {sharedCareNote}
+        </p>
       ) : null}
       {body}
     </div>

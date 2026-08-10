@@ -1,64 +1,95 @@
 "use client";
 
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, Eye, HeartHandshake, Sparkles, Stethoscope } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  parseCoachNoteSections,
+  pickCoachVerdict,
+  previewCoachText,
+  type CoachNoteSection,
+  type CoachNoteSectionKind,
+} from "@/lib/onboarding/coach-notes-sections";
 import { cn } from "@/lib/utils";
 
-/** Rough length where we collapse by default (mobile-readable chunk). */
-const COLLAPSE_CHARS = 220;
+function sectionIcon(kind: CoachNoteSectionKind) {
+  switch (kind) {
+    case "observe":
+      return Eye;
+    case "verdict":
+      return Sparkles;
+    case "buddy":
+      return HeartHandshake;
+    case "advice":
+      return Stethoscope;
+    default:
+      return Sparkles;
+  }
+}
 
-const SECTION_BREAK =
-  /\n(?=(?:Tóm lại|Tóm tắt|Mày ơi|Hướng xử lý|Lời khuyên|In short|So[,:]|Next[,:]|Bottom line))/i;
-
-function splitParagraphs(text: string): string[] {
-  const byBlank = text
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-  if (byBlank.length > 1) return byBlank;
-
-  const byMarker = text
-    .split(SECTION_BREAK)
-    .map((p) => p.trim())
-    .filter(Boolean);
-  if (byMarker.length > 1) return byMarker;
-
-  // Last resort: break on single newlines if chunks look like sentences.
-  const byLine = text
-    .split(/\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-  if (byLine.length > 2) return byLine;
-
-  return [text.trim()].filter(Boolean);
+function sectionLabelKey(
+  kind: CoachNoteSectionKind,
+):
+  | "readbackSectionObserve"
+  | "readbackSectionVerdict"
+  | "readbackSectionBuddy"
+  | "readbackSectionAdvice"
+  | null {
+  switch (kind) {
+    case "observe":
+      return "readbackSectionObserve";
+    case "verdict":
+      return "readbackSectionVerdict";
+    case "buddy":
+      return "readbackSectionBuddy";
+    case "advice":
+      return "readbackSectionAdvice";
+    default:
+      return null;
+  }
 }
 
 /**
- * Long coach skin notes — show a short preview first so the page isn’t a wall of text.
+ * Long coach skin notes — short verdict first, clinical detail behind expand.
  */
 export function CoachWelcomeSkinReadback({
   text,
   className,
+  photos,
+  photoAlt,
+  phaseHint,
 }: {
   text: string;
   className?: string;
+  /** Optional face photos shown next to the verdict. */
+  photos?: string[];
+  photoAlt?: (n: number) => string;
+  /** e.g. calm_first → calm-first chip from analysis. */
+  phaseHint?: string | null;
 }) {
   const t = useTranslations("coachWelcome");
   const trimmed = text.trim();
-  const paragraphs = useMemo(() => splitParagraphs(trimmed), [trimmed]);
-  const needsCollapse = trimmed.length > COLLAPSE_CHARS || paragraphs.length > 1;
+  const sections = useMemo(() => parseCoachNoteSections(trimmed), [trimmed]);
+  const verdict = useMemo(() => pickCoachVerdict(sections), [sections]);
+  const observe = sections.find((s) => s.kind === "observe");
+  const needsCollapse = trimmed.length > 140 || sections.length > 1;
   const [expanded, setExpanded] = useState(false);
 
   if (!trimmed) return null;
 
-  const previewParas = (() => {
-    if (!needsCollapse) return paragraphs;
-    const first = paragraphs[0] ?? "";
-    if (first.length <= COLLAPSE_CHARS) return [first];
-    return [`${first.slice(0, COLLAPSE_CHARS).replace(/\s+\S*$/, "").trim()}…`];
+  const phaseChip =
+    phaseHint === "calm_first"
+      ? t("readbackPhaseCalm")
+      : phaseHint === "can_add_active"
+        ? t("readbackPhaseActive")
+        : null;
+
+  const collapsedPreview = (() => {
+    if (verdict) return previewCoachText(verdict, 180);
+    if (observe) return previewCoachText(observe.text, 160);
+    return previewCoachText(trimmed, 160);
   })();
 
   return (
@@ -69,21 +100,60 @@ export function CoachWelcomeSkinReadback({
       )}
       data-testid="coach-welcome-skin-readback"
     >
-      <CardContent className="space-y-2.5 pt-4 pb-4 sm:pt-5 sm:pb-5">
-        <div className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="size-4 text-primary" aria-hidden />
-          </span>
-          <p className="text-sm font-semibold text-foreground">{t("readback")}</p>
+      <CardContent className="space-y-3 pt-4 pb-4 sm:pt-5 sm:pb-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
+              <Sparkles className="size-4 text-primary" aria-hidden />
+            </span>
+            <p className="text-sm font-semibold text-foreground">{t("readback")}</p>
+          </div>
+          {phaseChip ? (
+            <span
+              className="inline-flex min-h-7 items-center rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200"
+              data-testid="coach-welcome-phase-chip"
+            >
+              {phaseChip}
+            </span>
+          ) : null}
         </div>
 
-        <div className="space-y-2.5 text-sm leading-relaxed text-foreground/90">
-          {(expanded || !needsCollapse ? paragraphs : previewParas).map((p, i) => (
-            <p key={i} className="whitespace-pre-wrap">
-              {p}
+        {photos && photos.length > 0 ? (
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-muted-foreground">
+              {t("readbackPhotosHint")}
             </p>
-          ))}
-        </div>
+            <ul className="flex gap-2 overflow-x-auto pb-0.5">
+              {photos.slice(0, 3).map((url, i) => (
+                <li key={`${url}-${i}`} className="shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={photoAlt?.(i + 1) ?? ""}
+                    className="size-14 rounded-lg border border-border/70 object-cover shadow-sm sm:size-16"
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {!expanded ? (
+          <div className="space-y-2">
+            <p
+              className="text-sm font-medium leading-relaxed text-foreground"
+              data-testid="coach-welcome-readback-preview"
+            >
+              {collapsedPreview}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3" data-testid="coach-welcome-readback-full">
+            {sections.map((section, i) => (
+              <ReadbackSectionBlock key={`${section.kind}-${i}`} section={section} />
+            ))}
+          </div>
+        )}
 
         {needsCollapse ? (
           <button
@@ -105,6 +175,52 @@ export function CoachWelcomeSkinReadback({
   );
 }
 
+function ReadbackSectionBlock({ section }: { section: CoachNoteSection }) {
+  const t = useTranslations("coachWelcome");
+  const labelKey = sectionLabelKey(section.kind);
+  const Icon = sectionIcon(section.kind);
+  const isVerdict = section.kind === "verdict";
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-3 py-2.5",
+        isVerdict
+          ? "border-primary/25 bg-primary/[0.06]"
+          : "border-border/50 bg-muted/20",
+      )}
+    >
+      {labelKey ? (
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <Icon
+            className={cn(
+              "size-3.5 shrink-0",
+              isVerdict ? "text-primary" : "text-muted-foreground",
+            )}
+            aria-hidden
+          />
+          <p
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-wide",
+              isVerdict ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            {t(labelKey)}
+          </p>
+        </div>
+      ) : null}
+      <p
+        className={cn(
+          "text-sm leading-relaxed whitespace-pre-wrap",
+          isVerdict ? "font-medium text-foreground" : "text-foreground/90",
+        )}
+      >
+        {section.text}
+      </p>
+    </div>
+  );
+}
+
 /** Skip rationale card when it mostly repeats the skin readback. */
 export function isNearDuplicateText(a: string, b: string): boolean {
   const norm = (s: string) =>
@@ -119,6 +235,6 @@ export function isNearDuplicateText(a: string, b: string): boolean {
   if (x === y) return true;
   const shorter = x.length <= y.length ? x : y;
   const longer = x.length <= y.length ? y : x;
-  if (shorter.length < 80) return false;
-  return longer.includes(shorter.slice(0, Math.min(160, shorter.length)));
+  if (shorter.length < 40) return false;
+  return longer.includes(shorter);
 }

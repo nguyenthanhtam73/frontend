@@ -8,6 +8,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
@@ -17,6 +18,17 @@ import {
   buildPricingCheckoutHref,
   readCheckoutIntentFromSearch,
 } from "@/lib/premium/checkout-intent";
+import {
+  buildAuthHrefWithNext,
+  readAuthReturnPathFromSearch,
+} from "@/lib/auth/return-path";
+import {
+  claimGuestCoachWelcomeIfNeeded,
+  GUEST_CLAIM_RETURN_PATH,
+  isClaimableGuestCoachSession,
+} from "@/lib/onboarding/claim-guest-coach-welcome";
+import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY?.trim() ?? "";
@@ -52,6 +64,10 @@ function RegisterPageInner() {
     () => readCheckoutIntentFromSearch(searchParams),
     [searchParams],
   );
+  const returnPath = useMemo(
+    () => readAuthReturnPathFromSearch(searchParams),
+    [searchParams],
+  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,6 +76,7 @@ function RegisterPageInner() {
   const [err, setErr] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
+  const toast = useToast();
 
   // Already logged in + came from pricing upgrade → go straight to checkout handoff.
   useEffect(() => {
@@ -78,7 +95,9 @@ function RegisterPageInner() {
   }, []);
 
   const submitBlocked = captchaEnabled && !turnstileToken;
-  const loginHref = buildAuthHrefWithIntent("/login", checkoutIntent);
+  const loginHref = returnPath
+    ? buildAuthHrefWithNext("/login", returnPath)
+    : buildAuthHrefWithIntent("/login", checkoutIntent);
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-16">
@@ -138,11 +157,32 @@ function RegisterPageInner() {
                 } else {
                   void useAuthStore.getState().refresh();
                 }
-                // Paid intent → pricing auto-checkout; otherwise normal onboarding.
+                let claimed = false;
+                const alreadyDone =
+                  json.data?.user?.onboarding_completed === true;
+                const hadClaimableGuest =
+                  !alreadyDone &&
+                  isClaimableGuestCoachSession(readCoachWelcomeSession());
+                try {
+                  const claim = await claimGuestCoachWelcomeIfNeeded(token, {
+                    alreadyCompleted: alreadyDone,
+                    onPhotosAttachFailed: () =>
+                      toast.warning(t("claimGuestPhotosFailed")),
+                  });
+                  claimed = Boolean(claim);
+                } catch {
+                  claimed = false;
+                }
+                if (hadClaimableGuest && !claimed) {
+                  toast.error(t("claimGuestFailed"));
+                }
+                // Paid intent → pricing; claimed guest trial → coach-welcome; else ?next=.
                 router.push(
                   checkoutIntent
                     ? buildPricingCheckoutHref(checkoutIntent)
-                    : "/onboarding",
+                    : claimed
+                      ? GUEST_CLAIM_RETURN_PATH
+                      : resolveAuthReturnDestination(json.data?.user, returnPath),
                 );
               } catch {
                 invalidateCaptcha();

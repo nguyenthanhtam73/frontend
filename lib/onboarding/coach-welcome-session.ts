@@ -1,4 +1,4 @@
-import { mergeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
+import { mergeReviewPhotoUrls, normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import {
   COACH_WELCOME_SESSION_EVENT,
   COACH_WELCOME_STORAGE_KEY,
@@ -33,8 +33,19 @@ export function isCoachWelcomeRoutinePending(): boolean {
   return readCoachWelcomeSession()?.starterRoutinePending === true;
 }
 
+export type PatchCoachWelcomeOptions = {
+  /**
+   * When true, `reviewSummary.photo_urls` replaces stored URLs even if empty
+   * (claim sync). Default merge keeps local data URLs when a late patch sends [].
+   */
+  replacePhotoUrls?: boolean;
+};
+
 /** Merge a partial payload into sessionStorage and notify coach-welcome listeners. */
-export function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): void {
+export function patchCoachWelcomeSession(
+  patch: Partial<CoachWelcomePayload>,
+  opts?: PatchCoachWelcomeOptions,
+): void {
   if (typeof window === "undefined") return;
   try {
     const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
@@ -44,10 +55,12 @@ export function patchCoachWelcomeSession(patch: Partial<CoachWelcomePayload>): v
       ? {
           ...p.reviewSummary,
           ...patch.reviewSummary,
-          photo_urls: mergeReviewPhotoUrls(
-            p.reviewSummary?.photo_urls,
-            patch.reviewSummary.photo_urls,
-          ),
+          photo_urls: opts?.replacePhotoUrls
+            ? normalizeReviewPhotoUrls(patch.reviewSummary.photo_urls)
+            : mergeReviewPhotoUrls(
+                p.reviewSummary?.photo_urls,
+                patch.reviewSummary.photo_urls,
+              ),
         }
       : p.reviewSummary;
     const merged: CoachWelcomePayload = {

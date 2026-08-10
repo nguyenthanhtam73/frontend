@@ -6,11 +6,22 @@ import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
-import { postLoginDestination } from "@/lib/onboarding/post-auth-destination";
+import {
+  buildAuthHrefWithNext,
+  readAuthReturnPathFromSearch,
+} from "@/lib/auth/return-path";
+import {
+  claimGuestCoachWelcomeIfNeeded,
+  GUEST_CLAIM_RETURN_PATH,
+  isClaimableGuestCoachSession,
+} from "@/lib/onboarding/claim-guest-coach-welcome";
+import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import {
   buildAuthHrefWithIntent,
   buildPricingCheckoutHref,
@@ -43,18 +54,25 @@ function LoginPageInner() {
     () => readCheckoutIntentFromSearch(searchParams),
     [searchParams],
   );
+  const returnPath = useMemo(
+    () => readAuthReturnPathFromSearch(searchParams),
+    [searchParams],
+  );
   const [, startTransition] = useTransition();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    router.prefetch(checkoutIntent ? "/pricing" : "/onboarding");
-    if (!checkoutIntent) router.prefetch("/check-in");
-  }, [router, checkoutIntent]);
+    router.prefetch(checkoutIntent ? "/pricing" : returnPath || "/onboarding");
+    if (!checkoutIntent) router.prefetch(returnPath || "/check-in");
+  }, [router, checkoutIntent, returnPath]);
 
-  const registerHref = buildAuthHrefWithIntent("/register", checkoutIntent);
+  const registerHref = returnPath
+    ? buildAuthHrefWithNext("/register", returnPath)
+    : buildAuthHrefWithIntent("/register", checkoutIntent);
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-16">
@@ -93,9 +111,30 @@ function LoginPageInner() {
                 } else {
                   void useAuthStore.getState().refresh();
                 }
+                let claimed = false;
+                const alreadyDone =
+                  json.data?.user?.onboarding_completed === true;
+                const hadClaimableGuest =
+                  !alreadyDone &&
+                  isClaimableGuestCoachSession(readCoachWelcomeSession());
+                try {
+                  const claim = await claimGuestCoachWelcomeIfNeeded(token, {
+                    alreadyCompleted: alreadyDone,
+                    onPhotosAttachFailed: () =>
+                      toast.warning(t("claimGuestPhotosFailed")),
+                  });
+                  claimed = Boolean(claim);
+                } catch {
+                  claimed = false;
+                }
+                if (hadClaimableGuest && !claimed) {
+                  toast.error(t("claimGuestFailed"));
+                }
                 const nextPath = checkoutIntent
                   ? buildPricingCheckoutHref(checkoutIntent)
-                  : postLoginDestination(json.data?.user);
+                  : claimed
+                    ? GUEST_CLAIM_RETURN_PATH
+                    : resolveAuthReturnDestination(json.data?.user, returnPath);
                 // Keep loading until navigation replaces this screen — avoids an
                 // idle login form while Next.js still loads the next route.
                 startTransition(() => {

@@ -112,6 +112,13 @@ function EditActionButton({
   );
 }
 
+function tipFingerprint(tip: RoutineStepProductTip | null | undefined): string {
+  if (!tip) return "";
+  if (tip.affiliate?.product_id) return `id:${tip.affiliate.product_id}`;
+  const label = (tip.label || tip.softLabels?.[0] || "").trim().toLowerCase();
+  return label ? `label:${label}` : "";
+}
+
 function RoutineStepCard({
   stepText,
   index,
@@ -120,6 +127,7 @@ function RoutineStepCard({
   productTip,
   stepTestId,
   compactTips = false,
+  sameAsMorning = false,
 }: {
   stepText: string;
   index: number;
@@ -130,11 +138,14 @@ function RoutineStepCard({
   stepTestId?: string;
   /** Coach-welcome: shorter tip (label + why or Shopee) — skip help line. */
   compactTips?: boolean;
+  /** Evening step reuses the same AM product — show reuse hint instead of full commerce. */
+  sameAsMorning?: boolean;
 }) {
   const t = useTranslations("onboarding");
   const tGuide = useTranslations("onboarding.productGuidance");
   const ob = useOnboardingStore();
   const [expanded, setExpanded] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
   const [truncated, setTruncated] = useState(false);
   const detailRef = useRef<HTMLParagraphElement>(null);
   const parsed = parseRoutineStep(stepText);
@@ -288,8 +299,17 @@ function RoutineStepCard({
               data-testid="guidance-card"
               data-tip-kind={affiliate ? "affiliate" : "soft"}
               data-tip-density={compactTips ? "compact" : "full"}
+              data-same-as-morning={sameAsMorning ? "true" : undefined}
             >
-              {isSoftTip ? (
+              {sameAsMorning && compactTips ? (
+                <p className="text-xs leading-snug text-muted-foreground">
+                  <span className="font-medium text-foreground">
+                    {tip.label || visibleSoft[0]}
+                  </span>
+                  {" · "}
+                  {tGuide("sameAsMorning")}
+                </p>
+              ) : isSoftTip ? (
                 <>
                   {!compactTips ? (
                     <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700/80 dark:text-sky-300/90">
@@ -308,7 +328,7 @@ function RoutineStepCard({
                       </li>
                     ))}
                   </ul>
-                  {tip.why ? (
+                  {tip.why && (!compactTips || shopOpen) ? (
                     <p
                       className={cn(
                         "text-sm leading-snug text-foreground/85",
@@ -326,6 +346,20 @@ function RoutineStepCard({
                     >
                       {tip.help}
                     </p>
+                  ) : null}
+                  {compactTips && tip.why ? (
+                    <button
+                      type="button"
+                      onClick={() => setShopOpen((v) => !v)}
+                      className="inline-flex min-h-8 items-center gap-0.5 text-xs font-semibold text-sky-700 dark:text-sky-300"
+                      aria-expanded={shopOpen}
+                    >
+                      {shopOpen ? tGuide("hideShopHint") : tGuide("showShopHint")}
+                      <ChevronRight
+                        className={cn("size-3 transition-transform", shopOpen && "rotate-90")}
+                        aria-hidden
+                      />
+                    </button>
                   ) : null}
                 </>
               ) : (
@@ -333,7 +367,7 @@ function RoutineStepCard({
                   <p className="text-sm font-semibold leading-snug text-violet-900 dark:text-violet-100">
                     {tip.label}
                   </p>
-                  {tip.why ? (
+                  {(!compactTips || shopOpen) && tip.why ? (
                     <p
                       className={cn(
                         "text-sm leading-snug text-foreground/85",
@@ -352,7 +386,22 @@ function RoutineStepCard({
                       {tip.help}
                     </p>
                   ) : null}
-                  {affiliate ? (
+                  {compactTips ? (
+                    <button
+                      type="button"
+                      onClick={() => setShopOpen((v) => !v)}
+                      className="inline-flex min-h-8 items-center gap-0.5 text-xs font-semibold text-violet-700 dark:text-violet-300"
+                      aria-expanded={shopOpen}
+                      data-testid="guidance-shop-toggle"
+                    >
+                      {shopOpen ? tGuide("hideShopHint") : tGuide("showShopHint")}
+                      <ChevronRight
+                        className={cn("size-3 transition-transform", shopOpen && "rotate-90")}
+                        aria-hidden
+                      />
+                    </button>
+                  ) : null}
+                  {affiliate && (!compactTips || shopOpen) ? (
                     <a
                       href={affiliate.affiliate_link}
                       target="_blank"
@@ -414,6 +463,7 @@ export function OnboardingRoutinePeriodSection({
   sectionTestId,
   stepTestIdPrefix,
   compactTips = false,
+  morningProductTips,
 }: {
   period: "morning" | "evening";
   steps: string[];
@@ -428,10 +478,20 @@ export function OnboardingRoutinePeriodSection({
   stepTestIdPrefix?: string;
   /** Coach-welcome denser-page mode: shorter tips. */
   compactTips?: boolean;
+  /** Morning tips — used to mark evening duplicates as “same as AM”. */
+  morningProductTips?: (RoutineStepProductTip | null)[];
 }) {
   const t = useTranslations("onboarding");
   const ob = useOnboardingStore();
   const isMorning = period === "morning";
+  const morningKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const tip of morningProductTips ?? []) {
+      const key = tipFingerprint(tip);
+      if (key) set.add(key);
+    }
+    return set;
+  }, [morningProductTips]);
 
   return (
     <div
@@ -503,6 +563,10 @@ export function OnboardingRoutinePeriodSection({
                 stepTestIdPrefix ? `${stepTestIdPrefix}-${i}` : undefined
               }
               compactTips={compactTips}
+              sameAsMorning={
+                !isMorning &&
+                morningKeys.has(tipFingerprint(productTips?.[i] ?? null))
+              }
             />
           ))}
         </ol>

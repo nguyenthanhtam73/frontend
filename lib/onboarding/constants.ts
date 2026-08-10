@@ -93,3 +93,6 @@ export const ONBOARDING_ANALYZE_SLOW_HINT_MS = 35_000;
 
 /** Finish / preview-complete — wait before offering default routine (ms). */
 export const ONBOARDING_FINISH_TIMEOUT_MS = 45_000;
+
+/** Background attach of guest claim photos after fast JSON complete (ms). */
+export const ONBOARDING_PHOTO_ATTACH_TIMEOUT_MS = 90_000;

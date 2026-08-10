@@ -1,38 +1,33 @@
 "use client";
 
-import { Eye, EyeOff, X } from "lucide-react";
+import { ArrowRight, Eye, Moon, Sun, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import {
-  CoachWelcomeCta,
-  CoachWelcomePrimaryCtaBlock,
-  CoachWelcomeStickyBar,
-} from "@/components/onboarding/coach-welcome-cta";
-import { CoachWelcomeCelebrationHeader } from "@/components/onboarding/coach-welcome-payoff";
+  CoachWelcomeCelebrationHeader,
+} from "@/components/onboarding/coach-welcome-payoff";
 import { CoachWelcomeSection } from "@/components/onboarding/coach-welcome-section";
 import { CoachWelcomeSkinReadback } from "@/components/onboarding/coach-welcome-skin-readback";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
-import {
-  StarterRoutineCards,
-  starterHasFoldableGuidance,
-} from "@/components/onboarding/starter-routine-cards";
 import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
 import {
   StarterRoutineSafetySection,
   StarterRoutineSupportExtras,
 } from "@/components/onboarding/starter-routine-extras";
-import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
+import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
+import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
 import type { OnboardingReviewData } from "@/lib/onboarding/review-data";
-import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import {
+  dedupeConcernIds,
+  dedupeConcernLabels,
+} from "@/lib/onboarding/dedupe-concerns";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
-import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
 import { GUEST_COACH_PROFILE_ID } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
 
@@ -66,13 +61,16 @@ function absUploadUrl(url: string): string {
   return `${base}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
+/**
+ * Archive / profile summary after onboarding — not a clone of coach-welcome.
+ * Full AM/PM routine lives on /onboarding/coach-welcome.
+ */
 export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const t = useTranslations("onboarding");
   const tReview = useTranslations("onboarding.review");
   const tCoach = useTranslations("coachWelcome");
   const tCheckIn = useTranslations("checkIn");
   const formatter = useFormatter();
-  const [showPhotos, setShowPhotos] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const completedLabel = (() => {
@@ -92,10 +90,12 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
     data.skillLevel && data.skillLevel !== "unspecified"
       ? t(`skill.${data.skillLevel as "beginner"}.short`)
       : "—";
-  const concernLabels = data.concerns.map((id) =>
-    (CONCERN_IDS as readonly string[]).includes(id)
-      ? t(`aiConcerns.${id as (typeof CONCERN_IDS)[number]}`)
-      : id,
+  const concernLabels = dedupeConcernLabels(
+    dedupeConcernIds(data.concerns).map((id) =>
+      (CONCERN_IDS as readonly string[]).includes(id)
+        ? t(`aiConcerns.${id as (typeof CONCERN_IDS)[number]}`)
+        : id,
+    ),
   );
 
   const photoUrls = useMemo(
@@ -105,326 +105,226 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
   const hasPhotos = photoUrls.length > 0;
   const photosLost =
     !data.photosSkipped && data.photoUrls.length > 0 && !hasPhotos;
-  const showPhotoSection = data.photosSkipped || hasPhotos || photosLost;
 
   const skinReadback =
     data.coachingNotes?.trim() || data.starter?.skin_readback?.trim() || "";
 
   const closeLightbox = useCallback(() => setLightboxUrl(null), []);
 
+  const amCount = data.starter?.morning.length ?? 0;
+  const pmCount = data.starter?.evening.length ?? 0;
+
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl space-y-5 pb-24 sm:space-y-6 sm:pb-6">
-        <CoachWelcomeCelebrationHeader
-          completedLabel={
-            completedLabel
-              ? tReview("completedOn", { date: completedLabel })
-              : undefined
-          }
-        />
-
-        {showPhotoSection ? (
-          <div className="space-y-3">
-            {data.photosSkipped ? (
-              <p className="text-sm text-muted-foreground">{tReview("photosSkipped")}</p>
-            ) : hasPhotos ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  aria-expanded={showPhotos}
-                  onClick={() => setShowPhotos((v) => !v)}
-                >
-                  {showPhotos ? (
-                    <>
-                      <EyeOff className="size-4" aria-hidden />
-                      {tReview("hidePhotos")}
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="size-4" aria-hidden />
-                      {tReview("showPhotos")}
-                    </>
-                  )}
-                </Button>
-
-                {showPhotos ? (
-                  <section aria-label={tReview("photosSection")} className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {tReview("photosSection")}
-                    </p>
-                    <ReviewPhotoGrid
-                      urls={photoUrls}
-                      altLabel={(n) => tCheckIn("altPhoto", { n })}
-                      eagerLoad
-                      onOpen={setLightboxUrl}
-                    />
-                  </section>
-                ) : null}
-              </>
-            ) : photosLost ? (
-              <p className="text-sm text-muted-foreground">{tReview("photosExpired")}</p>
-            ) : null}
+      <div className="mx-auto w-full max-w-2xl space-y-5 pb-10 sm:space-y-6">
+        <header className="space-y-1.5 text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {tReview("badge")}
           </div>
-        ) : null}
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+            {tReview("archiveTitle")}
+          </h1>
+          <p className="text-sm text-muted-foreground">{tReview("archiveSub")}</p>
+        </header>
 
-      {skinReadback ? <CoachWelcomeSkinReadback text={skinReadback} /> : null}
-
-      <Card className="border-border/60 bg-muted/10">
-        <CardContent className="space-y-4 pt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
-            {tReview("skinSection")}
-          </p>
-          <dl className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <dt className="text-xs text-muted-foreground">{tReview("skinType")}</dt>
-              <dd className="text-sm font-medium">{skinTypeLabel}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{tReview("undertone")}</dt>
-              <dd className="text-sm font-medium">{undertoneLabel}</dd>
-            </div>
-            {concernLabels.length > 0 ? (
-              <div className="sm:col-span-2">
-                <dt className="text-xs text-muted-foreground">{tReview("concerns")}</dt>
-                <dd className="mt-1 flex flex-wrap gap-1.5">
-                  {concernLabels.map((c) => (
-                    <span
-                      key={c}
-                      className="rounded-full border bg-muted/50 px-2.5 py-0.5 text-xs font-medium"
-                    >
-                      {c}
-                    </span>
-                  ))}
-                </dd>
+        <Card className="border-border/60 bg-muted/10">
+          <CardContent className="space-y-4 pt-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+              {tReview("skinSection")}
+            </p>
+            <dl className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-muted-foreground">{tReview("skinType")}</dt>
+                <dd className="text-sm font-medium">{skinTypeLabel}</dd>
               </div>
-            ) : null}
-          </dl>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="border-border/60 bg-muted/10">
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
-              {tReview("skillSection")}
-            </p>
-            <p className="text-sm font-medium">{skillLabel}</p>
+              {data.undertone ? (
+                <div>
+                  <dt className="text-xs text-muted-foreground">{tReview("undertone")}</dt>
+                  <dd className="text-sm font-medium">{undertoneLabel}</dd>
+                </div>
+              ) : null}
+              {concernLabels.length > 0 ? (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-muted-foreground">{tReview("concerns")}</dt>
+                  <dd className="mt-1 flex flex-wrap gap-1.5">
+                    {concernLabels.map((c) => (
+                      <span
+                        key={c}
+                        className="rounded-full border bg-muted/50 px-2.5 py-0.5 text-xs font-medium"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
           </CardContent>
         </Card>
-        <Card className="border-border/60 bg-muted/10">
-          <CardContent className="space-y-2 pt-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
-              {tReview("goalSection")}
-            </p>
-            <p className="text-sm font-medium">{goalLabel}</p>
-          </CardContent>
-        </Card>
-      </div>
 
-      {data.starter ? (
-        data.isGuest ? (
-          <GuestReviewRoutineSection data={data} starter={data.starter} />
-        ) : (
-          <LoggedInReviewRoutineSection data={data} starter={data.starter} />
-        )
-      ) : null}
-
-      <CoachWelcomePrimaryCtaBlock />
-
-      {data.isGuest ? (
-        <CoachWelcomeSection delayMs={80}>
-          <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
-            <CardContent className="pt-6 text-sm leading-relaxed text-muted-foreground">
-              {tCoach("guestPreviewHint")}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="border-border/60 bg-muted/10">
+            <CardContent className="space-y-2 pt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+                {tReview("skillSection")}
+              </p>
+              <p className="text-sm font-medium">{skillLabel}</p>
             </CardContent>
           </Card>
+          <Card className="border-border/60 bg-muted/10">
+            <CardContent className="space-y-2 pt-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
+                {tReview("goalSection")}
+              </p>
+              <p className="text-sm font-medium">{goalLabel}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {data.photosSkipped ? (
+          <p className="text-sm text-muted-foreground">{tReview("photosSkipped")}</p>
+        ) : hasPhotos ? (
+          <section aria-label={tReview("photosSection")} className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {tReview("photosSection")}
+            </p>
+            <ReviewPhotoGrid
+              urls={photoUrls}
+              altLabel={(n) => tCheckIn("altPhoto", { n })}
+              eagerLoad
+              onOpen={setLightboxUrl}
+            />
+          </section>
+        ) : photosLost ? (
+          <p className="text-sm text-muted-foreground">{tReview("photosExpired")}</p>
+        ) : null}
+
+        {skinReadback ? (
+          <CoachWelcomeSkinReadback text={skinReadback} />
+        ) : null}
+
+        {data.starter ? (
+          <Card className="border-primary/20 bg-primary/[0.03]">
+            <CardContent className="space-y-3 pt-5 pb-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <p className="text-sm font-semibold">{tReview("routineSummaryTitle")}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {tReview("routineSummaryBody", { am: amCount, pm: pmCount })}
+                  </p>
+                  <div className="flex flex-wrap gap-3 pt-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Sun className="size-3.5 text-amber-600" aria-hidden />
+                      {tCoach("morning")}: {amCount}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Moon className="size-3.5 text-indigo-600" aria-hidden />
+                      {tCoach("evening")}: {pmCount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/onboarding/coach-welcome"
+                className={cn(
+                  buttonVariants({ variant: "default", size: "default" }),
+                  "inline-flex w-full gap-2 sm:w-auto",
+                )}
+                data-testid="review-view-full-routine"
+              >
+                {tReview("viewFullRoutine")}
+                <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {data.starter ? (
+          <>
+            <StarterRoutineSupportExtras
+              starter={data.starter}
+              skinReadback={skinReadback}
+            />
+            <StarterRoutineSafetySection starter={data.starter} />
+          </>
+        ) : null}
+
+        {data.profileId &&
+        data.profileId !== GUEST_COACH_PROFILE_ID &&
+        !data.isGuest ? (
+          <StarterRoutineFeedback profileId={data.profileId} compact />
+        ) : null}
+
+        {data.isGuest ? (
+          <CoachWelcomeSection delayMs={40}>
+            <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
+              <CardContent className="space-y-3 pt-6 text-sm leading-relaxed text-muted-foreground">
+                <p>{tCoach("guestPreviewHint")}</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Link
+                    href={buildAuthHrefWithNext("/register", GUEST_CLAIM_RETURN_PATH)}
+                    className={cn(
+                      buttonVariants({ variant: "default", size: "default" }),
+                      "justify-center",
+                    )}
+                  >
+                    {tCoach("guestSaveRoutineCta")}
+                  </Link>
+                  <Link
+                    href={buildAuthHrefWithNext("/login", GUEST_CLAIM_RETURN_PATH)}
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "default" }),
+                      "justify-center",
+                    )}
+                  >
+                    {tCoach("guestSignInExistingCta")}
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </CoachWelcomeSection>
+        ) : null}
+
+        <CoachWelcomeSection delayMs={80}>
+          {/* Archive footer: home only — avoid "review skin" self-link on this page. */}
+          <div className="flex justify-center">
+            <Link
+              href="/"
+              className="inline-flex min-h-10 items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+              {tCoach("ctaHome")}
+            </Link>
+          </div>
         </CoachWelcomeSection>
-      ) : null}
 
-      <CoachWelcomeSection delayMs={120}>
-        <CoachWelcomeCta isGuest={data.isGuest} />
-      </CoachWelcomeSection>
+        <CoachWelcomeSection delayMs={120} className="mt-4 border-t border-border/40 pt-6">
+          {completedLabel ? (
+            <CoachWelcomeCelebrationHeader
+              metaOnly
+              completedLabel={tReview("completedOn", { date: completedLabel })}
+              className="mb-2"
+            />
+          ) : null}
+          <p className="mb-1 inline-flex w-full items-center gap-2 text-[10px] leading-relaxed text-muted-foreground/70 sm:w-auto">
+            <Eye className="size-3 shrink-0" aria-hidden />
+            {tReview("readOnlyHint")}
+          </p>
+          <OnboardingDeleteSection
+            isGuest={data.isGuest}
+            onDeleted={onDeleted}
+            variant="subtle"
+          />
+        </CoachWelcomeSection>
 
-      <CoachWelcomeSection delayMs={160} className="mt-4 border-t border-border/40 pt-6">
-        <p className="mb-1 inline-flex w-full items-center gap-2 text-[10px] leading-relaxed text-muted-foreground/70 sm:w-auto">
-          <Eye className="size-3 shrink-0" aria-hidden />
-          {tReview("readOnlyHint")}
-        </p>
-        <OnboardingDeleteSection
-          isGuest={data.isGuest}
-          onDeleted={onDeleted}
-          variant="subtle"
-        />
-      </CoachWelcomeSection>
-
-      {lightboxUrl ? (
-        <ReviewPhotoLightbox
-          url={lightboxUrl}
-          closeLabel={tReview("closePhoto")}
-          onClose={closeLightbox}
-        />
-      ) : null}
+        {lightboxUrl ? (
+          <ReviewPhotoLightbox
+            url={lightboxUrl}
+            closeLabel={tReview("closePhoto")}
+            onClose={closeLightbox}
+          />
+        ) : null}
       </div>
-
-      <CoachWelcomeStickyBar />
     </>
-  );
-}
-
-function LoggedInReviewRoutineSection({
-  data,
-  starter: initialStarter,
-}: {
-  data: OnboardingReviewData;
-  starter: NonNullable<OnboardingReviewData["starter"]>;
-}) {
-  const tCoach = useTranslations("coachWelcome");
-
-  const initialPending = data.starterRoutinePending === true;
-  const { starter, isGeneratingRoutine, showFallbackBanner, routineJustUpdated } =
-    useStarterRoutineLive({
-      initialStarter,
-      initialPending,
-      isGuest: false,
-    });
-
-  return (
-    <section className="space-y-5">
-      <ReviewRoutineHeader />
-      <StarterRoutineGenerationNotice
-        isGeneratingRoutine={isGeneratingRoutine}
-        showFallbackBanner={showFallbackBanner}
-        isGuest={false}
-      />
-      <div
-        className={cn(
-          routineJustUpdated &&
-            "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700 sm:p-3",
-        )}
-      >
-        <StarterRoutineCards
-          starter={starter}
-          noStepsLabel={tCoach("noSteps")}
-          featured
-          sectionTitle={tCoach("routineSectionTitle")}
-          sectionSubtitle={tCoach("routineSectionSub")}
-          concerns={data.concerns}
-          skinType={data.skinType ?? undefined}
-        />
-      </div>
-      <StarterRoutineSupportExtras
-        starter={starter}
-        skinReadback={
-          data.coachingNotes?.trim() || starter.skin_readback?.trim() || ""
-        }
-      />
-      {!starterHasFoldableGuidance(starter) &&
-      starter.product_suggestions &&
-      starter.product_suggestions.length > 0 ? (
-        <ProductSuggestionsCard
-          suggestions={starter.product_suggestions}
-          source="starter_routine"
-          contextId={
-            data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
-              ? data.profileId
-              : undefined
-          }
-          maxVisible={2}
-        />
-      ) : null}
-      <StarterRoutineSafetySection starter={starter} />
-      {data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID ? (
-        <StarterRoutineFeedback profileId={data.profileId} compact />
-      ) : null}
-    </section>
-  );
-}
-
-function GuestReviewRoutineSection({
-  data,
-  starter: initialStarter,
-}: {
-  data: OnboardingReviewData;
-  starter: NonNullable<OnboardingReviewData["starter"]>;
-}) {
-  const tCoach = useTranslations("coachWelcome");
-  const session = readCoachWelcomeSession();
-  const initialPending =
-    data.starterRoutinePending === true || session?.starterRoutinePending === true;
-
-  const { starter: liveStarter, isGeneratingRoutine, showFallbackBanner, routineJustUpdated } =
-    useStarterRoutineLive({
-      initialStarter,
-      initialPending,
-      isGuest: true,
-    });
-
-  return (
-    <section className="space-y-5">
-      <ReviewRoutineHeader />
-      <StarterRoutineGenerationNotice
-        isGeneratingRoutine={isGeneratingRoutine}
-        showFallbackBanner={showFallbackBanner}
-        isGuest
-      />
-      <div
-        className={cn(
-          routineJustUpdated &&
-            "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700 sm:p-3",
-        )}
-      >
-        <StarterRoutineCards
-          starter={liveStarter}
-          noStepsLabel={tCoach("noSteps")}
-          featured
-          sectionTitle={tCoach("routineSectionTitle")}
-          sectionSubtitle={tCoach("routineSectionSub")}
-          carePhaseHint={session?.reviewSummary?.skin_analysis?.phase}
-          concerns={
-            session?.reviewSummary?.skin_analysis?.main_concerns?.length
-              ? session.reviewSummary.skin_analysis.main_concerns
-              : data.concerns
-          }
-          severity={session?.reviewSummary?.skin_analysis?.severity_level}
-          regions={session?.reviewSummary?.skin_analysis?.primary_regions}
-          skinType={data.skinType ?? undefined}
-        />
-      </div>
-      <StarterRoutineSupportExtras
-        starter={liveStarter}
-        skinReadback={
-          data.coachingNotes?.trim() || liveStarter.skin_readback?.trim() || ""
-        }
-      />
-      {!starterHasFoldableGuidance(liveStarter) &&
-      liveStarter.product_suggestions &&
-      liveStarter.product_suggestions.length > 0 ? (
-        <ProductSuggestionsCard
-          suggestions={liveStarter.product_suggestions}
-          source="starter_routine"
-          maxVisible={2}
-        />
-      ) : null}
-      <StarterRoutineSafetySection starter={liveStarter} />
-    </section>
-  );
-}
-
-function ReviewRoutineHeader() {
-  const tReview = useTranslations("onboarding.review");
-
-  return (
-    <div className="flex items-center justify-end gap-3">
-      <Link
-        href="/onboarding/coach-welcome"
-        className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "shrink-0 text-xs")}
-      >
-        {tReview("viewFullRoutine")}
-      </Link>
-    </div>
   );
 }
 
@@ -535,7 +435,6 @@ function ReviewPhotoLightbox({
         onClose();
         return;
       }
-      // Single focusable control — keep Tab inside the lightbox.
       if (e.key === "Tab") {
         e.preventDefault();
         closeRef.current?.focus();

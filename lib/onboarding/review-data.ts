@@ -122,4 +122,7 @@ export function clearOnboardingSessionCache(): void {
   } catch {
     /* ignore */
   }
+  void import("@/lib/onboarding/guest-photo-idb").then((m) =>
+    m.clearGuestClaimPhotos(),
+  );
 }

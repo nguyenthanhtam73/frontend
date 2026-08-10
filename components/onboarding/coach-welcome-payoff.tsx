@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
+/** Kept for onboarding step-3 payoff — not used on the slim welcome header. */
 export function CoachWelcomeAchievementCard({
   title,
   line,
@@ -77,35 +78,43 @@ export function CoachWelcomeNextStepCard({
   );
 }
 
-/** Celebration header — badge, title, achievement card. */
+/** Slim celebration — one headline + one line. Timestamp is optional meta. */
 export function CoachWelcomeCelebrationHeader({
   completedLabel,
   className,
+  metaOnly,
 }: {
   completedLabel?: string;
   className?: string;
+  /** Render only the muted timestamp (footer meta). */
+  metaOnly?: boolean;
 }) {
   const t = useTranslations("coachWelcome");
   const tReview = useTranslations("onboarding.review");
 
+  if (metaOnly) {
+    if (!completedLabel) return null;
+    return (
+      <p className={cn("text-[11px] text-muted-foreground/80", className)}>
+        {completedLabel}
+      </p>
+    );
+  }
+
   return (
     <header
-      className={cn("space-y-3 text-center sm:space-y-3.5 sm:text-left", className)}
+      className={cn("space-y-2 text-center sm:space-y-2.5 sm:text-left", className)}
     >
       <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
         <CheckCircle2 className="size-4" aria-hidden />
         {tReview("badge")}
       </div>
-      <h1 className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+      <h1 className="text-xl font-bold leading-tight tracking-tight sm:text-2xl">
         {t("celebrationTitle")}
       </h1>
-      <p className="text-sm font-semibold leading-snug text-foreground sm:text-base">
+      <p className="text-sm leading-snug text-muted-foreground sm:text-[15px]">
         {t("celebrationLine")}
       </p>
-      <CoachWelcomeAchievementCard title={t("achievementTitle")} line={t("achievementLine")} />
-      {completedLabel ? (
-        <p className="text-xs text-muted-foreground">{completedLabel}</p>
-      ) : null}
     </header>
   );
 }

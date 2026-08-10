@@ -303,4 +303,114 @@ test.describe("Onboarding smoke (P1 + P2)", () => {
       "server onboarding_skipped must keep home ungated after local clear",
     ).not.toMatch(/\/onboarding/);
   });
+
+  test("5) Guest sticky ?next= + login claims trial routine", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const stamp = Date.now().toString(36);
+    const markAm = `GUEST-AM-${stamp}`;
+    const markPm = `GUEST-PM-${stamp}`;
+
+    const guestPayload = {
+      profileId: "guest-preview",
+      guestPreview: true,
+      locale: "vi",
+      starterRoutine: {
+        morning: [markAm],
+        evening: [markPm],
+        week_notes: "week",
+        safety_notes: "safety",
+        encouragement: "keep going",
+        skin_readback: "readback",
+        rationale: "why",
+        closing_reminder: "reminder",
+      },
+      reviewSummary: {
+        skin_type: "combo",
+        undertone: "prefer_not",
+        goal: "clear_acne",
+        skill_level: "beginner",
+        body_concerns: ["acne"],
+        photos_skipped: true,
+        completed_at: new Date().toISOString(),
+        skin_analysis: {
+          skin_type_guess: "combo",
+          undertone_guess: "prefer_not",
+          concerns: ["acne"],
+          suggested_goal: "clear_acne",
+          barrier_signal: "unknown",
+          confidence: 0.7,
+          coaching_notes: "Tóm lại da ổn — routine dịu.",
+          non_diagnostic: "",
+          photo_quality: { sufficient: true, tips: [] },
+          model_used: "e2e",
+          severity_level: "mild",
+          primary_regions: ["cheeks"],
+          phase: "calm_first",
+          main_concerns: ["mụn"],
+        },
+      },
+      coachingNotes: "Tóm lại da ổn — routine dịu.",
+    };
+
+    await page.addInitScript((payload) => {
+      try {
+        sessionStorage.setItem(
+          "dadiary_coach_welcome_v1",
+          JSON.stringify(payload),
+        );
+        localStorage.setItem("hasCompletedOnboardingTrial", "true");
+        document.cookie =
+          "dadiary_guest_onboarding_trial=1; path=/; max-age=31536000; SameSite=Lax";
+      } catch {
+        /* ignore */
+      }
+    }, guestPayload);
+
+    await page.goto("/onboarding/coach-welcome");
+    await expect(page.getByTestId("coach-welcome-sticky-cta")).toBeVisible({
+      timeout: 20_000,
+    });
+    const stickyHref = await page
+      .getByTestId("coach-welcome-sticky-cta")
+      .locator("a")
+      .getAttribute("href");
+    expect(
+      stickyHref,
+      "guest sticky must send next=coach-welcome",
+    ).toMatch(/next=.*onboarding%2Fcoach-welcome|next=.*onboarding\/coach-welcome/);
+
+    const session = await registerFreeUser(request, {
+      password: defaultPassword(),
+    });
+    expect(
+      (await fetchMe(request, session.accessToken)).onboarding_completed,
+    ).toBeFalsy();
+
+    await loginViaUi(page, session.email, session.password, {
+      expectPath: /\/onboarding\/coach-welcome/,
+    });
+
+    await expect(page.getByTestId("coach-welcome-morning-0")).toContainText(
+      markAm,
+      { timeout: 20_000 },
+    );
+    await expect(page.getByTestId("coach-welcome-evening-0")).toContainText(
+      markPm,
+    );
+
+    const meDone = await fetchMe(request, session.accessToken);
+    expect(
+      meDone.onboarding_completed,
+      "claim on login must flip onboarding_completed",
+    ).toBeTruthy();
+
+    const skin = await fetchSkinProfile(request, session.accessToken);
+    assertSnapshotContainsEditedSteps(skin, {
+      morning: markAm,
+      evening: markPm,
+    });
+  });
 });

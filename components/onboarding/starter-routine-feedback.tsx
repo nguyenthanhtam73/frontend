@@ -46,7 +46,6 @@ export function StarterRoutineFeedback({
         error: tFb("error"),
         needLogin: tFb("needLogin"),
       }}
-      showCommentUpfront
     />
   );
 }

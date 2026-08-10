@@ -58,4 +58,9 @@ export type CoachWelcomePayload = {
   previewAccessToken?: string;
   /** True for local guest trial (never call /profile/skin). */
   guestPreview?: boolean;
+  /**
+   * Guest face photos live in IndexedDB (not sessionStorage data URLs).
+   * Coach-welcome / claim hydrate from IDB when this is true.
+   */
+  guestPhotosIdb?: boolean;
 };

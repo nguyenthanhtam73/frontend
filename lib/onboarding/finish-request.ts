@@ -6,8 +6,13 @@ import {
   OnboardingAiError,
   parseJsonSafe,
 } from "@/lib/onboarding/onboarding-ai";
-import { ONBOARDING_FINISH_TIMEOUT_MS, ONBOARDING_MAX_PHOTOS } from "@/lib/onboarding/constants";
+import {
+  ONBOARDING_FINISH_TIMEOUT_MS,
+  ONBOARDING_MAX_PHOTOS,
+  ONBOARDING_PHOTO_ATTACH_TIMEOUT_MS,
+} from "@/lib/onboarding/constants";
 import type { PhotoItem } from "@/lib/stores/onboarding-store";
+import type { SkinProfileResponse } from "@/lib/types/profile";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 
 export type OnboardingCompleteResult = {
@@ -97,6 +102,35 @@ export async function postOnboardingComplete(
     starterRoutinePending: payload.data?.starter_routine_pending === true,
     photoUrls: payload.data?.profile?.photo_urls,
   };
+}
+
+/** Attach face photos after a fast JSON onboarding complete (guest claim). */
+export async function postOnboardingPhotos(
+  photos: PhotoItem[],
+  token: string,
+): Promise<string[]> {
+  if (!photos.length) return [];
+  const fd = new FormData();
+  photos.slice(0, ONBOARDING_MAX_PHOTOS).forEach((p) => {
+    fd.append("images", p.file);
+  });
+  const res = await fetchOnboardingAi(
+    `${apiBaseUrl}/api/v1/profile/onboarding/photos`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    },
+    ONBOARDING_PHOTO_ATTACH_TIMEOUT_MS,
+  );
+  const payload = (await parseJsonSafe(res)) as {
+    success?: boolean;
+    data?: SkinProfileResponse;
+  };
+  if (!res.ok || !payload.data) {
+    throw new OnboardingAiError("server");
+  }
+  return payload.data.photo_urls ?? [];
 }
 
 export async function postGuestPreviewComplete(

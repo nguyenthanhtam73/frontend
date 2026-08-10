@@ -20,6 +20,13 @@ export type OnboardingFinishBody = {
   /** Present when the user edited AM/PM in step 2 — persisted server-side. */
   morning?: string[];
   evening?: string[];
+  /** Optional coach copy when locking AM/PM (guest claim keeps trial text). */
+  week_notes?: string;
+  safety_notes?: string;
+  encouragement?: string;
+  skin_readback?: string;
+  rationale?: string;
+  closing_reminder?: string;
 };
 
 export function bodyConcernsFromStore(ob: OnboardingState): string[] {

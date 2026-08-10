@@ -66,6 +66,22 @@ export function OnboardingPageClient() {
 
     const guestReview = loadGuestReviewFromSession();
     if (guestReview) {
+      if (
+        !guestReview.photosSkipped &&
+        guestReview.photoUrls.length === 0
+      ) {
+        try {
+          const { loadGuestClaimPhotos } = await import(
+            "@/lib/onboarding/guest-photo-idb"
+          );
+          const items = await loadGuestClaimPhotos();
+          if (items.length) {
+            guestReview.photoUrls = items.map((p) => p.preview);
+          }
+        } catch {
+          /* ignore */
+        }
+      }
       setReviewData(guestReview);
       setMode("review");
       return;
