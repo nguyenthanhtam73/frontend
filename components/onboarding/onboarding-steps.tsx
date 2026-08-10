@@ -252,8 +252,11 @@ export function OnboardingStepSkinProfile({
           />
           <ProductGuidanceSection
             items={step1Guidance}
-            collapseOnMobile
-            maxBenefits={2}
+            commerceOnly
+            forceExpanded
+            enrichContext={{
+              phase: resolveCarePhaseFromAnalysis(aiSnapshot),
+            }}
           />
           <AiDisclaimer variant="short" />
           <details className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm">

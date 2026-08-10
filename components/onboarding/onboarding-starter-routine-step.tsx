@@ -5,6 +5,7 @@ import {
   ArrowUp,
   CheckCircle2,
   ChevronRight,
+  ExternalLink,
   Moon,
   Pencil,
   Plus,
@@ -16,8 +17,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FriendlyNotice } from "@/components/onboarding/onboarding-ui";
-import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import { Button } from "@/components/ui/button";
+import { logAffiliateClick } from "@/lib/api/affiliate";
+import {
+  attachGuidanceToRoutineSteps,
+  countRoutineAffiliateCtas,
+  type RoutineStepProductTip,
+} from "@/lib/onboarding/attach-guidance-to-routine";
+import { enrichProductGuidanceItems } from "@/lib/onboarding/enrich-product-guidance";
 import {
   filterGuidanceForPhase,
   guidanceMentionsNoPick,
@@ -31,6 +38,8 @@ import {
 } from "@/lib/onboarding/parse-routine-step";
 import { buildRoutineRationale } from "@/lib/onboarding/routine-rationale";
 import { useManualProductGuidance } from "@/lib/onboarding/use-manual-product-guidance";
+import { Feature } from "@/lib/premium/features";
+import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
 
@@ -117,13 +126,16 @@ function RoutineStepCard({
   index,
   period,
   editing,
+  productTip,
 }: {
   stepText: string;
   index: number;
   period: "morning" | "evening";
   editing: boolean;
+  productTip?: RoutineStepProductTip | null;
 }) {
   const t = useTranslations("onboarding");
+  const tGuide = useTranslations("onboarding.productGuidance");
   const ob = useOnboardingStore();
   const [expanded, setExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
@@ -131,6 +143,7 @@ function RoutineStepCard({
   const parsed = parseRoutineStep(stepText);
   const Icon = routineStepIcon(parsed.icon);
   const hasDetail = Boolean(parsed.detail && parsed.detail !== parsed.title);
+  const affiliate = productTip?.affiliate;
 
   useEffect(() => {
     if (!hasDetail || expanded) return;
@@ -201,8 +214,12 @@ function RoutineStepCard({
 
   return (
     <li
-      className="rounded-lg border border-border/60 bg-background/90 px-2.5 py-2.5"
+      className={cn(
+        "rounded-lg border bg-background/90 px-2.5 py-2.5",
+        affiliate ? "border-violet-500/30" : "border-border/60",
+      )}
       data-testid={`onboarding-starter-step-${period}-${index}`}
+      data-guidance-step={productTip?.guidanceStep || undefined}
     >
       <div className="flex items-start gap-2.5">
         <span
@@ -232,7 +249,7 @@ function RoutineStepCard({
               <p
                 ref={detailRef}
                 className={cn(
-                  "text-xs leading-relaxed text-muted-foreground",
+                  "text-sm leading-relaxed text-muted-foreground",
                   !expanded && "line-clamp-2",
                 )}
               >
@@ -242,7 +259,7 @@ function RoutineStepCard({
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary"
+                  className="mt-0.5 inline-flex items-center gap-0.5 text-xs font-medium text-primary"
                 >
                   {expanded ? t("step2.hideDetail") : t("step2.viewStepDetail")}
                   <ChevronRight
@@ -251,6 +268,51 @@ function RoutineStepCard({
                   />
                 </button>
               ) : null}
+            </div>
+          ) : null}
+
+          {affiliate ? (
+            <div className="mt-2 space-y-1" data-testid="guidance-card">
+              <p className="text-sm font-semibold leading-snug text-violet-900 dark:text-violet-100">
+                {[affiliate.brand, affiliate.product_name].filter(Boolean).join(" · ")}
+              </p>
+              {productTip?.why ? (
+                <p
+                  className="text-sm leading-relaxed text-muted-foreground line-clamp-2"
+                  data-testid="guidance-why"
+                >
+                  {productTip.why}
+                </p>
+              ) : null}
+              <a
+                href={affiliate.affiliate_link}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
+                data-testid="affiliate-cta"
+                data-legacy-testid="onboarding-affiliate-cta"
+                data-affiliate-product-id={affiliate.product_id}
+                data-affiliate-source="starter_routine"
+                data-affiliate-step={productTip?.guidanceStep || ""}
+                onClick={() => {
+                  void logAffiliateClick(
+                    {
+                      product_name: affiliate.product_name,
+                      brand: affiliate.brand,
+                      reason: affiliate.why,
+                      affiliate_link: affiliate.affiliate_link,
+                      price_range: affiliate.price_range,
+                      priority: "high",
+                      product_id: affiliate.product_id,
+                    },
+                    "starter_routine",
+                  );
+                }}
+              >
+                {tGuide("viewShopee")}
+                {affiliate.price_range ? ` · ${affiliate.price_range}` : ""}
+                <ExternalLink className="size-3.5" aria-hidden />
+              </a>
             </div>
           ) : null}
         </div>
@@ -275,11 +337,16 @@ function RoutinePeriodSection({
   steps,
   editing,
   carePhase,
+  productTips,
+  emptyCommerceHint,
 }: {
   period: "morning" | "evening";
   steps: string[];
   editing: boolean;
   carePhase: StarterCarePhase;
+  productTips?: (RoutineStepProductTip | null)[];
+  /** Free + 0 CTAs: one muted line under AM only. */
+  emptyCommerceHint?: string | null;
 }) {
   const t = useTranslations("onboarding");
   const ob = useOnboardingStore();
@@ -348,6 +415,7 @@ function RoutinePeriodSection({
               index={i}
               period={period}
               editing={editing}
+              productTip={productTips?.[i]}
             />
           ))}
         </ol>
@@ -364,6 +432,15 @@ function RoutinePeriodSection({
             {t("routineStep.addStep")}
           </Button>
         )}
+
+        {emptyCommerceHint ? (
+          <p
+            className="px-0.5 pt-0.5 text-xs leading-relaxed text-muted-foreground"
+            data-testid="onboarding-commerce-empty-hint"
+          >
+            {emptyCommerceHint}
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -460,6 +537,44 @@ export function OnboardingStepStarterRoutine({
     [fromPhotos, manualGuidance.result, carePhase],
   );
 
+  const noAds = useFeatureGate(Feature.NoAds);
+  const hideCommerce =
+    (noAds.allowed && !noAds.isLoading) ||
+    (noAds.isLoading && noAds.isPremium);
+
+  const enrichedGuidance = useMemo(
+    () =>
+      enrichProductGuidanceItems(guidanceItems, {
+        locale,
+        phase: carePhase === "manual" ? "calm_first" : carePhase,
+        severity:
+          typeof aiSnapshot?.severity_level === "string"
+            ? aiSnapshot.severity_level
+            : undefined,
+        regions: aiSnapshot?.primary_regions,
+        concerns: aiConcernTags,
+      }),
+    [guidanceItems, locale, carePhase, aiSnapshot, aiConcernTags],
+  );
+
+  const stepTips = useMemo(() => {
+    if (!routine) {
+      return { morning: [] as (RoutineStepProductTip | null)[], evening: [] as (RoutineStepProductTip | null)[] };
+    }
+    return attachGuidanceToRoutineSteps(
+      routine.morning,
+      routine.evening,
+      enrichedGuidance,
+      hideCommerce,
+      carePhase === "manual" ? "calm_first" : carePhase,
+    );
+  }, [routine, enrichedGuidance, hideCommerce, carePhase]);
+
+  const affiliateCtaCount = useMemo(
+    () => countRoutineAffiliateCtas(stepTips),
+    [stepTips],
+  );
+
   const careNote = useMemo(
     () =>
       starterCareNote(goal, locale, carePhase, {
@@ -492,15 +607,6 @@ export function OnboardingStepStarterRoutine({
     ro?.observe(el);
     return () => ro?.disconnect();
   }, [summaryLine, summaryExpanded]);
-
-  const [maxBenefits, setMaxBenefits] = useState(2);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 640px)");
-    const apply = () => setMaxBenefits(mq.matches ? 3 : 2);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
 
   useEffect(() => {
     if (wasEditingRef.current && !editing && userEdited) {
@@ -607,38 +713,25 @@ export function OnboardingStepStarterRoutine({
         </div>
       )}
 
-      {guidanceItems && guidanceItems.length > 0 ? (
-        <ProductGuidanceSection
-          items={guidanceItems}
-          source="starter_routine"
-          forceExpanded
-          compactMobile
-          maxBenefits={maxBenefits}
-          sectionTestId="starter-product-guidance"
-          enrichContext={{
-            phase: carePhase === "manual" ? "calm_first" : carePhase,
-            severity:
-              typeof aiSnapshot?.severity_level === "string"
-                ? aiSnapshot.severity_level
-                : undefined,
-            regions: aiSnapshot?.primary_regions,
-            concerns: aiConcernTags,
-          }}
-        />
-      ) : null}
-
-      <div className="space-y-2.5">
+      <div className="space-y-2.5" data-testid="starter-product-guidance">
         <RoutinePeriodSection
           period="morning"
           steps={routine.morning}
           editing={editing}
           carePhase={carePhase}
+          productTips={stepTips.morning}
+          emptyCommerceHint={
+            !hideCommerce && affiliateCtaCount === 0
+              ? t("step2.commerceEmptyHint")
+              : null
+          }
         />
         <RoutinePeriodSection
           period="evening"
           steps={routine.evening}
           editing={editing}
           carePhase={carePhase}
+          productTips={stepTips.evening}
         />
       </div>
 

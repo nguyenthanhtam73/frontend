@@ -109,19 +109,15 @@ test.describe("Affiliate funnel smoke", () => {
       /dày|dense/i,
     );
 
+    // Step 1 commerceOnly: only catalog CTA cards (≤2), not full role wall.
     await expect(guidanceCard(page, "cleanse")).toBeVisible();
-    await expect(
-      guidanceCard(page, "moisturize"),
-    ).toBeVisible();
     await expect(guidanceCard(page, "spf")).toBeVisible();
-
-    // calm_first: no treat commerce card (caution may mention “chưa BHA”).
     await expect(guidanceCard(page, "treat")).toHaveCount(0);
+
     const guidanceText = (
       await guidanceSection(page).innerText()
     ).toLowerCase();
     expect(guidanceText).not.toMatch(/benzoyl|miracle toner/);
-    expect(guidanceText).toMatch(/chưa bha|no bha|làm dịu trước|calm first/);
 
     const ctas = page.locator(
       '[data-testid="affiliate-cta"], [data-testid="onboarding-affiliate-cta"]',
@@ -163,11 +159,8 @@ test.describe("Affiliate funnel smoke", () => {
     await waitForUsageGate(page);
     await injectAiAnalyzeFixture(page, denseCalmFirstAnalyzeFixture());
 
-    await expect(guidanceSection(page)).toBeVisible({
-      timeout: 15_000,
-    });
-    // Role tips still render (cleanse/moisturize/SPF); commerce stripped.
-    await expect(guidanceCard(page, "cleanse")).toBeVisible();
+    // Premium no_ads + commerceOnly → no product-guidance strip on Step 1.
+    await expect(guidanceSection(page)).toHaveCount(0);
     await expect
       .poll(async () => affiliateCtas(page).count(), {
         timeout: 8_000,
@@ -293,7 +286,7 @@ test.describe("Affiliate funnel smoke", () => {
     expect(badgeText).not.toMatch(/\+\s*ảnh|\+\s*photos/);
 
     // Manual path may fetch answer-driven guidance — wait briefly, then assert order
-    // (badge → optional guidance → AM), not a brittle absolute y threshold.
+    // (badge → AM). Product tips/CTAs are folded into AM/PM (starter-product-guidance wrapper).
     const guidance = page.getByTestId("starter-product-guidance");
     await guidance.waitFor({ state: "visible", timeout: 8_000 }).catch(() => {});
     const badgeBox = await badge.boundingBox();
@@ -301,12 +294,6 @@ test.describe("Affiliate funnel smoke", () => {
     expect(badgeBox, "badge missing geometry").toBeTruthy();
     expect(amBox, "AM section missing geometry").toBeTruthy();
     expect(badgeBox!.y).toBeLessThan(amBox!.y);
-    if (await guidance.isVisible()) {
-      const gBox = await guidance.boundingBox();
-      expect(gBox, "guidance missing geometry").toBeTruthy();
-      expect(badgeBox!.y).toBeLessThan(gBox!.y);
-      expect(gBox!.y).toBeLessThan(amBox!.y);
-    }
 
     // clear_acne manual: calm evening — no retinol/acid tick step.
     const eveningBlob = (await pm.innerText()).toLowerCase();
@@ -362,18 +349,15 @@ test.describe("Affiliate funnel smoke", () => {
       "calm_first",
     );
 
-    // Guidance remounted on Step 2 from analyze state (no new API).
+    // Step 2: guidance folded into AM/PM — no separate product-guidance block.
     await expect(page.getByTestId("starter-product-guidance")).toBeVisible();
     await expect(guidanceCard(page, "treat")).toHaveCount(0);
     await expect(
-      guidanceCard(page, "cleanse").getByTestId("guidance-why"),
-    ).toContainText(/viêm|má|dịu|đỏ/i);
-    await expect(
-      guidanceCard(page, "cleanse").getByTestId("guidance-benefits"),
+      page.locator('[data-guidance-step="cleanse"]').first(),
     ).toBeVisible();
     await expect(
-      guidanceCard(page, "cleanse").getByTestId("guidance-caution"),
-    ).toContainText(/không nặn|bha|retinoid/i);
+      page.locator('[data-testid="affiliate-cta"]'),
+    ).toBeVisible({ timeout: 15_000 });
     const ctas = affiliateCtas(page);
     await expect(ctas.first()).toBeVisible({ timeout: 15_000 });
     expect(await ctas.count()).toBeLessThanOrEqual(2);
@@ -388,17 +372,12 @@ test.describe("Affiliate funnel smoke", () => {
     expect(eveningBlob).not.toMatch(/retinol|\bbha\b|retinoid|acid/);
     await expect(page.getByTestId("onboarding-care-note-no-pick")).toBeVisible();
 
-    // Relative order: summary → guidance (with CTAs) → AM — not a raw y cap.
+    // Relative order: summary → AM (with optional CTAs) — guidance is inside AM/PM.
     const summaryBox = await summary.boundingBox();
-    const guidanceBox = await page
-      .getByTestId("starter-product-guidance")
-      .boundingBox();
     const amBox = await page.getByTestId("onboarding-starter-morning").boundingBox();
     expect(summaryBox).toBeTruthy();
-    expect(guidanceBox).toBeTruthy();
     expect(amBox).toBeTruthy();
-    expect(summaryBox!.y).toBeLessThan(guidanceBox!.y);
-    expect(guidanceBox!.y).toBeLessThan(amBox!.y);
+    expect(summaryBox!.y).toBeLessThan(amBox!.y);
   });
 
   test("6) can_add_active → Step 2 PM at most one optional active", async ({

@@ -106,6 +106,7 @@ function GuidanceCard({
   compactMobile,
   smUp,
   carePhase,
+  tipOnly = false,
 }: {
   item: ProductGuidanceItemDTO;
   idx: number;
@@ -119,11 +120,13 @@ function GuidanceCard({
   compactMobile: boolean;
   smUp: boolean;
   carePhase?: string;
+  /** Step 1 compact: title + why + CTA only (no benefits/how/caution). */
+  tipOnly?: boolean;
 }) {
   const affiliate = hasAffiliate(item, hideCommerce);
   // Mobile compact: card 0 expanded; later cards collapsed (CTA + role) —
   // keep title, why, and Shopee link visible; tuck benefits/caution behind toggle.
-  const preferCollapsed = compactMobile && !smUp && idx > 0;
+  const preferCollapsed = !tipOnly && compactMobile && !smUp && idx > 0;
   const [detailsOpen, setDetailsOpen] = useState(!preferCollapsed);
 
   useEffect(() => {
@@ -167,24 +170,29 @@ function GuidanceCard({
     item.brand,
     item.product_name,
   );
-  const benefits = (item.benefits ?? [])
-    .map((b) =>
-      scrubText(
-        b,
-        hideCommerce,
-        locale,
-        "benefit",
-        item.brand,
-        item.product_name,
-      ),
-    )
-    .filter(Boolean)
-    .slice(0, maxBenefits);
+  const benefits = tipOnly
+    ? []
+    : (item.benefits ?? [])
+        .map((b) =>
+          scrubText(
+            b,
+            hideCommerce,
+            locale,
+            "benefit",
+            item.brand,
+            item.product_name,
+          ),
+        )
+        .filter(Boolean)
+        .slice(0, maxBenefits);
 
   // Compact Step 2: keep how off the first mobile viewport (sm+ still shows it).
   const showHow =
-    Boolean(how) && variant !== "coach" && (!compactMobile || smUp);
-  const showExtras = detailsOpen || !preferCollapsed;
+    !tipOnly &&
+    Boolean(how) &&
+    variant !== "coach" &&
+    (!compactMobile || smUp);
+  const showExtras = !tipOnly && (detailsOpen || !preferCollapsed);
   const hasCollapsibleExtras =
     preferCollapsed && (benefits.length > 0 || Boolean(caution) || Boolean(how));
 
@@ -199,31 +207,33 @@ function GuidanceCard({
       data-guidance-compact={preferCollapsed && !detailsOpen ? "1" : "0"}
     >
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+        <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           {stepLabel}
         </span>
         {affiliate ? (
           <Badge
             variant="outline"
-            className="border-violet-400/40 bg-violet-500/10 text-[10px] uppercase tracking-wider text-violet-800 dark:text-violet-200"
+            className="border-violet-400/40 bg-violet-500/10 text-[11px] uppercase tracking-wider text-violet-800 dark:text-violet-200"
           >
             {t("affiliateBadge")}
           </Badge>
         ) : (
           <Badge
             variant="outline"
-            className="text-[10px] uppercase tracking-wider"
+            className="text-[11px] uppercase tracking-wider"
           >
             {t("genericBadge")}
           </Badge>
         )}
       </div>
-      <p className="text-sm font-semibold leading-snug">{title}</p>
+      <p className="text-base font-semibold leading-snug">{title}</p>
       {why ? (
         <p
           className={cn(
-            "mt-1.5 text-xs leading-relaxed text-muted-foreground",
-            preferCollapsed && !detailsOpen && "line-clamp-2",
+            "mt-1.5 text-sm leading-relaxed text-muted-foreground",
+            (preferCollapsed && !detailsOpen) || tipOnly
+              ? "line-clamp-2"
+              : undefined,
           )}
           data-testid="guidance-why"
         >
@@ -238,14 +248,14 @@ function GuidanceCard({
         <>
           {benefits.length ? (
             <div className="mt-1.5" data-testid="guidance-benefits">
-              <p className="text-[11px] font-medium text-foreground/80">
+              <p className="text-xs font-medium text-foreground/80">
                 {t("benefitsLabel")}
               </p>
               <ul className="mt-0.5 space-y-0.5">
                 {benefits.map((b) => (
                   <li
                     key={b}
-                    className="text-xs leading-relaxed text-foreground/90"
+                    className="text-sm leading-relaxed text-foreground/90"
                   >
                     · {b}
                   </li>
@@ -255,7 +265,7 @@ function GuidanceCard({
           ) : null}
           {showHow ? (
             <p
-              className="mt-1.5 text-xs leading-relaxed text-muted-foreground"
+              className="mt-1.5 text-sm leading-relaxed text-muted-foreground"
               data-testid="guidance-how"
             >
               <span className="font-medium text-foreground/80">
@@ -266,7 +276,7 @@ function GuidanceCard({
           ) : null}
           {caution ? (
             <p
-              className="mt-1.5 text-xs leading-relaxed text-amber-800 dark:text-amber-200"
+              className="mt-1.5 text-sm leading-relaxed text-amber-800 dark:text-amber-200"
               data-testid="guidance-caution"
             >
               <span className="font-medium">{t("cautionLabel")}: </span>
@@ -280,7 +290,7 @@ function GuidanceCard({
         <button
           type="button"
           onClick={() => setDetailsOpen((v) => !v)}
-          className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] font-medium text-primary"
+          className="mt-1.5 inline-flex items-center gap-0.5 text-xs font-medium text-primary"
           data-testid="guidance-toggle-details"
         >
           {detailsOpen ? t("lessDetails") : t("moreDetails")}
@@ -343,6 +353,11 @@ export function ProductGuidanceSection({
    * title + why (+ CTA link) until “more details”. How hidden on xs.
    */
   compactMobile = false,
+  /**
+   * Step 1: only show catalog-matched CTA cards (≤2), each with title + why + link.
+   * Hides when Premium no_ads or when nothing matched.
+   */
+  commerceOnly = false,
   maxBenefits = 4,
   enrichContext,
   sectionTestId = "onboarding-product-guidance",
@@ -356,6 +371,7 @@ export function ProductGuidanceSection({
   collapseOnMobile?: boolean;
   forceExpanded?: boolean;
   compactMobile?: boolean;
+  commerceOnly?: boolean;
   maxBenefits?: number;
   /** Optional analyze context for client-side copy fill. */
   enrichContext?: {
@@ -371,8 +387,12 @@ export function ProductGuidanceSection({
   const t = variant === "coach" ? tCoach : tOnb;
   const locale = useLocale();
   const noAds = useFeatureGate(Feature.NoAds);
-  // Hide CTAs while plan is loading so Premium never flashes Shopee / brand names.
-  const hideCommerce = noAds.isLoading || noAds.allowed;
+  // Hide Shopee only for confirmed Premium no_ads (or known Premium while
+  // /me/usage is still loading). Never treat bare isLoading as Premium — that
+  // was hiding Free CTAs behind “Gợi ý chung”.
+  const hideCommerce =
+    (noAds.allowed && !noAds.isLoading) ||
+    (noAds.isLoading && noAds.isPremium);
   const smUp = useIsSmUp();
   const carePhase = enrichContext?.phase;
 
@@ -388,21 +408,30 @@ export function ProductGuidanceSection({
     [items, locale, enrichContext],
   );
 
-  const list = enriched.filter(
-    (i) => i.name_or_category?.trim() || i.product_name?.trim() || i.why?.trim(),
-  );
+  const list = useMemo(() => {
+    const base = enriched.filter(
+      (i) =>
+        i.name_or_category?.trim() || i.product_name?.trim() || i.why?.trim(),
+    );
+    if (!commerceOnly) return base;
+    if (hideCommerce) return [];
+    return base
+      .filter((i) => Boolean(i.affiliate_product_id && i.affiliate_link?.trim()))
+      .slice(0, 2);
+  }, [enriched, commerceOnly, hideCommerce]);
+
   const hasVisibleCTA =
     !hideCommerce &&
     list.some((i) => Boolean(i.affiliate_product_id && i.affiliate_link?.trim()));
   const [open, setOpen] = useState(
-    forceExpanded || !collapseOnMobile || hasVisibleCTA,
+    forceExpanded || !collapseOnMobile || hasVisibleCTA || commerceOnly,
   );
 
   useEffect(() => {
-    if (forceExpanded || (collapseOnMobile && hasVisibleCTA)) {
+    if (forceExpanded || commerceOnly || (collapseOnMobile && hasVisibleCTA)) {
       setOpen(true);
     }
-  }, [collapseOnMobile, hasVisibleCTA, forceExpanded]);
+  }, [collapseOnMobile, hasVisibleCTA, forceExpanded, commerceOnly]);
 
   if (list.length === 0) return null;
 
@@ -423,12 +452,13 @@ export function ProductGuidanceSection({
           compactMobile={compactMobile}
           smUp={smUp}
           carePhase={carePhase}
+          tipOnly={commerceOnly}
         />
       ))}
     </ul>
   );
 
-  const showCollapseChrome = collapseOnMobile && !forceExpanded;
+  const showCollapseChrome = collapseOnMobile && !forceExpanded && !commerceOnly;
 
   return (
     <section
@@ -450,7 +480,7 @@ export function ProductGuidanceSection({
           <div className="min-w-0 flex-1">
             <h3
               id="onb-product-guidance-title"
-              className="text-sm font-semibold"
+              className="text-base font-semibold"
             >
               {t("title")}
             </h3>
@@ -472,7 +502,7 @@ export function ProductGuidanceSection({
           <div className="min-w-0">
             <h3
               id="onb-product-guidance-title"
-              className="text-sm font-semibold"
+              className="text-base font-semibold"
             >
               {t("title")}
             </h3>
