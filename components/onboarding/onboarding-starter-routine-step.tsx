@@ -278,27 +278,25 @@ function RoutineStepCard({
                 "mt-2 space-y-1 rounded-lg border px-2.5 py-2",
                 affiliate
                   ? "border-violet-500/30 bg-violet-500/[0.04]"
-                  : "border-border/60 bg-muted/25",
+                  : "border-sky-500/40 bg-sky-500/[0.06]",
               )}
               data-testid="guidance-card"
               data-tip-kind={affiliate ? "affiliate" : "soft"}
             >
               {isSoftTip ? (
                 <>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700/80 dark:text-sky-300/90">
                     {tGuide("softTipBadge")}
                   </p>
                   <ul className="space-y-0.5">
                     {softLabels.map((name, i) => (
-                      <li key={`${name}-${i}`}>
+                      <li key={`${name}-${i}`} className="text-sm leading-snug">
                         {i > 0 ? (
-                          <span className="mr-1 text-xs text-muted-foreground">
-                            {tGuide("softTipOr")}
+                          <span className="text-muted-foreground">
+                            {tGuide("softTipOr")}{" "}
                           </span>
                         ) : null}
-                        <span className="text-sm font-medium leading-snug text-foreground">
-                          {name}
-                        </span>
+                        <span className="font-medium text-foreground">{name}</span>
                       </li>
                     ))}
                   </ul>

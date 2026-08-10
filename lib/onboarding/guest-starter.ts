@@ -108,7 +108,7 @@ function morningCalmFirst(locale: string, skin: SkinTypeCard | null): string[] {
   }
   return en
     ? [
-        step("Gentle cleanser", "short wash — no scrubbing"),
+        step("Gentle cleanser", "about 30 seconds, lukewarm water — don’t scrub hard"),
         step(
           "Light moisturizer",
           "apply right after washing while skin is still a bit damp so it absorbs better",
@@ -119,7 +119,7 @@ function morningCalmFirst(locale: string, skin: SkinTypeCard | null): string[] {
         ),
       ]
     : [
-        step("Sữa rửa mặt dịu", "rửa ngắn — đừng chà mạnh"),
+        step("Sữa rửa mặt dịu", "khoảng 30 giây, nước ấm — đừng chà mạnh"),
         step(
           "Kem dưỡng ẩm nhẹ",
           "thoa ngay sau rửa, lúc da còn ẩm một chút để kem thấm tốt hơn",
