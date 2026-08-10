@@ -52,52 +52,82 @@ function morningCalmFirst(locale: string, skin: SkinTypeCard | null): string[] {
   if (skin === "oily") {
     return en
       ? [
-          step("Gentle gel cleanser", "clear oil lightly — no scrubbing"),
-          step("Light oil-free moisturizer", "thin layer for comfort"),
-          step("Morning sunscreen", "even if you stay mostly indoors"),
+          step("Gentle gel cleanser", "cleans oil lightly — don’t scrub hard"),
+          step("Light oil-free moisturizer", "thin layer so skin feels calm, not greasy"),
+          step(
+            "Morning sunscreen",
+            "every morning — window light at home can still darken marks",
+          ),
         ]
       : [
-          step("Sữa rửa mặt gel dịu", "làm sạch dầu nhẹ — không chà mạnh"),
-          step("Kem dưỡng nhẹ không dầu", "một lớp mỏng cho da đỡ bóng mà vẫn êm"),
-          step("Kem chống nắng mỗi sáng", "kể cả khi ở nhà gần cửa sổ"),
+          step("Sữa rửa mặt gel dịu", "làm sạch dầu nhẹ — đừng chà mạnh"),
+          step("Kem dưỡng nhẹ không dầu", "một lớp mỏng: da đỡ bóng mà vẫn êm"),
+          step(
+            "Kem chống nắng mỗi sáng",
+            "bôi mỗi sáng — nắng cửa sổ trong nhà vẫn có thể làm thâm",
+          ),
         ];
   }
   if (skin === "dry") {
     return en
       ? [
           step("Cream cleanser", "wash gently so skin doesn’t feel tight"),
-          step("Hydrating moisturizer", "pat in while skin is still damp"),
-          step("Morning sunscreen", "lock comfort and protect daily"),
+          step(
+            "Hydrating moisturizer",
+            "apply right after washing while skin is still a bit damp so it absorbs better",
+          ),
+          step("Morning sunscreen", "every morning to protect and keep comfort"),
         ]
       : [
-          step("Sữa rửa mặt dạng kem", "rửa nhẹ — xong không bị căng"),
-          step("Kem dưỡng cấp ẩm", "vỗ nhẹ khi da còn ẩm"),
-          step("Kem chống nắng mỗi sáng", "giữ ẩm và bảo vệ mỗi ngày"),
+          step("Sữa rửa mặt dạng kem", "rửa nhẹ để da không bị căng"),
+          step(
+            "Kem dưỡng cấp ẩm",
+            "thoa ngay sau rửa, lúc da còn ẩm một chút để kem thấm tốt hơn",
+          ),
+          step("Kem chống nắng mỗi sáng", "bôi mỗi sáng để bảo vệ và giữ da êm"),
         ];
   }
   if (skin === "sensitive") {
     return en
       ? [
-          step("Fragrance-free cleanser", "lukewarm water only"),
+          step("Fragrance-free cleanser", "lukewarm water is enough"),
           step("Simple moisturizer", "short formula for easily irritated skin"),
-          step("Mineral sunscreen", "patch-test on the jaw if unsure"),
+          step(
+            "Mineral-leaning sunscreen",
+            "try a little on the jaw first if you’re often sensitive",
+          ),
         ]
       : [
           step("Sữa rửa mặt không mùi", "nước ấm là đủ"),
           step("Kem dưỡng tối giản", "công thức ngắn cho da dễ kích ứng"),
-          step("Kem chống nắng khoáng", "thử ít ở hàm nếu hay nhạy"),
+          step(
+            "Kem chống nắng dịu (ưu tiên khoáng)",
+            "thử ít ở hàm trước nếu da hay nhạy",
+          ),
         ];
   }
   return en
     ? [
-        step("Gentle cleanser", "about 30 seconds, lukewarm water"),
-        step("Light moisturizer", "thin layer while skin is still damp"),
-        step("Morning sunscreen", "even near windows at home"),
+        step("Gentle cleanser", "short wash — no scrubbing"),
+        step(
+          "Light moisturizer",
+          "apply right after washing while skin is still a bit damp so it absorbs better",
+        ),
+        step(
+          "Morning sunscreen",
+          "every morning — window light at home can still darken marks",
+        ),
       ]
     : [
-        step("Sữa rửa mặt dịu", "khoảng 30 giây, nước ấm"),
-        step("Kem dưỡng ẩm nhẹ", "khi da còn hơi ẩm"),
-        step("Kem chống nắng mỗi sáng", "kể cả ở nhà gần cửa sổ"),
+        step("Sữa rửa mặt dịu", "rửa ngắn — đừng chà mạnh"),
+        step(
+          "Kem dưỡng ẩm nhẹ",
+          "thoa ngay sau rửa, lúc da còn ẩm một chút để kem thấm tốt hơn",
+        ),
+        step(
+          "Kem chống nắng mỗi sáng",
+          "bôi mỗi sáng — nắng cửa sổ trong nhà vẫn có thể làm thâm",
+        ),
       ];
 }
 
@@ -105,12 +135,24 @@ function eveningCalmFirst(locale: string): string[] {
   const en = isEn(locale);
   return en
     ? [
-        step("Gentle cleanse", "remove sunscreen without stripping"),
-        step("Repair moisturizer", "soothe overnight — no strong actives yet"),
+        step(
+          "Gentle cleanse",
+          "remove sunscreen lightly — don’t leave skin tight or dry",
+        ),
+        step(
+          "Repair moisturizer",
+          "comfort overnight — skip strong acne treatments this week",
+        ),
       ]
     : [
-        step("Rửa mặt dịu", "gỡ kem chống nắng nhẹ, không làm khô căng"),
-        step("Kem dưỡng phục hồi", "êm da qua đêm — chưa thêm hoạt chất mạnh"),
+        step(
+          "Rửa mặt dịu",
+          "gỡ kem chống nắng nhẹ — đừng để da khô căng",
+        ),
+        step(
+          "Kem dưỡng phục hồi",
+          "giữ da êm qua đêm — tuần này chưa thêm sản phẩm trị mụn mạnh",
+        ),
       ];
 }
 
@@ -131,7 +173,7 @@ function eveningCanAddActive(locale: string): string[] {
           "Tuỳ chọn: tối đa 1 BHA hoặc retinoid",
           "không dùng chung một đêm — bỏ qua nếu da rát",
         ),
-        step("Kem dưỡng ẩm", "khóa ẩm sau bước hoạt chất"),
+        step("Kem dưỡng ẩm", "khóa ẩm sau bước trị"),
       ];
 }
 
@@ -147,24 +189,36 @@ function morningForProfile(
         ? [
             step("Gel cleanser", "clears oil without scrubbing hard"),
             step("Light oil-free moisturizer", "a thin layer keeps skin comfortable"),
-            step("Morning sunscreen", "protects even if you stay mostly indoors"),
+            step(
+              "Morning sunscreen",
+              "every morning — window light at home can still darken marks",
+            ),
           ]
         : [
             step("Sữa rửa mặt dạng gel", "làm sạch dầu, không chà mạnh"),
             step("Kem dưỡng nhẹ không dầu", "một lớp mỏng cho da đỡ bóng mà vẫn êm"),
-            step("Kem chống nắng buổi sáng", "bảo vệ da kể cả khi ở nhà gần cửa sổ"),
+            step(
+              "Kem chống nắng buổi sáng",
+              "bôi mỗi sáng — nắng cửa sổ trong nhà vẫn có thể làm thâm",
+            ),
           ]
       : skin === "dry"
         ? en
           ? [
               step("Cream cleanser", "wash gently so skin doesn’t feel tight"),
-              step("Hydrating moisturizer", "pat in while skin is still damp"),
+              step(
+                "Hydrating moisturizer",
+                "apply right after washing while skin is still a bit damp so it absorbs better",
+              ),
               step("Morning sunscreen", "lock in comfort and protect"),
             ]
           : [
               step("Sữa rửa mặt dạng kem", "rửa nhẹ, xong không bị căng"),
-              step("Kem dưỡng cấp ẩm", "vỗ nhẹ khi da còn ẩm"),
-              step("Kem chống nắng mỗi sáng", "giữ ẩm và bảo vệ"),
+              step(
+                "Kem dưỡng cấp ẩm",
+                "thoa ngay sau rửa, lúc da còn ẩm một chút để kem thấm tốt hơn",
+              ),
+              step("Kem chống nắng mỗi sáng", "bôi mỗi sáng để bảo vệ và giữ da êm"),
             ]
         : skin === "sensitive"
           ? en
@@ -181,13 +235,25 @@ function morningForProfile(
           : en
             ? [
                 step("Gentle cleanser", "about 30 seconds, lukewarm water"),
-                step("Light moisturizer", "while skin is still a bit damp"),
-                step("Daily morning sunscreen", "even near windows at home"),
+                step(
+                  "Light moisturizer",
+                  "apply right after washing while skin is still a bit damp so it absorbs better",
+                ),
+                step(
+                  "Daily morning sunscreen",
+                  "every morning — window light at home can still darken marks",
+                ),
               ]
             : [
                 step("Sữa rửa mặt dịu", "khoảng 30 giây, nước ấm"),
-                step("Kem dưỡng ẩm nhẹ", "khi da còn hơi ẩm"),
-                step("Kem chống nắng mỗi sáng", "kể cả ở nhà gần cửa sổ"),
+                step(
+                  "Kem dưỡng ẩm nhẹ",
+                  "thoa ngay sau rửa, lúc da còn ẩm một chút để kem thấm tốt hơn",
+                ),
+                step(
+                  "Kem chống nắng mỗi sáng",
+                  "bôi mỗi sáng — nắng cửa sổ trong nhà vẫn có thể làm thâm",
+                ),
               ];
 
   void goal; // goal shapes evening / week notes; AM stays cleanse→moist→SPF
@@ -296,12 +362,12 @@ function weekNoteForPhase(
   if (phase === "calm_first" || phase === "manual") {
     return en
       ? "This week: calm first — no strong actives. Consistency beats complexity."
-      : "Tuần này: làm dịu trước — chưa thêm hoạt chất mạnh. Đều đặn quan trọng hơn nhiều bước.";
+      : "Tuần này: làm dịu trước — chưa thêm sản phẩm trị mụn mạnh. Đều đặn quan trọng hơn nhiều bước.";
   }
   if (phase === "can_add_active") {
     return en
-      ? "If you add an active: at most one at night — never stack acids the same evening."
-      : "Nếu thêm hoạt chất: tối đa 1 bước tối — không chồng nhiều acid cùng đêm.";
+      ? "If you add a treatment: at most one at night — never stack acids the same evening."
+      : "Nếu thêm bước trị: tối đa 1 sản phẩm trị mỗi tối — không chồng nhiều acid cùng đêm.";
   }
   if (skillMode === "beginner") {
     return en
@@ -360,8 +426,8 @@ export function starterCareNote(
         : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô.";
     }
     return en
-      ? "Care note: don’t pick or squeeze — cleanse gently and pat dry. No strong actives this week."
-      : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô. Tuần này chưa thêm hoạt chất mạnh.";
+      ? "Care note: don’t pick or squeeze — cleanse gently and pat dry. No strong acne treatments this week."
+      : "Lưu ý: không nặn / không cậy mụn — rửa nhẹ và thấm khô. Tuần này chưa thêm sản phẩm trị mụn mạnh.";
   }
   return null;
 }

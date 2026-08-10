@@ -220,12 +220,12 @@ function defaultHow(step: string, en: boolean): string {
         : "Vỗ lớp mỏng; bỏ qua nếu đang rát.";
     case "moisturize":
       return en
-        ? "Apply on slightly damp skin; cover red or dry areas."
-        : "Thoa khi da còn hơi ẩm; phủ đủ chỗ đỏ hoặc khô.";
+        ? "Apply right after washing while skin is still a bit damp so it absorbs better; cover red or dry areas."
+        : "Thoa ngay sau rửa, lúc da còn ẩm một chút để kem thấm tốt hơn; phủ đủ chỗ đỏ hoặc khô.";
     case "spf":
       return en
-        ? "Every morning as the last step — including near windows."
-        : "Mỗi sáng, bước cuối — kể cả gần cửa sổ.";
+        ? "Every morning as the last step — window light at home can still darken marks."
+        : "Mỗi sáng, bước cuối — nắng cửa sổ trong nhà vẫn có thể làm thâm.";
     case "treat":
       return en
         ? "2–3 nights a week on a small area; moisturize after."

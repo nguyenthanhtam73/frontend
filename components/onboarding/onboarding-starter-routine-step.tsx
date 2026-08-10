@@ -271,48 +271,73 @@ function RoutineStepCard({
             </div>
           ) : null}
 
-          {affiliate ? (
-            <div className="mt-2 space-y-1" data-testid="guidance-card">
-              <p className="text-sm font-semibold leading-snug text-violet-900 dark:text-violet-100">
-                {[affiliate.brand, affiliate.product_name].filter(Boolean).join(" · ")}
+          {productTip ? (
+            <div
+              className={cn(
+                "mt-2 space-y-1 rounded-lg border px-2.5 py-2",
+                affiliate
+                  ? "border-violet-500/30 bg-violet-500/[0.04]"
+                  : "border-border/50 bg-muted/20",
+              )}
+              data-testid="guidance-card"
+            >
+              <p
+                className={cn(
+                  "text-sm font-semibold leading-snug",
+                  affiliate
+                    ? "text-violet-900 dark:text-violet-100"
+                    : "text-foreground",
+                )}
+              >
+                {productTip.label}
               </p>
-              {productTip?.why ? (
+              {productTip.why ? (
                 <p
-                  className="text-sm leading-relaxed text-muted-foreground line-clamp-2"
+                  className="text-sm leading-relaxed text-foreground/85"
                   data-testid="guidance-why"
                 >
                   {productTip.why}
                 </p>
               ) : null}
-              <a
-                href={affiliate.affiliate_link}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
-                className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
-                data-testid="affiliate-cta"
-                data-legacy-testid="onboarding-affiliate-cta"
-                data-affiliate-product-id={affiliate.product_id}
-                data-affiliate-source="starter_routine"
-                data-affiliate-step={productTip?.guidanceStep || ""}
-                onClick={() => {
-                  void logAffiliateClick(
-                    {
-                      product_name: affiliate.product_name,
-                      brand: affiliate.brand,
-                      reason: affiliate.why,
-                      affiliate_link: affiliate.affiliate_link,
-                      price_range: affiliate.price_range,
-                      priority: "high",
-                      product_id: affiliate.product_id,
-                    },
-                    "starter_routine",
-                  );
-                }}
-              >
-                {tGuide("viewShopee")}
-                {affiliate.price_range ? ` · ${affiliate.price_range}` : ""}
-                <ExternalLink className="size-3.5" aria-hidden />
-              </a>
+              {productTip.benefit ? (
+                <p
+                  className="text-sm leading-relaxed text-muted-foreground"
+                  data-testid="guidance-benefit"
+                >
+                  {productTip.benefit}
+                </p>
+              ) : null}
+              {affiliate ? (
+                <a
+                  href={affiliate.affiliate_link}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-violet-700 underline-offset-4 hover:underline dark:text-violet-300"
+                  data-testid="affiliate-cta"
+                  data-legacy-testid="onboarding-affiliate-cta"
+                  data-affiliate-product-id={affiliate.product_id}
+                  data-affiliate-source="starter_routine"
+                  data-affiliate-step={productTip.guidanceStep || ""}
+                  onClick={() => {
+                    void logAffiliateClick(
+                      {
+                        product_name: affiliate.product_name,
+                        brand: affiliate.brand,
+                        reason: affiliate.why,
+                        affiliate_link: affiliate.affiliate_link,
+                        price_range: affiliate.price_range,
+                        priority: "high",
+                        product_id: affiliate.product_id,
+                      },
+                      "starter_routine",
+                    );
+                  }}
+                >
+                  {tGuide("viewShopee")}
+                  {affiliate.price_range ? ` · ${affiliate.price_range}` : ""}
+                  <ExternalLink className="size-3.5" aria-hidden />
+                </a>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -567,8 +592,18 @@ export function OnboardingStepStarterRoutine({
       enrichedGuidance,
       hideCommerce,
       carePhase === "manual" ? "calm_first" : carePhase,
+      {
+        locale,
+        phase: carePhase === "manual" ? "calm_first" : carePhase,
+        severity:
+          typeof aiSnapshot?.severity_level === "string"
+            ? aiSnapshot.severity_level
+            : undefined,
+        regions: aiSnapshot?.primary_regions,
+        concerns: aiConcernTags,
+      },
     );
-  }, [routine, enrichedGuidance, hideCommerce, carePhase]);
+  }, [routine, enrichedGuidance, hideCommerce, carePhase, locale, aiSnapshot, aiConcernTags]);
 
   const affiliateCtaCount = useMemo(
     () => countRoutineAffiliateCtas(stepTips),
