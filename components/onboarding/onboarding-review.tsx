@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Sparkles, X } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -170,8 +170,6 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           </div>
         ) : null}
 
-      <CoachWelcomePrimaryCtaBlock />
-
       {skinReadback ? <CoachWelcomeSkinReadback text={skinReadback} /> : null}
 
       <Card className="border-border/60 bg-muted/10">
@@ -233,6 +231,8 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
           <LoggedInReviewRoutineSection data={data} starter={data.starter} />
         )
       ) : null}
+
+      <CoachWelcomePrimaryCtaBlock />
 
       {data.isGuest ? (
         <CoachWelcomeSection delayMs={80}>
@@ -307,8 +307,6 @@ function LoggedInReviewRoutineSection({
       >
         <StarterRoutineCards
           starter={starter}
-          morningLabel={tCoach("morning")}
-          eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
           featured
           sectionTitle={tCoach("routineSectionTitle")}
@@ -380,8 +378,6 @@ function GuestReviewRoutineSection({
       >
         <StarterRoutineCards
           starter={liveStarter}
-          morningLabel={tCoach("morning")}
-          eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
           featured
           sectionTitle={tCoach("routineSectionTitle")}
@@ -419,17 +415,9 @@ function GuestReviewRoutineSection({
 
 function ReviewRoutineHeader() {
   const tReview = useTranslations("onboarding.review");
-  const tCoach = useTranslations("coachWelcome");
 
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0 space-y-0.5">
-        <div className="flex items-center gap-2">
-          <Sparkles className="size-4 shrink-0 text-primary/70" aria-hidden />
-          <h2 className="text-base font-semibold text-foreground/90">{tReview("routineSection")}</h2>
-        </div>
-        <p className="text-xs text-muted-foreground">{tCoach("routineSectionSub")}</p>
-      </div>
+    <div className="flex items-center justify-end gap-3">
       <Link
         href="/onboarding/coach-welcome"
         className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "shrink-0 text-xs")}

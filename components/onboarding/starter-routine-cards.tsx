@@ -19,19 +19,31 @@ import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
 
-function inferCarePhase(
+/** Infer care phase without treating calm “chưa trị mụn mạnh” as active phase. */
+export function inferCarePhaseFromStarter(
   starter: StarterRoutineDTO,
   analysisPhase?: string | null,
 ): StarterCarePhase {
   if (analysisPhase) {
     return resolveCarePhaseFromAnalysis({ phase: analysisPhase });
   }
-  const blob = [...starter.evening, starter.safety_notes, starter.week_notes]
+  const evening = starter.evening.join(" ").toLowerCase();
+  const calmBlob = [evening, starter.safety_notes, starter.week_notes]
     .join(" ")
     .toLowerCase();
+  // Calm-first copy frequently says “chưa trị mụn mạnh” / “ưu tiên làm dịu”.
   if (
-    /\b(bha|aha|retinol|retinoid|benzoyl)\b/.test(blob) ||
-    /trị mụn mạnh|one mild|một sản phẩm trị/.test(blob)
+    /chưa\s*(dùng\s*)?(sản phẩm\s*)?(trị|acid|retinol|bha|aha)/.test(calmBlob) ||
+    /ưu tiên làm dịu|làm dịu trước|calm first|skip strong/.test(calmBlob)
+  ) {
+    return "calm_first";
+  }
+  // Only evening treat language (not safety/week negation) unlocks active phase.
+  if (/\b(bha|aha|retinol|retinoid|benzoyl)\b/.test(evening)) {
+    return "can_add_active";
+  }
+  if (
+    /một sản phẩm trị|one mild treatment|optional active|có thể thêm/.test(evening)
   ) {
     return "can_add_active";
   }
@@ -40,8 +52,8 @@ function inferCarePhase(
 
 type StarterRoutineCardsProps = {
   starter: StarterRoutineDTO;
-  morningLabel: string;
-  eveningLabel: string;
+  morningLabel?: string;
+  eveningLabel?: string;
   noStepsLabel: string;
   /** Hero layout for coach-welcome — section heading. */
   featured?: boolean;
@@ -53,6 +65,8 @@ type StarterRoutineCardsProps = {
   severity?: string;
   regions?: string[];
   skinType?: string;
+  /** Onboarding Step 2 only — muted Shopee catalog hint. */
+  showCommerceEmptyHint?: boolean;
   className?: string;
 };
 
@@ -71,12 +85,13 @@ export function StarterRoutineCards({
   severity,
   regions,
   skinType,
+  showCommerceEmptyHint = false,
   className,
 }: StarterRoutineCardsProps) {
   const tOnb = useTranslations("onboarding");
   const locale = useLocale();
   const carePhase = useMemo(
-    () => inferCarePhase(starter, carePhaseHint),
+    () => inferCarePhaseFromStarter(starter, carePhaseHint),
     [starter, carePhaseHint],
   );
 
@@ -162,7 +177,9 @@ export function StarterRoutineCards({
           sectionTestId="coach-welcome-morning"
           stepTestIdPrefix="coach-welcome-morning"
           emptyCommerceHint={
-            affiliateCtaCount === 0 ? tOnb("step2.commerceEmptyHint") : null
+            showCommerceEmptyHint && affiliateCtaCount === 0
+              ? tOnb("step2.commerceEmptyHint")
+              : null
           }
         />
       ) : (
@@ -205,7 +222,10 @@ export function StarterRoutineCards({
   );
 }
 
-/** True when folded tips already cover product guidance (hide separate section). */
+/**
+ * Folded AM/PM tips cover product picks — only fall back to legacy suggestion
+ * cards when there is no routine to attach tips to.
+ */
 export function starterHasFoldableGuidance(starter: StarterRoutineDTO): boolean {
-  return Boolean(starter.product_guidance && starter.product_guidance.length > 0);
+  return starter.morning.length > 0 || starter.evening.length > 0;
 }

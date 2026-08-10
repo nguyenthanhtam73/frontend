@@ -8,13 +8,32 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 /** Rough length where we collapse by default (mobile-readable chunk). */
-const COLLAPSE_CHARS = 280;
+const COLLAPSE_CHARS = 220;
+
+const SECTION_BREAK =
+  /\n(?=(?:Tóm lại|Tóm tắt|Mày ơi|Hướng xử lý|Lời khuyên|In short|So[,:]|Next[,:]|Bottom line))/i;
 
 function splitParagraphs(text: string): string[] {
-  return text
+  const byBlank = text
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
+  if (byBlank.length > 1) return byBlank;
+
+  const byMarker = text
+    .split(SECTION_BREAK)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (byMarker.length > 1) return byMarker;
+
+  // Last resort: break on single newlines if chunks look like sentences.
+  const byLine = text
+    .split(/\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (byLine.length > 2) return byLine;
+
+  return [text.trim()].filter(Boolean);
 }
 
 /**
@@ -28,18 +47,19 @@ export function CoachWelcomeSkinReadback({
   className?: string;
 }) {
   const t = useTranslations("coachWelcome");
-  const tOnb = useTranslations("onboarding");
   const trimmed = text.trim();
   const paragraphs = useMemo(() => splitParagraphs(trimmed), [trimmed]);
-  const needsCollapse = trimmed.length > COLLAPSE_CHARS || paragraphs.length > 2;
+  const needsCollapse = trimmed.length > COLLAPSE_CHARS || paragraphs.length > 1;
   const [expanded, setExpanded] = useState(false);
 
   if (!trimmed) return null;
 
-  const preview =
-    paragraphs[0] && paragraphs[0].length <= COLLAPSE_CHARS
-      ? paragraphs[0]
-      : `${trimmed.slice(0, COLLAPSE_CHARS).trim()}…`;
+  const previewParas = (() => {
+    if (!needsCollapse) return paragraphs;
+    const first = paragraphs[0] ?? "";
+    if (first.length <= COLLAPSE_CHARS) return [first];
+    return [`${first.slice(0, COLLAPSE_CHARS).replace(/\s+\S*$/, "").trim()}…`];
+  })();
 
   return (
     <Card
@@ -58,15 +78,11 @@ export function CoachWelcomeSkinReadback({
         </div>
 
         <div className="space-y-2.5 text-sm leading-relaxed text-foreground/90">
-          {expanded || !needsCollapse ? (
-            paragraphs.map((p, i) => (
-              <p key={i} className="whitespace-pre-wrap">
-                {p}
-              </p>
-            ))
-          ) : (
-            <p className="whitespace-pre-wrap">{preview}</p>
-          )}
+          {(expanded || !needsCollapse ? paragraphs : previewParas).map((p, i) => (
+            <p key={i} className="whitespace-pre-wrap">
+              {p}
+            </p>
+          ))}
         </div>
 
         {needsCollapse ? (
@@ -74,9 +90,10 @@ export function CoachWelcomeSkinReadback({
             type="button"
             onClick={() => setExpanded((v) => !v)}
             className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-primary"
+            aria-expanded={expanded}
             data-testid="coach-welcome-readback-toggle"
           >
-            {expanded ? tOnb("step2.hideDetail") : t("readbackExpand")}
+            {expanded ? t("readbackCollapse") : t("readbackExpand")}
             <ChevronDown
               className={cn("size-3.5 transition-transform", expanded && "rotate-180")}
               aria-hidden

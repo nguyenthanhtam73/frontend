@@ -21,11 +21,18 @@ export function StarterRoutineSupportExtras({
 }) {
   const t = useTranslations("coachWelcome");
   const rationale = starter.rationale?.trim() || "";
+  const weekNotes = starter.week_notes?.trim() || "";
+  const safety = starter.safety_notes?.trim() || "";
   const showRationale =
     Boolean(rationale) &&
     !isNearDuplicateText(rationale, skinReadback?.trim() || "");
+  const showWeekNotes =
+    Boolean(weekNotes) &&
+    !isNearDuplicateText(weekNotes, safety) &&
+    !isNearDuplicateText(weekNotes, rationale) &&
+    !isNearDuplicateText(weekNotes, skinReadback?.trim() || "");
 
-  if (!showRationale && !starter.week_notes?.trim()) return null;
+  if (!showRationale && !showWeekNotes) return null;
 
   return (
     <>
@@ -42,14 +49,14 @@ export function StarterRoutineSupportExtras({
         </CoachWelcomeSection>
       ) : null}
 
-      {starter.week_notes ? (
+      {showWeekNotes ? (
         <CoachWelcomeSection delayMs={delayMs + 40}>
           <Card>
             <CardContent className="space-y-2 pt-5 pb-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("weekNotes")}
               </p>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{starter.week_notes}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{weekNotes}</p>
             </CardContent>
           </Card>
         </CoachWelcomeSection>

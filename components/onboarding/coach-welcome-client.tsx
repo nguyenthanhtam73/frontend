@@ -131,10 +131,6 @@ function CoachWelcomeLoaded({
           />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={40}>
-          <CoachWelcomePrimaryCtaBlock />
-        </CoachWelcomeSection>
-
         {skinReadback ? (
           <CoachWelcomeSection delayMs={40}>
             <CoachWelcomeSkinReadback text={skinReadback} />
@@ -166,8 +162,6 @@ function CoachWelcomeLoaded({
           >
             <StarterRoutineCards
               starter={starter}
-              morningLabel={t("morning")}
-              eveningLabel={t("evening")}
               noStepsLabel={t("noSteps")}
               featured
               sectionTitle={t("routineSectionTitle")}
@@ -194,7 +188,7 @@ function CoachWelcomeLoaded({
         {!starterHasFoldableGuidance(starter) &&
         starter.product_suggestions &&
         starter.product_suggestions.length > 0 ? (
-          <CoachWelcomeSection delayMs={260}>
+          <CoachWelcomeSection delayMs={240}>
             <ProductSuggestionsCard
               suggestions={starter.product_suggestions}
               source="starter_routine"
@@ -204,19 +198,23 @@ function CoachWelcomeLoaded({
           </CoachWelcomeSection>
         ) : null}
 
-        <StarterRoutineSafetySection starter={starter} delayMs={320} />
+        <StarterRoutineSafetySection starter={starter} delayMs={280} />
+
+        <CoachWelcomeSection delayMs={320}>
+          <CoachWelcomePrimaryCtaBlock />
+        </CoachWelcomeSection>
 
         {canFeedback ? (
-          <CoachWelcomeSection delayMs={380}>
+          <CoachWelcomeSection delayMs={360}>
             <StarterRoutineFeedback profileId={profileId} compact />
           </CoachWelcomeSection>
         ) : null}
 
-        <CoachWelcomeSection delayMs={420}>
+        <CoachWelcomeSection delayMs={400}>
           <CoachWelcomeCta isGuest={isGuest} guestVariant={guestVariant} />
         </CoachWelcomeSection>
 
-        <CoachWelcomeSection delayMs={460} className="mt-4 border-t border-border/40 pt-6">
+        <CoachWelcomeSection delayMs={440} className="mt-4 border-t border-border/40 pt-6">
           <p className="mb-1 inline-flex w-full items-center gap-2 text-[10px] leading-relaxed text-muted-foreground/70 sm:w-auto">
             <Eye className="size-3 shrink-0" aria-hidden />
             {tReview("readOnlyHint")}
