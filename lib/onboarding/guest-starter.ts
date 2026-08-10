@@ -36,9 +36,15 @@ export function resolveStarterCarePhase(ob: OnboardingState): StarterCarePhase {
   const types = (snap.concern_types ?? snap.main_concerns ?? []).map((t) =>
     String(t).toLowerCase(),
   );
-  const inflammatory = types.some((t) =>
-    /inflammatory|irritat|redness|acne|pustule|papule|cystic/.test(t),
-  );
+  const inflammatory = types.some((t) => {
+    // Closed comedones / mụn ẩn are not an inflammatory flare for phase.
+    if (/comedone|mụn ẩn|mun an|mụn cồi|mun coi|blackhead|whitehead/.test(t)) {
+      return false;
+    }
+    return /inflammatory|irritat|redness|acne|pustule|papule|cystic|mụn viêm|mun viem/.test(
+      t,
+    );
+  });
   // Align with BE derivePhase: dense / moderate+inflammatory → calm; lean calm when uncertain.
   if (severity === "dense") return "calm_first";
   if (severity === "moderate" && inflammatory) return "calm_first";

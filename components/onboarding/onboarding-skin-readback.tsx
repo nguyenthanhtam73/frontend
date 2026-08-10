@@ -63,8 +63,13 @@ export function OnboardingSkinReadback({
   const summary = snapshot.summary?.trim() || "";
   const regions = snapshot.primary_regions ?? [];
   const concernTypes = snapshot.concern_types ?? [];
+  // Prefer plain main_concerns ("mụn ẩn") over enum chips when vision returned them.
+  const concernChips =
+    snapshot.main_concerns?.map((c) => c.trim()).filter(Boolean) ?? [];
+  const showPlainConcerns = concernChips.length > 0;
+  const enumConcerns = concernTypes;
 
-  if (!severity && !phase && !summary && regions.length === 0 && concernTypes.length === 0) {
+  if (!severity && !phase && !summary && regions.length === 0 && concernTypes.length === 0 && !showPlainConcerns) {
     return null;
   }
 
@@ -146,25 +151,34 @@ export function OnboardingSkinReadback({
         </div>
       ) : null}
 
-      {!compact && concernTypes.length > 0 ? (
+      {!compact && (showPlainConcerns || enumConcerns.length > 0) ? (
         <div>
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
             {t("skinReadback.concernTypesLabel")}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {concernTypes.map((id) => (
-              <span
-                key={id}
-                className="rounded-full border border-border/70 bg-muted/30 px-2.5 py-0.5 text-xs"
-              >
-                {labelOrRaw(t, "skinReadback.concernTypes", id, CONCERN_TYPE_IDS)}
-              </span>
-            ))}
+            {showPlainConcerns
+              ? concernChips.slice(0, 6).map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-full border border-border/70 bg-muted/30 px-2.5 py-0.5 text-xs"
+                  >
+                    {label}
+                  </span>
+                ))
+              : enumConcerns.map((id) => (
+                  <span
+                    key={id}
+                    className="rounded-full border border-border/70 bg-muted/30 px-2.5 py-0.5 text-xs"
+                  >
+                    {labelOrRaw(t, "skinReadback.concernTypes", id, CONCERN_TYPE_IDS)}
+                  </span>
+                ))}
           </div>
         </div>
       ) : null}
 
-      {compact && (regions.length > 0 || concernTypes.length > 0) ? (
+      {compact && (regions.length > 0 || showPlainConcerns || enumConcerns.length > 0) ? (
         <div className="flex flex-wrap gap-1.5">
           {regions.slice(0, 3).map((id) => (
             <span
@@ -174,14 +188,23 @@ export function OnboardingSkinReadback({
               {labelOrRaw(t, "skinReadback.regions", id, REGION_IDS)}
             </span>
           ))}
-          {concernTypes.slice(0, 2).map((id) => (
-            <span
-              key={`c-${id}`}
-              className="rounded-full border border-border/70 bg-muted/30 px-2 py-0.5 text-[11px]"
-            >
-              {labelOrRaw(t, "skinReadback.concernTypes", id, CONCERN_TYPE_IDS)}
-            </span>
-          ))}
+          {showPlainConcerns
+            ? concernChips.slice(0, 4).map((label) => (
+                <span
+                  key={`c-${label}`}
+                  className="rounded-full border border-border/70 bg-muted/30 px-2 py-0.5 text-[11px]"
+                >
+                  {label}
+                </span>
+              ))
+            : enumConcerns.slice(0, 4).map((id) => (
+                <span
+                  key={`c-${id}`}
+                  className="rounded-full border border-border/70 bg-muted/30 px-2 py-0.5 text-[11px]"
+                >
+                  {labelOrRaw(t, "skinReadback.concernTypes", id, CONCERN_TYPE_IDS)}
+                </span>
+              ))}
         </div>
       ) : null}
     </section>
