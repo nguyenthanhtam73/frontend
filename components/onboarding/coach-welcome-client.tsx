@@ -5,12 +5,10 @@ import {
   AlertCircle,
   Eye,
   RefreshCw,
-  Sparkles,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
-import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import {
   CoachWelcomeCta,
   CoachWelcomePrimaryCtaBlock,
@@ -22,8 +20,12 @@ import {
 import {
   CoachWelcomeSection,
 } from "@/components/onboarding/coach-welcome-section";
+import { CoachWelcomeSkinReadback } from "@/components/onboarding/coach-welcome-skin-readback";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
-import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
+import {
+  StarterRoutineCards,
+  starterHasFoldableGuidance,
+} from "@/components/onboarding/starter-routine-cards";
 import {
   StarterRoutineSafetySection,
   StarterRoutineSupportExtras,
@@ -31,7 +33,6 @@ import {
 import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
 import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { fetchSkinProfile } from "@/lib/api/profile";
@@ -86,6 +87,7 @@ function CoachWelcomeLoaded({
   const session = readCoachWelcomeSession();
   const showRetryAi =
     (showFallbackBanner || session?.usedDefaultRoutine === true) && !isGeneratingRoutine;
+  const analysis = session?.reviewSummary?.skin_analysis;
 
   useEffect(() => {
     setProfileId(initialProfileId);
@@ -118,7 +120,7 @@ function CoachWelcomeLoaded({
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl space-y-5 pb-24 sm:space-y-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-2xl space-y-4 pb-24 sm:space-y-5 sm:pb-6">
         <CoachWelcomeSection>
           <CoachWelcomeCelebrationHeader
             completedLabel={
@@ -135,19 +137,7 @@ function CoachWelcomeLoaded({
 
         {skinReadback ? (
           <CoachWelcomeSection delayMs={40}>
-            <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.05] shadow-sm">
-              <CardContent className="space-y-2 pt-5 pb-5">
-                <div className="flex items-center gap-2">
-                  <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="size-4 text-primary" aria-hidden />
-                  </span>
-                  <p className="text-sm font-semibold text-foreground">{t("readback")}</p>
-                </div>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
-                  {skinReadback}
-                </p>
-              </CardContent>
-            </Card>
+            <CoachWelcomeSkinReadback text={skinReadback} />
           </CoachWelcomeSection>
         ) : null}
 
@@ -168,10 +158,10 @@ function CoachWelcomeLoaded({
         <CoachWelcomeSection delayMs={120} id="coach-welcome-routine">
           <div
             className={cn(
-              "rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4",
+              "space-y-0",
               "transition-all duration-700 motion-safe:animate-in motion-safe:fade-in",
               routineJustUpdated &&
-                "bg-emerald-500/[0.06] shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700",
+                "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700 sm:p-3",
             )}
           >
             <StarterRoutineCards
@@ -179,31 +169,40 @@ function CoachWelcomeLoaded({
               morningLabel={t("morning")}
               eveningLabel={t("evening")}
               noStepsLabel={t("noSteps")}
+              featured
               sectionTitle={t("routineSectionTitle")}
               sectionSubtitle={t("routineSectionSub")}
+              carePhaseHint={analysis?.phase}
+              concerns={
+                analysis?.main_concerns?.length
+                  ? analysis.main_concerns
+                  : analysis?.concern_types
+              }
+              severity={analysis?.severity_level}
+              regions={analysis?.primary_regions}
+              skinType={session?.reviewSummary?.skin_type}
             />
           </div>
         </CoachWelcomeSection>
 
-        <StarterRoutineSupportExtras starter={starter} delayMs={200} />
+        <StarterRoutineSupportExtras
+          starter={starter}
+          delayMs={200}
+          skinReadback={skinReadback}
+        />
 
-        <CoachWelcomeSection delayMs={260}>
-          {starter.product_guidance && starter.product_guidance.length > 0 ? (
-            <ProductGuidanceSection
-              items={starter.product_guidance}
-              source="starter_routine"
-              contextId={profileId ?? undefined}
-              maxBenefits={2}
-            />
-          ) : (
+        {!starterHasFoldableGuidance(starter) &&
+        starter.product_suggestions &&
+        starter.product_suggestions.length > 0 ? (
+          <CoachWelcomeSection delayMs={260}>
             <ProductSuggestionsCard
               suggestions={starter.product_suggestions}
               source="starter_routine"
               contextId={profileId ?? undefined}
               maxVisible={2}
             />
-          )}
-        </CoachWelcomeSection>
+          </CoachWelcomeSection>
+        ) : null}
 
         <StarterRoutineSafetySection starter={starter} delayMs={320} />
 

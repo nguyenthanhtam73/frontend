@@ -1,31 +1,41 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo } from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { OnboardingRoutinePeriodSection } from "@/components/onboarding/onboarding-starter-routine-step";
+import {
+  attachGuidanceToRoutineSteps,
+  countRoutineAffiliateCtas,
+  type RoutineStepProductTip,
+} from "@/lib/onboarding/attach-guidance-to-routine";
+import { enrichProductGuidanceItems } from "@/lib/onboarding/enrich-product-guidance";
+import {
+  filterGuidanceForPhase,
+  resolveCarePhaseFromAnalysis,
+  type StarterCarePhase,
+} from "@/lib/onboarding/guest-starter";
+import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
 import type { StarterRoutineDTO } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
 
-function numberedList(
-  lines: string[],
-  period: "morning" | "evening",
-  large?: boolean,
-) {
-  return (
-    <ol
-      className={cn(
-        "list-decimal space-y-2.5 pl-5 leading-relaxed text-foreground",
-        large ? "text-[15px] sm:text-base" : "text-sm",
-      )}
-      data-testid={`coach-welcome-${period}-list`}
-    >
-      {lines.map((line, i) => (
-        <li key={i} data-testid={`coach-welcome-${period}-${i}`}>
-          {line}
-        </li>
-      ))}
-    </ol>
-  );
+function inferCarePhase(
+  starter: StarterRoutineDTO,
+  analysisPhase?: string | null,
+): StarterCarePhase {
+  if (analysisPhase) {
+    return resolveCarePhaseFromAnalysis({ phase: analysisPhase });
+  }
+  const blob = [...starter.evening, starter.safety_notes, starter.week_notes]
+    .join(" ")
+    .toLowerCase();
+  if (
+    /\b(bha|aha|retinol|retinoid|benzoyl)\b/.test(blob) ||
+    /trị mụn mạnh|one mild|một sản phẩm trị/.test(blob)
+  ) {
+    return "can_add_active";
+  }
+  return "calm_first";
 }
 
 type StarterRoutineCardsProps = {
@@ -33,94 +43,171 @@ type StarterRoutineCardsProps = {
   morningLabel: string;
   eveningLabel: string;
   noStepsLabel: string;
-  /** Hero layout for coach-welcome — larger cards, section heading. */
+  /** Hero layout for coach-welcome — section heading. */
   featured?: boolean;
   sectionTitle?: string;
   sectionSubtitle?: string;
+  /** Vision phase when known (preferred over heuristic). */
+  carePhaseHint?: string | null;
+  concerns?: string[];
+  severity?: string;
+  regions?: string[];
+  skinType?: string;
+  className?: string;
 };
 
+/**
+ * AM/PM routine with product tips folded into each step (same pattern as
+ * onboarding Step 2) — no separate “Hướng sản phẩm” wall of cards.
+ */
 export function StarterRoutineCards({
   starter,
-  morningLabel,
-  eveningLabel,
+  morningLabel: _morningLabel,
+  eveningLabel: _eveningLabel,
   noStepsLabel,
   featured = false,
   sectionTitle,
   sectionSubtitle,
+  carePhaseHint,
+  concerns,
+  severity,
+  regions,
+  skinType,
+  className,
 }: StarterRoutineCardsProps) {
-  const cards = (
+  const tOnb = useTranslations("onboarding");
+  const locale = useLocale();
+  const carePhase = useMemo(
+    () => inferCarePhase(starter, carePhaseHint),
+    [starter, carePhaseHint],
+  );
+
+  const guidanceItems = useMemo(
+    () =>
+      filterGuidanceForPhase(starter.product_guidance, carePhase) as
+        | ProductGuidanceItemDTO[]
+        | undefined,
+    [starter.product_guidance, carePhase],
+  );
+
+  const enrichedGuidance = useMemo(
+    () =>
+      enrichProductGuidanceItems(guidanceItems, {
+        locale,
+        phase: carePhase === "manual" ? "calm_first" : carePhase,
+        severity,
+        regions,
+        concerns,
+      }),
+    [guidanceItems, locale, carePhase, severity, regions, concerns],
+  );
+
+  const stepTips = useMemo(() => {
+    if (!starter.morning.length && !starter.evening.length) {
+      return {
+        morning: [] as (RoutineStepProductTip | null)[],
+        evening: [] as (RoutineStepProductTip | null)[],
+      };
+    }
+    return attachGuidanceToRoutineSteps(
+      starter.morning,
+      starter.evening,
+      enrichedGuidance,
+      carePhase === "manual" ? "calm_first" : carePhase,
+      {
+        locale,
+        phase: carePhase === "manual" ? "calm_first" : carePhase,
+        severity,
+        regions,
+        concerns,
+        skinType,
+      },
+    );
+  }, [
+    starter.morning,
+    starter.evening,
+    enrichedGuidance,
+    carePhase,
+    locale,
+    severity,
+    regions,
+    concerns,
+    skinType,
+  ]);
+
+  const affiliateCtaCount = useMemo(
+    () => countRoutineAffiliateCtas(stepTips),
+    [stepTips],
+  );
+
+  const emptyMorning =
+    starter.morning.length === 0 ? (
+      <p className="px-3 py-2 text-sm text-muted-foreground">{noStepsLabel}</p>
+    ) : null;
+  const emptyEvening =
+    starter.evening.length === 0 ? (
+      <p className="px-3 py-2 text-sm text-muted-foreground">{noStepsLabel}</p>
+    ) : null;
+
+  const body = (
     <div
-      className={cn("grid gap-4", featured ? "sm:grid-cols-2" : "sm:grid-cols-2")}
+      className={cn("space-y-2.5", className)}
       data-testid="coach-welcome-starter-cards"
     >
-      <Card
-        className={cn(
-          "overflow-hidden border-amber-500/30 bg-gradient-to-b from-amber-500/[0.08] to-transparent",
-          featured && "border-2 shadow-md",
-        )}
-        data-testid="coach-welcome-morning"
-      >
-        <CardContent className={cn("space-y-3", featured ? "pt-6 pb-6 sm:pt-7" : "pt-6")}>
-          <div className="flex items-center gap-2.5 font-semibold">
-            <span
-              className={cn(
-                "flex items-center justify-center rounded-xl bg-amber-500/15",
-                featured ? "size-10" : "size-9",
-              )}
-            >
-              <Sun className={cn("text-amber-500", featured ? "size-5" : "size-5")} aria-hidden />
-            </span>
-            <span className={featured ? "text-lg" : undefined}>{morningLabel}</span>
-          </div>
-          {starter.morning.length > 0 ? (
-            numberedList(starter.morning, "morning", featured)
-          ) : (
-            <p className="text-sm text-muted-foreground">{noStepsLabel}</p>
-          )}
-        </CardContent>
-      </Card>
-      <Card
-        className={cn(
-          "overflow-hidden border-indigo-500/30 bg-gradient-to-b from-indigo-500/[0.08] to-transparent",
-          featured && "border-2 shadow-md",
-        )}
-        data-testid="coach-welcome-evening"
-      >
-        <CardContent className={cn("space-y-3", featured ? "pt-6 pb-6 sm:pt-7" : "pt-6")}>
-          <div className="flex items-center gap-2.5 font-semibold">
-            <span
-              className={cn(
-                "flex items-center justify-center rounded-xl bg-indigo-500/15",
-                featured ? "size-10" : "size-9",
-              )}
-            >
-              <Moon className="size-5 text-indigo-500" aria-hidden />
-            </span>
-            <span className={featured ? "text-lg" : undefined}>{eveningLabel}</span>
-          </div>
-          {starter.evening.length > 0 ? (
-            numberedList(starter.evening, "evening", featured)
-          ) : (
-            <p className="text-sm text-muted-foreground">{noStepsLabel}</p>
-          )}
-        </CardContent>
-      </Card>
+      {starter.morning.length > 0 ? (
+        <OnboardingRoutinePeriodSection
+          period="morning"
+          steps={starter.morning}
+          editing={false}
+          carePhase={carePhase}
+          productTips={stepTips.morning}
+          sectionTestId="coach-welcome-morning"
+          stepTestIdPrefix="coach-welcome-morning"
+          emptyCommerceHint={
+            affiliateCtaCount === 0 ? tOnb("step2.commerceEmptyHint") : null
+          }
+        />
+      ) : (
+        <div data-testid="coach-welcome-morning">{emptyMorning}</div>
+      )}
+      {starter.evening.length > 0 ? (
+        <OnboardingRoutinePeriodSection
+          period="evening"
+          steps={starter.evening}
+          editing={false}
+          carePhase={carePhase}
+          productTips={stepTips.evening}
+          sectionTestId="coach-welcome-evening"
+          stepTestIdPrefix="coach-welcome-evening"
+        />
+      ) : (
+        <div data-testid="coach-welcome-evening">{emptyEvening}</div>
+      )}
     </div>
   );
 
-  if (!featured) return cards;
+  if (!featured && !sectionTitle) return body;
 
   return (
-    <div className="space-y-4" data-testid="coach-welcome-starter">
+    <div className="space-y-3" data-testid="coach-welcome-starter">
       {sectionTitle ? (
-        <div className="space-y-1">
-          <h2 className="text-lg font-bold tracking-tight sm:text-xl">{sectionTitle}</h2>
+        <div className="space-y-0.5">
+          <h2 className="text-base font-bold tracking-tight sm:text-lg">
+            {sectionTitle}
+          </h2>
           {sectionSubtitle ? (
-            <p className="text-sm text-muted-foreground">{sectionSubtitle}</p>
+            <p className="text-xs text-muted-foreground sm:text-sm">
+              {sectionSubtitle}
+            </p>
           ) : null}
         </div>
       ) : null}
-      {cards}
+      {body}
     </div>
   );
+}
+
+/** True when folded tips already cover product guidance (hide separate section). */
+export function starterHasFoldableGuidance(starter: StarterRoutineDTO): boolean {
+  return Boolean(starter.product_guidance && starter.product_guidance.length > 0);
 }

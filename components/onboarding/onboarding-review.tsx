@@ -4,6 +4,7 @@ import { Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
 import {
   CoachWelcomeCta,
   CoachWelcomePrimaryCtaBlock,
@@ -11,10 +12,12 @@ import {
 } from "@/components/onboarding/coach-welcome-cta";
 import { CoachWelcomeCelebrationHeader } from "@/components/onboarding/coach-welcome-payoff";
 import { CoachWelcomeSection } from "@/components/onboarding/coach-welcome-section";
+import { CoachWelcomeSkinReadback } from "@/components/onboarding/coach-welcome-skin-readback";
 import { OnboardingDeleteSection } from "@/components/onboarding/onboarding-delete-section";
-import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
-import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
-import { StarterRoutineCards } from "@/components/onboarding/starter-routine-cards";
+import {
+  StarterRoutineCards,
+  starterHasFoldableGuidance,
+} from "@/components/onboarding/starter-routine-cards";
 import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-feedback";
 import {
   StarterRoutineSafetySection,
@@ -169,21 +172,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
 
       <CoachWelcomePrimaryCtaBlock />
 
-      {skinReadback ? (
-        <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.06] via-background to-emerald-500/[0.05] shadow-sm">
-          <CardContent className="space-y-2 pt-5 pb-5">
-            <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">
-                <Sparkles className="size-4 text-primary" aria-hidden />
-              </span>
-              <p className="text-sm font-semibold text-foreground">{tCoach("readback")}</p>
-            </div>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
-              {skinReadback}
-            </p>
-          </CardContent>
-        </Card>
-      ) : null}
+      {skinReadback ? <CoachWelcomeSkinReadback text={skinReadback} /> : null}
 
       <Card className="border-border/60 bg-muted/10">
         <CardContent className="space-y-4 pt-6">
@@ -312,9 +301,8 @@ function LoggedInReviewRoutineSection({
       />
       <div
         className={cn(
-          "rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4",
           routineJustUpdated &&
-            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
+            "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700 sm:p-3",
         )}
       >
         <StarterRoutineCards
@@ -322,23 +310,22 @@ function LoggedInReviewRoutineSection({
           morningLabel={tCoach("morning")}
           eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
+          featured
           sectionTitle={tCoach("routineSectionTitle")}
           sectionSubtitle={tCoach("routineSectionSub")}
+          concerns={data.concerns}
+          skinType={data.skinType ?? undefined}
         />
       </div>
-      <StarterRoutineSupportExtras starter={starter} />
-      {starter.product_guidance && starter.product_guidance.length > 0 ? (
-        <ProductGuidanceSection
-          items={starter.product_guidance}
-          source="starter_routine"
-          contextId={
-            data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID
-              ? data.profileId
-              : undefined
-          }
-          maxBenefits={2}
-        />
-      ) : (
+      <StarterRoutineSupportExtras
+        starter={starter}
+        skinReadback={
+          data.coachingNotes?.trim() || starter.skin_readback?.trim() || ""
+        }
+      />
+      {!starterHasFoldableGuidance(starter) &&
+      starter.product_suggestions &&
+      starter.product_suggestions.length > 0 ? (
         <ProductSuggestionsCard
           suggestions={starter.product_suggestions}
           source="starter_routine"
@@ -349,7 +336,7 @@ function LoggedInReviewRoutineSection({
           }
           maxVisible={2}
         />
-      )}
+      ) : null}
       <StarterRoutineSafetySection starter={starter} />
       {data.profileId && data.profileId !== GUEST_COACH_PROFILE_ID ? (
         <StarterRoutineFeedback profileId={data.profileId} compact />
@@ -387,9 +374,8 @@ function GuestReviewRoutineSection({
       />
       <div
         className={cn(
-          "rounded-xl border border-border/50 bg-muted/15 p-3 sm:p-4",
           routineJustUpdated &&
-            "ring-2 ring-emerald-400/45 bg-emerald-500/[0.06] shadow-md motion-safe:duration-700",
+            "rounded-xl bg-emerald-500/[0.06] p-2 shadow-md ring-2 ring-emerald-400/45 motion-safe:duration-700 sm:p-3",
         )}
       >
         <StarterRoutineCards
@@ -397,24 +383,35 @@ function GuestReviewRoutineSection({
           morningLabel={tCoach("morning")}
           eveningLabel={tCoach("evening")}
           noStepsLabel={tCoach("noSteps")}
+          featured
           sectionTitle={tCoach("routineSectionTitle")}
           sectionSubtitle={tCoach("routineSectionSub")}
+          carePhaseHint={session?.reviewSummary?.skin_analysis?.phase}
+          concerns={
+            session?.reviewSummary?.skin_analysis?.main_concerns?.length
+              ? session.reviewSummary.skin_analysis.main_concerns
+              : data.concerns
+          }
+          severity={session?.reviewSummary?.skin_analysis?.severity_level}
+          regions={session?.reviewSummary?.skin_analysis?.primary_regions}
+          skinType={data.skinType ?? undefined}
         />
       </div>
-      <StarterRoutineSupportExtras starter={liveStarter} />
-      {liveStarter.product_guidance && liveStarter.product_guidance.length > 0 ? (
-        <ProductGuidanceSection
-          items={liveStarter.product_guidance}
-          source="starter_routine"
-          maxBenefits={2}
-        />
-      ) : (
+      <StarterRoutineSupportExtras
+        starter={liveStarter}
+        skinReadback={
+          data.coachingNotes?.trim() || liveStarter.skin_readback?.trim() || ""
+        }
+      />
+      {!starterHasFoldableGuidance(liveStarter) &&
+      liveStarter.product_suggestions &&
+      liveStarter.product_suggestions.length > 0 ? (
         <ProductSuggestionsCard
           suggestions={liveStarter.product_suggestions}
           source="starter_routine"
           maxVisible={2}
         />
-      )}
+      ) : null}
       <StarterRoutineSafetySection starter={liveStarter} />
     </section>
   );
