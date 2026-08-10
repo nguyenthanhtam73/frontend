@@ -19,16 +19,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FriendlyNotice } from "@/components/onboarding/onboarding-ui";
 import { Button } from "@/components/ui/button";
 import { logAffiliateClick } from "@/lib/api/affiliate";
+import type { RoutineStepProductTip } from "@/lib/onboarding/attach-guidance-to-routine";
 import {
-  attachGuidanceToRoutineSteps,
-  countRoutineAffiliateCtas,
-  type RoutineStepProductTip,
-} from "@/lib/onboarding/attach-guidance-to-routine";
-import { enrichProductGuidanceItems } from "@/lib/onboarding/enrich-product-guidance";
-import {
-  filterGuidanceForPhase,
   guidanceMentionsNoPick,
-  resolveStarterCarePhase,
   starterCareNote,
   type StarterCarePhase,
 } from "@/lib/onboarding/guest-starter";
@@ -37,7 +30,7 @@ import {
   routineStepIcon,
 } from "@/lib/onboarding/parse-routine-step";
 import { buildRoutineRationale } from "@/lib/onboarding/routine-rationale";
-import { useManualProductGuidance } from "@/lib/onboarding/use-manual-product-guidance";
+import { useOnboardingRoutineStepTips } from "@/lib/onboarding/use-onboarding-routine-step-tips";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
 
@@ -125,12 +118,15 @@ function RoutineStepCard({
   period,
   editing,
   productTip,
+  stepTestId,
 }: {
   stepText: string;
   index: number;
   period: "morning" | "evening";
   editing: boolean;
   productTip?: RoutineStepProductTip | null;
+  /** Defaults to `onboarding-starter-step-{period}-{index}`. */
+  stepTestId?: string;
 }) {
   const t = useTranslations("onboarding");
   const tGuide = useTranslations("onboarding.productGuidance");
@@ -145,6 +141,8 @@ function RoutineStepCard({
   const affiliate = tip?.affiliate;
   const softLabels = tip?.softLabels?.filter(Boolean) ?? [];
   const isSoftTip = Boolean(tip && !affiliate && softLabels.length > 0);
+  const testId =
+    stepTestId ?? `onboarding-starter-step-${period}-${index}`;
 
   useEffect(() => {
     if (!hasDetail || expanded) return;
@@ -165,7 +163,7 @@ function RoutineStepCard({
     return (
       <li
         className="space-y-2 rounded-lg border border-border/80 bg-background p-2.5"
-        data-testid={`onboarding-starter-step-${period}-${index}`}
+        data-testid={testId}
       >
         <div className="flex items-center gap-1.5">
           <span
@@ -219,7 +217,7 @@ function RoutineStepCard({
         "rounded-lg border bg-background/90 px-2.5 py-2.5",
         tip?.affiliate ? "border-violet-500/30" : "border-border/60",
       )}
-      data-testid={`onboarding-starter-step-${period}-${index}`}
+      data-testid={testId}
       data-guidance-step={tip?.guidanceStep || undefined}
     >
       <div className="flex items-start gap-2.5">
@@ -390,13 +388,15 @@ function eveningHintKey(phase: StarterCarePhase):
   return "step2.eveningHint";
 }
 
-function RoutinePeriodSection({
+export function OnboardingRoutinePeriodSection({
   period,
   steps,
   editing,
   carePhase,
   productTips,
   emptyCommerceHint,
+  sectionTestId,
+  stepTestIdPrefix,
 }: {
   period: "morning" | "evening";
   steps: string[];
@@ -405,6 +405,10 @@ function RoutinePeriodSection({
   productTips?: (RoutineStepProductTip | null)[];
   /** Free + 0 CTAs: one muted line under AM only. */
   emptyCommerceHint?: string | null;
+  /** Override default `onboarding-starter-{period}` test id (e.g. ready recap). */
+  sectionTestId?: string;
+  /** If set, each step uses `{prefix}-{index}` (e.g. onboarding-ready-morning-0). */
+  stepTestIdPrefix?: string;
 }) {
   const t = useTranslations("onboarding");
   const ob = useOnboardingStore();
@@ -418,7 +422,7 @@ function RoutinePeriodSection({
           ? "border-amber-400/35 bg-gradient-to-b from-amber-500/[0.08] to-background"
           : "border-indigo-400/35 bg-gradient-to-b from-indigo-500/[0.08] to-background",
       )}
-      data-testid={`onboarding-starter-${period}`}
+      data-testid={sectionTestId ?? `onboarding-starter-${period}`}
     >
       <div
         className={cn(
@@ -474,6 +478,9 @@ function RoutinePeriodSection({
               period={period}
               editing={editing}
               productTip={productTips?.[i]}
+              stepTestId={
+                stepTestIdPrefix ? `${stepTestIdPrefix}-${i}` : undefined
+              }
             />
           ))}
         </ol>
@@ -513,7 +520,6 @@ export function OnboardingStepStarterRoutine({
 }) {
   const t = useTranslations("onboarding");
   const locale = useLocale();
-  const routine = useOnboardingStore((s) => s.starterRoutine);
   const aiSnapshot = useOnboardingStore((s) => s.aiSnapshot);
   const aiConcernTags = useOnboardingStore((s) => s.aiConcernTags);
   const goal = useOnboardingStore((s) => s.goal);
@@ -521,6 +527,9 @@ export function OnboardingStepStarterRoutine({
   const [showUpdatedToast, setShowUpdatedToast] = useState(false);
   const wasEditingRef = useRef(false);
   const userEdited = useOnboardingStore((s) => s.starterRoutineUserEdited);
+
+  const { routine, carePhase, stepTips, affiliateCtaCount, guidanceItems } =
+    useOnboardingRoutineStepTips();
 
   const labelFn = useCallback(
     (key: string) => {
@@ -556,86 +565,6 @@ export function OnboardingStepStarterRoutine({
   const goalLabel = useMemo(
     () => (rationale ? t(`goal.${rationale.goal as "glow"}`) : "—"),
     [rationale, t],
-  );
-
-  const carePhase = useMemo(
-    () =>
-      resolveStarterCarePhase({
-        aiSnapshot,
-        aiConcernTags,
-        goal,
-        skinType,
-      } as Parameters<typeof resolveStarterCarePhase>[0]),
-    [aiSnapshot, aiConcernTags, goal, skinType],
-  );
-
-  // Photo analysis is the richest source, but users who skip it must still see
-  // what to buy and why — so fall back to answer-driven guidance from the server.
-  const fromPhotos =
-    aiSnapshot?.product_guidance?.length
-      ? aiSnapshot.product_guidance
-      : routine?.product_guidance?.length
-        ? routine.product_guidance
-        : undefined;
-
-  const manualGuidance = useManualProductGuidance({
-    enabled: !fromPhotos,
-    locale,
-    goal,
-    skinType,
-    concerns: aiConcernTags,
-  });
-
-  const guidanceItems = useMemo(
-    () =>
-      filterGuidanceForPhase(
-        fromPhotos ?? manualGuidance.result?.product_guidance,
-        carePhase,
-      ),
-    [fromPhotos, manualGuidance.result, carePhase],
-  );
-
-  const enrichedGuidance = useMemo(
-    () =>
-      enrichProductGuidanceItems(guidanceItems, {
-        locale,
-        phase: carePhase === "manual" ? "calm_first" : carePhase,
-        severity:
-          typeof aiSnapshot?.severity_level === "string"
-            ? aiSnapshot.severity_level
-            : undefined,
-        regions: aiSnapshot?.primary_regions,
-        concerns: aiConcernTags,
-      }),
-    [guidanceItems, locale, carePhase, aiSnapshot, aiConcernTags],
-  );
-
-  const stepTips = useMemo(() => {
-    if (!routine) {
-      return { morning: [] as (RoutineStepProductTip | null)[], evening: [] as (RoutineStepProductTip | null)[] };
-    }
-    return attachGuidanceToRoutineSteps(
-      routine.morning,
-      routine.evening,
-      enrichedGuidance,
-      carePhase === "manual" ? "calm_first" : carePhase,
-      {
-        locale,
-        phase: carePhase === "manual" ? "calm_first" : carePhase,
-        severity:
-          typeof aiSnapshot?.severity_level === "string"
-            ? aiSnapshot.severity_level
-            : undefined,
-        regions: aiSnapshot?.primary_regions,
-        concerns: aiConcernTags,
-        skinType: skinType ?? undefined,
-      },
-    );
-  }, [routine, enrichedGuidance, carePhase, locale, aiSnapshot, aiConcernTags, skinType]);
-
-  const affiliateCtaCount = useMemo(
-    () => countRoutineAffiliateCtas(stepTips),
-    [stepTips],
   );
 
   const careNote = useMemo(
@@ -777,7 +706,7 @@ export function OnboardingStepStarterRoutine({
       )}
 
       <div className="space-y-2.5" data-testid="starter-product-guidance">
-        <RoutinePeriodSection
+        <OnboardingRoutinePeriodSection
           period="morning"
           steps={routine.morning}
           editing={editing}
@@ -787,7 +716,7 @@ export function OnboardingStepStarterRoutine({
             affiliateCtaCount === 0 ? t("step2.commerceEmptyHint") : null
           }
         />
-        <RoutinePeriodSection
+        <OnboardingRoutinePeriodSection
           period="evening"
           steps={routine.evening}
           editing={editing}

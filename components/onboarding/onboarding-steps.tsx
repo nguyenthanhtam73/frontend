@@ -21,10 +21,10 @@ import {
   OnboardingPhotoGuide,
 } from "@/components/onboarding/onboarding-photo-guide";
 import { OnboardingSkinReadback } from "@/components/onboarding/onboarding-skin-readback";
+import { OnboardingRoutinePeriodSection } from "@/components/onboarding/onboarding-starter-routine-step";
 import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import {
   ConcernChipRow,
-  FriendlyNotice,
   QuickChipGrid,
 } from "@/components/onboarding/onboarding-ui";
 import { AiDisclaimer } from "@/components/ui/ai-disclaimer";
@@ -40,6 +40,7 @@ import {
   filterGuidanceForPhase,
   resolveCarePhaseFromAnalysis,
 } from "@/lib/onboarding/guest-starter";
+import { useOnboardingRoutineStepTips } from "@/lib/onboarding/use-onboarding-routine-step-tips";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
@@ -283,7 +284,8 @@ export function OnboardingStepSkinProfile({
 
 export function OnboardingStepReady() {
   const t = useTranslations("onboarding");
-  const routine = useOnboardingStore((s) => s.starterRoutine);
+  const { routine, carePhase, stepTips, affiliateCtaCount } =
+    useOnboardingRoutineStepTips();
 
   return (
     <section
@@ -312,37 +314,29 @@ export function OnboardingStepReady() {
       </div>
 
       {routine && (
-        <div
-          className="rounded-xl border border-border/50 bg-muted/15 p-4"
-          data-testid="onboarding-ready-recap"
-        >
-          <p className="mb-3 text-sm font-semibold text-foreground/90">{t("step3.routineRecap")}</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div data-testid="onboarding-ready-morning">
-              <p className="mb-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-                {t("routineStep.morning")}
-              </p>
-              <ol className="list-decimal space-y-1 pl-4 text-sm text-muted-foreground">
-                {routine.morning.map((s, i) => (
-                  <li key={i} data-testid={`onboarding-ready-morning-${i}`}>
-                    {s}
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div data-testid="onboarding-ready-evening">
-              <p className="mb-1.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
-                {t("routineStep.evening")}
-              </p>
-              <ol className="list-decimal space-y-1 pl-4 text-sm text-muted-foreground">
-                {routine.evening.map((s, i) => (
-                  <li key={i} data-testid={`onboarding-ready-evening-${i}`}>
-                    {s}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
+        <div className="space-y-2.5" data-testid="onboarding-ready-recap">
+          <p className="text-sm font-semibold text-foreground/90">{t("step3.routineRecap")}</p>
+          <OnboardingRoutinePeriodSection
+            period="morning"
+            steps={routine.morning}
+            editing={false}
+            carePhase={carePhase}
+            productTips={stepTips.morning}
+            sectionTestId="onboarding-ready-morning"
+            stepTestIdPrefix="onboarding-ready-morning"
+            emptyCommerceHint={
+              affiliateCtaCount === 0 ? t("step2.commerceEmptyHint") : null
+            }
+          />
+          <OnboardingRoutinePeriodSection
+            period="evening"
+            steps={routine.evening}
+            editing={false}
+            carePhase={carePhase}
+            productTips={stepTips.evening}
+            sectionTestId="onboarding-ready-evening"
+            stepTestIdPrefix="onboarding-ready-evening"
+          />
         </div>
       )}
 
