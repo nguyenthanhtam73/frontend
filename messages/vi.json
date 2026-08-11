@@ -156,6 +156,7 @@
       "copyright": "© {year} DaDiary. Đang trong giai đoạn Beta.",
       "disclaimer": "DaDiary đưa ra gợi ý chăm da mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
       "betaContact": "Tham gia Beta: đăng ký tài khoản miễn phí để trải nghiệm sớm nhất.",
+      "navAria": "Liên kết chân trang",
       "social": {
         "navAria": "Mạng xã hội DaDiary",
         "facebook": "DaDiary trên Facebook",
@@ -183,6 +184,12 @@
     "retry": "Thử lại",
     "reload": "Tải lại trang",
     "home": "Về trang chủ"
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang",
+    "body": "Trang bạn tìm không tồn tại hoặc đã được chuyển đi.",
+    "home": "Về trang chủ",
+    "pricing": "Xem bảng giá"
   },
   "pwa": {
     "dialogLabel": "Cài DaDiary",
@@ -400,7 +407,30 @@
     "betaFree": "Free core trong Beta · Premium tùy chọn",
     "primary": "Bắt đầu với Free",
     "secondary": "Chỉ để lại email",
-    "trustNote": "DaDiary đưa ra gợi ý tham khảo, không thay thế tư vấn y tế. Luôn patch test sản phẩm mới."
+    "trustNote": "DaDiary đưa ra gợi ý tham khảo, không thay thế tư vấn y tế. Luôn patch test sản phẩm mới.",
+    "pricingLink": "Xem bảng giá Free / Premium"
+  },
+  "landingFaq": {
+    "sectionTitle": "FAQ",
+    "heading": "Câu hỏi thường gặp",
+    "subtitle": "Ngắn gọn — để bạn biết DaDiary phù hợp không trước khi đăng ký.",
+    "pricingCta": "Xem chi tiết gói trên trang bảng giá",
+    "q1": {
+      "question": "DaDiary khác app chăm da thông thường chỗ nào?",
+      "answer": "Bạn check-in bằng ảnh + cảm nhận da mỗi ngày, giữ streak, và nhận gợi ý từ AI Coach dựa trên nhật ký thật — không chỉ checklist routine cứng."
+    },
+    "q2": {
+      "question": "Free trong Beta dùng được những gì?",
+      "answer": "Check-in ảnh, streak, tick routine, tối đa 3 sản phẩm tủ đồ và AI Coach sau mỗi lần ghi (có hạn mức gợi ý/tháng). Premium mở không giới hạn khi bạn cần."
+    },
+    "q3": {
+      "question": "AI Coach có thay thế bác sĩ da liễu không?",
+      "answer": "Không. DaDiary đưa gợi ý tham khảo, nhắc kem chống nắng và an toàn cơ bản. Da bất thường hoặc cần điều trị — gặp bác sĩ."
+    },
+    "q4": {
+      "question": "Bắt đầu thế nào?",
+      "answer": "Đăng ký Free → làm quen với da (vài bước) → check-in ảnh đầu tiên. Có thể xem bảng giá bất cứ lúc nào nếu muốn Premium."
+    }
   },
   "betaSignup": {
     "sectionTitle": "Đăng ký Beta",

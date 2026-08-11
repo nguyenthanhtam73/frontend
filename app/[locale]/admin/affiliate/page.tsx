@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
+import { pageLocaleMetadata } from "@/lib/seo";
+
 import { AffiliateAdminView } from "@/components/admin/affiliate-admin-view";
 import { Link } from "@/i18n/navigation";
 
@@ -8,10 +10,13 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata.adminAffiliate" });
-  return {
+  return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
-  };
+    locale,
+    path: "/admin/affiliate",
+    noIndex: true,
+  });
 }
 
 export default async function AdminAffiliatePage() {

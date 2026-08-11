@@ -156,6 +156,7 @@
       "copyright": "© {year} DaDiary. Currently in Beta.",
       "disclaimer": "DaDiary offers skincare suggestions for reference only and does not replace professional medical advice.",
       "betaContact": "Join Beta: sign up for free early access.",
+      "navAria": "Footer links",
       "social": {
         "navAria": "DaDiary social media",
         "facebook": "DaDiary on Facebook",
@@ -183,6 +184,12 @@
     "retry": "Try again",
     "reload": "Reload page",
     "home": "Back to home"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you’re looking for doesn’t exist or was moved.",
+    "home": "Back to home",
+    "pricing": "See pricing"
   },
   "pwa": {
     "dialogLabel": "Install DaDiary",
@@ -400,7 +407,30 @@
     "betaFree": "Free core in Beta · Premium optional",
     "primary": "Start with Free",
     "secondary": "Just leave your email",
-    "trustNote": "DaDiary offers reference tips only, not medical advice. Always patch test new products."
+    "trustNote": "DaDiary offers reference tips only, not medical advice. Always patch test new products.",
+    "pricingLink": "See Free / Premium pricing"
+  },
+  "landingFaq": {
+    "sectionTitle": "FAQ",
+    "heading": "Frequently asked questions",
+    "subtitle": "Short answers so you know if DaDiary fits before you sign up.",
+    "pricingCta": "See full plan details on the pricing page",
+    "q1": {
+      "question": "How is DaDiary different from a typical skincare app?",
+      "answer": "You check in with photos and how your skin feels, keep a streak, and get AI Coach tips grounded in your real diary — not just a rigid routine checklist."
+    },
+    "q2": {
+      "question": "What does Free include in Beta?",
+      "answer": "Photo check-ins, streaks, routine ticks, up to 3 shelf products, and AI Coach notes after each log (monthly suggestion caps). Premium unlocks unlimited when you need it."
+    },
+    "q3": {
+      "question": "Does the AI Coach replace a dermatologist?",
+      "answer": "No. DaDiary offers reference tips plus sunscreen and basic safety nudges. Unusual symptoms or treatment needs — see a clinician."
+    },
+    "q4": {
+      "question": "How do I start?",
+      "answer": "Sign up for Free → get to know your skin (a few steps) → take your first photo check-in. You can open pricing anytime if you want Premium."
+    }
   },
   "betaSignup": {
     "sectionTitle": "Beta signup",

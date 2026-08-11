@@ -1,6 +1,7 @@
 import { ApiError, apiGet, apiPatch, apiPost } from "@/lib/api-client";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
+import { absoluteUrl } from "@/lib/seo";
 import type {
   AdminSkinReviewListQuery,
   AdminSkinReviewListResponse,
@@ -238,6 +239,41 @@ export async function fetchPublicSkinReview(
   return json.data;
 }
 
+/**
+ * GET /api/v1/public/skin-reviews — slug list for sitemap (no auth).
+ * Soft-fails to [] so a down API never breaks sitemap.xml generation.
+ */
+export async function fetchPublicSkinReviewSitemapItems(): Promise<
+  { slug: string; lastModified?: Date }[]
+> {
+  try {
+    const res = await fetch(`${apiBaseUrl}/api/v1/public/skin-reviews?limit=500`, {
+      headers: { Accept: "application/json" },
+      // Revalidate periodically — sitemap does not need real-time.
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      data?: {
+        items?: { slug?: string; published_at?: string; updated_at?: string }[];
+      };
+    };
+    const items = json?.data?.items;
+    if (!Array.isArray(items)) return [];
+    return items.flatMap((item) => {
+      const slug = item.slug?.trim();
+      if (!slug) return [];
+      const raw = item.updated_at || item.published_at;
+      const parsed = raw ? new Date(raw) : undefined;
+      const lastModified =
+        parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
+      return [{ slug, lastModified }];
+    });
+  } catch {
+    return [];
+  }
+}
+
 /** Client-side helper (admin console) — same public endpoint via api client. */
 export async function fetchPublicSkinReviewClient(
   slug: string,
@@ -281,13 +317,7 @@ export function sameOriginUploadUrl(path: string): string {
   return `/uploads/${path}`;
 }
 
-const SITE_ORIGIN =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://dadiary.vn";
-
 /** Locale-aware share URL for Facebook / clipboard. */
 export function skinReviewShareUrl(slug: string, locale = "vi"): string {
-  if (locale === "en") {
-    return `${SITE_ORIGIN}/en/share/skin-review/${slug}`;
-  }
-  return `${SITE_ORIGIN}/share/skin-review/${slug}`;
+  return absoluteUrl(locale, `/share/skin-review/${slug}`);
 }

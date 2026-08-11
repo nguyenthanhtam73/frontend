@@ -1,6 +1,8 @@
 import { Camera, ShieldCheck, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { pageLocaleMetadata } from "@/lib/seo";
+
 import dynamic from "next/dynamic";
 
 import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
@@ -19,10 +21,13 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata.checkIn" });
-  return {
+  return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
-  };
+    locale,
+    path: "/check-in",
+    noIndex: true,
+  });
 }
 
 export default async function CheckInPage({ params }: Props) {

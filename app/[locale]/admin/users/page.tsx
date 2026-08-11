@@ -2,16 +2,20 @@ import { getTranslations } from "next-intl/server";
 
 import { UsersAdminView } from "@/components/admin/users-admin-view";
 import { Link } from "@/i18n/navigation";
+import { pageLocaleMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata.adminUsers" });
-  return {
+  return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
-  };
+    locale,
+    path: "/admin/users",
+    noIndex: true,
+  });
 }
 
 export default async function AdminUsersPage() {

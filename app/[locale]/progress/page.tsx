@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
+import { pageLocaleMetadata } from "@/lib/seo";
+
 import { PendingCheckinBanner } from "@/components/progress/pending-checkin-banner";
 import { ProgressTimeline } from "@/components/progress/progress-timeline";
 
@@ -8,10 +10,13 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata.progress" });
-  return {
+  return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
-  };
+    locale,
+    path: "/progress",
+    noIndex: true,
+  });
 }
 
 /** /progress — Personal Progress Timeline + Before-After view.

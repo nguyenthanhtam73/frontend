@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "og:default": "node scripts/generate-og-default.mjs",
     "print:share-clipboard": "npx --yes tsx scripts/print-skin-review-share-clipboard.ts",
     "sync:affiliate-catalog": "node scripts/sync-affiliate-catalog.mjs",
     "test:e2e": "playwright test",

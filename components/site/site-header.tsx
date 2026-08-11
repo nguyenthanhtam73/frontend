@@ -182,7 +182,9 @@ export function SiteHeader() {
     mounted && !authReady && Boolean(getAccessToken()) && !user;
 
   const desktopAuth =
-    showAuthSkeleton ? (
+    !authReady && !user ? (
+      <AuthSkeleton />
+    ) : showAuthSkeleton ? (
       <AuthSkeleton />
     ) : user && accountLabel ? (
       <SignedInActions
@@ -193,16 +195,22 @@ export function SiteHeader() {
         onSignOut={signOut}
         signOutLabel={t("signOut")}
       />
-    ) : authReady ? (
+    ) : (
       <GuestActions
         className="hidden sm:flex"
         signInLabel={t("signIn")}
         registerLabel={t("register")}
       />
-    ) : null;
+    );
 
   const mobileAuth =
-    user && accountLabel ? (
+    showAuthSkeleton || (!authReady && !user) ? (
+      <div
+        data-testid="auth-skeleton-mobile"
+        className="h-9 min-w-[9.5rem] animate-pulse rounded-md bg-muted/60 sm:hidden"
+        aria-hidden
+      />
+    ) : user && accountLabel ? (
       <SignedInActions
         accountClassName="max-w-[min(100%,12rem)]"
         accountLabel={accountLabel}

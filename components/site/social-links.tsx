@@ -1,16 +1,17 @@
 import { getTranslations } from "next-intl/server";
 
+import { ORGANIZATION_SAME_AS } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const SOCIAL_LINKS = [
   {
-    id: "facebook",
-    href: "https://www.facebook.com/profile.php?id=61590558754796",
+    id: "facebook" as const,
+    href: ORGANIZATION_SAME_AS[0],
     icon: FacebookIcon,
   },
   {
-    id: "tiktok",
-    href: "https://www.tiktok.com/@dadiary0107",
+    id: "tiktok" as const,
+    href: ORGANIZATION_SAME_AS[1],
     icon: TikTokIcon,
   },
 ] as const;

@@ -1,36 +1,47 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Nunito_Sans } from "next/font/google";
+import type { ReactNode } from "react";
 
 import { PWA_SPLASH_LINKS } from "@/lib/pwa-splash";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  siteOrigin,
+  siteVerificationMetadata,
+} from "@/lib/seo";
 
 import "./globals.css";
 
-/** Nunito Sans: rounded, relaxed strokes — reads softer than geometric sans; Vietnamese subset included. */
-const fontSans = Nunito_Sans({
-  variable: "--font-ui-sans",
-  subsets: ["latin", "latin-ext", "vietnamese"],
-  display: "swap",
-});
-
-const fontMono = Geist_Mono({
-  variable: "--font-ui-mono",
-  subsets: ["latin"],
-});
-
 /**
- * Locale-agnostic metadata. The localised title + description live in
- * `app/[locale]/layout.tsx` and merge with these values automatically.
+ * Root layout stays a pass-through so `[locale]/layout` can own `<html lang>`.
+ * Fonts, body chrome, and providers live under the locale layout.
  *
- * Manifest and PWA icons are declared here so they're emitted once on every
- * page (including non-localised routes such as 404).
+ * `metadataBase` makes relative OG image paths resolve to absolute
+ * https://dadiary.vn/... (override via NEXT_PUBLIC_APP_URL / NEXT_PUBLIC_SITE_URL).
  */
 export const metadata: Metadata = {
-  applicationName: "DaDiary",
+  metadataBase: new URL(siteOrigin()),
+  applicationName: SITE_NAME,
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "DaDiary",
+    title: SITE_NAME,
     statusBarStyle: "default",
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE.url,
+        width: DEFAULT_OG_IMAGE.width,
+        height: DEFAULT_OG_IMAGE.height,
+        alt: DEFAULT_OG_IMAGE.alt,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE.url],
   },
   icons: {
     icon: [
@@ -41,9 +52,6 @@ export const metadata: Metadata = {
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    // iOS standalone launch images. Each entry's media query is targeted at a
-    // specific device class so the OS picks exactly one. List is generated
-    // from `scripts/generate-pwa-icons.mjs` — re-run after adding new sizes.
     other: PWA_SPLASH_LINKS.map((link) => ({
       rel: "apple-touch-startup-image",
       url: link.url,
@@ -53,14 +61,9 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  ...siteVerificationMetadata(),
 };
 
-/**
- * Theme colour matches the manifest so the browser chrome (Android URL bar,
- * iOS status bar) blends with the soft skincare palette in both light and
- * dark mode. `viewportFit: "cover"` lets us paint into safe-area insets
- * when running standalone on notched devices.
- */
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#9DD7D4" },
@@ -71,18 +74,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html
-      lang="vi"
-      className={`${fontSans.variable} ${fontMono.variable} h-full`}
-      suppressHydrationWarning
-    >
-      <body className="flex min-h-full flex-col antialiased">{children}</body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  return children;
 }

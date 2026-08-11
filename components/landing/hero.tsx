@@ -76,7 +76,7 @@ export async function Hero() {
         </div>
 
         <div className="relative isolate mx-auto aspect-square w-full max-w-md lg:max-w-none" aria-hidden>
-          <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/40 to-transparent blur-2xl" />
+          <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/15 via-accent/30 to-transparent blur-xl" />
           <HeroMockup
             tags={[
               { from: "0.82 0.06 330", to: "0.62 0.08 320", tag: t("stack1"), style: "left-[6%] top-[8%] -rotate-6" },

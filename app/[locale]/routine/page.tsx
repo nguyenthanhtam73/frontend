@@ -1,6 +1,8 @@
 import { Moon, Sun } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { pageLocaleMetadata } from "@/lib/seo";
+
 import { RoutineEditor } from "@/components/routine/routine-editor";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -8,10 +10,13 @@ type Props = { params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata.routine" });
-  return {
+  return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
-  };
+    locale,
+    path: "/routine",
+    noIndex: true,
+  });
 }
 
 /**

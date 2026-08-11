@@ -15,9 +15,9 @@ export async function Cta() {
         />
         <div className="relative space-y-5 text-center sm:text-left">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{t("eyebrow")}</p>
-          <h3 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             {t("heading")}
-          </h3>
+          </h2>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-muted-foreground sm:mx-0 sm:text-lg">
             {t("body")}
           </p>
@@ -32,9 +32,17 @@ export async function Cta() {
               <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
             <ButtonLink
-              href="/#beta-signup"
+              href="/pricing"
               size="lg"
               variant="outline"
+              className="h-12 w-full px-6 text-base sm:w-auto"
+            >
+              {t("pricingLink")}
+            </ButtonLink>
+            <ButtonLink
+              href="/#beta-signup"
+              size="lg"
+              variant="ghost"
               className="h-12 w-full px-6 text-base sm:w-auto"
             >
               {t("secondary")}
