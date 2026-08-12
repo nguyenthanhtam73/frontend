@@ -1,14 +1,11 @@
-import { getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 
-import { MergeMessagesProvider } from "@/components/i18n/merge-messages-provider";
-import {
-  HOME_MESSAGE_NAMESPACES,
-  pickMessages,
-} from "@/lib/i18n/client-messages";
+import { MergedMessagesLayout } from "@/components/i18n/merged-messages-layout";
+import { HOME_MESSAGE_NAMESPACES } from "@/lib/i18n/client-messages";
 
 /** Home-only client islands: beta form + skin preview cards. */
-export default async function HomeLayout({ children }: { children: ReactNode }) {
-  const extras = pickMessages(await getMessages(), HOME_MESSAGE_NAMESPACES);
-  return <MergeMessagesProvider messages={extras}>{children}</MergeMessagesProvider>;
+export default function HomeLayout({ children }: { children: ReactNode }) {
+  return (
+    <MergedMessagesLayout namespaces={HOME_MESSAGE_NAMESPACES}>{children}</MergedMessagesLayout>
+  );
 }

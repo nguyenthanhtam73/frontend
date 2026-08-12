@@ -4,39 +4,32 @@ import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-/** Public client ID from Meta Events Manager (override via env if needed). */
-const META_PIXEL_ID =
-  process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "1673924784100065";
-
-declare global {
-  interface Window {
-    fbq?: ((...args: unknown[]) => void) & {
-      callMethod?: (...args: unknown[]) => void;
-      queue?: unknown[];
-      loaded?: boolean;
-      version?: string;
-      push?: (...args: unknown[]) => void;
-    };
-    _fbq?: Window["fbq"];
-  }
-}
+import {
+  META_PIXEL_ID,
+  isMetaPixelAdminPath,
+  trackMetaEvent,
+} from "@/lib/meta-pixel";
 
 /**
  * Meta (Facebook) Pixel — PageView on first load + client navigations.
- * Uses next/navigation pathname (works outside next-intl helpers).
+ * Skipped on /admin so internal traffic does not pollute ad audiences.
  */
 export function MetaPixel() {
   const pathname = usePathname();
   const skipInitialPageView = useRef(true);
+  const isAdmin = isMetaPixelAdminPath(pathname);
 
   useEffect(() => {
+    if (isAdmin) return;
     // First PageView is fired by the inline init snippet.
     if (skipInitialPageView.current) {
       skipInitialPageView.current = false;
       return;
     }
-    window.fbq?.("track", "PageView");
-  }, [pathname]);
+    trackMetaEvent("PageView");
+  }, [pathname, isAdmin]);
+
+  if (isAdmin) return null;
 
   return (
     <>

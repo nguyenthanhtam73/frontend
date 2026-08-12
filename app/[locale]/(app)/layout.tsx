@@ -1,21 +1,16 @@
-import { getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 
-import { MergeMessagesProvider } from "@/components/i18n/merge-messages-provider";
-import {
-  SHELL_MESSAGE_NAMESPACES,
-  omitMessages,
-} from "@/lib/i18n/client-messages";
+import { MergedMessagesLayout } from "@/components/i18n/merged-messages-layout";
+import { APP_CLIENT_MESSAGE_NAMESPACES } from "@/lib/i18n/client-messages";
 
 /**
- * Authenticated / heavy client trees. Merges non-shell namespaces onto the
- * locale shell so HTML does not re-embed common/auth/pwa/….
+ * Authenticated / heavy client trees. Picks only app client namespaces so
+ * marketing/server catalogs are not re-embedded in HTML.
  */
-export default async function AppMessagesLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const extras = omitMessages(await getMessages(), SHELL_MESSAGE_NAMESPACES);
-  return <MergeMessagesProvider messages={extras}>{children}</MergeMessagesProvider>;
+export default function AppMessagesLayout({ children }: { children: ReactNode }) {
+  return (
+    <MergedMessagesLayout namespaces={APP_CLIENT_MESSAGE_NAMESPACES}>
+      {children}
+    </MergedMessagesLayout>
+  );
 }

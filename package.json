@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run test:i18n && next build",
     "start": "next start",
     "lint": "eslint",
+    "test:i18n": "npx --yes tsx --test lib/i18n/client-messages.test.ts",
+    "test:unit": "npx --yes tsx --test lib/i18n/client-messages.test.ts lib/auth/return-path.test.ts lib/onboarding/post-auth-destination.test.ts lib/onboarding/claim-guest-coach-welcome.test.ts lib/onboarding/coach-notes-sections.test.ts",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "og:default": "node scripts/generate-og-default.mjs",
     "print:share-clipboard": "npx --yes tsx scripts/print-skin-review-share-clipboard.ts",

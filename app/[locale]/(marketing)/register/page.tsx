@@ -28,6 +28,7 @@ import {
   isClaimableGuestCoachSession,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
 
@@ -159,6 +160,7 @@ function RegisterPageInner() {
                 } else {
                   void useAuthStore.getState().refresh();
                 }
+                trackMetaEvent("CompleteRegistration", { status: true });
                 let claimed = false;
                 const alreadyDone =
                   json.data?.user?.onboarding_completed === true;
