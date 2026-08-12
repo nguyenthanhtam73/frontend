@@ -51,7 +51,12 @@ function looksNeckCreaseProse(s: string): boolean {
 }
 
 function looksAcuteRed(s: string): boolean {
-  const t = s.toLowerCase();
+  const t = s
+    .toLowerCase()
+    .replace(/không thấy đỏ sưng[^.]{0,24}/g, " ")
+    .replace(/không đỏ sưng[^.]{0,16}/g, " ")
+    .replace(/no redness or pus[^.]{0,16}/g, " ")
+    .replace(/not red or swollen[^.]{0,16}/g, " ");
   return (
     t.includes("mụn viêm") ||
     t.includes("đỏ sưng") ||
@@ -60,6 +65,26 @@ function looksAcuteRed(s: string): boolean {
     t.includes("có mủ") ||
     t.includes("viêm cấp sát mép") ||
     t.includes("chùm hạt đỏ")
+  );
+}
+
+function looksUnevenTextureProse(s: string): boolean {
+  const t = s.toLowerCase();
+  return (
+    t.includes("sần sùi") ||
+    t.includes("gồ ghề không đều") ||
+    t.includes("texture không đều") ||
+    t.includes("uneven texture")
+  );
+}
+
+function proseDeniesRedInNote(s: string): boolean {
+  const t = s.toLowerCase();
+  return (
+    t.includes("không thấy đỏ sưng") ||
+    t.includes("không đỏ sưng") ||
+    t.includes("no redness or pus") ||
+    t.includes("not red or swollen")
   );
 }
 
@@ -150,10 +175,11 @@ export function skinReviewTipsHeadingKey(
     const r = (ar.region ?? "").trim().toLowerCase();
     const note = ar.note ?? "";
     if (r === "neck") neckRegion = true;
-    if (INFLAMED.has(c)) inflamedConcern = true;
+    if (INFLAMED.has(c) && !proseDeniesRedInNote(note)) inflamedConcern = true;
     if (PIGMENT.has(c)) pigment = true;
     if (c === "texture" && (r === "neck" || looksNeckCreaseProse(note))) neckCrease = true;
     if (looksSkinTagProse(note)) skinTag = true;
+    if (looksUnevenTextureProse(note)) skinTag = true;
     if (looksNeckCreaseProse(note)) neckCrease = true;
     if (looksPigmentProse(note)) pigment = true;
   }
@@ -162,6 +188,7 @@ export function skinReviewTipsHeadingKey(
     analysis.photo_notes ?? ""
   }`;
   if (looksSkinTagProse(blob)) skinTag = true;
+  if (looksUnevenTextureProse(blob)) skinTag = true;
   if (looksNeckCreaseProse(blob)) neckCrease = true;
   if (looksPigmentProse(blob)) pigment = true;
   const inflamedProse = looksAcuteRed(blob);

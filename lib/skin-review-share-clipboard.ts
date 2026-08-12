@@ -5,6 +5,10 @@
 
 import en from "../messages/en.json";
 import vi from "../messages/vi.json";
+import {
+  resolveSkinReviewConcern,
+  skinReviewConcernUsesUnevenTextureLabel,
+} from "./skin-review-concern-label";
 import type { AdminSkinReviewAnalysis } from "./types/admin-skin-review";
 
 export type SkinReviewShareLocale = "vi" | "en";
@@ -299,9 +303,17 @@ export function buildShareBodyFromAnalysis(
     const take = variant === "short" ? Math.min(2, problems.length) : Math.min(3, problems.length);
     const clauses = problems
       .slice(0, take)
-      .map((a) =>
-        buildRegionClause(a.region, a.concern, a.note ?? "", locale, templates),
-      );
+      .map((a) => {
+        const resolved = resolveSkinReviewConcern(a, analysis?.overview);
+        const concernKey = skinReviewConcernUsesUnevenTextureLabel(
+          resolved,
+          a,
+          analysis?.overview,
+        )
+          ? "textureUneven"
+          : resolved;
+        return buildRegionClause(a.region, concernKey, a.note ?? "", locale, templates);
+      });
     const joined =
       clauses.length === 1
         ? `${clauses[0]}.`

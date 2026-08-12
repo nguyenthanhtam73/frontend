@@ -4,6 +4,10 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { skinReviewTipsHeadingKey } from "@/lib/skin-review-tips-heading";
+import {
+  resolveSkinReviewConcern,
+  skinReviewConcernUsesUnevenTextureLabel,
+} from "@/lib/skin-review-concern-label";
 import type { AdminSkinReviewAnalysis } from "@/lib/types/admin-skin-review";
 import { cn } from "@/lib/utils";
 
@@ -148,7 +152,13 @@ export function SkinReviewAnalysisView({
                     {labelFromMap(t, "regions", area.region, REGION_KEYS)}
                   </span>
                   <BadgeChip share={share}>
-                    {labelFromMap(t, "concerns", area.concern, CONCERN_KEYS)}
+                    {(() => {
+                      const resolved = resolveSkinReviewConcern(area, a.overview);
+                      if (skinReviewConcernUsesUnevenTextureLabel(resolved, area, a.overview)) {
+                        return t("concerns.textureUneven");
+                      }
+                      return labelFromMap(t, "concerns", resolved, CONCERN_KEYS);
+                    })()}
                   </BadgeChip>
                   <BadgeChip tone="muted" share={share}>
                     {labelFromMap(t, "severities", area.severity, SEVERITY_KEYS)}

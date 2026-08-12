@@ -13,7 +13,7 @@
   "metadata": {
     "root": {
       "title": "DaDiary — Theo dõi da mỗi ngày · Nhận gợi ý từ AI Coach",
-      "description": "Đang mở Beta DaDiary — Free: check-in ảnh, streak, tick routine và AI Coach sau mỗi lần ghi (gợi ý routine 3/tháng UTC, chỉnh routine 5/tháng UTC). Nâng cấp Premium khi cần AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn. Phù hợp da Việt (da dầu, mụn, nóng ẩm)."
+      "description": "Beta DaDiary — nhật ký da bằng ảnh, streak và AI Coach. Bắt đầu Free; Premium khi cần không giới hạn. Phù hợp da Việt (dầu, mụn, nóng ẩm)."
     },
     "checkIn": {
       "title": "Ghi nhật ký da · DaDiary",
@@ -2594,6 +2594,7 @@
       "redness": "Đỏ / ửng đỏ",
       "pores": "Lỗ chân lông to",
       "texture": "Da hơi sần / không mịn đều",
+      "textureUneven": "Sần sùi / texture không đều",
       "dryness": "Khô",
       "oiliness": "Bóng / dầu",
       "irritation": "Kích ứng",
@@ -2689,6 +2690,7 @@
       "dryness": "da khô",
       "oiliness": "bóng dầu",
       "texture": "da hơi sần",
+      "textureUneven": "sần sùi / texture không đều",
       "irritation": "da kích ứng",
       "other": "vấn đề da"
     },

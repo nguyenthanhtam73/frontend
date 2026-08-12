@@ -13,7 +13,7 @@
   "metadata": {
     "root": {
       "title": "DaDiary — Your skin diary · Friendly AI skincare buddy every day",
-      "description": "DaDiary Beta is open — Free: photo check-ins, streaks, routine ticks, and AI Coach notes after each log (3 AI routine suggestions / month UTC, 5 manual edits / month UTC). Upgrade to Premium for unlimited AI, a full shelf, and longer history. Supportive guidance — not a substitute for medical care."
+      "description": "DaDiary Beta — photo skin diary, streaks, and AI Coach. Start Free; Premium when you want unlimited AI. Built for humid, oily, acne-prone skin."
     },
     "checkIn": {
       "title": "Skin check-in · DaDiary",
@@ -2594,6 +2594,7 @@
       "redness": "Redness / flush",
       "pores": "Large pores",
       "texture": "Uneven / bumpy-looking skin",
+      "textureUneven": "Rough / uneven texture",
       "dryness": "Dryness",
       "oiliness": "Shine / oil",
       "irritation": "Irritation",
@@ -2689,6 +2690,7 @@
       "dryness": "dryness",
       "oiliness": "shine/oil",
       "texture": "uneven texture",
+      "textureUneven": "rough / uneven texture",
       "irritation": "irritation",
       "other": "skin issues"
     },

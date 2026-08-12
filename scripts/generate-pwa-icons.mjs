@@ -14,8 +14,9 @@
  *   public/apple-touch-icon.png
  *   public/splash/<name>.png  (one per iOS device class)
  *   lib/pwa-splash.ts         (typed list of <link> entries)
+ *   app/favicon.ico, app/icon.png, app/apple-icon.png  (Next.js App Router)
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
@@ -342,5 +343,11 @@ for (const d of SPLASH_DEVICES) {
 }
 
 writeSplashTs(SPLASH_DEVICES);
+
+const APP_DIR = resolve(ROOT, "app");
+copyFileSync(resolve(ROOT, "public/favicon.ico"), resolve(APP_DIR, "favicon.ico"));
+copyFileSync(resolve(ICONS_OUT, "icon-192.png"), resolve(APP_DIR, "icon.png"));
+copyFileSync(APPLE_OUT, resolve(APP_DIR, "apple-icon.png"));
+console.log("  ✓ app/favicon.ico, app/icon.png, app/apple-icon.png");
 
 console.log("Done.");
