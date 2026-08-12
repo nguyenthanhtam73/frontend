@@ -19,7 +19,12 @@ export type SkinReviewTipsHeadingKey =
 
 function looksSkinTagProse(s: string): boolean {
   const t = s.toLowerCase();
-  if (t.includes("mụn thịt") || t.includes("skin tag") || t.includes("skin-tag")) {
+  if (
+    t.includes("mụn thịt") ||
+    t.includes("skin tag") ||
+    t.includes("skin-tag") ||
+    t.includes("milia")
+  ) {
     return true;
   }
   const tone =
