@@ -4,11 +4,13 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { MetaPixel } from "@/components/site/meta-pixel";
 import { OfflineIndicator } from "@/components/site/offline-indicator";
 import { PwaRegister } from "@/components/site/pwa-register";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { routing } from "@/i18n/routing";
+import { SHELL_MESSAGE_NAMESPACES, pickMessages } from "@/lib/i18n/client-messages";
 import { DEFAULT_OG_IMAGE, SITE_NAME, ogLocale } from "@/lib/seo";
 
 import { AppProviders } from "../providers";
@@ -21,11 +23,13 @@ const fontSans = Nunito_Sans({
   adjustFontFallback: true,
 });
 
+/** Mono is rare on marketing pages — skip preload to free LCP bandwidth. */
 const fontMono = Geist_Mono({
   variable: "--font-ui-mono",
   subsets: ["latin"],
   display: "swap",
   adjustFontFallback: true,
+  preload: false,
 });
 
 type Props = {
@@ -74,7 +78,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   }
 
   setRequestLocale(locale);
-  const messages = await getMessages({ locale });
+  const allMessages = await getMessages({ locale });
+  // Shell only — route segments merge extras via MergeMessagesProvider (no dupe).
+  const messages = pickMessages(allMessages, SHELL_MESSAGE_NAMESPACES);
 
   return (
     <html
@@ -83,6 +89,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col antialiased">
+        <MetaPixel />
         <NextIntlClientProvider messages={messages} locale={locale}>
           <AppProviders>
             <OfflineIndicator />
