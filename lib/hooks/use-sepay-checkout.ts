@@ -62,14 +62,14 @@ export function useSePayCheckout(): UseSePayCheckoutResult {
       try {
         const data = await createSePayCheckout(plan, interval, { locale });
         rememberMetaCheckout({
-          value: data.amount_vnd,
+          value: Number(data.amount_vnd),
           currency: data.currency || "VND",
           contentName: data.plan_tier,
           invoice: data.invoice_number,
         });
         trackMetaEvent("InitiateCheckout", {
-          value: data.amount_vnd,
-          currency: data.currency || "VND",
+          value: Number(data.amount_vnd),
+          currency: (data.currency || "VND").toUpperCase(),
           content_name: data.plan_tier,
           num_items: 1,
         });

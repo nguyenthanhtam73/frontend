@@ -43,7 +43,6 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
   );
   const [pollNonce, setPollNonce] = useState(0);
   const startedAt = useRef(Date.now());
-  const purchaseFired = useRef(false);
 
   const applyPaidTier = useCallback(
     async (tier: string) => {
@@ -92,13 +91,24 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
     };
   }, [kind, phase, pollNonce, applyPaidTier]);
 
-  // Confirmed paid plan → Purchase conversion (once per invoice / tab).
+  const firePurchase = useCallback((planConfirmed = false) => {
+    trackMetaPurchaseOnce({ planConfirmed });
+  }, []);
+
+  // SePay return (payload in localStorage) — don't wait for IPN poll.
+  useEffect(() => {
+    if (kind !== "success") return;
+    firePurchase(false);
+    const onLeave = () => firePurchase(false);
+    window.addEventListener("pagehide", onLeave);
+    return () => window.removeEventListener("pagehide", onLeave);
+  }, [kind, firePurchase]);
+
+  // Plan confirmed paid → Purchase even if checkout payload was lost.
   useEffect(() => {
     if (kind !== "success" || phase !== "active") return;
-    if (purchaseFired.current) return;
-    purchaseFired.current = true;
-    trackMetaPurchaseOnce();
-  }, [kind, phase]);
+    firePurchase(true);
+  }, [kind, phase, firePurchase]);
 
   // Countdown redirect only after plan is confirmed active.
   useEffect(() => {
@@ -203,6 +213,7 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
             size="lg"
             variant={phase === "timeout" ? "outline" : "default"}
             className="h-12 w-full font-semibold"
+            onClick={() => firePurchase(phase === "active")}
           >
             {tCommon("goDashboard")}
           </ButtonLink>

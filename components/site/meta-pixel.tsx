@@ -2,34 +2,40 @@
 
 import Script from "next/script";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   META_PIXEL_ID,
   isMetaPixelAdminPath,
+  shouldLoadMetaPixel,
   trackMetaEvent,
 } from "@/lib/meta-pixel";
 
 /**
  * Meta (Facebook) Pixel — PageView on first load + client navigations.
- * Skipped on /admin so internal traffic does not pollute ad audiences.
+ * Skipped on localhost/dev and /admin so those hits do not pollute ad audiences.
  */
 export function MetaPixel() {
   const pathname = usePathname();
   const skipInitialPageView = useRef(true);
   const isAdmin = isMetaPixelAdminPath(pathname);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    if (isAdmin) return;
+    setEnabled(shouldLoadMetaPixel());
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || isAdmin) return;
     // First PageView is fired by the inline init snippet.
     if (skipInitialPageView.current) {
       skipInitialPageView.current = false;
       return;
     }
     trackMetaEvent("PageView");
-  }, [pathname, isAdmin]);
+  }, [pathname, isAdmin, enabled]);
 
-  if (isAdmin) return null;
+  if (!enabled || isAdmin) return null;
 
   return (
     <>
