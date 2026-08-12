@@ -1,12 +1,15 @@
 import { CheckCircle2, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
+import { resolveSolutionSrc } from "@/lib/marketing-screenshots";
 
 const pointKeys = ["p1", "p2", "p3", "p4"] as const;
 
 export async function Solution() {
   const t = await getTranslations("solution");
+  const imageSrc = resolveSolutionSrc();
 
   return (
     <section className="border-t border-border/60">
@@ -17,6 +20,8 @@ export async function Solution() {
             aria-hidden
           />
           <SolutionMockup
+            imageSrc={imageSrc}
+            imageAlt={t("mockupAlt")}
             labels={{
               checkIn: t("mockup.checkIn"),
               coach: t("mockup.coach"),
@@ -64,6 +69,8 @@ export async function Solution() {
 
 function SolutionMockup({
   labels,
+  imageSrc,
+  imageAlt,
 }: {
   labels: {
     checkIn: string;
@@ -73,47 +80,62 @@ function SolutionMockup({
     streak: string;
     routine: string;
   };
+  /** Real product screenshot. Omit → CSS mock. Expected: public/marketing/solution.png (1200×1500, 4:5). */
+  imageSrc?: string;
+  imageAlt: string;
 }) {
   return (
     <div
       className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/50 bg-card shadow-2xl ring-1 ring-black/5"
-      aria-hidden
+      aria-hidden={imageSrc ? undefined : true}
     >
-      <div className="absolute inset-x-0 top-0 h-9 bg-gradient-to-r from-primary/10 to-accent/25" />
-      <div className="absolute left-1/2 top-2.5 h-1 w-16 -translate-x-1/2 rounded-full bg-border" />
-      <div className="flex h-full flex-col gap-3 p-5 pt-11">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
-            {labels.checkIn}
-          </p>
-          <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-[10px] font-medium text-primary">
-            {labels.streak}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="aspect-square rounded-xl bg-gradient-to-br from-primary/30 via-accent/40 to-primary/15 ring-1 ring-white/40" />
-          <div className="aspect-square rounded-xl bg-gradient-to-br from-accent/55 via-primary/20 to-accent/30 ring-1 ring-white/40" />
-        </div>
-        <div className="rounded-2xl border border-primary/15 bg-background/90 p-3.5 shadow-sm">
-          <p className="text-[11px] font-medium text-muted-foreground">{labels.coach}</p>
-          <p className="mt-1.5 text-sm leading-relaxed">{labels.coachSample}</p>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-secondary/80 p-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-medium text-muted-foreground">{labels.progress}</p>
-            <p className="text-[10px] font-medium text-primary/80">{labels.routine}</p>
+      {imageSrc ? (
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          fill
+          className="object-cover"
+          sizes="(min-width: 1024px) 24rem, 100vw"
+        />
+      ) : (
+        <>
+          <div className="absolute inset-x-0 top-0 h-9 bg-gradient-to-r from-primary/10 to-accent/25" />
+          <div className="absolute left-1/2 top-2.5 h-1 w-16 -translate-x-1/2 rounded-full bg-border" />
+          <div className="flex h-full flex-col gap-3 p-5 pt-11">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary">
+                {labels.checkIn}
+              </p>
+              <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-[10px] font-medium text-primary">
+                {labels.streak}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="aspect-square rounded-xl bg-gradient-to-br from-primary/30 via-accent/40 to-primary/15 ring-1 ring-white/40" />
+              <div className="aspect-square rounded-xl bg-gradient-to-br from-accent/55 via-primary/20 to-accent/30 ring-1 ring-white/40" />
+            </div>
+            <div className="rounded-2xl border border-primary/15 bg-background/90 p-3.5 shadow-sm">
+              <p className="text-[11px] font-medium text-muted-foreground">{labels.coach}</p>
+              <p className="mt-1.5 text-sm leading-relaxed">{labels.coachSample}</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-secondary/80 p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[11px] font-medium text-muted-foreground">{labels.progress}</p>
+                <p className="text-[10px] font-medium text-primary/80">{labels.routine}</p>
+              </div>
+              <div className="mt-3 flex items-end gap-1.5">
+                {[40, 55, 48, 62, 70, 68, 78].map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm bg-primary/70"
+                    style={{ height: `${h * 0.35}px` }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="mt-3 flex items-end gap-1.5">
-            {[40, 55, 48, 62, 70, 68, 78].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-sm bg-primary/70"
-                style={{ height: `${h * 0.35}px` }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

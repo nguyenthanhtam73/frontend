@@ -13,7 +13,7 @@
   "metadata": {
     "root": {
       "title": "DaDiary — Theo dõi da mỗi ngày · Nhận gợi ý từ AI Coach",
-      "description": "Đang mở Beta DaDiary — dùng Free đầy đủ để check-in bằng ảnh, theo dõi tiến trình và nhận gợi ý AI Coach. Nâng cấp Premium khi cần AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn. Phù hợp da Việt (da dầu, mụn, nóng ẩm)."
+      "description": "Đang mở Beta DaDiary — Free: check-in ảnh, streak, tick routine và AI Coach sau mỗi lần ghi (gợi ý routine 3/tháng UTC, chỉnh routine 5/tháng UTC). Nâng cấp Premium khi cần AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn. Phù hợp da Việt (da dầu, mụn, nóng ẩm)."
     },
     "checkIn": {
       "title": "Ghi nhật ký da · DaDiary",
@@ -142,6 +142,7 @@
       "checkIn": "Ghi nhật ký da",
       "routine": "Chăm da sáng tối",
       "howItWorks": "Cách hoạt động",
+      "faq": "FAQ",
       "pricing": "Bảng giá",
       "settings": "Cài đặt",
       "feedback": "Gửi góp ý",
@@ -226,11 +227,11 @@
     "guideClose": "Đóng"
   },
   "hero": {
-    "badge": "Đang mở Beta · Free đầy đủ",
+    "badge": "Đang mở Beta · Free",
     "slogan": "Nhật ký da + AI Coach",
     "titleLead": "Theo dõi da hằng ngày —",
     "titleGradient": "AI gợi ý đúng việc cần làm.",
-    "body": "Da dầu, mụn hay thâm trong khí hậu nóng ẩm? DaDiary giúp bạn <b>ghi nhật ký da bằng ảnh</b>, giữ streak, xem tiến trình và nhận gợi ý routine phù hợp. Bắt đầu với Free — nâng cấp Premium khi cần AI không giới hạn.",
+    "body": "Da dầu, mụn hay thâm vì nóng ẩm? <b>Ghi nhật ký bằng ảnh</b>, giữ streak, nhận gợi ý AI. Bắt đầu Free — Premium khi cần không giới hạn.",
     "ctaPrimary": "Bắt đầu với Free",
     "ctaSecondary": "Xem cách hoạt động",
     "ctaEmailLink": "Hoặc chỉ để lại email →",
@@ -247,7 +248,8 @@
     "mockupLabel": "DaDiary",
     "mockupCheckIn": "Check-in hôm nay",
     "mockupStreak": "Streak 7 ngày",
-    "mockupCoach": "Da hôm nay ổn hơn — giữ kem chống nắng buổi sáng nhé."
+    "mockupCoach": "Da hôm nay ổn hơn — giữ kem chống nắng buổi sáng nhé.",
+    "mockupAlt": "Giao diện DaDiary trên điện thoại: check-in ảnh, streak và gợi ý AI Coach."
   },
   "problem": {
     "sectionTitle": "Vấn đề",
@@ -290,13 +292,15 @@
       "progress": "Tiến trình 7 ngày",
       "streak": "Streak 7 ngày",
       "routine": "Routine sáng ✓"
-    }
+    },
+    "mockupAlt": "Màn hình DaDiary: check-in hôm nay, gợi ý AI Coach và tiến trình 7 ngày."
   },
   "progressPreview": {
     "sectionTitle": "Xem trước Progress",
     "heading": "Nhật ký da trông như thế này",
     "sub": "Mỗi check-in lưu ảnh, cảm nhận và gợi ý coach — đủ để bạn nhìn lại tuần trước và biết mình đang đi đúng hướng.",
-    "cta": "Bắt đầu với Free"
+    "cta": "Bắt đầu với Free",
+    "cardPhotoAlt": "Xem trước nhật ký da của {name}"
   },
   "features": {
     "sectionTitle": "Tính năng nổi bật",
@@ -313,15 +317,15 @@
       },
       "progress": {
         "title": "Theo dõi tiến trình & streak",
-        "desc": "Biểu đồ xu hướng, streak check-in và dòng thời gian giúp bạn nhìn thấy da thay đổi theo tuần — Free xem được vài tháng gần nhất."
+        "desc": "Biểu đồ xu hướng, streak check-in và dòng thời gian — Free xem khoảng 3 tháng gần nhất; Premium 12 tháng; Premium+ toàn bộ."
       },
       "routine": {
         "title": "Gợi ý routine sáng–tối",
-        "desc": "Routine khởi đầu từ AI, có thể chỉnh sửa và tick hoàn thành mỗi ngày — biết ngay bạn đã làm đủ các bước chưa."
+        "desc": "Routine khởi đầu từ AI (Free: 3 gợi ý/tháng UTC), chỉnh tay 5 lần/tháng UTC, tick hoàn thành mỗi ngày."
       },
       "cabinet": {
         "title": "Tủ đồ chăm da",
-        "desc": "Lưu sản phẩm đang dùng — AI tránh gợi ý trùng thành phần và nhắc kem chống nắng, patch test."
+        "desc": "Free xem và thêm tới 3 sản phẩm; sửa/xóa trên Premium. AI tránh gợi ý trùng thành phần và nhắc kem chống nắng, patch test."
       },
       "beforeAfter": {
         "title": "So sánh trước–sau",
@@ -378,10 +382,11 @@
   "testimonials": {
     "sectionTitle": "Người dùng nói gì",
     "heading": "Chăm da đều hơn — vì thấy mình đang tiến",
-    "sub": "Chia sẻ từ chị em 20–35 đang dùng Beta: check-in ảnh, streak và coach nhẹ mỗi ngày.",
-    "collecting": "Chia sẻ từ người dùng Beta",
-    "earlyBeta": "Beta",
-    "footnote": "Trải nghiệm cá nhân từ người dùng Beta sớm — không phải cam kết kết quả y tế. Da mỗi người khác nhau.",
+    "sub": "Câu chuyện minh họa phong cách người dùng Beta 20–35: check-in ảnh, streak và coach nhẹ mỗi ngày. Không phải review độc lập đã xác minh.",
+    "collecting": "Minh họa · Beta",
+    "earlyBeta": "Minh họa",
+    "starRatingAria": "Minh họa 5 sao — không phải điểm review đã xác minh",
+    "footnote": "Trải nghiệm minh họa / Beta — không phải đánh giá độc lập đã xác minh, không cam kết kết quả y tế. Da mỗi người khác nhau.",
     "items": {
       "t1": {
         "name": "Ngọc Anh",
@@ -403,7 +408,7 @@
   "cta": {
     "eyebrow": "Bắt đầu ngay",
     "heading": "Sẵn sàng theo dõi da và nhận gợi ý từ AI mỗi ngày?",
-    "body": "Đăng ký Free trong Beta — check-in bằng ảnh, giữ streak, tick routine và nhận coach sau mỗi lần ghi. Khi cần AI không giới hạn, tủ đồ đầy đủ hay lịch sử dài hơn — nâng cấp Premium bất cứ lúc nào.",
+    "body": "Đăng ký Free trong Beta — check-in bằng ảnh, giữ streak, tick routine và nhận coach sau mỗi lần ghi. Free: gợi ý AI 3/tháng UTC, chỉnh routine 5/tháng UTC, tủ đồ thêm tới 3 sản phẩm, Progress ~3 tháng. Khi cần AI không giới hạn, tủ đồ đầy đủ hay lịch sử dài hơn — nâng cấp Premium bất cứ lúc nào.",
     "betaFree": "Free core trong Beta · Premium tùy chọn",
     "primary": "Bắt đầu với Free",
     "secondary": "Chỉ để lại email",
@@ -421,7 +426,7 @@
     },
     "q2": {
       "question": "Free trong Beta dùng được những gì?",
-      "answer": "Check-in ảnh, streak, tick routine, tối đa 3 sản phẩm tủ đồ và AI Coach sau mỗi lần ghi (có hạn mức gợi ý/tháng). Premium mở không giới hạn khi bạn cần."
+      "answer": "Check-in ảnh, giữ streak, tick routine và nhận AI Coach sau mỗi lần ghi. Gợi ý routine AI: 3 lần/tháng (UTC). Chỉnh tay routine: 5 lần/tháng (UTC). Tủ đồ: xem và thêm tối đa 3 sản phẩm; sửa/xóa cần Premium. Progress: khoảng 3 tháng gần nhất."
     },
     "q3": {
       "question": "AI Coach có thay thế bác sĩ da liễu không?",
@@ -430,14 +435,18 @@
     "q4": {
       "question": "Bắt đầu thế nào?",
       "answer": "Đăng ký Free → làm quen với da (vài bước) → check-in ảnh đầu tiên. Có thể xem bảng giá bất cứ lúc nào nếu muốn Premium."
+    },
+    "q5": {
+      "question": "Premium và Premium+ khác nhau chỗ nào?",
+      "answer": "Premium: gợi ý AI và chỉnh routine không giới hạn, tủ đồ đầy đủ (thêm/sửa/xóa), Progress 12 tháng, cột mốc đầy đủ, xuất dữ liệu, không quảng cáo. Premium+ thêm phân tích đa góc nâng cao và lịch sử Progress không giới hạn."
     }
   },
   "betaSignup": {
     "sectionTitle": "Đăng ký Beta",
     "heading": "Nhận cập nhật Beta — bắt đầu Free khi sẵn sàng",
-    "sub": "Để lại email để nhận link mở Beta và tin tính năng mới. Dùng Free trước; Premium chỉ khi bạn muốn mở khóa thêm.",
+    "sub": "Để lại email để nhận link mở Beta và tin tính năng mới. Dùng Free trước (có hạn mức AI/chỉnh routine mỗi tháng); Premium chỉ khi bạn muốn mở khóa thêm.",
     "benefits": {
-      "b1": "Dùng Free đầy đủ trong Beta",
+      "b1": "Check-in, streak & coach trong Beta",
       "b2": "Ưu tiên khi mở tính năng mới",
       "b3": "Chỉ 1 email — Premium không bắt buộc"
     },
@@ -1374,9 +1383,7 @@
   "skinCard": {
     "checkInBadge": "Nhật ký",
     "coachPrefix": "Gợi ý của bạn đồng hành:",
-    "gapPrefix": "Có thể bổ sung:",
-    "like": "Thích",
-    "dislike": "Không hợp"
+    "gapPrefix": "Có thể bổ sung:"
   },
   "onboarding": {
     "sectionLabel": "Làm quen với da bạn",

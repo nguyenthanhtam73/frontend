@@ -8,19 +8,16 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { normalizePath } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useClientMounted } from "@/lib/use-client-mounted";
 import { useCurrentHash } from "@/lib/use-current-hash";
+import { useShowGuestNav } from "@/lib/use-show-guest-nav";
 import { cn } from "@/lib/utils";
 
 import { LocaleSwitcher } from "./locale-switcher";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
-
-function normalizePath(path: string) {
-  const trimmed = path.split("?")[0].replace(/\/$/, "");
-  return trimmed === "" ? "/" : trimmed;
-}
 
 /** Active when pathname matches route, or trailing segments (nested routes). Hash links compare `hash` (without #). */
 function isNavLinkActive(pathname: string, hash: string, href: string) {
@@ -226,7 +223,13 @@ export function SiteHeader() {
       />
     ) : null;
 
-  const navLinks = [
+  const guestNavLinks = [
+    { href: "/#how" as const, label: t("nav.howItWorks") },
+    { href: "/pricing" as const, label: t("nav.pricing") },
+    { href: "/#faq" as const, label: t("nav.faq") },
+  ];
+
+  const signedInNavLinks = [
     { href: "/onboarding" as const, label: t("nav.start") },
     { href: "/routine" as const, label: t("nav.routine") },
     { href: "/check-in" as const, label: t("nav.checkIn") },
@@ -244,11 +247,13 @@ export function SiteHeader() {
           { href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") },
         ]
       : []),
-    // Skin-review operators see only this admin page (not payments/users/feedbacks).
     ...(user?.can_skin_review || user?.is_admin
       ? [{ href: "/admin/skin-review" as const, label: t("nav.adminSkinReview") }]
       : []),
   ];
+
+  const showGuestNav = useShowGuestNav();
+  const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
 
   // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.
   const linkBase =

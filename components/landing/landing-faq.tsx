@@ -2,7 +2,8 @@ import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
 
-const FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
+/** Keep in sync with FAQPage JSON-LD on the home page. */
+export const LANDING_FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5"] as const;
 
 /** Landing FAQ — visible Q&A + pairs with FAQPage JSON-LD on the home page. */
 export async function LandingFaq() {
@@ -24,7 +25,7 @@ export async function LandingFaq() {
         </div>
 
         <div className="divide-y divide-border/60 rounded-2xl border border-border/70 bg-card/40 px-1">
-          {FAQ_KEYS.map((key) => (
+          {LANDING_FAQ_KEYS.map((key) => (
             <details
               key={key}
               className="group px-4 py-0.5 open:bg-muted/15 sm:px-5"

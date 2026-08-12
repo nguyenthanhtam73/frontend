@@ -13,7 +13,7 @@
   "metadata": {
     "root": {
       "title": "DaDiary — Your skin diary · Friendly AI skincare buddy every day",
-      "description": "DaDiary Beta is open — use a full Free tier for photo check-ins, progress tracking, and AI Coach tips. Upgrade to Premium when you want unlimited AI, a full shelf, and longer history. Supportive, evidence-friendly guidance — not a substitute for medical care."
+      "description": "DaDiary Beta is open — Free: photo check-ins, streaks, routine ticks, and AI Coach notes after each log (3 AI routine suggestions / month UTC, 5 manual edits / month UTC). Upgrade to Premium for unlimited AI, a full shelf, and longer history. Supportive guidance — not a substitute for medical care."
     },
     "checkIn": {
       "title": "Skin check-in · DaDiary",
@@ -142,6 +142,7 @@
       "checkIn": "Skin check-in",
       "routine": "Morning & evening",
       "howItWorks": "How it works",
+      "faq": "FAQ",
       "pricing": "Pricing",
       "settings": "Settings",
       "feedback": "Send feedback",
@@ -226,11 +227,11 @@
     "guideClose": "Close"
   },
   "hero": {
-    "badge": "Beta open · Full Free core",
+    "badge": "Beta open · Free",
     "slogan": "Skin diary + AI Coach",
     "titleLead": "Track your skin daily —",
     "titleGradient": "AI tells you what to do next.",
-    "body": "Oily skin, breakouts, or humidity stress? DaDiary helps you <b>log skin with photos</b>, keep a streak, see progress, and get routine tips that fit. Start on Free — upgrade to Premium when you want unlimited AI.",
+    "body": "Oily skin, breakouts, or humidity? <b>Log with photos</b>, keep a streak, get AI tips. Start Free — Premium when you want unlimited.",
     "ctaPrimary": "Start with Free",
     "ctaSecondary": "See how it works",
     "ctaEmailLink": "Or just leave your email →",
@@ -247,7 +248,8 @@
     "mockupLabel": "DaDiary",
     "mockupCheckIn": "Today's check-in",
     "mockupStreak": "7-day streak",
-    "mockupCoach": "Skin looks steadier — keep morning SPF going."
+    "mockupCoach": "Skin looks steadier — keep morning SPF going.",
+    "mockupAlt": "DaDiary phone UI: photo check-in, streak, and an AI Coach note."
   },
   "problem": {
     "sectionTitle": "The problem",
@@ -290,13 +292,15 @@
       "progress": "7-day progress",
       "streak": "7-day streak",
       "routine": "AM routine ✓"
-    }
+    },
+    "mockupAlt": "DaDiary screen: today's check-in, an AI Coach note, and 7-day progress."
   },
   "progressPreview": {
     "sectionTitle": "Progress preview",
     "heading": "Your skin diary looks like this",
     "sub": "Each check-in saves photos, how skin felt, and a coach note — enough to look back a week and see if you're on track.",
-    "cta": "Start with Free"
+    "cta": "Start with Free",
+    "cardPhotoAlt": "Skin diary preview for {name}"
   },
   "features": {
     "sectionTitle": "Key features",
@@ -313,15 +317,15 @@
       },
       "progress": {
         "title": "Progress & streaks",
-        "desc": "Trend charts, check-in streaks, and a timeline so you see week-by-week change — Free covers recent months."
+        "desc": "Trend charts, check-in streaks, and a timeline so you see week-by-week change — Free covers about the last 3 months; Premium 12 months; Premium+ all time."
       },
       "routine": {
         "title": "AM/PM routine suggestions",
-        "desc": "AI starter routine you can edit and tick off daily — know when you've done every step."
+        "desc": "AI starter routine (Free: 3 suggestions/month UTC), 5 manual edits/month UTC, and daily ticks so you know every step is done."
       },
       "cabinet": {
         "title": "Skincare shelf",
-        "desc": "Track products in use — AI avoids duplicate ingredients and reminds SPF and patch tests."
+        "desc": "Free: view and add up to 3 products; edit/delete on Premium. AI avoids duplicate ingredients and reminds SPF and patch tests."
       },
       "beforeAfter": {
         "title": "Before/after compare",
@@ -378,10 +382,11 @@
   "testimonials": {
     "sectionTitle": "What users say",
     "heading": "More consistent care — because progress is visible",
-    "sub": "Stories from women 20–35 in Beta: photo check-ins, streaks, and a gentle coach each day.",
-    "collecting": "Beta user stories",
-    "earlyBeta": "Beta",
-    "footnote": "Personal Beta experiences — not medical outcome promises. Everyone's skin is different.",
+    "sub": "Illustrative Beta-style stories (ages 20–35): photo check-ins, streaks, and a gentle coach each day. Not independently verified reviews.",
+    "collecting": "Illustrative · Beta",
+    "earlyBeta": "Illustrative",
+    "starRatingAria": "Illustrative 5-star styling — not a verified review score",
+    "footnote": "Illustrative / Beta stories — not independently verified reviews, and not medical outcome promises. Everyone's skin is different.",
     "items": {
       "t1": {
         "name": "Ngọc Anh",
@@ -403,7 +408,7 @@
   "cta": {
     "eyebrow": "Get started",
     "heading": "Ready to track your skin and get daily AI guidance?",
-    "body": "Sign up for Free in Beta — photo check-ins, streaks, routine ticks, and coach notes after each log. When you want unlimited AI, a full shelf, or longer history — upgrade to Premium anytime.",
+    "body": "Sign up for Free in Beta — photo check-ins, streaks, routine ticks, and coach notes after each log. Free: 3 AI suggestions/month UTC, 5 routine edits/month UTC, add up to 3 shelf products, ~3 months of Progress. When you want unlimited AI, a full shelf, or longer history — upgrade to Premium anytime.",
     "betaFree": "Free core in Beta · Premium optional",
     "primary": "Start with Free",
     "secondary": "Just leave your email",
@@ -421,7 +426,7 @@
     },
     "q2": {
       "question": "What does Free include in Beta?",
-      "answer": "Photo check-ins, streaks, routine ticks, up to 3 shelf products, and AI Coach notes after each log (monthly suggestion caps). Premium unlocks unlimited when you need it."
+      "answer": "Photo check-ins, streaks, routine ticks, and AI Coach notes after each log. AI routine suggestions: 3/month (UTC). Manual routine edits: 5/month (UTC). Shelf: view and add up to 3 products; edit/delete needs Premium. Progress: about the last 3 months."
     },
     "q3": {
       "question": "Does the AI Coach replace a dermatologist?",
@@ -430,14 +435,18 @@
     "q4": {
       "question": "How do I start?",
       "answer": "Sign up for Free → get to know your skin (a few steps) → take your first photo check-in. You can open pricing anytime if you want Premium."
+    },
+    "q5": {
+      "question": "What's the difference between Premium and Premium+?",
+      "answer": "Premium: unlimited AI suggestions and routine edits, full shelf (add/edit/delete), 12 months of Progress, full milestones, data export, and no ads. Premium+ adds advanced multi-angle analysis and unlimited Progress history."
     }
   },
   "betaSignup": {
     "sectionTitle": "Beta signup",
     "heading": "Get Beta updates — start Free when you're ready",
-    "sub": "Leave your email for Beta links and feature news. Use Free first; Premium only if you want to unlock more.",
+    "sub": "Leave your email for Beta links and feature news. Use Free first (monthly caps on AI suggestions and routine edits); Premium only if you want to unlock more.",
     "benefits": {
-      "b1": "Full Free core during Beta",
+      "b1": "Check-ins, streaks & coach in Beta",
       "b2": "Priority when new features launch",
       "b3": "One email — Premium not required"
     },
@@ -1374,9 +1383,7 @@
   "skinCard": {
     "checkInBadge": "Check-in",
     "coachPrefix": "Buddy tip:",
-    "gapPrefix": "Could add:",
-    "like": "Like",
-    "dislike": "Not for me"
+    "gapPrefix": "Could add:"
   },
   "onboarding": {
     "sectionLabel": "Get to know your skin",

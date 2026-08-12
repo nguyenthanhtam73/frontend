@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const itemKeys = ["t1", "t2", "t3"] as const;
 
-function StarRating() {
+function StarRating({ label }: { label: string }) {
   return (
-    <div className="flex gap-0.5" aria-label="5 out of 5 stars">
+    <div className="flex gap-0.5" aria-label={label}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star key={i} className="size-3.5 fill-primary/80 text-primary/80" aria-hidden />
       ))}
@@ -55,7 +55,7 @@ export async function Testimonials() {
               <CardContent className="flex h-full flex-col gap-4 p-6 pt-7">
                 <div className="flex items-start justify-between gap-3 pr-16">
                   <Quote className="size-6 shrink-0 text-primary/25" aria-hidden />
-                  <StarRating />
+                  <StarRating label={t("starRatingAria")} />
                 </div>
 
                 <blockquote className="flex-1 text-sm leading-relaxed text-foreground/90">

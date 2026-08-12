@@ -1,9 +1,10 @@
 import { ArrowRight } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { SkinCheckCard } from "@/components/skin/skin-check-card";
 import { ButtonLink } from "@/components/ui/button-link";
+import { resolvePreviewSrcs } from "@/lib/marketing-screenshots";
 import { localizeMockSkinCheck, mockSkinChecks } from "@/lib/mock-data";
-import { getLocale, getTranslations } from "next-intl/server";
 
 export async function ProgressPreview() {
   const t = await getTranslations("progressPreview");
@@ -11,6 +12,7 @@ export async function ProgressPreview() {
   const preview = mockSkinChecks
     .slice(0, 3)
     .map((src) => localizeMockSkinCheck(src, locale));
+  const photos = resolvePreviewSrcs();
 
   return (
     <section
@@ -37,8 +39,13 @@ export async function ProgressPreview() {
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {preview.map((e) => (
-            <SkinCheckCard key={e.id} entry={e} />
+          {preview.map((e, i) => (
+            <SkinCheckCard
+              key={e.id}
+              entry={e}
+              photoSrc={photos[i]}
+              photoAlt={t("cardPhotoAlt", { name: e.user.name })}
+            />
           ))}
         </div>
       </div>

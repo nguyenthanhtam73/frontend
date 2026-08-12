@@ -1,15 +1,11 @@
 import { getTranslations } from "next-intl/server";
 
-import { Link } from "@/i18n/navigation";
-
 import { Logo } from "./logo";
+import { SiteFooterNav } from "./site-footer-nav";
 import { SocialLinks } from "./social-links";
 
 export async function SiteFooter() {
   const tFooter = await getTranslations("common.footer");
-  const tNav = await getTranslations("common.nav");
-  const t = await getTranslations("common");
-  const tFaq = await getTranslations("landingFaq");
   const year = new Date().getFullYear();
 
   return (
@@ -19,41 +15,7 @@ export async function SiteFooter() {
           <Logo />
           <span className="text-xs text-muted-foreground sm:text-sm">{tFooter("tagline")}</span>
         </div>
-        <nav
-          aria-label={tFooter("navAria")}
-          className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
-        >
-          <Link className="hover:text-foreground" href="/pricing">
-            {tNav("pricing")}
-          </Link>
-          <Link className="hover:text-foreground" href="/#faq">
-            {tFaq("sectionTitle")}
-          </Link>
-          <Link className="hover:text-foreground" href="/#how">
-            {tNav("howItWorks")}
-          </Link>
-          <Link className="hover:text-foreground" href="/register">
-            {t("register")}
-          </Link>
-          <Link className="hover:text-foreground" href="/login">
-            {t("signIn")}
-          </Link>
-          <Link className="hover:text-foreground" href="/onboarding">
-            {tNav("start")}
-          </Link>
-          <Link className="hover:text-foreground" href="/feedback">
-            {tNav("feedback")}
-          </Link>
-          <Link className="hover:text-foreground" href="/check-in">
-            {tNav("checkIn")}
-          </Link>
-          <Link className="hover:text-foreground" href="/cabinet">
-            {tNav("cabinet")}
-          </Link>
-          <Link className="hover:text-foreground" href="/progress">
-            {tNav("progress")}
-          </Link>
-        </nav>
+        <SiteFooterNav />
       </div>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 border-t border-border/40 px-4 py-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6 sm:px-6">
         <div className="space-y-1.5 text-center text-xs text-muted-foreground sm:text-left">

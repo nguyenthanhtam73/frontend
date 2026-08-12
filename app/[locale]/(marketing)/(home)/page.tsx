@@ -7,7 +7,7 @@ import { Cta } from "@/components/landing/cta";
 import { Features } from "@/components/landing/features";
 import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
-import { LandingFaq } from "@/components/landing/landing-faq";
+import { LANDING_FAQ_KEYS, LandingFaq } from "@/components/landing/landing-faq";
 import { Problem } from "@/components/landing/problem";
 import { ProgressPreview } from "@/components/landing/progress-preview";
 import { Solution } from "@/components/landing/solution";
@@ -17,7 +17,6 @@ import { absoluteUrl, ORGANIZATION_SAME_AS, pageSocialMetadata, siteOrigin } fro
 type Props = { params: Promise<{ locale: string }> };
 
 const HOW_STEPS = ["s1", "s2", "s3", "s4"] as const;
-const FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -75,7 +74,7 @@ export default async function HomePage({ params }: Props) {
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ_KEYS.map((key) => ({
+    mainEntity: LANDING_FAQ_KEYS.map((key) => ({
       "@type": "Question",
       name: tFaq(`${key}.question`),
       acceptedAnswer: {

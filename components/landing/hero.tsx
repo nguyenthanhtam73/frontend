@@ -1,12 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { ArrowRight, Camera, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Link } from "@/i18n/navigation";
+import { resolveHeroPhoneSrc } from "@/lib/marketing-screenshots";
 
 export async function Hero() {
   const t = await getTranslations("hero");
+  const phoneSrc = resolveHeroPhoneSrc();
 
   return (
     <section className="relative overflow-hidden">
@@ -75,9 +78,14 @@ export async function Hero() {
           </dl>
         </div>
 
-        <div className="relative isolate mx-auto aspect-square w-full max-w-md lg:max-w-none" aria-hidden>
+        <div
+          className="relative isolate mx-auto aspect-square w-full max-w-md lg:max-w-none"
+          aria-hidden={phoneSrc ? undefined : true}
+        >
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/15 via-accent/30 to-transparent blur-xl" />
           <HeroMockup
+            imageSrc={phoneSrc}
+            imageAlt={t("mockupAlt")}
             tags={[
               { from: "0.82 0.06 330", to: "0.62 0.08 320", tag: t("stack1"), style: "left-[6%] top-[8%] -rotate-6" },
               { from: "0.58 0.09 195", to: "0.42 0.08 200", tag: t("stack2"), style: "right-[4%] top-[14%] rotate-3" },
@@ -100,56 +108,78 @@ function HeroMockup({
   checkInLabel,
   streakLabel,
   coachLabel,
+  imageSrc,
+  imageAlt,
 }: {
   tags: { from: string; to: string; tag: string; style: string }[];
   appLabel: string;
   checkInLabel: string;
   streakLabel: string;
   coachLabel: string;
+  /** Real product screenshot inside the phone bezel. Omit → CSS mock. */
+  imageSrc?: string;
+  imageAlt: string;
 }) {
   return (
     <div className="relative h-full w-full">
-      {/* Product phone frame — richer UI chrome (no PNG assets in repo yet) */}
+      {/* Product phone frame — screenshot when present, CSS mock otherwise.
+          Expected: public/marketing/hero-phone.png (780×1688, ~9:19.5). */}
       <div className="absolute left-1/2 top-1/2 z-10 w-[52%] max-w-[220px] -translate-x-1/2 -translate-y-[42%] overflow-hidden rounded-[1.85rem] border-[5px] border-white/80 bg-card shadow-2xl ring-1 ring-black/10 sm:max-w-none">
-        <div className="flex items-center justify-between bg-gradient-to-r from-primary/15 to-accent/30 px-3 py-2">
-          <span className="text-[10px] font-semibold tracking-wide text-foreground/80">
-            {appLabel}
-          </span>
-          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-medium text-primary">
-            {streakLabel}
-          </span>
-        </div>
-        <div className="space-y-2.5 p-3">
-          <div className="overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-primary/25 via-accent/35 to-primary/10">
-            <div className="flex aspect-[5/3] flex-col items-center justify-center gap-1.5 p-3">
-              <Camera className="size-5 text-primary/70" strokeWidth={1.75} />
-              <p className="text-center text-[10px] font-medium text-foreground/80">
-                {checkInLabel}
-              </p>
+        {imageSrc ? (
+          <div className="relative aspect-[9/19.5] w-full">
+            <Image
+              src={imageSrc}
+              alt={imageAlt}
+              fill
+              className="object-cover"
+              sizes="220px"
+              priority
+            />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between bg-gradient-to-r from-primary/15 to-accent/30 px-3 py-2">
+              <span className="text-[10px] font-semibold tracking-wide text-foreground/80">
+                {appLabel}
+              </span>
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-medium text-primary">
+                {streakLabel}
+              </span>
             </div>
-          </div>
-          <div className="rounded-lg border border-primary/15 bg-primary/8 px-2.5 py-2">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-primary/80">
-              AI Coach
-            </p>
-            <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-foreground/85">
-              {coachLabel}
-            </p>
-          </div>
-          <div className="flex items-end gap-1 px-0.5 pb-0.5">
-            {[36, 48, 42, 58, 64, 60, 72].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-sm bg-primary/55"
-                style={{ height: `${h * 0.28}px` }}
-              />
-            ))}
-          </div>
-        </div>
+            <div className="space-y-2.5 p-3">
+              <div className="overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-primary/25 via-accent/35 to-primary/10">
+                <div className="flex aspect-[5/3] flex-col items-center justify-center gap-1.5 p-3">
+                  <Camera className="size-5 text-primary/70" strokeWidth={1.75} />
+                  <p className="text-center text-[10px] font-medium text-foreground/80">
+                    {checkInLabel}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-primary/15 bg-primary/8 px-2.5 py-2">
+                <p className="text-[9px] font-semibold uppercase tracking-wide text-primary/80">
+                  AI Coach
+                </p>
+                <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-foreground/85">
+                  {coachLabel}
+                </p>
+              </div>
+              <div className="flex items-end gap-1 px-0.5 pb-0.5">
+                {[36, 48, 42, 58, 64, 60, 72].map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm bg-primary/55"
+                    style={{ height: `${h * 0.28}px` }}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       {tags.map((c) => (
         <div
           key={c.tag}
+          aria-hidden
           className={`absolute aspect-[3/4] w-[48%] overflow-hidden rounded-3xl border border-white/40 bg-card shadow-xl ring-1 ring-black/5 ${c.style}`}
           style={{
             background: `linear-gradient(160deg, oklch(${c.from}) 0%, oklch(${c.to}) 100%)`,
