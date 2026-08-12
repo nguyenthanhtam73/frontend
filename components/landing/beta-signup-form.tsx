@@ -7,6 +7,7 @@ import { useCallback, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { betaSignupErrorKey, submitBetaSignup } from "@/lib/api/beta-signup";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,6 +51,7 @@ export function BetaSignupForm({ className }: { className?: string }) {
 
     try {
       await submitBetaSignup({ email: email.trim() });
+      trackMetaEvent("Lead");
       setSubmitted(true);
       setEmail("");
       success({

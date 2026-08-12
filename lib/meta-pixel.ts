@@ -33,3 +33,60 @@ export function trackMetaEvent(
   }
   window.fbq?.("track", event);
 }
+
+const CHECKOUT_STORAGE_KEY = "dadiary_meta_checkout";
+const PURCHASE_FIRED_PREFIX = "dadiary_meta_purchase_";
+
+export type MetaCheckoutPayload = {
+  value: number;
+  currency: string;
+  contentName: string;
+  invoice?: string;
+};
+
+/** Persist checkout value so /payment/success can fire Purchase with amount. */
+export function rememberMetaCheckout(payload: MetaCheckoutPayload): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+function readMetaCheckout(): MetaCheckoutPayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(CHECKOUT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as MetaCheckoutPayload;
+    if (typeof parsed?.value !== "number") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fire Purchase once per invoice (or once per tab if invoice unknown).
+ * Call after SePay IPN confirms a paid plan.
+ */
+export function trackMetaPurchaseOnce(): void {
+  const payload = readMetaCheckout();
+  const dedupeKey = `${PURCHASE_FIRED_PREFIX}${payload?.invoice || "session"}`;
+  try {
+    if (sessionStorage.getItem(dedupeKey) === "1") return;
+    sessionStorage.setItem(dedupeKey, "1");
+    sessionStorage.removeItem(CHECKOUT_STORAGE_KEY);
+  } catch {
+    /* still fire — better a duplicate than a missed conversion */
+  }
+
+  const params: Record<string, unknown> = {
+    currency: payload?.currency || "VND",
+  };
+  if (payload && payload.value > 0) params.value = payload.value;
+  if (payload?.contentName) params.content_name = payload.contentName;
+  if (payload?.invoice) params.order_id = payload.invoice;
+  trackMetaEvent("Purchase", params);
+}

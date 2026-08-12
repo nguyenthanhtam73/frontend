@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { fetchMePlanTierSoft, isPaidPlanTier } from "@/lib/api/payment";
+import { trackMetaPurchaseOnce } from "@/lib/meta-pixel";
 import { normalizePlanTier } from "@/lib/premium/features";
 import { usageQueryKey } from "@/lib/api/usage";
 import { useRouter } from "@/i18n/navigation";
@@ -42,6 +43,7 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
   );
   const [pollNonce, setPollNonce] = useState(0);
   const startedAt = useRef(Date.now());
+  const purchaseFired = useRef(false);
 
   const applyPaidTier = useCallback(
     async (tier: string) => {
@@ -89,6 +91,14 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
       if (timer) clearTimeout(timer);
     };
   }, [kind, phase, pollNonce, applyPaidTier]);
+
+  // Confirmed paid plan → Purchase conversion (once per invoice / tab).
+  useEffect(() => {
+    if (kind !== "success" || phase !== "active") return;
+    if (purchaseFired.current) return;
+    purchaseFired.current = true;
+    trackMetaPurchaseOnce();
+  }, [kind, phase]);
 
   // Countdown redirect only after plan is confirmed active.
   useEffect(() => {

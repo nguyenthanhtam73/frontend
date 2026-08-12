@@ -9,6 +9,7 @@ import {
   sePayCheckoutErrorKey,
   submitSePayCheckoutForm,
 } from "@/lib/api/payment";
+import { rememberMetaCheckout, trackMetaEvent } from "@/lib/meta-pixel";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import type { BillingInterval, PricedPlan } from "@/lib/premium/pricing";
 
@@ -60,6 +61,18 @@ export function useSePayCheckout(): UseSePayCheckoutResult {
       setBusyPlan(plan);
       try {
         const data = await createSePayCheckout(plan, interval, { locale });
+        rememberMetaCheckout({
+          value: data.amount_vnd,
+          currency: data.currency || "VND",
+          contentName: data.plan_tier,
+          invoice: data.invoice_number,
+        });
+        trackMetaEvent("InitiateCheckout", {
+          value: data.amount_vnd,
+          currency: data.currency || "VND",
+          content_name: data.plan_tier,
+          num_items: 1,
+        });
         submitSePayCheckoutForm(data.checkout_url, data.form_fields);
         // If navigation is blocked, clear busy so the user can retry.
         window.setTimeout(() => {

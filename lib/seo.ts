@@ -148,6 +148,17 @@ const NO_INDEX_ROBOTS = {
   googleBot: { index: false, follow: true },
 } as const;
 
+const INDEX_ROBOTS = {
+  index: true,
+  follow: true,
+  googleBot: { index: true, follow: true },
+} as const;
+
+/** Default robots for authenticated / private app shells. */
+export function appShellRobots(): Pick<Metadata, "robots"> {
+  return { robots: NO_INDEX_ROBOTS };
+}
+
 /** Title + description + canonical/hreflang (or noindex for private pages). */
 export function pageLocaleMetadata({
   title,
@@ -168,6 +179,8 @@ export function pageLocaleMetadata({
   return {
     title,
     description,
+    // Explicit index so public pages under the app shell override the default noindex.
+    robots: INDEX_ROBOTS,
     alternates: localeAlternates(locale, path),
   };
 }
