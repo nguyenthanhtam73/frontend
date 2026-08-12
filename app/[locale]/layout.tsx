@@ -89,8 +89,8 @@ export default async function LocaleLayout({ children, params }: Props) {
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col antialiased">
-        <MetaPixel />
         <NextIntlClientProvider messages={messages} locale={locale}>
+          <MetaPixel />
           <AppProviders>
             <OfflineIndicator />
             <SiteHeader />

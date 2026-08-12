@@ -1,9 +1,8 @@
 "use client";
 
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-
-import { usePathname } from "@/i18n/navigation";
 
 /** Public client ID from Meta Events Manager (override via env if needed). */
 const META_PIXEL_ID =
@@ -24,7 +23,7 @@ declare global {
 
 /**
  * Meta (Facebook) Pixel — PageView on first load + client navigations.
- * Init script matches Meta's standard snippet; SPA routes re-fire PageView.
+ * Uses next/navigation pathname (works outside next-intl helpers).
  */
 export function MetaPixel() {
   const pathname = usePathname();
