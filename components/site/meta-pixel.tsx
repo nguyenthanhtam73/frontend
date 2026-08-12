@@ -19,7 +19,11 @@ export function MetaPixel() {
   const pathname = usePathname();
   const skipInitialPageView = useRef(true);
   const isAdmin = isMetaPixelAdminPath(pathname);
-  const [enabled, setEnabled] = useState(false);
+  // Production SSR includes the snippet so Meta can see the Pixel in HTML.
+  // After mount, drop it on localhost (`next start`) so Ads Manager stays clean.
+  const [enabled, setEnabled] = useState(
+    () => process.env.NODE_ENV === "production",
+  );
 
   useEffect(() => {
     setEnabled(shouldLoadMetaPixel());
