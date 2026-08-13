@@ -560,6 +560,12 @@ export function SkinReviewAdminView() {
         ) : null}
       </div>
 
+      {result && !title.trim() ? (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] px-3.5 py-2.5 text-xs leading-relaxed text-muted-foreground">
+          {t("titleMissingHint")}
+        </p>
+      ) : null}
+
       {shareUrl ? (
         <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 space-y-1">

@@ -142,6 +142,7 @@
       "checkIn": "Ghi nhật ký da",
       "routine": "Chăm da sáng tối",
       "howItWorks": "Cách hoạt động",
+      "guides": "Hướng dẫn",
       "faq": "FAQ",
       "pricing": "Bảng giá",
       "settings": "Cài đặt",
@@ -232,7 +233,7 @@
     "titleLead": "Theo dõi da hằng ngày —",
     "titleGradient": "AI gợi ý đúng việc cần làm.",
     "body": "Da dầu, mụn hay thâm vì nóng ẩm? <b>Ghi nhật ký bằng ảnh</b>, giữ streak, nhận gợi ý AI. Bắt đầu Free — Premium khi cần không giới hạn.",
-    "ctaPrimary": "Bắt đầu với Free",
+    "ctaPrimary": "Chụp ảnh nhận routine",
     "ctaSecondary": "Xem cách hoạt động",
     "ctaEmailLink": "Hoặc chỉ để lại email →",
     "betaNote": "Core Free trong Beta · Premium khi cần · Không bắt buộc thẻ",
@@ -299,7 +300,7 @@
     "sectionTitle": "Xem trước Progress",
     "heading": "Nhật ký da trông như thế này",
     "sub": "Mỗi check-in lưu ảnh, cảm nhận và gợi ý coach — đủ để bạn nhìn lại tuần trước và biết mình đang đi đúng hướng.",
-    "cta": "Bắt đầu với Free",
+    "cta": "Chụp ảnh nhận routine",
     "cardPhotoAlt": "Xem trước nhật ký da của {name}"
   },
   "features": {
@@ -407,10 +408,10 @@
   },
   "cta": {
     "eyebrow": "Bắt đầu ngay",
-    "heading": "Sẵn sàng theo dõi da và nhận gợi ý từ AI mỗi ngày?",
-    "body": "Đăng ký Free trong Beta — check-in bằng ảnh, giữ streak, tick routine và nhận coach sau mỗi lần ghi. Free: gợi ý AI 3/tháng UTC, chỉnh routine 5/tháng UTC, tủ đồ thêm tới 3 sản phẩm, Progress ~3 tháng. Khi cần AI không giới hạn, tủ đồ đầy đủ hay lịch sử dài hơn — nâng cấp Premium bất cứ lúc nào.",
+    "heading": "Sẵn sàng xem AI đọc da bạn?",
+    "body": "Chụp một ảnh để nhận routine khởi đầu — chưa cần tạo tài khoản. Đăng ký sau khi thấy gợi ý, để lưu streak và check-in mỗi ngày. Free trong Beta: gợi ý AI 3/tháng UTC, chỉnh routine 5/tháng UTC.",
     "betaFree": "Free core trong Beta · Premium tùy chọn",
-    "primary": "Bắt đầu với Free",
+    "primary": "Chụp ảnh nhận routine",
     "secondary": "Chỉ để lại email",
     "trustNote": "DaDiary đưa ra gợi ý tham khảo, không thay thế tư vấn y tế. Luôn patch test sản phẩm mới.",
     "pricingLink": "Xem bảng giá Free / Premium"
@@ -434,7 +435,7 @@
     },
     "q4": {
       "question": "Bắt đầu thế nào?",
-      "answer": "Đăng ký Free → làm quen với da (vài bước) → check-in ảnh đầu tiên. Có thể xem bảng giá bất cứ lúc nào nếu muốn Premium."
+      "answer": "Chụp ảnh (chưa cần tài khoản) → xem routine khởi đầu → đăng ký để lưu. Check-in ảnh đầu tiên khi đã có tài khoản. Bảng giá xem bất cứ lúc nào."
     },
     "q5": {
       "question": "Premium và Premium+ khác nhau chỗ nào?",
@@ -594,6 +595,14 @@
     "submitErrorGeneric": "Gửi thất bại ({status}): {detail}. Bạn có thể sửa và thử lại — dữ liệu vẫn được giữ.",
     "analyzingCoach": "Đang đọc ảnh và soạn lời khuyên — có thể mất vài phút, bạn cứ để tab mở nhé.",
     "coachBeforeSubmit": "Gửi để nhận: tóm tắt hôm nay, gợi ý điều chỉnh chăm da, điều nên cẩn thận, và nhắc an toàn.",
+    "pushNudge": {
+      "title": "Bật nhắc tối để giữ streak?",
+      "body": "Check-in đầu đã xong. Thông báo nhẹ buổi tối — tắt bất cứ lúc nào trong Cài đặt.",
+      "enable": "Bật thông báo",
+      "enabling": "Đang bật…",
+      "later": "Để sau",
+      "error": "Chưa bật được. Thử lại, hoặc mở Cài đặt."
+    },
     "feedbackLoading": {
       "title": "Bạn đồng hành đang soạn lời khuyên",
       "submittingTitle": "Đang gửi nhật ký da…",
@@ -2499,6 +2508,7 @@
     "userQuestionLabel": "Câu hỏi của user (tuỳ chọn)",
     "userQuestionPlaceholder": "vd. Má mình đang bị gì vậy ạ?",
     "userQuestionHint": "Câu hỏi trên FB/group — hiện trên trang share và ảnh PNG khi có trả lời.",
+    "titleMissingHint": "Chưa có Title. Trang public sẽ tự lấy tiêu đề từ câu hỏi của user (hoặc từ nhóm vấn đề), nhưng tự viết theo đúng câu người ta hay search thì lên Google tốt hơn — nhớ bấm Lưu metadata / Q&A.",
     "skinContext": {
       "title": "Sờ / thời gian (giúp AI đọc đúng nhóm)",
       "why": "Ảnh không tách được milia với mụn ẩn với mụn thịt — nhìn y nhau. Sờ cứng hay mềm, bao lâu rồi, có đau không thì tách được.",
@@ -2756,9 +2766,9 @@
     },
     "photoAlt": "Ảnh da đã làm mờ — nhận xét DaDiary",
     "photoAltN": "Ảnh da đã làm mờ {n} — nhận xét DaDiary",
-    "ctaTitle": "Thử phân tích da của bạn",
-    "ctaBody": "Tạo tài khoản DaDiary miễn phí để check-in bằng ảnh và nhận coaching cá nhân.",
-    "ctaRegister": "Đăng ký miễn phí",
+    "ctaTitle": "Chụp ảnh để nhận routine của bạn",
+    "ctaBody": "Xem AI đọc da — chưa cần tạo tài khoản. Đăng ký sau khi thấy routine khởi đầu.",
+    "ctaRegister": "Chụp ảnh nhận routine",
     "ctaHome": "Khám phá DaDiary"
   }
 }

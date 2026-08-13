@@ -142,6 +142,7 @@
       "checkIn": "Skin check-in",
       "routine": "Morning & evening",
       "howItWorks": "How it works",
+      "guides": "Guides",
       "faq": "FAQ",
       "pricing": "Pricing",
       "settings": "Settings",
@@ -232,7 +233,7 @@
     "titleLead": "Track your skin daily —",
     "titleGradient": "AI tells you what to do next.",
     "body": "Oily skin, breakouts, or humidity? <b>Log with photos</b>, keep a streak, get AI tips. Start Free — Premium when you want unlimited.",
-    "ctaPrimary": "Start with Free",
+    "ctaPrimary": "Take a photo, get a routine",
     "ctaSecondary": "See how it works",
     "ctaEmailLink": "Or just leave your email →",
     "betaNote": "Free core in Beta · Premium when you need it · Card optional",
@@ -299,7 +300,7 @@
     "sectionTitle": "Progress preview",
     "heading": "Your skin diary looks like this",
     "sub": "Each check-in saves photos, how skin felt, and a coach note — enough to look back a week and see if you're on track.",
-    "cta": "Start with Free",
+    "cta": "Take a photo, get a routine",
     "cardPhotoAlt": "Skin diary preview for {name}"
   },
   "features": {
@@ -407,10 +408,10 @@
   },
   "cta": {
     "eyebrow": "Get started",
-    "heading": "Ready to track your skin and get daily AI guidance?",
-    "body": "Sign up for Free in Beta — photo check-ins, streaks, routine ticks, and coach notes after each log. Free: 3 AI suggestions/month UTC, 5 routine edits/month UTC, add up to 3 shelf products, ~3 months of Progress. When you want unlimited AI, a full shelf, or longer history — upgrade to Premium anytime.",
+    "heading": "Ready to see what AI reads on your skin?",
+    "body": "Take one photo for a starter routine — no account yet. Sign up after you see the tips, so you can keep a streak and check in daily. Free in Beta: 3 AI suggestions/month UTC, 5 routine edits/month UTC.",
     "betaFree": "Free core in Beta · Premium optional",
-    "primary": "Start with Free",
+    "primary": "Take a photo, get a routine",
     "secondary": "Just leave your email",
     "trustNote": "DaDiary offers reference tips only, not medical advice. Always patch test new products.",
     "pricingLink": "See Free / Premium pricing"
@@ -434,7 +435,7 @@
     },
     "q4": {
       "question": "How do I start?",
-      "answer": "Sign up for Free → get to know your skin (a few steps) → take your first photo check-in. You can open pricing anytime if you want Premium."
+      "answer": "Take a photo (no account yet) → see a starter routine → sign up to save it. Do your first diary check-in once you have an account. Pricing is always open."
     },
     "q5": {
       "question": "What's the difference between Premium and Premium+?",
@@ -594,6 +595,14 @@
     "submitErrorGeneric": "Submit failed ({status}): {detail}. You can fix and retry — your data is kept.",
     "analyzingCoach": "Reading your photos and writing a friendly response — this can take a few minutes. Keep the tab open.",
     "coachBeforeSubmit": "Send to receive: today's read, routine tweaks, what to ease off, and safety notes.",
+    "pushNudge": {
+      "title": "Turn on an evening reminder to keep your streak?",
+      "body": "First check-in is in. A light evening nudge — you can turn it off anytime in Settings.",
+      "enable": "Enable notifications",
+      "enabling": "Enabling…",
+      "later": "Later",
+      "error": "Couldn’t enable. Try again, or open Settings."
+    },
     "feedbackLoading": {
       "title": "Your buddy is preparing feedback",
       "submittingTitle": "Sending your check-in…",
@@ -2499,6 +2508,7 @@
     "userQuestionLabel": "User question (optional)",
     "userQuestionPlaceholder": "e.g. What’s going on with my cheeks?",
     "userQuestionHint": "The FB/group question — shown on the share page and PNG when answered.",
+    "titleMissingHint": "No title yet. The public page will derive one from the user's question (or the finding), but writing the phrase people actually search ranks better — remember to press Save metadata / Q&A.",
     "skinContext": {
       "title": "Touch / timing (helps pick the right group)",
       "why": "A photo cannot separate milia from closed comedones from skin tags — they look identical. Firmness, how long it's been there, and whether it hurts can.",
@@ -2756,9 +2766,9 @@
     },
     "photoAlt": "Blurred skin photo — DaDiary review",
     "photoAltN": "Blurred skin photo {n} — DaDiary review",
-    "ctaTitle": "Try analyzing your own skin",
-    "ctaBody": "Create a free DaDiary account to check in with photos and get personal coaching.",
-    "ctaRegister": "Sign up free",
+    "ctaTitle": "Take a photo to get your routine",
+    "ctaBody": "See what the AI reads — no account yet. Sign up after you see the starter routine.",
+    "ctaRegister": "Take a photo, get a routine",
     "ctaHome": "Explore DaDiary"
   }
 }
