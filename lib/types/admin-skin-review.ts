@@ -24,6 +24,16 @@ export type AdminSkinReviewAnalysis = {
   /** 2–3 gentle avoid/do tips for public share (no brands/meds). */
   soothing_tips?: string[];
   non_diagnostic: string;
+  /** Morphology group from the backend Go classifier (mụn ẩn / milia / texture / …). */
+  morphology_group?: string;
+  /** high | medium | low — how readable the photo actually was. */
+  confidence?: string;
+  /** True when the photo alone cannot separate look-alike groups. */
+  needs_more_info?: boolean;
+  /** Short questions/photo asks that would settle an ambiguous read. */
+  clarify_questions?: string[];
+  /** Touch / pain / duration answers this analysis was produced with. */
+  skin_context?: string;
 };
 
 export type AdminSkinReviewResponse = {
@@ -45,6 +55,13 @@ export type AdminSkinReviewResponse = {
   share_path?: string;
   created_at: string;
   updated_at: string;
+  /** Touch / pain / duration answers captured at upload. */
+  skin_context?: string;
+  /** True once an operator corrected the AI read (labeled data exists). */
+  analysis_corrected?: boolean;
+  analysis_corrected_at?: string;
+  /** The model's first answer, kept for accuracy comparison. */
+  analysis_original?: AdminSkinReviewAnalysis;
 };
 
 /** Unauthenticated share payload — no admin notes, blurred images only. */
@@ -67,6 +84,8 @@ export type PatchAdminSkinReviewBody = {
   user_question?: string;
   answer?: string;
   status?: AdminSkinReviewStatus;
+  /** Operator-corrected analysis; the AI's original read is preserved server-side. */
+  analysis?: AdminSkinReviewAnalysis;
 };
 
 export type SuggestAdminSkinReviewAnswerBody = {
@@ -83,6 +102,8 @@ export type SuggestAdminSkinReviewAnswerResponse = {
 
 export type ReanalyzeAdminSkinReviewBody = {
   user_question?: string;
+  /** Answers to the clarify questions — re-reads the same photos with that evidence. */
+  skin_context?: string;
 };
 
 export type AdminSkinReviewListItem = {

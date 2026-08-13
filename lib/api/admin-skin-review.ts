@@ -41,6 +41,8 @@ export async function createAdminSkinReview(input: {
   user_question?: string;
   answer?: string;
   status?: "draft" | "published";
+  /** Touch / pain / duration answers — separate look-alikes a photo cannot. */
+  skin_context?: string;
 }): Promise<AdminSkinReviewResponse> {
   if (!getAccessToken()) {
     throw new Error("auth");
@@ -60,6 +62,9 @@ export async function createAdminSkinReview(input: {
   }
   if (input.answer?.trim()) fd.append("answer", input.answer.trim());
   if (input.status) fd.append("status", input.status);
+  if (input.skin_context?.trim()) {
+    fd.append("skin_context", input.skin_context.trim());
+  }
 
   try {
     return await apiPost<AdminSkinReviewResponse>("/api/v1/admin/skin-review", fd, {

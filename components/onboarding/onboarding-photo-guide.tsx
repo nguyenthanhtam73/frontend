@@ -9,6 +9,8 @@ const GOOD_CRITERIA_KEYS = [
   "photoGuide.goodLight",
   "photoGuide.goodAngle",
   "photoGuide.goodClean",
+  // Side lighting is the only way raised-vs-flat bumps show up at all.
+  "photoGuide.goodOblique",
 ] as const;
 
 const AVOID_CRITERIA_KEYS = [

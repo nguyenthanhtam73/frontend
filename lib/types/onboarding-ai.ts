@@ -34,6 +34,14 @@ export type OnboardingSkinAnalyzeDTO = {
   };
   skin_observations?: OnboardingSkinObservations;
   detailed_observations?: string;
+  /** Morphology group decided by the backend classifier (mụn ẩn / milia / texture / …). */
+  morphology_group?: string;
+  /** high | medium | low — how readable the photo actually was. */
+  group_confidence?: string;
+  /** True when the photo alone cannot separate look-alike groups. */
+  needs_more_info?: boolean;
+  /** Short questions / photo asks that would settle an ambiguous read. */
+  clarify_questions?: string[];
   main_concerns?: string[];
   skin_tone?: string;
   model_used: string;

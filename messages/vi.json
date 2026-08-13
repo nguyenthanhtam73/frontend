@@ -1597,10 +1597,22 @@
       "goodLight": "Ánh sáng tự nhiên, gần cửa sổ",
       "goodAngle": "Thẳng mặt hoặc nửa nghiêng",
       "goodClean": "Không makeup, không filter mạnh",
+      "goodOblique": "Thêm 1 ảnh sáng chiếu ngang má (đứng cạnh cửa sổ) — mới thấy nốt nổi cao hay phẳng",
       "avoidFilter": "Filter làm da quá mịn / sáng",
       "avoidDark": "Tối, flash gắt, bóng đổ nặng",
       "avoidMakeup": "Trang điểm dày che chi tiết da",
-      "footer": "2–3 ảnh là đủ. Không cần ảnh đẹp — chỉ cần rõ và tự nhiên."
+      "footer": "2–3 ảnh là đủ. Không cần ảnh đẹp — chỉ cần rõ và tự nhiên. Chụp sát vùng mày đang lo nhất."
+    },
+    "readbackUncertain": {
+      "title": "Chưa đủ để chốt chắc",
+      "body": "Từ ảnh này thì mấy nhóm trông giống nhau. Trả lời/chụp thêm mấy cái dưới đây thì tao chốt đúng hơn — vì routine bên dưới dựa hết vào phần đọc này."
+    },
+    "readbackConfirm": {
+      "prompt": "Đọc vậy có khớp da mày không?",
+      "yes": "Khớp",
+      "no": "Chưa khớp",
+      "thanksYes": "Ngon, tao giữ nguyên hướng này.",
+      "thanksNo": "Ok — sửa lại mấy nhãn vấn đề da ở dưới cho đúng, routine sẽ đi theo."
     },
     "routineStep": {
       "morning": "Buổi sáng",
@@ -2487,6 +2499,54 @@
     "userQuestionLabel": "Câu hỏi của user (tuỳ chọn)",
     "userQuestionPlaceholder": "vd. Má mình đang bị gì vậy ạ?",
     "userQuestionHint": "Câu hỏi trên FB/group — hiện trên trang share và ảnh PNG khi có trả lời.",
+    "skinContext": {
+      "title": "Sờ / thời gian (giúp AI đọc đúng nhóm)",
+      "why": "Ảnh không tách được milia với mụn ẩn với mụn thịt — nhìn y nhau. Sờ cứng hay mềm, bao lâu rồi, có đau không thì tách được.",
+      "firmnessLabel": "Sờ vào thấy",
+      "firmness": {
+        "firm": "Cứng như hạt cát",
+        "soft": "Mềm",
+        "stalked": "Có cuống, lắc lư được",
+        "unknown": "Chưa rõ"
+      },
+      "durationLabel": "Có bao lâu rồi",
+      "duration": {
+        "days": "Vài ngày",
+        "weeks": "Vài tuần",
+        "months": "Nhiều tháng, không đổi",
+        "comes_and_goes": "Lên xuống theo đợt",
+        "unknown": "Chưa rõ"
+      },
+      "painLabel": "Cảm giác",
+      "pain": {
+        "none": "Không đau, không ngứa",
+        "itchy": "Ngứa",
+        "sore": "Đau / rát",
+        "unknown": "Chưa rõ"
+      },
+      "extraLabel": "Thêm gì nữa (tuỳ chọn)",
+      "extraPlaceholder": "vd. mới đổi sữa rửa mặt tuần trước"
+    },
+    "needsMoreInfoTitle": "Chưa đủ để chốt nhóm",
+    "needsMoreInfoBody": "Chỉ từ ảnh này thì mấy nhóm trông giống nhau. Có thêm mấy thông tin dưới đây mới chốt chắc được — chốt sai thì phần dưỡng/trị cũng sai theo.",
+    "confidenceLabel": "Độ chắc",
+    "confidence": {
+      "high": "Cao",
+      "medium": "Vừa",
+      "low": "Thấp"
+    },
+    "correctionCta": "Sửa nhận xét AI",
+    "correctionHint": "AI gọi sai nhóm thì sửa ở đây — bản sửa được lưu lại để đo độ chính xác.",
+    "correctionDone": "Đã có bản sửa của người review.",
+    "correctionTitle": "Sửa nhóm AI đọc sai",
+    "correctionWhy": "Bản AI đoán vẫn được giữ nguyên bên cạnh bản sửa, nên cặp này dùng làm dữ liệu đo độ chính xác về sau.",
+    "correctionConcernLabel": "Nhóm vấn đề",
+    "correctionSeverityLabel": "Mức độ",
+    "correctionOverviewLabel": "Tổng quan (sửa lại nếu cần)",
+    "correctionSave": "Lưu bản sửa",
+    "correctionCancel": "Huỷ",
+    "correctionSaved": "Đã lưu bản sửa.",
+    "correctionError": "Lưu bản sửa thất bại. Thử lại.",
     "answerLabel": "Trả lời",
     "answerPlaceholder": "Câu trả lời ngắn cho user — có thể gợi ý bằng AI rồi sửa.",
     "qaSectionTitle": "Câu hỏi & trả lời (public)",

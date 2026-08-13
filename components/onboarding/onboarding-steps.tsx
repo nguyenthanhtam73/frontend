@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
   CoachWelcomeAchievementCard,
@@ -96,6 +96,9 @@ export function OnboardingStepSkinProfile({
   const tPrivacy = useTranslations("privacy");
   const tCheckIn = useTranslations("checkIn");
   const ob = useOnboardingStore();
+  // null = not answered yet. false surfaces a nudge to fix the concern labels below,
+  // since the starter routine is derived from this read.
+  const [readbackAgreed, setReadbackAgreed] = useState<boolean | null>(null);
 
   const step1Guidance = useMemo(() => {
     if (!aiSnapshot?.product_guidance?.length) return undefined;
@@ -250,7 +253,15 @@ export function OnboardingStepSkinProfile({
           <OnboardingSkinReadback
             snapshot={aiSnapshot}
             title={t("step1.aiResultTitle")}
+            onConfirm={setReadbackAgreed}
           />
+          {readbackAgreed !== null ? (
+            <p className="rounded-lg border border-border/70 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+              {readbackAgreed
+                ? t("readbackConfirm.thanksYes")
+                : t("readbackConfirm.thanksNo")}
+            </p>
+          ) : null}
           <ProductGuidanceSection
             items={step1Guidance}
             commerceOnly

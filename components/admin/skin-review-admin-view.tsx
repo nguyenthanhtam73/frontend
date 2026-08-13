@@ -9,8 +9,16 @@ import {
   AdminSkinReviewUpload,
   type AdminReviewPhoto,
 } from "@/components/admin/admin-skin-review-upload";
+import {
+  buildSkinContextText,
+  EMPTY_SKIN_CONTEXT,
+  skinContextHasAnswers,
+  SkinContextFields,
+  type SkinContextAnswers,
+} from "@/components/admin/skin-context-fields";
 import { SkinReviewAdminList } from "@/components/admin/skin-review-admin-list";
 import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
+import { SkinReviewCorrectionEditor } from "@/components/admin/skin-review-correction-editor";
 import { SkinReviewQaBlock } from "@/components/share/skin-review-qa-block";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,6 +67,7 @@ export function SkinReviewAdminView() {
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [userQuestion, setUserQuestion] = useState("");
+  const [skinContext, setSkinContext] = useState<SkinContextAnswers>(EMPTY_SKIN_CONTEXT);
   const [answer, setAnswer] = useState("");
   const [status, setStatus] = useState<AdminSkinReviewStatus>("draft");
   const [result, setResult] = useState<AdminSkinReviewResponse | null>(null);
@@ -131,6 +140,10 @@ export function SkinReviewAdminView() {
       if (!result?.id) throw new Error("missing_id");
       return reanalyzeAdminSkinReview(result.id, {
         user_question: userQuestion.trim() || undefined,
+        // Lets the operator answer the clarify questions and re-read the same photos.
+        skin_context: skinContextHasAnswers(skinContext)
+          ? buildSkinContextText(skinContext, t as unknown as (key: string) => string)
+          : undefined,
       });
     },
     onSuccess: (res) => {
@@ -154,6 +167,7 @@ export function SkinReviewAdminView() {
         user_question: userQuestion,
         answer,
         status,
+        skin_context: buildSkinContextText(skinContext, t as unknown as (key: string) => string),
       }),
     onSuccess: (res) => {
       setResult(res);
@@ -405,6 +419,13 @@ export function SkinReviewAdminView() {
             {t("userQuestionHint")}
           </span>
         </label>
+        <div className="sm:col-span-2">
+          <SkinContextFields
+            value={skinContext}
+            onChange={setSkinContext}
+            disabled={visionBusy || publishing}
+          />
+        </div>
       </section>
 
       {result ? (
@@ -596,6 +617,8 @@ export function SkinReviewAdminView() {
             analysis={result.analysis}
             userQuestion={result.user_question ?? userQuestion}
           />
+
+          <SkinReviewCorrectionEditor review={result} onSaved={setResult} />
         </section>
       ) : null}
       </>

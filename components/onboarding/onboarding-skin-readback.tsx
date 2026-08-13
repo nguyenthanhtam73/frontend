@@ -51,11 +51,18 @@ export function OnboardingSkinReadback({
   snapshot,
   title,
   compact,
+  onConfirm,
 }: {
   snapshot: OnboardingSkinAnalyzeDTO;
   title?: string;
   /** Compact = summary + chips only (for Step 2 above AM/PM). */
   compact?: boolean;
+  /**
+   * Called when the user says the read is right or wrong. Wrong is the useful signal:
+   * the whole routine is derived from this read, so letting them flag it beats
+   * building care advice on a group they can already tell is off.
+   */
+  onConfirm?: (agrees: boolean) => void;
 }) {
   const t = useTranslations("onboarding");
   const severity = snapshot.severity_level?.trim() || "";
@@ -175,6 +182,47 @@ export function OnboardingSkinReadback({
                   </span>
                 ))}
           </div>
+        </div>
+      ) : null}
+
+      {!compact && snapshot.needs_more_info ? (
+        <div
+          className="space-y-1.5 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2.5"
+          data-testid="onboarding-needs-more-info"
+        >
+          <p className="text-xs font-semibold">{t("readbackUncertain.title")}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {t("readbackUncertain.body")}
+          </p>
+          {(snapshot.clarify_questions ?? []).length > 0 ? (
+            <ul className="list-disc space-y-1 pl-4 text-xs text-foreground/90">
+              {(snapshot.clarify_questions ?? []).map((q) => (
+                <li key={q} className="leading-relaxed">
+                  {q}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {!compact && onConfirm ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
+          <span className="text-xs text-muted-foreground">{t("readbackConfirm.prompt")}</span>
+          <button
+            type="button"
+            onClick={() => onConfirm(true)}
+            className="min-h-8 rounded-full border border-border bg-background px-3 text-xs hover:text-foreground"
+          >
+            {t("readbackConfirm.yes")}
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(false)}
+            className="min-h-8 rounded-full border border-border bg-background px-3 text-xs hover:text-foreground"
+          >
+            {t("readbackConfirm.no")}
+          </button>
         </div>
       ) : null}
 

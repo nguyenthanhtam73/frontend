@@ -1597,10 +1597,22 @@
       "goodLight": "Natural light near a window",
       "goodAngle": "Straight-on or ¾ angle",
       "goodClean": "No makeup, light filters only",
+      "goodOblique": "Add one shot with light from the side (stand next to a window) — that's what shows raised vs flat bumps",
       "avoidFilter": "Heavy filters smoothing skin",
       "avoidDark": "Dark, harsh flash, heavy shadows",
       "avoidMakeup": "Heavy makeup hiding skin detail",
-      "footer": "2–3 photos is enough. They don't need to be pretty — just clear and natural."
+      "footer": "2–3 photos is enough. They don't need to be pretty — just clear and natural. Fill the frame with what worries you most."
+    },
+    "readbackUncertain": {
+      "title": "Not enough to be sure yet",
+      "body": "From this photo a few groups look the same. Answer or add the shots below and the read gets sharper — the routine underneath is built entirely on it."
+    },
+    "readbackConfirm": {
+      "prompt": "Does that match your skin?",
+      "yes": "It matches",
+      "no": "Not quite",
+      "thanksYes": "Good — keeping this direction.",
+      "thanksNo": "Fix the skin concern labels below and the routine will follow."
     },
     "routineStep": {
       "morning": "Morning",
@@ -2487,6 +2499,54 @@
     "userQuestionLabel": "User question (optional)",
     "userQuestionPlaceholder": "e.g. What’s going on with my cheeks?",
     "userQuestionHint": "The FB/group question — shown on the share page and PNG when answered.",
+    "skinContext": {
+      "title": "Touch / timing (helps pick the right group)",
+      "why": "A photo cannot separate milia from closed comedones from skin tags — they look identical. Firmness, how long it's been there, and whether it hurts can.",
+      "firmnessLabel": "It feels",
+      "firmness": {
+        "firm": "Firm like a grain of sand",
+        "soft": "Soft",
+        "stalked": "On a little stalk, floppy",
+        "unknown": "Not sure"
+      },
+      "durationLabel": "How long",
+      "duration": {
+        "days": "A few days",
+        "weeks": "A few weeks",
+        "months": "Months, unchanged",
+        "comes_and_goes": "Comes and goes",
+        "unknown": "Not sure"
+      },
+      "painLabel": "Sensation",
+      "pain": {
+        "none": "No pain, no itch",
+        "itchy": "Itchy",
+        "sore": "Sore / stinging",
+        "unknown": "Not sure"
+      },
+      "extraLabel": "Anything else (optional)",
+      "extraPlaceholder": "e.g. switched cleanser last week"
+    },
+    "needsMoreInfoTitle": "Not enough to settle the group",
+    "needsMoreInfoBody": "From this photo alone several groups look alike. The items below would settle it — a wrong group makes every care suggestion wrong too.",
+    "confidenceLabel": "Confidence",
+    "confidence": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "correctionCta": "Correct the AI read",
+    "correctionHint": "If the AI named the wrong group, fix it here — the correction is stored to measure accuracy.",
+    "correctionDone": "A reviewer correction is on file.",
+    "correctionTitle": "Correct the group the AI got wrong",
+    "correctionWhy": "The AI's original answer is kept alongside your correction, so the pair works as labeled data for accuracy measurement.",
+    "correctionConcernLabel": "Concern group",
+    "correctionSeverityLabel": "Severity",
+    "correctionOverviewLabel": "Overview (edit if needed)",
+    "correctionSave": "Save correction",
+    "correctionCancel": "Cancel",
+    "correctionSaved": "Correction saved.",
+    "correctionError": "Could not save the correction. Try again.",
     "answerLabel": "Answer",
     "answerPlaceholder": "Short public reply — AI can draft it, then you edit.",
     "qaSectionTitle": "Question & answer (public)",

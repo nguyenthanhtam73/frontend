@@ -43,6 +43,7 @@ import type {
 import { cn } from "@/lib/utils";
 
 import { SkinReviewAnalysisView } from "./skin-review-analysis-view";
+import { SkinReviewCorrectionEditor } from "./skin-review-correction-editor";
 
 const detailInputClass =
   "min-h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
@@ -568,6 +569,14 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
           <SkinReviewAnalysisView
             analysis={detail.analysis}
             userQuestion={detail.user_question ?? editQuestion}
+          />
+
+          <SkinReviewCorrectionEditor
+            review={detail}
+            onSaved={(next) => {
+              setDetail(next);
+              void queryClient.invalidateQueries({ queryKey: ["admin", "skin-reviews"] });
+            }}
           />
         </div>
       ) : null}

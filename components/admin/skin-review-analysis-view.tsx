@@ -95,6 +95,14 @@ export function SkinReviewAnalysisView({
 
   return (
     <div className={cn(share ? "space-y-8 sm:space-y-7" : "space-y-6", className)}>
+      {a.needs_more_info ? (
+        <UncertaintyPanel
+          confidence={a.confidence}
+          questions={a.clarify_questions ?? []}
+          share={share}
+        />
+      ) : null}
+
       <ResultSection title={t("fieldOverview")} share={share} index={nextIndex()}>
         <p
           className={cn(
@@ -231,6 +239,59 @@ export function SkinReviewAnalysisView({
         </p>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Honest-uncertainty panel.
+ *
+ * A photo cannot separate every look-alike group (milia vs closed comedones, old
+ * pigment vs acute irritation). Saying so — plus what would settle it — beats a
+ * confident wrong group, because the group drives every care suggestion downstream.
+ */
+function UncertaintyPanel({
+  confidence,
+  questions,
+  share,
+}: {
+  confidence?: string;
+  questions: string[];
+  share?: boolean;
+}) {
+  const t = useTranslations("adminSkinReview");
+  const level = (confidence ?? "").trim().toLowerCase();
+  const known = level === "high" || level === "medium" || level === "low";
+  return (
+    <section
+      className={cn(
+        "min-w-0 space-y-2 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] px-3.5 py-3",
+        share && "px-4 py-3.5",
+      )}
+      data-testid="skin-review-uncertainty"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={cn("font-semibold tracking-tight", share ? "text-sm" : "text-sm")}>
+          {t("needsMoreInfoTitle")}
+        </span>
+        {known ? (
+          <span className="inline-flex items-center rounded-full bg-foreground/10 px-2.5 py-0.5 text-xs font-medium">
+            {t("confidenceLabel")}: {t(`confidence.${level}` as "confidence.low")}
+          </span>
+        ) : null}
+      </div>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        {t("needsMoreInfoBody")}
+      </p>
+      {questions.length > 0 ? (
+        <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/90">
+          {questions.map((q) => (
+            <li key={q} className="min-w-0 break-words leading-relaxed">
+              {q}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 
