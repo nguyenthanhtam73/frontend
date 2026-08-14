@@ -209,6 +209,16 @@ function isNotVisible(concern: string): boolean {
   return concern.trim().toLowerCase() === "not_visible";
 }
 
+/** True when the cue appears and is not denied in the same short span. */
+function positiveCue(text: string, cue: RegExp): boolean {
+  if (!cue.test(text)) return false;
+  const denied = new RegExp(
+    String.raw`không(?:\s+thấy)?[^.?]{0,32}(?:${cue.source})`,
+    "i",
+  );
+  return !denied.test(text);
+}
+
 /** Pull light cues from a note without pasting the whole AI paragraph. */
 function extractCues(
   note: string,
@@ -221,13 +231,17 @@ function extractCues(
   if (locale === "vi") {
     const count = note.match(/khoảng\s+(\d+\s*[-–]\s*\d+|\d+)/i);
     if (count) cues.push(`khoảng ${count[1].replace(/\s+/g, "")}`);
-    else if (/cụm/.test(n)) cues.push("thành cụm");
-    else if (/rải/.test(n)) cues.push("rải");
-    if (/đầu trắng|có mũ/.test(n)) cues.push("có chỗ đầu trắng");
+    else if (positiveCue(n, /cụm/)) cues.push("thành cụm");
+    else if (positiveCue(n, /rải/)) cues.push("rải");
+    if (positiveCue(n, /đầu trắng|có mũ/)) cues.push("có chỗ đầu trắng");
     // Avoid repeating shine when concern is already oiliness
-    if (/bóng/.test(n) && concern !== "oiliness") cues.push("hơi bóng");
-    if (/thâm|đốm nâu/.test(n) && !["pigmentation", "dark_spots"].includes(concern))
+    if (positiveCue(n, /bóng/) && concern !== "oiliness") cues.push("hơi bóng");
+    if (
+      positiveCue(n, /thâm|đốm nâu/) &&
+      !["pigmentation", "dark_spots"].includes(concern)
+    ) {
       cues.push("có thâm");
+    }
   } else {
     const count = note.match(/(?:about|around)?\s*(\d+\s*[-–]\s*\d+|\d+)/i);
     if (count) cues.push(`about ${count[1].replace(/\s+/g, "")}`);
@@ -255,10 +269,9 @@ function buildRegionClause(
     if (c === "oiliness") {
       return `${region} hơi bóng`;
     }
-    const intens =
-      /nhiều|dày|cụm|rải/.test(noteLow) || /\d/.test(noteLow)
-        ? "đang nổi khá nhiều"
-        : "đang có";
+    const bump = ["acne", "papules", "pustules", "irritation"].includes(c);
+    const many = /nhiều|dày|cụm|rải/.test(noteLow) || /\d/.test(noteLow);
+    const intens = bump && many ? "đang nổi khá nhiều" : "đang có";
     const cueBit = cues.length ? `, ${cues.join(", ")}` : "";
     return `${region} ${intens} ${concern}${cueBit}`;
   }

@@ -372,6 +372,32 @@ function main() {
     throw new Error(`EN short_with_link should include URL:\n${enWithLink}`);
   }
 
+  const pigmentOnly = buildSkinReviewShareClipboard({
+    analysis: {
+      overview: "Chỉ thấy cằm.",
+      attention_areas: [
+        {
+          region: "chin",
+          concern: "pigmentation",
+          severity: "mild",
+          note: "Cằm có vài nốt thâm nông. Không thấy sưng đỏ hay đầu trắng rõ.",
+        },
+        { region: "cheeks", concern: "not_visible", severity: "mild", note: "" },
+        { region: "forehead", concern: "not_visible", severity: "mild", note: "" },
+      ],
+    },
+    link: LINK,
+    locale: "vi",
+  });
+  if (pigmentOnly.includes("đầu trắng") || pigmentOnly.includes("nổi khá nhiều")) {
+    throw new Error(
+      `pigment fallback must not invent whiteheads or 'nổi':\n${pigmentOnly}`,
+    );
+  }
+  if (!pigmentOnly.includes("thâm")) {
+    throw new Error(`pigment fallback should mention thâm:\n${pigmentOnly}`);
+  }
+
   const truncated = truncateOverview("a".repeat(300), 40);
   if (truncated.length > 40 || !truncated.endsWith("…")) {
     throw new Error("truncateOverview should cap and ellipsize");
