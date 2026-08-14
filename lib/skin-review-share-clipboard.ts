@@ -90,6 +90,8 @@ export type BuildSkinReviewShareClipboardInput = {
    * @deprecated Fallback when analysis is missing — treated as overview-only body.
    */
   overview?: string;
+  /** Saved public reply — this is the comment people actually want to paste. */
+  answer?: string;
   /** Skin type enum — full variant soft hint only. */
   skinType?: string;
   skinTypeSeverity?: string;
@@ -314,13 +316,7 @@ export function buildShareBodyFromAnalysis(
           : resolved;
         return buildRegionClause(a.region, concernKey, a.note ?? "", locale, templates);
       });
-    const joined =
-      clauses.length === 1
-        ? `${clauses[0]}.`
-        : clauses.length === 2
-          ? `${clauses[0]}; ${clauses[1]}.`
-          : `${clauses[0]}; ${clauses[1]}; ${clauses[2]}.`;
-    parts.push(capitalize(joined));
+    parts.push(joinObservationClauses(clauses, locale));
   } else if (overviewFallback.trim()) {
     // Soft paraphrase: first 1–2 sentences of overview
     const sentences = overviewFallback
@@ -345,11 +341,11 @@ export function buildShareBodyFromAnalysis(
   ) {
     const list =
       locale === "vi"
-        ? missing.slice(0, 3).join("/")
+        ? missing.slice(0, 3).join(", ")
         : missing
             .slice(0, 3)
-            .map((r) => r.replace(/^the\s+/i, ""))
-            .join("/");
+            .map((r) => r.replace(/^the\s+/i, "").toLowerCase())
+            .join(", ");
     parts.push(
       capitalize(templates.missingRegionsHint.replaceAll("{regions}", list)),
     );
@@ -363,9 +359,59 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function joinObservationClauses(
+  clauses: string[],
+  locale: SkinReviewShareLocale,
+): string {
+  const first = uncapitalize(clauses[0] ?? "");
+  if (locale === "vi") {
+    if (clauses.length === 1) return `Nhìn ảnh thì ${first}.`;
+    if (clauses.length === 2) {
+      return `Nhìn ảnh thì ${first}. ${capitalize(softenFollowOnClause(clauses[1]))}.`;
+    }
+    return `Nhìn ảnh thì ${first}. ${capitalize(softenFollowOnClause(clauses[1]))}. ${capitalize(softenFollowOnClause(clauses[2]))}.`;
+  }
+  const lead = /^the\s/i.test(first) ? first : `the ${first}`;
+  if (clauses.length === 1) return `From the photo, ${lead}.`;
+  if (clauses.length === 2) {
+    return `From the photo, ${lead}. ${capitalize(softenFollowOnClauseEn(clauses[1]))}.`;
+  }
+  return `From the photo, ${lead}. ${capitalize(softenFollowOnClauseEn(clauses[1]))}. ${capitalize(softenFollowOnClauseEn(clauses[2]))}.`;
+}
+
+function softenFollowOnClause(clause: string): string {
+  if (/\bcũng\b/.test(clause)) return clause;
+  return clause.replace(
+    /^(trán|mũi|má|cằm|cổ|hàm|trán–mũi–cằm|dưới mắt|vùng khác)\s+/,
+    "$1 cũng ",
+  );
+}
+
+function softenFollowOnClauseEn(clause: string): string {
+  const withArticle = /^the\s/i.test(clause) ? clause : `the ${uncapitalize(clause)}`;
+  if (/\balso\b/i.test(withArticle)) return withArticle;
+  return withArticle.replace(
+    /^(the (?:forehead|nose|cheeks|chin|neck|jawline|under-eyes)|forehead–nose–chin)\s+/i,
+    (m) => `${m.trim()} also `,
+  );
+}
+
+function tidyShareAnswer(raw: string, stripLinks: boolean): string {
+  let s = raw.trim().replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+  if (!s) return "";
+  if (stripLinks) {
+    s = s
+      .replace(/https?:\/\/\S+/gi, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+  return s;
+}
+
 /**
  * Build the exact string written to the clipboard / passed to navigator.share.
- * Default short_no_link is opener + CTA only (no analysis / Q&A / URL).
+ * Prefers the saved public reply so the comment reads like a person, not a template.
  */
 export function buildSkinReviewShareClipboard(
   input: BuildSkinReviewShareClipboardInput,
@@ -385,31 +431,37 @@ export function buildSkinReviewShareClipboard(
     templates.ctaDefault ||
     "";
 
-  // Primary FB button: opener + CTA only.
-  if (variant === "short_no_link") {
-    return [templates.opener, cta].filter(Boolean).join("\n");
-  }
-
   const analysis = input.analysis ?? null;
-  const skinType = input.skinType ?? analysis?.skin_type;
-  const skinTypeSeverity =
-    input.skinTypeSeverity ?? analysis?.skin_type_severity;
+  const stripLinks = !shareVariantIncludesLink(variant);
+  const answer = tidyShareAnswer(input.answer ?? "", stripLinks);
 
   const bodyKind = shareVariantIsFull(variant) ? "full" : "short";
-  const bodyRaw = buildShareBodyFromAnalysis(
-    analysis,
-    locale,
-    bodyKind,
-    input.overview ?? "",
-  );
+  const bodyRaw = answer
+    ? answer
+    : buildShareBodyFromAnalysis(
+        analysis,
+        locale,
+        bodyKind,
+        input.overview ?? "",
+      );
   const defaultMax =
     bodyKind === "short" ? SHORT_BODY_MAX : FULL_BODY_MAX;
-  const body = truncateOverview(bodyRaw, input.bodyMax ?? defaultMax);
+  // A saved reply is already written as a comment — don't chop it into a template.
+  const body = answer
+    ? answer
+    : truncateOverview(bodyRaw, input.bodyMax ?? defaultMax);
 
-  const lines: string[] = [templates.opener];
+  const lines: string[] = [];
+  // Skip the opener when the reply (or "Nhìn ảnh thì…") already sounds like a person talking.
+  const bodyLeads =
+    /^(nhìn ảnh thì|from the photo,)/i.test(body) || Boolean(answer);
+  if (!bodyLeads) lines.push(templates.opener);
   if (body) lines.push(body);
 
-  if (shareVariantIsFull(variant)) {
+  if (!answer && shareVariantIsFull(variant)) {
+    const skinType = input.skinType ?? analysis?.skin_type;
+    const skinTypeSeverity =
+      input.skinTypeSeverity ?? analysis?.skin_type_severity;
     const hint = buildSoftSkinTypeHint(locale, skinType, skinTypeSeverity);
     if (hint) lines.push(hint);
     const causeLine = formatShareCauses(analysis?.possible_causes, locale, 2);
@@ -421,15 +473,15 @@ export function buildSkinReviewShareClipboard(
       ? templates.linkLine.replaceAll("{link}", link)
       : "";
 
-  // Tips after observations / before CTA. Short variants: 1–2 very short tips if room.
-  // Budget includes linkLine for short_with_link so URL doesn't push past soft cap.
-  const tipBudget =
-    bodyKind === "short" ? Math.min(2, SHORT_TIP_BUDGET) : FULL_TIP_BUDGET;
-  const tipsLine = formatShareTips(analysis?.soothing_tips, locale, tipBudget);
-  if (tipsLine) {
-    const used = [...lines, tipsLine, linkLine, cta].filter(Boolean).join("\n");
-    if (bodyKind === "full" || [...used].length <= SHORT_CLIP_SOFT_MAX) {
-      lines.push(tipsLine);
+  if (!answer) {
+    const tipBudget =
+      bodyKind === "short" ? Math.min(1, SHORT_TIP_BUDGET) : FULL_TIP_BUDGET;
+    const tipsLine = formatShareTips(analysis?.soothing_tips, locale, tipBudget);
+    if (tipsLine) {
+      const used = [...lines, tipsLine, linkLine, cta].filter(Boolean).join("\n");
+      if (bodyKind === "full" || [...used].length <= SHORT_CLIP_SOFT_MAX) {
+        lines.push(tipsLine);
+      }
     }
   }
 
@@ -453,7 +505,7 @@ function formatShareCauses(
     .map((s) => s.trim().replace(/\s+/g, " "))
     .filter(Boolean)
     .slice(0, max)
-    .map((s) => truncateOverview(s, 90));
+    .map((s) => truncateOverview(s, 90).replace(/[.]+$/, ""));
   if (!items.length) return "";
   if (locale === "en") {
     return items.length === 1
@@ -477,7 +529,7 @@ function formatShareTips(
     .map((s) => truncateOverview(s, locale === "en" ? 70 : 64));
   if (!items.length) return "";
   const joined = items.join(locale === "en" ? " · " : " · ");
-  return locale === "en" ? `Gentle tip: ${joined}` : `Gợi ý nhẹ: ${joined}`;
+  return locale === "en" ? `For now: ${joined}` : `Tạm thời: ${joined}`;
 }
 
 function uncapitalize(s: string): string {

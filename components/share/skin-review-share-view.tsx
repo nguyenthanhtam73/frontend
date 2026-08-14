@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { SkinReviewAnalysisView } from "@/components/admin/skin-review-analysis-view";
+import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { SkinReviewQaBlock } from "@/components/share/skin-review-qa-block";
 import { SkinReviewShareImageCard } from "@/components/share/skin-review-share-image-card";
 import { Logo } from "@/components/site/logo";
@@ -127,13 +128,14 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
       buildSkinReviewShareClipboard({
         analysis: data.analysis,
         overview: data.analysis?.overview ?? "",
+        answer: data.answer,
         link: url,
         skinType: data.analysis?.skin_type,
         skinTypeSeverity: data.analysis?.skin_type_severity,
         locale,
         variant,
       }),
-    [data.analysis, locale],
+    [data.analysis, data.answer, locale],
   );
 
   const copyShareText = useCallback(
@@ -596,16 +598,15 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             {t("ctaBody")}
           </p>
           <div className="mt-5 flex flex-col gap-2.5 sm:mt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
-            <Link
-              href="/register"
+            <LandingStartCta
+              size="lg"
               className={cn(
-                buttonVariants({ size: "lg" }),
                 "h-11 min-h-11 w-full touch-manipulation sm:w-auto sm:min-w-[12rem]",
                 "shadow-[0_10px_28px_-10px_color-mix(in_oklab,var(--primary)_55%,transparent)]",
               )}
             >
               {t("ctaRegister")}
-            </Link>
+            </LandingStartCta>
             <Link
               href="/"
               className={cn(
