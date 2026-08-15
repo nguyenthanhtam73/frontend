@@ -561,18 +561,18 @@ function PhotoSlotCard({
           <button
             type="button"
             onClick={onPickFront}
-            className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60"
+            className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60"
           >
-            <Camera className="size-3.5 text-primary" aria-hidden />
-            {cameraLabel}
+            <Camera className="size-3.5 shrink-0 text-primary" aria-hidden />
+            <span className="truncate">{cameraLabel}</span>
           </button>
           <button
             type="button"
             onClick={onPickLibrary}
-            className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60"
+            className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60"
           >
-            <ImageIcon className="size-3.5 text-primary" aria-hidden />
-            {albumLabel}
+            <ImageIcon className="size-3.5 shrink-0 text-primary" aria-hidden />
+            <span className="truncate">{albumLabel}</span>
           </button>
         </div>
         {slotErrorBlock}

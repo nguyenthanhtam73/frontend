@@ -50,7 +50,7 @@ export function SaveBar({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-20 -mx-3 flex flex-col gap-3 border-t px-3 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md transition-colors duration-300 sm:-mx-4 sm:px-4 lg:static lg:z-0 lg:mx-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4 lg:shadow-none",
+        "sticky bottom-0 z-20 flex flex-col gap-3 border-t py-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-md transition-colors duration-300 lg:static lg:z-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4 lg:shadow-none",
         status === "unsaved"
           ? "border-primary/30 bg-background/98 shadow-[0_-6px_28px_-6px_rgba(0,0,0,0.12)]"
           : "border-border/80 bg-background/95 shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.12)]",

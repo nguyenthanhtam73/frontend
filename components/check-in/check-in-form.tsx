@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
+import { FirstCheckInPushNudge } from "@/components/check-in/first-check-in-push-nudge";
 import { useCheckInFeedback } from "@/components/check-in/use-check-in-feedback";
 import { StreakMilestoneHost } from "@/components/progress/streak-milestone-celebration";
 import { Button } from "@/components/ui/button";
@@ -568,10 +569,16 @@ export function CheckInForm() {
         ) : null}
 
         {feedback.phase === "completed" && feedback.payload ? (
-          <DailyCoachFeedback
-            payload={feedback.payload}
-            onRetry={feedback.resetFeedback}
-          />
+          <>
+            <DailyCoachFeedback
+              payload={feedback.payload}
+              onRetry={feedback.resetFeedback}
+            />
+            <FirstCheckInPushNudge
+              completed
+              payload={feedback.payload}
+            />
+          </>
         ) : null}
       </div>
 
@@ -592,7 +599,7 @@ export function CheckInForm() {
 
       <div
         className={cn(
-          "sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:z-0 lg:mx-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4",
+          "sticky bottom-0 z-20 flex flex-col gap-3 border-t bg-background/95 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:z-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4",
         )}
       >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">

@@ -8,6 +8,7 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { usePathname } from "@/i18n/navigation";
+import { hasMobileBottomChrome } from "@/lib/site-nav";
 import { hasToastHandler, pushToast } from "@/lib/toast-bridge";
 import { cn } from "@/lib/utils";
 
@@ -70,8 +71,7 @@ export function PwaRegister() {
   const t = useTranslations("pwa");
   const tPush = useTranslations("push");
   const pathname = usePathname();
-  // Pricing mobile sticky billing (z-60) occupies the bottom — lift toasts above it.
-  const onPricing = pathname.includes("/pricing");
+  const liftForBottomBar = hasMobileBottomChrome(pathname);
 
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
@@ -363,11 +363,11 @@ export function PwaRegister() {
         <div
           className={cn(
             "pointer-events-none fixed inset-x-3 z-50 flex flex-col items-stretch gap-2 sm:left-auto sm:right-4 sm:max-w-sm",
-            onPricing
+            liftForBottomBar
               ? "bottom-[calc(5.75rem+env(safe-area-inset-bottom))] sm:bottom-4"
               : "bottom-3 sm:bottom-4",
           )}
-          style={onPricing ? undefined : { paddingBottom: "env(safe-area-inset-bottom)" }}
+          style={liftForBottomBar ? undefined : { paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           {showUpdate && (
             <ToastShell

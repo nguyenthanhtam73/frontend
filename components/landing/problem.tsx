@@ -25,7 +25,7 @@ export async function Problem() {
           {itemKeys.map((key) => (
             <li key={key}>
               <Card className="h-full border-accent/30 bg-card/80">
-                <CardContent className="flex gap-4 p-6">
+                <CardContent className="flex gap-3 p-4 sm:gap-4 sm:p-6">
                   <div
                     className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/60 text-accent-foreground"
                     aria-hidden

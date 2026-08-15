@@ -3,6 +3,7 @@ import { ArrowRight, Camera, Sparkles } from "lucide-react";
 import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
+import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Link } from "@/i18n/navigation";
 import { resolveHeroPhoneSrc } from "@/lib/marketing-screenshots";
@@ -13,8 +14,8 @@ export async function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.9fr] lg:gap-12">
-        <div className="space-y-6">
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-24 lg:grid-cols-[1.2fr_0.9fr] lg:gap-12">
+        <div className="space-y-5 sm:space-y-6">
           <div className="space-y-3">
             <Badge variant="accent" className="rounded-full px-3 py-1 text-[11px]">
               <Sparkles className="size-3" aria-hidden />
@@ -23,26 +24,25 @@ export async function Hero() {
             <p className="text-sm font-medium tracking-wide text-primary/90 sm:text-base">{t("slogan")}</p>
           </div>
 
-          <h1 className="text-balance text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.25rem] lg:leading-[1.05]">
+          <h1 className="text-balance text-[1.75rem] font-semibold leading-[1.15] tracking-tight sm:text-5xl sm:leading-[1.08] lg:text-[3.25rem] lg:leading-[1.05]">
             {t("titleLead")}{" "}
             <span className="gradient-text">{t("titleGradient")}</span>
           </h1>
 
-          <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
+          <p className="max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
             {t.rich("body", {
               b: (chunks) => <strong className="font-medium text-foreground">{chunks}</strong>,
             })}
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <ButtonLink
-              href="/register"
+            <LandingStartCta
               size="lg"
               className="h-12 w-full gap-2 px-6 text-base shadow-lg shadow-primary/20 sm:w-auto"
             >
               {t("ctaPrimary")}
               <ArrowRight className="size-4" aria-hidden />
-            </ButtonLink>
+            </LandingStartCta>
             <ButtonLink
               href="/#how"
               size="lg"
@@ -60,14 +60,14 @@ export async function Hero() {
             </Link>
           </p>
 
-          <dl className="grid grid-cols-1 gap-5 border-t border-border/50 pt-5 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-4">
+          <dl className="grid grid-cols-1 gap-4 border-t border-border/50 pt-5 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-4">
             {[
               { k: "stat1", v: "stat1" },
               { k: "stat2", v: "stat2" },
               { k: "stat3", v: "stat3" },
             ].map((item) => (
               <div key={item.k} className="min-w-0 space-y-1">
-                <dt className="text-xl font-semibold tracking-tight whitespace-nowrap sm:text-2xl">
+                <dt className="text-xl font-semibold tracking-tight sm:text-2xl">
                   {t(`${item.k}k`)}
                 </dt>
                 <dd className="text-pretty text-xs leading-snug text-muted-foreground">
@@ -79,7 +79,7 @@ export async function Hero() {
         </div>
 
         <div
-          className="relative isolate mx-auto aspect-square w-full max-w-md lg:max-w-none"
+          className="relative isolate mx-auto aspect-[4/5] w-full max-w-[17.5rem] sm:aspect-square sm:max-w-md lg:max-w-none"
           aria-hidden={phoneSrc ? undefined : true}
         >
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/15 via-accent/30 to-transparent blur-xl" />
@@ -124,7 +124,7 @@ function HeroMockup({
     <div className="relative h-full w-full">
       {/* Product phone frame — screenshot when present, CSS mock otherwise.
           Expected: public/marketing/hero-phone.png (780×1688, ~9:19.5). */}
-      <div className="absolute left-1/2 top-1/2 z-10 w-[52%] max-w-[220px] -translate-x-1/2 -translate-y-[42%] overflow-hidden rounded-[1.85rem] border-[5px] border-white/80 bg-card shadow-2xl ring-1 ring-black/10 sm:max-w-none">
+      <div className="absolute left-1/2 top-1/2 z-10 w-[70%] max-w-[240px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[1.85rem] border-[5px] border-white/80 bg-card shadow-2xl ring-1 ring-black/10 sm:w-[52%] sm:max-w-none sm:-translate-y-[42%]">
         {imageSrc ? (
           <div className="relative aspect-[9/19.5] w-full">
             <Image
@@ -180,7 +180,7 @@ function HeroMockup({
         <div
           key={c.tag}
           aria-hidden
-          className={`absolute aspect-[3/4] w-[48%] overflow-hidden rounded-3xl border border-white/40 bg-card shadow-xl ring-1 ring-black/5 ${c.style}`}
+          className={`absolute hidden aspect-[3/4] w-[48%] overflow-hidden rounded-3xl border border-white/40 bg-card shadow-xl ring-1 ring-black/5 sm:block ${c.style}`}
           style={{
             background: `linear-gradient(160deg, oklch(${c.from}) 0%, oklch(${c.to}) 100%)`,
           }}

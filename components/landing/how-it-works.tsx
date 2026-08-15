@@ -28,7 +28,7 @@ export async function HowItWorks() {
             return (
               <li
                 key={key}
-                className="relative rounded-2xl border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+                className="relative rounded-2xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">

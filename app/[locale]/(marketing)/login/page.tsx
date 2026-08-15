@@ -39,7 +39,7 @@ export default function LoginPage() {
 
 function LoginPageFallback() {
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="mx-auto h-8 w-40 animate-pulse rounded-md bg-muted" />
       <div className="h-56 animate-pulse rounded-xl bg-muted" />
     </div>
@@ -75,7 +75,7 @@ function LoginPageInner() {
     : buildAuthHrefWithIntent("/register", checkoutIntent);
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t("loginTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("loginSub")}</p>

@@ -45,7 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     return (
       <div
         className={cn(
-          "inline-flex h-8 min-h-8 min-w-[2.85rem] shrink-0 cursor-default items-center gap-1 rounded-lg border border-border bg-background px-1.5 sm:min-w-[5rem]",
+          "inline-flex h-11 min-h-11 min-w-11 shrink-0 cursor-default items-center gap-1 rounded-lg border border-border bg-background px-1.5 md:h-8 md:min-h-8 md:min-w-[5rem]",
           className,
         )}
         aria-busy="true"
@@ -54,7 +54,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         <span className={cn(iconShellClass, "cursor-default")} aria-hidden>
           <span className="absolute inset-[15%] rounded-full bg-muted/70" />
         </span>
-        <span className="hidden min-h-3 min-w-[2.5rem] rounded-sm bg-muted/60 sm:block" aria-hidden />
+        <span className="hidden min-h-3 min-w-[2.5rem] rounded-sm bg-muted/60 md:block" aria-hidden />
       </div>
     );
   }
@@ -77,7 +77,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={label}
       onClick={() => setTheme(active === "light" ? "dark" : "light")}
       className={cn(
-        "theme-toggle-btn group/theme-toggle relative isolate inline-flex h-8 min-h-8 min-w-[2.85rem] shrink-0 cursor-pointer items-center gap-1 overflow-visible rounded-lg border border-border bg-background px-1.5 text-[11px] font-medium text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-200 hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 sm:min-w-[5rem] sm:text-xs",
+        "theme-toggle-btn group/theme-toggle relative isolate inline-flex h-11 min-h-11 min-w-11 shrink-0 cursor-pointer items-center gap-1 overflow-visible rounded-lg border border-border bg-background px-1.5 text-[11px] font-medium text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-200 hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 md:h-8 md:min-h-8 md:min-w-[5rem] md:text-xs",
         className,
       )}
     >
@@ -139,7 +139,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         </span>
       </span>
 
-      <span className="relative hidden min-h-4 min-w-10 overflow-hidden pt-px sm:inline-block">
+      <span className="relative hidden min-h-4 min-w-10 overflow-hidden pt-px md:inline-block">
         <span
           className={cn(
             "block whitespace-nowrap",

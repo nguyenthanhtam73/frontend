@@ -56,7 +56,7 @@ export function Logo({
         <circle cx="22" cy="14" r="1.4" fill="white" />
       </svg>
       {showWord ? (
-        <span className="text-sm font-medium tracking-tight sm:text-base sm:font-semibold">
+        <span className="dd-wordmark text-sm font-medium tracking-tight sm:text-base sm:font-semibold">
           Da<span className="text-primary">Diary</span>
         </span>
       ) : null}

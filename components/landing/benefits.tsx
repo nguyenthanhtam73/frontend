@@ -27,7 +27,7 @@ export async function Benefits() {
             const Icon = icons[i];
             return (
               <Card key={key} className="h-full overflow-hidden">
-                <CardContent className="flex gap-4 p-6">
+                <CardContent className="flex gap-3 p-4 sm:gap-4 sm:p-6">
                   <div className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-accent/40 text-primary">
                     <Icon className="size-5" aria-hidden />
                   </div>

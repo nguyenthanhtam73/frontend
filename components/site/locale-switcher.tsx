@@ -9,7 +9,14 @@ import { cn } from "@/lib/utils";
 
 type AppLocale = (typeof routing.locales)[number];
 
-export function LocaleSwitcher({ className }: { className?: string }) {
+export function LocaleSwitcher({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  /** Short VI / EN labels — keeps the header on one row on phones. */
+  compact?: boolean;
+}) {
   const t = useTranslations("common.language");
   const locale = useLocale();
   const router = useRouter();
@@ -45,7 +52,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "inline-flex min-h-9 items-center gap-0.5 rounded-lg border border-border bg-background p-0.5",
+        "inline-flex min-h-11 items-center gap-0.5 rounded-lg border border-border bg-background p-0.5",
         className,
       )}
       role="group"
@@ -60,13 +67,16 @@ export function LocaleSwitcher({ className }: { className?: string }) {
           aria-pressed={activeLocale === loc}
           aria-label={loc === "vi" ? t("vietnamese") : t("english")}
           className={cn(
-            "shrink-0 cursor-pointer rounded-md px-2.5 py-1 text-center text-[11px] font-medium leading-snug tracking-normal whitespace-nowrap transition-colors sm:px-3 sm:text-xs",
+            "shrink-0 cursor-pointer rounded-md text-center font-medium leading-snug tracking-normal whitespace-nowrap transition-colors",
+            compact
+              ? "min-h-10 min-w-8 px-2 py-1 text-[11px] tabular-nums"
+              : "px-2.5 py-1 text-[11px] sm:px-3 sm:text-xs",
             activeLocale === loc
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {loc === "vi" ? t("vietnamese") : t("english")}
+          {compact ? loc.toUpperCase() : loc === "vi" ? t("vietnamese") : t("english")}
         </button>
       ))}
     </div>

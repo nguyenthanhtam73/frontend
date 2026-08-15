@@ -98,7 +98,7 @@ export function PricingPlanCard({
               "bg-gradient-to-b from-primary/[0.1] via-card to-accent/25",
               "shadow-[0_12px_40px_-12px_color-mix(in_oklab,var(--primary)_45%,transparent)]",
               "ring-2 ring-primary/35",
-              "scale-[1.02] sm:scale-[1.03] sm:-translate-y-1",
+              "sm:scale-[1.03] sm:-translate-y-1",
               "motion-safe:hover:shadow-[0_16px_48px_-12px_color-mix(in_oklab,var(--primary)_55%,transparent)]",
               "motion-safe:hover:ring-primary/45",
             ]
@@ -290,7 +290,7 @@ function resolveCta({
     if (isLoggedIn) {
       return { kind: "link", href: "/routine", label: tCommon("continueFreeCta") };
     }
-    return { kind: "link", href: "/register", label: tPlan("cta") };
+    return { kind: "link", href: "/onboarding", label: tPlan("cta") };
   }
   // Beta: hide self-serve SePay — Premium is admin / invite only.
   if (!checkoutEnabled) {

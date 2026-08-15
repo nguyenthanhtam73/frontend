@@ -43,7 +43,7 @@ export async function Testimonials() {
           {itemKeys.map((key) => (
             <Card
               key={key}
-              className="relative min-w-[min(88vw,20rem)] shrink-0 snap-center border-border/70 bg-card/95 shadow-sm sm:min-w-[min(72vw,22rem)] md:min-w-0"
+              className="relative min-w-[min(100%,20rem)] w-[85%] shrink-0 snap-center border-border/70 bg-card/95 shadow-sm sm:min-w-[min(72%,22rem)] md:w-auto md:min-w-0"
             >
               <Badge
                 variant="secondary"

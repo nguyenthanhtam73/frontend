@@ -242,27 +242,27 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
               type="button"
               size="sm"
               variant="outline"
-              className="min-h-11"
+              className="min-h-11 min-w-0 flex-1"
               disabled={isScanning || isCreating}
               onClick={() => cameraRef.current?.click()}
             >
               {isScanning ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden />
+                <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
               ) : (
-                <Camera className="size-4" aria-hidden />
+                <Camera className="size-4 shrink-0" aria-hidden />
               )}
-              {t("scanCameraCta")}
+              <span className="truncate">{t("scanCameraCta")}</span>
             </Button>
             <Button
               type="button"
               size="sm"
               variant="outline"
-              className="min-h-11"
+              className="min-h-11 min-w-0 flex-1"
               disabled={isScanning || isCreating}
               onClick={() => libraryRef.current?.click()}
             >
-              <ImagePlus className="size-4" aria-hidden />
-              {t("scanLibraryCta")}
+              <ImagePlus className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{t("scanLibraryCta")}</span>
             </Button>
           </div>
           {isScanning ? (

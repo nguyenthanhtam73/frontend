@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
 function RegisterPageFallback() {
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="h-8 w-48 animate-pulse rounded-md bg-muted mx-auto" />
       <div className="h-64 animate-pulse rounded-xl bg-muted" />
     </div>
@@ -102,7 +102,7 @@ function RegisterPageInner() {
     : buildAuthHrefWithIntent("/login", checkoutIntent);
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-16">
+    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t("registerTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("registerSub")}</p>

@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { SkinCheckCard } from "@/components/skin/skin-check-card";
-import { ButtonLink } from "@/components/ui/button-link";
+import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { resolvePreviewSrcs } from "@/lib/marketing-screenshots";
 import { localizeMockSkinCheck, mockSkinChecks } from "@/lib/mock-data";
 
@@ -32,10 +32,10 @@ export async function ProgressPreview() {
               {t("sub")}
             </p>
           </div>
-          <ButtonLink href="/register" variant="ghost" className="shrink-0">
+          <LandingStartCta variant="ghost" className="h-11 w-full justify-center sm:h-9 sm:w-auto sm:shrink-0">
             {t("cta")}
             <ArrowRight className="size-4" aria-hidden />
-          </ButtonLink>
+          </LandingStartCta>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

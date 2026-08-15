@@ -21,6 +21,7 @@ export function SiteFooterNav() {
 
   const guestLinks = [
     { href: "/#how" as const, label: t("nav.howItWorks") },
+    { href: "/guides" as const, label: t("nav.guides") },
     { href: "/pricing" as const, label: t("nav.pricing") },
     { href: "/#faq" as const, label: t("nav.faq") },
     { href: "/register" as const, label: t("register") },

@@ -33,7 +33,7 @@ export async function Features() {
             const Icon = icons[i];
             return (
               <Card key={key} className="h-full transition-shadow hover:shadow-md">
-                <CardContent className="space-y-3 p-6 pt-6">
+                <CardContent className="space-y-3 p-4 pt-4 sm:p-6 sm:pt-6">
                   <div className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <Icon className="size-5" aria-hidden />
                   </div>

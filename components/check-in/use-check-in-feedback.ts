@@ -224,20 +224,25 @@ export function useCheckInFeedback() {
 
   const applyPayload = useCallback(
     (data: CreateSkinCheckResponseDTO): "done" | "continue" => {
-      syncPayload(data);
+      const prev = payloadRef.current;
+      const merged: CreateSkinCheckResponseDTO = {
+        ...data,
+        streak: data.streak ?? prev?.streak,
+      };
+      syncPayload(merged);
 
-      if (isAnalysisComplete(data)) {
-        settleCompleted(data);
+      if (isAnalysisComplete(merged)) {
+        settleCompleted(merged);
         return "done";
       }
 
-      if (isAnalysisFailed(data)) {
-        settleFailed(data);
+      if (isAnalysisFailed(merged)) {
+        settleFailed(merged);
         return "done";
       }
 
-      if (isAnalysisSettled(data.analysis.status)) {
-        settleFailed(data);
+      if (isAnalysisSettled(merged.analysis.status)) {
+        settleFailed(merged);
         return "done";
       }
 

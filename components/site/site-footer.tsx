@@ -9,11 +9,13 @@ export async function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-border/60 bg-background/60">
+    <footer className="min-w-0 border-t border-border/60 bg-background/60">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex items-center gap-3">
-          <Logo />
-          <span className="text-xs text-muted-foreground sm:text-sm">{tFooter("tagline")}</span>
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
+          <Logo className="shrink-0" />
+          <span className="min-w-0 text-pretty text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            {tFooter("tagline")}
+          </span>
         </div>
         <SiteFooterNav />
       </div>

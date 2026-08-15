@@ -189,6 +189,11 @@ export function pageLocaleMetadata({
 export const SITEMAP_PUBLIC_PATHS = [
   "",
   "/pricing",
+  "/guides",
+  "/guides/da-dau",
+  "/guides/mun",
+  "/guides/kem-chong-nang",
+  "/guides/routine-cham-da",
   "/login",
   "/register",
   "/onboarding",
@@ -211,13 +216,14 @@ export function buildSitemapEntries(
   const now = new Date();
   return paths.map((path) => {
     const isHome = !path || path === "/";
+    const isGuide = path === "/guides" || path.startsWith("/guides/");
     return {
       url: absoluteUrl("vi", path),
       lastModified: now,
-      changeFrequency: (isHome || path === "/pricing" ? "weekly" : "monthly") as
+      changeFrequency: (isHome || path === "/pricing" || isGuide ? "weekly" : "monthly") as
         | "weekly"
         | "monthly",
-      priority: isHome ? 1 : path === "/pricing" ? 0.9 : 0.6,
+      priority: isHome ? 1 : path === "/pricing" ? 0.9 : isGuide ? 0.8 : 0.6,
       alternates: {
         languages: {
           vi: absoluteUrl("vi", path),

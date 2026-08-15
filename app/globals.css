@@ -144,20 +144,56 @@
     @apply border-border outline-ring/50;
   }
   html {
-    /* ~17px from typical 16px browser default — scales all text-* / spacing rem tokens gently */
-    font-size: 106.25%;
-    scrollbar-gutter: stable;
+    /* Phone: 16px so rem padding/type fit a 320–390px screen.
+       Desktop keeps the slight bump for marketing type. */
+    font-size: 100%;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scrollbar-gutter: auto;
+    /* Sticky header is ~2 rows on phones; keep in-page anchors (#how, #faq) visible. */
+    scroll-padding-top: 8.25rem;
     @apply font-sans;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 106.25%;
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      scrollbar-gutter: stable;
+      scroll-padding-top: 7.5rem;
+    }
   }
   body {
     /* Variable sans + normal weight keeps paragraphs gentle; avoids crowded bold UI chrome */
-    @apply bg-background text-foreground antialiased font-normal;
+    @apply bg-background text-foreground antialiased font-normal min-w-0;
     text-rendering: optimizeLegibility;
     background-image:
       radial-gradient(at 0% 0%, color-mix(in oklab, var(--primary) 12%, transparent) 0px, transparent 55%),
       radial-gradient(at 100% 0%, color-mix(in oklab, var(--accent) 60%, transparent) 0px, transparent 50%);
     /* `fixed` breaks scroll/repaint on iOS Safari — keep it on desktop only. */
     background-attachment: scroll;
+  }
+
+  /* App shell is a column flex. Without min-width:0, a wide child (table, nowrap
+     label, 100vw) expands the whole page and “breaks” CSS on phones. */
+  header,
+  main,
+  footer {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  main {
+    overflow-wrap: break-word;
+  }
+
+  img,
+  video,
+  iframe {
+    max-width: 100%;
   }
 
   @media (hover: hover) and (pointer: fine) {

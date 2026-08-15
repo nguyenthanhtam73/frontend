@@ -62,7 +62,7 @@ export function ProgressEntryCard({
 
         <CardContent className="flex min-w-0 flex-1 flex-col gap-1.5 p-0">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-semibold tracking-tight">
+            <p className="min-w-0 truncate text-sm font-semibold tracking-tight">
               {entry.title?.trim() || t("untitled")}
             </p>
             <span className="inline-flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">

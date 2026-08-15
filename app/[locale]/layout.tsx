@@ -88,13 +88,13 @@ export default async function LocaleLayout({ children, params }: Props) {
       className={`${fontSans.variable} ${fontMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col antialiased">
+      <body className="flex min-h-full min-w-0 flex-col antialiased">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <MetaPixel />
           <AppProviders>
             <OfflineIndicator />
             <SiteHeader />
-            <main className="flex flex-1 flex-col">{children}</main>
+            <main className="flex min-w-0 max-w-full flex-1 flex-col">{children}</main>
             <SiteFooter />
             <PwaRegister />
           </AppProviders>

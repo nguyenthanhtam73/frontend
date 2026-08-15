@@ -30,8 +30,8 @@ export async function LandingFaq() {
               key={key}
               className="group px-4 py-0.5 open:bg-muted/15 sm:px-5"
             >
-              <summary className="cursor-pointer list-none py-4 text-[0.95rem] font-semibold tracking-tight marker:content-none [&::-webkit-details-marker]:hidden">
-                <span className="flex items-center justify-between gap-3">
+              <summary className="min-h-11 cursor-pointer list-none py-4 text-left text-[0.95rem] font-semibold tracking-tight marker:content-none [&::-webkit-details-marker]:hidden">
+                <span className="flex items-start justify-between gap-3 sm:items-center">
                   {t(`${key}.question`)}
                   <span
                     className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-transform group-open:rotate-45"

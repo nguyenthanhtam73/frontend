@@ -7,6 +7,7 @@ import { Cta } from "@/components/landing/cta";
 import { Features } from "@/components/landing/features";
 import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { GuidesTeaser } from "@/components/landing/guides-teaser";
 import { LANDING_FAQ_KEYS, LandingFaq } from "@/components/landing/landing-faq";
 import { Problem } from "@/components/landing/problem";
 import { ProgressPreview } from "@/components/landing/progress-preview";
@@ -106,6 +107,7 @@ export default async function HomePage({ params }: Props) {
       <HowItWorks />
       <Testimonials />
       <LandingFaq />
+      <GuidesTeaser />
       <BetaSignup />
       <Benefits />
       <Cta />

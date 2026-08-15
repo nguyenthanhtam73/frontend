@@ -1,6 +1,7 @@
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { ButtonLink } from "@/components/ui/button-link";
 
 export async function Cta() {
@@ -8,7 +9,7 @@ export async function Cta() {
 
   return (
     <section id="beta" className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-20">
-      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border-2 border-primary/15 bg-gradient-to-br from-primary/15 via-accent/40 to-background p-8 shadow-lg shadow-primary/10 sm:p-14">
+      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border-2 border-primary/15 bg-gradient-to-br from-primary/15 via-accent/40 to-background p-5 shadow-lg shadow-primary/10 sm:rounded-3xl sm:p-14">
         <div
           className="absolute -right-20 -top-24 size-72 rounded-full bg-primary/30 blur-3xl"
           aria-hidden
@@ -23,14 +24,13 @@ export async function Cta() {
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
-            <ButtonLink
-              href="/register"
+            <LandingStartCta
               size="lg"
               className="h-12 w-full gap-2 px-8 text-base shadow-lg shadow-primary/25 sm:w-auto"
             >
               {t("primary")}
               <ArrowRight className="size-4" aria-hidden />
-            </ButtonLink>
+            </LandingStartCta>
             <ButtonLink
               href="/pricing"
               size="lg"

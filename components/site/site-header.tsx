@@ -14,6 +14,7 @@ import { useClientMounted } from "@/lib/use-client-mounted";
 import { useCurrentHash } from "@/lib/use-current-hash";
 import { useShowGuestNav } from "@/lib/use-show-guest-nav";
 import { cn } from "@/lib/utils";
+import { LogOut } from "lucide-react";
 
 import { LocaleSwitcher } from "./locale-switcher";
 import { Logo } from "./logo";
@@ -51,6 +52,7 @@ function SignedInActions({
   signOutLabel,
   className,
   accountClassName,
+  compact = false,
 }: {
   accountLabel: string;
   email: string;
@@ -58,6 +60,7 @@ function SignedInActions({
   signOutLabel: string;
   className?: string;
   accountClassName?: string;
+  compact?: boolean;
 }) {
   return (
     <div
@@ -75,10 +78,14 @@ function SignedInActions({
         data-testid="auth-sign-out"
         variant="ghost"
         size="sm"
-        className="inline-flex min-w-[5.75rem] shrink-0 justify-center"
+        aria-label={signOutLabel}
+        className={cn(
+          "inline-flex shrink-0 justify-center",
+          compact ? "h-11 w-11 min-h-11 min-w-11 px-0" : "min-w-[5.75rem]",
+        )}
         onClick={onSignOut}
       >
-        {signOutLabel}
+        {compact ? <LogOut className="size-4" aria-hidden /> : signOutLabel}
       </Button>
     </div>
   );
@@ -93,7 +100,7 @@ function GuestActions({
   signInLabel: string;
   registerLabel: string;
   className?: string;
-  /** When true, both CTAs show on narrow screens (mobile header row). */
+  /** When true, only the primary Register CTA sits in the mobile header row. */
   compact?: boolean;
 }) {
   return (
@@ -109,7 +116,9 @@ function GuestActions({
         data-testid="auth-sign-in"
         className={cn(
           "min-h-9 justify-center",
-          compact ? "inline-flex px-2.5" : "hidden min-w-[4.5rem] lg:inline-flex",
+          compact
+            ? "hidden"
+            : "hidden min-w-[4.5rem] lg:inline-flex",
         )}
       >
         {signInLabel}
@@ -120,7 +129,7 @@ function GuestActions({
         size="sm"
         className={cn(
           "min-h-9 justify-center",
-          compact ? "inline-flex px-2.5" : "hidden min-w-[5.5rem] sm:inline-flex",
+          compact ? "inline-flex min-h-11 px-3" : "hidden min-w-[5.5rem] sm:inline-flex",
         )}
       >
         {registerLabel}
@@ -204,12 +213,14 @@ export function SiteHeader() {
     showAuthSkeleton || (!authReady && !user) ? (
       <div
         data-testid="auth-skeleton-mobile"
-        className="h-9 min-w-[9.5rem] animate-pulse rounded-md bg-muted/60 sm:hidden"
+        className="h-9 w-[5.75rem] animate-pulse rounded-md bg-muted/60 sm:hidden"
         aria-hidden
       />
     ) : user && accountLabel ? (
       <SignedInActions
-        accountClassName="max-w-[min(100%,12rem)]"
+        className="sm:hidden"
+        compact
+        accountClassName="hidden"
         accountLabel={accountLabel}
         email={user.email}
         onSignOut={signOut}
@@ -217,6 +228,7 @@ export function SiteHeader() {
       />
     ) : authReady ? (
       <GuestActions
+        className="sm:hidden"
         compact
         signInLabel={t("signIn")}
         registerLabel={t("register")}
@@ -225,18 +237,30 @@ export function SiteHeader() {
 
   const guestNavLinks = [
     { href: "/#how" as const, label: t("nav.howItWorks") },
+    { href: "/guides" as const, label: t("nav.guides") },
     { href: "/pricing" as const, label: t("nav.pricing") },
     { href: "/#faq" as const, label: t("nav.faq") },
   ];
 
-  const signedInNavLinks = [
+  const signedInCoreNavLinks = [
     { href: "/onboarding" as const, label: t("nav.start") },
     { href: "/routine" as const, label: t("nav.routine") },
     { href: "/check-in" as const, label: t("nav.checkIn") },
     { href: "/cabinet" as const, label: t("nav.cabinet") },
     { href: "/progress" as const, label: t("nav.progress") },
-    { href: "/pricing" as const, label: t("nav.pricing") },
     { href: "/settings" as const, label: t("nav.settings") },
+  ];
+
+  const signedInReviewLink =
+    user?.can_skin_review || user?.is_admin
+      ? [{ href: "/admin/skin-review" as const, label: t("nav.adminSkinReview") }]
+      : [];
+
+  const signedInMobileNavLinks = [...signedInCoreNavLinks, ...signedInReviewLink];
+
+  const signedInDesktopNavLinks = [
+    ...signedInCoreNavLinks,
+    { href: "/pricing" as const, label: t("nav.pricing") },
     { href: "/feedback" as const, label: t("nav.feedback") },
     { href: "/#how" as const, label: t("nav.howItWorks") },
     ...(user?.is_admin
@@ -247,24 +271,24 @@ export function SiteHeader() {
           { href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") },
         ]
       : []),
-    ...(user?.can_skin_review || user?.is_admin
-      ? [{ href: "/admin/skin-review" as const, label: t("nav.adminSkinReview") }]
-      : []),
+    ...signedInReviewLink,
   ];
 
   const showGuestNav = useShowGuestNav();
-  const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
+  const guestOrDesktopLinks = showGuestNav ? guestNavLinks : signedInDesktopNavLinks;
+  const guestOrMobileLinks = showGuestNav ? guestNavLinks : signedInMobileNavLinks;
 
   // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.
   const linkBase =
     "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium leading-snug transition-colors sm:min-h-0 sm:px-3.5 sm:py-2 sm:text-base";
 
   function renderNavUl(
+    links: typeof guestOrDesktopLinks,
     ulClassName: string,
   ) {
     return (
       <ul className={ulClassName}>
-        {navLinks.map((link) => {
+        {links.map((link) => {
           const active = isNavLinkActive(pathname, hash, link.href);
           return (
             <li key={link.href} className="shrink-0">
@@ -289,28 +313,32 @@ export function SiteHeader() {
   }
 
   const navStrip = renderNavUl(
+    guestOrMobileLinks,
     "flex flex-nowrap items-center justify-start gap-0.5 sm:gap-1",
   );
   const navWrapped = renderNavUl(
+    guestOrDesktopLinks,
     "flex flex-wrap items-center justify-center gap-x-2 gap-y-2",
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-4 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
-        <div className="flex min-h-11 items-center gap-2 sm:min-h-14 sm:gap-3">
+    <header className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-3 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
+        <div className="flex min-h-11 items-center gap-1.5 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
             prefetch
-            className="shrink-0 self-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="min-w-0 shrink rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring max-[22.5rem]:[&_.dd-wordmark]:hidden"
           >
             <Logo />
           </Link>
 
-          <div className="ml-auto flex min-h-9 shrink-0 items-center gap-1.5 self-center sm:gap-2">
+          <div className="ml-auto flex min-h-9 min-w-0 items-center justify-end gap-1 self-center sm:gap-2">
+            <LocaleSwitcher compact className="md:hidden" />
             <LocaleSwitcher className="hidden md:inline-flex" />
-            <ThemeToggle className="hidden sm:inline-flex" />
+            <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
             {desktopAuth}
+            {mobileAuth}
           </div>
         </div>
 
@@ -327,12 +355,6 @@ export function SiteHeader() {
           {navStrip}
         </div>
       </nav>
-
-      <div className="theme-toggle-mobile-bar flex min-h-11 flex-nowrap items-center justify-start gap-1.5 overflow-x-auto border-t border-border/40 px-3 py-1 [scrollbar-width:none] sm:justify-center sm:px-6 sm:py-2 [&::-webkit-scrollbar]:hidden md:hidden">
-        <LocaleSwitcher />
-        <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
-        {mobileAuth}
-      </div>
     </header>
   );
 }

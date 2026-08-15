@@ -164,28 +164,28 @@ export function OnboardingStepSkinProfile({
 
         <OnboardingPhotoGuide />
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
           <Button
             type="button"
             variant="outline"
             size="lg"
-            className="min-h-12 gap-2"
+            className="min-h-12 min-w-0 gap-2"
             onClick={openCamera}
             disabled={ob.photos.length >= ONBOARDING_MAX_PHOTOS || analyzing}
           >
-            <Camera className="size-4" aria-hidden />
-            {tPrivacy("captureCard.actionCamera")}
+            <Camera className="size-4 shrink-0" aria-hidden />
+            <span className="truncate">{tPrivacy("captureCard.actionCamera")}</span>
           </Button>
           <Button
             type="button"
             variant="outline"
             size="lg"
-            className="min-h-12 gap-2"
+            className="min-h-12 min-w-0 gap-2"
             onClick={openLibrary}
             disabled={ob.photos.length >= ONBOARDING_MAX_PHOTOS || analyzing}
           >
-            <ImagePlus className="size-4" aria-hidden />
-            {tPrivacy("captureCard.actionLibrary")}
+            <ImagePlus className="size-4 shrink-0" aria-hidden />
+            <span className="truncate">{tPrivacy("captureCard.actionLibrary")}</span>
           </Button>
         </div>
 

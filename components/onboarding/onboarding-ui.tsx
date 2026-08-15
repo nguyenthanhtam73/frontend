@@ -32,10 +32,10 @@ export function OnboardingProgress({ idx, t }: { idx: number; t: OnboardingT }) 
       aria-label={t("progress.stepOf", { current: idx + 1, total })}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-lg font-bold tracking-tight text-foreground">
+        <p className="min-w-0 text-base font-bold tracking-tight text-foreground sm:text-lg">
           {t("progress.stepOf", { current: idx + 1, total })}
         </p>
-        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+        <span className="max-w-[55%] shrink-0 truncate rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
           {t(PROGRESS_STEP_KEYS[idx])}
         </span>
       </div>
@@ -345,7 +345,7 @@ export function QuickChipGrid<T extends string>({
         </div>
       ) : null}
       <div
-        className={cn("grid gap-2.5", columns === 3 ? "grid-cols-3" : "grid-cols-2")}
+        className={cn("grid gap-2.5", columns === 3 ? "grid-cols-2 min-[400px]:grid-cols-3" : "grid-cols-2")}
         role="group"
         aria-label={title}
         aria-required={required || undefined}
