@@ -197,7 +197,7 @@ export function FeedbackButtons({
     <div
       className={cn(
         "flex flex-col gap-3",
-        compact ? "" : "rounded-xl border bg-card/60 p-3 sm:p-4",
+        compact ? "" : "rounded-xl border bg-card p-3 sm:p-4",
         className,
       )}
       data-feedback-buttons

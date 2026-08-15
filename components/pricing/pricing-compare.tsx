@@ -134,7 +134,7 @@ export function PricingCompare({ className }: { className?: string }) {
         <div
           ref={scrollerRef}
           className={cn(
-            "overflow-x-auto overscroll-x-contain rounded-2xl border border-border/70 bg-card/60 shadow-sm backdrop-blur-sm",
+            "overflow-x-auto overscroll-x-contain rounded-2xl border border-border/70 bg-card shadow-sm",
             "scroll-smooth touch-pan-x [-webkit-overflow-scrolling:touch]",
             "[scrollbar-width:thin] [scrollbar-color:color-mix(in_oklab,var(--primary)_35%,transparent)_transparent]",
           )}

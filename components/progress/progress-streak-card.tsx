@@ -103,7 +103,7 @@ export function ProgressStreakCard({
     return (
       <div
         className={cn(
-          "flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/30 px-4 py-5",
+          "flex items-center gap-3 rounded-2xl border border-border/70 bg-muted px-4 py-5",
           className,
         )}
         aria-busy

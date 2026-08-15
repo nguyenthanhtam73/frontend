@@ -207,7 +207,7 @@ function ReadbackSectionBlock({
         roomy ? "px-3.5 py-3.5 sm:px-4 sm:py-4" : "px-3 py-2.5",
         isVerdict
           ? "border-primary/25 bg-primary/[0.06]"
-          : "border-border/50 bg-muted/20",
+          : "border-border/50 bg-muted",
       )}
     >
       {labelKey ? (

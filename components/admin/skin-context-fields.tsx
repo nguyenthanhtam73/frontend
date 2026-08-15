@@ -81,7 +81,7 @@ function ChoiceRow({
                 "min-h-9 rounded-full border px-3 py-1 text-xs transition-colors disabled:opacity-50",
                 active
                   ? "border-primary bg-primary/10 font-semibold text-primary"
-                  : "border-border bg-background text-muted-foreground hover:text-foreground",
+                  : "border-border bg-card text-muted-foreground hover:text-foreground",
               )}
             >
               {t(`skinContext.${group}.${id}`)}
@@ -105,7 +105,7 @@ export function SkinContextFields({
   const t = useTranslations("adminSkinReview") as unknown as (key: string) => string;
 
   return (
-    <div className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-3.5">
+    <div className="space-y-3 rounded-xl border border-border/60 bg-muted p-3.5">
       <div className="space-y-1">
         <p className="text-sm font-semibold">{t("skinContext.title")}</p>
         <p className="text-xs leading-relaxed text-muted-foreground">

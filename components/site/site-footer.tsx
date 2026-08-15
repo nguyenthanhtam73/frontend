@@ -9,7 +9,7 @@ export async function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="min-w-0 border-t border-border/60 bg-background/60">
+    <footer className="min-w-0 border-t border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex min-w-0 items-start gap-3 sm:items-center">
           <Logo className="shrink-0" />

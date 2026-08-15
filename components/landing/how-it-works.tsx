@@ -8,7 +8,7 @@ export async function HowItWorks() {
   const t = await getTranslations("howItWorks");
 
   return (
-    <section id="how" className="scroll-mt-20 border-t border-border/60">
+    <section id="how" className="dd-anchor border-t border-border/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-xl space-y-3">

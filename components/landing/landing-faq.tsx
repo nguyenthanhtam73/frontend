@@ -10,7 +10,7 @@ export async function LandingFaq() {
   const t = await getTranslations("landingFaq");
 
   return (
-    <section id="faq" className="scroll-mt-20 border-t border-border/60">
+    <section id="faq" className="dd-anchor border-t border-border/60">
       <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-8 space-y-2 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -24,11 +24,11 @@ export async function LandingFaq() {
           </p>
         </div>
 
-        <div className="divide-y divide-border/60 rounded-2xl border border-border/70 bg-card/40 px-1">
+        <div className="divide-y divide-border/60 rounded-2xl border border-border/70 bg-card px-1">
           {LANDING_FAQ_KEYS.map((key) => (
             <details
               key={key}
-              className="group px-4 py-0.5 open:bg-muted/15 sm:px-5"
+              className="group px-4 py-0.5 open:bg-muted sm:px-5"
             >
               <summary className="min-h-11 cursor-pointer list-none py-4 text-left text-[0.95rem] font-semibold tracking-tight marker:content-none [&::-webkit-details-marker]:hidden">
                 <span className="flex items-start justify-between gap-3 sm:items-center">

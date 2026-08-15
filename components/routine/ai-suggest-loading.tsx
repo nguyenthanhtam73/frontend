@@ -168,7 +168,7 @@ function SkeletonSection({
   rows: number;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-primary/20 bg-card/40 p-3 sm:p-4">
+    <div className="rounded-xl border border-dashed border-primary/20 bg-card p-3 sm:p-4">
       <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground/80">
         <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary/10">
           {icon}

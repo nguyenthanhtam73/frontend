@@ -90,7 +90,7 @@ export function PricingPlanCard({
     <article
       data-testid={`pricing-card-${plan}`}
       className={cn(
-        "relative flex h-full flex-col rounded-2xl border bg-card/80 p-5 backdrop-blur-sm transition-[transform,box-shadow,border-color] duration-300 ease-out sm:p-6",
+        "relative flex h-full flex-col rounded-2xl border bg-card p-5 transition-[transform,box-shadow,border-color] duration-300 ease-out sm:p-6",
         "motion-safe:hover:-translate-y-0.5",
         showPopularLift
           ? [

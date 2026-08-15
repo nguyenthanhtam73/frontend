@@ -9,7 +9,7 @@ export async function Problem() {
   const t = await getTranslations("problem");
 
   return (
-    <section id="problem" className="scroll-mt-20 border-t border-border/60 bg-background/40">
+    <section id="problem" className="dd-anchor border-t border-border/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto mb-10 max-w-2xl space-y-3 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -24,7 +24,7 @@ export async function Problem() {
         <ul className="grid gap-4 sm:grid-cols-2">
           {itemKeys.map((key) => (
             <li key={key}>
-              <Card className="h-full border-accent/30 bg-card/80">
+              <Card className="h-full border-accent/30">
                 <CardContent className="flex gap-3 p-4 sm:gap-4 sm:p-6">
                   <div
                     className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent/60 text-accent-foreground"

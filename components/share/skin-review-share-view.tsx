@@ -316,12 +316,6 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
 
   return (
     <div className="relative isolate overflow-x-hidden">
-      {/* Teal + blush atmosphere */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] sm:h-[36rem] bg-[radial-gradient(ellipse_at_15%_0%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent_55%),radial-gradient(ellipse_at_90%_8%,color-mix(in_oklab,var(--accent)_70%,transparent),transparent_48%),linear-gradient(to_bottom,color-mix(in_oklab,var(--background)_30%,transparent),var(--background))]"
-      />
-
       <div
         className={cn(
           "mx-auto w-full max-w-xl",
@@ -353,7 +347,7 @@ export function SkinReviewShareView({ data }: { data: PublicSkinReviewResponse }
             <div
               className={cn(
                 /* Mobile: vertical stack; desktop: side grid when 2–3 photos */
-                "grid grid-cols-1 gap-1.5 bg-muted/40 p-1.5",
+                "grid grid-cols-1 gap-1.5 bg-muted p-1.5",
                 side.length > 0 && "sm:grid-cols-[1.4fr_1fr]",
               )}
             >

@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { HashScroll } from "@/components/site/hash-scroll";
 import { MetaPixel } from "@/components/site/meta-pixel";
 import { OfflineIndicator } from "@/components/site/offline-indicator";
 import { PwaRegister } from "@/components/site/pwa-register";
@@ -94,6 +95,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <AppProviders>
             <OfflineIndicator />
             <SiteHeader />
+            <HashScroll />
             <main className="flex min-w-0 max-w-full flex-1 flex-col">{children}</main>
             <SiteFooter />
             <PwaRegister />

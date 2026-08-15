@@ -90,8 +90,8 @@ function PreviewTile({
     <div
       className={
         tone === "card"
-          ? "flex items-center gap-3 rounded-xl border bg-card/70 px-3 py-2.5 shadow-sm backdrop-blur"
-          : "flex items-center gap-3 rounded-xl border border-dashed bg-background/40 px-3 py-2.5 text-xs text-muted-foreground"
+          ? "flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 shadow-sm"
+          : "flex items-center gap-3 rounded-xl border border-dashed bg-muted px-3 py-2.5 text-xs text-muted-foreground"
       }
     >
       <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-background/80 ring-1 ring-border/60">

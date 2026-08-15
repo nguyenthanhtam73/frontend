@@ -23,7 +23,7 @@ export function OnboardingPhotoGuide() {
   const t = useTranslations("onboarding");
 
   return (
-    <div className="space-y-3 rounded-xl border border-border/70 bg-muted/25 p-3.5">
+    <div className="space-y-3 rounded-xl border border-border/70 bg-muted p-3.5">
       <p className="text-sm font-semibold">{t("photoGuide.title")}</p>
 
       <div className="grid gap-2.5 sm:grid-cols-2">

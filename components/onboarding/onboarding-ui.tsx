@@ -291,7 +291,7 @@ export function QuickInfoGroup({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border/80 bg-card/40 p-3.5 sm:p-4">
+    <section className="rounded-2xl border border-border/80 bg-card p-3.5 sm:p-4">
       <p className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
         <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
         {label}

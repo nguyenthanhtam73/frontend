@@ -78,7 +78,7 @@ export function SuggestionPreview({
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {sections.map(({ key, title, icon }) => (
-            <div key={key} className="rounded-xl border bg-card/50 p-3 sm:p-4">
+            <div key={key} className="rounded-xl border bg-card p-3 sm:p-4">
               <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-foreground/80">
                 <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
                   {icon}
@@ -124,7 +124,7 @@ export function SuggestionPreview({
           ) : null}
         </div>
         {suggestion.closing_reminder ? (
-          <p className="rounded-xl bg-muted/40 px-3 py-2 text-xs italic leading-relaxed text-muted-foreground">
+          <p className="rounded-xl bg-muted px-3 py-2 text-xs italic leading-relaxed text-muted-foreground">
             {labels.closing}: {suggestion.closing_reminder}
           </p>
         ) : null}
@@ -189,7 +189,7 @@ export function SuggestionPreview({
 
 function PreviewBlock({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl border bg-card/50 p-3">
+    <div className="rounded-xl border bg-card p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {title}
       </p>

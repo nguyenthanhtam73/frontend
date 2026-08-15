@@ -28,7 +28,7 @@ export function StarterRoutineGenerationNotice({
   return (
     <>
       {isGeneratingRoutine ? (
-        <div className="rounded-xl border border-border/70 bg-muted/20 p-2 sm:p-3">
+        <div className="rounded-xl border border-border/70 bg-muted p-2 sm:p-3">
           <OnboardingAiLoading phase="starterRoutine" />
           {isGuest ? (
             <p className="mt-1 px-2 text-center text-[11px] leading-relaxed text-muted-foreground/90 sm:text-xs">

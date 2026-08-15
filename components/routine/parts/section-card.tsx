@@ -272,7 +272,7 @@ export function SectionCard({
                         ? stepConfirmed
                           ? "border-emerald-500/40 bg-emerald-500/8"
                           : "border-emerald-500/30 bg-emerald-500/5"
-                        : "border-border/80 bg-card/60 hover:border-primary/30 hover:bg-card"),
+                        : "border-border/80 bg-card hover:border-primary/30"),
                   )}
                 >
                   <StepRow

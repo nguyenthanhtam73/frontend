@@ -256,7 +256,7 @@ export function OnboardingStepSkinProfile({
             onConfirm={setReadbackAgreed}
           />
           {readbackAgreed !== null ? (
-            <p className="rounded-lg border border-border/70 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+            <p className="rounded-lg border border-border/70 bg-muted px-3 py-2 text-xs text-muted-foreground">
               {readbackAgreed
                 ? t("readbackConfirm.thanksYes")
                 : t("readbackConfirm.thanksNo")}
@@ -271,7 +271,7 @@ export function OnboardingStepSkinProfile({
             }}
           />
           <AiDisclaimer variant="short" />
-          <details className="rounded-xl border border-border/60 bg-muted/10 p-3 text-sm">
+          <details className="rounded-xl border border-border/60 bg-muted p-3 text-sm">
             <summary className="cursor-pointer font-medium">
               {t("aiReview.aiNotesToggle")} · {Math.round(aiSnapshot.confidence * 100)}%
             </summary>
@@ -361,7 +361,7 @@ export function OnboardingStepReady() {
                 "flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm",
                 key === "checkIn"
                   ? "border-primary/30 bg-primary/[0.06] shadow-sm"
-                  : "border-border/70 bg-card/50",
+                  : "border-border/70 bg-card",
               )}
             >
               <span

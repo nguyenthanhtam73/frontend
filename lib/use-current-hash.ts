@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const HASH_CHANGE_EVENT = "dadiary:hashchange";
+export const HASH_CHANGE_EVENT = "dadiary:hashchange";
 
 type PatchedHistory = History & { __dadiaryHashPatched?: boolean };
 

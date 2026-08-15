@@ -21,7 +21,7 @@ export async function Testimonials() {
   const t = await getTranslations("testimonials");
 
   return (
-    <section className="border-t border-border/60 bg-muted/20">
+    <section className="border-t border-border/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl space-y-3">
@@ -43,7 +43,7 @@ export async function Testimonials() {
           {itemKeys.map((key) => (
             <Card
               key={key}
-              className="relative min-w-[min(100%,20rem)] w-[85%] shrink-0 snap-center border-border/70 bg-card/95 shadow-sm sm:min-w-[min(72%,22rem)] md:w-auto md:min-w-0"
+              className="relative min-w-[min(100%,20rem)] w-[85%] shrink-0 snap-center border-border/70 shadow-sm sm:min-w-[min(72%,22rem)] md:w-auto md:min-w-0"
             >
               <Badge
                 variant="secondary"

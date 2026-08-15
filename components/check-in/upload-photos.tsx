@@ -349,7 +349,7 @@ function LoadingAngleSlot({
         role="status"
         aria-busy="true"
         aria-live="polite"
-        className="flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted/30 px-3 py-4 text-center sm:min-h-[12rem]"
+        className="flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted px-3 py-4 text-center sm:min-h-[12rem]"
       >
         <span className="inline-flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-sm ring-1 ring-border/60">
           <Loader2 className="size-5 animate-spin" aria-hidden />
@@ -527,7 +527,7 @@ function PhotoSlotCard({
               "group flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-3 py-4 text-muted-foreground transition-all duration-200 sm:min-h-[12rem]",
               dragOver
                 ? "scale-[1.02] border-primary border-solid bg-primary/15 text-foreground"
-                : "border-border bg-muted/30 hover:border-primary/50 hover:bg-primary/5 hover:text-foreground",
+                : "border-border bg-muted hover:border-primary/50 hover:bg-primary/5 hover:text-foreground",
             )}
           >
             <span

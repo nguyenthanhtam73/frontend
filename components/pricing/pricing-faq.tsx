@@ -26,7 +26,7 @@ export function PricingFaq({ className }: { className?: string }) {
         </p>
       </div>
 
-      <div className="mx-auto max-w-2xl divide-y divide-border/60 rounded-2xl border border-border/70 bg-card/50 px-1 shadow-sm backdrop-blur-sm">
+      <div className="mx-auto max-w-2xl divide-y divide-border/60 rounded-2xl border border-border/70 bg-card px-1 shadow-sm">
         {FAQ_KEYS.map((key) => (
           <details
             key={key}

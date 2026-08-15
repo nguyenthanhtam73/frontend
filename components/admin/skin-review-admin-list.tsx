@@ -429,7 +429,7 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
       ) : null}
 
       {detail ? (
-        <div className="space-y-4 rounded-2xl border border-border bg-muted/30 p-5">
+        <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <h3 className="text-lg font-semibold tracking-tight">
@@ -447,7 +447,7 @@ export function SkinReviewAdminList({ enabled, onOpenCreate }: Props) {
             </Button>
           </div>
 
-          <section className="space-y-3 rounded-xl border border-border bg-background/60 p-4">
+          <section className="space-y-3 rounded-xl border border-border bg-card p-4">
             <div>
               <h4 className="text-sm font-semibold tracking-tight">
                 {t("qaSectionTitle")}

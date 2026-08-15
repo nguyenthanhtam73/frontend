@@ -201,7 +201,7 @@ export function HistoryStrip({
           ) : null}
 
           {allEntries.length === 0 ? (
-            <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed bg-muted px-4 py-4 text-sm text-muted-foreground">
               {labels.empty}
             </p>
           ) : (

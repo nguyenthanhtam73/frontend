@@ -885,7 +885,7 @@ export function OnboardingStepStarterRoutine({
 
       {hasWhy ? (
         <details
-          className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2"
+          className="rounded-lg border border-border/60 bg-muted px-3 py-2"
           data-testid="onboarding-routine-rationale"
         >
           <summary className="cursor-pointer text-xs font-semibold text-foreground/90">
@@ -911,7 +911,7 @@ export function OnboardingStepStarterRoutine({
         </details>
       ) : routine.week_notes?.trim() ? (
         <p
-          className="rounded-lg border border-border/60 bg-muted/15 px-3 py-2 text-xs leading-relaxed text-muted-foreground"
+          className="rounded-lg border border-border/60 bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground"
           data-testid="onboarding-week-notes"
         >
           {routine.week_notes}

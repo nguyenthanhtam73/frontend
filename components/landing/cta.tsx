@@ -8,7 +8,7 @@ export async function Cta() {
   const t = await getTranslations("cta");
 
   return (
-    <section id="beta" className="scroll-mt-20 px-4 py-16 sm:px-6 sm:py-20">
+    <section id="beta" className="dd-anchor px-4 py-16 sm:px-6 sm:py-20">
       <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border-2 border-primary/15 bg-gradient-to-br from-primary/15 via-accent/40 to-background p-5 shadow-lg shadow-primary/10 sm:rounded-3xl sm:p-14">
         <div
           className="absolute -right-20 -top-24 size-72 rounded-full bg-primary/30 blur-3xl"

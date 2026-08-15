@@ -51,7 +51,6 @@ function SignedInActions({
   onSignOut,
   signOutLabel,
   className,
-  accountClassName,
   compact = false,
 }: {
   accountLabel: string;
@@ -59,16 +58,18 @@ function SignedInActions({
   onSignOut: () => void;
   signOutLabel: string;
   className?: string;
-  accountClassName?: string;
   compact?: boolean;
 }) {
   return (
     <div
       data-testid="auth-signed-in"
-      className={cn("flex shrink-0 items-center gap-1.5", className)}
+      className={cn("flex min-w-0 shrink items-center gap-1.5", className)}
     >
       <span
-        className={cn("max-w-40 truncate text-xs text-muted-foreground", accountClassName)}
+        className={cn(
+          "min-w-0 truncate text-xs text-muted-foreground",
+          compact ? "max-w-[7.5rem]" : "max-w-40",
+        )}
         title={email}
       >
         {accountLabel}
@@ -195,7 +196,6 @@ export function SiteHeader() {
     ) : user && accountLabel ? (
       <SignedInActions
         className="hidden sm:flex"
-        accountClassName="hidden lg:inline"
         accountLabel={accountLabel}
         email={user.email}
         onSignOut={signOut}
@@ -220,7 +220,6 @@ export function SiteHeader() {
       <SignedInActions
         className="sm:hidden"
         compact
-        accountClassName="hidden"
         accountLabel={accountLabel}
         email={user.email}
         onSignOut={signOut}
@@ -242,25 +241,14 @@ export function SiteHeader() {
     { href: "/#faq" as const, label: t("nav.faq") },
   ];
 
-  const signedInCoreNavLinks = [
+  const signedInNavLinks = [
     { href: "/onboarding" as const, label: t("nav.start") },
     { href: "/routine" as const, label: t("nav.routine") },
     { href: "/check-in" as const, label: t("nav.checkIn") },
     { href: "/cabinet" as const, label: t("nav.cabinet") },
     { href: "/progress" as const, label: t("nav.progress") },
-    { href: "/settings" as const, label: t("nav.settings") },
-  ];
-
-  const signedInReviewLink =
-    user?.can_skin_review || user?.is_admin
-      ? [{ href: "/admin/skin-review" as const, label: t("nav.adminSkinReview") }]
-      : [];
-
-  const signedInMobileNavLinks = [...signedInCoreNavLinks, ...signedInReviewLink];
-
-  const signedInDesktopNavLinks = [
-    ...signedInCoreNavLinks,
     { href: "/pricing" as const, label: t("nav.pricing") },
+    { href: "/settings" as const, label: t("nav.settings") },
     { href: "/feedback" as const, label: t("nav.feedback") },
     { href: "/#how" as const, label: t("nav.howItWorks") },
     ...(user?.is_admin
@@ -271,24 +259,22 @@ export function SiteHeader() {
           { href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") },
         ]
       : []),
-    ...signedInReviewLink,
+    ...(user?.can_skin_review || user?.is_admin
+      ? [{ href: "/admin/skin-review" as const, label: t("nav.adminSkinReview") }]
+      : []),
   ];
 
   const showGuestNav = useShowGuestNav();
-  const guestOrDesktopLinks = showGuestNav ? guestNavLinks : signedInDesktopNavLinks;
-  const guestOrMobileLinks = showGuestNav ? guestNavLinks : signedInMobileNavLinks;
+  const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
 
   // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.
   const linkBase =
     "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium leading-snug transition-colors sm:min-h-0 sm:px-3.5 sm:py-2 sm:text-base";
 
-  function renderNavUl(
-    links: typeof guestOrDesktopLinks,
-    ulClassName: string,
-  ) {
+  function renderNavUl(ulClassName: string) {
     return (
       <ul className={ulClassName}>
-        {links.map((link) => {
+        {navLinks.map((link) => {
           const active = isNavLinkActive(pathname, hash, link.href);
           return (
             <li key={link.href} className="shrink-0">
@@ -313,17 +299,15 @@ export function SiteHeader() {
   }
 
   const navStrip = renderNavUl(
-    guestOrMobileLinks,
     "flex flex-nowrap items-center justify-start gap-0.5 sm:gap-1",
   );
   const navWrapped = renderNavUl(
-    guestOrDesktopLinks,
     "flex flex-wrap items-center justify-center gap-x-2 gap-y-2",
   );
 
   return (
-    <header className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-3 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
+    <header className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-4 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
         <div className="flex min-h-11 items-center gap-1.5 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
@@ -351,7 +335,7 @@ export function SiteHeader() {
         className="border-t border-border/40 py-1 lg:hidden"
         aria-label={t("mainNavAria")}
       >
-        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-3 [scrollbar-width:thin] sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:thin] sm:px-6">
           {navStrip}
         </div>
       </nav>

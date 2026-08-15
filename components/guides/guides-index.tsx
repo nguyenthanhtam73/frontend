@@ -26,7 +26,7 @@ export async function GuidesIndexView() {
           <li key={article.slug}>
             <Link
               href={article.path}
-              className="flex h-full flex-col rounded-2xl border border-border/70 bg-card/50 p-5 transition-colors hover:border-primary/35 hover:bg-card"
+              className="flex h-full flex-col rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/35"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
                 {article.kicker}

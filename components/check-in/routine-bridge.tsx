@@ -494,7 +494,7 @@ function QuickColumn({
   disabled: boolean;
 }) {
   return (
-    <div className="rounded-xl border bg-card/70 p-3">
+    <div className="rounded-xl border bg-card p-3">
       <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
         {icon}
         <span>{label}</span>

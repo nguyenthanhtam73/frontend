@@ -17,7 +17,7 @@ export async function ProgressPreview() {
   return (
     <section
       id="progress-preview"
-      className="scroll-mt-20 border-t border-border/60 bg-gradient-to-b from-accent/25 via-background/60 to-background [content-visibility:auto] [contain-intrinsic-size:800px]"
+      className="dd-anchor border-t border-border/60"
     >
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">

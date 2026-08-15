@@ -211,7 +211,7 @@ export function PrivacyControls() {
           </div>
         </header>
 
-        <section className="rounded-xl border border-border/70 bg-muted/20 p-4">
+        <section className="rounded-xl border border-border/70 bg-muted p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2">
               <Brain className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
@@ -226,7 +226,7 @@ export function PrivacyControls() {
           </div>
         </section>
 
-        <ul className="grid gap-2 rounded-xl border border-border/70 bg-muted/30 p-3 text-sm sm:grid-cols-2">
+        <ul className="grid gap-2 rounded-xl border border-border/70 bg-muted p-3 text-sm sm:grid-cols-2">
           <PromiseLine icon={<Eye className="size-4" aria-hidden />} text={t("dialogBullet1")} />
           <PromiseLine
             icon={<ShieldCheck className="size-4" aria-hidden />}

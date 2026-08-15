@@ -113,12 +113,6 @@ function PricingViewInner() {
 
   return (
     <div className="relative overflow-x-clip">
-      {/* Soft skincare atmosphere — teal mist + blush, not flat fill */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[42rem] bg-[radial-gradient(ellipse_at_20%_0%,color-mix(in_oklab,var(--primary)_18%,transparent),transparent_55%),radial-gradient(ellipse_at_85%_10%,color-mix(in_oklab,var(--accent)_55%,transparent),transparent_50%),linear-gradient(to_bottom,color-mix(in_oklab,var(--background)_40%,transparent),var(--background))]"
-        aria-hidden
-      />
-
       <div className="mx-auto w-full max-w-6xl px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:py-20">
         <header className="mx-auto max-w-2xl space-y-3 text-center in-animate animate-in fade-in slide-in-from-bottom-2 duration-500 sm:space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/85">

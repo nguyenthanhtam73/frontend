@@ -10,7 +10,7 @@ export async function Benefits() {
   const t = await getTranslations("benefits");
 
   return (
-    <section className="border-t border-border/60 bg-background/40">
+    <section className="border-t border-border/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-10 max-w-2xl space-y-3">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">

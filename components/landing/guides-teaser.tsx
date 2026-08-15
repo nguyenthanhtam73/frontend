@@ -13,7 +13,7 @@ export async function GuidesTeaser() {
   return (
     <section
       id="guides"
-      className="scroll-mt-20 border-t border-border/60"
+      className="dd-anchor border-t border-border/60"
     >
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -42,7 +42,7 @@ export async function GuidesTeaser() {
             <Link
               key={article.slug}
               href={article.path}
-              className="group flex flex-col rounded-2xl border border-border/70 bg-card/40 p-4 transition-colors hover:border-primary/35 hover:bg-card"
+              className="group flex flex-col rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/35"
             >
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
                 {article.kicker}

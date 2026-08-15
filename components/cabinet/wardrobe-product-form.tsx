@@ -235,7 +235,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
           )}
         </div>
 
-        <div className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3">
+        <div className="space-y-2 rounded-xl border border-border/70 bg-muted p-3">
           <p className="text-xs text-muted-foreground">{t("scanHint")}</p>
           <div className="flex flex-wrap gap-2">
             <Button

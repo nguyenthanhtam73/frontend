@@ -147,13 +147,13 @@
     /* Phone: 16px so rem padding/type fit a 320–390px screen.
        Desktop keeps the slight bump for marketing type. */
     font-size: 100%;
-    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     scrollbar-gutter: auto;
-    /* Sticky header is ~2 rows on phones; keep in-page anchors (#how, #faq) visible. */
-    scroll-padding-top: 8.25rem;
-    @apply font-sans;
+    /* Sticky header is ~2 rows; in-page anchors (#how, #faq) sit below it. */
+    --dd-header-offset: 8.5rem;
+    scroll-padding-top: var(--dd-header-offset);
+    @apply bg-background font-sans;
   }
   @media (min-width: 640px) {
     html {
@@ -163,18 +163,31 @@
   @media (min-width: 1024px) {
     html {
       scrollbar-gutter: stable;
-      scroll-padding-top: 7.5rem;
+      --dd-header-offset: 7.5rem;
+      scroll-padding-top: var(--dd-header-offset);
     }
   }
   body {
     /* Variable sans + normal weight keeps paragraphs gentle; avoids crowded bold UI chrome */
-    @apply bg-background text-foreground antialiased font-normal min-w-0;
+    @apply text-foreground antialiased font-normal min-w-0;
     text-rendering: optimizeLegibility;
+    /* Keep body paint transparent so one viewport wash sits behind header + main.
+       Painting the blobs on `body` made a white sticky bar cut a scrolling wash
+       — those two edges never lined up and looked like stacked broken layers. */
+    background-color: transparent;
+    isolation: isolate;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--background);
     background-image:
       radial-gradient(at 0% 0%, color-mix(in oklab, var(--primary) 12%, transparent) 0px, transparent 55%),
       radial-gradient(at 100% 0%, color-mix(in oklab, var(--accent) 60%, transparent) 0px, transparent 50%);
-    /* `fixed` breaks scroll/repaint on iOS Safari — keep it on desktop only. */
-    background-attachment: scroll;
   }
 
   /* App shell is a column flex. Without min-width:0, a wide child (table, nowrap
@@ -187,7 +200,13 @@
   }
 
   main {
-    overflow-wrap: break-word;
+    overflow-wrap: normal;
+  }
+
+  @media (max-width: 639px) {
+    main {
+      overflow-wrap: break-word;
+    }
   }
 
   img,
@@ -196,11 +215,6 @@
     max-width: 100%;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    body {
-      background-attachment: fixed;
-    }
-  }
 
   /*
    * PWA standalone polish — when the app is launched from the home screen we
@@ -218,6 +232,10 @@
       overscroll-behavior-y: contain;
     }
   }
+}
+
+@utility dd-anchor {
+  scroll-margin-top: var(--dd-header-offset, 8.5rem);
 }
 
 /* Subtle gradient utility used by hero and CTA */

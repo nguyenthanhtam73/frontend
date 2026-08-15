@@ -462,7 +462,7 @@ export function CheckInForm() {
               </div>
             </Field>
 
-            <details className="group rounded-xl border border-border bg-muted/20 open:bg-muted/30">
+            <details className="group rounded-xl border border-border bg-muted open:bg-muted">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
                 <span>{t("advancedToggle")}</span>
                 <ChevronDown
@@ -525,7 +525,7 @@ export function CheckInForm() {
 
       <div ref={feedbackAnchorRef} className="scroll-mt-24 space-y-3">
         {feedback.phase === "idle" ? (
-          <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+          <p className="rounded-xl border border-dashed bg-muted px-4 py-3 text-xs text-muted-foreground">
             {t("coachBeforeSubmit")}
           </p>
         ) : null}
@@ -599,7 +599,7 @@ export function CheckInForm() {
 
       <div
         className={cn(
-          "sticky bottom-0 z-20 flex flex-col gap-3 border-t bg-background/95 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:static lg:z-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4",
+          "sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 border-t bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 lg:static lg:z-0 lg:mx-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4",
         )}
       >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">

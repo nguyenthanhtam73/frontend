@@ -44,10 +44,10 @@ import { cn } from "@/lib/utils";
 type AdminTab = "create" | "list";
 
 const inputClass =
-  "min-h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  "min-h-10 w-full rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 const selectClass =
-  "min-h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  "min-h-9 w-full rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 function resolveImageUrl(path: string): string {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
@@ -369,7 +369,7 @@ export function SkinReviewAdminView() {
         />
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-4 rounded-xl border border-border/70 bg-card p-4 sm:grid-cols-2 sm:p-5">
         <label className="block space-y-1.5 text-sm">
           <span className="font-medium">{t("titleLabel")}</span>
           <input
@@ -429,7 +429,7 @@ export function SkinReviewAdminView() {
       </section>
 
       {result ? (
-        <section className="space-y-4 rounded-2xl border border-border bg-muted/20 p-4 sm:p-5">
+        <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-4 sm:p-5">
           <div>
             <h2 className="text-base font-semibold tracking-tight">
               {t("qaSectionTitle")}
@@ -567,7 +567,7 @@ export function SkinReviewAdminView() {
       ) : null}
 
       {shareUrl ? (
-        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-muted p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-medium">{t("shareReady")}</p>
             <p className="truncate text-xs text-muted-foreground">{shareUrl}</p>
@@ -590,7 +590,7 @@ export function SkinReviewAdminView() {
       ) : null}
 
       {result ? (
-        <section className="space-y-5 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
+        <section className="space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight">{t("stepResult")}</h2>
             <p className="text-xs text-muted-foreground">

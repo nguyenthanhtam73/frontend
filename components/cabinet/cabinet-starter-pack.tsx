@@ -119,7 +119,7 @@ export function CabinetStarterPack() {
             return (
               <li
                 key={c.id}
-                className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card/80 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium leading-snug">{c.name}</p>

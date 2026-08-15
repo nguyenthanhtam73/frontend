@@ -254,7 +254,7 @@ export function DailyCoachFeedback({
               {c.improvements!.map((im, idx) => (
                 <li
                   key={`tip-${idx}-${im.tip.slice(0, 24)}`}
-                  className="rounded-xl border bg-muted/30 p-3 text-sm transition-colors hover:bg-muted/50"
+                  className="rounded-xl border bg-muted p-3 text-sm transition-colors hover:bg-muted"
                 >
                   <p className="font-medium leading-snug">{im.tip}</p>
                   {im.why ? (
@@ -320,7 +320,7 @@ export function DailyCoachFeedback({
               </ul>
             ) : null}
             {c.medical_disclaimer ? (
-              <p className="rounded-md bg-background/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+              <p className="rounded-md bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground">
                 {c.medical_disclaimer}
               </p>
             ) : null}

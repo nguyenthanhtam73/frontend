@@ -198,7 +198,7 @@ export function CoachWelcomeStickyBar({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background/95 p-3 backdrop-blur-md sm:hidden",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background p-4 sm:hidden",
         className,
       )}
       data-testid="coach-welcome-sticky-cta"
@@ -269,7 +269,7 @@ export function CoachWelcomeCta({
   return (
     <div
       className={cn(
-        "space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:p-5",
+        "space-y-4 rounded-2xl border border-border/60 bg-muted p-4 sm:p-5",
         className,
       )}
     >

@@ -112,7 +112,7 @@ export function SkinReviewCorrectionEditor({
         {areas.map((area, i) => (
           <li
             key={`${area.region}-${i}`}
-            className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-muted/20 px-2.5 py-2"
+            className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-muted px-2.5 py-2"
           >
             <span className="min-w-16 text-xs font-semibold">{area.region}</span>
             <select

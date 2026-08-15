@@ -37,7 +37,7 @@ export default async function RoutinePage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "routine" });
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-6 sm:py-10">
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
       <header className="mb-6 max-w-2xl space-y-2 sm:mb-8 sm:space-y-3">
         <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           <span className="inline-block size-1.5 rounded-full bg-primary" aria-hidden />
@@ -83,7 +83,7 @@ function HeroTile({
   ringClass: string;
 }) {
   return (
-    <div className="group flex gap-3 rounded-xl border border-border/80 bg-card/60 px-3 py-2.5 shadow-sm backdrop-blur transition-all hover:border-primary/30 hover:bg-card hover:shadow-md sm:px-4 sm:py-3">
+    <div className="group flex gap-3 rounded-xl border border-border/80 bg-card px-3 py-2.5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md sm:px-4 sm:py-3">
       <span
         className={`mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ${ringClass}`}
       >

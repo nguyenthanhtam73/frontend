@@ -455,7 +455,7 @@ export function ProductGuidanceSection({
 
   return (
     <section
-      className="space-y-3 rounded-xl border border-border/70 bg-muted/15 p-3.5 sm:p-4"
+      className="space-y-3 rounded-xl border border-border/70 bg-muted p-3.5 sm:p-4"
       data-testid={sectionTestId}
       aria-labelledby="onb-product-guidance-title"
     >

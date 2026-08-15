@@ -10,7 +10,7 @@ export async function BetaSignup() {
   const t = await getTranslations("betaSignup");
 
   return (
-    <section id="beta-signup" className="scroll-mt-20 border-t border-border/60 bg-background/40">
+    <section id="beta-signup" className="dd-anchor border-t border-border/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="relative mx-auto max-w-3xl overflow-hidden rounded-3xl border-2 border-primary/15 bg-gradient-to-br from-primary/10 via-accent/30 to-background p-6 shadow-lg shadow-primary/5 sm:p-10">
           <div
