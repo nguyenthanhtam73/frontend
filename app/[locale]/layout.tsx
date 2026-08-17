@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { HashScroll } from "@/components/site/hash-scroll";
 import { MetaPixel } from "@/components/site/meta-pixel";
+import { NavigationBlockListener } from "@/components/navigation/navigation-block-listener";
 import { OfflineIndicator } from "@/components/site/offline-indicator";
 import { PwaRegister } from "@/components/site/pwa-register";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -94,6 +95,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <MetaPixel />
           <AppProviders>
             <OfflineIndicator />
+            <NavigationBlockListener />
             <SiteHeader />
             <HashScroll />
             <main className="flex min-w-0 max-w-full flex-1 flex-col">{children}</main>

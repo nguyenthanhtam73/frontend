@@ -86,7 +86,6 @@ export function SectionCard({
   labels,
   accent,
   editLocked = false,
-  isStepConfirmed,
   highlightEmptyTitles = false,
   sectionAlert,
   onEditLockedAttempt,
@@ -106,8 +105,6 @@ export function SectionCard({
   labels: SectionLabels;
   accent: "am" | "pm";
   editLocked?: boolean;
-  /** Steps ticked complete and saved — cannot edit, delete, or untick. */
-  isStepConfirmed?: (id: string) => boolean;
   highlightEmptyTitles?: boolean;
   sectionAlert?: SectionAlert | null;
   onEditLockedAttempt?: () => void;
@@ -219,8 +216,7 @@ export function SectionCard({
           <ol className="space-y-2.5 sm:space-y-2">
             {steps.map((step, idx) => {
               const exiting = exitingIds.has(step.id);
-              const stepConfirmed = isStepConfirmed?.(step.id) ?? false;
-              const stepDragEnabled = dragEnabled && !exiting && !stepConfirmed;
+              const stepDragEnabled = dragEnabled && !exiting && !editLocked;
               return (
                 <li
                   key={step.id}
@@ -269,9 +265,7 @@ export function SectionCard({
                         : undefined),
                     !exiting &&
                       (step.completed
-                        ? stepConfirmed
-                          ? "border-emerald-500/40 bg-emerald-500/8"
-                          : "border-emerald-500/30 bg-emerald-500/5"
+                        ? "border-emerald-500/30 bg-emerald-500/5"
                         : "border-border/80 bg-card hover:border-primary/30"),
                   )}
                 >
@@ -282,7 +276,6 @@ export function SectionCard({
                     step={step}
                     beginnerSimple={beginnerSimple}
                     editLocked={editLocked}
-                    stepConfirmed={stepConfirmed}
                     onEditLockedAttempt={onEditLockedAttempt}
                     showDragHandle={stepDragEnabled}
                     onRemove={() => handleRemove(step.id)}
@@ -453,7 +446,6 @@ function StepRow({
   step,
   beginnerSimple,
   editLocked,
-  stepConfirmed = false,
   showDragHandle,
   onEditLockedAttempt,
   onRemove,
@@ -470,7 +462,6 @@ function StepRow({
   step: RoutineStepDTO;
   beginnerSimple: boolean;
   editLocked: boolean;
-  stepConfirmed?: boolean;
   showDragHandle: boolean;
   onEditLockedAttempt?: () => void;
   onRemove: () => void;
@@ -483,7 +474,7 @@ function StepRow({
 }) {
   const [showNotes, setShowNotes] = useState(!!step.notes);
   const cat = useMemo(() => normalizeCategory(step.category), [step.category]);
-  const locked = editLocked || stepConfirmed;
+  const locked = editLocked;
   const showReorder = !beginnerSimple && !locked;
   const showRemove = !locked;
 
@@ -501,25 +492,15 @@ function StepRow({
 
         <button
           type="button"
-          onClick={stepConfirmed ? undefined : onToggle}
-          disabled={stepConfirmed}
-          aria-label={
-            stepConfirmed
-              ? labels.completeLocked
-              : step.completed
-                ? labels.completeOn
-                : labels.completeOff
-          }
+          onClick={onToggle}
+          data-testid={`routine-step-tick-${section}-${index}`}
+          aria-label={step.completed ? labels.completeOn : labels.completeOff}
           aria-pressed={step.completed}
           className={cn(
-            "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 sm:size-10",
-            stepConfirmed
-              ? "cursor-default border-emerald-500/60 bg-emerald-500/90 text-white opacity-95"
-              : "active:scale-[0.95]",
-            !stepConfirmed &&
-              (step.completed
-                ? "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
-                : "border-border bg-background hover:border-primary/40 hover:bg-primary/5"),
+            "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-[0.95] sm:size-10",
+            step.completed
+              ? "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
+              : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
           )}
         >
           {step.completed ? (

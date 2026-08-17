@@ -57,13 +57,39 @@ export function toLocal(routine: RoutineDTO | null): LocalRoutine {
   };
 }
 
-/** Step ids that were ticked complete and persisted — immutable in the editor. */
-export function lockedCompletedIds(routine: LocalRoutine): Set<string> {
-  const ids = new Set<string>();
-  for (const s of [...routine.morning, ...routine.evening]) {
-    if (s.completed) ids.add(s.id);
-  }
-  return ids;
+/**
+ * tick_only payload: keep last persisted titles/order/notes, copy completion
+ * flags from the live editor by step id. New/deleted/renamed steps stay dirty
+ * locally until the user hits Save (manual_edit quota).
+ */
+export function overlayStepCompletions(
+  persisted: LocalRoutine,
+  current: LocalRoutine,
+): LocalRoutine {
+  const overlay = (base: RoutineStepDTO[], live: RoutineStepDTO[]) => {
+    const byId = new Map(live.map((s) => [s.id, s]));
+    return base.map((s) => {
+      const next = byId.get(s.id);
+      if (!next) return s;
+      return { ...s, completed: !!next.completed };
+    });
+  };
+  return {
+    ...persisted,
+    morning: overlay(persisted.morning, current.morning),
+    evening: overlay(persisted.evening, current.evening),
+  };
+}
+
+/** Copy a history day into today's editor — new ids, ticks reset. */
+export function cloneStepsForToday(steps: RoutineStepDTO[]): RoutineStepDTO[] {
+  return steps.map((s) => ({
+    id: localId(),
+    title: s.title,
+    category: s.category,
+    notes: s.notes,
+    completed: false,
+  }));
 }
 
 /** Strip transient fields and trim strings before sending to the API. */

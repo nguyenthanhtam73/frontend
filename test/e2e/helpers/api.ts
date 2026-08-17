@@ -525,6 +525,82 @@ export type SkinCheckPayload = {
   image_urls?: string[];
 };
 
+export type RoutineStepPayload = {
+  id: string;
+  title: string;
+  category?: string;
+  completed?: boolean;
+};
+
+export type RoutinePayload = {
+  routine_date?: string;
+  morning: RoutineStepPayload[];
+  evening: RoutineStepPayload[];
+  saved?: boolean;
+  skill_mode?: string;
+};
+
+export async function fetchRoutine(
+  request: APIRequestContext,
+  token: string,
+): Promise<RoutinePayload> {
+  const res = await request.get(`${apiURL()}/api/v1/routines`, {
+    headers: authHeader(token),
+  });
+  if (!res.ok()) throw new Error(`GET /routines ${res.status()}: ${await res.text()}`);
+  const json = (await res.json()) as Envelope<RoutinePayload>;
+  if (!json.data) throw new Error("GET /routines: empty data");
+  return json.data;
+}
+
+export async function upsertRoutineViaApi(
+  request: APIRequestContext,
+  token: string,
+  body: {
+    morning: RoutineStepPayload[];
+    evening: RoutineStepPayload[];
+    save_kind?: "manual_edit" | "tick_only" | "preference_only";
+    skill_mode?: string;
+    notes?: string;
+  },
+): Promise<RoutinePayload> {
+  const res = await request.post(`${apiURL()}/api/v1/routines`, {
+    headers: authHeader(token),
+    data: body,
+  });
+  if (!res.ok()) {
+    throw new Error(`POST /routines ${res.status()}: ${await res.text()}`);
+  }
+  const json = (await res.json()) as Envelope<RoutinePayload>;
+  if (!json.data) throw new Error("POST /routines: empty data");
+  return json.data;
+}
+
+/** E2E-only: yesterday saved, today empty → carried_over on GET /routines. */
+export async function seedRoutineCarriedOverFixture(
+  request: APIRequestContext,
+  email: string,
+): Promise<{ routine_date: string; carried_to: string }> {
+  const secret = e2eSecret();
+  if (!secret) {
+    throw new Error("E2E_SECRET required for carried-over routine fixture");
+  }
+  const res = await request.post(`${apiURL()}/api/v1/internal/e2e/routine/carried-over-fixture`, {
+    headers: {
+      "Content-Type": "application/json",
+      "X-E2E-Secret": secret,
+      Accept: "application/json",
+    },
+    data: { email },
+  });
+  if (!res.ok()) {
+    throw new Error(`carried-over-fixture ${res.status()}: ${await res.text()}`);
+  }
+  const json = (await res.json()) as Envelope<{ routine_date: string; carried_to: string }>;
+  if (!json.data?.carried_to) throw new Error("carried-over-fixture: empty data");
+  return json.data;
+}
+
 export async function fetchSkinCheck(
   request: APIRequestContext,
   token: string,

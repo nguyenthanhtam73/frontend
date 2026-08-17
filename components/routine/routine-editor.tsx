@@ -5,33 +5,33 @@ import { Moon, Sun } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  type RoutineCategory,
-  type RoutineStepDTO,
-} from "@/lib/types/routine";
+import type { RoutineCategory, RoutineStepDTO } from "@/lib/types/routine";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
-import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { useOnboardingStore, type SkillMode } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 
 import { Banner } from "./parts/banner";
 import { AISuggestCard } from "./parts/ai-suggest-card";
 import { CheckInContextCard } from "./parts/check-in-context-card";
-import { EmptyHero } from "./parts/empty-hero";
+import { FirstSaveBanner } from "./parts/first-save-banner";
 import { HistoryStrip } from "./parts/history-strip";
 import { NotesCard } from "./parts/notes-card";
+import { RoutineStatusPanel } from "./parts/routine-status-panel";
+import { RoutineToolsFold } from "./parts/routine-tools-fold";
 import { SaveBar, useSaveFlash } from "./parts/save-bar";
 import { SectionCard, type SectionLabels } from "./parts/section-card";
 import { SkillModeBar } from "./parts/skill-mode-bar";
-import { StatusBanner } from "./parts/status-banner";
 import { SuggestionPreview } from "./parts/suggestion-preview";
 import { ValidationPanel, getVisibleValidationIssues } from "./parts/validation-panel";
 import { AiSuggestLoading } from "./ai-suggest-loading";
 import { countCompletion, localId, resolveRoutineSource, validateRoutine } from "./routine-helpers";
 import { useRoutine } from "./use-routine";
 import { useRoutineSuggest, type SuggestError } from "./use-routine-suggest";
+import { useDirtyBeforeUnload } from "./hooks/use-dirty-beforeunload";
+import { useNavigationBlock } from "@/lib/hooks/use-navigation-block";
 import { streakDateKey } from "@/lib/streak/history";
 
 /**
@@ -60,12 +60,6 @@ export function RoutineEditor() {
   const setSkillMode = useSkillStore((s) => s.setMode);
   const onboardingSkill = useOnboardingStore((s) => s.skillMode);
 
-  // First visit: pull skill mode from onboarding so the editor opens in the
-  // right depth without an extra tap.
-  useEffect(() => {
-    if (!skillMode && onboardingSkill) setSkillMode(onboardingSkill);
-  }, [skillMode, onboardingSkill, setSkillMode]);
-
   const messages = useMemo(
     () => ({
       needAuth: t("needAuth"),
@@ -73,13 +67,33 @@ export function RoutineEditor() {
       loadError: t("loadError"),
       saveSuccess: t("saveSuccess"),
       autoSaved: t("autoSaved"),
+      autoSavedDirty: t("autoSavedDirty"),
     }),
     [t],
   );
 
-  const r = useRoutine(messages);
+  const r = useRoutine(messages, locale);
   const suggest = useRoutineSuggest(locale, skillMode ?? null);
   const [suggestToastDismissed, setSuggestToastDismissed] = useState(false);
+
+  useDirtyBeforeUnload(r.dirty);
+  useNavigationBlock({
+    id: "routine-editor",
+    active: r.dirty,
+    message: t("leaveConfirm"),
+  });
+
+  useEffect(() => {
+    if (skillMode) return;
+    const fromRoutine = r.routine.skillMode;
+    const validRoutine: SkillMode | null =
+      fromRoutine === "beginner" ||
+      fromRoutine === "intermediate" ||
+      fromRoutine === "advanced"
+        ? fromRoutine
+        : null;
+    setSkillMode(onboardingSkill || validRoutine || "beginner");
+  }, [skillMode, onboardingSkill, r.routine.skillMode, setSkillMode]);
   const { setSkillModeRef } = r;
 
   const suggestGate = useFeatureGate(Feature.AIRoutineSuggestion);
@@ -98,6 +112,32 @@ export function RoutineEditor() {
           limit: editLimit,
         })
       : undefined;
+
+  const saveBarQuotaHint = useMemo(() => {
+    if (editGate.isPremium && suggestGate.isPremium) return null;
+    const parts: string[] = [];
+    if (!editGate.isPremium && !editGate.isLoading) {
+      parts.push(t("quotaSaveBarRemaining", { remaining: editGate.remaining }));
+    }
+    if (!suggestGate.isPremium && !suggestGate.isLoading) {
+      parts.push(
+        t("quotaSaveBarSuggest", {
+          remaining: suggestGate.remaining,
+          limit: suggestLimit,
+        }),
+      );
+    }
+    return parts.length > 0 ? parts.join(" · ") : null;
+  }, [
+    editGate.isPremium,
+    editGate.isLoading,
+    editGate.remaining,
+    suggestGate.isPremium,
+    suggestGate.isLoading,
+    suggestGate.remaining,
+    suggestLimit,
+    t,
+  ]);
 
   const suggestQuotaLabel = suggestGate.isPremium
     ? t("premiumUnlimited")
@@ -213,6 +253,7 @@ export function RoutineEditor() {
 
   const editorTopRef = useRef<HTMLDivElement>(null);
   const editorGridRef = useRef<HTMLDivElement>(null);
+  const historySectionRef = useRef<HTMLDivElement>(null);
   const [validationEngaged, setValidationEngaged] = useState(false);
   const [saveAttempted, setSaveAttempted] = useState(false);
   const [editQuotaEngaged, setEditQuotaEngaged] = useState(false);
@@ -231,6 +272,14 @@ export function RoutineEditor() {
       suggestUpsellRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   }, []);
+
+  const handleSkillChange = useCallback(
+    (mode: SkillMode) => {
+      setSkillMode(mode);
+      r.persistSkillMode(mode);
+    },
+    [setSkillMode, r.persistSkillMode],
+  );
 
   const validationLabels = useMemo(
     () => ({
@@ -296,6 +345,21 @@ export function RoutineEditor() {
     [r.routine],
   );
 
+  const handleMiniStreakDay = useCallback(
+    (date: string) => {
+      const entry = r.history?.entries?.find((e) => e.routine_date === date);
+      if (!entry) return;
+      if (date === todayISO) {
+        editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      r.applyHistoryAsTodayDraft(entry);
+      engageValidation();
+      editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [r.history, r.applyHistoryAsTodayDraft, todayISO, engageValidation],
+  );
+
   if (r.status === "loading" && !r.routine.routineDate) {
     return <RoutineEditorSkeleton />;
   }
@@ -308,7 +372,7 @@ export function RoutineEditor() {
 
       <SkillModeBar
         value={skillMode}
-        onChange={setSkillMode}
+        onChange={handleSkillChange}
         labels={{
           beginner: t("modeBeginner"),
           intermediate: t("modeIntermediate"),
@@ -316,23 +380,40 @@ export function RoutineEditor() {
         }}
         hint={beginnerSimple ? t("modeBeginnerHint") : t("modeHint")}
         ariaLabel={t("modeAriaLabel")}
+        compact={!r.fresh}
       />
 
+      {!r.routine.saved && hasEditorContent ? (
+        <FirstSaveBanner message={t("firstSaveTickBanner")} />
+      ) : null}
+
       {!r.fresh ? (
-        <StatusBanner
+        <RoutineStatusPanel
           sourceInfo={sourceInfo}
           sourceLabels={sourceLabels}
           autoSaving={r.autoSaving}
           completed={completion.completed}
           total={completion.total}
           progressPct={completion.pct}
-          labels={{
+          statusLabels={{
             autosaving: t("autoSaving"),
           }}
+          history={r.history}
+          todayISO={todayISO}
+          miniLabels={{
+            streak: (n) => t("historyStreak", { n }),
+            streakUnit: t("historyStreakUnit"),
+            today: t("historyToday"),
+            yesterday: t("historyYesterday"),
+            openHistory: t("miniStreakOpenHistory"),
+          }}
+          onSelectDay={handleMiniStreakDay}
+          onOpenHistory={() =>
+            historySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }
         />
       ) : null}
 
-      {/* Latest check-in — links skin journal to today's routine. */}
       {applyHintsToast ? (
         <ToastBanner
           kind="ok"
@@ -366,156 +447,10 @@ export function RoutineEditor() {
         />
       ) : null}
 
-      <CheckInContextCard
-        editLocked={editLocked}
-        beginnerSimple={beginnerSimple}
-        hasEditorContent={hasEditorContent}
-        onApplyHints={(morning, evening) => {
-          r.applySuggestedSteps(morning, evening);
-          engageValidation();
-        }}
-        onApplySuccess={() => {
-          setApplyHintsToast(t("checkInContext.applySuccess"));
-          window.setTimeout(() => setApplyHintsToast(null), 3500);
-          editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }}
-      />
-
       {r.fresh ? (
-        <EmptyHero
-          beginnerSimple={beginnerSimple}
-          labels={{
-            title: t("emptyHeroTitle"),
-            body: t("emptyHeroBody"),
-            beginnerBody: t("emptyHeroBeginnerBody"),
-            scrollHint: t("emptyHeroScrollHint"),
-            am: t("morningTitle"),
-            pm: t("eveningTitle"),
-            amHint: t("morningDesc"),
-            pmHint: t("eveningDesc"),
-            safety: t("safetyTile"),
-          }}
-        />
-      ) : null}
-
-      <AISuggestCard
-        suggesting={suggest.suggesting}
-        busy={suggest.suggestBusy}
-        hasSuggestion={!!suggest.suggestion}
-        focusNote={suggest.focusNote}
-        onFocusChange={suggest.setFocusNote}
-        onSuggest={() => {
-          if (suggest.suggestBusy) return;
-          if (suggest.error && suggest.canRetry) {
-            handleSuggestRetry();
-            return;
-          }
-          if (suggestDisabled) {
-            engageSuggestQuota();
-            return;
-          }
-          void suggest.requestSuggestion();
-        }}
-        disabled={suggestDisabled || suggest.suggestBusy}
-        quotaLabel={suggestQuotaLabel}
-        manualEditQuotaLabel={editQuotaLabel}
-        manualEditLocked={editLocked}
-        onManualEditQuotaClick={engageEditQuota}
-        error={resolveSuggestError(suggest.error)}
-        onDismissError={suggest.dismissError}
-        onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
-        labels={{
-          title: t("aiSuggestTitle"),
-          body: t("aiSuggestBody"),
-          cta: t("aiSuggestCta"),
-          retry: t("aiRetry"),
-          loading: t("aiSuggesting"),
-          focusLabel: t("aiFocusLabel"),
-          focusPlaceholder: t("aiFocusPlaceholder"),
-          closeError: t("dismiss"),
-        }}
-      />
-
-      {suggestDisabled ? (
-        <div ref={suggestUpsellRef}>
-          <UpsellBanner
-            id="upsell-ai-routine-suggestion"
-            feature={Feature.AIRoutineSuggestion}
-            compact={!suggestQuotaEngaged}
-            onDismiss={
-              suggestQuotaEngaged ? () => setSuggestQuotaEngaged(false) : undefined
-            }
-          />
-        </div>
-      ) : null}
-
-      {suggest.suggesting ? (
-        <AiSuggestLoading
-          variant="loading"
-          title={t("aiSuggestLoadingTitle")}
-          subtitle={t("aiSuggestLoadingSubtitle")}
-          progress={suggest.fakeProgress}
-          progressLabel={t("aiSuggestProgress")}
-          cancelLabel={t("aiSuggestCancel")}
-          cancellingLabel={t("aiSuggestCancelling")}
-          onCancel={() => void suggest.cancelSuggestion()}
-          showCancel
-          cancelling={suggest.cancelling}
-        />
-      ) : null}
-
-      {suggest.showErrorPanel ? (
-        <AiSuggestLoading
-          variant="error"
-          title={t("aiSuggestErrorTitle")}
-          subtitle={t("aiSuggestFailed")}
-          errorMessage={resolveSuggestError(suggest.error) ?? undefined}
-          progress={suggest.fakeProgress}
-          progressLabel={t("aiSuggestProgress")}
-          cancelLabel={t("aiSuggestCancel")}
-          retryLabel={t("aiRetry")}
-          onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
-          showCancel={false}
-        />
-      ) : null}
-
-      {suggest.suggestion ? (
-        <SuggestionPreview
-          suggestion={suggest.suggestion}
-          retrying={suggest.suggesting}
-          onApply={() => {
-            r.applySuggestedSteps(
-              suggest.suggestion!.morning,
-              suggest.suggestion!.evening,
-            );
-            engageValidation();
-            editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-          onRetry={() => {
-            if (suggestDisabled) {
-              engageSuggestQuota();
-              return;
-            }
-            handleSuggestRetry();
-          }}
-          onDismiss={suggest.dismiss}
-          labels={{
-            title: t("aiPreviewTitle"),
-            hint: t("aiPreviewHint"),
-            apply: t("aiApply"),
-            retry: t("aiRetry"),
-            retrying: t("aiSuggesting"),
-            dismiss: t("aiDismiss"),
-            morning: t("morningTitle"),
-            evening: t("eveningTitle"),
-            encouragement: t("aiEncouragement"),
-            rationale: t("aiRationale"),
-            week: t("aiWeekNotes"),
-            safety: t("aiSafety"),
-            closing: t("aiClosing"),
-          }}
-          categoryLabels={editorLabels(t).categories}
-        />
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {beginnerSimple ? t("emptyHeroBeginnerBody") : t("emptyHeroBody")}
+        </p>
       ) : null}
 
       <ValidationPanel
@@ -597,7 +532,6 @@ export function RoutineEditor() {
           onToggle={(id) => r.toggleComplete("morning", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
-          isStepConfirmed={r.isStepConfirmed}
           onEditLockedAttempt={engageEditQuota}
         />
         <SectionCard
@@ -632,7 +566,6 @@ export function RoutineEditor() {
           onToggle={(id) => r.toggleComplete("evening", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
-          isStepConfirmed={r.isStepConfirmed}
           onEditLockedAttempt={engageEditQuota}
         />
       </div>
@@ -650,14 +583,167 @@ export function RoutineEditor() {
         />
       ) : null}
 
-      <HistoryStrip
+      <RoutineToolsFold title={t("toolsFoldTitle")} hint={t("toolsFoldHint")}>
+        <CheckInContextCard
+          editLocked={editLocked}
+          beginnerSimple={beginnerSimple}
+          hasEditorContent={hasEditorContent}
+          onApplyHints={(morning, evening) => {
+            r.applySuggestedSteps(morning, evening);
+            engageValidation();
+          }}
+          onApplySuccess={() => {
+            setApplyHintsToast(t("checkInContext.applySuccess"));
+            window.setTimeout(() => setApplyHintsToast(null), 3500);
+            editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+        />
+
+        <AISuggestCard
+          suggesting={suggest.suggesting}
+          busy={suggest.suggestBusy}
+          hasSuggestion={!!suggest.suggestion}
+          focusNote={suggest.focusNote}
+          onFocusChange={suggest.setFocusNote}
+          onSuggest={() => {
+            if (suggest.suggestBusy) return;
+            if (suggest.error && suggest.canRetry) {
+              handleSuggestRetry();
+              return;
+            }
+            if (suggestDisabled) {
+              engageSuggestQuota();
+              return;
+            }
+            void suggest.requestSuggestion();
+          }}
+          disabled={suggestDisabled || suggest.suggestBusy}
+          quotaLabel={suggestQuotaLabel}
+          manualEditQuotaLabel={editQuotaLabel}
+          manualEditLocked={editLocked}
+          onManualEditQuotaClick={engageEditQuota}
+          error={resolveSuggestError(suggest.error)}
+          onDismissError={suggest.dismissError}
+          onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
+          labels={{
+            title: t("aiSuggestTitle"),
+            body: t("aiSuggestBody"),
+            cta: t("aiSuggestCta"),
+            retry: t("aiRetry"),
+            loading: t("aiSuggesting"),
+            focusLabel: t("aiFocusLabel"),
+            focusPlaceholder: t("aiFocusPlaceholder"),
+            closeError: t("dismiss"),
+          }}
+        />
+
+        {suggestDisabled ? (
+          <div ref={suggestUpsellRef}>
+            <UpsellBanner
+              id="upsell-ai-routine-suggestion"
+              feature={Feature.AIRoutineSuggestion}
+              compact={!suggestQuotaEngaged}
+              onDismiss={
+                suggestQuotaEngaged ? () => setSuggestQuotaEngaged(false) : undefined
+              }
+            />
+          </div>
+        ) : null}
+
+        {suggest.suggesting ? (
+          <AiSuggestLoading
+            variant="loading"
+            title={t("aiSuggestLoadingTitle")}
+            subtitle={t("aiSuggestLoadingSubtitle")}
+            progress={suggest.fakeProgress}
+            progressLabel={t("aiSuggestProgress")}
+            cancelLabel={t("aiSuggestCancel")}
+            cancellingLabel={t("aiSuggestCancelling")}
+            onCancel={() => void suggest.cancelSuggestion()}
+            showCancel
+            cancelling={suggest.cancelling}
+          />
+        ) : null}
+
+        {suggest.showErrorPanel ? (
+          <AiSuggestLoading
+            variant="error"
+            title={t("aiSuggestErrorTitle")}
+            subtitle={t("aiSuggestFailed")}
+            errorMessage={resolveSuggestError(suggest.error) ?? undefined}
+            progress={suggest.fakeProgress}
+            progressLabel={t("aiSuggestProgress")}
+            cancelLabel={t("aiSuggestCancel")}
+            retryLabel={t("aiRetry")}
+            onRetry={suggest.canRetry ? handleSuggestRetry : undefined}
+            showCancel={false}
+          />
+        ) : null}
+
+        {suggest.suggestion ? (
+          <SuggestionPreview
+            suggestion={suggest.suggestion}
+            retrying={suggest.suggesting}
+            onApply={() => {
+              const morning = beginnerSimple
+                ? suggest.suggestion!.morning.map((s) => ({
+                    ...s,
+                    category: "other",
+                    notes: "",
+                  }))
+                : suggest.suggestion!.morning;
+              const evening = beginnerSimple
+                ? suggest.suggestion!.evening.map((s) => ({
+                    ...s,
+                    category: "other",
+                    notes: "",
+                  }))
+                : suggest.suggestion!.evening;
+              r.applySuggestedSteps(morning, evening);
+              engageValidation();
+              editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            onRetry={() => {
+              if (suggestDisabled) {
+                engageSuggestQuota();
+                return;
+              }
+              handleSuggestRetry();
+            }}
+            onDismiss={suggest.dismiss}
+            labels={{
+              title: t("aiPreviewTitle"),
+              hint: t("aiPreviewHint"),
+              apply: t("aiApply"),
+              retry: t("aiRetry"),
+              retrying: t("aiSuggesting"),
+              dismiss: t("aiDismiss"),
+              morning: t("morningTitle"),
+              evening: t("eveningTitle"),
+              encouragement: t("aiEncouragement"),
+              rationale: t("aiRationale"),
+              week: t("aiWeekNotes"),
+              safety: t("aiSafety"),
+              closing: t("aiClosing"),
+            }}
+            categoryLabels={editorLabels(t).categories}
+          />
+        ) : null}
+      </RoutineToolsFold>
+
+      <div ref={historySectionRef}>
+        <HistoryStrip
         history={r.history}
         todayISO={todayISO}
         dismissSheetTick={r.saveSuccessTick}
         editAllowed={!editLocked}
         onEditLockedAttempt={engageEditQuota}
         onEditDay={(entry) => {
-          r.loadFromEntry(entry);
+          if (entry.routine_date === todayISO) {
+            editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+          }
+          r.applyHistoryAsTodayDraft(entry);
           engageValidation();
           editorGridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
@@ -696,10 +782,13 @@ export function RoutineEditor() {
           detailNotes: t("historyDetailNotes"),
           detailEdit: t("historyDetailEdit"),
           detailEditToday: t("historyDetailEditToday"),
+          viewingPast: t("historyViewingPast"),
+          viewingToday: t("historyViewingToday"),
           sheetSwipeHint: t("historySheetSwipeHint"),
           editLocked: t("historyEditLocked"),
         }}
-      />
+        />
+      </div>
 
       {r.saveMsg ? (
         <Banner
@@ -721,12 +810,13 @@ export function RoutineEditor() {
         </div>
       ) : null}
 
-      {!r.routine.saved || r.saving || r.autoSaving || savedFlash ? (
+      {!r.routine.saved || r.dirty || r.saving || savedFlash ? (
       <SaveBar
         saving={r.saving}
         autoSaving={r.autoSaving}
         canSave={validation.canSave && !editLocked}
-        hasUnsaved={!r.routine.saved}
+        hasUnsaved={r.dirty || !r.routine.saved}
+        autosaveDirty={r.dirty}
         warningHint={
           beginnerSimple ? null : (validation.warnings[0] ?? null)
         }
@@ -751,8 +841,10 @@ export function RoutineEditor() {
           saving: t("saving"),
           reset: t("reset"),
           autosaving: t("autoSaving"),
+          autosavingDirty: t("autosavingDirty"),
           saved: t("saveSuccess"),
           unsavedHint: t("unsavedHint"),
+          quotaHint: saveBarQuotaHint,
         }}
       />
       ) : null}

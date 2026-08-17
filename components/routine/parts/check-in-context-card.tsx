@@ -83,13 +83,9 @@ export function CheckInContextCard({
     null,
   );
 
-  const canApply = !editLocked && !beginnerSimple;
+  const canApply = !editLocked;
 
-  const applyDisabledReason = editLocked
-    ? t("applyLocked")
-    : beginnerSimple
-      ? t("applyBeginner")
-      : null;
+  const applyDisabledReason = editLocked ? t("applyLocked") : null;
 
   const conditionLabel = useCallback(
     (raw: string) => translateSafely(tConditions, raw),
@@ -217,11 +213,17 @@ export function CheckInContextCard({
         split = splitRoutineHints(detail?.analysis?.coach?.routine_hints);
         setCachedHints(split);
       }
-      const morning = buildStepsFromHints(split.morning);
-      const evening = buildStepsFromHints([
+      const morningRaw = buildStepsFromHints(split.morning);
+      const eveningRaw = buildStepsFromHints([
         ...split.evening,
         ...split.other,
       ]);
+      const asTitles = (steps: typeof morningRaw) =>
+        beginnerSimple
+          ? steps.map((s) => ({ ...s, category: "other", notes: "" }))
+          : steps;
+      const morning = asTitles(morningRaw);
+      const evening = asTitles(eveningRaw);
       if (morning.length === 0 && evening.length === 0) {
         setApplyError(t("applyHintsEmpty"));
         return;

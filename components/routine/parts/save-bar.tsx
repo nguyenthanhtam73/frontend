@@ -23,6 +23,7 @@ export function SaveBar({
   hasUnsaved,
   warningHint,
   savedFlash,
+  autosaveDirty = false,
   onReset,
   onSave,
   labels,
@@ -33,6 +34,8 @@ export function SaveBar({
   hasUnsaved: boolean;
   warningHint: string | null;
   savedFlash?: boolean;
+  /** When true, autosave hint explains only ticks were persisted. */
+  autosaveDirty?: boolean;
   onReset: () => void;
   onSave: () => void;
   labels: {
@@ -40,8 +43,10 @@ export function SaveBar({
     saving: string;
     reset: string;
     autosaving: string;
+    autosavingDirty?: string;
     saved: string;
     unsavedHint: string;
+    quotaHint?: string | null;
   };
 }) {
   const status = resolveStatus({ saving, autoSaving, hasUnsaved, warningHint, savedFlash });
@@ -57,7 +62,17 @@ export function SaveBar({
         status === "saved" && "border-emerald-500/30 bg-emerald-500/5",
       )}
     >
-      <StatusHint status={status} hint={hint} labels={labels} />
+      <StatusHint
+        status={status}
+        hint={hint}
+        autosaveDirty={autosaveDirty}
+        labels={labels}
+      />
+      {labels.quotaHint ? (
+        <p className="text-[11px] leading-snug text-muted-foreground lg:order-first lg:flex-1">
+          {labels.quotaHint}
+        </p>
+      ) : null}
 
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] gap-2 sm:flex sm:w-auto">
         <Button
@@ -74,6 +89,7 @@ export function SaveBar({
         <Button
           type="button"
           size="default"
+          data-testid="routine-save"
           className={cn(
             "min-h-12 text-sm transition-all duration-300 sm:min-h-9",
             hasUnsaved &&
@@ -112,11 +128,13 @@ export function SaveBar({
 function StatusHint({
   status,
   hint,
+  autosaveDirty,
   labels,
 }: {
   status: SaveBarStatus;
   hint: string;
-  labels: { autosaving: string; saved: string };
+  autosaveDirty?: boolean;
+  labels: { autosaving: string; autosavingDirty?: string; saved: string };
 }) {
   if (!hint && status !== "autosaving" && status !== "saved") return null;
 
@@ -135,7 +153,9 @@ function StatusHint({
       {status === "autosaving" ? (
         <span className="inline-flex items-center gap-2">
           <CloudUpload className="size-4 animate-pulse" aria-hidden />
-          {labels.autosaving}
+          {autosaveDirty && labels.autosavingDirty
+            ? labels.autosavingDirty
+            : labels.autosaving}
         </span>
       ) : status === "saved" ? (
         <span className="inline-flex items-center gap-2 in-animate animate-in fade-in duration-200">

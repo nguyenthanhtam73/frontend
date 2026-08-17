@@ -19,6 +19,7 @@ export function StatusBanner({
   completed,
   total,
   progressPct,
+  compact = false,
 }: {
   sourceInfo: RoutineSourceInfo;
   sourceLabels: RoutineSourceLabels;
@@ -27,6 +28,8 @@ export function StatusBanner({
   completed: number;
   total: number;
   progressPct: number;
+  /** Nested inside RoutineStatusPanel on mobile — drop outer chrome. */
+  compact?: boolean;
 }) {
   const tone =
     sourceInfo.kind === "saved_today"
@@ -50,7 +53,8 @@ export function StatusBanner({
     <div
       className={cn(
         "flex flex-col gap-3 rounded-xl border px-3.5 py-3.5 sm:gap-4 sm:px-4 sm:py-4",
-        shellCls,
+        !compact && shellCls,
+        compact && "gap-2.5 border-0 bg-transparent px-0 py-0 shadow-none",
       )}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">

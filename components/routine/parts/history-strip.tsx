@@ -128,9 +128,6 @@ export function HistoryStrip({
 
   function handleEdit(entry: RoutineDTO) {
     onEditDay?.(entry);
-    if (entry.routine_date === todayISO) {
-      onSelectToday?.();
-    }
   }
 
   const handleSheetClose = useCallback(() => {

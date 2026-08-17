@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
-import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useGuardedRouter } from "@/lib/hooks/use-guarded-router";
 import { normalizePath } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useClientMounted } from "@/lib/use-client-mounted";
@@ -142,7 +143,7 @@ function GuestActions({
 export function SiteHeader() {
   const t = useTranslations("common");
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useGuardedRouter();
   const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
   const hash = useCurrentHash();

@@ -6,7 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { apiBaseUrl } from "@/lib/api";
 import { authHeaders, getAccessToken } from "@/lib/auth-token";
+import { redirectToLoginWithNext } from "@/lib/auth/redirect-to-login";
 import { usageQueryKey } from "@/lib/api/usage";
+import { streakDateKey } from "@/lib/streak/history";
 import type {
   RoutineDTO,
   RoutineHistoryDTO,
@@ -14,10 +16,11 @@ import type {
 } from "@/lib/types/routine";
 
 import {
+  cloneStepsForToday,
   emptyRoutine,
   isFreshlyEmpty,
   localId,
-  lockedCompletedIds,
+  overlayStepCompletions,
   stripStep,
   toLocal,
   type LocalRoutine,
@@ -25,21 +28,12 @@ import {
 } from "./routine-helpers";
 
 /**
- * `useRoutine` centralises all data + mutation logic for the Routine editor.
+ * Data + mutation hook for the Routine editor.
  *
- * Why a custom hook instead of letting the editor own state directly:
- *   - separates network code from layout code (parts/ stay UI-only),
- *   - lets us add an *autosave* loop without sprinkling timers across files,
- *   - makes the editor testable (parts can be rendered with mock state).
- *
- * Autosave behaviour:
- *   - Runs only AFTER the routine has at least one saved snapshot OR the user
- *     has explicitly hit Save once. We never silently persist drafts on first
- *     load — beginners would be surprised by an unexpected row appearing.
- *   - Triggers on tick / untick of completion, but NOT on title edits (titles
- *     are still saved on the explicit Save button — typing churn would create
- *     way too many requests, and an unfinished title is a low-value snapshot).
- *   - Debounced 750ms; the latest tick wins.
+ * Structural edits (add/remove/rename/reorder/notes) set `dirty` and only
+ * persist on explicit Save (Free edit quota). Completion ticks autosave with
+ * `save_kind=tick_only` against the last persisted snapshot so dirty titles
+ * cannot ride along.
  */
 export type RoutineMessages = {
   needAuth: string;
@@ -47,6 +41,8 @@ export type RoutineMessages = {
   loadError: string;
   saveSuccess: string;
   autoSaved: string;
+  /** Shown after tick autosave while structural edits are still dirty. */
+  autoSavedDirty: string;
 };
 
 export type FetchStatus = "idle" | "loading" | "success" | "error";
@@ -58,7 +54,9 @@ function mapRoutineApiError(json: { error?: { code?: string; message?: string } 
   return typeof json.error?.message === "string" ? json.error.message : fallback;
 }
 
-export function useRoutine(msg: RoutineMessages) {
+export type RoutineSaveKind = "tick_only" | "manual_edit" | "preference_only";
+
+export function useRoutine(msg: RoutineMessages, locale = "vi") {
   const queryClient = useQueryClient();
   const [routine, setRoutine] = useState<LocalRoutine>(emptyRoutine);
   const [history, setHistory] = useState<RoutineHistoryDTO | null>(null);
@@ -67,32 +65,64 @@ export function useRoutine(msg: RoutineMessages) {
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
-  /** Increments after each successful manual save — drives SaveBar flash + sheet dismiss. */
   const [saveSuccessTick, setSaveSuccessTick] = useState(0);
+  const [dirty, setDirty] = useState(false);
 
-  // We keep the most recent server snapshot in a ref so the autosave loop can
-  // POST the latest state without depending on the React state closure (which
-  // would otherwise need to be a dependency of the debounce, retriggering it).
   const latestRef = useRef<LocalRoutine>(routine);
   latestRef.current = routine;
 
-  // Track step ids that were ticked complete and persisted — they become immutable.
-  const [confirmedCompletedIds, setConfirmedCompletedIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
 
-  const syncConfirmedFromRoutine = useCallback((next: LocalRoutine) => {
-    setConfirmedCompletedIds(lockedCompletedIds(next));
-  }, []);
-
-  const isStepConfirmed = useCallback(
-    (id: string) => confirmedCompletedIds.has(id),
-    [confirmedCompletedIds],
-  );
+  const lastPersistedRef = useRef<LocalRoutine | null>(null);
 
   const skillModeRef = useRef<string | null>(null);
-  const everSavedRef = useRef(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSavePromiseRef = useRef<Promise<unknown> | null>(null);
+  const persistGenerationRef = useRef(0);
+  const savingRef = useRef(false);
+  const skillSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const redirectingRef = useRef(false);
+
+  const clearPersistBaseline = useCallback(() => {
+    lastPersistedRef.current = null;
+    persistGenerationRef.current += 1;
+  }, []);
+
+  const handleUnauthorized = useCallback(() => {
+    if (redirectingRef.current) return;
+    redirectingRef.current = true;
+    redirectToLoginWithNext(locale, "/routine");
+  }, [locale]);
+
+  const refreshHistorySilent = useCallback(async () => {
+    if (!getAccessToken()) return;
+    try {
+      const historyRes = await fetch(`${apiBaseUrl}/api/v1/routines/history?range=30`, {
+        headers: authHeaders(),
+      });
+      if (historyRes.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      if (historyRes.ok) {
+        const historyJson = await historyRes.json().catch(() => ({}));
+        if (historyJson?.success && historyJson?.data) {
+          setHistory(historyJson.data as RoutineHistoryDTO);
+        }
+      }
+    } catch {
+      /* non-fatal */
+    }
+  }, [handleUnauthorized]);
+
+  const rememberPersisted = useCallback((next: LocalRoutine) => {
+    if (!next.saved) {
+      clearPersistBaseline();
+      return;
+    }
+    lastPersistedRef.current = next;
+  }, [clearPersistBaseline]);
 
   const reload = useCallback(async () => {
     setStatus("loading");
@@ -104,20 +134,20 @@ export function useRoutine(msg: RoutineMessages) {
         fetch(`${apiBaseUrl}/api/v1/routines/history?range=30`, { headers }),
       ]);
       if (routineRes.status === 401) {
-        setLoadError(msg.needAuth);
-        setRoutine(emptyRoutine);
-        setStatus("error");
+        handleUnauthorized();
+        clearPersistBaseline();
         return;
       }
       const routineJson = await routineRes.json().catch(() => ({}));
       if (routineRes.ok && routineJson?.success && routineJson?.data) {
         const next = toLocal(routineJson.data as RoutineDTO);
         setRoutine(next);
-        syncConfirmedFromRoutine(next);
-        if (next.saved) everSavedRef.current = true;
+        setDirty(false);
+        rememberPersisted(next);
       } else {
         setRoutine(emptyRoutine);
-        setConfirmedCompletedIds(new Set());
+        setDirty(false);
+        clearPersistBaseline();
       }
       if (historyRes.ok) {
         const historyJson = await historyRes.json().catch(() => ({}));
@@ -129,19 +159,20 @@ export function useRoutine(msg: RoutineMessages) {
     } catch {
       setLoadError(msg.loadError);
       setRoutine(emptyRoutine);
+      setDirty(false);
+      clearPersistBaseline();
       setStatus("error");
     }
-  }, [msg.loadError, msg.needAuth, syncConfirmedFromRoutine]);
+  }, [msg.loadError, rememberPersisted, handleUnauthorized, clearPersistBaseline]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
 
-  // ---- step CRUD ----------------------------------------------------------
-
   const patchSteps = useCallback(
-    (section: StepSection, fn: (cur: RoutineStepDTO[]) => RoutineStepDTO[]) => {
+    (section: StepSection, fn: (cur: RoutineStepDTO[]) => RoutineStepDTO[], structural: boolean) => {
       setRoutine((cur) => ({ ...cur, [section]: fn(cur[section]) }));
+      if (structural) setDirty(true);
     },
     [],
   );
@@ -151,91 +182,106 @@ export function useRoutine(msg: RoutineMessages) {
       const next: RoutineStepDTO = fromAI
         ? { ...fromAI, id: localId(), completed: false }
         : { id: localId(), title: "", category: "other", completed: false };
-      patchSteps(section, (cur) => [...cur, next]);
+      patchSteps(section, (cur) => [...cur, next], true);
     },
     [patchSteps],
   );
 
   const removeStep = useCallback(
     (section: StepSection, id: string) => {
-      if (confirmedCompletedIds.has(id)) return;
-      patchSteps(section, (cur) => cur.filter((s) => s.id !== id));
+      patchSteps(section, (cur) => cur.filter((s) => s.id !== id), true);
     },
-    [patchSteps, confirmedCompletedIds],
+    [patchSteps],
   );
 
   const moveStep = useCallback(
     (section: StepSection, id: string, delta: -1 | 1) => {
-      if (confirmedCompletedIds.has(id)) return;
-      patchSteps(section, (cur) => {
-        const idx = cur.findIndex((s) => s.id === id);
-        if (idx < 0) return cur;
-        const target = idx + delta;
-        if (target < 0 || target >= cur.length) return cur;
-        if (confirmedCompletedIds.has(cur[target]?.id ?? "")) return cur;
-        const copy = [...cur];
-        const [removed] = copy.splice(idx, 1);
-        copy.splice(target, 0, removed);
-        return copy;
-      });
+      patchSteps(
+        section,
+        (cur) => {
+          const idx = cur.findIndex((s) => s.id === id);
+          if (idx < 0) return cur;
+          const target = idx + delta;
+          if (target < 0 || target >= cur.length) return cur;
+          const copy = [...cur];
+          const [removed] = copy.splice(idx, 1);
+          copy.splice(target, 0, removed);
+          return copy;
+        },
+        true,
+      );
     },
-    [patchSteps, confirmedCompletedIds],
+    [patchSteps],
   );
 
   const reorder = useCallback(
     (section: StepSection, fromIdx: number, toIdx: number) => {
       if (fromIdx === toIdx) return;
-      patchSteps(section, (cur) => {
-        if (fromIdx < 0 || fromIdx >= cur.length) return cur;
-        if (confirmedCompletedIds.has(cur[fromIdx]?.id ?? "")) return cur;
-        const copy = [...cur];
-        const [moved] = copy.splice(fromIdx, 1);
-        const insertAt = Math.max(0, Math.min(copy.length, toIdx));
-        if (confirmedCompletedIds.has(copy[insertAt]?.id ?? "")) return cur;
-        copy.splice(insertAt, 0, moved);
-        return copy;
-      });
+      patchSteps(
+        section,
+        (cur) => {
+          if (fromIdx < 0 || fromIdx >= cur.length) return cur;
+          const copy = [...cur];
+          const [moved] = copy.splice(fromIdx, 1);
+          const insertAt = Math.max(0, Math.min(copy.length, toIdx));
+          copy.splice(insertAt, 0, moved);
+          return copy;
+        },
+        true,
+      );
     },
-    [patchSteps, confirmedCompletedIds],
+    [patchSteps],
   );
 
   const updateStep = useCallback(
     (section: StepSection, id: string, patch: Partial<RoutineStepDTO>) => {
-      if (confirmedCompletedIds.has(id)) return;
-      patchSteps(section, (cur) =>
-        cur.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+      patchSteps(
+        section,
+        (cur) => cur.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+        true,
       );
     },
-    [patchSteps, confirmedCompletedIds],
+    [patchSteps],
   );
 
   const setNotes = useCallback((notes: string) => {
     setRoutine((cur) => ({ ...cur, notes }));
+    setDirty(true);
   }, []);
-
-  // ---- save / autosave ----------------------------------------------------
 
   const persist = useCallback(
     async (opts: {
       silent?: boolean;
       skillMode?: string | null;
-      saveKind?: "tick_only" | "manual_edit";
+      saveKind?: RoutineSaveKind;
     } = {}) => {
       const cur = latestRef.current;
-      const hasSteps = cur.morning.length > 0 || cur.evening.length > 0;
-      if (!hasSteps) return null;
+      const saveKind = opts.saveKind ?? "manual_edit";
+      const tickOnly = saveKind === "tick_only";
+      const preferenceOnly = saveKind === "preference_only";
+
+      let payload = cur;
+      if (tickOnly) {
+        if (savingRef.current) return null;
+        const snap = lastPersistedRef.current;
+        if (!snap?.saved) return null;
+        payload = dirtyRef.current ? overlayStepCompletions(snap, cur) : cur;
+      }
+
+      const hasSteps = payload.morning.length > 0 || payload.evening.length > 0;
+      if (!preferenceOnly && !hasSteps) return null;
       if (!getAccessToken()) {
         if (!opts.silent) setSaveMsg({ kind: "err", text: msg.needAuth });
         return null;
       }
       const body = {
-        morning: cur.morning.map(stripStep),
-        evening: cur.evening.map(stripStep),
-        notes: cur.notes,
-        source: cur.source === "ai_suggested" ? "ai_suggested" : "manual",
-        skill_mode: opts.skillMode ?? skillModeRef.current ?? cur.skillMode ?? "",
-        save_kind: opts.saveKind ?? "manual_edit",
-        ...(cur.routineDate ? { routine_date: cur.routineDate } : {}),
+        morning: payload.morning.map(stripStep),
+        evening: payload.evening.map(stripStep),
+        notes: payload.notes,
+        source: payload.source === "ai_suggested" ? "ai_suggested" : "manual",
+        skill_mode: opts.skillMode ?? skillModeRef.current ?? payload.skillMode ?? "",
+        save_kind: saveKind,
+        ...(payload.routineDate ? { routine_date: payload.routineDate } : {}),
       };
       try {
         const res = await fetch(`${apiBaseUrl}/api/v1/routines`, {
@@ -244,94 +290,127 @@ export function useRoutine(msg: RoutineMessages) {
           body: JSON.stringify(body),
         });
         const json = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          handleUnauthorized();
+          return null;
+        }
         if (res.ok && json?.success && json?.data) {
           const next = toLocal(json.data as RoutineDTO);
-          setRoutine(next);
-          syncConfirmedFromRoutine(next);
-          everSavedRef.current = true;
+          rememberPersisted(next);
           void queryClient.invalidateQueries({ queryKey: usageQueryKey });
+          if (tickOnly) {
+            void refreshHistorySilent();
+          }
+          if (tickOnly && dirtyRef.current) {
+            // Keep dirty titles/order in the editor; ticks already match local.
+            return next;
+          }
+          if (preferenceOnly) {
+            setRoutine((prev) => ({
+              ...prev,
+              skillMode: next.skillMode ?? prev.skillMode,
+            }));
+            return next;
+          }
+          setRoutine(next);
+          setDirty(false);
           return next;
         }
         const mapped = mapRoutineApiError(json, msg.saveError);
-        const text =
-          mapped === "quota_exceeded" ? "quota_exceeded" : mapped === "premium_required" ? mapped : mapped;
-        if (!opts.silent) setSaveMsg({ kind: "err", text });
+        if (!opts.silent) setSaveMsg({ kind: "err", text: mapped });
         return null;
       } catch {
         if (!opts.silent) setSaveMsg({ kind: "err", text: msg.saveError });
         return null;
       }
     },
-    [msg.needAuth, msg.saveError, queryClient, syncConfirmedFromRoutine],
+    [msg.needAuth, msg.saveError, queryClient, rememberPersisted, handleUnauthorized, refreshHistorySilent],
   );
 
   const save = useCallback(
     async (skillMode?: string | null) => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current);
+        autoSaveTimer.current = null;
+      }
+      persistGenerationRef.current += 1;
+      if (autoSavePromiseRef.current) {
+        await autoSavePromiseRef.current.catch(() => undefined);
+        autoSavePromiseRef.current = null;
+      }
+      savingRef.current = true;
       setSaving(true);
       setSaveMsg(null);
-      const result = await persist({ skillMode });
-      setSaving(false);
-      if (result) {
-        setSaveSuccessTick((n) => n + 1);
-        // Refresh history strip so streak/avg update right away.
-        try {
-          const headers = authHeaders();
-          const historyRes = await fetch(
-            `${apiBaseUrl}/api/v1/routines/history?range=30`,
-            { headers },
-          );
-          if (historyRes.ok) {
-            const historyJson = await historyRes.json().catch(() => ({}));
-            if (historyJson?.success && historyJson?.data) {
-              setHistory(historyJson.data as RoutineHistoryDTO);
-            }
-          }
-        } catch {
-          /* non-fatal: history refresh failure shouldn't block UX. */
+      try {
+        const result = await persist({ skillMode, saveKind: "manual_edit" });
+        if (result) {
+          setSaveSuccessTick((n) => n + 1);
+          await refreshHistorySilent();
         }
+      } finally {
+        savingRef.current = false;
+        setSaving(false);
       }
+    },
+    [persist, refreshHistorySilent],
+  );
+
+  const toggleComplete = useCallback(
+    (section: StepSection, id: string) => {
+      patchSteps(
+        section,
+        (cur) =>
+          cur.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s)),
+        false,
+      );
+      if (!lastPersistedRef.current?.saved) return;
+      if (!getAccessToken()) return;
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      const generation = persistGenerationRef.current;
+      autoSaveTimer.current = setTimeout(() => {
+        if (generation !== persistGenerationRef.current) return;
+        if (savingRef.current) return;
+        if (!lastPersistedRef.current?.saved) return;
+        setAutoSaving(true);
+        const tickPromise = persist({ silent: true, saveKind: "tick_only" }).finally(() => {
+          setAutoSaving(false);
+          autoSavePromiseRef.current = null;
+        });
+        autoSavePromiseRef.current = tickPromise;
+        void tickPromise.then((result) => {
+          if (!result) return;
+          const tickMsg = dirtyRef.current ? msg.autoSavedDirty : msg.autoSaved;
+          setSaveMsg({ kind: "ok", text: tickMsg });
+          setTimeout(() => setSaveMsg((m) => (m?.text === tickMsg ? null : m)), 2800);
+        });
+      }, 750);
+    },
+    [patchSteps, persist, msg.autoSaved, msg.autoSavedDirty],
+  );
+
+  const persistSkillMode = useCallback(
+    (mode: string | null) => {
+      if (!mode) return;
+      if (!lastPersistedRef.current?.saved) return;
+      if (!getAccessToken()) return;
+      if (skillSaveTimer.current) clearTimeout(skillSaveTimer.current);
+      skillSaveTimer.current = setTimeout(() => {
+        void persist({ silent: true, saveKind: "preference_only", skillMode: mode });
+      }, 400);
     },
     [persist],
   );
 
-  /**
-   * Toggle a step's completion. When the user has already saved at least once,
-   * this kicks off a debounced silent autosave (so completion ticks survive
-   * a refresh / accidental close without the user having to re-press Save).
-   */
-  const toggleComplete = useCallback(
-    (section: StepSection, id: string) => {
-      if (confirmedCompletedIds.has(id)) return;
-      patchSteps(section, (cur) =>
-        cur.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s)),
-      );
-      if (!everSavedRef.current) return;
-      if (!getAccessToken()) return;
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-      autoSaveTimer.current = setTimeout(() => {
-        setAutoSaving(true);
-        void persist({ silent: true, saveKind: "tick_only" }).finally(() => {
-          setAutoSaving(false);
-          setSaveMsg({ kind: "ok", text: msg.autoSaved });
-          // Autosave toast self-dismisses fast — this is a tertiary signal.
-          setTimeout(() => setSaveMsg((m) => (m?.text === msg.autoSaved ? null : m)), 1800);
-        });
-      }, 750);
-    },
-    [patchSteps, persist, msg.autoSaved, confirmedCompletedIds],
-  );
-
-  // Cancel any pending autosave on unmount so we don't leak a timer.
   useEffect(() => {
     return () => {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+      if (skillSaveTimer.current) clearTimeout(skillSaveTimer.current);
     };
   }, []);
 
   const dismissLoadError = useCallback(() => setLoadError(null), []);
   const dismissSaveMsg = useCallback(() => setSaveMsg(null), []);
 
-  /** Replace AM/PM steps with coach hints from the latest check-in. */
   const applySuggestedSteps = useCallback(
     (morning: RoutineStepDTO[], evening: RoutineStepDTO[]) => {
       setRoutine((cur) => ({
@@ -341,24 +420,29 @@ export function useRoutine(msg: RoutineMessages) {
         source: "ai_suggested",
         saved: false,
       }));
-      setConfirmedCompletedIds(new Set());
+      clearPersistBaseline();
+      setDirty(true);
     },
-    [],
+    [clearPersistBaseline],
   );
 
-  /** Load a historical (or today) entry into the editor for editing. */
-  const loadFromEntry = useCallback(
-    (entry: RoutineDTO) => {
-      const next = toLocal(entry);
-      setRoutine({ ...next, saved: true });
-      syncConfirmedFromRoutine(next);
-      everSavedRef.current = true;
-    },
-    [syncConfirmedFromRoutine],
-  );
+  /** Copy a past day's steps into *today's* draft. Never writes that past row. */
+  const applyHistoryAsTodayDraft = useCallback((entry: RoutineDTO) => {
+    const today = streakDateKey();
+    setRoutine((cur) => ({
+      ...cur,
+      morning: cloneStepsForToday(entry.morning ?? []),
+      evening: cloneStepsForToday(entry.evening ?? []),
+      notes: entry.notes ?? "",
+      source: "manual",
+      saved: false,
+      routineDate: today,
+      carriedFromDate: entry.routine_date ?? "",
+    }));
+    clearPersistBaseline();
+    setDirty(true);
+  }, [clearPersistBaseline]);
 
-  /** Allow the editor to inform the hook of the current skill mode without
-   *  forcing it as a dependency on every callback (would invalidate refs). */
   const setSkillModeRef = useCallback((mode: string | null) => {
     skillModeRef.current = mode;
   }, []);
@@ -366,7 +450,6 @@ export function useRoutine(msg: RoutineMessages) {
   const fresh = useMemo(() => isFreshlyEmpty(routine), [routine]);
 
   return {
-    // state
     routine,
     history,
     status,
@@ -375,8 +458,8 @@ export function useRoutine(msg: RoutineMessages) {
     autoSaving,
     saveMsg,
     saveSuccessTick,
+    dirty,
     fresh,
-    // actions
     setRoutine,
     setNotes,
     addStep,
@@ -385,10 +468,10 @@ export function useRoutine(msg: RoutineMessages) {
     reorder,
     updateStep,
     toggleComplete,
-    isStepConfirmed,
     save,
     reload,
-    loadFromEntry,
+    persistSkillMode,
+    applyHistoryAsTodayDraft,
     dismissLoadError,
     dismissSaveMsg,
     setSkillModeRef,

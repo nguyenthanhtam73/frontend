@@ -17,6 +17,7 @@ Commands
   npm run test:e2e -- core-smoke
   npm run test:e2e -- onboarding-smoke
   npm run test:e2e -- affiliate-funnel-smoke
+  npm run test:e2e -- routine-smoke
   npm run test:e2e -- premium-sepay-upgrade
   npm run test:e2e:ui        # Playwright UI mode
 
@@ -50,6 +51,14 @@ affiliate-funnel-smoke.test.ts (product guidance + Shopee affiliate)
   “Không nặn” is care note (onboarding-care-note-no-pick), not a tickable step
   Fixtures: Free=register only; Premium=register+forcePlan; dense=JSON inject (no photo)
   Run: npm run test:e2e -- affiliate-funnel-smoke
+
+routine-smoke.test.ts (/routine editor)
+- A) First save + tick morning step → reload keeps aria-pressed=true
+- B) After save, rename step (dirty) → refresh before Save → title reverts to persisted value
+- C) carried-over fixture (E2E_SECRET) → FirstSaveBanner visible → Save hides banner
+- D) dirty → nav Check-in → confirm Cancel stays / OK leaves
+  Run: npm run test:e2e -- routine-smoke
+  data-testid: routine-save, routine-first-save-banner, routine-step-tick-{section}-{index}
 
 core-smoke.test.ts
 - Auth session: UI login → reload + new tab keep signed-in (no guest flash) → GET /me with JWT

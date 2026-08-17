@@ -25,6 +25,8 @@ export type HistoryDaySheetLabels = {
   detailNotes: string;
   detailEdit: string;
   detailEditToday: string;
+  viewingPast: string;
+  viewingToday: string;
   sheetSwipeHint: string;
   editLocked: string;
 };
@@ -209,6 +211,9 @@ export function HistoryDaySheet({
                 className="text-base font-semibold leading-snug tracking-tight sm:text-lg"
               >
                 {sheetTitle}
+              </p>
+              <p className="text-sm leading-snug text-muted-foreground">
+                {isToday ? labels.viewingToday : labels.viewingPast}
               </p>
               <p className="text-sm text-muted-foreground">
                 {labels.done(done, total)} · {labels.detailPct(pct)}
