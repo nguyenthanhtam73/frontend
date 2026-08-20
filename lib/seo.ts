@@ -283,8 +283,7 @@ export function robotsDisallowPaths(): string[] {
   return out;
 }
 
-export const FACEBOOK_PROFILE_URL =
-  "https://www.facebook.com/profile.php?id=61590558754796";
+export const FACEBOOK_PROFILE_URL = "https://www.facebook.com/dadiary.vn";
 export const TIKTOK_PROFILE_URL = "https://www.tiktok.com/@dadiary8";
 
 /** Public social profile URLs for Organization sameAs JSON-LD. */
