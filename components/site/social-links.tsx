@@ -1,17 +1,19 @@
 import { getTranslations } from "next-intl/server";
 
-import { ORGANIZATION_SAME_AS } from "@/lib/seo";
+import { FACEBOOK_PROFILE_URL, TIKTOK_PROFILE_URL } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
 const SOCIAL_LINKS = [
   {
     id: "facebook" as const,
-    href: ORGANIZATION_SAME_AS[0],
+    href: FACEBOOK_PROFILE_URL,
+    shortKey: "facebookShort" as const,
     icon: FacebookIcon,
   },
   {
     id: "tiktok" as const,
-    href: ORGANIZATION_SAME_AS[1],
+    href: TIKTOK_PROFILE_URL,
+    shortKey: "tiktokShort" as const,
     icon: TikTokIcon,
   },
 ] as const;
@@ -24,20 +26,32 @@ export async function SocialLinks({ className }: SocialLinksProps) {
   const t = await getTranslations("common.footer.social");
 
   return (
-    <nav aria-label={t("navAria")} className={cn("flex items-center gap-1", className)}>
-      {SOCIAL_LINKS.map(({ id, href, icon: Icon }) => (
-        <a
-          key={id}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={t(id)}
-          className="inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Icon className="size-[18px]" />
-        </a>
-      ))}
-    </nav>
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <p
+        id="footer-social-follow"
+        className="text-[11px] font-medium tracking-wide text-muted-foreground"
+      >
+        {t("follow")}
+      </p>
+      <nav
+        aria-labelledby="footer-social-follow"
+        className="flex flex-wrap items-center gap-2"
+      >
+        {SOCIAL_LINKS.map(({ id, href, shortKey, icon: Icon }) => (
+          <a
+            key={id}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t(id)}
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-border/80 bg-background/70 px-3.5 text-xs font-medium text-foreground/80 shadow-sm shadow-primary/5 transition-colors hover:border-primary/35 hover:bg-primary/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Icon className="size-3.5" />
+            <span>{t(shortKey)}</span>
+          </a>
+        ))}
+      </nav>
+    </div>
   );
 }
 

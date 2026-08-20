@@ -283,10 +283,14 @@ export function robotsDisallowPaths(): string[] {
   return out;
 }
 
+export const FACEBOOK_PROFILE_URL =
+  "https://www.facebook.com/profile.php?id=61590558754796";
+export const TIKTOK_PROFILE_URL = "https://www.tiktok.com/@dadiary8";
+
 /** Public social profile URLs for Organization sameAs JSON-LD. */
 export const ORGANIZATION_SAME_AS = [
-  "https://www.facebook.com/profile.php?id=61590558754796",
-  "https://www.tiktok.com/@dadiary0107",
+  FACEBOOK_PROFILE_URL,
+  TIKTOK_PROFILE_URL,
 ] as const;
 
 type SocialMetaInput = PageMetaInput & {

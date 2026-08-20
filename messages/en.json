@@ -161,8 +161,11 @@
       "navAria": "Footer links",
       "social": {
         "navAria": "DaDiary social media",
+        "follow": "Follow",
         "facebook": "DaDiary on Facebook",
-        "tiktok": "DaDiary on TikTok"
+        "tiktok": "DaDiary on TikTok",
+        "facebookShort": "Facebook",
+        "tiktokShort": "TikTok"
       }
     },
     "theme": {

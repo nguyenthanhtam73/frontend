@@ -161,8 +161,11 @@
       "navAria": "Liên kết chân trang",
       "social": {
         "navAria": "Mạng xã hội DaDiary",
+        "follow": "Theo dõi",
         "facebook": "DaDiary trên Facebook",
-        "tiktok": "DaDiary trên TikTok"
+        "tiktok": "DaDiary trên TikTok",
+        "facebookShort": "Facebook",
+        "tiktokShort": "TikTok"
       }
     },
     "theme": {
