@@ -24,6 +24,26 @@ import { cn } from "@/lib/utils";
 
 type AiFilled = Partial<Record<"name" | "brand" | "category" | "notes", boolean>>;
 
+/** Drop AI filler brands ("—", "unknown") so matching stays clean. */
+function sanitizeScanBrand(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  if (/^[—–−\-_|./\\]+$/.test(v)) return "";
+  const lower = v.toLowerCase();
+  if (
+    lower === "unknown" ||
+    lower === "n/a" ||
+    lower === "na" ||
+    lower === "none" ||
+    lower === "null" ||
+    lower === "không rõ" ||
+    lower === "khong ro"
+  ) {
+    return "";
+  }
+  return v;
+}
+
 export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?: string }) {
   const t = useTranslations("cabinet");
   const locale = useLocale();
@@ -44,7 +64,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
 
   const freeSlotsRemaining =
     !wardrobeGate.isPremium && !wardrobeGate.unlimited
-      ? (wardrobeGate.remaining ||
+      ? (wardrobeGate.remaining ??
           Math.max(0, (wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT) - wardrobeGate.used))
       : null;
 
@@ -81,7 +101,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
       const { file } = await compressOnboardingPhoto(raw);
       const suggestion = await scanWardrobeProductLabel({ file, locale });
       const nextName = suggestion.name?.trim() ?? "";
-      const nextBrand = suggestion.brand?.trim() ?? "";
+      const nextBrand = sanitizeScanBrand(suggestion.brand?.trim() ?? "");
       const nextCategory =
         suggestion.category && isWardrobeCategoryId(suggestion.category)
           ? suggestion.category
@@ -96,26 +116,19 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
       }
 
       setName(nextName);
-      setBrand(nextBrand || "—");
+      setBrand(nextBrand);
       setCategory(nextCategory);
       if (nextNotes) setNotes(nextNotes);
       setAiFilled({
         name: !!nextName,
-        brand: true,
+        brand: !!nextBrand,
         category: !!nextCategory,
         notes: !!nextNotes,
       });
-      toast.success(t("scanSuccess"));
+      toast.success(wardrobeGate.locked ? t("scanSuccessAtCap") : t("scanSuccess"));
     } catch (err) {
       if (err instanceof Error && err.message === "auth") {
         toast.error(t("needAuth"));
-        return;
-      }
-      if (
-        err instanceof Error &&
-        (err.message === "premium_required" || err.message === "quota_exceeded")
-      ) {
-        toast.error(t("premiumWardrobeBody"));
         return;
       }
       if (err instanceof Error && err.message === "rate_limited") {
@@ -131,21 +144,21 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
-    if (wardrobeGate.locked || isScanning) {
+    if (isScanning) {
+      return;
+    }
+    if (wardrobeGate.locked) {
+      setFormError(t("premiumWardrobeBody"));
       return;
     }
     if (!name.trim()) {
       setFormError(t("nameRequired"));
       return;
     }
-    if (!brand.trim()) {
-      setFormError(t("brandRequired"));
-      return;
-    }
     try {
       await createProduct({
         name: name.trim(),
-        brand: brand.trim(),
+        brand: brand.trim() || undefined,
         category: category || undefined,
         opened_at: openedAt.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -187,7 +200,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
 
   if (wardrobeGate.isLoading) {
     return (
-      <Card id={formId}>
+      <Card id={formId} className="scroll-mt-24">
         <CardContent className="space-y-3 p-5 sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -199,31 +212,17 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
     );
   }
 
-  if (wardrobeGate.locked) {
-    return (
-      <Card id={formId} className="opacity-95">
-        <CardContent className="space-y-4 p-5 sm:p-6">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
-            <p className="text-sm text-muted-foreground">{t("addSub")}</p>
-            <p className="text-sm text-muted-foreground">{t("freeLimitHint", { n: FREE_WARDROBE_PRODUCT_LIMIT })}</p>
-          </div>
-          <UpsellBanner
-            id="upsell-wardrobe-full"
-            feature={Feature.WardrobeFull}
-          />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card id={formId}>
+    <Card id={formId} className="scroll-mt-24">
       <CardContent className="space-y-4 p-5 sm:p-6">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("addSub")}</p>
-          {freeSlotsRemaining != null ? (
+          {wardrobeGate.locked ? (
+            <p className="text-sm text-muted-foreground">
+              {t("freeLimitHint", { n: FREE_WARDROBE_PRODUCT_LIMIT })}
+            </p>
+          ) : freeSlotsRemaining != null ? (
             <p className="text-xs text-muted-foreground">
               {t("freeSlotsRemaining", {
                 remaining: freeSlotsRemaining,
@@ -235,8 +234,15 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
           )}
         </div>
 
+        {wardrobeGate.locked ? (
+          <UpsellBanner id="upsell-wardrobe-full" feature={Feature.WardrobeFull} />
+        ) : null}
+
         <div className="space-y-2 rounded-xl border border-border/70 bg-muted p-3">
           <p className="text-xs text-muted-foreground">{t("scanHint")}</p>
+          {wardrobeGate.locked ? (
+            <p className="text-xs text-muted-foreground">{t("scanCapHint")}</p>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
@@ -304,7 +310,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
             />
           </WardrobeField>
 
-          <WardrobeField label={t("fieldBrand")} htmlFor="wardrobe-brand" required>
+          <WardrobeField label={t("fieldBrand")} htmlFor="wardrobe-brand">
             <input
               id="wardrobe-brand"
               className={aiInputClass("brand")}
@@ -313,7 +319,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
                 clearAiHighlight("brand");
                 setBrand(e.target.value);
               }}
-              placeholder={t("placeholderBrand")}
+              placeholder={t("placeholderBrandOptional")}
               autoComplete="off"
               disabled={isScanning}
             />
@@ -328,6 +334,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
                   clearAiHighlight("category");
                   setCategory(v);
                 }}
+                disabled={isScanning}
               />
             </div>
           </WardrobeField>
@@ -359,7 +366,9 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
           </WardrobeField>
 
           {Object.keys(aiFilled).length > 0 ? (
-            <p className="text-xs text-muted-foreground">{t("scanPrefillHint")}</p>
+            <p className="text-xs text-muted-foreground">
+              {wardrobeGate.locked ? t("scanPrefillHintAtCap") : t("scanPrefillHint")}
+            </p>
           ) : null}
 
           {formError ? (
@@ -368,23 +377,27 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
             </p>
           ) : null}
 
-          <Button
-            type="submit"
-            className="w-full min-h-11 sm:w-auto"
-            disabled={isCreating || isScanning}
-          >
-            {isCreating ? (
-              <>
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-                {t("adding")}
-              </>
-            ) : (
-              <>
-                <Plus className="size-4" aria-hidden />
-                {t("addCta")}
-              </>
-            )}
-          </Button>
+          {wardrobeGate.locked ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">{t("capSaveHint")}</p>
+          ) : (
+            <Button
+              type="submit"
+              className="w-full min-h-11 sm:w-auto"
+              disabled={isCreating || isScanning}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  {t("adding")}
+                </>
+              ) : (
+                <>
+                  <Plus className="size-4" aria-hidden />
+                  {t("addCta")}
+                </>
+              )}
+            </Button>
+          )}
         </form>
       </CardContent>
     </Card>

@@ -43,10 +43,13 @@ export function HashScroll() {
           }, delayMs),
         );
       };
-      // Home content may not exist on the first paint after a client nav.
+      // Client nav + sticky header: retry until the target hydrates (Settings privacy).
       attempt(0);
       attempt(80);
       attempt(250);
+      attempt(500);
+      attempt(900);
+      attempt(1400);
     };
 
     run();

@@ -226,9 +226,10 @@ test.describe("SePay sandbox smoke", () => {
 
     const usage = await fetchUsage(request, session.accessToken);
     expect(usage.is_premium).toBe(false);
-    // Free may still create until the shelf slot cap; unlimited edit/delete stays off.
+    // Free may still create until the shelf slot cap; unlimited create stays off.
+    // Edit/delete remain allowed so Free can free slots.
     expect(usage.features?.wardrobe_full?.unlimited).toBeFalsy();
-    expect(usage.wardrobe?.can_manage).toBeFalsy();
+    expect(usage.wardrobe?.can_manage).toBeTruthy();
     expect(usage.features?.export_data?.allowed).toBeFalsy();
   });
 });

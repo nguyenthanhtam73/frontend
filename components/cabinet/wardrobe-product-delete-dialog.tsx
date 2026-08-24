@@ -65,7 +65,7 @@ export function WardrobeProductDeleteDialog({
           <DialogDescription>
             {t("deleteBody", {
               name: product?.name ?? "",
-              brand: product?.brand ?? "",
+              brand: product?.brand?.trim() ? product.brand : t("brandUnknown"),
             })}
           </DialogDescription>
         </DialogHeader>
@@ -80,14 +80,15 @@ export function WardrobeProductDeleteDialog({
           <Button
             type="button"
             variant="outline"
+            className="min-h-11 w-full sm:w-auto"
             onClick={() => onOpenChange(false)}
-            disabled={isDeleting}
           >
             {t("cancel")}
           </Button>
           <Button
             type="button"
             variant="destructive"
+            className="min-h-11 w-full sm:w-auto"
             disabled={isDeleting || !product}
             onClick={() => void handleConfirm()}
           >

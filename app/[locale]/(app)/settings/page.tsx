@@ -32,7 +32,7 @@ export default async function SettingsPage() {
         <p className="max-w-2xl text-muted-foreground">{t("sub")}</p>
         <Link
           href="/cabinet"
-          className="inline-block text-sm font-medium text-primary underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4"
         >
           {t("backCabinet")}
         </Link>

@@ -24,7 +24,7 @@ export type FeatureGateSnapshot = {
   features: Partial<Record<FeatureId, FeatureAccess>>;
   /** Free: create while under shelf slot limit; Premium: always. */
   canWardrobeWrite: boolean;
-  /** Premium only — edit / delete shelf items. */
+  /** Signed-in users may edit/delete their own shelf items on every plan. */
   canWardrobeManage: boolean;
   canRoutineSuggest: boolean;
   canRoutineManualEdit: boolean;

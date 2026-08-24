@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { SETTINGS_FACE_MODE_HREF } from "@/lib/privacy/anchors";
 import { cn } from "@/lib/utils";
 
 /** Shown instead of the photo upload card when skip-face mode is active. */
@@ -67,14 +68,14 @@ export function SkipModePanel({
             type="button"
             size="sm"
             onClick={onBack}
-            className="min-h-11 gap-2 sm:min-h-9"
+            className="min-h-11 gap-2"
           >
             <Camera className="size-4" aria-hidden />
             {t("skipModeBackCta")}
           </Button>
           <Link
-            href="/cabinet"
-            className="inline-flex min-h-11 items-center justify-center rounded-md px-3 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline sm:min-h-9"
+            href={SETTINGS_FACE_MODE_HREF}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-md px-3 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline sm:w-auto"
           >
             {t("skipModeManageCta")}
           </Link>

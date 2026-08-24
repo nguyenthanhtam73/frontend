@@ -4,8 +4,8 @@ import type { WardrobeCategoryId } from "@/lib/cabinet/categories";
 import { buildLocalizedStarterLines } from "@/lib/i18n/starter-pack-lines";
 import type { OnboardingState } from "@/lib/stores/onboarding-store";
 
-/** Placeholder brand when adding from starter tips (BE requires non-empty brand). */
-export const STARTER_SHELF_BRAND = "—";
+/** Empty brand for starter tips — BE allows optional brand; UI shows “unknown”. */
+export const STARTER_SHELF_BRAND = "";
 
 export type StarterShelfCandidate = {
   /** Stable key for React + pending state. */

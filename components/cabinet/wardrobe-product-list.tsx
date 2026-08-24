@@ -12,15 +12,12 @@ import {
   type WardrobeCategoryFilterValue,
 } from "@/components/cabinet/wardrobe-category-filter";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
-import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { getPaoHint } from "@/lib/cabinet/pao";
-import { Feature } from "@/lib/premium/features";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
-import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +25,7 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
   const t = useTranslations("cabinet");
   const formatter = useFormatter();
   const { hasAuth, products, isLoading, isError, error, refetch, isFetching } = useWardrobe();
-  const wardrobeGate = useFeatureGate(Feature.WardrobeFull);
   const { canWardrobeManage } = usePlanTier();
-  const canWardrobeWrite = wardrobeGate.allowed && !wardrobeGate.locked;
   const [editProduct, setEditProduct] = useState<WardrobeProductDTO | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<WardrobeProductDTO | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<WardrobeCategoryFilterValue>("all");
@@ -56,7 +51,7 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
       <Card className="border-dashed border-primary/25">
         <CardContent className="space-y-3 p-5 sm:p-6">
           <p className="text-sm text-muted-foreground">{t("needAuth")}</p>
-          <Link href="/login" className={buttonVariants({ size: "sm" })}>
+          <Link href="/login" className={buttonVariants({ size: "sm", className: "min-h-11" })}>
             {t("signIn")}
           </Link>
         </CardContent>
@@ -87,11 +82,11 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
           </p>
           <div className="flex flex-wrap gap-2">
             {needAuth ? (
-              <Link href="/login" className={buttonVariants({ size: "sm" })}>
+              <Link href="/login" className={buttonVariants({ size: "sm", className: "min-h-11" })}>
                 {t("signIn")}
               </Link>
             ) : (
-              <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
+              <Button type="button" size="sm" variant="outline" className="min-h-11" onClick={() => void refetch()}>
                 {t("retry")}
               </Button>
             )}
@@ -135,23 +130,19 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
               </div>
               <p className="text-base font-semibold tracking-tight">{t("emptyTitle")}</p>
               <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                {t("emptyBody")}
+                <span className="hidden sm:inline">{t("emptyBodyDesktop")}</span>
+                <span className="sm:hidden">{t("emptyBodyMobile")}</span>
               </p>
-              {onAddClick && canWardrobeWrite ? (
+              {onAddClick ? (
                 <Button
                   type="button"
                   size="sm"
-                  className="mt-4 min-h-10"
+                  className="mt-4 min-h-11"
                   onClick={onAddClick}
                 >
                   <Plus className="size-4" aria-hidden />
                   {t("emptyCta")}
                 </Button>
-              ) : null}
-              {wardrobeGate.locked ? (
-                <div className="mx-auto mt-4 max-w-md text-left">
-                  <UpsellBanner feature={Feature.WardrobeFull} compact />
-                </div>
               ) : null}
             </div>
           ) : filteredProducts.length === 0 ? (
@@ -169,7 +160,7 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
                 type="button"
                 size="sm"
                 variant="outline"
-                className="mt-4 min-h-10"
+                className="mt-4 min-h-11"
                 onClick={() => setCategoryFilter("all")}
               >
                 {t("filterClear")}
@@ -266,11 +257,13 @@ function ProductRow({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-medium leading-snug">{product.name}</p>
-          {product.brand ? (
+          {product.brand?.trim() ? (
             <p className="text-xs text-muted-foreground">{product.brand}</p>
-          ) : null}
+          ) : (
+            <p className="text-xs text-muted-foreground">{t("brandUnknown")}</p>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
           <div className="flex flex-wrap gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {categoryLabel ? (
               <span className="rounded-full border border-border px-2 py-0.5">{categoryLabel}</span>
@@ -282,12 +275,12 @@ function ProductRow({
             ) : null}
           </div>
           {canManage ? (
-            <div className="flex gap-1">
+            <div className="flex w-full justify-end gap-1 sm:w-auto">
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="min-h-9 px-2"
+                className="min-h-11 min-w-11 px-2"
                 onClick={onEdit}
                 aria-label={t("editAria", { name: product.name })}
               >
@@ -298,7 +291,7 @@ function ProductRow({
                 type="button"
                 size="sm"
                 variant="ghost"
-                className="min-h-9 px-2 text-destructive hover:text-destructive"
+                className="min-h-11 min-w-11 px-2 text-destructive hover:text-destructive"
                 onClick={onDelete}
                 aria-label={t("deleteAria", { name: product.name })}
               >
@@ -314,7 +307,7 @@ function ProductRow({
       ) : canManage && !product.opened_at ? (
         <button
           type="button"
-          className="mt-2 text-xs font-medium text-primary underline underline-offset-2"
+          className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-primary underline underline-offset-2"
           onClick={onEdit}
         >
           {t("paoAddOpenedCta")}

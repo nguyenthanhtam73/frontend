@@ -63,8 +63,7 @@ function buildSnapshot(
       data?.wardrobe?.can_write ??
       (isPremium || optimisticFreeWardrobe),
     canWardrobeManage:
-      data?.wardrobe?.can_manage ??
-      (features.wardrobe_full?.unlimited ?? isPremium),
+      data?.wardrobe?.can_manage ?? true,
     canRoutineSuggest:
       features.ai_routine_suggestion?.allowed ??
       (isPremium ||

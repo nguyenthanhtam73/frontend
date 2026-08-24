@@ -59,14 +59,10 @@ export function WardrobeProductEditDialog({
       setFormError(t("nameRequired"));
       return;
     }
-    if (!brand.trim()) {
-      setFormError(t("brandRequired"));
-      return;
-    }
     try {
       await updateProduct(product.id, {
         name: name.trim(),
-        brand: brand.trim(),
+        brand: brand.trim() || undefined,
         category: category || undefined,
         // Always send opened_at so clearing the date reaches the API.
         opened_at: openedAt.trim(),
@@ -107,13 +103,13 @@ export function WardrobeProductEditDialog({
             />
           </WardrobeField>
 
-          <WardrobeField label={t("fieldBrand")} htmlFor="wardrobe-edit-brand" required>
+          <WardrobeField label={t("fieldBrand")} htmlFor="wardrobe-edit-brand">
             <input
               id="wardrobe-edit-brand"
               className={wardrobeInputClass}
               value={brand}
               onChange={(e) => setBrand(e.target.value)}
-              placeholder={t("placeholderBrand")}
+              placeholder={t("placeholderBrandOptional")}
               autoComplete="off"
             />
           </WardrobeField>
@@ -157,12 +153,13 @@ export function WardrobeProductEditDialog({
             <Button
               type="button"
               variant="outline"
+              className="min-h-11 w-full sm:w-auto"
               onClick={() => onOpenChange(false)}
               disabled={isUpdating}
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isUpdating || !product}>
+            <Button type="submit" className="min-h-11 w-full sm:w-auto" disabled={isUpdating || !product}>
               {isUpdating ? (
                 <>
                   <Loader2 className="size-4 animate-spin" aria-hidden />

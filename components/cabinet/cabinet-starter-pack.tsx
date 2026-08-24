@@ -15,6 +15,7 @@ import { buildStarterShelfCandidates } from "@/lib/cabinet/starter-shelf";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { FREE_WARDROBE_PRODUCT_LIMIT } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
 export function CabinetStarterPack() {
@@ -59,7 +60,7 @@ export function CabinetStarterPack() {
           <p className="text-sm text-muted-foreground">{t("starterEmpty")}</p>
           <Link
             href="/onboarding"
-            className="inline-block text-sm font-medium text-primary underline underline-offset-4"
+            className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4"
           >
             {t("adjustOnboarding")}
           </Link>
@@ -70,6 +71,14 @@ export function CabinetStarterPack() {
 
   const canWrite = hasAuth && wardrobeGate.allowed && !wardrobeGate.locked;
   const showUpsell = hasAuth && wardrobeGate.locked;
+  const freeRemaining =
+    hasAuth && !wardrobeGate.isPremium && !wardrobeGate.unlimited
+      ? (wardrobeGate.remaining ??
+          Math.max(
+            0,
+            (wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT) - wardrobeGate.used,
+          ))
+      : null;
 
   async function handleAdd(candidateId: string) {
     const candidate = candidates.find((c) => c.id === candidateId);
@@ -78,7 +87,7 @@ export function CabinetStarterPack() {
     try {
       await createProduct({
         name: candidate.name,
-        brand: candidate.brand,
+        brand: candidate.brand.trim() || undefined,
         category: candidate.category,
         notes: t("starterAddNote"),
       });
@@ -110,6 +119,16 @@ export function CabinetStarterPack() {
             {t("starterTitle")}
           </div>
           <p className="text-xs text-muted-foreground">{t("starterAddHint")}</p>
+          {freeRemaining != null ? (
+            <p className="text-xs text-muted-foreground">
+              {freeRemaining > 0
+                ? t("starterSlotsHint", {
+                    remaining: freeRemaining,
+                    n: FREE_WARDROBE_PRODUCT_LIMIT,
+                  })
+                : t("starterSlotsFull", { n: FREE_WARDROBE_PRODUCT_LIMIT })}
+            </p>
+          ) : null}
         </div>
 
         <ul className="space-y-2">
@@ -124,18 +143,18 @@ export function CabinetStarterPack() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium leading-snug">{c.name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {t(`categories.${c.category}`)} · {c.brand}
+                    {t(`categories.${c.category}`)} · {c.brand.trim() ? c.brand : t("brandUnknown")}
                   </p>
                 </div>
                 {!hasAuth ? (
                   <Link
                     href="/login"
-                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "min-h-10 shrink-0")}
+                    className={cn(buttonVariants({ size: "sm", variant: "outline" }), "min-h-11 w-full shrink-0 sm:w-auto")}
                   >
                     {t("signIn")}
                   </Link>
                 ) : inShelf ? (
-                  <span className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-xs font-medium text-primary">
+                  <span className="inline-flex min-h-11 shrink-0 items-center gap-1.5 text-xs font-medium text-primary">
                     <Check className="size-3.5" aria-hidden />
                     {t("starterInShelf")}
                   </span>
@@ -144,7 +163,7 @@ export function CabinetStarterPack() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    className="min-h-10 shrink-0"
+                    className="min-h-11 w-full shrink-0 sm:w-auto"
                     disabled={!canWrite || busy || wardrobeGate.isLoading}
                     onClick={() => void handleAdd(c.id)}
                   >
@@ -153,6 +172,8 @@ export function CabinetStarterPack() {
                         <Loader2 className="size-3.5 animate-spin" aria-hidden />
                         {t("adding")}
                       </>
+                    ) : wardrobeGate.locked ? (
+                      t("starterAddLockedCta")
                     ) : (
                       <>
                         <Plus className="size-3.5" aria-hidden />
@@ -172,7 +193,7 @@ export function CabinetStarterPack() {
 
         <Link
           href="/onboarding"
-          className="inline-block text-sm font-medium text-primary underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4"
         >
           {t("adjustOnboarding")}
         </Link>

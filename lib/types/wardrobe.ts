@@ -17,7 +17,7 @@ export type WardrobeListDTO = {
 
 export type CreateWardrobeProductInput = {
   name: string;
-  brand: string;
+  brand?: string;
   category?: string;
   notes?: string;
   opened_at?: string;
@@ -25,7 +25,7 @@ export type CreateWardrobeProductInput = {
 
 export type UpdateWardrobeProductInput = {
   name: string;
-  brand: string;
+  brand?: string;
   category?: string;
   notes?: string;
   /** YYYY-MM-DD; empty string clears the opened date. */

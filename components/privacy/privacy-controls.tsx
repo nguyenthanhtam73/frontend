@@ -32,6 +32,7 @@ import { wardrobeQueryKey } from "@/lib/api/wardrobe";
 import { clearLocalUserData } from "@/lib/clear-local-user-data";
 import { Link, useRouter } from "@/i18n/navigation";
 import { getAccessToken } from "@/lib/auth-token";
+import { PRIVACY_FACE_MODE_ID } from "@/lib/privacy/anchors";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
@@ -244,7 +245,10 @@ export function PrivacyControls() {
 
         <PushNotificationSetting />
 
-        <section className="space-y-3 rounded-xl border border-border/70 bg-card p-4">
+        <section
+          id={PRIVACY_FACE_MODE_ID}
+          className="scroll-mt-24 space-y-3 rounded-xl border border-border/70 bg-card p-4"
+        >
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0 space-y-0.5">
               <p className="text-sm font-semibold">{t("modeRowTitle")}</p>
@@ -283,6 +287,7 @@ export function PrivacyControls() {
               type="button"
               size="sm"
               variant={skipFaceCapture ? "default" : "outline"}
+              className="min-h-11"
               onClick={() => {
                 setSkipFaceCapture(!skipFaceCapture);
                 if (!skipFaceCapture) {
@@ -296,6 +301,7 @@ export function PrivacyControls() {
               type="button"
               size="sm"
               variant="ghost"
+              className="min-h-11"
               onClick={() => withdrawConsent()}
               disabled={!consentAcknowledged}
             >

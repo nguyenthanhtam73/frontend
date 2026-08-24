@@ -42,7 +42,7 @@ export function WardrobeCategoryFilter({
             role="tab"
             aria-selected={active}
             className={cn(
-              "inline-flex min-h-10 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition-colors",
+              "inline-flex min-h-11 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition-colors",
               active
                 ? "border-primary/40 bg-primary/10 text-primary"
                 : "border-border bg-background text-muted-foreground hover:bg-muted/50",
