@@ -340,7 +340,7 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
         {data.isGuest ? (
           <CoachWelcomeSection>
             <Card className="border-amber-200/70 bg-amber-50/50 dark:border-amber-500/25 dark:bg-amber-950/30">
-              <CardContent className="space-y-3 pt-6 text-sm leading-relaxed text-muted-foreground">
+              <CardContent className="space-y-3 text-sm leading-relaxed text-muted-foreground">
                 <p>{tCoach("guestPreviewHint")}</p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Link

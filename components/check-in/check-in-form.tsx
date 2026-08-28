@@ -682,7 +682,7 @@ function FeedbackFailedCard({
 }) {
   return (
     <Card className="border-destructive/30 bg-destructive/5">
-      <CardContent className="space-y-3 pt-6">
+      <CardContent className="space-y-3">
         <div className="flex items-center gap-2 font-medium text-destructive" role="alert">
           <AlertTriangle className="size-4 shrink-0" aria-hidden />
           {title}

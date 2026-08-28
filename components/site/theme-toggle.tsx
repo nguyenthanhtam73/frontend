@@ -139,7 +139,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         </span>
       </span>
 
-      <span className="relative hidden min-h-4 min-w-10 overflow-hidden pt-px md:inline-block">
+      <span className="relative hidden h-5 min-w-10 overflow-hidden md:inline-flex md:items-center">
         <span
           className={cn(
             "block whitespace-nowrap",

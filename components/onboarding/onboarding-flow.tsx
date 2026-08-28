@@ -705,7 +705,7 @@ export function OnboardingFlow() {
         {finishing && step === "ready" && (
           <OnboardingAiLoading phase="starterRoutine" overlay />
         )}
-        <CardContent className="p-4 pt-5 sm:p-6 sm:pt-6">
+        <CardContent>
           <OnboardingStepPanel stepKey={step} direction={slideDir}>
             {step === "skinProfile" && (
               <OnboardingStepSkinProfile

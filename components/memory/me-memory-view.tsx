@@ -222,7 +222,7 @@ export function MeMemoryView() {
         </div>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 sm:p-0">
             <pre
               className={cn(
                 "max-h-[min(70vh,32rem)] overflow-auto rounded-xl p-4 sm:p-5",

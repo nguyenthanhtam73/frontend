@@ -274,7 +274,7 @@ export function ProgressBeforeAfter({
 
   return (
     <Card>
-      <CardContent className="space-y-3 pt-5">
+      <CardContent className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
@@ -569,7 +569,7 @@ function NotEnoughPhotos() {
   const t = useTranslations("progress.beforeAfter");
   return (
     <Card className="border-dashed">
-      <CardContent className="space-y-3 py-8 text-center">
+      <CardContent className="space-y-3 py-8 text-center sm:py-8">
         <span className="mx-auto inline-flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <ImageIcon className="size-5" aria-hidden />
         </span>

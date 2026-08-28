@@ -59,7 +59,7 @@ export function DailyCoachFeedback({
   if (!c) {
     return (
       <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardContent className="space-y-3 pt-6">
+        <CardContent className="space-y-3">
           <div className="flex items-center gap-2 font-medium text-amber-900 dark:text-amber-200" role="alert">
             <AlertTriangle className="size-4 shrink-0" aria-hidden />
             {t("failedTitle")}
@@ -97,7 +97,7 @@ export function DailyCoachFeedback({
     >
       {c.situation_summary ? (
         <Card>
-          <CardContent className="space-y-2 pt-5">
+          <CardContent className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t("todaySummary")}
             </p>
@@ -110,7 +110,7 @@ export function DailyCoachFeedback({
 
       {c.concern_alignment ? (
         <Card className="border-blue-500/15 bg-blue-500/[0.03]">
-          <CardContent className="space-y-2 pt-5">
+          <CardContent className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-900/80 dark:text-blue-200/90">
               {t("alignment")}
             </p>
@@ -123,7 +123,7 @@ export function DailyCoachFeedback({
 
       {hasGauges ? (
         <Card className="border-muted">
-          <CardContent className="space-y-3 pt-5">
+          <CardContent className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t("softGauges")}
             </p>
@@ -150,7 +150,7 @@ export function DailyCoachFeedback({
           className="border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent"
           data-care-suggestions
         >
-          <CardContent className="space-y-4 pt-5">
+          <CardContent className="space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <ListChecks className="size-4 text-primary" aria-hidden />
@@ -191,7 +191,7 @@ export function DailyCoachFeedback({
         <div className="grid gap-3 sm:grid-cols-2">
           {split.morning.length > 0 ? (
             <Card className="border-amber-500/25 bg-gradient-to-b from-amber-500/5 to-transparent">
-              <CardContent className="space-y-2 pt-5">
+              <CardContent className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-semibold">
                   <Sun className="size-4 text-amber-500" aria-hidden />
                   {t("routineAm")}
@@ -206,7 +206,7 @@ export function DailyCoachFeedback({
           ) : null}
           {split.evening.length > 0 ? (
             <Card className="border-indigo-500/25 bg-gradient-to-b from-indigo-500/5 to-transparent">
-              <CardContent className="space-y-2 pt-5">
+              <CardContent className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-semibold">
                   <Moon className="size-4 text-indigo-500" aria-hidden />
                   {t("routinePm")}
@@ -230,7 +230,7 @@ export function DailyCoachFeedback({
 
       {split.other.length > 0 ? (
         <Card>
-          <CardContent className="space-y-2 pt-5">
+          <CardContent className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t("routineAdjust")}
             </p>
@@ -245,7 +245,7 @@ export function DailyCoachFeedback({
 
       {showLegacyTips ? (
         <Card>
-          <CardContent className="space-y-3 pt-5">
+          <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Lightbulb className="size-4 text-amber-600" aria-hidden />
               {t("careSuggestions")}
@@ -290,7 +290,7 @@ export function DailyCoachFeedback({
 
       {c.avoid_or_patch && c.avoid_or_patch.length > 0 ? (
         <Card className="border-orange-500/20">
-          <CardContent className="space-y-2 pt-5">
+          <CardContent className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-orange-800 dark:text-orange-200">
               <Ban className="size-4 shrink-0" aria-hidden />
               {t("avoid")}
@@ -307,7 +307,7 @@ export function DailyCoachFeedback({
       {(c.safety_reminders && c.safety_reminders.length > 0) ||
       c.medical_disclaimer ? (
         <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardContent className="space-y-3 pt-5">
+          <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
               <ShieldCheck className="size-4 shrink-0" aria-hidden />
               {t("safety")}

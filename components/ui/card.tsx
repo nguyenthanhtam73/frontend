@@ -51,10 +51,12 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  // Standalone cards need equal padding. After CardHeader use `pt-0 sm:pt-0`
+  // — unprefixed `pt-0` loses to `sm:p-6`.
   return (
     <div
       data-slot="card-content"
-      className={cn("p-4 pt-0 sm:p-6 sm:pt-0", className)}
+      className={cn("p-4 sm:p-6", className)}
       {...props}
     />
   );

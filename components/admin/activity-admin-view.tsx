@@ -164,7 +164,7 @@ export function ActivityAdminView() {
                 {t("checkInsTitle")}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 pt-0 sm:pt-0">
               {(data?.check_ins ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("checkInsEmpty")}</p>
               ) : (
@@ -230,7 +230,7 @@ export function ActivityAdminView() {
                 {t("productsTitle")}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 pt-0 sm:pt-0">
               {(data?.product_usage ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("productsEmpty")}</p>
               ) : (
@@ -285,7 +285,7 @@ function StatCard({
 }) {
   return (
     <Card className="border-border/70">
-      <CardContent className="p-4">
+      <CardContent>
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>

@@ -241,7 +241,7 @@ export function CheckInContextCard({
   if (status === "loading") {
     return (
       <Card className="border-dashed shadow-sm">
-        <CardContent className="flex items-center gap-2 py-4 text-sm text-muted-foreground" role="status">
+        <CardContent className="flex items-center gap-2 py-4 text-sm text-muted-foreground sm:py-4" role="status">
           <Loader2 className="size-4 animate-spin" aria-hidden />
           {t("loading")}
         </CardContent>

@@ -49,7 +49,7 @@ export function ProgressSummaryCard({
   return (
     <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-accent/40 to-background shadow-sm">
       <div className="pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-      <CardContent className="relative space-y-4 pt-5 sm:pt-6">
+      <CardContent className="relative space-y-4">
         <div className="flex items-start gap-3">
           <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-background/80 shadow-sm ring-1 ring-primary/20">
             <Sparkles className="size-4 text-primary" aria-hidden />

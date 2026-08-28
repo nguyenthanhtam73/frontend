@@ -76,7 +76,7 @@ export function ProductSuggestionsCard({
 
   return (
     <Card className="border-violet-500/20 bg-gradient-to-b from-violet-500/[0.04] to-transparent">
-      <CardContent className={emphasize ? "space-y-4 pt-5" : "space-y-3 pt-5"}>
+      <CardContent className={emphasize ? "space-y-4" : "space-y-3"}>
         <div className="flex items-start gap-2">
           <ShoppingBag
             className={

@@ -215,6 +215,42 @@
     max-width: 100%;
   }
 
+  /*
+   * Nunito Sans sits optically high: the em-box has more descent than cap
+   * overshoot, so labels in buttons/chips look shifted up. Trim the line box
+   * to cap/baseline (ink still paints, including Vietnamese diacritics).
+   * Skip .theme-toggle-btn — its label uses overflow-hidden for the slide.
+   */
+  @supports (text-box-trim: trim-both) {
+    button:not(.theme-toggle-btn),
+    [data-slot="button"],
+    [data-slot="badge"],
+    header nav a,
+    footer a.inline-flex {
+      text-box: trim-both cap alphabetic;
+    }
+  }
+
+  @supports not (text-box-trim: trim-both) {
+    button:not(.theme-toggle-btn),
+    [data-slot="button"],
+    [data-slot="badge"],
+    header nav a,
+    footer a.inline-flex {
+      padding-block-start: 0.1em;
+    }
+  }
+
+  /*
+   * Native fields ignore flex alignment; Windows + Nunito leaves the value
+   * hugging the top edge. Vertical padding recenters without clipping
+   * underdots. Utilities like `py-2` still win when set on the control.
+   */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([type="date"]):not([type="time"]):not([type="month"]):not([type="week"]):not([type="datetime-local"]),
+  select {
+    line-height: 1.25;
+    padding-block: 0.4em;
+  }
 
   /*
    * PWA standalone polish — when the app is launched from the home screen we

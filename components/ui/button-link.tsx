@@ -24,6 +24,7 @@ export function ButtonLink({
   return (
     <Link
       {...props}
+      data-slot="button"
       className={cn(buttonVariants({ variant, size }), className)}
     >
       {children}

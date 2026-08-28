@@ -192,7 +192,7 @@ function Kpi({
 }) {
   return (
     <Card className="border-border/70">
-      <CardContent className="p-4">
+      <CardContent>
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
         {loading ? (
           <Skeleton className="mt-2 h-8 w-16" />

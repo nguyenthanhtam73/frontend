@@ -46,7 +46,7 @@ export function StarterRoutineSupportExtras({
       {showRationale ? (
         <CoachWelcomeSection>
           <Card>
-            <CardContent className="space-y-2 pt-5 pb-5">
+            <CardContent className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("why")}
               </p>
@@ -59,7 +59,7 @@ export function StarterRoutineSupportExtras({
       {showEncouragement ? (
         <CoachWelcomeSection>
           <Card className="border-primary/15 bg-primary/[0.03]">
-            <CardContent className="space-y-2 pt-5 pb-5" data-testid="coach-welcome-encouragement">
+            <CardContent className="space-y-2" data-testid="coach-welcome-encouragement">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("encouragement")}
               </p>
@@ -72,7 +72,7 @@ export function StarterRoutineSupportExtras({
       {showWeekNotes ? (
         <CoachWelcomeSection>
           <Card>
-            <CardContent className="space-y-2 pt-5 pb-5">
+            <CardContent className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("weekNotes")}
               </p>
@@ -103,7 +103,7 @@ export function StarterRoutineSafetySection({
       {starter.safety_notes?.trim() ? (
         <CoachWelcomeSection id="coach-welcome-safety">
           <Card className="border-emerald-500/20 bg-emerald-500/5">
-            <CardContent className="space-y-3 pt-5 pb-5">
+            <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-emerald-800 dark:text-emerald-200">
                 <ShieldCheck className="size-4 shrink-0" aria-hidden />
                 {t("safety")}

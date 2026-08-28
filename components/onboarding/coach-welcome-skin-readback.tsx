@@ -106,7 +106,7 @@ export function CoachWelcomeSkinReadback({
       )}
       data-testid="coach-welcome-skin-readback"
     >
-      <CardContent className="space-y-3 pt-4 pb-4 sm:space-y-4 sm:pt-5 sm:pb-5">
+      <CardContent className="space-y-3 sm:space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-primary/10">

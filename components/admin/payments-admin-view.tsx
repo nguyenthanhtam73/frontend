@@ -332,7 +332,7 @@ function MetricCard({
 }) {
   return (
     <Card className="border-border/70">
-      <CardContent className="space-y-1 p-4">
+      <CardContent className="space-y-1">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>

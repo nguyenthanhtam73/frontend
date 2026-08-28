@@ -292,7 +292,7 @@ export function SkinReviewAdminView() {
   if (!hasAuth) {
     return (
       <Card>
-        <CardContent className="space-y-3 py-8">
+        <CardContent className="space-y-3 py-8 sm:py-8">
           <p className="text-sm text-muted-foreground">{t("needAuth")}</p>
           <Link href="/login" className={cn(buttonVariants())}>
             {t("signIn")}
@@ -305,7 +305,7 @@ export function SkinReviewAdminView() {
   if (!canSkinReview) {
     return (
       <Card>
-        <CardContent className="py-8">
+        <CardContent className="py-8 sm:py-8">
           <p className="text-sm text-muted-foreground">{t("forbidden")}</p>
         </CardContent>
       </Card>

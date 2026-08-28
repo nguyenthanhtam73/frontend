@@ -57,7 +57,7 @@ const desktopActionBtn =
 
 function mobileActionBtn(variant: "neutral" | "danger") {
   return cn(
-    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-2 text-[11px] font-semibold leading-none transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 sm:flex-row sm:gap-1.5 sm:text-xs",
+    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border px-1.5 py-2 text-[11px] font-semibold leading-snug transition-all duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-35 sm:flex-row sm:gap-1.5 sm:text-xs",
     variant === "neutral" &&
       "border-border/80 bg-muted/50 text-foreground shadow-sm hover:bg-muted/80 active:bg-muted",
     variant === "danger" &&

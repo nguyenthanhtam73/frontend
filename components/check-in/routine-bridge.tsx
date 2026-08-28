@@ -292,7 +292,7 @@ export function RoutineBridge({
       />
 
       <Card className="border-primary/25 bg-linear-to-br from-primary/5 via-accent/15 to-background">
-        <CardContent className="space-y-4 pt-5">
+        <CardContent className="space-y-4">
           {toastMsg ? (
             <ToastBanner kind="ok" message={toastMsg} onDismiss={() => setToastMsg(null)} />
           ) : null}

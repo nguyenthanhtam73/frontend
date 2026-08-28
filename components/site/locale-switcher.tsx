@@ -67,10 +67,10 @@ export function LocaleSwitcher({
           aria-pressed={activeLocale === loc}
           aria-label={loc === "vi" ? t("vietnamese") : t("english")}
           className={cn(
-            "shrink-0 cursor-pointer rounded-md text-center font-medium leading-snug tracking-normal whitespace-nowrap transition-colors",
+            "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md text-center font-medium leading-snug tracking-normal whitespace-nowrap transition-colors",
             compact
-              ? "min-h-10 min-w-8 px-2 py-1 text-[11px] tabular-nums"
-              : "px-2.5 py-1 text-[11px] sm:px-3 sm:text-xs",
+              ? "min-h-10 min-w-8 px-2 pt-[5px] pb-1 text-[11px] tabular-nums"
+              : "px-2.5 pt-[5px] pb-1 text-[11px] sm:px-3 sm:text-xs",
             activeLocale === loc
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
