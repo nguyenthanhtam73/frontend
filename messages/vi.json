@@ -79,6 +79,10 @@
       "title": "Admin Skin Review · DaDiary",
       "description": "Tải 1 ảnh da rõ để AI nhận xét tình trạng (chỉ admin)."
     },
+    "adminActivity": {
+      "title": "Hôm nay · DaDiary Admin",
+      "description": "Xem user nào check-in ảnh và ai đã tick dùng sản phẩm, theo ngày Việt Nam."
+    },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
       "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
@@ -151,7 +155,8 @@
       "adminUsers": "Quản lý gói",
       "adminPayments": "Thanh toán",
       "adminAffiliate": "Affiliate",
-      "adminSkinReview": "Skin review"
+      "adminSkinReview": "Skin review",
+      "adminActivity": "Hôm nay"
     },
     "footer": {
       "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
@@ -2393,6 +2398,7 @@
     "title": "Quản lý gói Premium",
     "sub": "Grant / revoke Premium & Premium+ cho test nội bộ. Mọi thay đổi đều được ghi log.",
     "linkFeedbacks": "← Quản lý góp ý",
+    "linkActivity": "Check-in hôm nay →",
     "authLoading": "Đang tải quyền admin…",
     "needAuth": "Đăng nhập để truy cập trang quản trị.",
     "signIn": "Đăng nhập",
@@ -2436,6 +2442,29 @@
       "premium": "Premium",
       "premium_plus": "Premium+"
     }
+  },
+  "adminActivity": {
+    "sectionLabel": "Admin",
+    "title": "Hôm nay",
+    "sub": "User nào check-in ảnh, và ai đã tick dùng sản phẩm — theo ngày Việt Nam. Ảnh mới trên Cloudflare cũng nằm trong thư mục YYYY/MM/DD/check-in/username.",
+    "linkUsers": "← Quản lý gói",
+    "dateLabel": "Ngày",
+    "prevDay": "Hôm trước",
+    "nextDay": "Hôm sau",
+    "loadError": "Không tải được hoạt động hôm nay.",
+    "statCheckIns": "Check-in",
+    "statCheckInsHint": "{n} có ảnh",
+    "statPhotos": "Check-in có ảnh",
+    "statPhotosHint": "Ảnh mặt đã lưu hôm nay",
+    "statProducts": "Dùng sản phẩm",
+    "statProductsHint": "Tick ít nhất một bước routine",
+    "checkInsTitle": "Check-in da",
+    "checkInsEmpty": "Không ai check-in ngày này.",
+    "badgeWithPhoto": "{n} ảnh",
+    "badgeNoPhoto": "Không ảnh",
+    "productsTitle": "Dùng sản phẩm",
+    "productsEmpty": "Không ai tick sản phẩm ngày này.",
+    "amPmTicks": "Sáng {am} · Tối {pm}"
   },
   "adminPayments": {
     "sectionLabel": "Admin",

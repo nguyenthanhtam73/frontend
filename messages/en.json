@@ -79,6 +79,10 @@
       "title": "Admin Skin Review · DaDiary",
       "description": "Upload 1 clear skin photo for deep observation-only AI analysis (admin)."
     },
+    "adminActivity": {
+      "title": "Today’s activity · DaDiary Admin",
+      "description": "See who checked in with a photo and who ticked products, by Vietnam calendar day."
+    },
     "pricingPage": {
       "title": "Pricing · DaDiary",
       "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
@@ -151,7 +155,8 @@
       "adminUsers": "Manage plans",
       "adminPayments": "Payments",
       "adminAffiliate": "Affiliate",
-      "adminSkinReview": "Skin review"
+      "adminSkinReview": "Skin review",
+      "adminActivity": "Today"
     },
     "footer": {
       "tagline": "Your skin diary · AI Coach · progress & before/after",
@@ -2393,6 +2398,7 @@
     "title": "Manage Premium plans",
     "sub": "Grant or revoke Premium & Premium+ for internal testing. Every change is logged.",
     "linkFeedbacks": "← Manage feedback",
+    "linkActivity": "Today’s check-ins →",
     "authLoading": "Checking admin access…",
     "needAuth": "Sign in to access the admin page.",
     "signIn": "Sign in",
@@ -2436,6 +2442,29 @@
       "premium": "Premium",
       "premium_plus": "Premium+"
     }
+  },
+  "adminActivity": {
+    "sectionLabel": "Admin",
+    "title": "Today",
+    "sub": "Who checked in with a photo, and who ticked products they used — Vietnam calendar day. New photos on Cloudflare also land under YYYY/MM/DD/check-in/username.",
+    "linkUsers": "← Manage plans",
+    "dateLabel": "Date",
+    "prevDay": "Previous day",
+    "nextDay": "Next day",
+    "loadError": "Could not load today’s activity.",
+    "statCheckIns": "Check-ins",
+    "statCheckInsHint": "{n} with a photo",
+    "statPhotos": "Photo check-ins",
+    "statPhotosHint": "Face photos saved today",
+    "statProducts": "Used a product",
+    "statProductsHint": "Ticked at least one routine step",
+    "checkInsTitle": "Skin check-ins",
+    "checkInsEmpty": "Nobody checked in this day.",
+    "badgeWithPhoto": "{n} photo",
+    "badgeNoPhoto": "No photo",
+    "productsTitle": "Product use",
+    "productsEmpty": "Nobody ticked a product this day.",
+    "amPmTicks": "AM {am} · PM {pm}"
   },
   "adminPayments": {
     "sectionLabel": "Admin",
