@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: Props) {
     locale,
     path: "/settings",
     noIndex: true,
+    noFollow: true,
   });
 }
 

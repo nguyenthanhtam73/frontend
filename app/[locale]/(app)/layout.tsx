@@ -5,7 +5,7 @@ import { MergedMessagesLayout } from "@/components/i18n/merged-messages-layout";
 import { APP_CLIENT_MESSAGE_NAMESPACES } from "@/lib/i18n/client-messages";
 import { appShellRobots } from "@/lib/seo";
 
-/** Private by default; public app routes (onboarding, feedback) opt back in via page metadata. */
+/** Private (noindex, nofollow) by default; routine / onboarding / feedback opt into noindex, follow. */
 export function generateMetadata(): Metadata {
   return appShellRobots();
 }

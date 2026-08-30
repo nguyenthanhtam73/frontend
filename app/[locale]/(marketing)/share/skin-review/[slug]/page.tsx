@@ -48,6 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale,
       path,
       images,
+      noIndex: true,
     });
 
     return {

@@ -244,41 +244,6 @@ export async function fetchPublicSkinReview(
   return json.data;
 }
 
-/**
- * GET /api/v1/public/skin-reviews — slug list for sitemap (no auth).
- * Soft-fails to [] so a down API never breaks sitemap.xml generation.
- */
-export async function fetchPublicSkinReviewSitemapItems(): Promise<
-  { slug: string; lastModified?: Date }[]
-> {
-  try {
-    const res = await fetch(`${apiBaseUrl}/api/v1/public/skin-reviews?limit=500`, {
-      headers: { Accept: "application/json" },
-      // Revalidate periodically — sitemap does not need real-time.
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const json = (await res.json()) as {
-      data?: {
-        items?: { slug?: string; published_at?: string; updated_at?: string }[];
-      };
-    };
-    const items = json?.data?.items;
-    if (!Array.isArray(items)) return [];
-    return items.flatMap((item) => {
-      const slug = item.slug?.trim();
-      if (!slug) return [];
-      const raw = item.updated_at || item.published_at;
-      const parsed = raw ? new Date(raw) : undefined;
-      const lastModified =
-        parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
-      return [{ slug, lastModified }];
-    });
-  } catch {
-    return [];
-  }
-}
-
 /** Client-side helper (admin console) — same public endpoint via api client. */
 export async function fetchPublicSkinReviewClient(
   slug: string,

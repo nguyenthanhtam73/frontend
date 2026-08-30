@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: Props) {
     description: t("description"),
     locale,
     path: "/onboarding",
+    noIndex: true,
   });
 }
 

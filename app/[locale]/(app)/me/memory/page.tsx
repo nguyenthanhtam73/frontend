@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: Props) {
     locale,
     path: "/me/memory",
     noIndex: true,
+    noFollow: true,
   });
 }
 

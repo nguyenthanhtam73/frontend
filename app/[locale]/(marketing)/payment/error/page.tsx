@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: Props) {
     locale,
     path: "/payment/error",
     noIndex: true,
+    noFollow: true,
   });
 }
 

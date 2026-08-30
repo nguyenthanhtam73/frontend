@@ -135,17 +135,24 @@ type PageMetaInput = {
   /** Path without locale prefix (e.g. "" for home, "/pricing"). */
   path?: string;
   /**
-   * Private / app-only routes: `noindex,nofollow`, canonical only (no hreflang).
-   * Use for /admin/*, /settings, /me/*, /payment/*.
+   * `noindex`. Default `follow: true` (auth, onboarding, feedback, routine, share).
+   * Pair with `noFollow` for private app routes.
    */
   noIndex?: boolean;
+  /** With `noIndex`: emit `nofollow` (admin, settings, me, payment, wardrobe). */
+  noFollow?: boolean;
 };
 
-const NO_INDEX_ROBOTS = {
+const NO_INDEX_FOLLOW_ROBOTS = {
   index: false,
-  // Keep follow so internal links from app pages still pass equity.
   follow: true,
   googleBot: { index: false, follow: true },
+} as const;
+
+const NO_INDEX_NOFOLLOW_ROBOTS = {
+  index: false,
+  follow: false,
+  googleBot: { index: false, follow: false },
 } as const;
 
 const INDEX_ROBOTS = {
@@ -154,9 +161,13 @@ const INDEX_ROBOTS = {
   googleBot: { index: true, follow: true },
 } as const;
 
+function noIndexRobots(noFollow: boolean) {
+  return noFollow ? NO_INDEX_NOFOLLOW_ROBOTS : NO_INDEX_FOLLOW_ROBOTS;
+}
+
 /** Default robots for authenticated / private app shells. */
 export function appShellRobots(): Pick<Metadata, "robots"> {
-  return { robots: NO_INDEX_ROBOTS };
+  return { robots: NO_INDEX_NOFOLLOW_ROBOTS };
 }
 
 /** Title + description + canonical/hreflang (or noindex for private pages). */
@@ -166,12 +177,13 @@ export function pageLocaleMetadata({
   locale,
   path = "",
   noIndex = false,
+  noFollow = false,
 }: PageMetaInput): Metadata {
   if (noIndex) {
     return {
       title,
       description,
-      robots: NO_INDEX_ROBOTS,
+      robots: noIndexRobots(noFollow),
       // Self-canonical only — do not emit hreflang for noindex URLs.
       alternates: { canonical: absoluteUrl(locale, path) },
     };
@@ -194,50 +206,20 @@ export const SITEMAP_PUBLIC_PATHS = [
   "/guides/mun",
   "/guides/kem-chong-nang",
   "/guides/routine-cham-da",
-  "/login",
-  "/register",
-  "/onboarding",
-  "/feedback",
 ] as const;
+
+function sitemapPriority(path: string, locale: string): number {
+  const isHome = !path || path === "/";
+  const vi = isHome ? 1 : path === "/pricing" ? 0.9 : 0.8;
+  return locale === "en" ? Math.round((vi - 0.1) * 10) / 10 : vi;
+}
 
 /**
  * Build sitemap entries with hreflang alternates for each public path.
- * Emits the VI URL as the primary `url` (x-default) plus language map.
+ * Emits one loc per locale (vi + en) so the file is ~14 URLs, not a share dump.
  */
 export function buildSitemapEntries(
   paths: readonly string[] = SITEMAP_PUBLIC_PATHS,
-): {
-  url: string;
-  lastModified: Date;
-  changeFrequency: "weekly" | "monthly";
-  priority: number;
-  alternates: { languages: Record<string, string> };
-}[] {
-  const now = new Date();
-  return paths.map((path) => {
-    const isHome = !path || path === "/";
-    const isGuide = path === "/guides" || path.startsWith("/guides/");
-    return {
-      url: absoluteUrl("vi", path),
-      lastModified: now,
-      changeFrequency: (isHome || path === "/pricing" || isGuide ? "weekly" : "monthly") as
-        | "weekly"
-        | "monthly",
-      priority: isHome ? 1 : path === "/pricing" ? 0.9 : isGuide ? 0.8 : 0.6,
-      alternates: {
-        languages: {
-          vi: absoluteUrl("vi", path),
-          en: absoluteUrl("en", path),
-          "x-default": absoluteUrl("vi", path),
-        },
-      },
-    };
-  });
-}
-
-/** Sitemap entries for public skin-review share pages (vi + en hreflang). */
-export function buildShareSitemapEntries(
-  items: { slug: string; lastModified?: Date }[],
 ): {
   url: string;
   lastModified: Date;
@@ -245,21 +227,21 @@ export function buildShareSitemapEntries(
   priority: number;
   alternates: { languages: Record<string, string> };
 }[] {
-  return items.map(({ slug, lastModified }) => {
-    const path = `/share/skin-review/${slug}`;
-    return {
-      url: absoluteUrl("vi", path),
-      lastModified: lastModified ?? new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-      alternates: {
-        languages: {
-          vi: absoluteUrl("vi", path),
-          en: absoluteUrl("en", path),
-          "x-default": absoluteUrl("vi", path),
-        },
-      },
+  const now = new Date();
+  const locales = ["vi", "en"] as const;
+  return paths.flatMap((path) => {
+    const languages = {
+      vi: absoluteUrl("vi", path),
+      en: absoluteUrl("en", path),
+      "x-default": absoluteUrl("vi", path),
     };
+    return locales.map((locale) => ({
+      url: absoluteUrl(locale, path),
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: sitemapPriority(path, locale),
+      alternates: { languages },
+    }));
   });
 }
 
@@ -306,6 +288,8 @@ export function pageSocialMetadata({
   locale,
   path = "",
   images,
+  noIndex = false,
+  noFollow = false,
 }: SocialMetaInput): Metadata {
   const url = absoluteUrl(locale, path);
   const ogImages = images?.length ? images : [DEFAULT_OG_IMAGE];
@@ -314,6 +298,7 @@ export function pageSocialMetadata({
   return {
     title,
     description,
+    robots: noIndex ? noIndexRobots(noFollow) : INDEX_ROBOTS,
     alternates: localeAlternates(locale, path),
     openGraph: {
       title,

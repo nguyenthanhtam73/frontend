@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     locale,
     path: "/wardrobe",
     noIndex: true,
+    noFollow: true,
   });
 }
 

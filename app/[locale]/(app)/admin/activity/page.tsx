@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: Props) {
     locale,
     path: "/admin/activity",
     noIndex: true,
+    noFollow: true,
   });
 }
 
