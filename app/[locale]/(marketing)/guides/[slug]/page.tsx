@@ -6,9 +6,15 @@ import { GuideArticleView } from "@/components/guides/guide-article";
 import {
   GUIDE_SLUGS,
   getGuideArticle,
+  guideChrome,
   isGuideSlug,
 } from "@/lib/guides/catalog";
-import { absoluteUrl, pageSocialMetadata, siteOrigin } from "@/lib/seo";
+import {
+  guideArticleJsonLd,
+  guideBreadcrumbJsonLd,
+  guideFaqJsonLd,
+} from "@/lib/guides/schema";
+import { pageSocialMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
 
@@ -27,6 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: article.description,
     locale,
     path: article.path,
+    images: [article.ogImage],
+    ogType: "article",
+    publishedTime: article.datePublished,
+    modifiedTime: article.dateModified,
   });
 }
 
@@ -36,38 +46,25 @@ export default async function GuideArticlePage({ params }: Props) {
   if (!isGuideSlug(slug)) notFound();
 
   const article = getGuideArticle(slug, locale);
-  const url = absoluteUrl(locale, article.path);
-
-  const articleLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
-    description: article.description,
-    inLanguage: locale === "en" ? "en" : "vi",
-    url,
-    author: { "@type": "Organization", name: "DaDiary", url: siteOrigin() },
-    publisher: { "@type": "Organization", name: "DaDiary", url: siteOrigin() },
-  };
-
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: article.faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: { "@type": "Answer", text: faq.answer },
-    })),
-  };
+  const chrome = guideChrome(locale);
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(guideArticleJsonLd(article, locale)),
+        }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(guideFaqJsonLd(article)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(guideBreadcrumbJsonLd(article, locale, chrome)),
+        }}
       />
       <GuideArticleView slug={slug} />
     </>

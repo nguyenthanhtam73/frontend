@@ -4,24 +4,91 @@ import { getLocale } from "next-intl/server";
 import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { Link } from "@/i18n/navigation";
 import {
+  formatGuideDate,
   getGuideArticle,
   guideChrome,
+  type GuideSection,
   type GuideSlug,
+  type GuideSubsection,
 } from "@/lib/guides/catalog";
+
+function GuideChecklist({ items }: { items: string[] }) {
+  return (
+    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-foreground/90 sm:text-base">
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+function GuideSubsectionBlock({ subsection }: { subsection: GuideSubsection }) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-lg font-semibold tracking-tight">{subsection.heading}</h3>
+      {subsection.paragraphs.map((p) => (
+        <p key={p} className="text-sm leading-relaxed text-foreground/90 sm:text-base">
+          {p}
+        </p>
+      ))}
+      {subsection.checklist ? <GuideChecklist items={subsection.checklist} /> : null}
+    </div>
+  );
+}
+
+function GuideSectionBlock({ section }: { section: GuideSection }) {
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-semibold tracking-tight">{section.heading}</h2>
+      {section.paragraphs.map((p) => (
+        <p key={p} className="text-sm leading-relaxed text-foreground/90 sm:text-base">
+          {p}
+        </p>
+      ))}
+      {section.checklist ? <GuideChecklist items={section.checklist} /> : null}
+      {section.subsections?.map((subsection) => (
+        <GuideSubsectionBlock key={subsection.heading} subsection={subsection} />
+      ))}
+    </section>
+  );
+}
 
 export async function GuideArticleView({ slug }: { slug: GuideSlug }) {
   const locale = await getLocale();
   const article = getGuideArticle(slug, locale);
   const chrome = guideChrome(locale);
+  const updated = formatGuideDate(article.dateModified, locale);
 
   return (
     <article className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      <nav aria-label="Breadcrumb" className="mb-6 text-xs text-muted-foreground">
+        <ol className="flex flex-wrap items-center gap-1.5">
+          <li>
+            <Link href="/" className="underline-offset-4 hover:text-foreground hover:underline">
+              {chrome.breadcrumbHome}
+            </Link>
+          </li>
+          <li aria-hidden>/</li>
+          <li>
+            <Link href="/guides" className="underline-offset-4 hover:text-foreground hover:underline">
+              {chrome.breadcrumbGuides}
+            </Link>
+          </li>
+          <li aria-hidden>/</li>
+          <li className="text-foreground/80">{article.kicker}</li>
+        </ol>
+      </nav>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
         {article.kicker}
       </p>
       <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
         {article.title}
       </h1>
+      <p className="mt-3 text-xs text-muted-foreground">
+        <time dateTime={article.dateModified}>
+          {chrome.updatedLabel} {updated}
+        </time>
+      </p>
       <p className="mt-4 text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
         {article.lede}
       </p>
@@ -36,14 +103,7 @@ export async function GuideArticleView({ slug }: { slug: GuideSlug }) {
 
       <div className="mt-10 space-y-10">
         {article.sections.map((section) => (
-          <section key={section.heading} className="space-y-3">
-            <h2 className="text-xl font-semibold tracking-tight">{section.heading}</h2>
-            {section.paragraphs.map((p, i) => (
-              <p key={i} className="text-sm leading-relaxed text-foreground/90 sm:text-base">
-                {p}
-              </p>
-            ))}
-          </section>
+          <GuideSectionBlock key={section.heading} section={section} />
         ))}
       </div>
 

@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 
 import { GuidesIndexView } from "@/components/guides/guides-index";
 import { guideChrome } from "@/lib/guides/catalog";
+import { guidesIndexBreadcrumbJsonLd } from "@/lib/guides/schema";
 import { pageSocialMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -21,5 +22,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function GuidesIndexPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <GuidesIndexView />;
+  const chrome = guideChrome(locale);
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(guidesIndexBreadcrumbJsonLd(locale, chrome)),
+        }}
+      />
+      <GuidesIndexView />
+    </>
+  );
 }
