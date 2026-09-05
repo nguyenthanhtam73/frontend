@@ -17,5 +17,8 @@ node scripts/write-guide-svgs.mjs
 | `routine-cham-da` | `ampm.svg` `order.svg` `two-weeks.svg` `photo.svg` |
 | `tham-mun` | `hero.svg` `protect.svg` `weekly.svg` |
 | `da-dau-van-phong` | `hero.svg` `desk.svg` `lunch.svg` |
+| `da-kho` | `hero.svg` `layers.svg` `climate.svg` |
+| `da-nhay-cam` | `hero.svg` `minimal.svg` `patch.svg` |
+| `retinol-cho-nguoi-moi` | `calendar.svg` `sandwich.svg` `daytime.svg` |
 
 Open Graph cards stay at `/og/guides/{slug}.png`.

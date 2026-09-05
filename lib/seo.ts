@@ -216,7 +216,7 @@ function sitemapPriority(path: string, locale: string): number {
 
 /**
  * Build sitemap entries with hreflang alternates for each public path.
- * Emits one loc per locale (vi + en) so the file is ~14 URLs, not a share dump.
+ * Emits one loc per locale (vi + en) so the file stays a marketing set, not a share dump.
  */
 export function buildSitemapEntries(
   paths: readonly string[] = SITEMAP_PUBLIC_PATHS,

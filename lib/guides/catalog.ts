@@ -1,7 +1,10 @@
 import { daDau } from "./articles/da-dau";
 import { daDauVanPhong } from "./articles/da-dau-van-phong";
+import { daKho } from "./articles/da-kho";
+import { daNhayCam } from "./articles/da-nhay-cam";
 import { kemChongNang } from "./articles/kem-chong-nang";
 import { mun } from "./articles/mun";
+import { retinolChoNguoiMoi } from "./articles/retinol-cho-nguoi-moi";
 import { routineChamDa } from "./articles/routine-cham-da";
 import { thamMun } from "./articles/tham-mun";
 import type {
@@ -32,10 +35,10 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
   vi: {
     indexTitle: "Hướng dẫn chăm da nóng ẩm · DaDiary",
     indexDescription:
-      "Sáu guide cho da dầu, mụn, thâm, kem chống nắng, routine người mới và ngày văn phòng máy lạnh — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
+      "Chín guide cho da dầu, da khô, da nhạy, mụn, thâm, SPF, routine người mới, retinol chậm, và ngày văn phòng máy lạnh — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
     indexHeading: "Hướng dẫn chăm da cho khí hậu nóng ẩm",
     indexSub:
-      "Sáu bài cho da Việt: da dầu, mụn, thâm, SPF, routine ngắn, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",
+      "Chín bài cho da Việt: dầu, khô, nhạy cảm, mụn, thâm, SPF, routine ngắn, retinol người mới, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",
     ctaPhoto: "Chụp ảnh nhận routine",
     ctaHint: "Không cần tạo tài khoản trước. Xem routine rồi hãy lưu.",
     relatedHeading: "Đọc tiếp",
@@ -51,10 +54,10 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
   en: {
     indexTitle: "Humid-heat skincare guides · DaDiary",
     indexDescription:
-      "Six guides on oily skin, acne, marks, sunscreen, beginner routines, and air-con office days — then take a photo for a starter routine from the AI Coach.",
+      "Nine guides on oily, dry, and sensitive skin, acne, marks, sunscreen, beginner routines, slow retinol, and air-con office days — then take a photo for a starter routine from the AI Coach.",
     indexHeading: "Skincare guides for humid heat",
     indexSub:
-      "Six reads for Vietnamese-climate skin: oil, acne, marks, SPF, a short routine, and office air-con. Then take one photo for a starter routine — sign up after you see it.",
+      "Nine reads for Vietnamese-climate skin: oil, dry, sensitive, acne, marks, SPF, a short routine, beginner retinol, and office air-con. Then take one photo for a starter routine — sign up after you see it.",
     ctaPhoto: "Take a photo, get a routine",
     ctaHint: "No account needed first. See the routine, then save it.",
     relatedHeading: "Keep reading",
@@ -76,12 +79,17 @@ const ARTICLES: Record<GuideSlug, Record<GuideLocale, GuideArticleCopy>> = {
   "routine-cham-da": routineChamDa,
   "tham-mun": thamMun,
   "da-dau-van-phong": daDauVanPhong,
+  "da-kho": daKho,
+  "da-nhay-cam": daNhayCam,
+  "retinol-cho-nguoi-moi": retinolChoNguoiMoi,
 };
 
 /** First public ship of the four pillar guides. */
 export const GUIDE_PILLAR_PUBLISHED = "2026-08-16";
-/** This content expansion + two new high-intent URLs. */
+/** Content expansion + two high-intent URLs (wave 1). */
 export const GUIDE_CONTENT_EXPANDED = "2026-09-05";
+/** Dry, sensitive, and beginner-retinol URLs (wave 2). */
+export const GUIDE_WAVE2_PUBLISHED = "2026-09-05";
 
 const DATES: Record<GuideSlug, { datePublished: string; dateModified: string }> = {
   "da-dau": { datePublished: GUIDE_PILLAR_PUBLISHED, dateModified: GUIDE_CONTENT_EXPANDED },
@@ -102,15 +110,30 @@ const DATES: Record<GuideSlug, { datePublished: string; dateModified: string }> 
     datePublished: GUIDE_CONTENT_EXPANDED,
     dateModified: GUIDE_CONTENT_EXPANDED,
   },
+  "da-kho": {
+    datePublished: GUIDE_WAVE2_PUBLISHED,
+    dateModified: GUIDE_WAVE2_PUBLISHED,
+  },
+  "da-nhay-cam": {
+    datePublished: GUIDE_WAVE2_PUBLISHED,
+    dateModified: GUIDE_WAVE2_PUBLISHED,
+  },
+  "retinol-cho-nguoi-moi": {
+    datePublished: GUIDE_WAVE2_PUBLISHED,
+    dateModified: GUIDE_WAVE2_PUBLISHED,
+  },
 };
 
 const RELATED: Record<GuideSlug, GuideSlug[]> = {
-  "da-dau": ["da-dau-van-phong", "mun", "kem-chong-nang"],
-  mun: ["tham-mun", "da-dau", "kem-chong-nang"],
+  "da-dau": ["da-kho", "da-dau-van-phong", "mun"],
+  mun: ["tham-mun", "da-nhay-cam", "retinol-cho-nguoi-moi"],
   "kem-chong-nang": ["tham-mun", "da-dau", "routine-cham-da"],
-  "routine-cham-da": ["da-dau", "da-dau-van-phong", "kem-chong-nang"],
-  "tham-mun": ["mun", "kem-chong-nang", "routine-cham-da"],
-  "da-dau-van-phong": ["da-dau", "routine-cham-da", "kem-chong-nang"],
+  "routine-cham-da": ["retinol-cho-nguoi-moi", "da-kho", "kem-chong-nang"],
+  "tham-mun": ["mun", "kem-chong-nang", "retinol-cho-nguoi-moi"],
+  "da-dau-van-phong": ["da-dau", "da-kho", "kem-chong-nang"],
+  "da-kho": ["da-dau-van-phong", "routine-cham-da", "da-nhay-cam"],
+  "da-nhay-cam": ["da-kho", "mun", "retinol-cho-nguoi-moi"],
+  "retinol-cho-nguoi-moi": ["routine-cham-da", "da-nhay-cam", "tham-mun"],
 };
 
 export function isGuideSlug(value: string): value is GuideSlug {

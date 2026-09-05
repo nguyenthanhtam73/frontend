@@ -5,6 +5,9 @@ export const GUIDE_SLUGS = [
   "routine-cham-da",
   "tham-mun",
   "da-dau-van-phong",
+  "da-kho",
+  "da-nhay-cam",
+  "retinol-cho-nguoi-moi",
 ] as const;
 
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];

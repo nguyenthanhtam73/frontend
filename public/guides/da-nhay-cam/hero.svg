@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="64" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0F2E2C">Đỏ sau chai mới: dừng</text>
+  <ellipse cx="280" cy="240" rx="88" ry="108" fill="#F7D4C8"/>
+  <ellipse cx="280" cy="250" rx="58" ry="40" fill="#F4C7CE" opacity="0.7"/>
+  <rect x="470" y="160" width="90" height="170" rx="28" fill="#C5D5D4"/>
+  <path d="M455 175 L575 315" stroke="#C45C74" stroke-width="10" stroke-linecap="round"/>
+  <text x="400" y="400" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700" fill="#C45C74">Không cố chịu cho quen</text>
+</svg>
