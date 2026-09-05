@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:i18n": "npx --yes tsx --test lib/i18n/client-messages.test.ts",
-    "test:unit": "npx --yes tsx --test lib/i18n/client-messages.test.ts lib/auth/return-path.test.ts lib/navigation/app-path.test.ts lib/onboarding/post-auth-destination.test.ts lib/onboarding/claim-guest-coach-welcome.test.ts lib/onboarding/coach-notes-sections.test.ts lib/onboarding/guest-routine-persist.test.ts lib/analytics/funnel.test.ts lib/site-nav.test.ts lib/landing/start-href.test.ts lib/check-in/first-check-in-push.test.ts lib/guides/catalog.test.ts lib/activation/first-check-in.test.ts lib/activation/check-in-reminder.test.ts lib/premium/upsell-href.test.ts lib/premium/checkout-intent.test.ts components/routine/routine-helpers.test.ts",
+    "test:unit": "npx --yes tsx --test lib/i18n/client-messages.test.ts lib/auth/return-path.test.ts lib/navigation/app-path.test.ts lib/onboarding/post-auth-destination.test.ts lib/onboarding/claim-guest-coach-welcome.test.ts lib/onboarding/coach-notes-sections.test.ts lib/onboarding/guest-routine-persist.test.ts lib/analytics/funnel.test.ts lib/site-nav.test.ts lib/landing/start-href.test.ts lib/check-in/first-check-in-push.test.ts lib/guides/catalog.test.ts lib/activation/first-check-in.test.ts lib/activation/check-in-reminder.test.ts lib/premium/upsell-href.test.ts lib/premium/checkout-intent.test.ts lib/share/before-after.test.ts lib/share/streak-continue.test.ts components/routine/routine-helpers.test.ts",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "og:default": "node scripts/generate-og-default.mjs",
     "og:guides": "node scripts/generate-og-guides.mjs",

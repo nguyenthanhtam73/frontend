@@ -664,6 +664,11 @@
     "submitErrorGeneric": "Gửi thất bại ({status}): {detail}. Bạn có thể sửa và thử lại — dữ liệu vẫn được giữ.",
     "analyzingCoach": "Đang đọc ảnh và soạn lời khuyên — có thể mất vài phút, bạn cứ để tab mở nhé.",
     "coachBeforeSubmit": "Gửi để nhận: tóm tắt hôm nay, gợi ý điều chỉnh chăm da, điều nên cẩn thận, và nhắc an toàn.",
+    "beforeAfterShare": {
+      "cta": "Chia sẻ thẻ trước · sau",
+      "title": "Trước · sau của mình",
+      "hint": "Chọn một ảnh sớm hơn cạnh ảnh hôm nay. Thẻ chỉ có ảnh của bạn + DaDiary — không điểm số, không chẩn đoán."
+    },
     "pushNudge": {
       "title": "Bật nhắc tối để giữ streak?",
       "body": "Check-in đầu đã xong. Thông báo nhẹ buổi tối — tắt bất cứ lúc nào trong Cài đặt.",
@@ -1449,6 +1454,24 @@
             "cheer": "100 ngày?! Đẳng cấp rồi đó."
           }
         }
+      },
+      "continue": {
+        "title": "Chuỗi ngày tiếp tục!",
+        "body": "{n} ngày liên tiếp — hôm nay mình lại check-in.",
+        "cheer": "Nhịp đẹp đó. Mai mình gặp lại nhé?",
+        "daysUnit": "ngày",
+        "share": "Chia sẻ",
+        "save": "Lưu PNG",
+        "continue": "Tiếp tục",
+        "brandMark": "Nhật ký da của mình",
+        "cardHeadline": "Streak {n} ngày",
+        "cardSub": "Mình vừa check-in trên DaDiary",
+        "cardCta": "Nhật ký da mỗi ngày · dadiary.vn",
+        "shareTitle": "Streak {n} ngày trên DaDiary của mình",
+        "shareText": "Mình đang streak {n} ngày trên DaDiary! {url}",
+        "shared": "Cảm ơn bạn đã chia sẻ!",
+        "saved": "Đã lưu thẻ",
+        "failed": "Không tạo được thẻ. Thử lại nhé?"
       }
     },
     "beforeAfter": {
@@ -1468,7 +1491,24 @@
       "pickerClose": "Đóng",
       "notEnoughTitle": "Chưa đủ ảnh để so sánh",
       "notEnoughBody": "Cần ít nhất 2 ảnh để xem sự thay đổi. Hãy check-in thêm để theo dõi tiến trình da.",
-      "notEnoughCta": "Đi check-in ngay"
+      "notEnoughCta": "Đi check-in ngay",
+      "share": {
+        "cta": "Chia sẻ thẻ",
+        "title": "Chia sẻ trước · sau",
+        "body": "Thẻ ảnh đơn giản — chỉ ngày chụp và thương hiệu DaDiary. Không điểm số, không chẩn đoán.",
+        "privacy": "Ảnh chỉ rời máy bạn khi bạn bấm chia sẻ hoặc lưu.",
+        "share": "Chia sẻ",
+        "save": "Lưu PNG",
+        "brandMark": "Nhật ký da của mình",
+        "headline": "Trước · Sau",
+        "ctaLine": "Nhật ký da mỗi ngày · dadiary.vn",
+        "disclaimer": "Ảnh cá nhân — không phải chẩn đoán.",
+        "shareTitle": "Trước/sau trên DaDiary của mình",
+        "shareText": "Trước/sau trên DaDiary của mình — chỉ ảnh mình chụp. {url}",
+        "shared": "Cảm ơn bạn đã chia sẻ!",
+        "saved": "Đã lưu thẻ",
+        "failed": "Không tạo được thẻ. Thử lại nhé?"
+      }
     },
     "entry": {
       "untitled": "Nhật ký",

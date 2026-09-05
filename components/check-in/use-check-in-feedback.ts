@@ -97,6 +97,8 @@ export function useCheckInFeedback() {
   // rather than started by a fresh submit — lets the UI reassure the user.
   const [isResumed, setIsResumed] = useState(false);
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
+  /** Streak after a fresh POST this session — used for the continue celebration. */
+  const [sessionStreak, setSessionStreak] = useState<number | null>(null);
 
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -360,6 +362,11 @@ export function useCheckInFeedback() {
       void queryClient.invalidateQueries({ queryKey: streakQueryKey });
       void queryClient.refetchQueries({ queryKey: streakQueryKey });
 
+      const streakDays = data.streak?.current_streak;
+      setSessionStreak(
+        typeof streakDays === "number" && Number.isFinite(streakDays) ? streakDays : null,
+      );
+
       beginPolling(id, data, undefined, false);
     },
     [beginPolling, queryClient, tStreak, toastSuccess],
@@ -393,6 +400,7 @@ export function useCheckInFeedback() {
     setIsSlow(false);
     setIsResumed(false);
     setFailureMessage(null);
+    setSessionStreak(null);
     devLog("cancelled wait");
   }, [stopPolling, syncPayload]);
 
@@ -431,6 +439,7 @@ export function useCheckInFeedback() {
     setIsSlow(false);
     setIsResumed(false);
     setFailureMessage(null);
+    setSessionStreak(null);
   }, [stopPolling, syncPayload]);
 
   const resumeFromSession = useCallback(async () => {
@@ -512,6 +521,8 @@ export function useCheckInFeedback() {
     dismissWait,
     retryPolling,
     resetFeedback,
+    sessionStreak,
+    dismissSessionStreak: () => setSessionStreak(null),
     isWaiting: phase === "submitting" || phase === "processing",
   };
 }
