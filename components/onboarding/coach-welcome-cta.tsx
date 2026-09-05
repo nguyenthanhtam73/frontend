@@ -12,8 +12,8 @@ import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
 import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { cn } from "@/lib/utils";
 
-function trackSignupCta(surface: string) {
-  trackFunnelEvent(FUNNEL_EVENTS.signupCtaClick, { surface });
+function trackSignupCta(surface: string, intent: "register" | "login" = "register") {
+  trackFunnelEvent(FUNNEL_EVENTS.signupCtaClick, { surface, intent });
 }
 
 type CoachWelcomeCtaBaseProps = {
@@ -175,7 +175,7 @@ export function CoachWelcomePrimaryCtaBlock({
           href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
           className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           data-testid="coach-welcome-guest-login-link"
-          onClick={() => trackSignupCta("primary_login")}
+          onClick={() => trackSignupCta("primary_login", "login")}
         >
           {t("guestSignInExistingCta")}
         </Link>
@@ -357,7 +357,7 @@ export function CoachWelcomeCta({
               <Link
                 href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
                 className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                onClick={() => trackSignupCta("secondary_login")}
+                onClick={() => trackSignupCta("secondary_login", "login")}
               >
                 {t("guestSignInExistingCta")}
               </Link>

@@ -1,3 +1,4 @@
+import { getAccessToken } from "@/lib/auth-token";
 import {
   clearPersistedGuestRoutine,
   persistGuestRoutine,
@@ -23,26 +24,54 @@ function readSessionOnly(): CoachWelcomePayload | null {
   }
 }
 
+function writeSessionOnly(payload: CoachWelcomePayload): void {
+  sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(payload));
+}
+
 /** Write session + durable guest backup (survives tab close). */
 export function writeCoachWelcomeSession(payload: CoachWelcomePayload): void {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(payload));
+  try {
+    writeSessionOnly(payload);
+  } catch {
+    /* quota — still keep the slim persist so the routine can be recovered */
+  }
   persistGuestRoutine(payload);
 }
 
+/**
+ * Restore a leftover guest trial into this tab (claim after register in a new tab).
+ * Do not call for general reads on a signed-in account.
+ */
+export function hydratePersistedGuestSession(): CoachWelcomePayload | null {
+  if (typeof window === "undefined") return null;
+  const persisted = readPersistedGuestRoutine();
+  if (!persisted) return null;
+  try {
+    writeSessionOnly(persisted);
+  } catch {
+    /* still return persist */
+  }
+  return persisted;
+}
+
+/**
+ * Session first. Guest persist only hydrates when there is no JWT — never inject
+ * a leftover trial into a signed-in account's working session.
+ */
 export function readCoachWelcomeSession(): CoachWelcomePayload | null {
   if (typeof window === "undefined") return null;
   const fromSession = readSessionOnly();
   if (fromSession) return fromSession;
+  if (getAccessToken()) return null;
 
-  const persisted = readPersistedGuestRoutine();
-  if (!persisted) return null;
-  try {
-    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(persisted));
-  } catch {
-    /* quota — still return persist so this tab can show the routine */
-  }
-  return persisted;
+  return hydratePersistedGuestSession();
+}
+
+/** Session or persist — used only when claiming a guest trial onto an account. */
+export function readClaimableGuestSession(): CoachWelcomePayload | null {
+  if (typeof window === "undefined") return null;
+  return readSessionOnly() ?? hydratePersistedGuestSession();
 }
 
 /** Guest preview must use session + preview-routine poll only — never /profile/skin. */

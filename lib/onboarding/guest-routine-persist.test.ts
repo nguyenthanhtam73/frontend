@@ -5,7 +5,7 @@ import { slimGuestRoutinePayload } from "./guest-routine-persist";
 import { GUEST_COACH_PROFILE_ID } from "@/lib/types/starter-routine";
 
 describe("slimGuestRoutinePayload", () => {
-  it("keeps routine steps and drops transient photo URLs", () => {
+  it("keeps routine steps and drops photos, vision notes, and preview secrets", () => {
     const slim = slimGuestRoutinePayload({
       profileId: GUEST_COACH_PROFILE_ID,
       guestPreview: true,
@@ -47,8 +47,10 @@ describe("slimGuestRoutinePayload", () => {
     assert.equal(slim.previewJobId, undefined);
     assert.equal(slim.previewAccessToken, undefined);
     assert.deepEqual(slim.starterRoutine.morning, ["Rửa mặt"]);
-    assert.deepEqual(slim.reviewSummary?.photo_urls, ["/uploads/face.jpg"]);
-    assert.equal(slim.reviewSummary?.skin_analysis?.coaching_notes, "ok");
-    assert.equal(slim.reviewSummary?.skin_analysis?.product_guidance, undefined);
+    assert.equal(slim.reviewSummary?.skin_type, "combo");
+    assert.equal(slim.reviewSummary?.goal, "clear_acne");
+    assert.equal(slim.reviewSummary?.photo_urls, undefined);
+    assert.equal(slim.reviewSummary?.skin_analysis, undefined);
+    assert.equal(slim.coachingNotes, undefined);
   });
 });

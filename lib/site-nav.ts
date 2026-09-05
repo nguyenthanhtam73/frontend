@@ -21,7 +21,12 @@ function appPath(pathname: string) {
  */
 export function isOnboardingFunnelPath(pathname: string) {
   const p = appPath(pathname);
-  return p === "/onboarding" || p.startsWith("/onboarding/");
+  return (
+    p === "/onboarding" ||
+    p.startsWith("/onboarding/") ||
+    p === "/login" ||
+    p === "/register"
+  );
 }
 
 /** Marketing surfaces where guests see the short funnel nav. */

@@ -44,10 +44,7 @@ const STANDARD_BY_CUSTOM: Partial<
     event: "Lead",
     extra: { content_name: "save_routine", content_category: "onboarding" },
   },
-  [FUNNEL_EVENTS.registerSuccess]: {
-    event: "CompleteRegistration",
-    extra: { status: true, content_name: "guest_routine_signup" },
-  },
+  // registerSuccess is custom-only — register page already fires CompleteRegistration.
 };
 
 function recordLocal(name: FunnelEventName, params?: Record<string, unknown>): void {
@@ -63,6 +60,22 @@ function recordLocal(name: FunnelEventName, params?: Record<string, unknown>): v
   }
 }
 
+const STANDARD_ONCE_PREFIX = "dadiary_funnel_std_";
+
+function trackStandardOnce(
+  event: string,
+  params?: Record<string, unknown>,
+): void {
+  const key = `${STANDARD_ONCE_PREFIX}${event}:${String(params?.content_name ?? "")}`;
+  try {
+    if (sessionStorage.getItem(key) === "1") return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    /* still fire — better a duplicate than a miss if storage is blocked */
+  }
+  trackMetaEvent(event, params);
+}
+
 /** Fire a funnel event (local queue + Meta custom + mapped standard event). */
 export function trackFunnelEvent(
   name: FunnelEventName,
@@ -71,9 +84,10 @@ export function trackFunnelEvent(
   if (typeof window === "undefined") return;
   recordLocal(name, params);
   trackMetaCustomEvent(name, params);
+  if (params?.intent === "login") return;
   const mapped = STANDARD_BY_CUSTOM[name];
   if (mapped) {
-    trackMetaEvent(mapped.event, { ...mapped.extra, ...params });
+    trackStandardOnce(mapped.event, { ...mapped.extra, ...params });
   }
 }
 

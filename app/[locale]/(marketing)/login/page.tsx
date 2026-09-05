@@ -21,7 +21,7 @@ import {
   isClaimableGuestCoachSession,
   isGuestRoutineSaveReturn,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
-import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { readClaimableGuestSession } from "@/lib/onboarding/coach-welcome-session";
 import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import {
   buildAuthHrefWithIntent,
@@ -119,7 +119,7 @@ function LoginPageInner() {
                   json.data?.user?.onboarding_completed === true;
                 const hadClaimableGuest =
                   !alreadyDone &&
-                  isClaimableGuestCoachSession(readCoachWelcomeSession());
+                  isClaimableGuestCoachSession(readClaimableGuestSession());
                 try {
                   const claim = await claimGuestCoachWelcomeIfNeeded(token, {
                     alreadyCompleted: alreadyDone,

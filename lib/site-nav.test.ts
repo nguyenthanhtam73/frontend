@@ -17,6 +17,8 @@ describe("site-nav funnel helpers", () => {
     assert.equal(isOnboardingFunnelPath("/onboarding"), true);
     assert.equal(isOnboardingFunnelPath("/onboarding/coach-welcome"), true);
     assert.equal(isOnboardingFunnelPath("/en/onboarding/coach-welcome"), true);
+    assert.equal(isOnboardingFunnelPath("/register"), true);
+    assert.equal(isOnboardingFunnelPath("/login"), true);
     assert.equal(isOnboardingFunnelPath("/check-in"), false);
     assert.equal(isOnboardingFunnelPath("/"), false);
   });

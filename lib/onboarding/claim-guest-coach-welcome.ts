@@ -7,8 +7,10 @@ import {
 import {
   clearCoachWelcomeSession,
   patchCoachWelcomeSession,
+  readClaimableGuestSession,
   readCoachWelcomeSession,
 } from "@/lib/onboarding/coach-welcome-session";
+import { readPersistedGuestRoutine } from "@/lib/onboarding/guest-routine-persist";
 import {
   clearGuestClaimPhotos,
   loadGuestClaimPhotos,
@@ -378,7 +380,9 @@ export async function claimGuestCoachWelcomeIfNeeded(
   // Existing account: never claim; drop leftover guest trial so coach-welcome
   // loads the real profile instead of painting guest CTAs/routine.
   if (opts?.alreadyCompleted) {
-    if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+    const leftover =
+      readCoachWelcomeSession() ?? readPersistedGuestRoutine();
+    if (sessionLooksLikeGuestTrial(leftover)) {
       clearCoachWelcomeSession();
     }
     return null;
@@ -390,7 +394,9 @@ export async function claimGuestCoachWelcomeIfNeeded(
     // Defense in depth: never overwrite an already-completed profile via Save CTA
     // (auth store may still be null on cold load — also check /profile/skin).
     if (useAuthStore.getState().user?.onboarding_completed === true) {
-      if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+      const leftover =
+        readCoachWelcomeSession() ?? readPersistedGuestRoutine();
+      if (sessionLooksLikeGuestTrial(leftover)) {
         clearCoachWelcomeSession();
       }
       return null;
@@ -398,7 +404,9 @@ export async function claimGuestCoachWelcomeIfNeeded(
     try {
       const prof = await fetchSkinProfile();
       if (prof && isOnboardingComplete(prof)) {
-        if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+        const leftover =
+          readCoachWelcomeSession() ?? readPersistedGuestRoutine();
+        if (sessionLooksLikeGuestTrial(leftover)) {
           clearCoachWelcomeSession();
         }
         return null;
@@ -407,7 +415,7 @@ export async function claimGuestCoachWelcomeIfNeeded(
       /* network/auth — fall through; CompleteOnboarding will fail loudly if needed */
     }
 
-    const session = readCoachWelcomeSession();
+    const session = readClaimableGuestSession();
     if (!isClaimableGuestCoachSession(session) || !session) return null;
 
     const photos = await resolveGuestClaimPhotos(session);

@@ -10,27 +10,22 @@ type PersistedGuestRoutine = {
   payload: CoachWelcomePayload;
 };
 
-function isTransientUrl(url: string): boolean {
-  return url.startsWith("data:") || url.startsWith("blob:");
-}
-
-/** Drop bulky / ephemeral fields so localStorage stays small and safe to reopen. */
+/**
+ * Claim-safe leftover only: routine steps + skin labels.
+ * Never persist photos, vision notes, or preview secrets — localStorage lasts
+ * across tabs and other people on the same browser.
+ */
 export function slimGuestRoutinePayload(
   payload: CoachWelcomePayload,
 ): CoachWelcomePayload {
-  const photoUrls = (payload.reviewSummary?.photo_urls ?? []).filter(
-    (u) => typeof u === "string" && u.trim() && !isTransientUrl(u),
-  );
-  const analysis = payload.reviewSummary?.skin_analysis;
   return {
     profileId: payload.profileId ?? GUEST_COACH_PROFILE_ID,
     guestPreview: true,
     starterRoutine: payload.starterRoutine,
     starterRoutinePending: false,
     usedDefaultRoutine: payload.usedDefaultRoutine,
-    coachingNotes: payload.coachingNotes,
     locale: payload.locale,
-    guestPhotosIdb: payload.guestPhotosIdb,
+    guestPhotosIdb: payload.guestPhotosIdb === true ? true : undefined,
     reviewSummary: payload.reviewSummary
       ? {
           skin_type: payload.reviewSummary.skin_type,
@@ -40,14 +35,6 @@ export function slimGuestRoutinePayload(
           body_concerns: payload.reviewSummary.body_concerns,
           completed_at: payload.reviewSummary.completed_at,
           photos_skipped: payload.reviewSummary.photos_skipped,
-          photo_urls: photoUrls.length ? photoUrls : undefined,
-          skin_analysis: analysis
-            ? {
-                ...analysis,
-                product_guidance: undefined,
-                product_suggestions: undefined,
-              }
-            : undefined,
         }
       : undefined,
   };

@@ -29,7 +29,7 @@ import {
   isClaimableGuestCoachSession,
   isGuestRoutineSaveReturn,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
-import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { readClaimableGuestSession } from "@/lib/onboarding/coach-welcome-session";
 import { trackMetaEvent } from "@/lib/meta-pixel";
 import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
@@ -104,7 +104,7 @@ function RegisterPageInner() {
     : buildAuthHrefWithIntent("/login", checkoutIntent);
   const [hasGuestSession, setHasGuestSession] = useState(false);
   useEffect(() => {
-    setHasGuestSession(isClaimableGuestCoachSession(readCoachWelcomeSession()));
+    setHasGuestSession(isClaimableGuestCoachSession(readClaimableGuestSession()));
   }, []);
   const savingGuestRoutine =
     isGuestRoutineSaveReturn(returnPath) || hasGuestSession;
@@ -178,7 +178,7 @@ function RegisterPageInner() {
                   json.data?.user?.onboarding_completed === true;
                 const hadClaimableGuest =
                   !alreadyDone &&
-                  isClaimableGuestCoachSession(readCoachWelcomeSession());
+                  isClaimableGuestCoachSession(readClaimableGuestSession());
                 try {
                   const claim = await claimGuestCoachWelcomeIfNeeded(token, {
                     alreadyCompleted: alreadyDone,
