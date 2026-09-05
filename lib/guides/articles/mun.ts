@@ -61,12 +61,12 @@ function copy(locale: GuideLocale): GuideArticleCopy {
 
   if (locale === "vi") {
     return {
-      title: "Mụn ẩn và mụn viêm: làm gì trước khi thêm acid",
+      title: "Mụn ẩn, mụn viêm nóng ẩm: dịu da trước khi thêm acid",
       description:
-        "Mụn kéo dài thường vì nặn, chồng trị mụn, và bỏ SPF. Việc an toàn, một hoạt chất, khi nào gặp bác sĩ — rồi chụp ảnh nhận routine.",
+        "Mụn kéo dài thường vì nặn, chồng trị, bỏ SPF. Việc an toàn trước acid; khi nào gặp bác sĩ. DaDiary Beta: không chẩn loại mụn — chụp ảnh nhận routine.",
       kicker: "Mụn",
       lede:
-        "Mình không chẩn loại mụn giúp bạn trên trang này. Chỉ nhắc việc ít hại: đừng nặn, giữ da dịu, SPF mỗi sáng, rồi mới tính một hoạt chất.",
+        "Mình không chẩn loại mụn giúp bạn trên trang này. Chỉ nhắc việc ít hại: đừng nặn, giữ da dịu, SPF mỗi sáng, rồi mới tính một hoạt chất. DaDiary đang Beta: gợi ý, không phải phòng khám.",
       heroFigure: hero,
       sections: [
         {
@@ -84,7 +84,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
                 "Không nặn.",
                 "Tay sạch trước khi thoa.",
                 "Đổi vỏ gối nếu hay gác má.",
-                "SPF mỗi sáng — thâm sau mụn dễ đậm khi da còn đỏ.",
+                "SPF mỗi sáng — [thâm sau mụn](/guides/tham-mun) dễ đậm khi da còn đỏ. Cách thoa ở [kem chống nắng](/guides/kem-chong-nang).",
               ],
             },
             {
@@ -109,7 +109,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Chọn một để bắt đầu",
               paragraphs: [
-                "BHA thường dùng vùng dầu, mụn ẩn — vẫn có thể khô. Benzoyl peroxide thường nhắm mụn viêm; dễ khô và phai vải — nồng độ thấp, vùng nhỏ. Retinol không phải bước đầu khi da đỏ rát.",
+                "BHA thường dùng vùng dầu, mụn ẩn — vẫn có thể khô. Benzoyl peroxide thường nhắm mụn viêm; dễ khô và phai vải — nồng độ thấp, vùng nhỏ. Retinol không phải bước đầu khi da đỏ rát — xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi).",
               ],
             },
             {
@@ -210,12 +210,12 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   }
 
   return {
-    title: "Clogged pores and inflamed acne: what to do before more acids",
+    title: "Clogged pores and inflamed acne in humid heat: calm first",
     description:
-      "Breakouts linger with picking, stacked actives, and skipped SPF. Safer moves, one active, when to see a doctor — then a photo for a routine.",
+      "Breakouts linger with picking, stacked actives, and skipped SPF. Safer moves before more acid. DaDiary Beta: no acne-type diagnosis — then a photo for a routine.",
     kicker: "Acne",
     lede:
-      "This page does not name your acne type. It lists lower-harm moves: don’t pick, keep skin calm, wear morning SPF, then consider one active.",
+      "This page does not name your acne type. It lists lower-harm moves: don’t pick, keep skin calm, wear morning SPF, then consider one active. DaDiary is in Beta: tips, not a clinic.",
     heroFigure: hero,
     sections: [
       {
@@ -233,7 +233,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
               "Don’t pick.",
               "Clean hands before products.",
               "Change the pillowcase if you sleep on your cheek.",
-              "SPF every morning — marks darken easily while skin is still red.",
+              "SPF every morning — [marks](/guides/tham-mun) darken easily while skin is still red. How to wear it is in the [sunscreen guide](/guides/kem-chong-nang).",
             ],
           },
           {
@@ -258,7 +258,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Start with one",
             paragraphs: [
-              "BHA is often used on oilier, clogged areas — it can still dry. Benzoyl peroxide is often aimed at inflamed spots; it dries and can bleach fabric — start low, small area. Retinol is not step one on stinging skin.",
+              "BHA is often used on oilier, clogged areas — it can still dry. Benzoyl peroxide is often aimed at inflamed spots; it dries and can bleach fabric — start low, small area. Retinol is not step one on stinging skin — see [retinol for beginners](/guides/retinol-cho-nguoi-moi).",
             ],
           },
           {

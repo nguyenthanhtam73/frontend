@@ -49,7 +49,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     return {
       title: "Retinol cho người mới: chậm, SPF, dừng khi rát",
       description:
-        "Muốn thử retinol? Ổn định rửa–dưỡng–SPF, patch-test, vài đêm/tuần, không chồng acid. Không kê đơn, không hứa hết mụn — chụp ảnh nhận routine nhẹ.",
+        "Muốn thử retinol trên da nóng ẩm? Ổn định rửa–dưỡng–SPF, patch-test, vài đêm/tuần, không chồng acid. DaDiary Beta: không kê đơn, không hứa hết mụn — chụp ảnh nhận routine nhẹ.",
       kicker: "Retinol người mới",
       lede:
         "Retinol kệ không phải đơn tretinoin. Mình không bảo bạn ‘phải dùng’. Nếu vẫn muốn thử: chậm, SPF mỗi sáng, dừng khi rát — không ‘cố cho da quen’ khi đang nẻ. DaDiary đang Beta: không chẩn bệnh, không thay bác sĩ.",
@@ -65,7 +65,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Việc retinol không làm",
               paragraphs: [
-                "Không thay kem chống nắng. Không thay việc không nặn. Không phải bước đầu khi da đang đỏ, nẻ, hay mụn nang đau — xem bài da nhạy cảm và bài mụn.",
+                "Không thay kem chống nắng. Không thay việc không nặn. Không phải bước đầu khi da đang đỏ, nẻ, hay mụn nang đau — xem [da nhạy cảm](/guides/da-nhay-cam) và [bài mụn](/guides/mun).",
               ],
             },
             {
@@ -79,7 +79,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           heading: "Điều kiện trước khi mở nắp",
           paragraphs: [
-            "Nếu nền 3 bước còn chưa giữ được, retinol chỉ thêm biến. Ổn định rửa dịu–dưỡng–SPF khoảng hai tuần — bài routine người mới nói rõ khung này.",
+            "Nếu nền 3 bước còn chưa giữ được, retinol chỉ thêm biến. Ổn định rửa dịu–dưỡng–SPF khoảng hai tuần — [routine người mới](/guides/routine-cham-da) nói rõ khung này.",
           ],
           checklist: [
             "Da không đang rát cả ngày, không nẻ chảy.",
@@ -105,7 +105,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Sáng hôm sau: SPF, không thêm acid",
               paragraphs: [
-                "Hai ngón tay, cổ, tai trước. Mũ khi nắng gắt. Thâm sau mụn dễ đậm nếu vừa kích vừa bỏ nắng — bài thâm mụn nói rõ việc này.",
+                "Hai ngón tay, cổ, tai trước. Mũ khi nắng gắt. Thâm sau mụn dễ đậm nếu vừa kích vừa bỏ nắng — [bài thâm mụn](/guides/tham-mun) nói rõ việc này.",
               ],
               figure: daytime,
             },
@@ -183,7 +183,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   return {
     title: "Retinol for beginners: go slow, wear SPF, stop if it stings",
     description:
-      "Want to try retinol? Stabilize cleanse–moisturize–SPF, patch-test, a few nights a week, no extra acids. No prescription, no acne promise — then a photo for a gentle routine.",
+      "Want to try retinol in humid heat? Stabilize cleanse–moisturize–SPF, patch-test, a few nights a week, no extra acids. DaDiary Beta: no prescription, no acne promise — then a photo for a gentle routine.",
     kicker: "Beginner retinol",
     lede:
       "Shelf retinol is not a tretinoin prescription. This page does not say you ‘must’ use it. If you still want to try: go slow, SPF every morning, stop if it stings — don’t ‘push through’ on cracked skin. DaDiary is in Beta: no diagnosis, not a doctor visit.",
@@ -199,7 +199,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "What retinol does not replace",
             paragraphs: [
-              "It does not replace sunscreen. It does not replace leaving spots alone. It is not step one while skin is red, cracked, or holding painful cysts — see the sensitive-skin and acne guides.",
+              "It does not replace sunscreen. It does not replace leaving spots alone. It is not step one while skin is red, cracked, or holding painful cysts — see the [sensitive-skin](/guides/da-nhay-cam) and [acne](/guides/mun) guides.",
             ],
           },
           {
@@ -213,7 +213,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
       {
         heading: "Before you open the bottle",
         paragraphs: [
-          "If the 3-step base is not keepable yet, retinol only adds noise. Hold a gentle cleanse–moisturizer–SPF for about two weeks — the beginner routine guide spells out that frame.",
+          "If the 3-step base is not keepable yet, retinol only adds noise. Hold a gentle cleanse–moisturizer–SPF for about two weeks — the [beginner routine](/guides/routine-cham-da) spells out that frame.",
         ],
         checklist: [
           "You are not stinging all day or splitting.",
@@ -239,7 +239,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Next morning: SPF, no extra acid",
             paragraphs: [
-              "Two fingers, neck, the front of the ears. A hat in harsh sun. Post-acne marks darken if you irritate and skip sun care — the marks guide covers that job.",
+              "Two fingers, neck, the front of the ears. A hat in harsh sun. Post-acne marks darken if you irritate and skip sun care — the [marks guide](/guides/tham-mun) covers that job.",
             ],
             figure: daytime,
           },

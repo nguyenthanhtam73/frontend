@@ -49,7 +49,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     return {
       title: "Da khô nóng ẩm: dưỡng khi còn ẩm, đừng rửa đến kít",
       description:
-        "Da căng sau rửa, nẻ khóe miệng, máy lạnh hút nước? Rửa dịu, dưỡng lúc da còn ẩm, SPF mỗi sáng. Checklist làm/tránh — rồi chụp ảnh nhận routine.",
+        "Da khô trên nóng ẩm Việt Nam: căng sau rửa, nẻ khóe, máy lạnh hút nước? Rửa dịu, dưỡng lúc còn ẩm, SPF mỗi sáng. DaDiary Beta: gợi ý, không chẩn bệnh — chụp ảnh nhận routine.",
       kicker: "Da khô",
       lede:
         "Trời nóng ẩm mà da vẫn khô? Hay gặp. Máy lạnh, rửa mạnh, bỏ dưỡng vì sợ bí — rồi má căng, T-zone lại bóng. Bài này giữ ngắn: khóa ẩm, SPF, và khi nào nên gặp bác sĩ. DaDiary đang Beta: gợi ý tham khảo, không chẩn bệnh.",
@@ -80,7 +80,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
               ],
               checklist: [
                 "Cả mặt một lớp mỏng; má thêm nếu căng.",
-                "T-zone bóng chiều: thấm, đừng rửa giữa giờ — xem bài da dầu văn phòng.",
+                "T-zone bóng chiều: thấm, đừng rửa giữa giờ — xem [da dầu văn phòng](/guides/da-dau-van-phong).",
                 "SPF cả mặt. Da khô cũng bắt nắng trên xe máy.",
               ],
             },
@@ -109,7 +109,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Kem chống nắng mỗi sáng",
               paragraphs: [
-                "Da khô vẫn cần SPF. Chọn kết cấu chịu được: lotion hoặc cream mỏng, hai ngón tay, cổ. Bỏ nắng để ‘da thở’ thường là bỏ thời gian thâm đang lắng — xem bài kem chống nắng.",
+                "Da khô vẫn cần SPF. Chọn kết cấu chịu được: lotion hoặc cream mỏng, hai ngón tay, cổ. Bỏ nắng để ‘da thở’ thường là bỏ thời gian thâm đang lắng — xem [kem chống nắng](/guides/kem-chong-nang).",
               ],
             },
           ],
@@ -203,7 +203,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   return {
     title: "Dry skin in humid heat: moisturize while damp, don’t wash until it squeaks",
     description:
-      "Tight after washing, cracked corners, air-con pulling water? Gentle cleanse, moisturizer on damp skin, SPF every morning. A do/skip list — then a photo for a starter routine.",
+      "Dry skin in Vietnamese humid heat: tight after washing, cracked corners, air-con pulling water? Gentle cleanse, damp-skin moisturizer, morning SPF. DaDiary Beta: tips, not a diagnosis — then a photo for a routine.",
     kicker: "Dry skin",
     lede:
       "Humid outside and still dry? Common. Air-con, a harsh wash, skipping moisturizer to avoid heaviness — then tight cheeks and a shiny T-zone. This page stays short: lock water, wear SPF, know when to see a doctor. DaDiary is in Beta: reference tips, not a diagnosis.",
@@ -234,7 +234,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             ],
             checklist: [
               "A thin layer everywhere; more on cheeks if they feel tight.",
-              "Afternoon T-zone shine: blot, don’t wash at the desk — see the office oily-skin guide.",
+              "Afternoon T-zone shine: blot, don’t wash at the desk — see the [office oily-skin guide](/guides/da-dau-van-phong).",
               "SPF on the whole face. Dry skin still burns on a motorbike.",
             ],
           },
@@ -263,7 +263,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Sunscreen every morning",
             paragraphs: [
-              "Dry skin still needs SPF. Pick a texture you can wear: a lotion or thin cream, two fingers, including the neck. Skipping sun care so skin can ‘breathe’ often skips the time a mark was fading — see the sunscreen guide.",
+              "Dry skin still needs SPF. Pick a texture you can wear: a lotion or thin cream, two fingers, including the neck. Skipping sun care so skin can ‘breathe’ often skips the time a mark was fading — see the [sunscreen guide](/guides/kem-chong-nang).",
             ],
           },
         ],

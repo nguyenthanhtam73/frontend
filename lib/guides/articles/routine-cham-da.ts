@@ -61,12 +61,12 @@ function copy(locale: GuideLocale): GuideArticleCopy {
 
   if (locale === "vi") {
     return {
-      title: "Routine 3–4 bước cho người mới — dễ giữ hơn 10 bước",
+      title: "Routine 3–4 bước cho người mới — nóng ẩm, dễ giữ",
       description:
-        "Sáng: rửa, dưỡng, SPF. Tối: rửa, một hoạt chất nếu da chịu, dưỡng. Patch-test, một thay đổi mỗi lần — chụp ảnh nhận bản riêng.",
+        "Sáng: rửa, dưỡng, SPF. Tối: rửa, một hoạt chất nếu da chịu, dưỡng. DaDiary Beta: khung tham khảo, không chẩn bệnh — chụp ảnh nhận bản riêng.",
       kicker: "Routine",
       lede:
-        "Bạn bỏ cuộc vì routine dài? Bình thường. Mình muốn bạn giữ được thứ Tư mệt, không phải ritual Chủ nhật. Ba–bốn bước, đúng thứ tự, rồi mới thêm serum.",
+        "Bạn bỏ cuộc vì routine dài? Bình thường. Mình muốn bạn giữ được thứ Tư mệt, không phải ritual Chủ nhật. Ba–bốn bước, đúng thứ tự, rồi mới thêm serum. DaDiary đang Beta: gợi ý, không chẩn bệnh.",
       heroFigure: ampm,
       sections: [
         {
@@ -117,7 +117,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           doAvoid: {
             doItems: [
               "Ba bước sáng, hai–ba bước tối.",
-              "SPF mỗi sáng, kể cả ngày ‘chỉ đi làm’.",
+              "SPF mỗi sáng, kể cả ngày ‘chỉ đi làm’ — xem [kem chống nắng](/guides/kem-chong-nang).",
               "Một thay đổi mỗi lần, patch-test.",
               "Ảnh cùng góc 2–3 lần/tuần.",
             ],
@@ -197,12 +197,12 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   }
 
   return {
-    title: "A 3–4 step routine for beginners — easier to keep than ten",
+    title: "A 3–4 step routine for beginners — humid heat, easier to keep",
     description:
-      "AM: cleanse, moisturize, SPF. PM: cleanse, one active if skin allows, moisturize. Patch-test, one change at a time — take a photo for a version that fits.",
+      "AM: cleanse, moisturize, SPF. PM: cleanse, one active if skin allows, moisturize. DaDiary Beta: a frame, not a diagnosis — take a photo for a version that fits.",
     kicker: "Routine",
     lede:
-      "Long routines are how beginners quit. This page wants a tired Wednesday to still happen. Three or four steps, in order, then a serum.",
+      "Long routines are how beginners quit. This page wants a tired Wednesday to still happen. Three or four steps, in order, then a serum. DaDiary is in Beta: tips, not a diagnosis.",
     heroFigure: ampm,
     sections: [
       {
@@ -257,7 +257,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         doAvoid: {
           doItems: [
             "Three morning steps, two–three at night.",
-            "SPF every morning, including ‘just going to work’ days.",
+            "SPF every morning, including ‘just going to work’ days — see the [sunscreen guide](/guides/kem-chong-nang).",
             "One change at a time, patch-tested.",
             "Same-angle photos 2–3 times a week.",
           ],

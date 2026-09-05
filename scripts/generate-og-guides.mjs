@@ -88,6 +88,13 @@ const GUIDES = [
     accent: "#7A5A8A",
     wash: "#F1E8F4",
   },
+  {
+    slug: "da-nong-am",
+    kicker: "Da nóng ẩm · Việt Nam",
+    title: "Chín guide, rồi chụp ảnh",
+    accent: "#2A8F88",
+    wash: "#E8F5F3",
+  },
 ];
 
 function escapeXml(value) {

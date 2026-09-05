@@ -12,6 +12,25 @@ export const GUIDE_SLUGS = [
 
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
 
+/** Climate-intent hub URL — not a tenth article slug. */
+export const GUIDE_CLIMATE_HUB_PATH = "/guides/da-nong-am";
+export const GUIDE_CLIMATE_HUB_SLUG = "da-nong-am";
+
+export type GuideClusterId = "skinTypes" | "concerns" | "sunOffice" | "startHere";
+
+export type GuideClusterDef = {
+  id: GuideClusterId;
+  slugs: readonly GuideSlug[];
+};
+
+/** Every article slug appears in exactly one cluster. */
+export const GUIDE_CLUSTERS: readonly GuideClusterDef[] = [
+  { id: "skinTypes", slugs: ["da-dau", "da-kho", "da-nhay-cam"] },
+  { id: "concerns", slugs: ["mun", "tham-mun"] },
+  { id: "sunOffice", slugs: ["kem-chong-nang", "da-dau-van-phong"] },
+  { id: "startHere", slugs: ["routine-cham-da", "retinol-cho-nguoi-moi"] },
+] as const;
+
 export type GuideLocale = "vi" | "en";
 
 export type GuideFaq = {
@@ -89,6 +108,8 @@ export type GuideChrome = {
   updatedLabel: string;
   breadcrumbHome: string;
   breadcrumbGuides: string;
+  breadcrumbHub: string;
+  climateHubLabel: string;
   doLabel: string;
   avoidLabel: string;
 };

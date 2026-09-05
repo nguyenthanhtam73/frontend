@@ -1,6 +1,7 @@
 import { ArrowRight, CircleAlert, CircleCheck } from "lucide-react";
 import { getLocale } from "next-intl/server";
 
+import { GuideRichText } from "@/components/guides/guide-rich-text";
 import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { Link } from "@/i18n/navigation";
 import {
@@ -14,6 +15,7 @@ import {
   type GuideSlug,
   type GuideSubsection,
 } from "@/lib/guides/catalog";
+import { GUIDE_CLIMATE_HUB_PATH } from "@/lib/guides/catalog";
 
 function GuideFigureBlock({ figure }: { figure: GuideFigure }) {
   return (
@@ -43,7 +45,9 @@ function GuideChecklist({ items }: { items: string[] }) {
       {items.map((item) => (
         <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-foreground/90 sm:text-base">
           <CircleCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          <span>{item}</span>
+          <span>
+            <GuideRichText text={item} />
+          </span>
         </li>
       ))}
     </ul>
@@ -65,7 +69,9 @@ function GuideDoAvoidBlock({
           {box.doItems.map((item) => (
             <li key={item} className="flex gap-2 text-sm leading-relaxed">
               <CircleCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-              <span>{item}</span>
+              <span>
+                <GuideRichText text={item} />
+              </span>
             </li>
           ))}
         </ul>
@@ -78,7 +84,9 @@ function GuideDoAvoidBlock({
           {box.avoidItems.map((item) => (
             <li key={item} className="flex gap-2 text-sm leading-relaxed">
               <CircleAlert className="mt-0.5 size-4 shrink-0 text-rose-600 dark:text-rose-300" aria-hidden />
-              <span>{item}</span>
+              <span>
+                <GuideRichText text={item} />
+              </span>
             </li>
           ))}
         </ul>
@@ -93,7 +101,7 @@ function GuideSubsectionBlock({ subsection }: { subsection: GuideSubsection }) {
       <h3 className="text-lg font-semibold tracking-tight">{subsection.heading}</h3>
       {subsection.paragraphs.map((p) => (
         <p key={p} className="text-sm leading-relaxed text-foreground/90 sm:text-base">
-          {p}
+          <GuideRichText text={p} />
         </p>
       ))}
       {subsection.checklist ? <GuideChecklist items={subsection.checklist} /> : null}
@@ -114,7 +122,7 @@ function GuideSectionBlock({
       <h2 className="text-xl font-semibold tracking-tight">{section.heading}</h2>
       {section.paragraphs.map((p) => (
         <p key={p} className="text-sm leading-relaxed text-foreground/90 sm:text-base">
-          {p}
+          <GuideRichText text={p} />
         </p>
       ))}
       {section.figure ? <GuideFigureBlock figure={section.figure} /> : null}
@@ -193,7 +201,7 @@ export async function GuideArticleView({ slug }: { slug: GuideSlug }) {
             <div key={faq.question} className="px-4 py-4 sm:px-5">
               <dt className="text-sm font-semibold">{faq.question}</dt>
               <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                {faq.answer}
+                <GuideRichText text={faq.answer} />
               </dd>
             </div>
           ))}
@@ -214,6 +222,14 @@ export async function GuideArticleView({ slug }: { slug: GuideSlug }) {
           {chrome.relatedHeading}
         </p>
         <ul className="mt-3 space-y-2">
+          <li>
+            <Link
+              href={GUIDE_CLIMATE_HUB_PATH}
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {chrome.climateHubLabel}
+            </Link>
+          </li>
           {article.related.map((relatedSlug) => {
             const related = getGuideArticle(relatedSlug, locale);
             return (
