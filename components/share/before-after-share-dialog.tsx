@@ -141,6 +141,12 @@ export function BeforeAfterShareDialog({
         </div>
 
         <p className="text-xs leading-relaxed text-muted-foreground">{t("privacy")}</p>
+        <p
+          data-testid="share-ugc-hint"
+          className="text-xs leading-relaxed text-muted-foreground"
+        >
+          {t("ugcHint")}
+        </p>
 
         <DialogFooter className="gap-2 sm:justify-stretch">
           <Button

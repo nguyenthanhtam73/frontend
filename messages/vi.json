@@ -466,7 +466,7 @@
     },
     "q5": {
       "question": "Premium và Premium+ khác nhau chỗ nào?",
-      "answer": "Premium: gợi ý AI và chỉnh routine không giới hạn, tủ đồ đầy đủ (thêm/sửa/xóa), Progress 12 tháng, cột mốc đầy đủ, xuất dữ liệu, không quảng cáo. Premium+ thêm phân tích đa góc nâng cao và lịch sử Progress không giới hạn."
+      "answer": "Premium mở hết hạn Free: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo. Premium+ giữ toàn bộ Premium và chỉ thêm phân tích đa góc cùng lịch sử không giới hạn. Hầu hết không cần Plus."
     }
   },
   "betaSignup": {
@@ -500,18 +500,18 @@
   "activation": {
     "reminder": {
       "d0": {
-        "title": "Hôm nay là ngày đầu — check-in một lần nhé",
-        "body": "Mình chỉ cần một ảnh hoặc vài dòng cảm nhận. Bắt đầu chuỗi ngày từ hôm nay."
+        "title": "Hôm nay là ngày đầu — check-in ~30 giây",
+        "body": "Một ảnh hoặc vài dòng cảm nhận là đủ. Check-in nhanh để bắt đầu streak."
       },
       "d1": {
-        "title": "Hôm qua mình chưa ghi — check-in hôm nay nhé",
+        "title": "Hôm qua mình chưa ghi — check-in ~30 giây nhé",
         "body": "Một lần check-in là đủ để bắt đầu (hoặc giữ) streak. Không cần hoàn hảo."
       },
       "keep": {
-        "title": "Giữ streak {n} ngày — check-in hôm nay",
+        "title": "Giữ streak {n} ngày — check-in ~30 giây",
         "body": "Bạn đã check-in hôm qua. Một lần nữa hôm nay để chuỗi ngày không đứt."
       },
-      "cta": "Check-in ngay",
+      "cta": "Check-in ~30 giây",
       "dismiss": "Để sau"
     },
     "streak": {
@@ -520,9 +520,9 @@
       "best": "Kỷ lục",
       "days": "{n} ngày",
       "emptyTitle": "Chưa có streak",
-      "emptyBody": "Check-in hôm nay để bắt đầu chuỗi ngày.",
-      "emptyCta": "Bắt đầu check-in",
-      "checkInCta": "Check-in hôm nay",
+      "emptyBody": "Check-in ~30 giây hôm nay để bắt đầu chuỗi ngày.",
+      "emptyCta": "Check-in ~30 giây",
+      "checkInCta": "Check-in ~30 giây",
       "doneToday": "Đã check-in hôm nay",
       "openDiary": "Xem nhật ký"
     }
@@ -539,15 +539,15 @@
     "heroStepSafetyDesc": "Kem chống nắng · thử trước · dấu hiệu lạ → đi gặp bác sĩ.",
     "activation": {
       "title": "Bạn chưa check-in lần nào",
-      "body": "Check-in hôm nay để bắt đầu streak. Mất chưa đầy 1 phút — mình nhắc nhẹ thôi.",
-      "cta": "Check-in hôm nay",
+      "body": "Check-in ~30 giây hôm nay để bắt đầu streak — mình nhắc nhẹ thôi.",
+      "cta": "Check-in ~30 giây",
       "dismiss": "Để sau"
     },
     "firstVisit": {
-      "title": "Lần check-in đầu của bạn",
-      "body": "Một ảnh + cảm nhận da. Mình sẽ ghi nhận để theo dõi cùng bạn từ hôm nay.",
-      "d1Title": "Hôm qua mình chưa ghi — check-in hôm nay nhé",
-      "d1Body": "Một ảnh + cảm nhận da. Bắt đầu streak ngay — không cần hoàn hảo."
+      "title": "Lần check-in đầu — khoảng 30 giây",
+      "body": "Một ảnh + cảm nhận da. Check-in nhanh để mở streak — không cần hoàn hảo.",
+      "d1Title": "Hôm qua mình chưa ghi — check-in ~30 giây hôm nay",
+      "d1Body": "Một ảnh + cảm nhận da. Giữ streak ngay — không cần hoàn hảo."
     },
     "photoTitle": "Ảnh da",
     "photoHint": "1–2 tấm. Ảnh 1 thẳng mặt, ảnh 2 nửa nghiêng (nếu có) — ánh sáng tự nhiên, cùng góc mỗi ngày.",
@@ -818,14 +818,14 @@
     "celebrationLineGuest": "Routine này mới nằm trên máy bạn. Đăng ký miễn phí để không mất khi đóng tab.",
     "stickyGuestHint": "Chưa lưu — đóng tab là mất routine này.",
     "nextStepLabel": "Việc nên làm ngay",
-    "nextStepHint": "Check-in hôm nay để bắt đầu theo dõi tiến trình da của bạn.",
-    "nextStepBenefit": "Ghi lại cảm nhận mỗi ngày — bạn sẽ thấy da thay đổi rõ hơn theo thời gian.",
+    "nextStepHint": "Check-in ~30 giây hôm nay để bắt đầu streak và theo dõi da.",
+    "nextStepBenefit": "Ghi lại cảm nhận mỗi ngày — giữ streak dễ hơn đoán mò.",
     "nextStepHintGuest": "Đăng ký miễn phí để lưu routine — rồi mới check-in được.",
     "nextStepBenefitGuest": "Tài khoản giữ routine, lịch sử da, và để AI nhớ bạn lâu dài.",
     "routineSectionTitle": "Routine sáng & tối",
     "routineSectionSub": "Bắt đầu với buổi sáng — tick hoàn thành trong Check-in mỗi ngày.",
-    "ctaCheckInPrimary": "Bắt đầu check-in ngay",
-    "ctaCheckInBenefit": "Mất chưa đầy 1 phút — nhưng giúp bạn thấy tiến trình da rõ ràng hơn.",
+    "ctaCheckInPrimary": "Check-in ~30 giây",
+    "ctaCheckInBenefit": "Khoảng 30 giây — đủ để mở streak và thấy tiến trình da rõ hơn.",
     "ctaGuestRegisterToCheckIn": "Đăng ký để lưu routine",
     "ctaGuestCheckInBenefit": "Tạo tài khoản miễn phí để lưu routine và ghi nhật ký da.",
     "ctaSaveToAccount": "Lưu vào tài khoản",
@@ -884,11 +884,11 @@
     "errorNetwork": "Mạng gián đoạn — kiểm tra kết nối và thử lại.",
     "firstCheckIn": {
       "label": "Bước tiếp theo",
-      "title": "Check-in hôm nay để bắt đầu",
-      "titleSaved": "Đã lưu routine — check-in luôn nhé",
-      "body": "Mất chưa đầy 1 phút. Một ảnh + cảm nhận da là đủ để mình theo dõi cùng bạn.",
+      "title": "Check-in ~30 giây để bắt đầu",
+      "titleSaved": "Đã lưu routine — check-in ~30 giây luôn nhé",
+      "body": "Một ảnh + cảm nhận da là đủ. Check-in nhanh để mở streak hôm nay.",
       "bodySaved": "Routine đã gắn vào tài khoản. Check-in lần đầu ngay để mở streak — đừng để sang ngày mai.",
-      "cta": "Check-in hôm nay",
+      "cta": "Check-in ~30 giây",
       "skip": "Xem routine trước",
       "skipHint": "Bạn có thể check-in sau, nhưng làm ngay thì dễ nhớ hơn."
     }
@@ -899,21 +899,21 @@
     "betaBody": "Beta đang dùng Free. Premium được team cấp tay / invite — chưa mở thanh toán tự phục vụ.",
     "dismiss": "Đóng",
     "quotaSuggestTitle": "Đã hết gợi ý AI tháng này",
-    "quotaSuggestBody": "Bạn đã dùng hết lượt gợi ý AI tháng này. Check-in, streak và tick routine vẫn dùng bình thường. Nâng cấp Premium để gợi ý không giới hạn.",
+    "quotaSuggestBody": "Bạn đã hết lượt gợi ý AI tháng này. Check-in, streak và tick routine vẫn miễn phí. Premium mở gợi ý AI không giới hạn.",
     "quotaEditTitle": "Đã hết lượt chỉnh tay tháng này",
     "quotaEditBody": "Bạn đã dùng hết {limit} lần chỉnh tay tháng này — vẫn tick hoàn thành được. Premium cho phép chỉnh sửa không giới hạn.",
     "wardrobeTitle": "Đã hết suất tủ đồ Free",
     "wardrobeBody": "Free thêm tới 3 sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
     "progressTitle": "Muốn xem lịch sử dài hơn?",
-    "progressBody": "Free xem 3 tháng gần nhất. Premium: 12 tháng. Premium+: không giới hạn.",
+    "progressBody": "Free xem 3 tháng gần nhất. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn.",
     "advancedTitle": "Phân tích da nâng cao",
-    "advancedBody": "Phân tích multi-angle và sâu hơn dành cho Premium+.",
+    "advancedBody": "Phân tích đa góc (2 ảnh) chỉ có trên Premium+ — không nằm trong Premium.",
     "exportTitle": "Xuất dữ liệu",
     "exportBody": "Xuất dữ liệu và báo cáo dành cho Premium.",
     "milestoneTitle": "Cột mốc đầy đủ",
     "milestoneBody": "Cột mốc đầy đủ dành cho Premium.",
     "genericTitle": "Nâng cấp để mở tính năng này",
-    "genericBody": "Tính năng này có trên Premium hoặc Premium+. Check-in, streak và tick routine vẫn dùng bình thường.",
+    "genericBody": "Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Premium+ chỉ thêm phân tích đa góc và lịch sử không giới hạn. Check-in vẫn miễn phí.",
     "quotaEditBodyUnknown": "Bạn đã hết lượt chỉnh tay tháng này — vẫn tick hoàn thành được. Premium cho phép chỉnh sửa không giới hạn.",
     "usageUsed": "Đã dùng {used}/{limit} tháng này",
     "usageRemaining": "Còn {remaining} lượt",
@@ -921,28 +921,30 @@
     "benefitSuggest": "Premium: gợi ý AI không giới hạn. Check-in, streak và tick routine vẫn miễn phí.",
     "benefitEdit": "Premium: chỉnh routine không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
     "benefitWardrobe": "Premium: thêm sản phẩm không giới hạn. Sửa và xóa vẫn mở trên Free.",
-    "benefitProgress": "Premium xem 12 tháng; Premium+ không giới hạn. Check-in mỗi ngày vẫn miễn phí.",
-    "benefitAdvanced": "Premium+ mở phân tích đa góc. Check-in 1 ảnh vẫn dùng được trên Free.",
+    "benefitProgress": "Premium mở 12 tháng lịch sử. Premium+ chỉ thêm toàn bộ lịch sử. Check-in mỗi ngày vẫn miễn phí.",
+    "benefitAdvanced": "Premium+ (không phải Premium) mở phân tích đa góc. Check-in 1 ảnh vẫn dùng được trên Free.",
     "benefitExport": "Premium xuất nhật ký và báo cáo khi bạn cần mang dữ liệu đi.",
     "benefitMilestone": "Premium mở danh sách cột mốc đầy đủ — streak vẫn đếm trên Free.",
-    "benefitGeneric": "Premium mở khóa khi bạn thật sự cần. Check-in và tick routine không bị khóa."
+    "benefitGeneric": "Hầu hết chỉ cần Premium khi hết hạn Free. Premium+ là gói bổ sung cho đa góc / lịch sử dài. Check-in không bị khóa."
   },
   "pricing": {
     "heroTitle": "Mở khóa toàn bộ",
     "heroTitleAccent": "AI Coach & Tủ đồ",
     "fromContext": {
-      "generic": "Bạn đang xem Premium vì vừa chạm hạn mức Free. Check-in và tick routine vẫn dùng bình thường.",
-      "ai_routine_suggestion": "Bạn đang xem Premium vì hết gợi ý AI tháng này. Nâng cấp để gợi ý không giới hạn — check-in vẫn miễn phí.",
-      "edit_routine": "Bạn đang xem Premium vì hết lượt chỉnh routine tháng này. Tick hoàn thành vẫn dùng được trên Free.",
-      "wardrobe_full": "Bạn đang xem Premium vì tủ đồ Free đã đủ 3 món. Sửa và xóa vẫn mở trên Free.",
-      "progress_full_history": "Bạn đang xem Premium để mở lịch sử dài hơn 3 tháng. Check-in mỗi ngày vẫn miễn phí.",
-      "advanced_skin_analysis": "Bạn đang xem Premium+ vì phân tích đa góc. Check-in 1 ảnh vẫn dùng được trên Free."
+      "generic": "Bạn đang xem bảng giá vì vừa chạm hạn Free. Premium mở phần bị giới hạn — check-in và tick routine vẫn dùng bình thường.",
+      "ai_routine_suggestion": "Bạn hết gợi ý AI tháng này. Premium mở gợi ý không giới hạn — check-in vẫn miễn phí.",
+      "edit_routine": "Bạn hết lượt chỉnh routine tháng này. Premium mở chỉnh không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
+      "wardrobe_full": "Tủ đồ Free đã đủ 3 món. Premium mở thêm không giới hạn. Sửa và xóa vẫn mở trên Free.",
+      "progress_full_history": "Free xem 3 tháng. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn. Check-in mỗi ngày vẫn miễn phí.",
+      "advanced_skin_analysis": "Phân tích đa góc chỉ có trên Premium+ (không nằm trong Premium). Check-in 1 ảnh vẫn dùng được trên Free."
     },
-    "heroSub": "Free đã đủ để check-in, streak và coach sau mỗi lần ghi. Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử dài hơn — nâng cấp khi bạn thật sự cần.",
+    "heroSub": "Free đủ check-in, streak và coach sau mỗi lần ghi. Premium (phổ biến nhất) mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Premium+ chỉ thêm phân tích đa góc và lịch sử không giới hạn.",
     "heroSubBeta": "Đang mở Beta: Free dùng đầy đủ. Premium (AI không giới hạn, tủ đồ, lịch sử dài) sẽ được team cấp tay / invite — chưa mở thanh toán tự phục vụ.",
     "betaInviteBanner": "Thanh toán tự phục vụ tạm tắt trong Beta để tránh cổng test. Muốn thử Premium? Gửi góp ý hoặc liên hệ team để được cấp gói.",
     "betaInviteCta": "Premium — cấp trong Beta",
     "mostPopular": "Phổ biến nhất",
+    "plusBadge": "Gói bổ sung",
+    "plusNote": "Không chắc? Chọn Premium. Premium+ không thay thế Premium — chỉ thêm phân tích đa góc và lịch sử đầy đủ.",
     "upgradeCta": "Nâng cấp ngay",
     "currentPlanBadge": "Gói hiện tại",
     "currentPlanCta": "Đang dùng gói này",
@@ -1009,6 +1011,7 @@
         "name": "Free",
         "tagline": "Bắt đầu nhật ký da",
         "blurb": "Đủ để check-in mỗi ngày, tick routine và cảm nhận nhịp chăm da.",
+        "bestFor": "Đủ để check-in mỗi ngày và giữ streak — không cần thẻ.",
         "cta": "Dùng miễn phí",
         "features": {
           "f1": "Check-in da + coach AI sau mỗi lần ghi",
@@ -1019,8 +1022,9 @@
       },
       "premium": {
         "name": "Premium",
-        "tagline": "AI Coach không giới hạn",
-        "blurb": "Mở khóa toàn bộ AI Coach & Tủ đồ — dành cho người muốn chăm da đều và chỉnh routine tự do.",
+        "tagline": "Mở hết hạn mức Free",
+        "blurb": "Mở những gì Free giới hạn: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo.",
+        "bestFor": "Phù hợp hầu hết mọi người khi chạm hạn Free.",
         "features": {
           "f1": "Gợi ý AI & chỉnh routine không giới hạn",
           "f2": "Tủ đồ đầy đủ — thêm & quản lý sản phẩm",
@@ -1031,20 +1035,21 @@
       },
       "premium_plus": {
         "name": "Premium+",
-        "tagline": "Chăm da sâu hơn",
-        "blurb": "Tất cả của Premium, cộng phân tích nâng cao, deep memory và early access tính năng mới.",
+        "tagline": "Thêm phân tích nâng cao",
+        "blurb": "Giữ toàn bộ Premium. Chỉ thêm phân tích đa góc, lịch sử Progress không giới hạn và early access.",
+        "bestFor": "Chỉ khi bạn cần phân tích 2 ảnh hoặc lịch sử dài hơn 12 tháng.",
         "features": {
           "f1": "Mọi quyền lợi Premium",
-          "f2": "Phân tích da nâng cao (multi-angle)",
+          "f2": "Phân tích da nâng cao (đa góc) — không có trên Premium",
           "f3": "Deep memory — coach nhớ ngữ cảnh lâu hơn",
-          "f4": "Lịch sử Progress không giới hạn",
+          "f4": "Lịch sử Progress không giới hạn (Premium: 12 tháng)",
           "f5": "Early access tính năng mới trước"
         }
       }
     },
     "compare": {
       "title": "So sánh chi tiết",
-      "subtitle": "Ba gói, một mục tiêu: giúp bạn chăm da rõ ràng và đều đặn hơn.",
+      "subtitle": "Hầu hết chọn Premium khi hết hạn Free. Premium+ chỉ khác ở phân tích đa góc và lịch sử không giới hạn.",
       "caption": "Bảng so sánh tính năng Free, Premium và Premium+",
       "scrollHint": "Vuốt ngang để xem đủ 3 gói",
       "scrollLeft": "Cuộn bảng sang trái",
@@ -1089,7 +1094,7 @@
       },
       "q3": {
         "question": "Premium và Premium+ khác nhau chỗ nào?",
-        "answer": "Premium mở AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu và không quảng cáo. Premium+ thêm phân tích nâng cao, deep memory, lịch sử không giới hạn và early access."
+        "answer": "Premium mở hết hạn Free: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo. Premium+ giữ toàn bộ Premium và chỉ thêm phân tích đa góc, lịch sử không giới hạn, deep memory và early access. Hầu hết không cần Plus."
       },
       "q4": {
         "question": "Có thể đổi gói hoặc hủy sau không?",
@@ -1420,7 +1425,8 @@
           "text": "Mình vừa đạt {n} ngày streak trên DaDiary! 🔥 Duy trì chăm da mỗi ngày không dễ đâu. Cùng mình nhé: {url} #DaDiary #SkincareStreak",
           "copied": "Đã sao chép vào clipboard",
           "shared": "Cảm ơn bạn đã chia sẻ!",
-          "failed": "Không chia sẻ được — thử sao chép nhé."
+          "failed": "Không chia sẻ được — thử sao chép nhé.",
+          "ugcHint": "Muốn đăng story? Nhắc DaDiary để bạn bè tìm thấy — chỉ khi bạn muốn, không bắt buộc."
         },
         "items": {
           "d3": {
@@ -1462,6 +1468,7 @@
         "daysUnit": "ngày",
         "share": "Chia sẻ",
         "save": "Lưu PNG",
+        "ugcHint": "Muốn đăng story? Nhắc DaDiary để bạn bè tìm thấy — chỉ khi bạn muốn, không bắt buộc.",
         "continue": "Tiếp tục",
         "brandMark": "Nhật ký da của mình",
         "cardHeadline": "Streak {n} ngày",
@@ -1499,6 +1506,7 @@
         "privacy": "Ảnh chỉ rời máy bạn khi bạn bấm chia sẻ hoặc lưu.",
         "share": "Chia sẻ",
         "save": "Lưu PNG",
+        "ugcHint": "Muốn đăng story? Nhắc DaDiary để bạn bè tìm thấy — chỉ khi bạn muốn, không bắt buộc.",
         "brandMark": "Nhật ký da của mình",
         "headline": "Trước · Sau",
         "ctaLine": "Nhật ký da mỗi ngày · dadiary.vn",

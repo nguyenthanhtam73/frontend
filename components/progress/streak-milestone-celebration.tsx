@@ -181,6 +181,13 @@ export function StreakMilestoneCelebration({
             </span>
           </p>
 
+          <p
+            data-testid="share-ugc-hint"
+            className="text-xs leading-relaxed text-muted-foreground"
+          >
+            {t("share.ugcHint")}
+          </p>
+
           <div className="grid gap-2 sm:grid-cols-2">
             <Button
               type="button"

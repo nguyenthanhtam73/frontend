@@ -136,6 +136,13 @@ export function PricingPlanCard({
           <Sparkles className="size-3.5 shrink-0" aria-hidden />
           {tCommon("mostPopular")}
         </Badge>
+      ) : isPlus ? (
+        <Badge
+          variant="outline"
+          className="absolute -top-3 left-1/2 z-[2] -translate-x-1/2 rounded-full border-border/80 bg-background px-3 py-1 text-[11px] font-semibold text-muted-foreground"
+        >
+          {tCommon("plusBadge")}
+        </Badge>
       ) : null}
 
       <header className="space-y-2 pb-4 pt-1">
@@ -144,6 +151,7 @@ export function PricingPlanCard({
         </p>
         <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("tagline")}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">{t("blurb")}</p>
+        <p className="text-xs font-medium leading-relaxed text-foreground/80">{t("bestFor")}</p>
       </header>
 
       <div className="pb-5">

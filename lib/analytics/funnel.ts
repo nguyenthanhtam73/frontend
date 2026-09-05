@@ -1,9 +1,25 @@
 /**
- * Guest photo → starter routine → signup funnel events.
- * Meta Pixel is the live ads stack; custom names stay stable for Events Manager.
+ * Activation + conversion funnel events.
+ *
+ * Stack: Meta Pixel (prod only) + `window.dataLayer` + `window.__dadiaryFunnel`.
+ * No second analytics vendor — `track()` / `trackFunnelEvent()` no-op on SSR
+ * and Pixel itself no-ops in local/dev (`shouldLoadMetaPixel`).
+ *
+ * Naming: snake_case custom events, prefixed by surface.
+ *
+ * | Brief / ads name   | Event we fire                                      |
+ * |--------------------|----------------------------------------------------|
+ * | guest_photo        | onboarding_photo_added / onboarding_photos_submitted |
+ * | routine_shown      | onboarding_routine_shown                           |
+ * | signup_success     | onboarding_register_success                        |
+ * | first_checkin      | activation_first_checkin                           |
+ * | d1_checkin         | activation_d1_checkin (+ d1 reminder shown)        |
+ * | paywall_view       | paywall_view                                       |
+ * | checkout_confirm   | checkout_confirm                                   |
+ * | paid               | paid (+ Meta Purchase via trackMetaPurchaseOnce)   |
  */
 
-import { trackMetaCustomEvent, trackMetaEvent } from "@/lib/meta-pixel";
+import { trackMetaCustomEvent, trackMetaEvent, trackMetaPurchaseOnce } from "@/lib/meta-pixel";
 
 export const FUNNEL_EVENTS = {
   photoAdded: "onboarding_photo_added",
@@ -13,6 +29,12 @@ export const FUNNEL_EVENTS = {
   signupCtaClick: "onboarding_signup_cta_click",
   registerSuccess: "onboarding_register_success",
   firstCheckInCtaClick: "activation_first_checkin_cta_click",
+  firstCheckIn: "activation_first_checkin",
+  d1CheckIn: "activation_d1_checkin",
+  d1ReminderShown: "activation_d1_reminder_shown",
+  paywallView: "paywall_view",
+  checkoutConfirm: "checkout_confirm",
+  paid: "paid",
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];
@@ -22,6 +44,10 @@ export type FunnelEventPayload = {
   params?: Record<string, unknown>;
   ts: number;
 };
+
+export type CheckInFunnelKind = "first" | "d1";
+
+export type PaywallSurface = "upsell_banner" | "pricing";
 
 declare global {
   interface Window {
@@ -45,7 +71,13 @@ const STANDARD_BY_CUSTOM: Partial<
     event: "Lead",
     extra: { content_name: "save_routine", content_category: "onboarding" },
   },
+  [FUNNEL_EVENTS.paywallView]: {
+    event: "ViewContent",
+    extra: { content_name: "paywall", content_category: "pricing" },
+  },
   // registerSuccess is custom-only — register page already fires CompleteRegistration.
+  // checkoutConfirm is custom-only — SePay start already fires InitiateCheckout.
+  // paid is custom-only — trackPaidOnce also fires Meta Purchase once.
 };
 
 function recordLocal(name: FunnelEventName, params?: Record<string, unknown>): void {
@@ -62,6 +94,7 @@ function recordLocal(name: FunnelEventName, params?: Record<string, unknown>): v
 }
 
 const STANDARD_ONCE_PREFIX = "dadiary_funnel_std_";
+const CUSTOM_ONCE_PREFIX = "dadiary_funnel_once_";
 
 function trackStandardOnce(
   event: string,
@@ -92,6 +125,96 @@ export function trackFunnelEvent(
   }
 }
 
+/**
+ * Thin typed alias. Safe on SSR (no-op). Pixel stays off in local/dev.
+ */
+export const track = trackFunnelEvent;
+
 export function isFunnelEventName(value: string): value is FunnelEventName {
   return (Object.values(FUNNEL_EVENTS) as string[]).includes(value);
+}
+
+/** Session key for once-per-tab custom events. */
+export function funnelOnceKey(name: FunnelEventName, scope = ""): string {
+  const suffix = scope.trim() ? `:${scope.trim()}` : "";
+  return `${CUSTOM_ONCE_PREFIX}${name}${suffix}`;
+}
+
+type OnceStore = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+};
+
+/** Returns true the first time this key is seen; false on later calls. */
+export function claimOnceFlag(store: OnceStore | null, key: string): boolean {
+  if (!store) return true;
+  try {
+    if (store.getItem(key) === "1") return false;
+    store.setItem(key, "1");
+    return true;
+  } catch {
+    return true;
+  }
+}
+
+function defaultSessionStore(): OnceStore | null {
+  if (typeof sessionStorage === "undefined") return null;
+  return sessionStorage;
+}
+
+/** Same as `track()`, but only the first time `name`+`scope` fires in this tab. */
+export function trackFunnelEventOnce(
+  name: FunnelEventName,
+  params?: Record<string, unknown>,
+  scope = "",
+  store: OnceStore | null = defaultSessionStore(),
+): boolean {
+  if (!claimOnceFlag(store, funnelOnceKey(name, scope))) return false;
+  trackFunnelEvent(name, params);
+  return true;
+}
+
+/**
+ * Which completion events to fire after a successful check-in.
+ * `first` = never checked in before. `d1` = day-1 return (reminder kind d1).
+ * A first check-in on the calendar day after signup emits both.
+ */
+export function resolveCheckInFunnelKinds(input: {
+  neverCheckedIn: boolean;
+  reminderKind: "d0" | "d1" | "keep" | null;
+}): CheckInFunnelKind[] {
+  const kinds: CheckInFunnelKind[] = [];
+  if (input.neverCheckedIn) kinds.push("first");
+  if (input.reminderKind === "d1") kinds.push("d1");
+  return kinds;
+}
+
+export function funnelEventForCheckInKind(
+  kind: CheckInFunnelKind,
+): FunnelEventName {
+  return kind === "first" ? FUNNEL_EVENTS.firstCheckIn : FUNNEL_EVENTS.d1CheckIn;
+}
+
+export function paywallViewParams(input: {
+  surface: PaywallSurface;
+  feature?: string | null;
+  recommendedPlan?: string | null;
+}): Record<string, unknown> {
+  const feature = (input.feature ?? "generic").trim() || "generic";
+  const params: Record<string, unknown> = {
+    surface: input.surface,
+    feature,
+  };
+  if (input.recommendedPlan) params.recommended_plan = input.recommendedPlan;
+  return params;
+}
+
+/** Custom `paid` + Meta Purchase, both once-per-invoice (Purchase helper dedupes). */
+export function trackPaidOnce(opts?: { planConfirmed?: boolean }): void {
+  trackFunnelEventOnce(
+    FUNNEL_EVENTS.paid,
+    { plan_confirmed: !!opts?.planConfirmed },
+    "session",
+  );
+  trackMetaPurchaseOnce(opts);
 }

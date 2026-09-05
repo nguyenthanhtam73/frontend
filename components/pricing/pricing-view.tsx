@@ -32,6 +32,7 @@ import {
   readUpsellFeatureFromSearch,
   recommendedPlanForFeature,
 } from "@/lib/premium/upsell-href";
+import { FUNNEL_EVENTS, paywallViewParams, trackFunnelEventOnce } from "@/lib/analytics/funnel";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** Client shell: billing interval state + plan cards + compare + FAQ. */
@@ -70,6 +71,19 @@ function PricingViewInner() {
     [searchParams],
   );
   const highlightPlan = recommendedPlanForFeature(upsellFrom ?? undefined);
+
+  useEffect(() => {
+    if (!upsellFrom) return;
+    trackFunnelEventOnce(
+      FUNNEL_EVENTS.paywallView,
+      paywallViewParams({
+        surface: "pricing",
+        feature: upsellFrom,
+        recommendedPlan: highlightPlan,
+      }),
+      `pricing:${upsellFrom}`,
+    );
+  }, [highlightPlan, upsellFrom]);
 
   const [interval, setInterval] = useState<BillingInterval>(
     () => intent?.interval ?? "yearly",
@@ -273,7 +287,14 @@ function PricingViewInner() {
           />
         </div>
 
-        <p className="mx-auto mt-5 max-w-md text-center text-xs leading-relaxed text-muted-foreground sm:mt-6">
+        <p
+          data-testid="pricing-plus-note"
+          className="mx-auto mt-5 max-w-lg text-center text-sm leading-relaxed text-foreground/80 sm:mt-6"
+        >
+          {t("plusNote")}
+        </p>
+
+        <p className="mx-auto mt-3 max-w-md text-center text-xs leading-relaxed text-muted-foreground">
           {checkoutEnabled ? t("trustLine") : t("trustLineBeta")}
         </p>
 

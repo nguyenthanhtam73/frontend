@@ -9,6 +9,7 @@ import {
   sePayCheckoutErrorKey,
   submitSePayCheckoutForm,
 } from "@/lib/api/payment";
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { rememberMetaCheckout, trackMetaEvent } from "@/lib/meta-pixel";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import type { BillingInterval, PricedPlan } from "@/lib/premium/pricing";
@@ -59,6 +60,11 @@ export function useSePayCheckout(): UseSePayCheckoutResult {
       }
       inflight.current = true;
       setBusyPlan(plan);
+      trackFunnelEvent(FUNNEL_EVENTS.checkoutConfirm, {
+        plan,
+        interval,
+        surface: "sepay_start",
+      });
       try {
         const data = await createSePayCheckout(plan, interval, { locale });
         rememberMetaCheckout({
