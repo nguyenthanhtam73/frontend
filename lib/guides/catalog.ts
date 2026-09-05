@@ -17,7 +17,9 @@ export type {
   GuideArticle,
   GuideArticleCopy,
   GuideChrome,
+  GuideDoAvoid,
   GuideFaq,
+  GuideFigure,
   GuideLocale,
   GuideOgImage,
   GuideSection,
@@ -43,6 +45,8 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
     updatedLabel: "Cập nhật",
     breadcrumbHome: "Trang chủ",
     breadcrumbGuides: "Hướng dẫn",
+    doLabel: "Nên làm",
+    avoidLabel: "Nên tránh",
   },
   en: {
     indexTitle: "Humid-heat skincare guides · DaDiary",
@@ -60,6 +64,8 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
     updatedLabel: "Updated",
     breadcrumbHome: "Home",
     breadcrumbGuides: "Guides",
+    doLabel: "Do this",
+    avoidLabel: "Skip this",
   },
 };
 

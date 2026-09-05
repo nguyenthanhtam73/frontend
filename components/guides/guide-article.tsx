@@ -1,4 +1,5 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CircleAlert, CircleCheck } from "lucide-react";
+import Image from "next/image";
 import { getLocale } from "next-intl/server";
 
 import { LandingStartCta } from "@/components/landing/landing-start-cta";
@@ -7,18 +8,81 @@ import {
   formatGuideDate,
   getGuideArticle,
   guideChrome,
+  type GuideChrome,
+  type GuideDoAvoid,
+  type GuideFigure,
   type GuideSection,
   type GuideSlug,
   type GuideSubsection,
 } from "@/lib/guides/catalog";
 
+function GuideFigureBlock({ figure }: { figure: GuideFigure }) {
+  return (
+    <figure className="overflow-hidden rounded-2xl border border-border/60 bg-muted/20">
+      <Image
+        src={figure.src}
+        alt={figure.alt}
+        width={figure.width}
+        height={figure.height}
+        className="h-auto w-full"
+        sizes="(min-width: 768px) 720px, 100vw"
+      />
+      {figure.caption ? (
+        <figcaption className="px-4 py-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          {figure.caption}
+        </figcaption>
+      ) : null}
+    </figure>
+  );
+}
+
 function GuideChecklist({ items }: { items: string[] }) {
   return (
-    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-foreground/90 sm:text-base">
+    <ul className="space-y-2 rounded-2xl border border-border/70 bg-card px-4 py-4 sm:px-5">
       {items.map((item) => (
-        <li key={item}>{item}</li>
+        <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-foreground/90 sm:text-base">
+          <CircleCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+          <span>{item}</span>
+        </li>
       ))}
     </ul>
+  );
+}
+
+function GuideDoAvoidBlock({
+  box,
+  chrome,
+}: {
+  box: GuideDoAvoid;
+  chrome: GuideChrome;
+}) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] px-4 py-4">
+        <p className="text-sm font-semibold text-primary">{box.doHeading ?? chrome.doLabel}</p>
+        <ul className="mt-3 space-y-2">
+          {box.doItems.map((item) => (
+            <li key={item} className="flex gap-2 text-sm leading-relaxed">
+              <CircleCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="rounded-2xl border border-rose-300/50 bg-rose-50/70 px-4 py-4 dark:border-rose-400/25 dark:bg-rose-950/30">
+        <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">
+          {box.avoidHeading ?? chrome.avoidLabel}
+        </p>
+        <ul className="mt-3 space-y-2">
+          {box.avoidItems.map((item) => (
+            <li key={item} className="flex gap-2 text-sm leading-relaxed">
+              <CircleAlert className="mt-0.5 size-4 shrink-0 text-rose-600 dark:text-rose-300" aria-hidden />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -32,20 +96,29 @@ function GuideSubsectionBlock({ subsection }: { subsection: GuideSubsection }) {
         </p>
       ))}
       {subsection.checklist ? <GuideChecklist items={subsection.checklist} /> : null}
+      {subsection.figure ? <GuideFigureBlock figure={subsection.figure} /> : null}
     </div>
   );
 }
 
-function GuideSectionBlock({ section }: { section: GuideSection }) {
+function GuideSectionBlock({
+  section,
+  chrome,
+}: {
+  section: GuideSection;
+  chrome: GuideChrome;
+}) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <h2 className="text-xl font-semibold tracking-tight">{section.heading}</h2>
       {section.paragraphs.map((p) => (
         <p key={p} className="text-sm leading-relaxed text-foreground/90 sm:text-base">
           {p}
         </p>
       ))}
+      {section.figure ? <GuideFigureBlock figure={section.figure} /> : null}
       {section.checklist ? <GuideChecklist items={section.checklist} /> : null}
+      {section.doAvoid ? <GuideDoAvoidBlock box={section.doAvoid} chrome={chrome} /> : null}
       {section.subsections?.map((subsection) => (
         <GuideSubsectionBlock key={subsection.heading} subsection={subsection} />
       ))}
@@ -92,6 +165,11 @@ export async function GuideArticleView({ slug }: { slug: GuideSlug }) {
       <p className="mt-4 text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
         {article.lede}
       </p>
+      {article.heroFigure ? (
+        <div className="mt-6">
+          <GuideFigureBlock figure={article.heroFigure} />
+        </div>
+      ) : null}
 
       <div className="mt-8 space-y-3 rounded-2xl border border-primary/25 bg-primary/[0.07] px-4 py-5 sm:px-6">
         <LandingStartCta size="lg" className="h-12 w-full gap-2 text-base sm:w-auto">
@@ -103,7 +181,7 @@ export async function GuideArticleView({ slug }: { slug: GuideSlug }) {
 
       <div className="mt-10 space-y-10">
         {article.sections.map((section) => (
-          <GuideSectionBlock key={section.heading} section={section} />
+          <GuideSectionBlock key={section.heading} section={section} chrome={chrome} />
         ))}
       </div>
 

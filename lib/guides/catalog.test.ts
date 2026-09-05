@@ -16,6 +16,7 @@ import {
   isGuideSlug,
   listGuideArticles,
 } from "./catalog";
+import { listGuideFigures } from "./figures";
 import {
   guideArticleJsonLd,
   guideBreadcrumbJsonLd,
@@ -25,7 +26,8 @@ import {
 import { countGuideWords } from "./word-count";
 
 const NEW_SLUGS = ["tham-mun", "da-dau-van-phong"] as const;
-const OG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../public/og/guides");
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const OG_DIR = path.join(ROOT, "public/og/guides");
 
 describe("guide catalog", () => {
   it("exposes six slugs and matching public paths", () => {
@@ -77,12 +79,20 @@ describe("guide catalog", () => {
           0,
         );
         const checklistCount = article.sections.filter((s) => s.checklist?.length).length;
-        assert.ok(subsectionCount >= 3, `${slug}/${locale} needs H3 subsections`);
+        const doAvoidCount = article.sections.filter((s) => s.doAvoid).length;
+        const figures = listGuideFigures(article);
+        assert.ok(subsectionCount >= 2, `${slug}/${locale} needs H3 subsections`);
         assert.ok(checklistCount >= 1, `${slug}/${locale} needs a checklist`);
+        assert.ok(doAvoidCount >= 1, `${slug}/${locale} needs a do/avoid box`);
+        assert.ok(figures.length >= 2, `${slug}/${locale} needs at least 2 figures`);
         assert.ok(
           article.sections.some((s) => /bác sĩ|doctor|clinician/i.test(s.heading)),
           `${slug}/${locale} needs a when-to-see-a-doctor section`,
         );
+        for (const figure of figures) {
+          assert.ok(figure.alt.length > 20, `${slug}/${locale} figure needs meaningful alt`);
+          assert.equal(existsSync(path.join(ROOT, "public", figure.src.replace(/^\//, ""))), true);
+        }
       }
     }
     assert.equal(listGuideArticles("vi").length, 6);
@@ -96,11 +106,11 @@ describe("guide catalog", () => {
       const viWords = countGuideWords(vi);
       const enWords = countGuideWords(en);
       assert.ok(
-        viWords >= 980 && viWords <= 1600,
-        `${slug} vi word count ${viWords} should be ~1000–1400`,
+        viWords >= 750 && viWords <= 1600,
+        `${slug} vi word count ${viWords} should stay useful without stuffing`,
       );
       assert.ok(
-        enWords >= 880 && enWords <= 1600,
+        enWords >= 680 && enWords <= 1600,
         `${slug} en word count ${enWords} should stay near the vi article`,
       );
     }

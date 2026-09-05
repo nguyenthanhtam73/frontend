@@ -1,7 +1,12 @@
 import type { GuideArticleCopy, GuideSection, GuideSubsection } from "./types";
 
 function subsectionWords(sub: GuideSubsection): string[] {
-  return [sub.heading, ...sub.paragraphs, ...(sub.checklist ?? [])];
+  return [
+    sub.heading,
+    ...sub.paragraphs,
+    ...(sub.checklist ?? []),
+    ...(sub.figure ? [sub.figure.alt, sub.figure.caption ?? ""] : []),
+  ];
 }
 
 function sectionWords(section: GuideSection): string[] {
@@ -9,6 +14,15 @@ function sectionWords(section: GuideSection): string[] {
     section.heading,
     ...section.paragraphs,
     ...(section.checklist ?? []),
+    ...(section.doAvoid
+      ? [
+          section.doAvoid.doHeading ?? "",
+          ...section.doAvoid.doItems,
+          section.doAvoid.avoidHeading ?? "",
+          ...section.doAvoid.avoidItems,
+        ]
+      : []),
+    ...(section.figure ? [section.figure.alt, section.figure.caption ?? ""] : []),
     ...(section.subsections ?? []).flatMap(subsectionWords),
   ];
 }
@@ -20,6 +34,9 @@ export function countGuideWords(article: GuideArticleCopy): number {
     article.description,
     article.kicker,
     article.lede,
+    ...(article.heroFigure
+      ? [article.heroFigure.alt, article.heroFigure.caption ?? ""]
+      : []),
     ...article.sections.flatMap(sectionWords),
     ...article.faqs.flatMap((faq) => [faq.question, faq.answer]),
   ];

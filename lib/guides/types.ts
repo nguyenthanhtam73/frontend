@@ -16,16 +16,34 @@ export type GuideFaq = {
   answer: string;
 };
 
+export type GuideFigure = {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption?: string;
+};
+
+export type GuideDoAvoid = {
+  doItems: string[];
+  avoidItems: string[];
+  doHeading?: string;
+  avoidHeading?: string;
+};
+
 export type GuideSubsection = {
   heading: string;
   paragraphs: string[];
   checklist?: string[];
+  figure?: GuideFigure;
 };
 
 export type GuideSection = {
   heading: string;
   paragraphs: string[];
   checklist?: string[];
+  doAvoid?: GuideDoAvoid;
+  figure?: GuideFigure;
   subsections?: GuideSubsection[];
 };
 
@@ -34,6 +52,7 @@ export type GuideArticleCopy = {
   description: string;
   kicker: string;
   lede: string;
+  heroFigure?: GuideFigure;
   sections: GuideSection[];
   faqs: GuideFaq[];
 };
@@ -67,4 +86,6 @@ export type GuideChrome = {
   updatedLabel: string;
   breadcrumbHome: string;
   breadcrumbGuides: string;
+  doLabel: string;
+  avoidLabel: string;
 };

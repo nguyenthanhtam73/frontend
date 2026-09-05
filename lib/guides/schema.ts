@@ -1,10 +1,14 @@
 import { absoluteUrl, siteOrigin } from "@/lib/seo";
 
+import { listGuideFigures } from "./figures";
 import type { GuideArticle, GuideChrome } from "./types";
 
 export function guideArticleJsonLd(article: GuideArticle, locale: string) {
   const url = absoluteUrl(locale, article.path);
-  const image = absoluteUrl(locale, article.ogImage.url);
+  const images = [
+    absoluteUrl(locale, article.ogImage.url),
+    ...listGuideFigures(article).map((figure) => absoluteUrl(locale, figure.src)),
+  ];
   return {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -14,7 +18,7 @@ export function guideArticleJsonLd(article: GuideArticle, locale: string) {
     url,
     datePublished: article.datePublished,
     dateModified: article.dateModified,
-    image: [image],
+    image: images,
     author: { "@type": "Organization", name: "DaDiary", url: siteOrigin() },
     publisher: { "@type": "Organization", name: "DaDiary", url: siteOrigin() },
     mainEntityOfPage: { "@type": "WebPage", "@id": url },
