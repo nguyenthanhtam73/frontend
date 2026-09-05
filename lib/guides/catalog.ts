@@ -42,7 +42,7 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
   vi: {
     indexTitle: "Hướng dẫn chăm da nóng ẩm · DaDiary",
     indexDescription:
-      "Chín guide cho da dầu, da khô, da nhạy, mụn, thâm, SPF, routine người mới, retinol chậm, và ngày văn phòng máy lạnh — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
+      "Chín bài cho da dầu, da khô, da nhạy, mụn, thâm, SPF, routine người mới, retinol chậm, và ngày văn phòng máy lạnh — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
     indexHeading: "Hướng dẫn chăm da cho khí hậu nóng ẩm",
     indexSub:
       "Chín bài cho da Việt: dầu, khô, nhạy cảm, mụn, thâm, SPF, routine ngắn, retinol người mới, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",

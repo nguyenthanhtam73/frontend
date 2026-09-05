@@ -91,7 +91,7 @@ const GUIDES = [
   {
     slug: "da-nong-am",
     kicker: "Da nóng ẩm · Việt Nam",
-    title: "Chín guide, rồi chụp ảnh",
+    title: "Chín bài, rồi chụp ảnh",
     accent: "#2A8F88",
     wash: "#E8F5F3",
   },

@@ -101,20 +101,20 @@ const HUB: Record<
   Omit<ClimateHubCopy, "clusters" | "ogImage" | "path" | "datePublished" | "dateModified">
 > = {
   vi: {
-    title: "Chăm da nóng ẩm Việt Nam: 9 guide + routine từ ảnh · DaDiary",
+    title: "Chăm da nóng ẩm Việt Nam: 9 bài, rồi chụp ảnh nhận routine · DaDiary",
     description:
-      "Nắng xe máy, mưa ẩm, máy lạnh một ngày. Chín guide theo loại da và việc hay gặp — rồi chụp ảnh nhận routine. DaDiary Beta: gợi ý, không chẩn bệnh.",
+      "Nắng xe máy, mưa ẩm, máy lạnh trong một ngày. Chín bài theo loại da và việc hay gặp — rồi chụp ảnh nhận routine. DaDiary Beta: gợi ý, không chẩn bệnh.",
     heading: "Chăm da nóng ẩm ở Việt Nam",
-    kicker: "Hub khí hậu",
+    kicker: "Nắng ẩm Việt Nam",
     lede:
-      "Bạn không cần 50 bài mỏng. Chín guide dưới đây gom việc hay gặp khi da sống nắng ẩm: dầu, khô, dễ đỏ, mụn, thâm, SPF, routine ngắn, retinol chậm, và ngày văn phòng. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý. DaDiary đang Beta: tham khảo, không phải phòng khám.",
+      "Da sống nắng ẩm hay gặp dầu, khô, dễ đỏ, mụn hay thâm. Chín bài dưới đây nói từng việc: kem chống nắng, routine ngắn, retinol chậm, và ngày văn phòng. Đọc xong, chụp một ảnh để nhận routine khởi đầu. Đăng ký sau khi thấy gợi ý. DaDiary đang Beta: tham khảo, không phải phòng khám.",
     climateHeading: "Một ngày có thể đủ ba khí hậu",
     climateParagraphs: [
       "Sáng: mũ, nắng, kem chống nắng. Trưa: vài phút ra đường. Chiều: máy lạnh, T-zone bóng hoặc má căng. Tối: muốn ‘tẩy sạch cả ngày’ nên rửa mạnh.",
-      "Dầu không phải da bẩn. Khô không phải phải rửa đến kít. Đỏ không tự thành chẩn đoán. Mục tiêu chung: thói quen mỏng chịu được thứ Tư mệt, SPF còn đó, biết khi nào đi khám.",
-      "Trang này không kê đơn, không hứa hết mụn hay hết thâm trong bảy ngày, không bịa review. Nếu da đau, có mủ, sưng lan — gặp bác sĩ, đừng thay bằng một hub.",
+      "Dầu không phải da bẩn. Khô không phải phải rửa đến kít. Đỏ không tự thành chẩn đoán. Mục tiêu chung: thói quen ngắn chịu được thứ Tư mệt, SPF còn đó, biết khi nào đi khám.",
+      "Trang này không kê đơn, không hứa hết mụn hay hết thâm trong bảy ngày, không bịa review. Nếu da đau, có mủ, sưng lan — gặp bác sĩ. Một trang hướng dẫn không thay được khám.",
     ],
-    howToPickHeading: "Nên mở guide nào trước",
+    howToPickHeading: "Nên mở bài nào trước",
     howToPickParagraphs: [
       "Chưa có routine: bắt đầu bài 3–4 bước, rồi kem chống nắng. Đang bóng T-zone: da dầu hoặc da dầu văn phòng. Má căng, nẻ khóe: da khô. Dễ rát sau chai mới: da nhạy cảm — lùi hoạt chất.",
       "Mụn đang viêm hoặc hay nặn: bài mụn trước bài thâm. Muốn thử retinol: chỉ sau khi rửa–dưỡng–SPF đã giữ được, và da không đang nẻ.",
@@ -133,23 +133,23 @@ const HUB: Record<
       {
         question: "Tôi phải đọc hết rồi mới được chụp ảnh?",
         answer:
-          "Không. Hub này để bạn chọn đúng bài. Ảnh một góc, ánh sáng giống nhau nếu được, đủ để nhận routine khởi đầu. Xem gợi ý rồi hãy lưu tài khoản.",
+          "Không. Trang này để bạn chọn đúng bài. Ảnh một góc, ánh sáng giống nhau nếu được, đủ để nhận routine khởi đầu. Xem gợi ý rồi hãy lưu tài khoản.",
       },
     ],
   },
   en: {
-    title: "Humid-heat skincare in Vietnam: 9 guides + a photo routine · DaDiary",
+    title: "Humid-heat skincare in Vietnam: 9 reads, then a photo routine · DaDiary",
     description:
-      "Motorbike sun, humid rain, air-con in one day. Nine guides by skin type and common jobs — then a photo for a starter routine. DaDiary Beta: tips, not a diagnosis.",
+      "Motorbike sun, humid rain, air-con in one day. Nine reads by skin type and common jobs — then a photo for a starter routine. DaDiary Beta: tips, not a diagnosis.",
     heading: "Skincare for humid heat in Vietnam",
-    kicker: "Climate hub",
+    kicker: "Humid heat",
     lede:
-      "You do not need fifty thin posts. These nine guides cover what humid-heat skin actually meets: oil, dry, easy flush, acne, marks, SPF, a short routine, slow retinol, and office air-con. Then take one photo for a starter routine — sign up after you see it. DaDiary is in Beta: reference tips, not a clinic.",
+      "Humid-heat skin often means oil, dryness, easy flush, acne, or marks. These nine reads cover sunscreen, a short routine, slow retinol, and office air-con. Then take one photo for a starter routine. Sign up after you see it. DaDiary is in Beta: reference tips, not a clinic.",
     climateHeading: "One day can hold three climates",
     climateParagraphs: [
       "Morning: a helmet, sun, sunscreen. Midday: a few minutes outside. Afternoon: air-con, a shiny T-zone or tight cheeks. Night: the urge to punish-wash the whole day off.",
-      "Oil is not dirt. Dry is not a reason to wash until it squeaks. Redness is not a diagnosis. The shared aim: a thin habit that survives a tired Wednesday, SPF still on, and a clear line for when to see a clinician.",
-      "This page does not prescribe, does not promise clear skin or faded marks in seven days, and does not invent reviews. Pain, pus, spreading swelling — see a clinician. A hub is not a substitute.",
+      "Oil is not dirt. Dry is not a reason to wash until it squeaks. Redness is not a diagnosis. The shared aim: a light habit that survives a tired Wednesday, SPF still on, and a clear line for when to see a clinician.",
+      "This page does not prescribe, does not promise clear skin or faded marks in seven days, and does not invent reviews. Pain, pus, spreading swelling — see a clinician. This page is not a substitute.",
     ],
     howToPickHeading: "Which guide to open first",
     howToPickParagraphs: [
@@ -170,7 +170,7 @@ const HUB: Record<
       {
         question: "Do I have to read every guide before I take a photo?",
         answer:
-          "No. This hub is so you can pick the right page. One angle, similar light if you can, is enough for a starter routine. See the suggestion, then save an account.",
+          "No. This page is so you can pick the right read. One angle, similar light if you can, is enough for a starter routine. See the suggestion, then save an account.",
       },
     ],
   },

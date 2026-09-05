@@ -438,7 +438,7 @@ export function buildStarterPackBullets(s: OnboardingState): string[] {
     lines.push("Xen kẽ hoạt chất (VD: BHA/PHA tối) — luôn kẹp cấp ẩm + phục hồi khi da căng.");
     lines.push("Ghi routine 5–7 ngày để nhìn pattern da, không đổi cùng lúc nhiều sản phẩm.");
   } else if (s.skillMode === "advanced") {
-    lines.push("Tối ưu tầng (layering) có chủ đích; theo dõi pH và thứ tự acid/retinol.");
+    lines.push("Thoa từng lớp có lý do; nhớ thứ tự khi dùng acid hoặc retinol, và da chịu được không.");
     lines.push("So ảnh cùng ánh sáng/góc trước khi kết luận “tiến triển”.");
   }
   if (s.goal && s.goal !== "unsure") {

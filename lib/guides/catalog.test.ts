@@ -222,4 +222,32 @@ describe("guide catalog", () => {
     assert.ok(chrome.climateHubLabel.length > 4);
     assert.ok(chrome.breadcrumbHub.length > 2);
   });
+
+  it("keeps public hub and index copy free of SEO jargon", () => {
+    const banned =
+      /bài mỏng|50 bài|Chín guide|9 guide|thin content|thin posts|fifty thin|Hub khí hậu|Climate hub/i;
+    for (const locale of ["vi", "en"] as const) {
+      const hub = getClimateHub(locale);
+      const chrome = guideChrome(locale);
+      const blob = [
+        hub.title,
+        hub.description,
+        hub.heading,
+        hub.kicker,
+        hub.lede,
+        hub.howToPickHeading,
+        ...hub.climateParagraphs,
+        ...hub.howToPickParagraphs,
+        ...hub.faqs.flatMap((faq) => [faq.question, faq.answer]),
+        ...hub.clusters.flatMap((cluster) => [cluster.heading, cluster.intro]),
+        chrome.indexTitle,
+        chrome.indexDescription,
+        chrome.indexHeading,
+        chrome.indexSub,
+        chrome.climateHubLabel,
+        chrome.breadcrumbHub,
+      ].join("\n");
+      assert.doesNotMatch(blob, banned, `${locale} public guide copy leaked SEO jargon`);
+    }
+  });
 });

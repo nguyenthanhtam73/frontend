@@ -896,7 +896,7 @@
   "premium": {
     "cta": "Nâng cấp Premium ngay",
     "betaCta": "Xem bảng giá Beta",
-    "betaBody": "Beta đang dùng Free. Premium được team cấp tay / invite — chưa mở thanh toán tự phục vụ.",
+    "betaBody": "Beta đang dùng Free. Premium do team cấp khi bạn được mời — chưa mở thanh toán trên trang này.",
     "dismiss": "Đóng",
     "quotaSuggestTitle": "Đã hết gợi ý AI tháng này",
     "quotaSuggestBody": "Bạn đã hết lượt gợi ý AI tháng này. Check-in, streak và tick routine vẫn miễn phí. Premium mở gợi ý AI không giới hạn.",
@@ -907,7 +907,7 @@
     "progressTitle": "Muốn xem lịch sử dài hơn?",
     "progressBody": "Free xem 3 tháng gần nhất. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn.",
     "advancedTitle": "Phân tích da nâng cao",
-    "advancedBody": "Phân tích đa góc (2 ảnh) chỉ có trên Premium+ — không nằm trong Premium.",
+    "advancedBody": "Phân tích nhiều góc (2 ảnh) chỉ có trên Premium+ — không nằm trong Premium.",
     "exportTitle": "Xuất dữ liệu",
     "exportBody": "Xuất dữ liệu và báo cáo dành cho Premium.",
     "milestoneTitle": "Cột mốc đầy đủ",
@@ -922,7 +922,7 @@
     "benefitEdit": "Premium: chỉnh routine không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
     "benefitWardrobe": "Premium: thêm sản phẩm không giới hạn. Sửa và xóa vẫn mở trên Free.",
     "benefitProgress": "Premium mở 12 tháng lịch sử. Premium+ chỉ thêm toàn bộ lịch sử. Check-in mỗi ngày vẫn miễn phí.",
-    "benefitAdvanced": "Premium+ (không phải Premium) mở phân tích đa góc. Check-in 1 ảnh vẫn dùng được trên Free.",
+    "benefitAdvanced": "Premium+ (không phải Premium) mở phân tích nhiều góc. Check-in 1 ảnh vẫn dùng được trên Free.",
     "benefitExport": "Premium xuất nhật ký và báo cáo khi bạn cần mang dữ liệu đi.",
     "benefitMilestone": "Premium mở danh sách cột mốc đầy đủ — streak vẫn đếm trên Free.",
     "benefitGeneric": "Hầu hết chỉ cần Premium khi hết hạn Free. Premium+ là gói bổ sung cho đa góc / lịch sử dài. Check-in không bị khóa."
@@ -936,11 +936,11 @@
       "edit_routine": "Bạn hết lượt chỉnh routine tháng này. Premium mở chỉnh không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
       "wardrobe_full": "Tủ đồ Free đã đủ 3 món. Premium mở thêm không giới hạn. Sửa và xóa vẫn mở trên Free.",
       "progress_full_history": "Free xem 3 tháng. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn. Check-in mỗi ngày vẫn miễn phí.",
-      "advanced_skin_analysis": "Phân tích đa góc chỉ có trên Premium+ (không nằm trong Premium). Check-in 1 ảnh vẫn dùng được trên Free."
+      "advanced_skin_analysis": "Phân tích nhiều góc chỉ có trên Premium+ (không nằm trong Premium). Check-in 1 ảnh vẫn dùng được trên Free."
     },
-    "heroSub": "Free đủ check-in, streak và coach sau mỗi lần ghi. Premium (phổ biến nhất) mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Premium+ chỉ thêm phân tích đa góc và lịch sử không giới hạn.",
-    "heroSubBeta": "Đang mở Beta: Free dùng đầy đủ. Premium (AI không giới hạn, tủ đồ, lịch sử dài) sẽ được team cấp tay / invite — chưa mở thanh toán tự phục vụ.",
-    "betaInviteBanner": "Thanh toán tự phục vụ tạm tắt trong Beta để tránh cổng test. Muốn thử Premium? Gửi góp ý hoặc liên hệ team để được cấp gói.",
+    "heroSub": "Free đủ check-in, streak và coach sau mỗi lần ghi. Premium (phổ biến nhất) mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Premium+ chỉ thêm phân tích nhiều góc và lịch sử không giới hạn.",
+    "heroSubBeta": "Đang mở Beta: Free dùng đầy đủ. Premium (AI không giới hạn, tủ đồ, lịch sử dài) do team cấp khi bạn được mời — chưa mở thanh toán trên trang này.",
+    "betaInviteBanner": "Trong Beta chưa mở thanh toán trên trang này. Muốn thử Premium? Gửi góp ý hoặc liên hệ team để được cấp gói.",
     "betaInviteCta": "Premium — cấp trong Beta",
     "betaInviteCtaPlus": "Premium+ — cấp trong Beta",
     "mostPopular": "Phổ biến nhất",
@@ -975,9 +975,9 @@
     "yearlyHint": "Đang xem giá năm — tiết kiệm khoảng {percent}%.",
     "monthlyHint": "Chuyển sang Thanh toán năm để tiết kiệm khoảng {percent}%.",
     "trustLine": "Thanh toán qua SePay — gói kích hoạt tự động sau khi trả thành công.",
-    "trustLineBeta": "Beta: chưa thu tiền. Free đủ dùng; Premium do team cấp tay.",
-    "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (sandbox trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
-    "legalNoteBeta": "Giá tham khảo bằng VND. Trong Beta chưa mở cổng thanh toán — Premium chỉ cấp qua admin / invite.",
+    "trustLineBeta": "Beta: chưa thu tiền. Free đủ dùng; Premium do team cấp khi bạn được mời.",
+    "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (cổng thử trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
+    "legalNoteBeta": "Giá tham khảo bằng VND. Trong Beta chưa mở thanh toán trên trang này — Premium chỉ cấp khi team mời.",
     "summary": {
       "eyebrow": "Gói bạn đang chọn",
       "planLine": "{plan} · {interval}",
@@ -1031,20 +1031,20 @@
           "f2": "Tủ đồ đầy đủ — thêm & quản lý sản phẩm",
           "f3": "Progress 12 tháng + cột mốc đầy đủ",
           "f4": "Xuất dữ liệu & trải nghiệm không quảng cáo",
-          "f5": "Ưu tiên cải tiến từ feedback Beta"
+          "f5": "Ưu tiên cải tiến từ góp ý Beta"
         }
       },
       "premium_plus": {
         "name": "Premium+",
         "tagline": "Thêm phân tích nâng cao",
-        "blurb": "Giữ toàn bộ Premium. Chỉ thêm phân tích đa góc, lịch sử Progress không giới hạn và early access.",
+        "blurb": "Giữ toàn bộ Premium. Chỉ thêm phân tích nhiều góc, lịch sử Progress không giới hạn và dùng tính năng mới sớm.",
         "bestFor": "Chỉ khi bạn cần phân tích 2 ảnh hoặc lịch sử dài hơn 12 tháng.",
         "features": {
           "f1": "Mọi quyền lợi Premium",
-          "f2": "Phân tích da nâng cao (đa góc) — không có trên Premium",
-          "f3": "Deep memory — coach nhớ ngữ cảnh lâu hơn",
+          "f2": "Phân tích da nâng cao (nhiều góc) — không có trên Premium",
+          "f3": "Coach nhớ ngữ cảnh của bạn lâu hơn",
           "f4": "Lịch sử Progress không giới hạn (Premium: 12 tháng)",
-          "f5": "Early access tính năng mới trước"
+          "f5": "Dùng tính năng mới sớm hơn"
         }
       }
     },
@@ -1095,12 +1095,12 @@
       },
       "q3": {
         "question": "Premium và Premium+ khác nhau chỗ nào?",
-        "answer": "Premium mở hết hạn Free: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo. Premium+ giữ toàn bộ Premium và chỉ thêm phân tích đa góc, lịch sử không giới hạn, deep memory và early access. Hầu hết không cần Plus."
+        "answer": "Premium mở hết hạn Free: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo. Premium+ giữ toàn bộ Premium và chỉ thêm phân tích nhiều góc, lịch sử không giới hạn, coach nhớ bạn lâu hơn và dùng tính năng mới sớm. Hầu hết không cần Plus."
       },
       "q4": {
         "question": "Có thể đổi gói hoặc hủy sau không?",
         "answer": "Nâng cấp qua SePay bất cứ lúc nào. Đang dùng Premium thì hủy ngay trên trang này — vẫn giữ quyền lợi đến hết kỳ (và vài ngày gia hạn). Không bị khóa Free nếu bạn không nâng cấp.",
-        "answerBeta": "Beta chưa mở thanh toán tự phục vụ. Free dùng bình thường; Premium do team cấp tay / invite. Khi mở thu tiền, bạn có thể nâng cấp và hủy trên trang này."
+        "answerBeta": "Beta chưa mở thanh toán trên trang này. Free dùng bình thường; Premium do team cấp khi bạn được mời. Khi mở thu tiền, bạn có thể nâng cấp và hủy trên trang này."
       }
     }
   },
@@ -1527,7 +1527,7 @@
     },
     "empty": {
       "cta": "Check-in hôm nay",
-      "benefit": "Sau 7–14 ngày check-in liên tục, bạn sẽ thấy rõ xu hướng da qua biểu đồ và ảnh before/after.",
+      "benefit": "Sau 7–14 ngày check-in liên tục, bạn sẽ thấy rõ xu hướng da qua biểu đồ và ảnh trước–sau.",
       "first": {
         "title": "Check-in hôm nay để thấy da đổi",
         "body": "Bạn chưa có nhật ký da. Check-in hôm nay — một ảnh là đủ để bắt đầu."
@@ -2039,7 +2039,7 @@
       "skillBeginner1": "Mỗi tuần thử thêm tối đa 1 thành phần mới — và nhớ thử trước trên một vùng da nhỏ.",
       "skillIntermediate0": "Xen kẽ thành phần (VD: BHA/PHA buổi tối) — luôn đi kèm cấp ẩm + làm dịu khi da căng.",
       "skillIntermediate1": "Ghi nhật ký 5–7 ngày để nhìn được thói quen của da, đừng đổi nhiều sản phẩm cùng lúc.",
-      "skillAdvanced0": "Lên lớp (layering) có chủ đích; theo dõi pH và thứ tự acid/retinol.",
+      "skillAdvanced0": "Thoa từng lớp có lý do; nhớ thứ tự khi dùng acid hoặc retinol, và da chịu được không.",
       "skillAdvanced1": "So ảnh cùng ánh sáng/góc trước khi kết luận “tiến triển”.",
       "budgetEntry": "Ưu tiên drugstore đủ công thức: sữa rửa mặt pH ~5–6, ceramide, kem chống nắng bền hơn là serum đắt.",
       "budgetMid": "Đầu tư 1 serum đặc trị + 1 kem dưỡng/làm dịu tốt; phần còn lại giữ tối giản.",
