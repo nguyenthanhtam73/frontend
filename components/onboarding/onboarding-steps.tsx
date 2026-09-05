@@ -42,6 +42,7 @@ import {
 } from "@/lib/onboarding/guest-starter";
 import { useOnboardingRoutineStepTips } from "@/lib/onboarding/use-onboarding-routine-step-tips";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { isPhotoInputError } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 import { cn } from "@/lib/utils";
@@ -240,8 +241,18 @@ export function OnboardingStepSkinProfile({
       {analyzeFailed && !analyzing && (
         <OnboardingAiErrorPanel
           errorKind={analyzeErrorKind ?? "unknown"}
-          onRetry={onRetryAnalyze}
-          retryLabel={t("photos.errorRetry")}
+          // Re-sending a photo the server already rejected fails identically,
+          // so those kinds lead with picking a different one.
+          onRetry={
+            analyzeErrorKind && isPhotoInputError(analyzeErrorKind)
+              ? openLibrary
+              : onRetryAnalyze
+          }
+          retryLabel={
+            analyzeErrorKind && isPhotoInputError(analyzeErrorKind)
+              ? t("aiLoading.changePhotos")
+              : t("photos.errorRetry")
+          }
           secondaryLabel={t("aiLoading.useDefaultNow")}
           onSecondary={onSkipAnalyze}
           showFallbackHint

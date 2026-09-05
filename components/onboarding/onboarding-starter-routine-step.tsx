@@ -16,6 +16,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { ManualSkinFallbackBanner } from "@/components/onboarding/onboarding-ai-error-panel";
 import { FriendlyNotice } from "@/components/onboarding/onboarding-ui";
 import { Button } from "@/components/ui/button";
 import { logAffiliateClick } from "@/lib/api/affiliate";
@@ -31,7 +32,7 @@ import {
 } from "@/lib/onboarding/parse-routine-step";
 import { buildRoutineRationale } from "@/lib/onboarding/routine-rationale";
 import { useOnboardingRoutineStepTips } from "@/lib/onboarding/use-onboarding-routine-step-tips";
-import { useOnboardingStore } from "@/lib/stores/onboarding-store";
+import { isAiFallbackManual, useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
 
 /** Concern ids with an `onboarding.aiConcerns.*` translation. */
@@ -663,13 +664,17 @@ export function OnboardingRoutinePeriodSection({
 export function OnboardingStepStarterRoutine({
   editing,
   onToggleEditing,
+  onRetryAnalyze,
 }: {
   editing: boolean;
   onToggleEditing: () => void;
+  /** Back to step 1 and re-run vision — offered when the AI read failed. */
+  onRetryAnalyze?: () => void;
 }) {
   const t = useTranslations("onboarding");
   const locale = useLocale();
   const aiSnapshot = useOnboardingStore((s) => s.aiSnapshot);
+  const skinInputMode = useOnboardingStore((s) => s.skinInputMode);
   const aiConcernTags = useOnboardingStore((s) => s.aiConcernTags);
   const goal = useOnboardingStore((s) => s.goal);
   const skinType = useOnboardingStore((s) => s.skinType);
@@ -775,6 +780,7 @@ export function OnboardingStepStarterRoutine({
   const hasWhy = whyLines.length > 0;
   const badgeKey =
     carePhase === "manual" ? "step2.personalBadgeManual" : "step2.personalBadge";
+  const photoReadFailed = !aiSnapshot && isAiFallbackManual(skinInputMode);
 
   return (
     <section
@@ -783,6 +789,17 @@ export function OnboardingStepStarterRoutine({
       data-testid="onboarding-step-starter-routine"
       data-care-phase={carePhase}
     >
+      {/* The user uploaded photos and the read failed — say so, or this reads
+          as the AI's verdict on their skin. */}
+      {photoReadFailed && onRetryAnalyze ? (
+        <ManualSkinFallbackBanner
+          title={t("aiLoading.photoFallbackTitle")}
+          body={t("aiLoading.photoFallbackBody")}
+          retryLabel={t("aiLoading.retryAnalyzeAiShort")}
+          onRetryAi={onRetryAnalyze}
+        />
+      ) : null}
+
       {/* Compact header — summary + guidance + AM/PM win the first viewport. */}
       <div className="space-y-1">
         <div

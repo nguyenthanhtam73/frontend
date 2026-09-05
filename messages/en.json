@@ -1901,6 +1901,7 @@
       "analyzeWhy30": "Extra analysis means a closer starter routine — or start now with your goal-based plan below.",
       "analyzeTime30Line1": "AI is finishing your personal routine — usually just a few more seconds.",
       "analyzeTime30Line2": "Want to start now? Your goal-based routine is ready below.",
+      "analyzeSlowLine1": "This read is taking longer than usual — still running, nothing has failed.",
       "durationHint": "Usually takes 15–30 seconds",
       "earlyContextTitle": "Already noted from you",
       "earlyContextPhotos": "Analyzing {count} skin photo(s) you uploaded.",
@@ -1949,11 +1950,19 @@
       "retryAnalyzeAiShort": "Analyze again with AI",
       "manualSkinBannerTitle": "You're picking your skin type manually",
       "manualSkinBannerBody": "Results may be less accurate than AI analysis. Your photos are kept — you can try AI again anytime.",
+      "photoFallbackTitle": "This routine hasn't seen your photos",
+      "photoFallbackBody": "AI couldn't read your photos, so these steps come from the goal and concerns you picked. Your photos are still saved — analyze them anytime for a closer fit.",
+      "changePhotos": "Choose different photos",
       "errors": {
-        "timeout": "AI took too long (over 45 seconds). Try again or use the default routine now.",
+        "timeout": "AI took longer than expected. Try again or use the goal-based routine now.",
         "network": "Connection looks unstable. Check your network and try again, or use the default routine.",
         "auth": "Your session expired or the server isn't ready. Retry or use the default routine.",
         "server": "AI isn't responding right now. Try again in a few seconds or use the default routine.",
+        "photoTooLarge": "Those photos are too large. Take a new one or pick a smaller file, then try again.",
+        "photoInvalid": "We couldn't read those photos. Use a JPG, PNG, or WEBP taken with your camera.",
+        "photoCount": "Pick 2 to 3 face photos so AI can read your skin properly.",
+        "rateLimited": "You've tried a few times in a row. Wait a couple of minutes, then analyze again.",
+        "aiUnavailable": "Photo analysis is temporarily unavailable. Use the goal-based routine now and try again later.",
         "generic": "Something didn't work. Try again or use the default routine — your choices are still kept."
       }
     }

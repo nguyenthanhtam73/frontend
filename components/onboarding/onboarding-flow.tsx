@@ -44,6 +44,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   assertAnalyzeSkinPayload,
   fetchOnboardingAi,
+  isRejectedPhotoError,
   onboardingAiErrorKind,
   OnboardingAiError,
   parseJsonSafe,
@@ -200,15 +201,19 @@ export function OnboardingFlow() {
       if (!files?.length) return;
       setSkipFaceCapture(false);
       const list = Array.from(files);
-      if (replace) {
+      const state = useOnboardingStore.getState();
+      // A staged photo was rejected upstream. Appending would keep the bad one,
+      // and does nothing at all once three are staged — so start the set over.
+      const rejected =
+        state.analyzeStatus === "error" &&
+        state.analyzeErrorKind != null &&
+        isRejectedPhotoError(state.analyzeErrorKind);
+      if (replace || rejected) {
         clearPhotos();
         void appendOnboardingPhotos(list, ONBOARDING_MAX_PHOTOS, addPhoto);
         return;
       }
-      const remaining = Math.max(
-        0,
-        ONBOARDING_MAX_PHOTOS - useOnboardingStore.getState().photos.length,
-      );
+      const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - state.photos.length);
       void appendOnboardingPhotos(list, remaining, addPhoto);
     },
     [addPhoto, clearPhotos, setSkipFaceCapture],
@@ -258,6 +263,18 @@ export function OnboardingFlow() {
     buildRoutineForStep2(locale, routineLabelFn);
     setSlideDir(1);
     setIdx((i) => Math.min(i + 1, steps.length - 1));
+  }
+
+  /**
+   * Second chance from step 2 after a failed read. Always lands on step 1 — the
+   * readback confirms a good result there, and too-few photos are fixed there too.
+   */
+  function retryAnalyzeFromRoutine() {
+    const state = useOnboardingStore.getState();
+    state.setAnalyzeStatus("idle");
+    setSlideDir(-1);
+    setIdx(0);
+    if (state.photos.length >= ONBOARDING_MIN_PHOTOS) void runAnalyze();
   }
 
   function continueWithoutPhotos() {
@@ -728,6 +745,7 @@ export function OnboardingFlow() {
               <OnboardingStepStarterRoutine
                 editing={routineEditing}
                 onToggleEditing={() => setRoutineEditing((v) => !v)}
+                onRetryAnalyze={retryAnalyzeFromRoutine}
               />
             )}
 

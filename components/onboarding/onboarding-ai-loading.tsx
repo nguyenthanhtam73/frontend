@@ -7,7 +7,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { SkinGoal } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
-import { STEP1_CONCERNS } from "@/lib/onboarding/constants";
+import {
+  ONBOARDING_ANALYZE_SLOW_HINT_MS,
+  STEP1_CONCERNS,
+} from "@/lib/onboarding/constants";
 import { cn } from "@/lib/utils";
 
 export type OnboardingAiLoadingPhase = "analyze" | "starterRoutine";
@@ -191,6 +194,8 @@ export function OnboardingAiLoading({
   const connectorProgress = analyzeConnectorProgress(elapsedMs);
   const softSkip = phase === "analyze" && elapsedMs >= ANALYZE_SOFT_SKIP_MS;
   const emphasizeSkip = phase === "analyze" && elapsedMs >= ANALYZE_EMPHASIZE_SKIP_MS;
+  // Past the point where a read is normal, stop promising "a few more seconds".
+  const slowHint = phase === "analyze" && elapsedMs >= ONBOARDING_ANALYZE_SLOW_HINT_MS;
   const showEarlyContext = phase === "analyze" && elapsedMs >= ANALYZE_EARLY_CONTEXT_MS;
   const showTip = phase === "analyze" && elapsedMs >= ANALYZE_TIP_START_MS;
 
@@ -360,11 +365,13 @@ export function OnboardingAiLoading({
           {emphasizeSkip && phase === "analyze" ? (
             <div
               id={stageMessageId}
-              key="long-wait"
+              key={slowHint ? "slow-wait" : "long-wait"}
               className="space-y-1 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
             >
               <p className="text-sm font-medium leading-snug text-foreground">
-                {t("aiLoading.analyzeTime30Line1")}
+                {slowHint
+                  ? t("aiLoading.analyzeSlowLine1")
+                  : t("aiLoading.analyzeTime30Line1")}
               </p>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 {t("aiLoading.analyzeTime30Line2")}

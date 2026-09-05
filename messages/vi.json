@@ -1901,6 +1901,7 @@
       "analyzeWhy30": "Phân tích kỹ hơn giúp routine khởi đầu sát da bạn — bạn vẫn có thể bắt đầu ngay với routine từ mục tiêu.",
       "analyzeTime30Line1": "AI đang hoàn thiện routine cá nhân — thường chỉ còn vài giây nữa.",
       "analyzeTime30Line2": "Muốn bắt đầu ngay? Routine từ mục tiêu của bạn đã sẵn sàng bên dưới.",
+      "analyzeSlowLine1": "Lần này AI đọc lâu hơn bình thường — vẫn đang chạy, chưa lỗi đâu nhé.",
       "durationHint": "Thường mất 15–30 giây",
       "earlyContextTitle": "Đã ghi nhận từ bạn",
       "earlyContextPhotos": "Đang phân tích {count} ảnh da bạn đã tải lên.",
@@ -1949,11 +1950,19 @@
       "retryAnalyzeAiShort": "Phân tích lại bằng AI",
       "manualSkinBannerTitle": "Bạn đang chọn loại da thủ công",
       "manualSkinBannerBody": "Kết quả sẽ kém chính xác hơn so với phân tích AI. Ảnh của bạn vẫn được giữ — bạn có thể thử AI lại bất cứ lúc nào.",
+      "photoFallbackTitle": "Routine này chưa đọc ảnh của bạn",
+      "photoFallbackBody": "AI chưa đọc được ảnh nên các bước dưới đây dựa trên mục tiêu và vấn đề da bạn đã chọn. Ảnh của bạn vẫn được giữ — phân tích lại bất cứ lúc nào để routine sát da hơn.",
+      "changePhotos": "Chọn ảnh khác",
       "errors": {
-        "timeout": "AI xử lý quá lâu (hơn 45 giây). Bạn có thể thử lại hoặc dùng routine mặc định ngay.",
+        "timeout": "AI xử lý lâu hơn bình thường. Bạn có thể thử lại hoặc dùng routine từ mục tiêu ngay.",
         "network": "Kết nối chưa ổn định. Kiểm tra mạng rồi thử lại, hoặc dùng routine mặc định.",
         "auth": "Phiên đăng nhập hết hạn hoặc máy chủ chưa sẵn sàng. Thử lại hoặc dùng routine mặc định.",
         "server": "AI tạm thời không phản hồi. Thử lại sau vài giây hoặc dùng routine mặc định.",
+        "photoTooLarge": "Ảnh bạn chọn nặng quá. Chụp lại hoặc chọn ảnh nhẹ hơn rồi thử lại nhé.",
+        "photoInvalid": "Không đọc được ảnh này. Dùng ảnh JPG, PNG hoặc WEBP chụp từ máy ảnh nhé.",
+        "photoCount": "Chọn 2–3 ảnh khuôn mặt để AI đọc da chính xác hơn.",
+        "rateLimited": "Bạn vừa thử khá nhiều lần liên tiếp. Đợi vài phút rồi phân tích lại nhé.",
+        "aiUnavailable": "Phân tích ảnh tạm thời chưa dùng được. Bạn dùng routine từ mục tiêu trước, lát nữa thử lại nhé.",
         "generic": "Có gì đó chưa ổn. Thử lại hoặc dùng routine mặc định — lựa chọn của bạn vẫn được giữ."
       }
     }

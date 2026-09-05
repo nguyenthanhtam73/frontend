@@ -85,14 +85,23 @@ export const ONBOARDING_MAX_CONCERNS = 3;
 export const ONBOARDING_MIN_PHOTOS = 2;
 export const ONBOARDING_MAX_PHOTOS = 3;
 
-/** Vision analyze-skin — abort request after this (ms). */
-export const ONBOARDING_ANALYZE_TIMEOUT_MS = 45_000;
+/**
+ * Vision analyze-skin — abort request after this (ms).
+ * Two sequential model calls (vision → coach) plus upload regularly run past a
+ * minute on mobile data; the loading UI offers the goal-based routine from 15s,
+ * so a long ceiling costs nothing and stops us failing runs that would land.
+ */
+export const ONBOARDING_ANALYZE_TIMEOUT_MS = 120_000;
 
 /** During analyze loading — show “taking longer than usual” copy (ms). */
-export const ONBOARDING_ANALYZE_SLOW_HINT_MS = 35_000;
+export const ONBOARDING_ANALYZE_SLOW_HINT_MS = 45_000;
 
-/** Finish / preview-complete — wait before offering default routine (ms). */
-export const ONBOARDING_FINISH_TIMEOUT_MS = 45_000;
+/**
+ * Finish / preview-complete — wait before offering default routine (ms).
+ * The loading copy already has a 35s tier, so 45s left almost no headroom and
+ * discarded routines that were about to land.
+ */
+export const ONBOARDING_FINISH_TIMEOUT_MS = 90_000;
 
 /** Background attach of guest claim photos after fast JSON complete (ms). */
 export const ONBOARDING_PHOTO_ATTACH_TIMEOUT_MS = 90_000;
