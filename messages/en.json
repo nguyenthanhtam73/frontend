@@ -942,6 +942,7 @@
     "heroSubBeta": "Beta is open: Free covers the core. Premium (unlimited AI, full shelf, longer history) is granted by the team / invite — self-serve payments are not open yet.",
     "betaInviteBanner": "Self-serve checkout is off during Beta so nobody hits the test payment gateway. Want Premium? Send feedback or contact the team for an invite.",
     "betaInviteCta": "Premium — invite in Beta",
+    "betaInviteCtaPlus": "Premium+ — invite in Beta",
     "mostPopular": "Most popular",
     "plusBadge": "Add-on",
     "plusNote": "Not sure? Pick Premium. Premium+ doesn't replace Premium — it only adds multi-angle analysis and all-time history.",

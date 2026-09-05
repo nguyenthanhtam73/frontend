@@ -310,7 +310,13 @@ function resolveCta({
   }
   // Beta: hide self-serve SePay — Premium is admin / invite only.
   if (!checkoutEnabled) {
-    return { kind: "disabled", label: tCommon("betaInviteCta") };
+    return {
+      kind: "disabled",
+      label:
+        plan === "premium_plus"
+          ? tCommon("betaInviteCtaPlus")
+          : tCommon("betaInviteCta"),
+    };
   }
   // Paid tiers — logged-in users go to SePay; guests register first (keep interval).
   if (isLoggedIn) {
