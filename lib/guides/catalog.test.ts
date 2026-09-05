@@ -25,12 +25,12 @@ import {
 } from "./schema";
 import { countGuideWords } from "./word-count";
 
-const NEW_SLUGS = ["tham-mun", "da-dau-van-phong"] as const;
+const NEW_SLUGS = ["da-kho", "da-nhay-cam", "retinol-cho-nguoi-moi"] as const;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const OG_DIR = path.join(ROOT, "public/og/guides");
 
 describe("guide catalog", () => {
-  it("exposes six slugs and matching public paths", () => {
+  it("exposes nine slugs and matching public paths", () => {
     assert.deepEqual([...GUIDE_SLUGS], [
       "da-dau",
       "mun",
@@ -38,6 +38,9 @@ describe("guide catalog", () => {
       "routine-cham-da",
       "tham-mun",
       "da-dau-van-phong",
+      "da-kho",
+      "da-nhay-cam",
+      "retinol-cho-nguoi-moi",
     ]);
     assert.deepEqual(guidePublicPaths(), [
       "/guides",
@@ -47,6 +50,9 @@ describe("guide catalog", () => {
       "/guides/routine-cham-da",
       "/guides/tham-mun",
       "/guides/da-dau-van-phong",
+      "/guides/da-kho",
+      "/guides/da-nhay-cam",
+      "/guides/retinol-cho-nguoi-moi",
     ]);
     for (const path of guidePublicPaths()) {
       assert.ok(
@@ -96,8 +102,8 @@ describe("guide catalog", () => {
         }
       }
     }
-    assert.equal(listGuideArticles("vi").length, 6);
-    assert.equal(listGuideArticles("en").length, 6);
+    assert.equal(listGuideArticles("vi").length, 9);
+    assert.equal(listGuideArticles("en").length, 9);
   });
 
   it("keeps Vietnamese pillar and new guides in the useful-length band", () => {
@@ -117,13 +123,15 @@ describe("guide catalog", () => {
     }
   });
 
-  it("publishes the two new high-intent URLs in both locales", () => {
+  it("publishes the three new high-intent URLs in both locales", () => {
     for (const slug of NEW_SLUGS) {
       const vi = getGuideArticle(slug, "vi");
       const en = getGuideArticle(slug, "en");
       assert.equal(vi.path, `/guides/${slug}`);
       assert.notEqual(vi.title, en.title);
       assert.ok(vi.datePublished <= vi.dateModified);
+      assert.match(vi.lede, /Beta/i);
+      assert.match(en.lede, /Beta/i);
     }
   });
 
@@ -134,7 +142,7 @@ describe("guide catalog", () => {
   });
 
   it("emits Article dates, FAQ, and BreadcrumbList schema", () => {
-    const article = getGuideArticle("tham-mun", "vi");
+    const article = getGuideArticle("da-kho", "vi");
     const chrome = guideChrome("vi");
     const articleLd = guideArticleJsonLd(article, "vi");
     const faqLd = guideFaqJsonLd(article);
@@ -148,8 +156,8 @@ describe("guide catalog", () => {
     assert.equal(crumbs.itemListElement.length, 3);
     assert.equal(indexCrumbs.itemListElement.length, 2);
     assert.ok(
-      String(crumbs.itemListElement[2]?.item).endsWith("/guides/tham-mun") ||
-        String(crumbs.itemListElement[2]?.item).includes("/guides/tham-mun"),
+      String(crumbs.itemListElement[2]?.item).endsWith("/guides/da-kho") ||
+        String(crumbs.itemListElement[2]?.item).includes("/guides/da-kho"),
     );
   });
 });

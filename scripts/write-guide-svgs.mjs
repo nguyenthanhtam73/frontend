@@ -262,3 +262,94 @@ write(
   ${t(400, 220, "Thấm dầu", 28, "#2A8F88")}
   ${t(400, 270, "Giữ lớp SPF · đừng rửa rồi ra nắng", 20, "#2A5552", 600)}`,
 );
+
+// --- da-kho ---
+write(
+  "da-kho",
+  "hero",
+  `${t(400, 64, "Căng sau rửa ≠ da sạch", 26)}
+  ${card(70, 110, 300, 280, "#F8E8EC")}<ellipse cx="220" cy="220" rx="70" ry="88" fill="#F3B8A8"/>
+  <path d="M190 250 Q220 238 250 250" fill="none" stroke="#C45C74" stroke-width="6" stroke-linecap="round"/>
+  ${t(220, 360, "Rửa đến kít", 20, "#C45C74")}
+  ${card(430, 110, 300, 280, "#D8F0EE")}<ellipse cx="580" cy="220" rx="70" ry="88" fill="#F7D4C8"/>
+  <path d="M550 255 Q580 272 610 255" fill="none" stroke="#2A8F88" stroke-width="6" stroke-linecap="round"/>
+  ${t(580, 360, "Dưỡng khi ẩm", 20, "#2A8F88")}`,
+);
+write(
+  "da-kho",
+  "layers",
+  `${t(400, 64, "Khóa ẩm, rồi SPF", 26)}
+  ${card(50, 110, 220, 280, "#D8F0EE")}${t(160, 200, "1", 48, "#2A8F88")}${t(160, 260, "Rửa dịu", 22)}${t(160, 296, "Không kít mặt", 16, "#2A5552", 500)}
+  ${card(290, 110, 220, 280, "#F6EDE0")}${t(400, 200, "2", 48, "#B8864A")}${t(400, 260, "Dưỡng ẩm", 22)}${t(400, 296, "Khi da hơi ướt", 16, "#2A5552", 500)}
+  ${card(530, 110, 220, 280, "#F8F0DC")}${t(640, 200, "3", 48, "#C48A2A")}${t(640, 260, "SPF sáng", 22)}${t(640, 296, "Da khô cũng nắng", 16, "#2A5552", 500)}`,
+);
+write(
+  "da-kho",
+  "climate",
+  `${t(400, 64, "Một ngày, ba khí hậu", 26)}
+  ${card(40, 110, 230, 280, "#E7F0F5")}${t(155, 230, "❄", 42)}${t(155, 300, "Máy lạnh", 20)}
+  ${card(285, 110, 230, 280, "#D8E8F4")}${t(400, 230, "☂", 42)}${t(400, 300, "Mưa ẩm", 20)}
+  ${card(530, 110, 230, 280, "#F8F0DC")}${t(645, 230, "☀", 42)}${t(645, 300, "Nắng xe máy", 20)}`,
+);
+
+// --- da-nhay-cam ---
+write(
+  "da-nhay-cam",
+  "hero",
+  `${t(400, 64, "Đỏ sau chai mới: dừng", 26)}
+  <ellipse cx="280" cy="240" rx="88" ry="108" fill="#F7D4C8"/>
+  <ellipse cx="280" cy="250" rx="58" ry="40" fill="#F4C7CE" opacity="0.7"/>
+  <rect x="470" y="160" width="90" height="170" rx="28" fill="#C5D5D4"/>
+  <path d="M455 175 L575 315" stroke="#C45C74" stroke-width="10" stroke-linecap="round"/>
+  ${t(400, 400, "Không cố chịu cho quen", 20, "#C45C74")}`,
+);
+write(
+  "da-nhay-cam",
+  "minimal",
+  `${t(400, 64, "Ba bước khi da đang kêu", 26)}
+  ${card(50, 110, 220, 280, "#D8F0EE")}${t(160, 210, "Rửa dịu", 22, "#2A8F88")}${t(160, 260, "Ít hương", 16, "#2A5552", 500)}
+  ${card(290, 110, 220, 280, "#E8F2EC")}${t(400, 210, "Dưỡng", 22, "#3B7A5A")}${t(400, 260, "Ít thành phần", 16, "#2A5552", 500)}
+  ${card(530, 110, 220, 280, "#F8F0DC")}${t(640, 210, "SPF", 22, "#C48A2A")}${t(640, 260, "Kết cấu chịu được", 16, "#2A5552", 500)}`,
+);
+write(
+  "da-nhay-cam",
+  "patch",
+  `${t(400, 58, "Patch-test 2–3 đêm", 26)}
+  <ellipse cx="400" cy="250" rx="120" ry="150" fill="#F7D4C8"/>
+  <circle cx="292" cy="230" r="22" fill="none" stroke="#2A8F88" stroke-width="6"/>
+  <circle cx="400" cy="318" r="20" fill="none" stroke="#2A8F88" stroke-width="6"/>
+  ${t(400, 430, "Sau tai · dọc hàm — chưa cả mặt", 18, "#2A5552", 600)}`,
+);
+
+// --- retinol-cho-nguoi-moi ---
+write(
+  "retinol-cho-nguoi-moi",
+  "calendar",
+  `${t(400, 58, "Hai đêm / tuần đã là bắt đầu", 24)}
+  ${[0, 1, 2, 3, 4, 5, 6]
+    .map((d) => {
+      const x = 70 + d * 96;
+      const active = d === 1 || d === 4;
+      return `${card(x, 130, 84, 220, active ? "#F1E8F4" : "#E7F3EA")}${t(x + 42, 240, active ? "R" : "·", 32, active ? "#7A5A8A" : "#2A8F88")}${t(x + 42, 300, active ? "Retinol" : "Dưỡng", 14, "#2A5552", 600)}`;
+    })
+    .join("")}`,
+);
+write(
+  "retinol-cho-nguoi-moi",
+  "sandwich",
+  `${t(400, 64, "Dưỡng → mỏng → dưỡng", 26)}
+  <rect x="160" y="300" width="480" height="52" rx="16" fill="#9DD7D4"/>
+  <rect x="200" y="220" width="400" height="52" rx="16" fill="#7A5A8A"/>
+  <rect x="160" y="140" width="480" height="52" rx="16" fill="#9DD7D4"/>
+  ${t(400, 334, "Dưỡng", 18, "#0F2E2C", 600)}
+  ${t(400, 254, "Retinol mỏng", 18, "#FFFFFF", 700)}
+  ${t(400, 174, "Dưỡng", 18, "#0F2E2C", 600)}
+  ${t(400, 420, "Không phải lớp dày cho nhanh", 16, "#2A5552", 500)}`,
+);
+write(
+  "retinol-cho-nguoi-moi",
+  "daytime",
+  `${t(400, 64, "Sáng hôm sau: SPF", 26)}
+  ${card(70, 120, 300, 260, "#F8F0DC")}${t(220, 230, "SPF", 28, "#C48A2A")}${t(220, 280, "Hai ngón tay", 18)}
+  ${card(430, 120, 300, 260, "#D8F0EE")}${t(580, 230, "Mũ", 28, "#2A8F88")}${t(580, 280, "Không thêm acid", 18)}`,
+);

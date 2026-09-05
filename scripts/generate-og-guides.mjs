@@ -67,6 +67,27 @@ const GUIDES = [
     accent: "#3D6B8A",
     wash: "#E6F0F5",
   },
+  {
+    slug: "da-kho",
+    kicker: "Da khô · nóng ẩm",
+    title: "Dưỡng khi ẩm, đừng rửa kít",
+    accent: "#B8864A",
+    wash: "#F6EDE0",
+  },
+  {
+    slug: "da-nhay-cam",
+    kicker: "Da nhạy cảm",
+    title: "Giảm kích, một thay đổi",
+    accent: "#6A8A7A",
+    wash: "#E8F2EC",
+  },
+  {
+    slug: "retinol-cho-nguoi-moi",
+    kicker: "Retinol người mới",
+    title: "Chậm, SPF, dừng khi rát",
+    accent: "#7A5A8A",
+    wash: "#F1E8F4",
+  },
 ];
 
 function escapeXml(value) {
