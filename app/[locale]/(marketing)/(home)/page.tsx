@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { SignedInHomeActivation } from "@/components/activation/signed-in-home-activation";
 import { Benefits } from "@/components/landing/benefits";
 import { BetaSignup } from "@/components/landing/beta-signup";
 import { Cta } from "@/components/landing/cta";
@@ -99,6 +100,7 @@ export default async function HomePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
+      <SignedInHomeActivation />
       <Hero />
       <Problem />
       <Solution />

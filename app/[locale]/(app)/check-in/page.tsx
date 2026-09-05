@@ -5,6 +5,7 @@ import { pageLocaleMetadata } from "@/lib/seo";
 
 import dynamic from "next/dynamic";
 
+import { ActivationStreakCard } from "@/components/activation/activation-streak-card";
 import { CheckInFirstVisit } from "@/components/activation/check-in-first-visit";
 import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
 import { OfflineNotice } from "@/components/site/offline-notice";
@@ -68,6 +69,7 @@ export default async function CheckInPage({ params }: Props) {
         />
       </div>
 
+      <ActivationStreakCard className="mb-6 sm:mb-8" hideCheckInCta />
       <CheckInFirstVisit />
 
       {/* Surface offline state before the form so users know uploads/AI feedback

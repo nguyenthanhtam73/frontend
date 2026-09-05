@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { ActivationCheckInBanner } from "@/components/activation/activation-check-in-banner";
 import { HashScroll } from "@/components/site/hash-scroll";
 import { MetaPixel } from "@/components/site/meta-pixel";
 import { NavigationBlockListener } from "@/components/navigation/navigation-block-listener";
@@ -97,6 +98,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             <OfflineIndicator />
             <NavigationBlockListener />
             <SiteHeader />
+            <ActivationCheckInBanner />
             <HashScroll />
             <main className="flex min-w-0 max-w-full flex-1 flex-col">{children}</main>
             <SiteFooter />

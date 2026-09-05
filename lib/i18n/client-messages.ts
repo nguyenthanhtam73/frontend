@@ -16,6 +16,7 @@ export const SHELL_MESSAGE_NAMESPACES = [
   "auth",
   "premium",
   "feedback",
+  "activation",
 ] as const;
 
 /** Home client islands (beta form + progress preview cards). */

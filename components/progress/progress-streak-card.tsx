@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import { ApplyConfirmDialog } from "@/components/routine/parts/apply-confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
 import { useToast } from "@/hooks/use-toast";
 import { ApiError } from "@/lib/api-client";
 import { useCountUp } from "@/lib/hooks/use-count-up";
@@ -20,6 +21,7 @@ import {
   manualFreezeTarget,
   manualFreezeTargetDate,
   resolveStreakStatus,
+  streakDateKey,
   streakFlameTier,
 } from "@/lib/streak/history";
 import type { StreakDTO, StreakDayCell, StreakStatus } from "@/lib/types/streak";
@@ -254,6 +256,17 @@ function StreakCardBody({
 
           <StatusBadge status={status} pendingAutoSave={pendingAuto} />
         </div>
+
+        {streak.last_check_in_date !== streakDateKey() ? (
+          <ButtonLink
+            href="/check-in"
+            size="sm"
+            className="min-h-11 w-full gap-1.5 font-semibold sm:w-auto"
+            data-testid="progress-streak-check-in-cta"
+          >
+            {t("checkInCta")}
+          </ButtonLink>
+        ) : null}
 
         {softExpired && streak.last_check_in_date ? (
           <p className="text-xs leading-relaxed text-muted-foreground">
