@@ -19,6 +19,7 @@ import {
   CoachWelcomePrimaryCtaBlock,
   CoachWelcomeStickyBar,
 } from "@/components/onboarding/coach-welcome-cta";
+import { FirstCheckInPrompt } from "@/components/onboarding/first-check-in-prompt";
 import {
   CoachWelcomeCelebrationHeader,
 } from "@/components/onboarding/coach-welcome-payoff";
@@ -363,6 +364,12 @@ function CoachWelcomeLoaded({
         <CoachWelcomeSection>
           <CoachWelcomeCelebrationHeader isGuest={isGuest} />
         </CoachWelcomeSection>
+
+        <FirstCheckInPrompt
+          signedIn={signedIn}
+          isGuest={isGuest}
+          pendingAccountClaim={pendingAccountClaim}
+        />
 
         <CoachWelcomeSection>
           <StarterRoutineGenerationNotice
@@ -777,12 +784,33 @@ export function CoachWelcomeClient() {
   }
 
   if (!loaded || view === "empty") {
+    const signedIn = Boolean(getAccessToken());
     return (
       <div className="mx-auto max-w-lg space-y-4 text-center">
         <p className="text-muted-foreground">{t("empty")}</p>
-        <Link href="/onboarding" className={cn(buttonVariants({ variant: "default" }))}>
-          {t("backOnboarding")}
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          {signedIn ? (
+            <Link
+              href="/check-in"
+              className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full sm:w-auto")}
+              data-testid="coach-welcome-empty-check-in"
+            >
+              {t("firstCheckIn.cta")}
+            </Link>
+          ) : null}
+          <Link
+            href="/onboarding"
+            className={cn(
+              buttonVariants({
+                variant: signedIn ? "outline" : "default",
+                size: "lg",
+              }),
+              "w-full sm:w-auto",
+            )}
+          >
+            {t("backOnboarding")}
+          </Link>
+        </div>
       </div>
     );
   }

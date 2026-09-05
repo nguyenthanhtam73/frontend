@@ -1,6 +1,19 @@
 import type { FeatureId, PlanTier } from "@/lib/premium/features";
 import type { FeatureAccess } from "@/lib/premium/types";
 
+/**
+ * GET /api/v1/me/usage contract the activation/paywall UI depends on.
+ *
+ * Required for live used/remaining chips (frontend will not invent 3/5/3):
+ * - routine_suggest / routine_manual_edit: { used, limit, remaining, unlimited? }
+ * - wardrobe: { used, limit, remaining, unlimited?, can_write, can_manage? }
+ * Optional richer catalog: features.ai_routine_suggestion | edit_routine |
+ * wardrobe_full with the same meter fields + allowed.
+ *
+ * Streak 0 reminder uses GET /api/v1/me/streak
+ * (current_streak, first_check_in_date, last_check_in_date).
+ */
+
 export type UsageCounterDTO = {
   used: number;
   limit: number;

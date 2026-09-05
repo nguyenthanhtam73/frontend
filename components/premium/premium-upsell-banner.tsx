@@ -16,6 +16,9 @@ export function PremiumUpsellBanner({
   primaryCta = true,
   onDismiss,
   dismissLabel = "Dismiss",
+  usageLabel,
+  remainingLabel,
+  benefit,
 }: {
   title: string;
   body: string;
@@ -27,6 +30,10 @@ export function PremiumUpsellBanner({
   primaryCta?: boolean;
   onDismiss?: () => void;
   dismissLabel?: string;
+  /** Live used/limit from GET /me/usage — omit when the backend sent no meter. */
+  usageLabel?: string;
+  remainingLabel?: string;
+  benefit?: string;
 }) {
   return (
     <div
@@ -60,7 +67,24 @@ export function PremiumUpsellBanner({
           <p className={cn("font-semibold leading-snug", compact ? "text-sm" : "text-base")}>
             {title}
           </p>
+          {usageLabel || remainingLabel ? (
+            <p
+              className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-amber-900/90 dark:text-amber-100/90"
+              data-testid="upsell-usage-meter"
+            >
+              {usageLabel ? <span>{usageLabel}</span> : null}
+              {usageLabel && remainingLabel ? (
+                <span className="text-muted-foreground" aria-hidden>
+                  ·
+                </span>
+              ) : null}
+              {remainingLabel ? <span>{remainingLabel}</span> : null}
+            </p>
+          ) : null}
           <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+          {benefit ? (
+            <p className="text-xs leading-relaxed text-foreground/80">{benefit}</p>
+          ) : null}
           {cta ? (
             <ButtonLink
               href={ctaHref}

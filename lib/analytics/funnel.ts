@@ -12,6 +12,7 @@ export const FUNNEL_EVENTS = {
   routineAccepted: "onboarding_routine_accepted",
   signupCtaClick: "onboarding_signup_cta_click",
   registerSuccess: "onboarding_register_success",
+  firstCheckInCtaClick: "activation_first_checkin_cta_click",
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

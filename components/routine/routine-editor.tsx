@@ -101,25 +101,24 @@ export function RoutineEditor() {
   const suggestDisabled = suggestGate.locked;
   const editLocked = editGate.locked;
 
-  const editLimit = editGate.limit > 0 ? editGate.limit : 5;
-  const suggestLimit = suggestGate.limit > 0 ? suggestGate.limit : 3;
+  const editLimit = editGate.hasMeter ? editGate.limit : 0;
+  const suggestLimit = suggestGate.hasMeter ? suggestGate.limit : 0;
 
-  const editQuotaLabel = editGate.isPremium
-    ? undefined
-    : !editGate.isLoading
-      ? t("quotaManualEdit", {
+  const editQuotaLabel =
+    editGate.isPremium || editGate.isLoading || !editGate.hasMeter
+      ? undefined
+      : t("quotaManualEdit", {
           used: editGate.used,
           limit: editLimit,
-        })
-      : undefined;
+        });
 
   const saveBarQuotaHint = useMemo(() => {
     if (editGate.isPremium && suggestGate.isPremium) return null;
     const parts: string[] = [];
-    if (!editGate.isPremium && !editGate.isLoading) {
+    if (!editGate.isPremium && !editGate.isLoading && editGate.hasMeter) {
       parts.push(t("quotaSaveBarRemaining", { remaining: editGate.remaining }));
     }
-    if (!suggestGate.isPremium && !suggestGate.isLoading) {
+    if (!suggestGate.isPremium && !suggestGate.isLoading && suggestGate.hasMeter) {
       parts.push(
         t("quotaSaveBarSuggest", {
           remaining: suggestGate.remaining,
@@ -131,9 +130,11 @@ export function RoutineEditor() {
   }, [
     editGate.isPremium,
     editGate.isLoading,
+    editGate.hasMeter,
     editGate.remaining,
     suggestGate.isPremium,
     suggestGate.isLoading,
+    suggestGate.hasMeter,
     suggestGate.remaining,
     suggestLimit,
     t,
@@ -141,7 +142,7 @@ export function RoutineEditor() {
 
   const suggestQuotaLabel = suggestGate.isPremium
     ? t("premiumUnlimited")
-    : !suggestGate.isLoading
+    : !suggestGate.isLoading && suggestGate.hasMeter
       ? t("quotaSuggest", {
           used: suggestGate.used,
           limit: suggestLimit,
@@ -152,11 +153,15 @@ export function RoutineEditor() {
   const editUpsellRef = useRef<HTMLDivElement>(null);
 
   function resolveEditExceeded() {
-    return t("quotaEditExceeded", { limit: editLimit });
+    return editLimit > 0
+      ? t("quotaEditExceeded", { limit: editLimit })
+      : tPremium("quotaEditBodyUnknown");
   }
 
   function resolveSuggestExceeded() {
-    return t("quotaSuggestExceeded", { limit: suggestLimit });
+    return suggestLimit > 0
+      ? t("quotaSuggestExceeded", { limit: suggestLimit })
+      : tPremium("quotaSuggestBody");
   }
 
   function resolveSaveErrorMessage(code: string | null | undefined) {

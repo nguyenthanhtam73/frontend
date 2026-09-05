@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
 import { Feature, type FeatureId } from "@/lib/premium/features";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
+import { buildUpsellPricingHref } from "@/lib/premium/upsell-href";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 
 type UpsellBannerProps = {
@@ -28,13 +29,14 @@ type UpsellBannerProps = {
  * with Free / Premium / Premium+ gates.
  *
  * Wraps the existing PremiumUpsellBanner visual — do not duplicate styling.
+ * Usage chips only render when GET /me/usage sent a live meter.
  */
 export function UpsellBanner({
   feature,
   title,
   body,
   cta,
-  ctaHref = "/pricing",
+  ctaHref,
   className,
   compact,
   onDismiss,
@@ -51,8 +53,9 @@ export function UpsellBanner({
     return null;
   }
 
-  const copy = resolveCopy(feature, t, gate.limit || (feature === Feature.EditRoutine ? 5 : 3));
+  const copy = resolveCopy(feature, t, gate.hasMeter ? gate.limit : 0);
   const checkoutEnabled = isSePayCheckoutEnabled();
+  const href = ctaHref ?? buildUpsellPricingHref(feature);
 
   return (
     <div id={id}>
@@ -60,11 +63,24 @@ export function UpsellBanner({
         title={title ?? copy.title}
         body={body ?? (checkoutEnabled ? copy.body : t("betaBody"))}
         cta={cta ?? (checkoutEnabled ? t("cta") : t("betaCta"))}
-        ctaHref={ctaHref}
+        ctaHref={href}
         className={className}
         compact={compact}
         onDismiss={onDismiss}
         dismissLabel={t("dismiss")}
+        usageLabel={
+          gate.hasMeter && !gate.unlimited
+            ? t("usageUsed", { used: gate.used, limit: gate.limit })
+            : gate.locked && !gate.unlimited
+              ? t("usageUnknown")
+              : undefined
+        }
+        remainingLabel={
+          gate.hasMeter && !gate.unlimited
+            ? t("usageRemaining", { remaining: gate.remaining })
+            : undefined
+        }
+        benefit={checkoutEnabled ? copy.benefit : undefined}
       />
     </div>
   );
@@ -74,47 +90,56 @@ function resolveCopy(
   feature: FeatureId | undefined,
   t: ReturnType<typeof useTranslations>,
   limit: number,
-): { title: string; body: string } {
+): { title: string; body: string; benefit: string } {
   switch (feature) {
     case Feature.AIRoutineSuggestion:
       return {
         title: t("quotaSuggestTitle"),
         body: t("quotaSuggestBody"),
+        benefit: t("benefitSuggest"),
       };
     case Feature.EditRoutine:
       return {
         title: t("quotaEditTitle"),
-        body: t("quotaEditBody", { limit: limit || 5 }),
+        body:
+          limit > 0 ? t("quotaEditBody", { limit }) : t("quotaEditBodyUnknown"),
+        benefit: t("benefitEdit"),
       };
     case Feature.WardrobeFull:
       return {
         title: t("wardrobeTitle"),
         body: t("wardrobeBody"),
+        benefit: t("benefitWardrobe"),
       };
     case Feature.ProgressFullHistory:
       return {
         title: t("progressTitle"),
         body: t("progressBody"),
+        benefit: t("benefitProgress"),
       };
     case Feature.AdvancedSkinAnalysis:
       return {
         title: t("advancedTitle"),
         body: t("advancedBody"),
+        benefit: t("benefitAdvanced"),
       };
     case Feature.ExportData:
       return {
         title: t("exportTitle"),
         body: t("exportBody"),
+        benefit: t("benefitExport"),
       };
     case Feature.MilestoneFull:
       return {
         title: t("milestoneTitle"),
         body: t("milestoneBody"),
+        benefit: t("benefitMilestone"),
       };
     default:
       return {
         title: t("genericTitle"),
         body: t("genericBody"),
+        benefit: t("benefitGeneric"),
       };
   }
 }
