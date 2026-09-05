@@ -21,6 +21,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken, AUTH_CHANGED_EVENT } from "@/lib/auth-token";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
+import { markAwaitingFirstCheckIn } from "@/lib/activation/first-check-in";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { buildStepStarterRoutine } from "@/lib/onboarding/build-step-routine";
 import { appendOnboardingPhotos } from "@/lib/onboarding/compress-photo";
@@ -448,6 +449,7 @@ export function OnboardingFlow() {
 
     if (state.skillMode) setSkillGlobal(state.skillMode);
     state.markComplete();
+    if (!guestish) markAwaitingFirstCheckIn();
     router.push("/onboarding/coach-welcome");
   }
 

@@ -60,7 +60,12 @@ export function ProgressEmptyState({
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <ButtonLink href="/check-in" size="lg" className="gap-1.5">
+          <ButtonLink
+            href="/check-in"
+            size="lg"
+            className="min-h-12 w-full gap-1.5 font-bold shadow-lg shadow-primary/20 sm:w-auto"
+            data-testid="progress-empty-check-in"
+          >
             <Sparkles className="size-4" aria-hidden />
             {t("cta")}
           </ButtonLink>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { ActivationCheckInBanner } from "@/components/activation/activation-check-in-banner";
 import { MergedMessagesLayout } from "@/components/i18n/merged-messages-layout";
 import { APP_CLIENT_MESSAGE_NAMESPACES } from "@/lib/i18n/client-messages";
 import { appShellRobots } from "@/lib/seo";
@@ -17,6 +18,7 @@ export function generateMetadata(): Metadata {
 export default function AppMessagesLayout({ children }: { children: ReactNode }) {
   return (
     <MergedMessagesLayout namespaces={APP_CLIENT_MESSAGE_NAMESPACES}>
+      <ActivationCheckInBanner />
       {children}
     </MergedMessagesLayout>
   );

@@ -11,6 +11,10 @@ describe("funnel analytics", () => {
     assert.equal(FUNNEL_EVENTS.routineAccepted, "onboarding_routine_accepted");
     assert.equal(FUNNEL_EVENTS.signupCtaClick, "onboarding_signup_cta_click");
     assert.equal(FUNNEL_EVENTS.registerSuccess, "onboarding_register_success");
+    assert.equal(
+      FUNNEL_EVENTS.firstCheckInCtaClick,
+      "activation_first_checkin_cta_click",
+    );
   });
 
   it("accepts only known funnel event names", () => {

@@ -5,6 +5,7 @@ import { pageLocaleMetadata } from "@/lib/seo";
 
 import dynamic from "next/dynamic";
 
+import { CheckInFirstVisit } from "@/components/activation/check-in-first-visit";
 import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
 import { OfflineNotice } from "@/components/site/offline-notice";
 
@@ -66,6 +67,8 @@ export default async function CheckInPage({ params }: Props) {
           desc={t("heroStepSafetyDesc")}
         />
       </div>
+
+      <CheckInFirstVisit />
 
       {/* Surface offline state before the form so users know uploads/AI feedback
           will likely fail until connectivity returns. */}

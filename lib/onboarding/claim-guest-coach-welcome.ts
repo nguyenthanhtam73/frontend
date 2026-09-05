@@ -25,6 +25,7 @@ import {
   type CoachWelcomePayload,
 } from "@/lib/types/starter-routine";
 import type { PhotoItem } from "@/lib/stores/onboarding-store";
+import { markAwaitingFirstCheckIn } from "@/lib/activation/first-check-in";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** After guest claim, land on the payoff screen with their routine. */
@@ -497,6 +498,7 @@ export async function claimGuestCoachWelcomeIfNeeded(
       void clearGuestClaimPhotos();
     }
 
+    markAwaitingFirstCheckIn();
     return {
       profileId: result.profileId,
       starterRoutinePending: result.starterRoutinePending,

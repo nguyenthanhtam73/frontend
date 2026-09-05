@@ -16,11 +16,19 @@ import {
   readCheckoutIntentFromSearch,
   wantsAutoCheckout,
 } from "@/lib/premium/checkout-intent";
-import { isPaidPlan, normalizePlanTier } from "@/lib/premium/features";
+import {
+  isPaidPlan,
+  normalizePlanTier,
+  type FeatureId,
+} from "@/lib/premium/features";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
 import type { BillingInterval } from "@/lib/premium/pricing";
 import { YEARLY_SAVE_PERCENT } from "@/lib/premium/pricing";
+import {
+  readUpsellFeatureFromSearch,
+  recommendedPlanForFeature,
+} from "@/lib/premium/upsell-href";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** Client shell: billing interval state + plan cards + compare + FAQ. */
@@ -57,6 +65,11 @@ function PricingViewInner() {
     () => wantsAutoCheckout(searchParams),
     [searchParams],
   );
+  const upsellFrom = useMemo(
+    () => readUpsellFeatureFromSearch(searchParams),
+    [searchParams],
+  );
+  const highlightPlan = recommendedPlanForFeature(upsellFrom ?? undefined);
 
   const [interval, setInterval] = useState<BillingInterval>(
     () => intent?.interval ?? "yearly",
@@ -125,6 +138,14 @@ function PricingViewInner() {
           <p className="text-pretty text-[0.95rem] leading-relaxed text-muted-foreground sm:text-lg">
             {checkoutEnabled ? t("heroSub") : t("heroSubBeta")}
           </p>
+          {upsellFrom ? (
+            <p
+              data-testid="pricing-from-context"
+              className="mx-auto max-w-lg rounded-xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm leading-relaxed text-amber-950 dark:border-amber-500/25 dark:bg-amber-950/40 dark:text-amber-50"
+            >
+              {fromContextCopy(t, upsellFrom)}
+            </p>
+          ) : null}
           {!checkoutEnabled ? (
             <p
               data-testid="pricing-beta-banner"
@@ -183,7 +204,7 @@ function PricingViewInner() {
           <PricingPlanCard
             plan="premium"
             interval={interval}
-            highlighted
+            highlighted={highlightPlan === "premium"}
             currentPlan={currentPlan}
             isLoggedIn={isLoggedIn}
             checkoutEnabled={checkoutEnabled}
@@ -199,6 +220,7 @@ function PricingViewInner() {
           <PricingPlanCard
             plan="premium_plus"
             interval={interval}
+            highlighted={highlightPlan === "premium_plus"}
             currentPlan={currentPlan}
             isLoggedIn={isLoggedIn}
             checkoutEnabled={checkoutEnabled}
@@ -259,4 +281,20 @@ function PricingViewInner() {
       </div>
     </div>
   );
+}
+
+const FROM_CONTEXT_KEYS: Partial<Record<FeatureId, string>> = {
+  ai_routine_suggestion: "fromContext.ai_routine_suggestion",
+  edit_routine: "fromContext.edit_routine",
+  wardrobe_full: "fromContext.wardrobe_full",
+  progress_full_history: "fromContext.progress_full_history",
+  advanced_skin_analysis: "fromContext.advanced_skin_analysis",
+};
+
+function fromContextCopy(
+  t: ReturnType<typeof useTranslations>,
+  feature: FeatureId,
+): string {
+  const key = FROM_CONTEXT_KEYS[feature];
+  return key ? t(key) : t("fromContext.generic");
 }

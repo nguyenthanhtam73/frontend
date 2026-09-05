@@ -1,4 +1,5 @@
 import type { FeatureId, PlanTier } from "@/lib/premium/features";
+import type { UsageCounterDTO, UsageQuotaDTO } from "@/lib/types/usage";
 
 export type FeatureAccess = {
   allowed: boolean;
@@ -8,6 +9,13 @@ export type FeatureAccess = {
   remaining?: number;
   kind?: "boolean" | "monthly_quota" | "history_months" | string;
   history_months?: number;
+};
+
+/** Live meters from GET /me/usage — null when the backend omitted the field. */
+export type UsageMeters = {
+  routineSuggest: UsageCounterDTO | null;
+  routineManualEdit: UsageCounterDTO | null;
+  wardrobe: UsageQuotaDTO["wardrobe"] | null;
 };
 
 export type FeatureGateSnapshot = {
@@ -22,6 +30,8 @@ export type FeatureGateSnapshot = {
   isFetched: boolean;
   /** Raw catalog from GET /me/usage — keyed by FeatureId. */
   features: Partial<Record<FeatureId, FeatureAccess>>;
+  /** Top-level counters; prefer these when `features` rows omit used/limit. */
+  meters: UsageMeters;
   /** Free: create while under shelf slot limit; Premium: always. */
   canWardrobeWrite: boolean;
   /** Signed-in users may edit/delete their own shelf items on every plan. */

@@ -58,6 +58,11 @@ function buildSnapshot(
     isLoading: meta.isLoading,
     isFetched: meta.isFetched,
     features,
+    meters: {
+      routineSuggest: suggest ?? null,
+      routineManualEdit: edit ?? null,
+      wardrobe: data?.wardrobe ?? null,
+    },
     canWardrobeWrite:
       features.wardrobe_full?.allowed ??
       data?.wardrobe?.can_write ??

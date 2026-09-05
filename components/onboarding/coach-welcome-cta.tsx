@@ -101,7 +101,14 @@ export function CoachWelcomePrimaryCta({
       href={href}
       size="lg"
       className={cn(primaryBtnClass, className)}
-      onClick={showGuestAuth ? () => trackSignupCta("primary") : undefined}
+      onClick={
+        showGuestAuth
+          ? () => trackSignupCta("primary")
+          : () =>
+              trackFunnelEvent(FUNNEL_EVENTS.firstCheckInCtaClick, {
+                surface: "coach_welcome_primary",
+              })
+      }
     >
       {showGuestAuth ? (
         <UserPlus className="size-5 shrink-0" aria-hidden />
@@ -230,7 +237,14 @@ export function CoachWelcomeStickyBar({
             href={href}
             size="lg"
             className={primaryBtnClass}
-            onClick={showGuestAuth ? () => trackSignupCta("sticky") : undefined}
+            onClick={
+              showGuestAuth
+                ? () => trackSignupCta("sticky")
+                : () =>
+                    trackFunnelEvent(FUNNEL_EVENTS.firstCheckInCtaClick, {
+                      surface: "coach_welcome_sticky",
+                    })
+            }
           >
             {showGuestAuth ? (
               <UserPlus className="size-5 shrink-0" aria-hidden />

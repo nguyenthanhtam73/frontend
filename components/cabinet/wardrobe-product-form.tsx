@@ -63,9 +63,8 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   const toast = useToast();
 
   const freeSlotsRemaining =
-    !wardrobeGate.isPremium && !wardrobeGate.unlimited
-      ? (wardrobeGate.remaining ??
-          Math.max(0, (wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT) - wardrobeGate.used))
+    !wardrobeGate.isPremium && !wardrobeGate.unlimited && wardrobeGate.hasMeter
+      ? wardrobeGate.remaining
       : null;
 
   function clearAiHighlight(field: keyof AiFilled) {
@@ -226,12 +225,12 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
             <p className="text-xs text-muted-foreground">
               {t("freeSlotsRemaining", {
                 remaining: freeSlotsRemaining,
-                n: FREE_WARDROBE_PRODUCT_LIMIT,
+                n: wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT,
               })}
             </p>
-          ) : (
+          ) : wardrobeGate.isPremium || wardrobeGate.unlimited ? (
             <p className="text-xs text-muted-foreground">{t("premiumUnlimitedHint")}</p>
-          )}
+          ) : null}
         </div>
 
         {wardrobeGate.locked ? (
