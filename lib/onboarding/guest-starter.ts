@@ -382,7 +382,7 @@ function weekNoteForPhase(
   }
   if (skillMode === "advanced") {
     return en
-      ? "When layering acids/retinol, go slow and note how skin feels the next day."
+      ? "When you use acids or retinol, go slow and note how skin feels the next day."
       : "Khi xen kẽ acid/retinol, đi chậm và ghi lại cảm giác da hôm sau.";
   }
   return en
