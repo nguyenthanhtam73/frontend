@@ -7,10 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OnboardingAiErrorPanel } from "@/components/onboarding/onboarding-ai-error-panel";
 import { OnboardingAiLoading } from "@/components/onboarding/onboarding-ai-loading";
 import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
-import {
-  OnboardingStepReady,
-  OnboardingStepSkinProfile,
-} from "@/components/onboarding/onboarding-steps";
+import { OnboardingStepSkinProfile } from "@/components/onboarding/onboarding-steps";
 import { OnboardingStepStarterRoutine } from "@/components/onboarding/onboarding-starter-routine-step";
 import {
   OnboardingProgress,
@@ -23,9 +20,16 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken, AUTH_CHANGED_EVENT } from "@/lib/auth-token";
+import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { buildStepStarterRoutine } from "@/lib/onboarding/build-step-routine";
 import { appendOnboardingPhotos } from "@/lib/onboarding/compress-photo";
-import { patchCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
+import {
+  patchCoachWelcomeSession,
+  readCoachWelcomeSession,
+  writeCoachWelcomeSession,
+} from "@/lib/onboarding/coach-welcome-session";
 import {
   buildDefaultStarterRoutine,
   resolveWelcomeStarter,
@@ -60,7 +64,6 @@ import {
   ONBOARDING_EXIT_ANIM_KEY,
 } from "@/lib/onboarding/constants";
 import {
-  COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
   type CoachWelcomePayload,
 } from "@/lib/types/starter-routine";
@@ -208,13 +211,24 @@ export function OnboardingFlow() {
         state.analyzeStatus === "error" &&
         state.analyzeErrorKind != null &&
         isRejectedPhotoError(state.analyzeErrorKind);
+      const before = replace || rejected ? 0 : state.photos.length;
       if (replace || rejected) {
         clearPhotos();
-        void appendOnboardingPhotos(list, ONBOARDING_MAX_PHOTOS, addPhoto);
+        void appendOnboardingPhotos(list, ONBOARDING_MAX_PHOTOS, addPhoto).then(() => {
+          const count = useOnboardingStore.getState().photos.length;
+          if (count > before) {
+            trackFunnelEvent(FUNNEL_EVENTS.photoAdded, { count, source: "replace" });
+          }
+        });
         return;
       }
-      const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - state.photos.length);
-      void appendOnboardingPhotos(list, remaining, addPhoto);
+      const remaining = Math.max(0, ONBOARDING_MAX_PHOTOS - before);
+      void appendOnboardingPhotos(list, remaining, addPhoto).then(() => {
+        const count = useOnboardingStore.getState().photos.length;
+        if (count > before) {
+          trackFunnelEvent(FUNNEL_EVENTS.photoAdded, { count, source: "add" });
+        }
+      });
     },
     [addPhoto, clearPhotos, setSkipFaceCapture],
   );
@@ -226,6 +240,9 @@ export function OnboardingFlow() {
     analyzeSkipRequested.current = false;
     state.setSkinInputMode("none");
     state.setAnalyzeStatus("loading");
+    trackFunnelEvent(FUNNEL_EVENTS.photosSubmitted, {
+      count: state.photos.length,
+    });
     try {
       const fd = new FormData();
       state.photos.forEach((p) => fd.append("images", p.file));
@@ -311,11 +328,10 @@ export function OnboardingFlow() {
     if (step === "starterRoutine") {
       setRoutineEditing(false);
       useOnboardingStore.getState().markStarterRoutineAccepted();
-      setSlideDir(1);
-      setIdx((i) => Math.min(i + 1, steps.length - 1));
-      return;
-    }
-    if (step === "ready") {
+      trackFunnelEvent(FUNNEL_EVENTS.routineAccepted, {
+        guest: !getAccessToken(),
+        edited: useOnboardingStore.getState().starterRoutineUserEdited,
+      });
       void finish();
     }
   }
@@ -403,7 +419,7 @@ export function OnboardingFlow() {
     };
 
     try {
-      sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(full));
+      writeCoachWelcomeSession(full);
       sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
       markJustCompletedOnboarding();
     } catch {
@@ -422,7 +438,7 @@ export function OnboardingFlow() {
               : undefined,
           },
         };
-        sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(slim));
+        writeCoachWelcomeSession(slim);
         sessionStorage.setItem(ONBOARDING_EXIT_ANIM_KEY, "1");
         markJustCompletedOnboarding();
       } catch {
@@ -462,21 +478,37 @@ export function OnboardingFlow() {
 
     try {
       if (!token) {
-        const preview = await postGuestPreviewComplete(finishBody);
-        const fallback = buildDefaultStarterRoutine(state, locale);
+        // Don't block the signup moment on preview-complete — guests already
+        // have a local routine from step 2. Patch session when the job lands.
         await goToCoachWelcome({
           profileId: GUEST_COACH_PROFILE_ID,
           guestPreview: true,
-          starterRoutine: state.starterRoutineUserEdited
-            ? userRoutine
-            : (preview.starterRoutine ?? fallback),
-          starterRoutinePending: state.starterRoutineUserEdited
-            ? false
-            : preview.starterRoutinePending,
-          previewJobId: preview.previewJobId,
-          previewAccessToken: preview.previewAccessToken,
+          starterRoutine: userRoutine,
+          starterRoutinePending: !state.starterRoutineUserEdited,
           coachingNotes: state.aiSnapshot?.coaching_notes?.trim() || undefined,
         });
+        void postGuestPreviewComplete(finishBody)
+          .then((preview) => {
+            if (useOnboardingStore.getState().starterRoutineUserEdited) {
+              patchCoachWelcomeSession({
+                previewJobId: preview.previewJobId,
+                previewAccessToken: preview.previewAccessToken,
+                starterRoutinePending: false,
+              });
+              return;
+            }
+            patchCoachWelcomeSession({
+              previewJobId: preview.previewJobId,
+              previewAccessToken: preview.previewAccessToken,
+              starterRoutinePending: preview.starterRoutinePending,
+              ...(preview.starterRoutine
+                ? { starterRoutine: preview.starterRoutine, starterRoutinePending: false }
+                : {}),
+            });
+          })
+          .catch(() => {
+            patchCoachWelcomeSession({ starterRoutinePending: false });
+          });
         return;
       }
 
@@ -650,26 +682,26 @@ export function OnboardingFlow() {
       ? analyzing
         ? tAuth("submitting")
         : t("next")
-      : step === "starterRoutine"
-        ? routineEditing
+      : finishing
+        ? tAuth("submitting")
+        : routineEditing
           ? t("step2.saveAndUseRoutine")
-          : t("step2.useRoutine")
-        : finishing
-          ? tAuth("submitting")
-          : t("step3.finish");
+          : t("step2.useRoutine");
 
   const stickyCanContinue =
     step === "skinProfile"
       ? canProceedStep1(ob) && !analyzing
-      : step === "starterRoutine"
-        ? ob.starterRoutine != null
-        : !finishing;
+      : ob.starterRoutine != null && !finishing;
 
   if (guestTrialBlocked === null) {
     return <OnboardingFlowSkeleton />;
   }
 
   if (guestTrialBlocked) {
+    if (readCoachWelcomeSession()?.starterRoutine) {
+      router.replace("/onboarding/coach-welcome");
+      return <OnboardingFlowSkeleton />;
+    }
     return (
       <GuestTrialGate
         title={t("guestTrial.title")}
@@ -678,6 +710,7 @@ export function OnboardingFlow() {
         registerLabel={t("guestTrial.registerCta")}
         loginLabel={t("guestTrial.loginCta")}
         homeLabel={t("guestTrial.homeLink")}
+        viewRoutineLabel={t("guestTrial.viewRoutineCta")}
       />
     );
   }
@@ -719,7 +752,7 @@ export function OnboardingFlow() {
             useDefaultLabel={t("aiLoading.useDefaultNow")}
           />
         )}
-        {finishing && step === "ready" && (
+        {finishing && step === "starterRoutine" && (
           <OnboardingAiLoading phase="starterRoutine" overlay />
         )}
         <CardContent>
@@ -742,16 +775,12 @@ export function OnboardingFlow() {
             )}
 
             {step === "starterRoutine" && (
-              <OnboardingStepStarterRoutine
-                editing={routineEditing}
-                onToggleEditing={() => setRoutineEditing((v) => !v)}
-                onRetryAnalyze={retryAnalyzeFromRoutine}
-              />
-            )}
-
-            {step === "ready" && (
               <>
-                <OnboardingStepReady />
+                <OnboardingStepStarterRoutine
+                  editing={routineEditing}
+                  onToggleEditing={() => setRoutineEditing((v) => !v)}
+                  onRetryAnalyze={retryAnalyzeFromRoutine}
+                />
                 {finishError ? (
                   finishError === "save_failed" ? (
                     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
@@ -786,8 +815,6 @@ export function OnboardingFlow() {
                       </Button>
                     </div>
                   ) : finishErrorSource === "default" ? (
-                    // Panel renders secondary first — put default retry there so
-                    // "Try again" stays the emphasized action after Use default.
                     <OnboardingAiErrorPanel
                       titleKey="aiLoading.routineErrorTitle"
                       errorKind={finishError}
@@ -824,11 +851,15 @@ export function OnboardingFlow() {
             backDisabled={idx === 0 || blockInteraction}
             continueDisabled={!stickyCanContinue || blockInteraction}
             continueLoading={
-              (analyzing && step === "skinProfile") || (finishing && step === "ready")
+              (analyzing && step === "skinProfile") ||
+              (finishing && step === "starterRoutine")
             }
-            continueIcon={step === "ready" ? <Sparkles className="size-5" aria-hidden /> : undefined}
-            primaryEmphasis={step === "ready"}
-            singleCta={step === "ready"}
+            continueIcon={
+              step === "starterRoutine" && !routineEditing ? (
+                <Sparkles className="size-5" aria-hidden />
+              ) : undefined
+            }
+            primaryEmphasis={step === "starterRoutine" && !routineEditing}
           />
         </CardContent>
       </Card>
@@ -876,6 +907,7 @@ function GuestTrialGate({
   registerLabel,
   loginLabel,
   homeLabel,
+  viewRoutineLabel,
 }: {
   title: string;
   body1: string;
@@ -883,7 +915,11 @@ function GuestTrialGate({
   registerLabel: string;
   loginLabel: string;
   homeLabel: string;
+  viewRoutineLabel: string;
 }) {
+  const hasRoutine = Boolean(readCoachWelcomeSession()?.starterRoutine);
+  const registerHref = buildAuthHrefWithNext("/register", GUEST_CLAIM_RETURN_PATH);
+  const loginHref = buildAuthHrefWithNext("/login", GUEST_CLAIM_RETURN_PATH);
   return (
     <div className="mx-auto w-full max-w-md px-4 sm:px-0">
       <Card className="overflow-hidden border-amber-200/70 bg-gradient-to-br from-amber-50/90 via-background to-primary/5 shadow-lg dark:border-amber-500/25 dark:from-amber-950/40 dark:to-primary/10">
@@ -903,15 +939,30 @@ function GuestTrialGate({
           </div>
           <div className="flex flex-col gap-3">
             <ButtonLink
-              href="/register"
+              href={registerHref}
               size="lg"
               className="min-h-12 w-full text-base font-semibold"
+              onClick={() =>
+                trackFunnelEvent(FUNNEL_EVENTS.signupCtaClick, {
+                  surface: "guest_trial_gate",
+                })
+              }
             >
               {registerLabel}
             </ButtonLink>
-            <ButtonLink href="/login" size="lg" variant="outline" className="min-h-11 w-full">
+            <ButtonLink href={loginHref} size="lg" variant="outline" className="min-h-11 w-full">
               {loginLabel}
             </ButtonLink>
+            {hasRoutine ? (
+              <ButtonLink
+                href="/onboarding/coach-welcome"
+                size="lg"
+                variant="ghost"
+                className="min-h-11 w-full"
+              >
+                {viewRoutineLabel}
+              </ButtonLink>
+            ) : null}
           </div>
           <p>
             <Link

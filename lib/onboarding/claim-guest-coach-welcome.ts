@@ -7,8 +7,10 @@ import {
 import {
   clearCoachWelcomeSession,
   patchCoachWelcomeSession,
+  readClaimableGuestSession,
   readCoachWelcomeSession,
 } from "@/lib/onboarding/coach-welcome-session";
+import { readPersistedGuestRoutine } from "@/lib/onboarding/guest-routine-persist";
 import {
   clearGuestClaimPhotos,
   loadGuestClaimPhotos,
@@ -27,6 +29,13 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** After guest claim, land on the payoff screen with their routine. */
 export const GUEST_CLAIM_RETURN_PATH = "/onboarding/coach-welcome";
+
+/** Register/login `?next=` that means "save the guest routine I just saw". */
+export function isGuestRoutineSaveReturn(path: string | null | undefined): boolean {
+  if (!path) return false;
+  const bare = path.split("?")[0]?.split("#")[0] || path;
+  return bare === GUEST_CLAIM_RETURN_PATH || bare.startsWith(`${GUEST_CLAIM_RETURN_PATH}/`);
+}
 
 /** True when payload still looks like a local guest trial (not a prior account). */
 export function sessionLooksLikeGuestTrial(
@@ -371,7 +380,9 @@ export async function claimGuestCoachWelcomeIfNeeded(
   // Existing account: never claim; drop leftover guest trial so coach-welcome
   // loads the real profile instead of painting guest CTAs/routine.
   if (opts?.alreadyCompleted) {
-    if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+    const leftover =
+      readCoachWelcomeSession() ?? readPersistedGuestRoutine();
+    if (sessionLooksLikeGuestTrial(leftover)) {
       clearCoachWelcomeSession();
     }
     return null;
@@ -383,7 +394,9 @@ export async function claimGuestCoachWelcomeIfNeeded(
     // Defense in depth: never overwrite an already-completed profile via Save CTA
     // (auth store may still be null on cold load — also check /profile/skin).
     if (useAuthStore.getState().user?.onboarding_completed === true) {
-      if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+      const leftover =
+        readCoachWelcomeSession() ?? readPersistedGuestRoutine();
+      if (sessionLooksLikeGuestTrial(leftover)) {
         clearCoachWelcomeSession();
       }
       return null;
@@ -391,7 +404,9 @@ export async function claimGuestCoachWelcomeIfNeeded(
     try {
       const prof = await fetchSkinProfile();
       if (prof && isOnboardingComplete(prof)) {
-        if (sessionLooksLikeGuestTrial(readCoachWelcomeSession())) {
+        const leftover =
+          readCoachWelcomeSession() ?? readPersistedGuestRoutine();
+        if (sessionLooksLikeGuestTrial(leftover)) {
           clearCoachWelcomeSession();
         }
         return null;
@@ -400,7 +415,7 @@ export async function claimGuestCoachWelcomeIfNeeded(
       /* network/auth — fall through; CompleteOnboarding will fail loudly if needed */
     }
 
-    const session = readCoachWelcomeSession();
+    const session = readClaimableGuestSession();
     if (!isClaimableGuestCoachSession(session) || !session) return null;
 
     const photos = await resolveGuestClaimPhotos(session);

@@ -10,12 +10,13 @@ import {
   parseSnapshotStarter,
 } from "@/lib/onboarding/snapshot";
 import {
-  COACH_WELCOME_STORAGE_KEY,
   GUEST_COACH_PROFILE_ID,
-  type CoachWelcomePayload,
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
-import { clearCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import {
+  clearCoachWelcomeSession,
+  readCoachWelcomeSession,
+} from "@/lib/onboarding/coach-welcome-session";
 import {
   clearJustCompletedOnboarding,
   hasGuestCompletedOnboardingTrial,
@@ -84,10 +85,8 @@ export function loadGuestReviewFromSession(): OnboardingReviewData | null {
   if (typeof window === "undefined") return null;
   if (!hasGuestCompletedOnboardingTrial()) return null;
   try {
-    const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
-    if (!raw) return null;
-    const p = JSON.parse(raw) as CoachWelcomePayload;
-    if (!p.starterRoutine) return null;
+    const p = readCoachWelcomeSession();
+    if (!p?.starterRoutine) return null;
     const summary = p.reviewSummary;
     return {
       profileId: p.profileId ?? GUEST_COACH_PROFILE_ID,

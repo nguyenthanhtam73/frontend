@@ -21,7 +21,7 @@
     },
     "onboarding": {
       "title": "Get to know your skin · DaDiary",
-      "description": "Three quick steps: pick skin concerns, preview your starter routine, and begin."
+      "description": "Two quick steps: pick skin concerns, preview your starter routine — no account yet."
     },
     "progress": {
       "title": "See how your skin changes · DaDiary",
@@ -105,6 +105,10 @@
     "loginSub": "Use your email and password to check in and save your skin profile.",
     "registerTitle": "Create your account",
     "registerSub": "After sign-up you'll go through getting to know your skin — save your skin type and get a starter routine from your AI buddy.",
+    "registerTitleSaveRoutine": "Save your routine",
+    "registerSubSaveRoutine": "Create a free account to keep the routine you just saw — it won't vanish when you close the tab — then start check-in.",
+    "registerCtaSaveRoutine": "Save routine & create account",
+    "loginSubSaveRoutine": "Sign in to attach the routine you just saw to your account.",
     "email": "Email",
     "password": "Password (min 8 characters)",
     "displayNameOptional": "Display name (optional)",
@@ -749,11 +753,13 @@
   "coachWelcome": {
     "celebrationTitle": "Your starter routine is ready",
     "celebrationLine": "Review the steps below — tick them off in Check-in each day.",
+    "celebrationLineGuest": "This routine is only on this device. Sign up free so it isn't lost when you close the tab.",
+    "stickyGuestHint": "Not saved yet — closing the tab loses this routine.",
     "nextStepLabel": "Do this next",
     "nextStepHint": "Check in today to start tracking your skin progress.",
     "nextStepBenefit": "A quick daily log helps you see how your skin changes over time.",
-    "nextStepHintGuest": "Sign up free to save your routine and start check-ins.",
-    "nextStepBenefitGuest": "With an account, you can log your skin every day.",
+    "nextStepHintGuest": "Sign up free to save your routine — then you can check in.",
+    "nextStepBenefitGuest": "An account keeps your routine, skin history, and long-term AI memory.",
     "routineSectionTitle": "Morning & evening routine",
     "routineSectionSub": "Start with morning — tick steps off in Check-in each day.",
     "ctaCheckInPrimary": "Start check-in now",
@@ -802,7 +808,7 @@
     "weekNotes": "First week — gentle notes",
     "safety": "This week’s safety notes",
     "ctaHome": "Home",
-    "needSignIn": "Sign in to see your starter routine from getting-to-know-your-skin.",
+    "needSignIn": "Sign up or sign in to see the starter routine you just created.",
     "guestPreviewHint": "This is a preview on your device — nothing is saved to the server yet. Sign up to keep your routine, skin history, and long-term AI memory.",
     "guestRoutineReadyCta": "Your personalized routine is ready. Sign up free to save it and track your skin over time.",
     "guestRoutineFallbackCta": "You're on a temporary default routine. Sign up free for one tailored to your skin.",
@@ -1416,7 +1422,7 @@
   "onboarding": {
     "sectionLabel": "Get to know your skin",
     "title": "Starter routine",
-    "intro": "Three steps — under 60 seconds. Pick concerns, see your routine right away, no waiting.",
+    "intro": "Two steps — under 60 seconds. Pick concerns, see your routine right away — no account yet.",
     "skipToApp": "Skip for now — enter the app",
     "progress": {
       "stepOf": "Step {current} of {total}",
@@ -1747,11 +1753,12 @@
     "summaryOptional": "Optional notes (body areas, current routine)",
     "homeLink": "Home",
     "guestTrial": {
-      "title": "You've used your free trial",
-      "body1": "You've used your one free onboarding round.",
-      "body2": "Next time you want saved data, skin history, and long-term AI memory — you gotta sign up.",
-      "registerCta": "Sign up, quick!",
+      "title": "Sign up to save the routine you just saw",
+      "body1": "You've already previewed a starter routine on this device — it isn't saved to an account yet.",
+      "body2": "Create a free account to keep your routine, log your skin, and let the AI remember you over time.",
+      "registerCta": "Sign up to save your routine",
       "loginCta": "Log in",
+      "viewRoutineCta": "See your routine again",
       "homeLink": "Back to home"
     },
     "review": {

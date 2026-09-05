@@ -6,6 +6,7 @@ import {
   buildGuestClaimPayload,
   dataUrlToPhotoItem,
   isClaimableGuestCoachSession,
+  isGuestRoutineSaveReturn,
   photosFromGuestSessionDataUrls,
   sessionLooksLikeGuestTrial,
 } from "./claim-guest-coach-welcome";
@@ -177,5 +178,15 @@ describe("claim-guest-coach-welcome", () => {
     const item = dataUrlToPhotoItem(TINY_PNG, 0);
     assert.ok(item);
     assert.equal(item!.file.name, "guest-claim-1.png");
+  });
+
+  it("detects the guest save-routine return path", () => {
+    assert.equal(isGuestRoutineSaveReturn("/onboarding/coach-welcome"), true);
+    assert.equal(
+      isGuestRoutineSaveReturn("/onboarding/coach-welcome?x=1"),
+      true,
+    );
+    assert.equal(isGuestRoutineSaveReturn("/check-in"), false);
+    assert.equal(isGuestRoutineSaveReturn(null), false);
   });
 });

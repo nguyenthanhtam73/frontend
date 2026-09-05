@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 const PROGRESS_STEP_KEYS = [
   "progress.skinProfile",
   "progress.starterRoutine",
-  "progress.ready",
 ] as const;
 
 type OnboardingT = (key: string, values?: Record<string, string | number>) => string;

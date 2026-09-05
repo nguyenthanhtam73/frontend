@@ -22,12 +22,14 @@ import {
   buildAuthHrefWithNext,
   readAuthReturnPathFromSearch,
 } from "@/lib/auth/return-path";
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   claimGuestCoachWelcomeIfNeeded,
   GUEST_CLAIM_RETURN_PATH,
   isClaimableGuestCoachSession,
+  isGuestRoutineSaveReturn,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
-import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
+import { readClaimableGuestSession } from "@/lib/onboarding/coach-welcome-session";
 import { trackMetaEvent } from "@/lib/meta-pixel";
 import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
@@ -100,12 +102,22 @@ function RegisterPageInner() {
   const loginHref = returnPath
     ? buildAuthHrefWithNext("/login", returnPath)
     : buildAuthHrefWithIntent("/login", checkoutIntent);
+  const [hasGuestSession, setHasGuestSession] = useState(false);
+  useEffect(() => {
+    setHasGuestSession(isClaimableGuestCoachSession(readClaimableGuestSession()));
+  }, []);
+  const savingGuestRoutine =
+    isGuestRoutineSaveReturn(returnPath) || hasGuestSession;
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("registerTitle")}</h1>
-        <p className="text-sm text-muted-foreground">{t("registerSub")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {savingGuestRoutine ? t("registerTitleSaveRoutine") : t("registerTitle")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {savingGuestRoutine ? t("registerSubSaveRoutine") : t("registerSub")}
+        </p>
       </div>
       <Card>
         <CardContent className="space-y-4 p-6">
@@ -166,7 +178,7 @@ function RegisterPageInner() {
                   json.data?.user?.onboarding_completed === true;
                 const hadClaimableGuest =
                   !alreadyDone &&
-                  isClaimableGuestCoachSession(readCoachWelcomeSession());
+                  isClaimableGuestCoachSession(readClaimableGuestSession());
                 try {
                   const claim = await claimGuestCoachWelcomeIfNeeded(token, {
                     alreadyCompleted: alreadyDone,
@@ -177,6 +189,10 @@ function RegisterPageInner() {
                 } catch {
                   claimed = false;
                 }
+                trackFunnelEvent(FUNNEL_EVENTS.registerSuccess, {
+                  claimed,
+                  had_guest_routine: hadClaimableGuest,
+                });
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
@@ -251,7 +267,11 @@ function RegisterPageInner() {
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
-                {loading ? t("submitting") : t("registerCta")}
+                {loading
+                  ? t("submitting")
+                  : savingGuestRoutine
+                    ? t("registerCtaSaveRoutine")
+                    : t("registerCta")}
               </Button>
             </fieldset>
           </form>

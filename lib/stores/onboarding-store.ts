@@ -28,8 +28,8 @@ export type SkillMode = "beginner" | "intermediate" | "advanced";
  */
 export type SkinInputMode = "none" | "ai" | "manual_skip" | "manual_fallback";
 
-/** Three-step onboarding: skinProfile → starterRoutine → ready. */
-export const ONBOARDING_STEPS = ["skinProfile", "starterRoutine", "ready"] as const;
+/** Two-step onboarding: skinProfile → starterRoutine (finish goes to coach-welcome). */
+export const ONBOARDING_STEPS = ["skinProfile", "starterRoutine"] as const;
 
 export type OnboardingStepId = (typeof ONBOARDING_STEPS)[number];
 

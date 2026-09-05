@@ -21,7 +21,7 @@
     },
     "onboarding": {
       "title": "Làm quen với da bạn · DaDiary",
-      "description": "3 bước nhanh: chọn vấn đề da, xem routine khởi đầu, rồi bắt đầu chăm da."
+      "description": "2 bước nhanh: chọn vấn đề da, xem routine khởi đầu — chưa cần tài khoản."
     },
     "progress": {
       "title": "Xem da thay đổi · DaDiary",
@@ -105,6 +105,10 @@
     "loginSub": "Dùng email và mật khẩu để ghi nhật ký da và lưu hồ sơ.",
     "registerTitle": "Tạo tài khoản",
     "registerSub": "Sau khi đăng ký, bạn sẽ được hướng dẫn làm quen với da — lưu loại da và nhận chăm da sáng tối khởi đầu từ bạn đồng hành AI.",
+    "registerTitleSaveRoutine": "Lưu routine của bạn",
+    "registerSubSaveRoutine": "Tạo tài khoản miễn phí để giữ routine vừa xem — không mất khi đóng tab, rồi bắt đầu check-in.",
+    "registerCtaSaveRoutine": "Lưu routine & tạo tài khoản",
+    "loginSubSaveRoutine": "Đăng nhập để gắn routine vừa xem vào tài khoản của bạn.",
     "email": "Email",
     "password": "Mật khẩu (tối thiểu 8 ký tự)",
     "displayNameOptional": "Tên hiển thị (không bắt buộc)",
@@ -749,11 +753,13 @@
   "coachWelcome": {
     "celebrationTitle": "Routine khởi đầu của bạn đã sẵn sàng",
     "celebrationLine": "Xem các bước bên dưới — tick trong Check-in mỗi ngày.",
+    "celebrationLineGuest": "Routine này mới nằm trên máy bạn. Đăng ký miễn phí để không mất khi đóng tab.",
+    "stickyGuestHint": "Chưa lưu — đóng tab là mất routine này.",
     "nextStepLabel": "Việc nên làm ngay",
     "nextStepHint": "Check-in hôm nay để bắt đầu theo dõi tiến trình da của bạn.",
     "nextStepBenefit": "Ghi lại cảm nhận mỗi ngày — bạn sẽ thấy da thay đổi rõ hơn theo thời gian.",
-    "nextStepHintGuest": "Đăng ký miễn phí để lưu routine và bắt đầu check-in.",
-    "nextStepBenefitGuest": "Sau khi có tài khoản, bạn có thể ghi nhật ký da mỗi ngày.",
+    "nextStepHintGuest": "Đăng ký miễn phí để lưu routine — rồi mới check-in được.",
+    "nextStepBenefitGuest": "Tài khoản giữ routine, lịch sử da, và để AI nhớ bạn lâu dài.",
     "routineSectionTitle": "Routine sáng & tối",
     "routineSectionSub": "Bắt đầu với buổi sáng — tick hoàn thành trong Check-in mỗi ngày.",
     "ctaCheckInPrimary": "Bắt đầu check-in ngay",
@@ -802,7 +808,7 @@
     "weekNotes": "Tuần đầu — lưu ý nhẹ",
     "safety": "An toàn tuần này",
     "ctaHome": "Về trang chủ",
-    "needSignIn": "Đăng nhập để xem chăm da khởi đầu từ phần làm quen với da.",
+    "needSignIn": "Đăng ký hoặc đăng nhập để xem lại routine khởi đầu bạn vừa tạo.",
     "guestPreviewHint": "Đây là kết quả thử trên thiết bị này — chưa lưu lên máy chủ. Đăng ký để giữ routine, lịch sử da và để AI nhớ bạn lâu dài.",
     "guestRoutineReadyCta": "Routine cá nhân đã sẵn sàng. Đăng ký miễn phí để lưu lại và theo dõi da theo thời gian.",
     "guestRoutineFallbackCta": "Đang dùng routine mặc định tạm thời. Đăng ký miễn phí để nhận bản cá nhân theo da của bạn.",
@@ -1416,7 +1422,7 @@
   "onboarding": {
     "sectionLabel": "Làm quen với da bạn",
     "title": "Chăm da khởi đầu",
-    "intro": "3 bước — dưới 60 giây là xong. Chọn vấn đề da, xem routine ngay, không cần chờ.",
+    "intro": "2 bước — dưới 60 giây. Chọn vấn đề da, xem routine ngay — chưa cần tài khoản.",
     "skipToApp": "Bỏ qua — vào ứng dụng",
     "progress": {
       "stepOf": "Bước {current}/{total}",
@@ -1747,11 +1753,12 @@
     "summaryOptional": "Ghi chú thêm (tùy chọn)",
     "homeLink": "Về trang chủ",
     "guestTrial": {
-      "title": "Bạn đã dùng hết lượt thử",
-      "body1": "Bạn đã dùng thử onboarding 1 lần rồi.",
-      "body2": "Lần sau muốn lưu dữ liệu, xem lịch sử da, và để AI nhớ lâu dài thì phải đăng ký thôi.",
-      "registerCta": "Đăng ký cho nhanh",
+      "title": "Đăng ký để lưu routine bạn vừa xem",
+      "body1": "Bạn đã xem routine thử trên máy này rồi — chưa lưu lên tài khoản.",
+      "body2": "Tạo tài khoản miễn phí để giữ routine, ghi nhật ký da, và để AI nhớ bạn lâu dài.",
+      "registerCta": "Đăng ký để lưu routine",
       "loginCta": "Đăng nhập",
+      "viewRoutineCta": "Xem lại routine",
       "homeLink": "Về trang chủ"
     },
     "review": {

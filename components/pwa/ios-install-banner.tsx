@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { usePathname } from "@/i18n/navigation";
-import { hasMobileBottomChrome } from "@/lib/site-nav";
+import { hasMobileBottomChrome, isOnboardingFunnelPath } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------
@@ -42,6 +42,7 @@ const SHOW_DELAY_MS = 900;
 export function IosInstallBanner() {
   const pathname = usePathname();
   const liftForBottomBar = hasMobileBottomChrome(pathname);
+  const hideOnFunnel = isOnboardingFunnelPath(pathname);
   const t = useTranslations("iosInstall");
 
   // `mounted` gates the portal until `document.body` exists (SSR safety).
@@ -69,7 +70,7 @@ export function IosInstallBanner() {
     setVisible(false);
   }, []);
 
-  if (!mounted || !visible) return null;
+  if (!mounted || !visible || hideOnFunnel) return null;
 
   return createPortal(
     <>

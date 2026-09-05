@@ -55,22 +55,6 @@ export async function completeOnboardingViaUi(
     await page.getByTestId("onboarding-starter-edit-toggle").click();
   }
 
-  await page.getByTestId("onboarding-nav-continue").click();
-  await expect(page.getByTestId("onboarding-step-ready")).toBeVisible({
-    timeout: 15_000,
-  });
-
-  if (opts?.morningEdit) {
-    await expect(page.getByTestId("onboarding-ready-morning-0")).toContainText(
-      opts.morningEdit,
-    );
-  }
-  if (opts?.eveningEdit) {
-    await expect(page.getByTestId("onboarding-ready-evening-0")).toContainText(
-      opts.eveningEdit,
-    );
-  }
-
   const completeResp = page.waitForResponse(
     (r) =>
       r.url().includes("/api/v1/profile/onboarding/complete") &&
