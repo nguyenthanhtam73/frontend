@@ -466,7 +466,7 @@
     },
     "q5": {
       "question": "What's the difference between Premium and Premium+?",
-      "answer": "Premium: unlimited AI suggestions and routine edits, full shelf (add/edit/delete), 12 months of Progress, full milestones, data export, and no ads. Premium+ adds advanced multi-angle analysis and unlimited Progress history."
+      "answer": "Premium unlocks Free caps: unlimited AI, a full shelf, 12 months of Progress, export, and no ads. Premium+ keeps all of Premium and only adds multi-angle analysis and unlimited history. Most people don't need Plus."
     }
   },
   "betaSignup": {
@@ -500,18 +500,18 @@
   "activation": {
     "reminder": {
       "d0": {
-        "title": "Today is day one — check in once",
-        "body": "One photo or a few notes is enough. Start your streak today."
+        "title": "Today is day one — ~30s check-in",
+        "body": "One photo or a few notes is enough. A quick check-in starts your streak."
       },
       "d1": {
-        "title": "You haven't logged yet — check in today",
-        "body": "One check-in is enough to start (or keep) your streak. It doesn't have to be perfect."
+        "title": "You haven't logged yet — ~30s check-in today",
+        "body": "One check-in starts (or keeps) your streak. It doesn't have to be perfect."
       },
       "keep": {
-        "title": "Keep your {n}-day streak — check in today",
+        "title": "Keep your {n}-day streak — ~30s check-in",
         "body": "You checked in yesterday. One more today keeps the streak going."
       },
-      "cta": "Check in now",
+      "cta": "Check in (~30s)",
       "dismiss": "Later"
     },
     "streak": {
@@ -520,9 +520,9 @@
       "best": "Best",
       "days": "{n} days",
       "emptyTitle": "No streak yet",
-      "emptyBody": "Check in today to start your streak.",
-      "emptyCta": "Start check-in",
-      "checkInCta": "Check in today",
+      "emptyBody": "A ~30s check-in today starts your streak.",
+      "emptyCta": "Check in (~30s)",
+      "checkInCta": "Check in (~30s)",
       "doneToday": "Checked in today",
       "openDiary": "See diary"
     }
@@ -539,15 +539,15 @@
     "heroStepSafetyDesc": "Sunscreen · patch test · red flags → see a clinician.",
     "activation": {
       "title": "You haven't checked in yet",
-      "body": "Check in today to start your streak. Takes under a minute — just a gentle nudge.",
-      "cta": "Check in today",
+      "body": "A ~30s check-in today starts your streak — just a gentle nudge.",
+      "cta": "Check in (~30s)",
       "dismiss": "Later"
     },
     "firstVisit": {
-      "title": "Your first check-in",
-      "body": "One photo plus how your skin feels. We'll log it and follow along with you from today.",
-      "d1Title": "You skipped yesterday — check in today",
-      "d1Body": "One photo plus how your skin feels. Start your streak now — it doesn't have to be perfect."
+      "title": "Your first check-in — about 30 seconds",
+      "body": "One photo plus how your skin feels. A quick check-in opens your streak — it doesn't have to be perfect.",
+      "d1Title": "You skipped yesterday — ~30s check-in today",
+      "d1Body": "One photo plus how your skin feels. Keep the streak going — it doesn't have to be perfect."
     },
     "photoTitle": "Skin photos",
     "photoHint": "1–2 photos. Photo 1 straight-on, photo 2 a slight angle — natural light, same spot each day.",
@@ -818,14 +818,14 @@
     "celebrationLineGuest": "This routine is only on this device. Sign up free so it isn't lost when you close the tab.",
     "stickyGuestHint": "Not saved yet — closing the tab loses this routine.",
     "nextStepLabel": "Do this next",
-    "nextStepHint": "Check in today to start tracking your skin progress.",
-    "nextStepBenefit": "A quick daily log helps you see how your skin changes over time.",
+    "nextStepHint": "A ~30s check-in today starts your streak and skin log.",
+    "nextStepBenefit": "Log how your skin feels each day — keeping a streak is easier than guessing.",
     "nextStepHintGuest": "Sign up free to save your routine — then you can check in.",
     "nextStepBenefitGuest": "An account keeps your routine, skin history, and long-term AI memory.",
     "routineSectionTitle": "Morning & evening routine",
     "routineSectionSub": "Start with morning — tick steps off in Check-in each day.",
-    "ctaCheckInPrimary": "Start check-in now",
-    "ctaCheckInBenefit": "Takes under a minute — and makes your skin progress easier to see.",
+    "ctaCheckInPrimary": "Check in (~30s)",
+    "ctaCheckInBenefit": "About 30 seconds — enough to open your streak and see progress more clearly.",
     "ctaGuestRegisterToCheckIn": "Sign up to save your routine",
     "ctaGuestCheckInBenefit": "Create a free account to save your routine and log your skin.",
     "ctaSaveToAccount": "Save to your account",
@@ -884,11 +884,11 @@
     "errorNetwork": "Network hiccup — check your connection and retry.",
     "firstCheckIn": {
       "label": "Next step",
-      "title": "Check in today to get started",
-      "titleSaved": "Routine saved — check in now",
-      "body": "Takes under a minute. One photo plus how your skin feels is enough for us to track along with you.",
+      "title": "A ~30s check-in to get started",
+      "titleSaved": "Routine saved — ~30s check-in now",
+      "body": "One photo plus how your skin feels is enough. A quick check-in opens your streak today.",
       "bodySaved": "Your routine is on your account. Do the first check-in now to open your streak — don't leave it for tomorrow.",
-      "cta": "Check in today",
+      "cta": "Check in (~30s)",
       "skip": "See the routine first",
       "skipHint": "You can check in later, but doing it now is easier to remember."
     }
@@ -899,21 +899,21 @@
     "betaBody": "Beta runs on Free. Premium is granted by the team / invite — self-serve checkout is not open yet.",
     "dismiss": "Dismiss",
     "quotaSuggestTitle": "Out of AI suggestions this month",
-    "quotaSuggestBody": "You've used all AI suggestions this month. Check-in, streak, and ticking routines still work. Upgrade to Premium for unlimited suggestions.",
+    "quotaSuggestBody": "You're out of AI suggestions this month. Check-in, streak, and ticking routines stay free. Premium unlocks unlimited suggestions.",
     "quotaEditTitle": "Out of manual edits this month",
     "quotaEditBody": "You've used all {limit} manual edits this month — ticking completion still works. Premium allows unlimited edits.",
     "wardrobeTitle": "Free shelf limit reached",
     "wardrobeBody": "Free can add up to 3 products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
     "progressTitle": "Want a longer history?",
-    "progressBody": "Free: last 3 months. Premium: 12 months. Premium+: unlimited.",
+    "progressBody": "Free: last 3 months. Premium unlocks 12 months. Premium+ only adds unlimited history.",
     "advancedTitle": "Advanced skin analysis",
-    "advancedBody": "Multi-angle and deeper analysis are available on Premium+.",
+    "advancedBody": "Multi-angle analysis (2 photos) is only on Premium+ — not included in Premium.",
     "exportTitle": "Export your data",
     "exportBody": "Data and report exports are available on Premium.",
     "milestoneTitle": "Full milestones",
     "milestoneBody": "The full milestone catalog is available on Premium.",
     "genericTitle": "Upgrade to open this feature",
-    "genericBody": "This feature is on Premium or Premium+. Check-in, streak, and ticking routines still work.",
+    "genericBody": "Premium unlocks unlimited AI, a full shelf, and 12 months of history. Premium+ only adds multi-angle analysis and unlimited history. Check-in stays free.",
     "quotaEditBodyUnknown": "You're out of manual edits this month — ticking completion still works. Premium allows unlimited edits.",
     "usageUsed": "Used {used}/{limit} this month",
     "usageRemaining": "{remaining} left",
@@ -921,28 +921,31 @@
     "benefitSuggest": "Premium: unlimited AI suggestions. Check-in, streak, and ticking routines stay free.",
     "benefitEdit": "Premium: unlimited routine edits. Ticking completion still works on Free.",
     "benefitWardrobe": "Premium: add products without a cap. Edit and delete stay open on Free.",
-    "benefitProgress": "Premium: 12 months of history; Premium+: unlimited. Daily check-in stays free.",
-    "benefitAdvanced": "Premium+ unlocks multi-angle analysis. A single check-in photo still works on Free.",
+    "benefitProgress": "Premium unlocks 12 months of history. Premium+ only adds all-time history. Daily check-in stays free.",
+    "benefitAdvanced": "Premium+ (not Premium) unlocks multi-angle analysis. A single check-in photo still works on Free.",
     "benefitExport": "Premium exports your log and reports when you need to take data with you.",
     "benefitMilestone": "Premium opens the full milestone list — streaks still count on Free.",
-    "benefitGeneric": "Premium unlocks extras when you truly need them. Check-in and ticking routines stay open."
+    "benefitGeneric": "Most people only need Premium after a Free cap. Premium+ is an add-on for multi-angle / longer history. Check-in stays open."
   },
   "pricing": {
     "heroTitle": "Unlock your full",
     "heroTitleAccent": "AI Coach & shelf",
     "fromContext": {
-      "generic": "You're looking at Premium because you hit a Free cap. Check-in and ticking routines still work.",
-      "ai_routine_suggestion": "You're looking at Premium because you're out of AI suggestions this month. Upgrade for unlimited suggestions — check-in stays free.",
-      "edit_routine": "You're looking at Premium because you're out of routine edits this month. Ticking completion still works on Free.",
-      "wardrobe_full": "You're looking at Premium because the Free shelf is full (3 items). Edit and delete stay open on Free.",
-      "progress_full_history": "You're looking at Premium to open more than 3 months of history. Daily check-in stays free.",
-      "advanced_skin_analysis": "You're looking at Premium+ for multi-angle analysis. A single check-in photo still works on Free."
+      "generic": "You're on pricing because you hit a Free cap. Premium unlocks what was limited — check-in and ticking routines still work.",
+      "ai_routine_suggestion": "You're out of AI suggestions this month. Premium unlocks unlimited suggestions — check-in stays free.",
+      "edit_routine": "You're out of routine edits this month. Premium unlocks unlimited edits. Ticking completion still works on Free.",
+      "wardrobe_full": "The Free shelf is full (3 items). Premium unlocks unlimited add. Edit and delete stay open on Free.",
+      "progress_full_history": "Free shows 3 months. Premium unlocks 12 months. Premium+ only adds unlimited history. Daily check-in stays free.",
+      "advanced_skin_analysis": "Multi-angle analysis is only on Premium+ (not included in Premium). A single check-in photo still works on Free."
     },
-    "heroSub": "Free already covers check-ins, streaks, and coach notes after each log. Premium unlocks unlimited AI, a full shelf, and longer history — upgrade when you truly need it.",
+    "heroSub": "Free already covers check-ins, streaks, and coach notes after each log. Premium (most popular) unlocks unlimited AI, a full shelf, and 12 months of history. Premium+ only adds multi-angle analysis and unlimited history.",
     "heroSubBeta": "Beta is open: Free covers the core. Premium (unlimited AI, full shelf, longer history) is granted by the team / invite — self-serve payments are not open yet.",
     "betaInviteBanner": "Self-serve checkout is off during Beta so nobody hits the test payment gateway. Want Premium? Send feedback or contact the team for an invite.",
     "betaInviteCta": "Premium — invite in Beta",
+    "betaInviteCtaPlus": "Premium+ — invite in Beta",
     "mostPopular": "Most popular",
+    "plusBadge": "Add-on",
+    "plusNote": "Not sure? Pick Premium. Premium+ doesn't replace Premium — it only adds multi-angle analysis and all-time history.",
     "upgradeCta": "Upgrade now",
     "currentPlanBadge": "Current plan",
     "currentPlanCta": "Your current plan",
@@ -1009,6 +1012,7 @@
         "name": "Free",
         "tagline": "Start your skin diary",
         "blurb": "Enough to check in daily, tick routines, and feel your care rhythm.",
+        "bestFor": "Daily check-ins and streaks — no card needed.",
         "cta": "Start free",
         "features": {
           "f1": "Skin check-ins + AI coach after each entry",
@@ -1019,8 +1023,9 @@
       },
       "premium": {
         "name": "Premium",
-        "tagline": "Unlimited AI Coach",
-        "blurb": "Unlock the full AI Coach & shelf — for anyone who wants freer routines and steadier care.",
+        "tagline": "Unlock Free limits",
+        "blurb": "Unlocks what Free caps: unlimited AI, a full shelf, 12 months of Progress, export, and no ads.",
+        "bestFor": "What most people need after hitting a Free cap.",
         "features": {
           "f1": "Unlimited AI suggestions & routine edits",
           "f2": "Full shelf — add and manage products",
@@ -1031,20 +1036,21 @@
       },
       "premium_plus": {
         "name": "Premium+",
-        "tagline": "Deeper skin care",
-        "blurb": "Everything in Premium, plus advanced analysis, deep memory, and early access to new features.",
+        "tagline": "Add advanced analysis",
+        "blurb": "Keeps everything in Premium. Only adds multi-angle analysis, unlimited Progress history, and early access.",
+        "bestFor": "Only if you need 2-photo analysis or history longer than 12 months.",
         "features": {
           "f1": "Everything in Premium",
-          "f2": "Advanced skin analysis (multi-angle)",
+          "f2": "Advanced skin analysis (multi-angle) — not in Premium",
           "f3": "Deep memory — richer long-term coach context",
-          "f4": "Unlimited Progress history",
+          "f4": "Unlimited Progress history (Premium: 12 months)",
           "f5": "Early access to new features"
         }
       }
     },
     "compare": {
       "title": "Compare plans",
-      "subtitle": "Three tiers, one goal: clearer, steadier skincare.",
+      "subtitle": "Most people pick Premium after a Free cap. Premium+ only differs on multi-angle analysis and unlimited history.",
       "caption": "Feature comparison for Free, Premium, and Premium+",
       "scrollHint": "Swipe sideways to see all 3 plans",
       "scrollLeft": "Scroll comparison table left",
@@ -1089,7 +1095,7 @@
       },
       "q3": {
         "question": "What's the difference between Premium and Premium+?",
-        "answer": "Premium unlocks unlimited AI, a full shelf, 12 months of Progress, export, and no ads. Premium+ adds advanced analysis, deep memory, unlimited history, and early access."
+        "answer": "Premium unlocks Free caps: unlimited AI, a full shelf, 12 months of Progress, export, and no ads. Premium+ keeps all of Premium and only adds multi-angle analysis, unlimited history, deep memory, and early access. Most people don't need Plus."
       },
       "q4": {
         "question": "Can I change or cancel later?",
@@ -1420,7 +1426,8 @@
           "text": "I just hit {n} days on DaDiary! 🔥 Keeping a daily skincare check-in isn't easy — join me: {url} #DaDiary #SkincareStreak",
           "copied": "Copied to clipboard",
           "shared": "Thanks for sharing!",
-          "failed": "Couldn't share — try copying instead."
+          "failed": "Couldn't share — try copying instead.",
+          "ugcHint": "Posting a story? Mention DaDiary so friends can find it — optional, no pressure."
         },
         "items": {
           "d3": {
@@ -1462,6 +1469,7 @@
         "daysUnit": "days",
         "share": "Share",
         "save": "Save PNG",
+        "ugcHint": "Posting a story? Mention DaDiary so friends can find it — optional, no pressure.",
         "continue": "Keep going",
         "brandMark": "Your skin diary",
         "cardHeadline": "{n}-day streak",
@@ -1499,6 +1507,7 @@
         "privacy": "Photos stay on this device until you tap share or save.",
         "share": "Share",
         "save": "Save PNG",
+        "ugcHint": "Posting a story? Mention DaDiary so friends can find it — optional, no pressure.",
         "brandMark": "Your skin diary",
         "headline": "Before · After",
         "ctaLine": "Daily skin diary · dadiary.vn",

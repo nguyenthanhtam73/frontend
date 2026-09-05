@@ -190,6 +190,13 @@ export function StreakContinueCelebration({
             <span className="ml-2 text-base font-semibold opacity-75">{t("daysUnit")}</span>
           </p>
 
+          <p
+            data-testid="share-ugc-hint"
+            className="text-xs leading-relaxed text-muted-foreground"
+          >
+            {t("ugcHint")}
+          </p>
+
           <div className="grid gap-2 sm:grid-cols-2">
             <Button
               type="button"

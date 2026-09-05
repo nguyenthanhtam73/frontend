@@ -16,7 +16,7 @@ import {
   writeReminderDismissedDay,
   type CheckInReminderKind,
 } from "@/lib/activation/check-in-reminder";
-import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
+import { FUNNEL_EVENTS, trackFunnelEvent, trackFunnelEventOnce } from "@/lib/analytics/funnel";
 import { getAccessToken } from "@/lib/auth-token";
 import { useCheckInReminder } from "@/lib/hooks/use-check-in-reminder";
 import { useStreak } from "@/lib/hooks/use-streak";
@@ -120,6 +120,15 @@ export function ActivationCheckInBanner() {
     if (user?.id) writeReminderDismissedDay(user.id, today);
     setDismissedToday(true);
   }, [today, user?.id]);
+
+  useEffect(() => {
+    if (!visible || kind !== "d1") return;
+    trackFunnelEventOnce(
+      FUNNEL_EVENTS.d1ReminderShown,
+      { surface: "activation_banner" },
+      `${today}:${user?.id ?? "anon"}`,
+    );
+  }, [kind, today, user?.id, visible]);
 
   if (!visible || !kind) return null;
 

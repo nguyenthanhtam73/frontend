@@ -1,11 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
+import { FUNNEL_EVENTS, paywallViewParams, trackFunnelEventOnce } from "@/lib/analytics/funnel";
 import { Feature, type FeatureId } from "@/lib/premium/features";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
-import { buildUpsellPricingHref } from "@/lib/premium/upsell-href";
+import {
+  buildUpsellPricingHref,
+  recommendedPlanForFeature,
+} from "@/lib/premium/upsell-href";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 
 type UpsellBannerProps = {
@@ -59,6 +64,7 @@ export function UpsellBanner({
 
   return (
     <div id={id}>
+      <PaywallViewTracker feature={feature} />
       <PremiumUpsellBanner
         title={title ?? copy.title}
         body={body ?? (checkoutEnabled ? copy.body : t("betaBody"))}
@@ -142,4 +148,19 @@ function resolveCopy(
         benefit: t("benefitGeneric"),
       };
   }
+}
+
+function PaywallViewTracker({ feature }: { feature?: FeatureId }) {
+  useEffect(() => {
+    trackFunnelEventOnce(
+      FUNNEL_EVENTS.paywallView,
+      paywallViewParams({
+        surface: "upsell_banner",
+        feature,
+        recommendedPlan: recommendedPlanForFeature(feature),
+      }),
+      `upsell:${feature ?? "generic"}`,
+    );
+  }, [feature]);
+  return null;
 }

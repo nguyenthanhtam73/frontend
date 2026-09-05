@@ -30,13 +30,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
+import { resolveCheckInReminderKind, signupDayKey } from "@/lib/activation/check-in-reminder";
+import { hasNeverCheckedIn } from "@/lib/activation/first-check-in";
+import {
+  funnelEventForCheckInKind,
+  resolveCheckInFunnelKinds,
+  trackFunnelEvent,
+  type CheckInFunnelKind,
+} from "@/lib/analytics/funnel";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
+import { useStreak } from "@/lib/hooks/use-streak";
 import type { SkillMode } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { usePrivacyHydrated } from "@/lib/use-privacy-hydrated";
 import { usePrivacyStore } from "@/lib/stores/privacy-store";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
+import { streakDateKey } from "@/lib/streak/history";
 import { CHECKIN_PHOTO_MAX_MB } from "@/lib/check-in/photo-upload-validation";
 import { cn } from "@/lib/utils";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
@@ -85,6 +96,9 @@ export function CheckInForm() {
   const visibility = "private" as const;
   const router = useRouter();
   const feedback = useCheckInFeedback();
+  const user = useAuthStore((s) => s.user);
+  const streakQuery = useStreak();
+  const checkInFunnelKindsRef = useRef<CheckInFunnelKind[]>([]);
   // Inline error banner replaces native alert() — much friendlier on mobile (no modal
   // popups stealing focus or breaking scroll). Auto-cleared on next submit attempt.
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -223,6 +237,14 @@ export function CheckInForm() {
         }
         feedback.beginSubmit();
         scrollToFeedback();
+        checkInFunnelKindsRef.current = resolveCheckInFunnelKinds({
+          neverCheckedIn: hasNeverCheckedIn(streakQuery.data),
+          reminderKind: resolveCheckInReminderKind({
+            today: streakDateKey(),
+            signupDay: signupDayKey(user?.created_at),
+            streak: streakQuery.data,
+          }),
+        });
         try {
           const fd = new FormData();
           if (skipFaceCapture) {
@@ -258,6 +280,11 @@ export function CheckInForm() {
 
           const raw = await res.json().catch(() => ({}));
           if (res.ok && raw?.success && raw?.data) {
+            for (const kind of checkInFunnelKindsRef.current) {
+              trackFunnelEvent(funnelEventForCheckInKind(kind), {
+                surface: "check_in_form",
+              });
+            }
             feedback.onSubmitSuccess(raw.data as CreateSkinCheckResponseDTO);
             scrollToFeedback();
           } else if (res.status === 401) {

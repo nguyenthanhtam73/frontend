@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { fetchMePlanTierSoft, isPaidPlanTier } from "@/lib/api/payment";
-import { trackMetaPurchaseOnce } from "@/lib/meta-pixel";
+import { trackPaidOnce } from "@/lib/analytics/funnel";
 import { normalizePlanTier } from "@/lib/premium/features";
 import { usageQueryKey } from "@/lib/api/usage";
 import { useRouter } from "@/i18n/navigation";
@@ -92,7 +92,7 @@ export function PaymentResultView({ kind }: PaymentResultViewProps) {
   }, [kind, phase, pollNonce, applyPaidTier]);
 
   const firePurchase = useCallback((planConfirmed = false) => {
-    trackMetaPurchaseOnce({ planConfirmed });
+    trackPaidOnce({ planConfirmed });
   }, []);
 
   // SePay return (payload in localStorage) — don't wait for IPN poll.
