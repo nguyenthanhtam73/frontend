@@ -497,6 +497,36 @@
     "successTitle": "Đã ghi nhận email!",
     "successBody": "Cảm ơn bạn đã quan tâm DaDiary. Chúng tôi sẽ liên hệ khi có cập nhật Beta."
   },
+  "activation": {
+    "reminder": {
+      "d0": {
+        "title": "Hôm nay là ngày đầu — check-in một lần nhé",
+        "body": "Mình chỉ cần một ảnh hoặc vài dòng cảm nhận. Bắt đầu chuỗi ngày từ hôm nay."
+      },
+      "d1": {
+        "title": "Hôm qua mình chưa ghi — check-in hôm nay nhé",
+        "body": "Một lần check-in là đủ để bắt đầu (hoặc giữ) streak. Không cần hoàn hảo."
+      },
+      "keep": {
+        "title": "Giữ streak {n} ngày — check-in hôm nay",
+        "body": "Bạn đã check-in hôm qua. Một lần nữa hôm nay để chuỗi ngày không đứt."
+      },
+      "cta": "Check-in ngay",
+      "dismiss": "Để sau"
+    },
+    "streak": {
+      "ariaLabel": "Chuỗi ngày check-in",
+      "current": "Chuỗi hiện tại",
+      "best": "Kỷ lục",
+      "days": "{n} ngày",
+      "emptyTitle": "Chưa có streak",
+      "emptyBody": "Check-in hôm nay để bắt đầu chuỗi ngày.",
+      "emptyCta": "Bắt đầu check-in",
+      "checkInCta": "Check-in hôm nay",
+      "doneToday": "Đã check-in hôm nay",
+      "openDiary": "Xem nhật ký"
+    }
+  },
   "checkIn": {
     "sectionEyebrow": "Ghi nhật ký da",
     "pageTitle": "Hôm nay da bạn thế nào?",
@@ -515,7 +545,9 @@
     },
     "firstVisit": {
       "title": "Lần check-in đầu của bạn",
-      "body": "Một ảnh + cảm nhận da. Mình sẽ ghi nhận để theo dõi cùng bạn từ hôm nay."
+      "body": "Một ảnh + cảm nhận da. Mình sẽ ghi nhận để theo dõi cùng bạn từ hôm nay.",
+      "d1Title": "Hôm qua mình chưa ghi — check-in hôm nay nhé",
+      "d1Body": "Một ảnh + cảm nhận da. Bắt đầu streak ngay — không cần hoàn hảo."
     },
     "photoTitle": "Ảnh da",
     "photoHint": "1–2 tấm. Ảnh 1 thẳng mặt, ảnh 2 nửa nghiêng (nếu có) — ánh sáng tự nhiên, cùng góc mỗi ngày.",
@@ -1302,6 +1334,7 @@
       "historyAria": "Các ngày check-in gần đây",
       "today": "Hôm nay",
       "endedHint": "Chuỗi ngày đã kết thúc sau {date}. Check-in để bắt đầu lại.",
+      "checkInCta": "Check-in hôm nay",
       "status": {
         "maintaining": "Đang duy trì",
         "at_risk": "Check-in hôm nay",

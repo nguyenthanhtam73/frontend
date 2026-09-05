@@ -497,6 +497,36 @@
     "successTitle": "You're on the list!",
     "successBody": "Thanks for your interest in DaDiary. We'll reach out when Beta updates are ready."
   },
+  "activation": {
+    "reminder": {
+      "d0": {
+        "title": "Today is day one — check in once",
+        "body": "One photo or a few notes is enough. Start your streak today."
+      },
+      "d1": {
+        "title": "You haven't logged yet — check in today",
+        "body": "One check-in is enough to start (or keep) your streak. It doesn't have to be perfect."
+      },
+      "keep": {
+        "title": "Keep your {n}-day streak — check in today",
+        "body": "You checked in yesterday. One more today keeps the streak going."
+      },
+      "cta": "Check in now",
+      "dismiss": "Later"
+    },
+    "streak": {
+      "ariaLabel": "Check-in streak",
+      "current": "Current streak",
+      "best": "Best",
+      "days": "{n} days",
+      "emptyTitle": "No streak yet",
+      "emptyBody": "Check in today to start your streak.",
+      "emptyCta": "Start check-in",
+      "checkInCta": "Check in today",
+      "doneToday": "Checked in today",
+      "openDiary": "See diary"
+    }
+  },
   "checkIn": {
     "sectionEyebrow": "Skin check-in",
     "pageTitle": "How is your skin today?",
@@ -515,7 +545,9 @@
     },
     "firstVisit": {
       "title": "Your first check-in",
-      "body": "One photo plus how your skin feels. We'll log it and follow along with you from today."
+      "body": "One photo plus how your skin feels. We'll log it and follow along with you from today.",
+      "d1Title": "You skipped yesterday — check in today",
+      "d1Body": "One photo plus how your skin feels. Start your streak now — it doesn't have to be perfect."
     },
     "photoTitle": "Skin photos",
     "photoHint": "1–2 photos. Photo 1 straight-on, photo 2 a slight angle — natural light, same spot each day.",
@@ -1302,6 +1334,7 @@
       "historyAria": "Recent check-in days",
       "today": "Today",
       "endedHint": "Streak ended after {date}. Check in to start again.",
+      "checkInCta": "Check in today",
       "status": {
         "maintaining": "On track",
         "at_risk": "Check in today",

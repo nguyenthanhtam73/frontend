@@ -24,7 +24,8 @@ function parseDateKey(key: string): Date {
   return new Date(Date.UTC(y, m - 1, day));
 }
 
-function shiftDateKey(key: string, deltaDays: number): string {
+/** Shift a YYYY-MM-DD Vietnam calendar key by whole days (not timezone-sensitive). */
+export function shiftDateKey(key: string, deltaDays: number): string {
   const d = parseDateKey(key);
   d.setUTCDate(d.getUTCDate() + deltaDays);
   return d.toISOString().slice(0, 10);
