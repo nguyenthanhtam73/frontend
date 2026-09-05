@@ -8,6 +8,7 @@ import {
   fetchSkinCheckResult,
   isAnalysisSettled,
 } from "@/lib/api/skin-check";
+import { checkInReminderQueryKey } from "@/lib/api/check-in-reminder";
 import { streakQueryKey } from "@/lib/api/streak";
 import {
   clearPersistedCheckInPending,
@@ -358,9 +359,11 @@ export function useCheckInFeedback() {
         });
       }
 
-      // Streak is updated server-side on create — refresh any open Progress views.
+      // Streak + D0/D1 reminder recompute server-side on create.
       void queryClient.invalidateQueries({ queryKey: streakQueryKey });
       void queryClient.refetchQueries({ queryKey: streakQueryKey });
+      void queryClient.invalidateQueries({ queryKey: checkInReminderQueryKey });
+      void queryClient.refetchQueries({ queryKey: checkInReminderQueryKey });
 
       const streakDays = data.streak?.current_streak;
       setSessionStreak(

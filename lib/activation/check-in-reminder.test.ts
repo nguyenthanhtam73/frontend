@@ -4,7 +4,9 @@ import { describe, it } from "node:test";
 import {
   dismissDayFromMap,
   hasCheckedInToday,
+  kindFromServerCheckInReminder,
   resolveCheckInReminderKind,
+  resolvePreferredCheckInReminderKind,
   shouldShowDailyCheckInReminder,
   signupDayKey,
 } from "./check-in-reminder";
@@ -177,6 +179,164 @@ describe("shouldShowDailyCheckInReminder", () => {
     assert.equal(
       shouldShowDailyCheckInReminder({ ...base, kind: null }),
       false,
+    );
+  });
+
+  it("can show a server-backed kind before streak finishes", () => {
+    assert.equal(
+      shouldShowDailyCheckInReminder({
+        ...base,
+        streakStatus: "loading",
+        reminderStatus: "ready",
+        kind: "d0",
+      }),
+      true,
+    );
+    assert.equal(
+      shouldShowDailyCheckInReminder({
+        ...base,
+        streakStatus: "error",
+        reminderStatus: "ready",
+        kind: "d1",
+      }),
+      true,
+    );
+  });
+});
+
+describe("kindFromServerCheckInReminder", () => {
+  const dueD0 = {
+    kind: "d0",
+    due: true,
+    signup_date: "2026-09-05",
+    days_since_signup: 0,
+    checked_in_today: false,
+    channels: {
+      in_app: true,
+      email: false,
+      push_evening: true,
+      push_d0_d1_specific: false,
+    },
+  };
+
+  it("returns d0/d1 only when due and not already checked in today", () => {
+    assert.equal(kindFromServerCheckInReminder(dueD0), "d0");
+    assert.equal(kindFromServerCheckInReminder({ ...dueD0, kind: "d1" }), "d1");
+    assert.equal(
+      kindFromServerCheckInReminder({ ...dueD0, kind: "D0" }),
+      "d0",
+    );
+  });
+
+  it("returns null when due is false, already checked in, or kind is none", () => {
+    assert.equal(
+      kindFromServerCheckInReminder({ ...dueD0, due: false }),
+      null,
+    );
+    assert.equal(
+      kindFromServerCheckInReminder({
+        ...dueD0,
+        due: false,
+        checked_in_today: true,
+      }),
+      null,
+    );
+    assert.equal(
+      kindFromServerCheckInReminder({ ...dueD0, kind: "none", due: false }),
+      null,
+    );
+    assert.equal(
+      kindFromServerCheckInReminder({ ...dueD0, kind: "none", due: true }),
+      null,
+    );
+  });
+
+  it("returns undefined for an unusable payload so callers can fall back", () => {
+    assert.equal(kindFromServerCheckInReminder(null), undefined);
+    assert.equal(kindFromServerCheckInReminder(undefined), undefined);
+    assert.equal(kindFromServerCheckInReminder({ kind: "d0" }), undefined);
+    assert.equal(kindFromServerCheckInReminder("d0"), undefined);
+  });
+});
+
+describe("resolvePreferredCheckInReminderKind", () => {
+  const dueD0 = {
+    kind: "d0",
+    due: true,
+    days_since_signup: 0,
+    checked_in_today: false,
+    channels: { in_app: true, email: false, push_evening: false, push_d0_d1_specific: false },
+  };
+  const notDue = {
+    kind: "none",
+    due: false,
+    days_since_signup: 3,
+    checked_in_today: false,
+    channels: { in_app: true, email: false, push_evening: false, push_d0_d1_specific: false },
+  };
+
+  it("prefers server d0/d1 when the request succeeded", () => {
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: dueD0,
+        clientKind: "keep",
+      }),
+      "d0",
+    );
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: { ...dueD0, kind: "d1" },
+        clientKind: "d0",
+      }),
+      "d1",
+    );
+  });
+
+  it("hides D0/D1 when the server says not due, but keeps client keep", () => {
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: notDue,
+        clientKind: "d1",
+      }),
+      null,
+    );
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: notDue,
+        clientKind: "keep",
+      }),
+      "keep",
+    );
+  });
+
+  it("falls back to the client kind while loading, on error, or bad payload", () => {
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "loading",
+        serverData: undefined,
+        clientKind: "d0",
+      }),
+      "d0",
+    );
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "error",
+        serverData: undefined,
+        clientKind: "d1",
+      }),
+      "d1",
+    );
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: { kind: "d0" },
+        clientKind: "keep",
+      }),
+      "keep",
     );
   });
 });

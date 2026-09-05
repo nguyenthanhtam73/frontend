@@ -71,21 +71,74 @@ export function resolveCheckInReminderKind(input: {
   return "d1";
 }
 
+export type ReminderQueryStatus = "loading" | "ready" | "error";
+
+/**
+ * Map GET /api/v1/me/check-in-reminder `data` to a banner kind.
+ *
+ * - `d0` / `d1` when `due` is true (and not already checked in today)
+ * - `null` when the server says the D0/D1 nudge is not due
+ * - `undefined` when the payload is unusable (caller should fall back)
+ *
+ * Backend `kind` is only `d0` | `d1` | `none`. Unknown strings normalize to
+ * `none`, matching `NormalizeKind` on the API.
+ */
+export function kindFromServerCheckInReminder(
+  data: unknown,
+): CheckInReminderKind | null | undefined {
+  if (!data || typeof data !== "object") return undefined;
+  const rec = data as Record<string, unknown>;
+  if (typeof rec.due !== "boolean") return undefined;
+
+  const raw = typeof rec.kind === "string" ? rec.kind.trim().toLowerCase() : "";
+  const serverKind = raw === "d0" || raw === "d1" ? raw : "none";
+  const checkedInToday =
+    typeof rec.checked_in_today === "boolean" ? rec.checked_in_today : false;
+
+  if (checkedInToday || !rec.due) return null;
+  if (serverKind === "d0" || serverKind === "d1") return serverKind;
+  return null;
+}
+
+/**
+ * Prefer live server D0/D1 when the request succeeds. Keep the client
+ * resolver when the request is loading or failed so the banner never blanks.
+ *
+ * The API does not return `keep` (day 2+ is `kind=none`). Preserve a client
+ * `keep` so streak-continue copy still shows when the server says D0/D1 is
+ * not due.
+ */
+export function resolvePreferredCheckInReminderKind(input: {
+  reminderStatus: ReminderQueryStatus;
+  serverData: unknown;
+  clientKind: CheckInReminderKind | null;
+}): CheckInReminderKind | null {
+  if (input.reminderStatus === "ready") {
+    const mapped = kindFromServerCheckInReminder(input.serverData);
+    if (mapped === undefined) return input.clientKind;
+    if (mapped === "d0" || mapped === "d1") return mapped;
+    return input.clientKind === "keep" ? "keep" : null;
+  }
+  return input.clientKind;
+}
+
 export function shouldShowDailyCheckInReminder(input: {
   signedIn: boolean;
   dismissedToday: boolean;
   onFunnelPath: boolean;
   onCheckInPath: boolean;
   onCoachWelcomePath: boolean;
-  streakStatus: "loading" | "ready" | "error";
+  streakStatus: ReminderQueryStatus;
+  /** When ready, a server-backed kind can show before streak finishes. */
+  reminderStatus?: ReminderQueryStatus;
   kind: CheckInReminderKind | null;
 }): boolean {
   if (!input.signedIn || input.dismissedToday) return false;
   if (input.onFunnelPath || input.onCheckInPath || input.onCoachWelcomePath) {
     return false;
   }
-  if (input.streakStatus !== "ready") return false;
-  return input.kind !== null;
+  if (input.kind === null) return false;
+  return input.streakStatus === "ready" || input.reminderStatus === "ready";
 }
 
 type DismissMap = Record<string, string>;
