@@ -10,6 +10,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import {
   isReminderDismissedToday,
   resolveCheckInReminderKind,
+  resolvePreferredCheckInReminderKind,
   shouldShowDailyCheckInReminder,
   signupDayKey,
   writeReminderDismissedDay,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/activation/check-in-reminder";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { getAccessToken } from "@/lib/auth-token";
+import { useCheckInReminder } from "@/lib/hooks/use-check-in-reminder";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { isOnboardingFunnelPath } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -44,6 +46,7 @@ export function ActivationCheckInBanner() {
   const user = useAuthStore((s) => s.user);
   const signedIn = Boolean(user || getAccessToken());
   const streakQuery = useStreak();
+  const reminderQuery = useCheckInReminder();
   const [hydrated, setHydrated] = useState(false);
   const [dismissedToday, setDismissedToday] = useState(false);
 
@@ -61,14 +64,32 @@ export function ActivationCheckInBanner() {
       ? "error"
       : "ready";
 
+  const reminderStatus = reminderQuery.isSuccess
+    ? "ready"
+    : reminderQuery.isError
+      ? "error"
+      : "loading";
+
+  const clientKind = useMemo(
+    () =>
+      streakStatus === "ready"
+        ? resolveCheckInReminderKind({
+            today,
+            signupDay: signupDayKey(user?.created_at),
+            streak: streakQuery.data,
+          })
+        : null,
+    [streakQuery.data, streakStatus, today, user?.created_at],
+  );
+
   const kind = useMemo(
     () =>
-      resolveCheckInReminderKind({
-        today,
-        signupDay: signupDayKey(user?.created_at),
-        streak: streakQuery.data,
+      resolvePreferredCheckInReminderKind({
+        reminderStatus,
+        serverData: reminderQuery.data,
+        clientKind,
       }),
-    [streakQuery.data, today, user?.created_at],
+    [clientKind, reminderQuery.data, reminderStatus],
   );
 
   const visible = useMemo(
@@ -81,6 +102,7 @@ export function ActivationCheckInBanner() {
         onCheckInPath: isCheckInPath(pathname),
         onCoachWelcomePath: isCoachWelcomePath(pathname),
         streakStatus,
+        reminderStatus,
         kind,
       }),
     [
@@ -88,6 +110,7 @@ export function ActivationCheckInBanner() {
       hydrated,
       kind,
       pathname,
+      reminderStatus,
       signedIn,
       streakStatus,
     ],
