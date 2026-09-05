@@ -13,6 +13,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import { CheckInBeforeAfterShare } from "@/components/check-in/check-in-before-after-share";
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
 import { splitRoutineHints } from "@/components/check-in/routine-hint-parser";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
@@ -95,6 +96,8 @@ export function DailyCoachFeedback({
       className="space-y-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500"
       data-coach-feedback
     >
+      <CheckInBeforeAfterShare payload={payload} />
+
       {c.situation_summary ? (
         <Card>
           <CardContent className="space-y-2">

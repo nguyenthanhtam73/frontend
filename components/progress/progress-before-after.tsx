@@ -8,6 +8,7 @@ import {
   ImageIcon,
   Pencil,
   RotateCcw,
+  Share2,
   Sparkles,
   X,
 } from "lucide-react";
@@ -15,9 +16,15 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ProgressPhoto } from "@/components/progress/progress-photo";
+import { BeforeAfterShareDialog } from "@/components/share/before-after-share-dialog";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  canSharePhotoPair,
+  formatShareDate,
+  type SharePhotoRef,
+} from "@/lib/share/before-after";
 import type { ProgressEntryDTO, ProgressRangeKey } from "@/lib/types/progress";
 import { cn } from "@/lib/utils";
 
@@ -139,6 +146,7 @@ export function ProgressBeforeAfter({
   const [beforeSel, setBeforeSel] = useState<PhotoSelection | null>(null);
   const [afterSel, setAfterSel] = useState<PhotoSelection | null>(null);
   const [picker, setPicker] = useState<PickerSlot | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Guards the persist effect from clobbering stored data before we've had a
   // chance to read it back on mount.
@@ -272,8 +280,28 @@ export function ProgressBeforeAfter({
   // the user manually picked an older one, the badge would be misleading.
   const afterIsLatest = latestKey != null && selKey(after) === latestKey;
 
+  const shareBefore: SharePhotoRef = {
+    entryId: before.entryId,
+    imageIndex: before.imageIndex,
+    url: before.url,
+    date: before.date,
+  };
+  const shareAfter: SharePhotoRef = {
+    entryId: after.entryId,
+    imageIndex: after.imageIndex,
+    url: after.url,
+    date: after.date,
+  };
+  const sharePhotos: SharePhotoRef[] = photoItems.map((item) => ({
+    entryId: item.entryId,
+    imageIndex: item.imageIndex,
+    url: item.url,
+    date: item.date,
+  }));
+  const canShare = canSharePhotoPair(shareBefore, shareAfter);
+
   return (
-    <Card>
+    <Card id="progress-before-after">
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -290,18 +318,32 @@ export function ProgressBeforeAfter({
               </span>
             ) : null}
           </div>
-          {isManual ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              onClick={resetAuto}
-              className="gap-1 text-muted-foreground hover:text-foreground"
-            >
-              <RotateCcw className="size-3" aria-hidden />
-              {t("resetAuto")}
-            </Button>
-          ) : null}
+          <div className="flex shrink-0 items-center gap-1">
+            {canShare ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={() => setShareOpen(true)}
+                className="gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <Share2 className="size-3" aria-hidden />
+                {t("share.cta")}
+              </Button>
+            ) : null}
+            {isManual ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={resetAuto}
+                className="gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="size-3" aria-hidden />
+                {t("resetAuto")}
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {/* Level 1.1 — guidance caption. */}
@@ -349,6 +391,18 @@ export function ProgressBeforeAfter({
         {before.score != null && after.score != null ? (
           <DeltaRow before={before.score} after={after.score} />
         ) : null}
+
+        {canShare ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 w-full gap-2"
+            onClick={() => setShareOpen(true)}
+          >
+            <Share2 className="size-4" aria-hidden />
+            {t("share.cta")}
+          </Button>
+        ) : null}
       </CardContent>
 
       {picker ? (
@@ -360,6 +414,16 @@ export function ProgressBeforeAfter({
           latestLabel={t("latestBadge")}
           onSelect={(sel) => handlePick(picker, sel)}
           onClose={() => setPicker(null)}
+        />
+      ) : null}
+
+      {canShare ? (
+        <BeforeAfterShareDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          photos={sharePhotos}
+          initialBefore={shareBefore}
+          initialAfter={shareAfter}
         />
       ) : null}
     </Card>
@@ -405,7 +469,7 @@ function PhotoSlot({
           key={url}
           className="size-full motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
         >
-          <ProgressPhoto url={url} alt={`${label} · ${formatDate(date)}`} />
+          <ProgressPhoto url={url} alt={`${label} · ${formatShareDate(date)}`} />
         </div>
       </div>
 
@@ -428,7 +492,7 @@ function PhotoSlot({
       {/* Level 1.3 — label + clearly formatted capture date under the photo. */}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent px-2 py-1.5 text-left">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-white/90">{label}</p>
-        <p className="text-[11px] tabular-nums text-white">{formatDate(date)}</p>
+        <p className="text-[11px] tabular-nums text-white">{formatShareDate(date)}</p>
       </div>
 
       {/* Change affordance — appears on hover/focus so the tile reads as tappable. */}
@@ -527,7 +591,7 @@ function PhotoPicker({
                 )}
               >
                 <div className="relative aspect-square w-full">
-                  <ProgressPhoto url={item.url} alt={formatDate(item.date)} />
+                  <ProgressPhoto url={item.url} alt={formatShareDate(item.date)} />
                 </div>
                 {key === latestKey ? (
                   <span className="absolute left-1 top-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground shadow-sm">
@@ -552,7 +616,7 @@ function PhotoPicker({
                 ) : null}
                 <div className="absolute inset-x-0 bottom-0 -z-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 pb-1 pt-4">
                   <p className="text-[10px] font-medium tabular-nums text-white">
-                    {formatDate(item.date)}
+                    {formatShareDate(item.date)}
                   </p>
                 </div>
               </button>
@@ -615,9 +679,3 @@ function photoLabel(item: PhotoItem): string | undefined {
   return `${item.imageIndex + 1}/${item.totalInEntry}`;
 }
 
-/** Format an ISO "YYYY-MM-DD" date as "DD/MM/YYYY" for clear at-a-glance reading. */
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  if (!y || !m || !d) return iso;
-  return `${d}/${m}/${y}`;
-}

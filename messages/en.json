@@ -664,6 +664,11 @@
     "submitErrorGeneric": "Submit failed ({status}): {detail}. You can fix and retry — your data is kept.",
     "analyzingCoach": "Reading your photos and writing a friendly response — this can take a few minutes. Keep the tab open.",
     "coachBeforeSubmit": "Send to receive: today's read, routine tweaks, what to ease off, and safety notes.",
+    "beforeAfterShare": {
+      "cta": "Share a before/after card",
+      "title": "Your before · after",
+      "hint": "Pick an earlier photo next to today's. The card is just your photos + DaDiary — no scores, no diagnosis."
+    },
     "pushNudge": {
       "title": "Turn on an evening reminder to keep your streak?",
       "body": "First check-in is in. A light evening nudge — you can turn it off anytime in Settings.",
@@ -1449,6 +1454,24 @@
             "cheer": "100 days?! Absolute icon status."
           }
         }
+      },
+      "continue": {
+        "title": "Streak keeps going!",
+        "body": "{n} days in a row — you showed up again today.",
+        "cheer": "Nice rhythm. See you tomorrow?",
+        "daysUnit": "days",
+        "share": "Share",
+        "save": "Save PNG",
+        "continue": "Keep going",
+        "brandMark": "Your skin diary",
+        "cardHeadline": "{n}-day streak",
+        "cardSub": "Checking in on DaDiary",
+        "cardCta": "Daily skin diary · dadiary.vn",
+        "shareTitle": "My {n}-day DaDiary streak",
+        "shareText": "I'm on a {n}-day DaDiary streak! {url}",
+        "shared": "Thanks for sharing!",
+        "saved": "Card saved",
+        "failed": "Couldn't create the card. Try again?"
       }
     },
     "beforeAfter": {
@@ -1468,7 +1491,24 @@
       "pickerClose": "Close",
       "notEnoughTitle": "Not enough photos to compare",
       "notEnoughBody": "You need at least 2 photos to see the change. Check in more to track your skin progress.",
-      "notEnoughCta": "Check in now"
+      "notEnoughCta": "Check in now",
+      "share": {
+        "cta": "Share card",
+        "title": "Share before · after",
+        "body": "A simple photo card — your dates and DaDiary branding only. No scores, no diagnosis.",
+        "privacy": "Photos stay on this device until you tap share or save.",
+        "share": "Share",
+        "save": "Save PNG",
+        "brandMark": "Your skin diary",
+        "headline": "Before · After",
+        "ctaLine": "Daily skin diary · dadiary.vn",
+        "disclaimer": "Personal photos — not a diagnosis.",
+        "shareTitle": "My DaDiary before/after",
+        "shareText": "My before/after on DaDiary — just my own photos. {url}",
+        "shared": "Thanks for sharing!",
+        "saved": "Card saved",
+        "failed": "Couldn't create the card. Try again?"
+      }
     },
     "entry": {
       "untitled": "Check-in",
