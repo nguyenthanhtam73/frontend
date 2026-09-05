@@ -1,30 +1,29 @@
 import { getTranslations } from "next-intl/server";
 
-import { pageLocaleMetadata } from "@/lib/seo";
-
-import { SkinReviewAdminView } from "@/components/admin/skin-review-admin-view";
+import { FunnelAdminView } from "@/components/admin/funnel-admin-view";
 import { Link } from "@/i18n/navigation";
+import { pageLocaleMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "metadata.adminSkinReview" });
+  const t = await getTranslations({ locale, namespace: "metadata.adminFunnel" });
   return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
     locale,
-    path: "/admin/skin-review",
+    path: "/admin/funnel",
     noIndex: true,
     noFollow: true,
   });
 }
 
-export default async function AdminSkinReviewPage() {
-  const t = await getTranslations("adminSkinReview");
+export default async function AdminFunnelPage() {
+  const t = await getTranslations("adminFunnel");
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="mb-8 space-y-2">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {t("sectionLabel")}
@@ -33,20 +32,26 @@ export default async function AdminSkinReviewPage() {
         <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">{t("sub")}</p>
         <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <Link
-            href="/admin/users"
+            href="/admin/activity"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            {t("linkUsers")}
+            {t("linkActivity")}
           </Link>
           <Link
-            href="/admin/funnel"
+            href="/admin/payments"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            {t("linkFunnel")}
+            {t("linkPayments")}
+          </Link>
+          <Link
+            href="/admin/skin-review"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("linkSkinReview")}
           </Link>
         </p>
       </div>
-      <SkinReviewAdminView />
+      <FunnelAdminView />
     </div>
   );
 }

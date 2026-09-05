@@ -83,6 +83,10 @@
       "title": "Today’s activity · DaDiary Admin",
       "description": "See who checked in with a photo and who ticked products, by Vietnam calendar day."
     },
+    "adminFunnel": {
+      "title": "Sign-ups & check-ins · DaDiary Admin",
+      "description": "See recent sign-ups, check-ins, and paid orders."
+    },
     "pricingPage": {
       "title": "Pricing · DaDiary",
       "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
@@ -173,7 +177,8 @@
       "adminPayments": "Payments",
       "adminAffiliate": "Affiliate",
       "adminSkinReview": "Skin review",
-      "adminActivity": "Today"
+      "adminActivity": "Today",
+      "adminFunnel": "New users"
     },
     "footer": {
       "tagline": "Your skin diary · AI Coach · progress & before/after",
@@ -2614,6 +2619,7 @@
     "title": "Today",
     "sub": "Who checked in with a photo, and who ticked products they used — Vietnam calendar day. New photos on Cloudflare also land under YYYY/MM/DD/check-in/username.",
     "linkUsers": "← Manage plans",
+    "linkFunnel": "New users →",
     "dateLabel": "Date",
     "prevDay": "Previous day",
     "nextDay": "Next day",
@@ -2632,12 +2638,55 @@
     "productsEmpty": "Nobody ticked a product this day.",
     "amPmTicks": "AM {am} · PM {pm}"
   },
+  "adminFunnel": {
+    "sectionLabel": "Admin",
+    "title": "Sign-ups & check-ins",
+    "sub": "How many people signed up, checked in, and paid — last 24 hours and 7 days. Check-in days use the Vietnam calendar.",
+    "linkActivity": "← Today",
+    "linkPayments": "Payments",
+    "linkSkinReview": "Skin review",
+    "loadError": "Could not load these numbers.",
+    "asOf": "Updated {time}",
+    "calendarNote": "Check-in days follow the Vietnam calendar.",
+    "paywallNa": "N/A",
+    "groups": {
+      "signups": "Sign-ups",
+      "checkIns": "People who checked in",
+      "sameDay": "Check-in on signup day",
+      "paid": "Payments"
+    },
+    "cards": {
+      "signedUp1d": "Sign-ups",
+      "signedUp1dHint": "Last 24 hours",
+      "signedUp7d": "Sign-ups",
+      "signedUp7dHint": "Last 7 days",
+      "checkInEver": "Checked in",
+      "checkInEverHint": "All time",
+      "checkIn1d": "Checked in",
+      "checkIn1dHint": "Last 24 hours",
+      "checkIn7d": "Checked in",
+      "checkIn7dHint": "Last 7 days",
+      "d0": "Check-in on signup day",
+      "d0Hint": "Checked in on the same Vietnam day they signed up",
+      "d07d": "Check-in on signup day",
+      "d07dHint": "Among people who signed up in the last 7 days",
+      "d1": "Check-in the next day",
+      "d1Hint": "Checked in / people whose next day has already happened",
+      "d17d": "Check-in the next day",
+      "d17dHint": "Among last-7-day sign-ups — checked in / next day already happened",
+      "paid7d": "Paid orders",
+      "paid7dHint": "Last 7 days",
+      "paywall": "Pricing page views",
+      "paywallHint": "The paywall is only on the device and is not saved on the server"
+    }
+  },
   "adminPayments": {
     "sectionLabel": "Admin",
     "title": "Payment metrics",
     "sub": "Today’s checkout health (UTC), Premium subscribers, and upcoming expiries. Metrics refresh about every minute.",
     "linkUsers": "← Manage plans",
     "linkFeedbacks": "Manage feedback",
+    "linkFunnel": "New users",
     "loadError": "Could not load payment metrics.",
     "cards": {
       "revenue": "Revenue today",
@@ -2703,6 +2752,7 @@
     "title": "Skin Review",
     "sub": "Upload 1 clear skin photo for deep AI observations only — no routine, products, or care steps.",
     "linkUsers": "← Manage plans",
+    "linkFunnel": "New users",
     "authLoading": "Checking admin access…",
     "needAuth": "Sign in to access the admin page.",
     "signIn": "Sign in",

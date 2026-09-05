@@ -83,6 +83,10 @@
       "title": "Hôm nay · DaDiary Admin",
       "description": "Xem user nào check-in ảnh và ai đã tick dùng sản phẩm, theo ngày Việt Nam."
     },
+    "adminFunnel": {
+      "title": "Người đăng ký & check-in · DaDiary Admin",
+      "description": "Xem số người đăng ký, check-in và đơn thanh toán gần đây."
+    },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
       "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
@@ -173,7 +177,8 @@
       "adminPayments": "Thanh toán",
       "adminAffiliate": "Affiliate",
       "adminSkinReview": "Skin review",
-      "adminActivity": "Hôm nay"
+      "adminActivity": "Hôm nay",
+      "adminFunnel": "Người dùng mới"
     },
     "footer": {
       "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
@@ -2614,6 +2619,7 @@
     "title": "Hôm nay",
     "sub": "User nào check-in ảnh, và ai đã tick dùng sản phẩm — theo ngày Việt Nam. Ảnh mới trên Cloudflare cũng nằm trong thư mục YYYY/MM/DD/check-in/username.",
     "linkUsers": "← Quản lý gói",
+    "linkFunnel": "Người dùng mới →",
     "dateLabel": "Ngày",
     "prevDay": "Hôm trước",
     "nextDay": "Hôm sau",
@@ -2632,12 +2638,55 @@
     "productsEmpty": "Không ai tick sản phẩm ngày này.",
     "amPmTicks": "Sáng {am} · Tối {pm}"
   },
+  "adminFunnel": {
+    "sectionLabel": "Admin",
+    "title": "Người đăng ký & check-in",
+    "sub": "Bao nhiêu người vừa đăng ký, đã check-in, và đã thanh toán — 24 giờ và 7 ngày. Ngày check-in theo lịch Việt Nam.",
+    "linkActivity": "← Hôm nay",
+    "linkPayments": "Thanh toán",
+    "linkSkinReview": "Skin review",
+    "loadError": "Không tải được số liệu.",
+    "asOf": "Cập nhật {time}",
+    "calendarNote": "Ngày check-in theo lịch Việt Nam.",
+    "paywallNa": "Chưa đo được",
+    "groups": {
+      "signups": "Người đăng ký",
+      "checkIns": "Có check-in",
+      "sameDay": "Check-in theo ngày đăng ký",
+      "paid": "Thanh toán"
+    },
+    "cards": {
+      "signedUp1d": "Người đăng ký",
+      "signedUp1dHint": "24 giờ vừa qua",
+      "signedUp7d": "Người đăng ký",
+      "signedUp7dHint": "7 ngày vừa qua",
+      "checkInEver": "Có check-in",
+      "checkInEverHint": "Từ trước đến nay",
+      "checkIn1d": "Có check-in",
+      "checkIn1dHint": "24 giờ vừa qua",
+      "checkIn7d": "Có check-in",
+      "checkIn7dHint": "7 ngày vừa qua",
+      "d0": "Check-in ngày đăng ký",
+      "d0Hint": "Check-in đúng ngày tạo tài khoản",
+      "d07d": "Check-in ngày đăng ký",
+      "d07dHint": "Trong số người đăng ký 7 ngày gần đây",
+      "d1": "Check-in ngày hôm sau",
+      "d1Hint": "Số người check-in / số người đã qua ngày hôm sau",
+      "d17d": "Check-in ngày hôm sau",
+      "d17dHint": "Trong số người đăng ký 7 ngày gần đây — số check-in / số đã qua ngày hôm sau",
+      "paid7d": "Đơn đã thanh toán",
+      "paid7dHint": "7 ngày vừa qua",
+      "paywall": "Xem bảng giá",
+      "paywallHint": "Trang thanh toán chỉ xem trên máy, chưa lưu trên máy chủ"
+    }
+  },
   "adminPayments": {
     "sectionLabel": "Admin",
     "title": "Chỉ số thanh toán",
     "sub": "Sức khỏe checkout hôm nay (UTC), số Premium đang active và gói sắp hết hạn. Làm mới khoảng mỗi phút.",
     "linkUsers": "← Quản lý gói",
     "linkFeedbacks": "Quản lý góp ý",
+    "linkFunnel": "Người dùng mới",
     "loadError": "Không tải được chỉ số thanh toán.",
     "cards": {
       "revenue": "Doanh thu hôm nay",
@@ -2703,6 +2752,7 @@
     "title": "Skin Review",
     "sub": "Tải 1 ảnh da rõ để AI nhận xét tình trạng — không sinh routine, sản phẩm hay bước chăm sóc.",
     "linkUsers": "← Quản lý gói",
+    "linkFunnel": "Người dùng mới",
     "authLoading": "Đang tải quyền admin…",
     "needAuth": "Đăng nhập để truy cập trang quản trị.",
     "signIn": "Đăng nhập",
