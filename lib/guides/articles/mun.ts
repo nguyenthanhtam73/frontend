@@ -3,7 +3,7 @@ import type { GuideArticleCopy, GuideLocale } from "../types";
 
 function copy(locale: GuideLocale): GuideArticleCopy {
   const hero = figure(
-    "/guides/mun/hero.webp",
+    "/guides/mun/hero.svg",
     {
       vi: {
         alt: "Minh họa không nặn mụn: người đứng trước gương, hai tay thả lỏng, gối và lót mũ sạch trên kệ.",
@@ -17,7 +17,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const oneActive = figure(
-    "/guides/mun/one-active.webp",
+    "/guides/mun/one-active.svg",
     {
       vi: {
         alt: "Một chai hoạt chất được làm nổi, các chai khác mờ phía sau, lịch vài buổi tối trong tuần.",
@@ -31,7 +31,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const friction = figure(
-    "/guides/mun/friction.webp",
+    "/guides/mun/friction.svg",
     {
       vi: {
         alt: "Mũ bảo hiểm với lót vải tháo ra để giặt, cạnh vỏ gối sạch.",
@@ -45,7 +45,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const doctor = figure(
-    "/guides/mun/doctor.webp",
+    "/guides/mun/doctor.svg",
     {
       vi: {
         alt: "Phòng chờ da liễu yên, cây xanh và cửa phòng khám — không phải hình mụn gây sốc.",

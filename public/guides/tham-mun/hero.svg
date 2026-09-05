@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="64" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0F2E2C">Thâm phẳng ≠ sẹo lõm</text>
+  <rect x="70" y="110" width="300" height="280" rx="20" fill="#F1E8F4"/><ellipse cx="220" cy="230" rx="70" ry="90" fill="#E8D0C4"/><ellipse cx="220" cy="250" rx="28" ry="18" fill="#A67C52" opacity="0.55"/><text x="220" y="360" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700" fill="#0F2E2C">Thâm (phẳng)</text>
+  <rect x="430" y="110" width="300" height="280" rx="20" fill="#E7F0F5"/><ellipse cx="580" cy="230" rx="70" ry="90" fill="#E8D0C4"/><ellipse cx="580" cy="250" rx="22" ry="14" fill="#6B5344" opacity="0.35"/><text x="580" y="360" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700" fill="#0F2E2C">Sẹo (địa hình)</text>
+</svg>

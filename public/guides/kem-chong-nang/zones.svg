@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="58" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0F2E2C">Thoa hết vùng</text>
+  <ellipse cx="400" cy="250" rx="120" ry="150" fill="#F7D4C8"/>
+  <ellipse cx="400" cy="175" rx="70" ry="28" fill="#F4C7CE" opacity="0.8"/>
+  <ellipse cx="330" cy="250" rx="36" ry="40" fill="#F4C7CE" opacity="0.8"/>
+  <ellipse cx="470" cy="250" rx="36" ry="40" fill="#F4C7CE" opacity="0.8"/>
+  <ellipse cx="400" cy="250" rx="22" ry="30" fill="#F4C7CE" opacity="0.9"/>
+  <ellipse cx="400" cy="330" rx="36" ry="22" fill="#F4C7CE" opacity="0.8"/>
+  <text x="400" y="430" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600" fill="#2A5552">Trán · má · mũi · cằm · tai trước · cổ</text>
+</svg>

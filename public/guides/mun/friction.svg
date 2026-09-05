@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="64" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0F2E2C">Giảm ma sát</text>
+  <rect x="70" y="110" width="300" height="280" rx="20" fill="#E7F0F5"/>
+  <ellipse cx="220" cy="230" rx="90" ry="55" fill="#9DD7D4"/>
+  <text x="220" y="340" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700" fill="#0F2E2C">Vỏ gối sạch</text>
+  <rect x="430" y="110" width="300" height="280" rx="20" fill="#F8E8EC"/>
+  <path d="M500 180 h160 v90 a40 40 0 0 1 -40 40 h-80 a40 40 0 0 1 -40 -40 z" fill="#C45C74"/>
+  <text x="580" y="340" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="700" fill="#0F2E2C">Lót mũ giặt được</text>
+</svg>

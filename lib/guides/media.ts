@@ -1,6 +1,6 @@
 import type { GuideFigure, GuideLocale } from "./types";
 
-export const GUIDE_FIGURE_SIZE = { width: 1280, height: 853 } as const;
+export const GUIDE_FIGURE_SIZE = { width: 800, height: 480 } as const;
 
 export function figure(
   src: string,

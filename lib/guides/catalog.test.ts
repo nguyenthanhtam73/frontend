@@ -91,6 +91,7 @@ describe("guide catalog", () => {
         );
         for (const figure of figures) {
           assert.ok(figure.alt.length > 20, `${slug}/${locale} figure needs meaningful alt`);
+          assert.match(figure.src, /\.(svg|png)$/);
           assert.equal(existsSync(path.join(ROOT, "public", figure.src.replace(/^\//, ""))), true);
         }
       }

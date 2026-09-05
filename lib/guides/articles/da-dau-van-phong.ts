@@ -3,7 +3,7 @@ import type { GuideArticleCopy, GuideLocale } from "../types";
 
 function copy(locale: GuideLocale): GuideArticleCopy {
   const hero = figure(
-    "/guides/da-dau-van-phong/hero.webp",
+    "/guides/da-dau-van-phong/hero.svg",
     {
       vi: {
         alt: "Một ngày hai khí hậu: nắng xe máy bên trái, máy lạnh văn phòng bên phải.",
@@ -17,7 +17,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const desk = figure(
-    "/guides/da-dau-van-phong/desk.webp",
+    "/guides/da-dau-van-phong/desk.svg",
     {
       vi: {
         alt: "Ngăn kéo văn phòng: giấy thấm, nước, không để sữa rửa mặt trên bàn.",
@@ -31,7 +31,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const lunch = figure(
-    "/guides/da-dau-van-phong/lunch.webp",
+    "/guides/da-dau-van-phong/lunch.svg",
     {
       vi: {
         alt: "Người thấm dầu tại bàn thay vì rửa mặt nhà vệ sinh công ty trước giờ ăn trưa nắng.",

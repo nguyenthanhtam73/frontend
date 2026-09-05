@@ -3,7 +3,7 @@ import type { GuideArticleCopy, GuideLocale } from "../types";
 
 function copy(locale: GuideLocale): GuideArticleCopy {
   const hero = figure(
-    "/guides/da-dau/hero.webp",
+    "/guides/da-dau/hero.svg",
     {
       vi: {
         alt: "Minh họa da dầu khí hậu nóng ẩm: vùng T-zone bóng hơn má, mũ bảo hiểm để cạnh cửa sổ.",
@@ -17,7 +17,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const steps = figure(
-    "/guides/da-dau/steps.webp",
+    "/guides/da-dau/steps.svg",
     {
       vi: {
         alt: "Ba bước nền cho da dầu: rửa dịu, gel mỏng, kem chống nắng hai ngón tay.",
@@ -31,7 +31,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const doAvoid = figure(
-    "/guides/da-dau/do-avoid.webp",
+    "/guides/da-dau/do-avoid.svg",
     {
       vi: {
         alt: "So sánh nên làm và nên tránh: sữa rửa dịu bên trái, chà mạnh và bỏ dưỡng bên phải.",
@@ -43,7 +43,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const climate = figure(
-    "/guides/da-dau/climate.webp",
+    "/guides/da-dau/climate.svg",
     {
       vi: {
         alt: "Ba khung khí hậu: nắng xe máy, trời mưa ẩm, và văn phòng máy lạnh.",

@@ -3,7 +3,7 @@ import type { GuideArticleCopy, GuideLocale } from "../types";
 
 function copy(locale: GuideLocale): GuideArticleCopy {
   const amount = figure(
-    "/guides/kem-chong-nang/amount.webp",
+    "/guides/kem-chong-nang/amount.svg",
     {
       vi: {
         alt: "Hai ngón tay với một dải kem chống nắng cạnh tuýp không nhãn hiệu.",
@@ -17,7 +17,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const zones = figure(
-    "/guides/kem-chong-nang/zones.webp",
+    "/guides/kem-chong-nang/zones.svg",
     {
       vi: {
         alt: "Bản đồ mặt: trán, má, mũi, cằm, tai trước và cổ cần được thoa kem chống nắng.",
@@ -31,7 +31,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const where = figure(
-    "/guides/kem-chong-nang/where.webp",
+    "/guides/kem-chong-nang/where.svg",
     {
       vi: {
         alt: "Cửa sổ văn phòng và người đi xe máy — hai chỗ nắng thường ngày.",
@@ -45,7 +45,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const textures = figure(
-    "/guides/kem-chong-nang/textures.webp",
+    "/guides/kem-chong-nang/textures.svg",
     {
       vi: {
         alt: "Hai tuýp không nhãn: fluid/gel mỏng và kem đặc hơn để so kết cấu.",

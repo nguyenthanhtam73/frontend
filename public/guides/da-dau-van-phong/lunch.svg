@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="70" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="700" fill="#0F2E2C">Bóng lúc 3 giờ chưa chắc sai</text>
+  <rect x="140" y="130" width="520" height="240" rx="20" fill="#D8F0EE"/>
+  <text x="400" y="220" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700" fill="#2A8F88">Thấm dầu</text>
+  <text x="400" y="270" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600" fill="#2A5552">Giữ lớp SPF · đừng rửa rồi ra nắng</text>
+</svg>

@@ -1,14 +1,21 @@
-# In-article guide illustrations
+# In-article guide diagrams
 
-Editorial illustrations served from this folder. No brand packaging, no posed “after” photos of real users.
+Simple labeled **SVG** figures rendered inside each article (`<img>`, not only `og:image`).
+No brand packaging. Vietnamese labels sit on the diagram; alt text is in the catalog (vi + en).
 
-| Guide | Files (WebP, 1280×853) |
+Regenerate:
+
+```bash
+node scripts/write-guide-svgs.mjs
+```
+
+| Guide | Files |
 | --- | --- |
-| `da-dau` | `hero.webp`, `steps.webp`, `do-avoid.webp`, `climate.webp` |
-| `mun` | `hero.webp`, `one-active.webp`, `friction.webp`, `doctor.webp` |
-| `kem-chong-nang` | `amount.webp`, `zones.webp`, `textures.webp`, `where.webp` |
-| `routine-cham-da` | `ampm.webp`, `order.webp`, `two-weeks.webp`, `photo.webp` |
-| `tham-mun` | `hero.webp`, `protect.webp`, `weekly.webp` |
-| `da-dau-van-phong` | `hero.webp`, `desk.webp`, `lunch.webp` |
+| `da-dau` | `hero.svg` `steps.svg` `do-avoid.svg` `climate.svg` |
+| `mun` | `hero.svg` `one-active.svg` `friction.svg` `doctor.svg` |
+| `kem-chong-nang` | `amount.svg` `zones.svg` `textures.svg` `where.svg` |
+| `routine-cham-da` | `ampm.svg` `order.svg` `two-weeks.svg` `photo.svg` |
+| `tham-mun` | `hero.svg` `protect.svg` `weekly.svg` |
+| `da-dau-van-phong` | `hero.svg` `desk.svg` `lunch.svg` |
 
-Open Graph cards stay under `/og/guides/{slug}.png` (unique per URL). Alt text lives in the catalog (Vietnamese + English), not in the filename.
+Open Graph cards stay at `/og/guides/{slug}.png`.

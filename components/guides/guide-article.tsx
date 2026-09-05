@@ -1,5 +1,4 @@
 import { ArrowRight, CircleAlert, CircleCheck } from "lucide-react";
-import Image from "next/image";
 import { getLocale } from "next-intl/server";
 
 import { LandingStartCta } from "@/components/landing/landing-start-cta";
@@ -19,13 +18,15 @@ import {
 function GuideFigureBlock({ figure }: { figure: GuideFigure }) {
   return (
     <figure className="overflow-hidden rounded-2xl border border-border/60 bg-muted/20">
-      <Image
+      {/* Native <img>: SVG diagrams must render in the article body. next/image can omit or break them. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={figure.src}
         alt={figure.alt}
         width={figure.width}
         height={figure.height}
         className="h-auto w-full"
-        sizes="(min-width: 768px) 720px, 100vw"
+        decoding="async"
       />
       {figure.caption ? (
         <figcaption className="px-4 py-3 text-xs leading-relaxed text-muted-foreground sm:text-sm">

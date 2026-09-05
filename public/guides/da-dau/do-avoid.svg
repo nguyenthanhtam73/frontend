@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="64" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0F2E2C">Nên làm / nên tránh</text>
+  <rect x="50" y="100" width="330" height="300" rx="20" fill="#D8F0EE"/><text x="215" y="160" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="700" fill="#2A8F88">Nên làm</text>
+  <text x="215" y="220" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600" fill="#0F2E2C">Rửa dịu · dưỡng mỏng</text>
+  <text x="215" y="256" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600" fill="#0F2E2C">SPF mỗi sáng</text>
+  <text x="215" y="292" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600" fill="#0F2E2C">Patch-test chai mới</text>
+  <rect x="420" y="100" width="330" height="300" rx="20" fill="#F8E8EC"/><text x="585" y="160" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="700" fill="#C45C74">Nên tránh</text>
+  <text x="585" y="220" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600" fill="#0F2E2C">Chà hạt · muối</text>
+  <text x="585" y="256" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600" fill="#0F2E2C">Bỏ dưỡng / bỏ SPF</text>
+  <text x="585" y="292" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="600" fill="#0F2E2C">Chồng nhiều acid</text>
+</svg>

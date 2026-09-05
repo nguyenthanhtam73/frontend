@@ -3,7 +3,7 @@ import type { GuideArticleCopy, GuideLocale } from "../types";
 
 function copy(locale: GuideLocale): GuideArticleCopy {
   const hero = figure(
-    "/guides/tham-mun/hero.webp",
+    "/guides/tham-mun/hero.svg",
     {
       vi: {
         alt: "Hai biểu tượng mặt: vết thâm phẳng bên trái và sẹo đổi địa hình bên phải, minh họa nhẹ không gây sốc.",
@@ -17,7 +17,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const protect = figure(
-    "/guides/tham-mun/protect.webp",
+    "/guides/tham-mun/protect.svg",
     {
       vi: {
         alt: "Ba biểu tượng: tuýp chống nắng, mũ, và miếng chà bị gạch bỏ.",
@@ -31,7 +31,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const weekly = figure(
-    "/guides/tham-mun/weekly.webp",
+    "/guides/tham-mun/weekly.svg",
     {
       vi: {
         alt: "Cùng một cửa sổ và cùng góc điện thoại trên lịch hai tuần — so ảnh, không phải trước-sau quảng cáo.",

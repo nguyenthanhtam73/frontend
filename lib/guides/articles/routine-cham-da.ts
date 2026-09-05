@@ -3,7 +3,7 @@ import type { GuideArticleCopy, GuideLocale } from "../types";
 
 function copy(locale: GuideLocale): GuideArticleCopy {
   const ampm = figure(
-    "/guides/routine-cham-da/ampm.webp",
+    "/guides/routine-cham-da/ampm.svg",
     {
       vi: {
         alt: "Khung sáng và tối: buổi sáng rửa, dưỡng, chống nắng; buổi tối rửa và dưỡng.",
@@ -17,7 +17,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const order = figure(
-    "/guides/routine-cham-da/order.webp",
+    "/guides/routine-cham-da/order.svg",
     {
       vi: {
         alt: "Thứ tự lớp: nước loãng, lotion mỏng, rồi lớp đặc hơn; buổi sáng có lớp chống nắng trên cùng.",
@@ -31,7 +31,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const twoWeeks = figure(
-    "/guides/routine-cham-da/two-weeks.webp",
+    "/guides/routine-cham-da/two-weeks.svg",
     {
       vi: {
         alt: "Lịch hai tuần với dấu check sáng và tối, cạnh sữa rửa và kem chống nắng không nhãn.",
@@ -45,7 +45,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     locale,
   );
   const photo = figure(
-    "/guides/routine-cham-da/photo.webp",
+    "/guides/routine-cham-da/photo.svg",
     {
       vi: {
         alt: "Người chụp ảnh cùng góc cạnh cửa sổ cho nhật ký da, không phải ảnh trước-sau.",
