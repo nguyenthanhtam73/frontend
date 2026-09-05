@@ -37,6 +37,12 @@ export default async function AdminActivityPage() {
           >
             {t("linkUsers")}
           </Link>
+          <Link
+            href="/admin/funnel"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("linkFunnel")}
+          </Link>
         </p>
       </div>
       <ActivityAdminView />

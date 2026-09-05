@@ -44,6 +44,12 @@ export default async function AdminPaymentsPage() {
           >
             {t("linkFeedbacks")}
           </Link>
+          <Link
+            href="/admin/funnel"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("linkFunnel")}
+          </Link>
         </p>
       </div>
       <PaymentsAdminView />
