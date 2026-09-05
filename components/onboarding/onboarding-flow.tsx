@@ -478,21 +478,37 @@ export function OnboardingFlow() {
 
     try {
       if (!token) {
-        const preview = await postGuestPreviewComplete(finishBody);
-        const fallback = buildDefaultStarterRoutine(state, locale);
+        // Don't block the signup moment on preview-complete — guests already
+        // have a local routine from step 2. Patch session when the job lands.
         await goToCoachWelcome({
           profileId: GUEST_COACH_PROFILE_ID,
           guestPreview: true,
-          starterRoutine: state.starterRoutineUserEdited
-            ? userRoutine
-            : (preview.starterRoutine ?? fallback),
-          starterRoutinePending: state.starterRoutineUserEdited
-            ? false
-            : preview.starterRoutinePending,
-          previewJobId: preview.previewJobId,
-          previewAccessToken: preview.previewAccessToken,
+          starterRoutine: userRoutine,
+          starterRoutinePending: !state.starterRoutineUserEdited,
           coachingNotes: state.aiSnapshot?.coaching_notes?.trim() || undefined,
         });
+        void postGuestPreviewComplete(finishBody)
+          .then((preview) => {
+            if (useOnboardingStore.getState().starterRoutineUserEdited) {
+              patchCoachWelcomeSession({
+                previewJobId: preview.previewJobId,
+                previewAccessToken: preview.previewAccessToken,
+                starterRoutinePending: false,
+              });
+              return;
+            }
+            patchCoachWelcomeSession({
+              previewJobId: preview.previewJobId,
+              previewAccessToken: preview.previewAccessToken,
+              starterRoutinePending: preview.starterRoutinePending,
+              ...(preview.starterRoutine
+                ? { starterRoutine: preview.starterRoutine, starterRoutinePending: false }
+                : {}),
+            });
+          })
+          .catch(() => {
+            patchCoachWelcomeSession({ starterRoutinePending: false });
+          });
         return;
       }
 
