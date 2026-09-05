@@ -43,6 +43,20 @@ export function trackMetaEvent(
   window.fbq?.("track", event);
 }
 
+/** Custom event — use for funnel steps that are not Meta standard events. */
+export function trackMetaCustomEvent(
+  event: string,
+  params?: Record<string, unknown>,
+): void {
+  if (typeof window === "undefined") return;
+  if (!shouldLoadMetaPixel()) return;
+  if (params) {
+    window.fbq?.("trackCustom", event, params);
+    return;
+  }
+  window.fbq?.("trackCustom", event);
+}
+
 const CHECKOUT_STORAGE_KEY = "dadiary_meta_checkout";
 const PURCHASE_FIRED_PREFIX = "dadiary_meta_purchase_";
 

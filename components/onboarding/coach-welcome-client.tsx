@@ -44,6 +44,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
+import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
 import {
   clearCoachWelcomeSession,
   readCoachWelcomeSession,
@@ -51,6 +52,7 @@ import {
 } from "@/lib/onboarding/coach-welcome-session";
 import {
   claimGuestCoachWelcomeIfNeeded,
+  GUEST_CLAIM_RETURN_PATH,
   isClaimableGuestCoachSession,
   retryAttachGuestClaimPhotos,
   sessionLooksLikeGuestTrial,
@@ -61,6 +63,7 @@ import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { consumeJustCompletedOnboarding } from "@/lib/stores/onboarding-store";
 import {
   COACH_WELCOME_SESSION_EVENT,
@@ -179,6 +182,13 @@ function CoachWelcomeLoaded({
   useEffect(() => {
     setProfileId(initialProfileId);
   }, [initialProfileId]);
+
+  useEffect(() => {
+    trackFunnelEvent(FUNNEL_EVENTS.routineShown, {
+      guest: isGuest,
+      pending: initialPending,
+    });
+  }, [isGuest, initialPending]);
 
   useEffect(() => {
     // Catch attach-fail patches that may have landed before this listener mounted.
@@ -351,7 +361,7 @@ function CoachWelcomeLoaded({
     <>
       <div className="mx-auto w-full max-w-2xl space-y-4 pb-24 sm:space-y-5 sm:pb-6">
         <CoachWelcomeSection>
-          <CoachWelcomeCelebrationHeader />
+          <CoachWelcomeCelebrationHeader isGuest={isGuest} />
         </CoachWelcomeSection>
 
         <CoachWelcomeSection>
@@ -743,7 +753,19 @@ export function CoachWelcomeClient() {
       <div className="mx-auto max-w-lg space-y-4 text-center">
         <p className="text-muted-foreground">{t("needSignIn")}</p>
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Link href="/login" className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full sm:w-auto")}>
+          <Link
+            href={buildAuthHrefWithNext("/register", GUEST_CLAIM_RETURN_PATH)}
+            className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full sm:w-auto")}
+            onClick={() =>
+              trackFunnelEvent(FUNNEL_EVENTS.signupCtaClick, { surface: "anon" })
+            }
+          >
+            {t("ctaGuestRegisterToCheckIn")}
+          </Link>
+          <Link
+            href={buildAuthHrefWithNext("/login", GUEST_CLAIM_RETURN_PATH)}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
+          >
             {t("signInCta")}
           </Link>
           <Link href="/onboarding" className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "w-full sm:w-auto")}>

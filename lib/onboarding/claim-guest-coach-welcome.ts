@@ -28,6 +28,13 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 /** After guest claim, land on the payoff screen with their routine. */
 export const GUEST_CLAIM_RETURN_PATH = "/onboarding/coach-welcome";
 
+/** Register/login `?next=` that means "save the guest routine I just saw". */
+export function isGuestRoutineSaveReturn(path: string | null | undefined): boolean {
+  if (!path) return false;
+  const bare = path.split("?")[0]?.split("#")[0] || path;
+  return bare === GUEST_CLAIM_RETURN_PATH || bare.startsWith(`${GUEST_CLAIM_RETURN_PATH}/`);
+}
+
 /** True when payload still looks like a local guest trial (not a prior account). */
 export function sessionLooksLikeGuestTrial(
   session: CoachWelcomePayload | null,

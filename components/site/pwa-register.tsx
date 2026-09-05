@@ -8,7 +8,7 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { usePathname } from "@/i18n/navigation";
-import { hasMobileBottomChrome } from "@/lib/site-nav";
+import { hasMobileBottomChrome, isOnboardingFunnelPath } from "@/lib/site-nav";
 import { hasToastHandler, pushToast } from "@/lib/toast-bridge";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +72,7 @@ export function PwaRegister() {
   const tPush = useTranslations("push");
   const pathname = usePathname();
   const liftForBottomBar = hasMobileBottomChrome(pathname);
+  const hideInstallOnFunnel = isOnboardingFunnelPath(pathname);
 
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
@@ -351,7 +352,11 @@ export function PwaRegister() {
   }, []);
 
   const showUpdate = waitingWorker !== null;
-  const showInstall = !showUpdate && installEvent !== null && !installHidden;
+  const showInstall =
+    !showUpdate &&
+    installEvent !== null &&
+    !installHidden &&
+    !hideInstallOnFunnel;
 
   // The iOS banner self-gates (iOS only, not standalone, not dismissed) and
   // never overlaps the Android/desktop install toast, since `beforeinstallprompt`

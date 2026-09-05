@@ -38,6 +38,7 @@ import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
 import type { OnboardingReviewData } from "@/lib/onboarding/review-data";
 import {
@@ -349,6 +350,11 @@ export function OnboardingReview({ data, onDeleted }: OnboardingReviewProps) {
                       buttonVariants({ variant: "default", size: "default" }),
                       "justify-center",
                     )}
+                    onClick={() =>
+                      trackFunnelEvent(FUNNEL_EVENTS.signupCtaClick, {
+                        surface: "review",
+                      })
+                    }
                   >
                     {tCoach("guestSaveRoutineCta")}
                   </Link>

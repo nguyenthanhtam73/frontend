@@ -1,3 +1,8 @@
+import {
+  clearPersistedGuestRoutine,
+  persistGuestRoutine,
+  readPersistedGuestRoutine,
+} from "@/lib/onboarding/guest-routine-persist";
 import { mergeReviewPhotoUrls, normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import {
   COACH_WELCOME_SESSION_EVENT,
@@ -6,8 +11,7 @@ import {
   type CoachWelcomePayload,
 } from "@/lib/types/starter-routine";
 
-export function readCoachWelcomeSession(): CoachWelcomePayload | null {
-  if (typeof window === "undefined") return null;
+function readSessionOnly(): CoachWelcomePayload | null {
   try {
     const raw = sessionStorage.getItem(COACH_WELCOME_STORAGE_KEY);
     if (!raw) return null;
@@ -17,6 +21,28 @@ export function readCoachWelcomeSession(): CoachWelcomePayload | null {
   } catch {
     return null;
   }
+}
+
+/** Write session + durable guest backup (survives tab close). */
+export function writeCoachWelcomeSession(payload: CoachWelcomePayload): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(payload));
+  persistGuestRoutine(payload);
+}
+
+export function readCoachWelcomeSession(): CoachWelcomePayload | null {
+  if (typeof window === "undefined") return null;
+  const fromSession = readSessionOnly();
+  if (fromSession) return fromSession;
+
+  const persisted = readPersistedGuestRoutine();
+  if (!persisted) return null;
+  try {
+    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(persisted));
+  } catch {
+    /* quota — still return persist so this tab can show the routine */
+  }
+  return persisted;
 }
 
 /** Guest preview must use session + preview-routine poll only — never /profile/skin. */
@@ -40,6 +66,7 @@ export function clearCoachWelcomeSession(): void {
   } catch {
     /* ignore */
   }
+  clearPersistedGuestRoutine();
   void import("@/lib/onboarding/guest-photo-idb").then((m) =>
     m.clearGuestClaimPhotos(),
   );
@@ -85,6 +112,7 @@ export function patchCoachWelcomeSession(
       reviewSummary: mergedReviewSummary,
     };
     sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(merged));
+    persistGuestRoutine(merged);
     window.dispatchEvent(new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }));
   } catch {
     /* storage full or private mode */

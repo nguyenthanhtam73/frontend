@@ -83,11 +83,13 @@ export function CoachWelcomeCelebrationHeader({
   completedLabel,
   className,
   metaOnly,
+  isGuest = false,
 }: {
   completedLabel?: string;
   className?: string;
   /** Render only the muted timestamp (footer meta). */
   metaOnly?: boolean;
+  isGuest?: boolean;
 }) {
   const t = useTranslations("coachWelcome");
   const tReview = useTranslations("onboarding.review");
@@ -113,7 +115,7 @@ export function CoachWelcomeCelebrationHeader({
         {t("celebrationTitle")}
       </h1>
       <p className="text-sm leading-snug text-muted-foreground sm:text-[15px]">
-        {t("celebrationLine")}
+        {isGuest ? t("celebrationLineGuest") : t("celebrationLine")}
       </p>
     </header>
   );

@@ -19,6 +19,7 @@ import {
   claimGuestCoachWelcomeIfNeeded,
   GUEST_CLAIM_RETURN_PATH,
   isClaimableGuestCoachSession,
+  isGuestRoutineSaveReturn,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { readCoachWelcomeSession } from "@/lib/onboarding/coach-welcome-session";
 import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
@@ -78,7 +79,9 @@ function LoginPageInner() {
     <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t("loginTitle")}</h1>
-        <p className="text-sm text-muted-foreground">{t("loginSub")}</p>
+        <p className="text-sm text-muted-foreground">
+          {isGuestRoutineSaveReturn(returnPath) ? t("loginSubSaveRoutine") : t("loginSub")}
+        </p>
       </div>
       <Card>
         <CardContent className="space-y-4 p-6">
