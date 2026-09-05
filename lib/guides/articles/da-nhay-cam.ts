@@ -47,9 +47,9 @@ function copy(locale: GuideLocale): GuideArticleCopy {
 
   if (locale === "vi") {
     return {
-      title: "Da nhạy cảm: giảm kích, một thay đổi mỗi lần",
+      title: "Da nhạy cảm nóng ẩm: giảm kích, một thay đổi mỗi lần",
       description:
-        "Da dễ đỏ, rát, ngứa sau chai mới? Routine tối giản, patch-test, SPF dịu — không chồng acid. Khi nào gặp bác sĩ, rồi chụp ảnh nhận routine nhẹ.",
+        "Da dễ đỏ, rát, ngứa sau chai mới trên khí hậu nóng ẩm? Routine tối giản, patch-test, SPF dịu — không chồng acid. DaDiary Beta: không chẩn bệnh — chụp ảnh nhận routine nhẹ.",
       kicker: "Da nhạy cảm",
       lede:
         "Mình không chẩn ‘da nhạy cảm’ giúp bạn trên trang này. Nhiều thứ làm da đỏ: hương, acid, nắng, mũ, điều hòa. Việc ít hại: bớt chai, bớt chồng, biết khi nào đi khám. DaDiary đang Beta — gợi ý, không phải phòng khám.",
@@ -65,7 +65,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Tín hiệu thường gặp — chưa phải chẩn đoán",
               paragraphs: [
-                "Rát khi thoa, đỏ lan sau chai mới, ngứa dọc má khi máy lạnh. Cũng có thể chỉ là hàng rào đang khô — xem bài da khô trước khi mua ‘serum phục hồi’.",
+                "Rát khi thoa, đỏ lan sau chai mới, ngứa dọc má khi máy lạnh. Cũng có thể chỉ là hàng rào đang khô — xem [da khô](/guides/da-kho) trước khi mua ‘serum phục hồi’.",
               ],
               checklist: [
                 "Viết ra chai mới trong 2 tuần (kể cả sunscreen).",
@@ -76,7 +76,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Mụn, đỏ, và ma sát",
               paragraphs: [
-                "Da đang nổi vẫn có thể là da dễ kích. Nặn, chà, lót mũ bẩn làm đỏ thêm. Ưu tiên dịu + không nặn — bài mụn nói rõ hơn việc acid.",
+                "Da đang nổi vẫn có thể là da dễ kích. Nặn, chà, lót mũ bẩn làm đỏ thêm. Ưu tiên dịu + không nặn — [bài mụn](/guides/mun) nói rõ hơn việc acid.",
               ],
             },
           ],
@@ -98,7 +98,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Hoạt chất để sau",
               paragraphs: [
-                "Retinol, AHA, BHA, vitamin C mạnh — không phải bước đầu khi da đang đỏ. Xem bài retinol cho người mới khi da đã êm vài tuần.",
+                "Retinol, AHA, BHA, vitamin C mạnh — không phải bước đầu khi da đang đỏ. Xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi) khi da đã êm vài tuần.",
                 "Đang có đơn từ bác sĩ: giữ giờ dặn. Đừng thêm tip mạng lên cùng vùng.",
               ],
             },
@@ -187,9 +187,9 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   }
 
   return {
-    title: "Sensitive skin: fewer triggers, one change at a time",
+    title: "Sensitive skin in humid heat: fewer triggers, one change at a time",
     description:
-      "Easy redness, sting, or itch after a new bottle? A short routine, patch tests, a wearable SPF — no stacked acids. When to see a doctor, then a photo for a gentle routine.",
+      "Easy redness, sting, or itch after a new bottle in humid heat? A short routine, patch tests, a wearable SPF — no stacked acids. DaDiary Beta: no diagnosis — then a photo for a gentle routine.",
     kicker: "Sensitive skin",
     lede:
       "This page does not diagnose ‘sensitive skin’ for you. Many things flush a face: fragrance, acids, sun, a helmet, air-con. Lower-harm moves: fewer bottles, less stacking, knowing when to get care. DaDiary is in Beta — tips, not a clinic.",
@@ -205,7 +205,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Common signals — not a diagnosis",
             paragraphs: [
-              "Sting on application, spreading red after a new bottle, cheek itch under air-con. It can also just be a dry barrier — read the dry-skin guide before you buy a ‘repair serum’.",
+              "Sting on application, spreading red after a new bottle, cheek itch under air-con. It can also just be a dry barrier — read the [dry-skin guide](/guides/da-kho) before you buy a ‘repair serum’.",
             ],
             checklist: [
               "Write down new bottles in the last 2 weeks (including sunscreen).",
@@ -216,7 +216,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Spots, redness, and friction",
             paragraphs: [
-              "Skin that is breaking out can still be easily irritated. Picking, scrubbing, a dirty helmet liner add red. Calm care and no picking come first — the acne guide covers acids more than this page.",
+              "Skin that is breaking out can still be easily irritated. Picking, scrubbing, a dirty helmet liner add red. Calm care and no picking come first — the [acne guide](/guides/mun) covers acids more than this page.",
             ],
           },
         ],
@@ -238,7 +238,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Actives wait",
             paragraphs: [
-              "Retinol, AHA, BHA, strong vitamin C — not step one on a red face. Read the beginner retinol guide once skin has been calm for a few weeks.",
+              "Retinol, AHA, BHA, strong vitamin C — not step one on a red face. Read the [beginner retinol guide](/guides/retinol-cho-nguoi-moi) once skin has been calm for a few weeks.",
               "Already on a prescription? Keep that schedule. Don’t add an internet tip on the same area.",
             ],
           },

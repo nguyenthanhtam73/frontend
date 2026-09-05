@@ -49,10 +49,10 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     return {
       title: "Thâm mụn nóng ẩm: SPF, kiên nhẫn, không chà",
       description:
-        "Thâm nâu sau mụn dễ đậm vì nắng và nặn. SPF mỗi sáng, không chà, không hứa hết trong 7 ngày — chụp ảnh theo tuần và nhận routine nhẹ.",
+        "Thâm nâu sau mụn dễ đậm vì nắng và nặn. SPF mỗi sáng, không chà, không hứa hết 7 ngày. DaDiary Beta: không review giả — chụp ảnh theo tuần.",
       kicker: "Thâm mụn",
       lede:
-        "Mình không bán ‘hết thâm 7 ngày’. Vết nâu sau mụn hay gặp trên da dễ sắc tố, càng rõ khi nắng ẩm và hay nặn. Việc ít hại: bảo vệ nắng, để da yên, biết khi nào cần bác sĩ.",
+        "Mình không bán ‘hết thâm 7 ngày’. Vết nâu sau mụn hay gặp trên da dễ sắc tố, càng rõ khi nắng ẩm và hay nặn. Việc ít hại: bảo vệ nắng, để da yên, biết khi nào cần bác sĩ. DaDiary đang Beta: gợi ý, không chẩn bệnh.",
       heroFigure: hero,
       sections: [
         {
@@ -93,7 +93,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           doAvoid: {
             doItems: [
               "Không nặn. Không chà.",
-              "SPF mỗi sáng, kể cả ngày mây và văn phòng có cửa sổ.",
+              "SPF mỗi sáng, kể cả ngày mây và văn phòng có cửa sổ — xem [kem chống nắng](/guides/kem-chong-nang).",
               "Mũ, bóng râm khi nắng gắt — bổ sung, không thay kem.",
               "Ảnh cùng góc, cùng khung giờ, mỗi tuần.",
             ],
@@ -169,10 +169,10 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   return {
     title: "Post-acne marks in humid heat: SPF, patience, no scrubbing",
     description:
-      "Brown marks darken with sun and picking. Morning SPF, no scrubbing, no 7-day promise — weekly photos and a gentle starter routine.",
+        "Brown marks darken with sun and picking. Morning SPF, no scrubbing, no 7-day promise. DaDiary Beta: no fake reviews — weekly photos and a gentle routine.",
     kicker: "Marks",
     lede:
-      "This page does not sell a 7-day fade. Flat brown marks after acne are common on skin that pigments easily, and louder in humid sun if you pick. Lower-harm moves: sun care, leaving skin alone, knowing when to see a doctor.",
+      "This page does not sell a 7-day fade. Flat brown marks after acne are common on skin that pigments easily, and louder in humid sun if you pick. Lower-harm moves: sun care, leaving skin alone, knowing when to see a doctor. DaDiary is in Beta: tips, not a diagnosis.",
     heroFigure: hero,
     sections: [
       {
@@ -213,7 +213,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         doAvoid: {
           doItems: [
             "No picking. No scrubbing.",
-            "SPF every morning, including cloudy days and windowed offices.",
+            "SPF every morning, including cloudy days and windowed offices — see the [sunscreen guide](/guides/kem-chong-nang).",
             "Hat and shade in harsh sun — extras, not a sunscreen replacement.",
             "Same-angle photos, same time of day, weekly.",
           ],

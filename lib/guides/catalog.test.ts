@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { SITEMAP_PUBLIC_PATHS } from "@/lib/seo";
 
 import {
+  GUIDE_CLIMATE_HUB_PATH,
+  GUIDE_CLUSTERS,
   GUIDE_SLUGS,
   formatGuideDate,
   getGuideArticle,
@@ -18,10 +20,19 @@ import {
 } from "./catalog";
 import { listGuideFigures } from "./figures";
 import {
+  clusteredSlugSet,
+  climateHubOgPath,
+  getClimateHub,
+} from "./hub";
+import {
+  climateHubBreadcrumbJsonLd,
+  climateHubFaqJsonLd,
+  climateHubJsonLd,
   guideArticleJsonLd,
   guideBreadcrumbJsonLd,
   guideFaqJsonLd,
   guidesIndexBreadcrumbJsonLd,
+  guidesIndexCollectionJsonLd,
 } from "./schema";
 import { countGuideWords } from "./word-count";
 
@@ -44,6 +55,7 @@ describe("guide catalog", () => {
     ]);
     assert.deepEqual(guidePublicPaths(), [
       "/guides",
+      GUIDE_CLIMATE_HUB_PATH,
       "/guides/da-dau",
       "/guides/mun",
       "/guides/kem-chong-nang",
@@ -54,6 +66,7 @@ describe("guide catalog", () => {
       "/guides/da-nhay-cam",
       "/guides/retinol-cho-nguoi-moi",
     ]);
+    assert.equal(isGuideSlug("da-nong-am"), false);
     for (const path of guidePublicPaths()) {
       assert.ok(
         (SITEMAP_PUBLIC_PATHS as readonly string[]).includes(path),
@@ -73,6 +86,9 @@ describe("guide catalog", () => {
         assert.ok(article.faqs.length >= 3);
         assert.equal(article.path, `/guides/${slug}`);
         assert.ok(article.related.every((r) => r !== slug && isGuideSlug(r)));
+        assert.match(article.description, /Beta/i);
+        assert.match(article.lede, /Beta/i);
+        assert.match(JSON.stringify(article), /\]\(\/guides\/[a-z0-9-]+\)/);
         assert.match(article.datePublished, /^\d{4}-\d{2}-\d{2}$/);
         assert.match(article.dateModified, /^\d{4}-\d{2}-\d{2}$/);
         assert.equal(article.ogImage.url, guideOgPath(slug));
@@ -159,5 +175,51 @@ describe("guide catalog", () => {
       String(crumbs.itemListElement[2]?.item).endsWith("/guides/da-kho") ||
         String(crumbs.itemListElement[2]?.item).includes("/guides/da-kho"),
     );
+
+    const indexLd = guidesIndexCollectionJsonLd("vi", chrome, listGuideArticles("vi"));
+    assert.equal(indexLd["@type"], "CollectionPage");
+    assert.equal(indexLd.mainEntity.numberOfItems, 9);
+  });
+
+  it("clusters all nine guides once on the climate hub", () => {
+    const clustered = clusteredSlugSet();
+    assert.equal(clustered.size, GUIDE_SLUGS.length);
+    for (const slug of GUIDE_SLUGS) {
+      assert.equal(clustered.has(slug), true, `cluster missing ${slug}`);
+    }
+    assert.equal(
+      GUIDE_CLUSTERS.reduce((n, cluster) => n + cluster.slugs.length, 0),
+      9,
+    );
+
+    for (const locale of ["vi", "en"] as const) {
+      const hub = getClimateHub(locale);
+      assert.equal(hub.path, GUIDE_CLIMATE_HUB_PATH);
+      assert.ok(hub.heading.length > 10);
+      assert.match(hub.description, /Beta/i);
+      assert.match(hub.lede, /Beta/i);
+      assert.equal(hub.clusters.length, 4);
+      assert.ok(hub.faqs.length >= 3);
+      assert.equal(
+        hub.clusters.reduce((n, cluster) => n + cluster.articles.length, 0),
+        9,
+      );
+      assert.equal(hub.ogImage.url, climateHubOgPath());
+      assert.equal(existsSync(path.join(OG_DIR, "da-nong-am.png")), true);
+      assert.equal(existsSync(path.join(OG_DIR, "da-nong-am.svg")), true);
+
+      const hubLd = climateHubJsonLd(hub, locale);
+      const hubFaq = climateHubFaqJsonLd(hub);
+      const hubCrumbs = climateHubBreadcrumbJsonLd(locale, guideChrome(locale));
+      assert.equal(hubLd["@type"], "CollectionPage");
+      assert.equal(hubLd.mainEntity.numberOfItems, 9);
+      assert.equal(hubFaq.mainEntity.length, hub.faqs.length);
+      assert.equal(hubCrumbs.itemListElement.length, 3);
+      assert.ok(String(hubCrumbs.itemListElement[2]?.item).includes("/guides/da-nong-am"));
+    }
+
+    const chrome = guideChrome("vi");
+    assert.ok(chrome.climateHubLabel.length > 4);
+    assert.ok(chrome.breadcrumbHub.length > 2);
   });
 });

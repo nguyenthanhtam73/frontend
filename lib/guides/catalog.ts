@@ -14,12 +14,14 @@ import type {
   GuideLocale,
   GuideSlug,
 } from "./types";
-import { GUIDE_SLUGS } from "./types";
+import { GUIDE_CLIMATE_HUB_PATH, GUIDE_SLUGS } from "./types";
 
 export type {
   GuideArticle,
   GuideArticleCopy,
   GuideChrome,
+  GuideClusterDef,
+  GuideClusterId,
   GuideDoAvoid,
   GuideFaq,
   GuideFigure,
@@ -29,7 +31,12 @@ export type {
   GuideSlug,
   GuideSubsection,
 } from "./types";
-export { GUIDE_SLUGS } from "./types";
+export {
+  GUIDE_CLIMATE_HUB_PATH,
+  GUIDE_CLIMATE_HUB_SLUG,
+  GUIDE_CLUSTERS,
+  GUIDE_SLUGS,
+} from "./types";
 
 const CHROME: Record<GuideLocale, GuideChrome> = {
   vi: {
@@ -48,6 +55,8 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
     updatedLabel: "Cập nhật",
     breadcrumbHome: "Trang chủ",
     breadcrumbGuides: "Hướng dẫn",
+    breadcrumbHub: "Da nóng ẩm",
+    climateHubLabel: "Da nóng ẩm Việt Nam",
     doLabel: "Nên làm",
     avoidLabel: "Nên tránh",
   },
@@ -67,6 +76,8 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
     updatedLabel: "Updated",
     breadcrumbHome: "Home",
     breadcrumbGuides: "Guides",
+    breadcrumbHub: "Humid heat",
+    climateHubLabel: "Humid-heat skin in Vietnam",
     doLabel: "Do this",
     avoidLabel: "Skip this",
   },
@@ -125,12 +136,12 @@ const DATES: Record<GuideSlug, { datePublished: string; dateModified: string }> 
 };
 
 const RELATED: Record<GuideSlug, GuideSlug[]> = {
-  "da-dau": ["da-kho", "da-dau-van-phong", "mun"],
-  mun: ["tham-mun", "da-nhay-cam", "retinol-cho-nguoi-moi"],
-  "kem-chong-nang": ["tham-mun", "da-dau", "routine-cham-da"],
-  "routine-cham-da": ["retinol-cho-nguoi-moi", "da-kho", "kem-chong-nang"],
+  "da-dau": ["da-dau-van-phong", "kem-chong-nang", "mun"],
+  mun: ["tham-mun", "da-dau", "da-nhay-cam"],
+  "kem-chong-nang": ["tham-mun", "da-dau", "da-dau-van-phong"],
+  "routine-cham-da": ["kem-chong-nang", "da-dau", "retinol-cho-nguoi-moi"],
   "tham-mun": ["mun", "kem-chong-nang", "retinol-cho-nguoi-moi"],
-  "da-dau-van-phong": ["da-dau", "da-kho", "kem-chong-nang"],
+  "da-dau-van-phong": ["da-dau", "kem-chong-nang", "da-kho"],
   "da-kho": ["da-dau-van-phong", "routine-cham-da", "da-nhay-cam"],
   "da-nhay-cam": ["da-kho", "mun", "retinol-cho-nguoi-moi"],
   "retinol-cho-nguoi-moi": ["routine-cham-da", "da-nhay-cam", "tham-mun"],
@@ -171,7 +182,7 @@ export function listGuideArticles(locale: string): GuideArticle[] {
 }
 
 export function guidePublicPaths(): string[] {
-  return ["/guides", ...GUIDE_SLUGS.map((slug) => `/guides/${slug}`)];
+  return ["/guides", GUIDE_CLIMATE_HUB_PATH, ...GUIDE_SLUGS.map((slug) => `/guides/${slug}`)];
 }
 
 export function formatGuideDate(isoDate: string, locale: string): string {

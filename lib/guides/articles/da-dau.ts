@@ -61,10 +61,10 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     return {
       title: "Da dầu nóng ẩm: routine mỏng, SPF mỗi sáng",
       description:
-        "Da dầu bóng T-zone khi nắng ẩm? Rửa dịu, gel mỏng, kem chống nắng mỗi sáng. Checklist làm/tránh — rồi chụp ảnh nhận routine.",
+        "Da dầu bóng T-zone khi nắng ẩm Việt Nam? Rửa dịu, gel mỏng, SPF mỗi sáng. DaDiary Beta: gợi ý, không chẩn bệnh — rồi chụp ảnh nhận routine.",
       kicker: "Da dầu",
       lede:
-        "Bạn không cần 8 bước. Mình hay thấy người rửa thật mạnh, bỏ dưỡng, rồi da vừa bóng vừa căng lúc 3 giờ — mệt thật. Bài này giữ ngắn: nền 3 bước, SPF, và khi nào nên gặp bác sĩ.",
+        "Bạn không cần 8 bước. Mình hay thấy người rửa thật mạnh, bỏ dưỡng, rồi da vừa bóng vừa căng lúc 3 giờ — mệt thật. Bài này giữ ngắn: nền 3 bước, SPF, và khi nào nên gặp bác sĩ. DaDiary đang Beta: gợi ý tham khảo, không chẩn bệnh.",
       heroFigure: hero,
       sections: [
         {
@@ -173,7 +173,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           checklist: [
             "Nắng gắt / đi lâu: thấm mồ hôi, thoa lại SPF nếu được. Đừng rửa giữa đường rồi bỏ trống.",
             "Trời râm mùa mưa: UV vẫn có thể cao. Những ngày có đoạn ngoài đường, giữ SPF sáng.",
-            "Cả ngày máy lạnh: má có thể khô, T-zone vẫn bóng. SPF cả mặt; tối thêm lotion ở má.",
+            "Cả ngày máy lạnh: má có thể khô, T-zone vẫn bóng. SPF cả mặt; tối thêm lotion ở má — chi tiết ở [da dầu văn phòng](/guides/da-dau-van-phong).",
           ],
         },
         {
@@ -208,7 +208,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           question: "Da dầu có dùng retinol được không?",
           answer:
-            "Có thể, nhưng không phải bước đầu khi da đang rát. Ổn định rửa–dưỡng–SPF, patch-test, rồi mới vài đêm/tuần. Đang trị theo đơn — hỏi bác sĩ trước.",
+            "Có thể, nhưng không phải bước đầu khi da đang rát. Ổn định rửa–dưỡng–SPF, patch-test, rồi mới vài đêm/tuần — xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi). Đang trị theo đơn — hỏi bác sĩ trước.",
         },
         {
           question: "Bóng T-zone buổi chiều có phải routine sai?",
@@ -222,10 +222,10 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   return {
     title: "Oily skin in humid heat: a thin routine and morning SPF",
     description:
-      "Shiny T-zone in humid heat? Gentle cleanse, thin gel, sunscreen every morning. A do/skip list — then take a photo for a starter routine.",
+      "Shiny T-zone in Vietnamese humid heat? Gentle cleanse, thin gel, morning SPF. DaDiary Beta: tips, not a diagnosis — then a photo for a starter routine.",
     kicker: "Oily skin",
     lede:
-      "You do not need eight steps. A harsh wash and no moisturizer often leave skin shiny and tight by 3 p.m. This page stays short: a 3-step base, SPF, and when to see a doctor.",
+      "You do not need eight steps. A harsh wash and no moisturizer often leave skin shiny and tight by 3 p.m. This page stays short: a 3-step base, SPF, and when to see a doctor. DaDiary is in Beta: reference tips, not a diagnosis.",
     heroFigure: hero,
     sections: [
       {
@@ -328,7 +328,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         checklist: [
           "Harsh sun / a long ride: blot, reapply SPF if you can. Don’t wash on the roadside and leave skin bare.",
           "Cloudy rainy days: UV can still be high. Any outdoor stretch, keep morning SPF.",
-          "All-day air-con: cheeks may dry while the T-zone shines. SPF on the whole face; extra lotion on cheeks at night.",
+          "All-day air-con: cheeks may dry while the T-zone shines. SPF on the whole face; extra lotion on cheeks at night — more in the [office oily-skin guide](/guides/da-dau-van-phong).",
         ],
       },
       {
@@ -363,7 +363,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
       {
         question: "Can oily skin use retinol?",
         answer:
-          "Sometimes — not as step one while skin stings. Stabilize cleanse–moisturize–SPF, patch-test, then a few nights a week. On a prescription? Ask first.",
+          "Sometimes — not as step one while skin stings. Stabilize cleanse–moisturize–SPF, patch-test, then a few nights a week — see [retinol for beginners](/guides/retinol-cho-nguoi-moi). On a prescription? Ask first.",
       },
       {
         question: "Is a shiny T-zone in the afternoon a failed routine?",

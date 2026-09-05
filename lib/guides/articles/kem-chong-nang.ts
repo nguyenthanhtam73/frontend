@@ -61,12 +61,12 @@ function copy(locale: GuideLocale): GuideArticleCopy {
 
   if (locale === "vi") {
     return {
-      title: "Kem chống nắng da dầu, da mụn: thoa đủ để giữ được",
+      title: "Kem chống nắng da dầu, da mụn: thoa đủ mỗi sáng",
       description:
-        "SPF mỗi sáng giúp thâm ít đậm hơn. Hai ngón tay, gel/fluid, rửa sạch tối. Checklist làm/tránh — rồi chụp ảnh nhận routine có bước nắng.",
+        "SPF mỗi sáng giúp thâm ít đậm hơn trên da nóng ẩm. Hai ngón tay, gel/fluid, rửa sạch tối. DaDiary Beta: thói quen, không trị liệu — chụp ảnh nhận routine.",
       kicker: "Kem chống nắng",
       lede:
-        "Bạn bỏ SPF vì bí, trắng, hoặc sợ mụn? Thường là kết cấu và lượng thoa — không phải ‘da dầu không cần nắng’. Mình viết để bạn giữ được mỗi sáng.",
+        "Bạn bỏ SPF vì bí, trắng, hoặc sợ mụn? Thường là kết cấu và lượng thoa — không phải ‘da dầu không cần nắng’. Mình viết để bạn giữ được mỗi sáng. DaDiary đang Beta: gợi ý, không chẩn bệnh.",
       heroFigure: amount,
       sections: [
         {
@@ -92,7 +92,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Giữa ngày: thấm, đừng rửa rồi bỏ trống",
               paragraphs: [
-                "Bóng giữa buổi họp: giấy thấm, rồi phấn hoặc xịt có SPF nếu bạn mang theo. Rửa mặt giữa giờ rồi ra nắng trưa dễ thâm hơn là chịu một lớp mỏng.",
+                "Bóng giữa buổi họp: giấy thấm, rồi phấn hoặc xịt có SPF nếu bạn mang theo. Rửa mặt giữa giờ rồi ra nắng trưa dễ thâm hơn là chịu một lớp mỏng — xem [da dầu văn phòng](/guides/da-dau-van-phong).",
               ],
             },
           ],
@@ -185,12 +185,12 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   }
 
   return {
-    title: "Sunscreen for oily, acne-prone skin: enough product, every morning",
+    title: "Sunscreen for oily, acne-prone skin: enough product every morning",
     description:
-      "Morning SPF helps marks stay lighter. Two fingers, a gel or fluid, wash it off at night. A do/skip list — then a photo for a routine with sun care.",
+      "Morning SPF helps marks stay lighter in humid heat. Two fingers, a gel or fluid, wash it off at night. DaDiary Beta: a habit, not a treatment — then a photo for a routine.",
     kicker: "Sunscreen",
     lede:
-      "Skipping SPF because it feels heavy, white, or ‘breakout-y’ is usually texture and amount — not ‘oily skin doesn’t need sun’. This page is about a habit you can keep.",
+      "Skipping SPF because it feels heavy, white, or ‘breakout-y’ is usually texture and amount — not ‘oily skin doesn’t need sun’. This page is about a habit you can keep. DaDiary is in Beta: tips, not a diagnosis.",
     heroFigure: amount,
     sections: [
       {
@@ -216,7 +216,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Midday: blot, don’t wash and go bare",
               paragraphs: [
-                "Shine in a meeting: blot, then powder or a spray with SPF if you brought it. Washing at noon and walking into sun marks more easily than a thin layer you can feel.",
+                "Shine in a meeting: blot, then powder or a spray with SPF if you brought it. Washing at noon and walking into sun marks more easily than a thin layer you can feel — see the [office oily-skin guide](/guides/da-dau-van-phong).",
               ],
             },
         ],

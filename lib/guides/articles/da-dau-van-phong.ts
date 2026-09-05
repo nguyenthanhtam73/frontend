@@ -49,17 +49,17 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     return {
       title: "Da dầu văn phòng máy lạnh: sáng mỏng, chiều đừng rửa thêm",
       description:
-        "Sáng nắng xe máy, cả ngày máy lạnh, T-zone bóng lúc 3 giờ? Rửa dịu, dưỡng mỏng, SPF — giấy thấm chứ đừng rửa giữa giờ. Chụp ảnh nhận routine ngày làm việc.",
+        "Sáng nắng xe máy, cả ngày máy lạnh, T-zone bóng lúc 3 giờ? Rửa dịu, dưỡng mỏng, SPF — giấy thấm chứ đừng rửa giữa giờ. DaDiary Beta: gợi ý, không chẩn bệnh.",
       kicker: "Da dầu văn phòng",
       lede:
-        "Bạn sống hai khí hậu một ngày. Mục tiêu không phải hết bóng. Mục tiêu: da chịu được, ít rát, SPF còn đó, thói quen còn sống sau 17h.",
+        "Bạn sống hai khí hậu một ngày. Mục tiêu không phải hết bóng. Mục tiêu: da chịu được, ít rát, SPF còn đó, thói quen còn sống sau 17h. DaDiary đang Beta: gợi ý, không chẩn bệnh.",
       heroFigure: hero,
       sections: [
         {
           heading: "Một ngày, hai khí hậu",
           paragraphs: [
             "Sáng: nắng, mũ, kem chống nắng. Ngày: điều hòa. Trưa: ra đường vài phút. Chiều: T-zone bóng. Tối: muốn ‘tẩy sạch cả ngày’ nên rửa mạnh.",
-            "Máy lạnh không có nghĩa bỏ dưỡng. Da dầu vẫn mất nước rồi tiết dầu bù.",
+            "Máy lạnh không có nghĩa bỏ dưỡng. Da dầu vẫn mất nước rồi tiết dầu bù — nền ở [da dầu nóng ẩm](/guides/da-dau); má căng xem [da khô](/guides/da-kho).",
             "Nếu da đang trị theo đơn, giữ giờ bác sĩ dặn. Đừng thay bằng tip văn phòng trên mạng.",
           ],
         },
@@ -173,17 +173,17 @@ function copy(locale: GuideLocale): GuideArticleCopy {
   return {
     title: "Oily skin in an air-conditioned office: thin morning, no extra midday wash",
     description:
-      "Motorbike sun at 8, air-con all day, shiny T-zone at 3? Gentle cleanse, thin lotion, SPF — blot instead of washing at lunch. Take a photo for a workday routine.",
+      "Motorbike sun at 8, air-con all day, shiny T-zone at 3? Gentle cleanse, thin lotion, SPF — blot instead of a lunch wash. DaDiary Beta: tips, not a diagnosis.",
     kicker: "Office oily skin",
     lede:
-      "You live two climates in one day. The aim is not zero shine. The aim: skin you can tolerate, less sting, SPF still on, a habit that survives 5 p.m.",
+      "You live two climates in one day. The aim is not zero shine. The aim: skin you can tolerate, less sting, SPF still on, a habit that survives 5 p.m. DaDiary is in Beta: tips, not a diagnosis.",
     heroFigure: hero,
     sections: [
       {
         heading: "One day, two climates",
         paragraphs: [
           "Morning: sun, a helmet, sunscreen. Day: air-con. Lunch: a few minutes outside. Afternoon: shiny T-zone. Night: the urge to punish-wash.",
-          "Air-con is not a reason to skip moisturizer. Oily skin still loses water, then makes more oil.",
+          "Air-con is not a reason to skip moisturizer. Oily skin still loses water, then makes more oil — base care in the [oily-skin guide](/guides/da-dau); tight cheeks in the [dry-skin guide](/guides/da-kho).",
           "If you already have a prescribed cream, keep that schedule. Don’t swap it for an office tip from the internet.",
         ],
       },

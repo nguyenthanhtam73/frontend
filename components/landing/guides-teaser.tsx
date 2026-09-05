@@ -4,6 +4,7 @@ import { getLocale } from "next-intl/server";
 import { LandingStartCta } from "@/components/landing/landing-start-cta";
 import { Link } from "@/i18n/navigation";
 import { guideChrome, listGuideArticles } from "@/lib/guides/catalog";
+import { GUIDE_CLIMATE_HUB_PATH } from "@/lib/guides/catalog";
 
 export async function GuidesTeaser() {
   const locale = await getLocale();
@@ -28,13 +29,22 @@ export async function GuidesTeaser() {
               {chrome.indexSub}
             </p>
           </div>
-          <Link
-            href="/guides"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {chrome.readGuide}
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link
+              href={GUIDE_CLIMATE_HUB_PATH}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {chrome.climateHubLabel}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+            <Link
+              href="/guides"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {chrome.readGuide}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
