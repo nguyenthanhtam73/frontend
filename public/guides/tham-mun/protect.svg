@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="64" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="26" font-weight="700" fill="#0F2E2C">Bảo vệ thâm</text>
+  <rect x="40" y="120" width="230" height="260" rx="20" fill="#F8F0DC"/><text x="155" y="240" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700" fill="#C48A2A">SPF</text><text x="155" y="290" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700" fill="#0F2E2C">Mỗi sáng</text>
+  <rect x="285" y="120" width="230" height="260" rx="20" fill="#D8F0EE"/><text x="400" y="240" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700" fill="#2A8F88">Mũ</text><text x="400" y="290" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700" fill="#0F2E2C">Bóng râm</text>
+  <rect x="530" y="120" width="230" height="260" rx="20" fill="#F8E8EC"/><text x="645" y="240" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="700" fill="#C45C74">Không chà</text><text x="645" y="290" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="700" fill="#0F2E2C">Không nặn</text>
+</svg>

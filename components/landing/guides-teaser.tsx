@@ -37,7 +37,7 @@ export async function GuidesTeaser() {
           </Link>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (
             <Link
               key={article.slug}

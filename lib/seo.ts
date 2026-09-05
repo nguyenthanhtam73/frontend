@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { guidePublicPaths } from "@/lib/guides/catalog";
+
 /**
  * Canonical site origin for absolute OG/Twitter URLs.
  * Prefer NEXT_PUBLIC_APP_URL; fall back to NEXT_PUBLIC_SITE_URL then production.
@@ -198,15 +200,7 @@ export function pageLocaleMetadata({
 }
 
 /** Paths listed in sitemap + allowed for indexing (no locale prefix). */
-export const SITEMAP_PUBLIC_PATHS = [
-  "",
-  "/pricing",
-  "/guides",
-  "/guides/da-dau",
-  "/guides/mun",
-  "/guides/kem-chong-nang",
-  "/guides/routine-cham-da",
-] as const;
+export const SITEMAP_PUBLIC_PATHS = ["", "/pricing", ...guidePublicPaths()] as const;
 
 function sitemapPriority(path: string, locale: string): number {
   const isHome = !path || path === "/";
@@ -276,6 +270,10 @@ export const ORGANIZATION_SAME_AS = [
 
 type SocialMetaInput = PageMetaInput & {
   images?: OgImage[];
+  /** Open Graph object type. Articles should pass `article` plus dates. */
+  ogType?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
 };
 
 /**
@@ -288,33 +286,51 @@ export function pageSocialMetadata({
   locale,
   path = "",
   images,
+  ogType = "website",
+  publishedTime,
+  modifiedTime,
   noIndex = false,
   noFollow = false,
 }: SocialMetaInput): Metadata {
   const url = absoluteUrl(locale, path);
   const ogImages = images?.length ? images : [DEFAULT_OG_IMAGE];
   const twitterImages = ogImages.map((img) => img.url);
+  const ogImagePayload = ogImages.map((img) => ({
+    url: img.url,
+    width: img.width ?? 1200,
+    height: img.height ?? 630,
+    alt: img.alt ?? title,
+  }));
 
   return {
     title,
     description,
     robots: noIndex ? noIndexRobots(noFollow) : INDEX_ROBOTS,
     alternates: localeAlternates(locale, path),
-    openGraph: {
-      title,
-      description,
-      url,
-      siteName: SITE_NAME,
-      locale: ogLocale(locale),
-      alternateLocale: [ogAlternateLocale(locale)],
-      type: "website",
-      images: ogImages.map((img) => ({
-        url: img.url,
-        width: img.width ?? 1200,
-        height: img.height ?? 630,
-        alt: img.alt ?? title,
-      })),
-    },
+    openGraph:
+      ogType === "article"
+        ? {
+            title,
+            description,
+            url,
+            siteName: SITE_NAME,
+            locale: ogLocale(locale),
+            alternateLocale: [ogAlternateLocale(locale)],
+            type: "article",
+            publishedTime,
+            modifiedTime,
+            images: ogImagePayload,
+          }
+        : {
+            title,
+            description,
+            url,
+            siteName: SITE_NAME,
+            locale: ogLocale(locale),
+            alternateLocale: [ogAlternateLocale(locale)],
+            type: "website",
+            images: ogImagePayload,
+          },
     twitter: {
       card: "summary_large_image",
       title,

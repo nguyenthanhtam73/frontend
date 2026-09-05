@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480" role="img">
+  <rect width="800" height="480" rx="28" fill="#E8F5F3"/>
+  <rect x="18" y="18" width="764" height="444" rx="22" fill="#FFFFFF" opacity="0.55"/>
+  <text x="400" y="70" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="700" fill="#0F2E2C">Tay xuống. Đừng nặn.</text>
+  <circle cx="400" cy="230" r="92" fill="#F7D4C8"/>
+  <circle cx="368" cy="215" r="8" fill="#0F2E2C"/>
+  <circle cx="432" cy="215" r="8" fill="#0F2E2C"/>
+  <path d="M368 268 Q400 286 432 268" fill="none" stroke="#0F2E2C" stroke-width="6" stroke-linecap="round"/>
+  <path d="M250 180 L300 210" stroke="#C45C74" stroke-width="8" stroke-linecap="round"/>
+  <path d="M250 210 L300 180" stroke="#C45C74" stroke-width="8" stroke-linecap="round"/>
+  <text x="400" y="380" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="600" fill="#2A5552">Gối sạch · lót mũ sạch · SPF sáng</text>
+</svg>
