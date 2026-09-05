@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense, useEffect, useMemo, useState, useTransition } from "react";
 
+import { CheckoutPlanSummary } from "@/components/pricing/checkout-plan-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -11,10 +12,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
-import {
-  buildAuthHrefWithNext,
-  readAuthReturnPathFromSearch,
-} from "@/lib/auth/return-path";
+import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import {
   claimGuestCoachWelcomeIfNeeded,
   GUEST_CLAIM_RETURN_PATH,
@@ -24,10 +22,10 @@ import {
 import { readClaimableGuestSession } from "@/lib/onboarding/coach-welcome-session";
 import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
 import {
-  buildAuthHrefWithIntent,
+  buildAuthHref,
   buildPricingCheckoutHref,
-  readCheckoutIntentFromSearch,
 } from "@/lib/premium/checkout-intent";
+import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
 
 export default function LoginPage() {
@@ -51,10 +49,7 @@ function LoginPageInner() {
   const t = useTranslations("auth");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const checkoutIntent = useMemo(
-    () => readCheckoutIntentFromSearch(searchParams),
-    [searchParams],
-  );
+  const checkoutIntent = useCheckoutIntent(searchParams);
   const returnPath = useMemo(
     () => readAuthReturnPathFromSearch(searchParams),
     [searchParams],
@@ -71,18 +66,23 @@ function LoginPageInner() {
     if (!checkoutIntent) router.prefetch(returnPath || "/check-in");
   }, [router, checkoutIntent, returnPath]);
 
-  const registerHref = returnPath
-    ? buildAuthHrefWithNext("/register", returnPath)
-    : buildAuthHrefWithIntent("/register", checkoutIntent);
+  const registerHref = buildAuthHref("/register", {
+    intent: checkoutIntent,
+    next: returnPath,
+  });
+  const loginSub = checkoutIntent
+    ? t("loginSubUpgrade")
+    : isGuestRoutineSaveReturn(returnPath)
+      ? t("loginSubSaveRoutine")
+      : t("loginSub");
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{t("loginTitle")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {isGuestRoutineSaveReturn(returnPath) ? t("loginSubSaveRoutine") : t("loginSub")}
-        </p>
+        <p className="text-sm text-muted-foreground">{loginSub}</p>
       </div>
+      {checkoutIntent ? <CheckoutPlanSummary intent={checkoutIntent} /> : null}
       <Card>
         <CardContent className="space-y-4 p-6">
           <form

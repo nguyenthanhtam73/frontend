@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
 import {
@@ -244,6 +245,7 @@ export function UploadPhotos({
       <div>
         <h2 className="text-base font-semibold tracking-tight">{t("photoTitle")}</h2>
         <p className="text-sm text-muted-foreground">{t("photoHint")}</p>
+        <PhotoPrivacyNote className="mt-1.5" />
         <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
           {t("photoDragHintDesktop")}
         </p>

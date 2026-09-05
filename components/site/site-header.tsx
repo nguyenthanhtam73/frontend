@@ -308,7 +308,7 @@ export function SiteHeader() {
   );
 
   return (
-    <header className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <header className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 overflow-x-clip border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-4 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
         <div className="flex min-h-11 items-center gap-1.5 sm:min-h-14 sm:gap-3">
           <Link
@@ -337,7 +337,7 @@ export function SiteHeader() {
         className="border-t border-border/40 py-1 lg:hidden"
         aria-label={t("mainNavAria")}
       >
-        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:thin] sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
           {navStrip}
         </div>
       </nav>

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   hasMobileBottomChrome,
+  hidesPwaInstallBanner,
   isOnboardingFunnelPath,
   normalizePath,
 } from "./site-nav";
@@ -26,5 +27,12 @@ describe("site-nav funnel helpers", () => {
   it("keeps coach-welcome in mobile bottom chrome", () => {
     assert.equal(hasMobileBottomChrome("/onboarding/coach-welcome"), true);
     assert.equal(hasMobileBottomChrome("/onboarding"), false);
+  });
+
+  it("hides the install banner on funnel + pricing", () => {
+    assert.equal(hidesPwaInstallBanner("/pricing"), true);
+    assert.equal(hidesPwaInstallBanner("/en/pricing"), true);
+    assert.equal(hidesPwaInstallBanner("/register"), true);
+    assert.equal(hidesPwaInstallBanner("/check-in"), false);
   });
 });

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Eye, ImageOff, ShieldCheck, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef } from "react";
 
+import { LegalInlineLinks } from "@/components/legal/legal-links";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -131,7 +132,8 @@ export function FacePrivacyConsentDialog({
                 {t("dialogTitle")}
               </h2>
               <p id={descId} className="text-xs leading-relaxed text-muted-foreground">
-                {t("dialogIntro")}
+                {t("dialogIntro")}{" "}
+                <LegalInlineLinks />
               </p>
             </div>
           </div>

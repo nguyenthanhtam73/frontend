@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
+import { MergedMessagesLayout } from "@/components/i18n/merged-messages-layout";
+import { AUTH_FUNNEL_MESSAGE_NAMESPACES } from "@/lib/i18n/client-messages";
 import { pageLocaleMetadata } from "@/lib/seo";
 
 type Props = {
@@ -21,5 +23,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function RegisterLayout({ children }: Props) {
-  return children;
+  return (
+    <MergedMessagesLayout namespaces={AUTH_FUNNEL_MESSAGE_NAMESPACES}>
+      {children}
+    </MergedMessagesLayout>
+  );
 }

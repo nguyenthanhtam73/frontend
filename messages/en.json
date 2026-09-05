@@ -98,6 +98,14 @@
     "paymentCancel": {
       "title": "Payment cancelled · DaDiary",
       "description": "You cancelled checkout. You can upgrade anytime."
+    },
+    "privacyPage": {
+      "title": "Privacy · DaDiary",
+      "description": "How DaDiary uses your email, skin photos, and account data — and how you can delete them."
+    },
+    "termsPage": {
+      "title": "Terms of use · DaDiary",
+      "description": "Short Beta terms for DaDiary: skincare suggestions, accounts, and payments."
     }
   },
   "auth": {
@@ -108,6 +116,11 @@
     "registerTitleSaveRoutine": "Save your routine",
     "registerSubSaveRoutine": "Create a free account to keep the routine you just saw — it won't vanish when you close the tab — then start check-in.",
     "registerCtaSaveRoutine": "Save routine & create account",
+    "registerTitleUpgrade": "Create an account to upgrade",
+    "registerSubUpgrade": "Keep the plan you just picked — check the price summary below, then create an account to pay.",
+    "registerCtaUpgrade": "Create account & continue to payment",
+    "loginSubUpgrade": "Sign in to continue upgrading the plan you just picked.",
+    "legalConsent": "Creating an account means you agree to DaDiary’s privacy notice and terms (Beta).",
     "loginSubSaveRoutine": "Sign in to attach the routine you just saw to your account.",
     "email": "Email",
     "password": "Password (min 8 characters)",
@@ -166,6 +179,8 @@
       "tagline": "Your skin diary · AI Coach · progress & before/after",
       "copyright": "© {year} DaDiary. Currently in Beta.",
       "disclaimer": "DaDiary offers skincare suggestions for reference only and does not replace professional medical advice.",
+      "privacy": "Privacy",
+      "terms": "Terms",
       "betaContact": "Join Beta: sign up for free early access.",
       "navAria": "Footer links",
       "social": {
@@ -923,6 +938,18 @@
     "trustLineBeta": "Beta: no charges. Free is fully usable; Premium is granted by the team.",
     "legalNote": "Prices shown in VND. Payments run through SePay (sandbox during Beta). After a successful payment, Premium activates automatically.",
     "legalNoteBeta": "Prices in VND are for reference. Checkout is closed in Beta — Premium is admin / invite only.",
+    "summary": {
+      "eyebrow": "Plan you picked",
+      "planLine": "{plan} · {interval}",
+      "aria": "Summary of {plan}, billed {interval}",
+      "afterRegister": "After you create an account, you’ll confirm and pay via SePay. You are not charged at sign-up."
+    },
+    "confirm": {
+      "title": "Confirm your upgrade",
+      "body": "Check the plan and billing cycle before we open checkout. You can cancel later on this page.",
+      "cta": "Confirm & pay",
+      "later": "Not now — review the plans"
+    },
     "checkout": {
       "redirecting": "Redirecting to checkout…",
       "errorTitle": "Couldn't start checkout",
@@ -2243,6 +2270,7 @@
     "dialogAccept": "Got it, take a photo",
     "dialogDecline": "I'd rather not photograph my face",
     "dialogCloseAria": "Close privacy notice",
+    "uploadConsent": "Face photos are used for skin analysis. You can delete your data anytime in Settings.",
     "captureCard": {
       "title": "Take or choose a photo",
       "subtitle": "Photos are uploaded for AI skin analysis — review them before submitting.",
@@ -2880,5 +2908,61 @@
     "ctaBody": "See what the AI reads — no account yet. Sign up after you see the starter routine.",
     "ctaRegister": "Take a photo, get a routine",
     "ctaHome": "Explore DaDiary"
+  },
+  "legal": {
+    "privacy": {
+      "title": "Privacy",
+      "updated": "Updated: September 2026 · Beta",
+      "intro": "DaDiary is in Beta. This page describes how we use data you choose to share — not a certification, and not a promise beyond what the product actually does today.",
+      "collect": {
+        "title": "What we collect",
+        "body": "Email and password to create an account; an optional display name; skin photos you choose to upload; check-in notes, routines, and Settings preferences. We do not sell your email list to third parties."
+      },
+      "photos": {
+        "title": "Face photos",
+        "body": "Photos are used to analyze your skin and suggest a routine. They are sent to our servers so the AI can process them. You can skip face photos and use tags + notes instead."
+      },
+      "retention": {
+        "title": "Storage and deletion",
+        "body": "Skin data and photos are stored on our servers so you can review history. In Settings you can delete all skin data (photos, diary, saved routines). Your login account stays if you only wipe skin data."
+      },
+      "choices": {
+        "title": "Your choices",
+        "body": "You can turn off face capture, withdraw photo consent, disable push notifications, and delete data anytime in Settings. In-app feedback is used only to improve the product."
+      },
+      "medical": {
+        "title": "Not medical advice",
+        "body": "DaDiary suggestions are for reference from the photos and notes you provide — they do not replace a dermatologist. See a professional if your skin needs medical care."
+      },
+      "disclaimer": "Questions about your data? Send feedback in the app or reach DaDiary on our social channels. We’ll update this page if how we handle data changes.",
+      "homeLink": "Back to home"
+    },
+    "terms": {
+      "title": "Terms of use",
+      "updated": "Updated: September 2026 · Beta",
+      "intro": "Using DaDiary means you agree to these short terms. The product is in Beta — features and prices may change.",
+      "product": {
+        "title": "Beta product",
+        "body": "DaDiary is a skin diary plus AI suggestions. Some features may break, pause, or change during Beta. We’ll try to say so clearly in the app."
+      },
+      "account": {
+        "title": "Your account",
+        "body": "You’re responsible for keeping your email and password safe, and for only uploading photos you have the right to use. Don’t use the service to spam or harm others."
+      },
+      "payments": {
+        "title": "Payments",
+        "body": "When checkout is open, Premium upgrades go through SePay at the listed VND price. The plan activates after a successful payment. You can cancel on the Pricing page — benefits last until the end of the current period."
+      },
+      "medical": {
+        "title": "Skincare suggestions, not treatment",
+        "body": "Nothing on DaDiary is a diagnosis or prescription. You decide which products and habits to follow."
+      },
+      "changes": {
+        "title": "Changes to these terms",
+        "body": "We may update this page as the product changes. The date is at the top. If you don’t agree, you can stop using DaDiary and delete your data in Settings."
+      },
+      "disclaimer": "Skincare suggestions are for reference only and do not replace professional medical advice.",
+      "homeLink": "Back to home"
+    }
   }
 }

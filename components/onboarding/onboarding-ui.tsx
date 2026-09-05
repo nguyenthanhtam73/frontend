@@ -112,7 +112,7 @@ export function OnboardingStickyNav({
       <div
         className={cn(
           "flex w-full items-stretch gap-2 sm:gap-3",
-          singleCta ? "flex-col" : "flex-row",
+          singleCta ? "flex-col" : "flex-col min-[380px]:flex-row",
         )}
       >
         {!singleCta ? (
@@ -123,10 +123,12 @@ export function OnboardingStickyNav({
             onClick={onBack}
             disabled={backDisabled}
             data-testid="onboarding-nav-back"
-            className="min-h-12 shrink-0 gap-1.5 px-3 sm:min-w-[7rem] sm:px-4"
+            className="min-h-12 shrink-0 gap-1.5 px-3 min-[380px]:w-auto sm:min-w-[7rem] sm:px-4"
           >
             <ArrowLeft className="size-4 shrink-0" aria-hidden />
-            <span className="text-sm font-medium sm:text-base">{backLabel}</span>
+            <span className="text-pretty text-sm font-medium leading-snug sm:text-base">
+              {backLabel}
+            </span>
           </Button>
         ) : null}
         {!hideContinue ? (
@@ -137,10 +139,10 @@ export function OnboardingStickyNav({
             disabled={continueDisabled || continueLoading}
             data-testid="onboarding-nav-continue"
             className={cn(
-              "gap-2 font-semibold shadow-md",
+              "h-auto min-h-12 gap-2 whitespace-normal font-semibold shadow-md",
               singleCta || primaryEmphasis
                 ? "min-h-14 w-full text-base sm:min-h-[3.25rem] sm:text-lg"
-                : "min-h-12 min-w-0 flex-[1.35] text-base sm:flex-1",
+                : "min-w-0 flex-1 text-sm leading-snug sm:text-base",
             )}
           >
             {continueLoading ? (
@@ -148,10 +150,17 @@ export function OnboardingStickyNav({
             ) : (
               continueIcon ?? <ArrowRight className="size-5 shrink-0" aria-hidden />
             )}
-            <span className={cn(singleCta ? "text-center" : "truncate")}>{continueLabel}</span>
+            <span
+              className={cn(
+                "text-pretty leading-snug",
+                singleCta ? "text-center" : "min-w-0",
+              )}
+            >
+              {continueLabel}
+            </span>
           </Button>
         ) : singleCta ? null : (
-          <div className="flex-[1.35] sm:flex-1" />
+          <div className="flex-1" />
         )}
       </div>
     </nav>

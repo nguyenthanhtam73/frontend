@@ -26,6 +26,8 @@ export function SiteFooterNav() {
     { href: "/#faq" as const, label: t("nav.faq") },
     { href: "/register" as const, label: t("register") },
     { href: "/login" as const, label: t("signIn") },
+    { href: "/privacy" as const, label: t("footer.privacy") },
+    { href: "/terms" as const, label: t("footer.terms") },
   ].filter((link) => normalizePath(link.href) !== normalizePath(pathname));
 
   const signedInLinks = [
@@ -37,6 +39,8 @@ export function SiteFooterNav() {
     { href: "/pricing" as const, label: t("nav.pricing") },
     { href: "/settings" as const, label: t("nav.settings") },
     { href: "/feedback" as const, label: t("nav.feedback") },
+    { href: "/privacy" as const, label: t("footer.privacy") },
+    { href: "/terms" as const, label: t("footer.terms") },
   ];
 
   const links = showGuestNav ? guestLinks : signedInLinks;

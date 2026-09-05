@@ -98,6 +98,14 @@
     "paymentCancel": {
       "title": "Đã hủy thanh toán · DaDiary",
       "description": "Bạn đã hủy thanh toán. Có thể nâng cấp lại bất cứ lúc nào."
+    },
+    "privacyPage": {
+      "title": "Quyền riêng tư · DaDiary",
+      "description": "Cách DaDiary dùng email, ảnh da và dữ liệu tài khoản — và cách bạn xoá chúng."
+    },
+    "termsPage": {
+      "title": "Điều khoản sử dụng · DaDiary",
+      "description": "Điều khoản ngắn cho Beta DaDiary: gợi ý chăm da, tài khoản và thanh toán."
     }
   },
   "auth": {
@@ -108,6 +116,11 @@
     "registerTitleSaveRoutine": "Lưu routine của bạn",
     "registerSubSaveRoutine": "Tạo tài khoản miễn phí để giữ routine vừa xem — không mất khi đóng tab, rồi bắt đầu check-in.",
     "registerCtaSaveRoutine": "Lưu routine & tạo tài khoản",
+    "registerTitleUpgrade": "Tạo tài khoản để nâng cấp",
+    "registerSubUpgrade": "Giữ gói bạn vừa chọn — xem tóm tắt giá bên dưới, rồi tạo tài khoản để thanh toán.",
+    "registerCtaUpgrade": "Tạo tài khoản & tiếp tục thanh toán",
+    "loginSubUpgrade": "Đăng nhập để tiếp tục nâng cấp gói bạn vừa chọn.",
+    "legalConsent": "Tạo tài khoản nghĩa là bạn đồng ý với quyền riêng tư và điều khoản của DaDiary (Beta).",
     "loginSubSaveRoutine": "Đăng nhập để gắn routine vừa xem vào tài khoản của bạn.",
     "email": "Email",
     "password": "Mật khẩu (tối thiểu 8 ký tự)",
@@ -166,6 +179,8 @@
       "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
       "copyright": "© {year} DaDiary. Đang trong giai đoạn Beta.",
       "disclaimer": "DaDiary đưa ra gợi ý chăm da mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
+      "privacy": "Quyền riêng tư",
+      "terms": "Điều khoản",
       "betaContact": "Tham gia Beta: đăng ký tài khoản miễn phí để trải nghiệm sớm nhất.",
       "navAria": "Liên kết chân trang",
       "social": {
@@ -923,6 +938,18 @@
     "trustLineBeta": "Beta: chưa thu tiền. Free đủ dùng; Premium do team cấp tay.",
     "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (sandbox trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
     "legalNoteBeta": "Giá tham khảo bằng VND. Trong Beta chưa mở cổng thanh toán — Premium chỉ cấp qua admin / invite.",
+    "summary": {
+      "eyebrow": "Gói bạn đang chọn",
+      "planLine": "{plan} · {interval}",
+      "aria": "Tóm tắt gói {plan}, thanh toán {interval}",
+      "afterRegister": "Sau khi tạo tài khoản, bạn sẽ xác nhận rồi thanh toán qua SePay. Chưa bị trừ tiền lúc đăng ký."
+    },
+    "confirm": {
+      "title": "Xác nhận nâng cấp",
+      "body": "Kiểm tra lại gói và chu kỳ trước khi mở cổng thanh toán. Bạn có thể hủy sau trên trang này.",
+      "cta": "Xác nhận & thanh toán",
+      "later": "Để sau — xem lại bảng giá"
+    },
     "checkout": {
       "redirecting": "Đang chuyển đến thanh toán…",
       "errorTitle": "Không mở được thanh toán",
@@ -2243,6 +2270,7 @@
     "dialogAccept": "Đồng ý, chụp tiếp",
     "dialogDecline": "Tôi không muốn chụp mặt",
     "dialogCloseAria": "Đóng thông báo quyền riêng tư",
+    "uploadConsent": "Ảnh mặt chỉ dùng để phân tích da. Bạn có thể xoá dữ liệu trong Cài đặt bất cứ lúc nào.",
     "captureCard": {
       "title": "Chụp / chọn ảnh da",
       "subtitle": "Ảnh gửi lên để AI phân tích da — bạn xem lại trước khi gửi.",
@@ -2880,5 +2908,61 @@
     "ctaBody": "Xem AI đọc da — chưa cần tạo tài khoản. Đăng ký sau khi thấy routine khởi đầu.",
     "ctaRegister": "Chụp ảnh nhận routine",
     "ctaHome": "Khám phá DaDiary"
+  },
+  "legal": {
+    "privacy": {
+      "title": "Quyền riêng tư",
+      "updated": "Cập nhật: tháng 9/2026 · Beta",
+      "intro": "DaDiary đang ở giai đoạn Beta. Trang này mô tả cách mình dùng dữ liệu bạn chủ động cung cấp — không phải chứng nhận pháp lý hay cam kết ngoài những gì đang làm trên sản phẩm.",
+      "collect": {
+        "title": "Mình thu thập gì",
+        "body": "Email và mật khẩu để tạo tài khoản; tên hiển thị nếu bạn nhập; ảnh da bạn tự chọn tải lên; ghi chú check-in, routine và tuỳ chọn trong Cài đặt. Mình không bán danh sách email cho bên thứ ba."
+      },
+      "photos": {
+        "title": "Ảnh mặt",
+        "body": "Ảnh chỉ dùng để phân tích da và gợi ý routine. Ảnh được gửi lên máy chủ để AI xử lý. Bạn có thể bỏ qua chụp mặt và dùng tag + ghi chú."
+      },
+      "retention": {
+        "title": "Lưu trữ và xoá",
+        "body": "Dữ liệu da và ảnh được lưu trên máy chủ để bạn xem lại lịch sử. Trong Cài đặt bạn có thể xoá toàn bộ dữ liệu da (ảnh, nhật ký, routine đã lưu). Tài khoản đăng nhập vẫn giữ nếu bạn chỉ xoá dữ liệu da."
+      },
+      "choices": {
+        "title": "Lựa chọn của bạn",
+        "body": "Bạn có thể tắt chụp mặt, rút lại đồng ý ảnh, tắt thông báo đẩy, và xoá dữ liệu bất cứ lúc nào trong Cài đặt. Góp ý trong app chỉ dùng để cải thiện sản phẩm."
+      },
+      "medical": {
+        "title": "Không phải tư vấn y tế",
+        "body": "Gợi ý của DaDiary mang tính tham khảo từ ảnh và thông tin bạn cung cấp — không thay thế bác sĩ da liễu. Nếu da có vấn đề nghiêm trọng, hãy gặp chuyên gia."
+      },
+      "disclaimer": "Nếu có câu hỏi về dữ liệu, gửi góp ý trong app hoặc liên hệ qua các kênh mạng xã hội của DaDiary. Mình sẽ cập nhật trang này khi cách xử lý dữ liệu thay đổi.",
+      "homeLink": "Về trang chủ"
+    },
+    "terms": {
+      "title": "Điều khoản sử dụng",
+      "updated": "Cập nhật: tháng 9/2026 · Beta",
+      "intro": "Dùng DaDiary nghĩa là bạn đồng ý với các điều khoản ngắn dưới đây. Sản phẩm đang Beta — tính năng và giá có thể đổi.",
+      "product": {
+        "title": "Sản phẩm Beta",
+        "body": "DaDiary là nhật ký da + gợi ý AI. Một số tính năng có thể lỗi, tạm tắt, hoặc thay đổi trong Beta. Mình cố gắng thông báo rõ trên app."
+      },
+      "account": {
+        "title": "Tài khoản của bạn",
+        "body": "Bạn chịu trách nhiệm giữ email/mật khẩu an toàn và chỉ tải lên ảnh bạn có quyền dùng. Không dùng dịch vụ để spam hoặc làm hại người khác."
+      },
+      "payments": {
+        "title": "Thanh toán",
+        "body": "Khi cổng thanh toán mở, nâng cấp Premium qua SePay theo giá hiển thị (VND). Gói kích hoạt sau khi thanh toán thành công. Bạn có thể hủy trên trang Bảng giá — quyền lợi giữ đến hết kỳ hiện tại."
+      },
+      "medical": {
+        "title": "Gợi ý chăm da, không phải điều trị",
+        "body": "Nội dung trên DaDiary không phải chẩn đoán hay đơn thuốc. Bạn tự quyết định sản phẩm và thói quen chăm da của mình."
+      },
+      "changes": {
+        "title": "Thay đổi điều khoản",
+        "body": "Mình có thể cập nhật trang này khi sản phẩm đổi. Ngày cập nhật nằm ở đầu trang. Nếu không đồng ý, bạn có thể ngừng dùng và xoá dữ liệu trong Cài đặt."
+      },
+      "disclaimer": "Gợi ý chăm da chỉ mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
+      "homeLink": "Về trang chủ"
+    }
   }
 }

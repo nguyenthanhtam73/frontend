@@ -200,7 +200,13 @@ export function pageLocaleMetadata({
 }
 
 /** Paths listed in sitemap + allowed for indexing (no locale prefix). */
-export const SITEMAP_PUBLIC_PATHS = ["", "/pricing", ...guidePublicPaths()] as const;
+export const SITEMAP_PUBLIC_PATHS = [
+  "",
+  "/pricing",
+  ...guidePublicPaths(),
+  "/privacy",
+  "/terms",
+] as const;
 
 function sitemapPriority(path: string, locale: string): number {
   const isHome = !path || path === "/";
