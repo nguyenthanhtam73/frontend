@@ -12,6 +12,7 @@ const ALLOWED_PREFIXES = [
   "/settings",
   "/feedback",
   "/privacy",
+  "/terms",
 ] as const;
 
 /** Normalize and allow only same-origin app paths (relative only). */

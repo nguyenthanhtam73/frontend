@@ -169,6 +169,7 @@
   }
   body {
     /* Variable sans + normal weight keeps paragraphs gentle; avoids crowded bold UI chrome */
+    overflow-x: clip;
     @apply text-foreground antialiased font-normal min-w-0;
     text-rendering: optimizeLegibility;
     /* Keep body paint transparent so one viewport wash sits behind header + main.

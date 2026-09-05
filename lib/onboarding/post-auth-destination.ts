@@ -58,6 +58,7 @@ export function isOnboardingGateExemptPath(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";
   if (p === "/onboarding" || p.startsWith("/onboarding/")) return true;
   if (p === "/privacy" || p.startsWith("/privacy/")) return true;
+  if (p === "/terms" || p.startsWith("/terms/")) return true;
   if (p === "/settings" || p.startsWith("/settings/")) return true;
   if (p === "/login" || p.startsWith("/login/")) return true;
   if (p === "/register" || p.startsWith("/register/")) return true;

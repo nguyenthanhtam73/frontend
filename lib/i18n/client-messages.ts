@@ -23,6 +23,9 @@ export const HOME_MESSAGE_NAMESPACES = ["betaSignup", "skinCard"] as const;
 
 export const PRICING_MESSAGE_NAMESPACES = ["pricing", "payment"] as const;
 
+/** Register/login need plan names + prices when arriving from pricing CTAs. */
+export const AUTH_FUNNEL_MESSAGE_NAMESPACES = ["pricing"] as const;
+
 export const SHARE_MESSAGE_NAMESPACES = ["skinReviewShare", "adminSkinReview"] as const;
 
 export const PAYMENT_MESSAGE_NAMESPACES = ["payment", "pricing"] as const;
@@ -59,6 +62,7 @@ export const ALL_CLIENT_MESSAGE_NAMESPACES = [
   ...SHELL_MESSAGE_NAMESPACES,
   ...HOME_MESSAGE_NAMESPACES,
   ...PRICING_MESSAGE_NAMESPACES,
+  ...AUTH_FUNNEL_MESSAGE_NAMESPACES,
   ...SHARE_MESSAGE_NAMESPACES,
   ...PAYMENT_MESSAGE_NAMESPACES,
   ...APP_CLIENT_MESSAGE_NAMESPACES,

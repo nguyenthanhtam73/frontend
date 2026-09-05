@@ -29,6 +29,15 @@ export function isOnboardingFunnelPath(pathname: string) {
   );
 }
 
+/**
+ * Conversion-critical screens where the install banner collides with CTAs
+ * or the sticky billing bar. Update toasts still show.
+ */
+export function hidesPwaInstallBanner(pathname: string) {
+  const p = appPath(pathname);
+  return isOnboardingFunnelPath(pathname) || p === "/pricing";
+}
+
 /** Marketing surfaces where guests see the short funnel nav. */
 export function isMarketingPath(pathname: string) {
   const p = normalizePath(pathname);
@@ -39,6 +48,8 @@ export function isMarketingPath(pathname: string) {
     p.startsWith("/guides/") ||
     p === "/login" ||
     p === "/register" ||
+    p === "/privacy" ||
+    p === "/terms" ||
     p.startsWith("/payment") ||
     p.startsWith("/share")
   );

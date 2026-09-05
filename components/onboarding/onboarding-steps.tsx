@@ -23,6 +23,7 @@ import {
 import { OnboardingSkinReadback } from "@/components/onboarding/onboarding-skin-readback";
 import { OnboardingRoutinePeriodSection } from "@/components/onboarding/onboarding-starter-routine-step";
 import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
+import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
 import {
   ConcernChipRow,
   QuickChipGrid,
@@ -164,6 +165,7 @@ export function OnboardingStepSkinProfile({
         </div>
 
         <OnboardingPhotoGuide />
+        <PhotoPrivacyNote />
 
         <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
           <Button

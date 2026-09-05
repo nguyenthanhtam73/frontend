@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import type { PlanTier } from "@/lib/premium/features";
-import { buildRegisterCheckoutHref } from "@/lib/premium/checkout-intent";
+import {
+  buildRegisterCheckoutHref,
+  persistCheckoutIntent,
+} from "@/lib/premium/checkout-intent";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import {
   formatVnd,
@@ -240,6 +243,11 @@ export function PricingPlanCard({
                 ? "outline"
                 : "secondary"
           }
+          onClick={() => {
+            if (cta.kind === "link" && plan !== "free") {
+              persistCheckoutIntent({ plan, interval });
+            }
+          }}
           className={cn(
             "h-12 w-full touch-manipulation text-base font-semibold transition-[transform,box-shadow,background-color] duration-200 sm:h-[3.25rem]",
             highlighted &&

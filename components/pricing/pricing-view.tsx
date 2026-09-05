@@ -6,16 +6,19 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { BillingToggle } from "@/components/pricing/billing-toggle";
 import { CancelSubscriptionButton } from "@/components/pricing/cancel-subscription-button";
+import { CheckoutPlanSummary } from "@/components/pricing/checkout-plan-summary";
 import { PricingCompare } from "@/components/pricing/pricing-compare";
 import { PricingFaq } from "@/components/pricing/pricing-faq";
 import { PricingPlanCard } from "@/components/pricing/pricing-plan-card";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { getAccessToken } from "@/lib/auth-token";
 import { useSePayCheckout } from "@/lib/hooks/use-sepay-checkout";
 import {
-  readCheckoutIntentFromSearch,
+  persistCheckoutIntent,
   wantsAutoCheckout,
 } from "@/lib/premium/checkout-intent";
+import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import {
   isPaidPlan,
   normalizePlanTier,
@@ -57,10 +60,7 @@ function PricingViewInner() {
   const t = useTranslations("pricing");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const intent = useMemo(
-    () => readCheckoutIntentFromSearch(searchParams),
-    [searchParams],
-  );
+  const intent = useCheckoutIntent(searchParams);
   const autoCheckout = useMemo(
     () => wantsAutoCheckout(searchParams),
     [searchParams],
@@ -91,42 +91,49 @@ function PricingViewInner() {
     if (intent?.interval) setInterval(intent.interval);
   }, [intent?.interval]);
 
-  // After register/login with ?plan=&checkout=1 → start SePay once.
-  const autoStarted = useRef(false);
   useEffect(() => {
-    if (autoStarted.current) return;
+    if (!intent) return;
+    persistCheckoutIntent({ plan: intent.plan, interval });
+  }, [intent, interval]);
+
+  // After register/login with ?checkout=1: keep plan selected and show confirm.
+  // Do not silent-POST to SePay — users should see price + interval first.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const cleanedUrl = useRef(false);
+  useEffect(() => {
+    if (cleanedUrl.current) return;
     if (!checkoutEnabled) {
-      // Beta: strip checkout intent so users never hit sandbox SePay.
       if (autoCheckout || intent) {
-        autoStarted.current = true;
+        cleanedUrl.current = true;
+        persistCheckoutIntent(null);
         router.replace("/pricing");
       }
       return;
     }
-    if (!autoCheckout || !intent || !isLoggedIn) return;
+    if (!intent) return;
+    persistCheckoutIntent(intent);
+    if (!autoCheckout || !isLoggedIn) return;
     if (currentPlan === intent.plan) {
-      // Already on that plan — clean the URL, don't re-checkout.
+      cleanedUrl.current = true;
+      persistCheckoutIntent(null);
       router.replace("/pricing");
       return;
     }
-    autoStarted.current = true;
-    const { plan, interval: checkoutInterval } = intent;
-    // Strip ?checkout=1 before form POST so refresh/Back won't re-trigger.
-    router.replace("/pricing");
-    void startCheckout(plan, checkoutInterval);
-  }, [
-    checkoutEnabled,
-    autoCheckout,
-    intent,
-    isLoggedIn,
-    currentPlan,
-    startCheckout,
-    router,
-  ]);
+    cleanedUrl.current = true;
+    setConfirmOpen(true);
+    router.replace(`/pricing?plan=${intent.plan}&interval=${intent.interval}`);
+  }, [checkoutEnabled, autoCheckout, intent, isLoggedIn, currentPlan, router]);
+
+  function confirmUpgrade() {
+    if (!intent) return;
+    setConfirmOpen(false);
+    persistCheckoutIntent(null);
+    void startCheckout(intent.plan, interval);
+  }
 
   return (
     <div className="relative overflow-x-clip">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:py-20">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] pt-10 sm:px-6 sm:pb-16 sm:pt-14 lg:py-20">
         <header className="mx-auto max-w-2xl space-y-3 text-center in-animate animate-in fade-in slide-in-from-bottom-2 duration-500 sm:space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/85">
             DaDiary
@@ -191,6 +198,37 @@ function PricingViewInner() {
             )}
           </div>
         </header>
+
+        {confirmOpen && intent && checkoutEnabled ? (
+          <div
+            data-testid="checkout-confirm"
+            className="mx-auto mt-8 max-w-md space-y-3 rounded-2xl border border-primary/30 bg-card p-4 shadow-sm sm:mt-10"
+          >
+            <h2 className="text-center text-base font-semibold tracking-tight">
+              {t("confirm.title")}
+            </h2>
+            <p className="text-center text-sm leading-relaxed text-muted-foreground">
+              {t("confirm.body")}
+            </p>
+            <CheckoutPlanSummary intent={{ plan: intent.plan, interval }} />
+            <Button
+              type="button"
+              size="lg"
+              className="h-12 w-full text-base font-semibold"
+              disabled={checkoutBusy}
+              onClick={confirmUpgrade}
+            >
+              {checkoutBusy ? t("checkout.redirecting") : t("confirm.cta")}
+            </Button>
+            <button
+              type="button"
+              className="mx-auto block text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              onClick={() => setConfirmOpen(false)}
+            >
+              {t("confirm.later")}
+            </button>
+          </div>
+        ) : null}
 
         {/* Mobile: Premium first (most popular). Desktop: Free | Premium | Plus */}
         <div className="mt-8 grid gap-6 sm:mt-12 sm:gap-5 lg:grid-cols-3 lg:items-stretch lg:gap-6">

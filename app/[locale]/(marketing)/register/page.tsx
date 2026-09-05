@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
+import { LegalInlineLinks } from "@/components/legal/legal-links";
+import { CheckoutPlanSummary } from "@/components/pricing/checkout-plan-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -14,14 +16,11 @@ import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { getAccessToken, setAuthTokens } from "@/lib/auth-token";
 import {
-  buildAuthHrefWithIntent,
+  buildAuthHref,
   buildPricingCheckoutHref,
-  readCheckoutIntentFromSearch,
 } from "@/lib/premium/checkout-intent";
-import {
-  buildAuthHrefWithNext,
-  readAuthReturnPathFromSearch,
-} from "@/lib/auth/return-path";
+import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
+import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   claimGuestCoachWelcomeIfNeeded,
@@ -61,12 +60,10 @@ function RegisterPageFallback() {
 
 function RegisterPageInner() {
   const t = useTranslations("auth");
+  const tPricing = useTranslations("pricing");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const checkoutIntent = useMemo(
-    () => readCheckoutIntentFromSearch(searchParams),
-    [searchParams],
-  );
+  const checkoutIntent = useCheckoutIntent(searchParams);
   const returnPath = useMemo(
     () => readAuthReturnPathFromSearch(searchParams),
     [searchParams],
@@ -99,26 +96,46 @@ function RegisterPageInner() {
   }, []);
 
   const submitBlocked = captchaEnabled && !turnstileToken;
-  const loginHref = returnPath
-    ? buildAuthHrefWithNext("/login", returnPath)
-    : buildAuthHrefWithIntent("/login", checkoutIntent);
+  const loginHref = buildAuthHref("/login", {
+    intent: checkoutIntent,
+    next: returnPath,
+  });
   const [hasGuestSession, setHasGuestSession] = useState(false);
   useEffect(() => {
     setHasGuestSession(isClaimableGuestCoachSession(readClaimableGuestSession()));
   }, []);
   const savingGuestRoutine =
-    isGuestRoutineSaveReturn(returnPath) || hasGuestSession;
+    !checkoutIntent &&
+    (isGuestRoutineSaveReturn(returnPath) || hasGuestSession);
+
+  const title = checkoutIntent
+    ? t("registerTitleUpgrade")
+    : savingGuestRoutine
+      ? t("registerTitleSaveRoutine")
+      : t("registerTitle");
+  const subtitle = checkoutIntent
+    ? t("registerSubUpgrade")
+    : savingGuestRoutine
+      ? t("registerSubSaveRoutine")
+      : t("registerSub");
+  const ctaLabel = checkoutIntent
+    ? t("registerCtaUpgrade")
+    : savingGuestRoutine
+      ? t("registerCtaSaveRoutine")
+      : t("registerCta");
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {savingGuestRoutine ? t("registerTitleSaveRoutine") : t("registerTitle")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {savingGuestRoutine ? t("registerSubSaveRoutine") : t("registerSub")}
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
+      {checkoutIntent ? (
+        <CheckoutPlanSummary
+          intent={checkoutIntent}
+          footnote={tPricing("summary.afterRegister")}
+        />
+      ) : null}
       <Card>
         <CardContent className="space-y-4 p-6">
           <form
@@ -266,12 +283,14 @@ function RegisterPageInner() {
                   {err}
                 </p>
               )}
+              <p
+                data-testid="register-legal-consent"
+                className="text-center text-xs leading-relaxed text-muted-foreground"
+              >
+                {t("legalConsent")} <LegalInlineLinks />
+              </p>
               <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
-                {loading
-                  ? t("submitting")
-                  : savingGuestRoutine
-                    ? t("registerCtaSaveRoutine")
-                    : t("registerCta")}
+                {loading ? t("submitting") : ctaLabel}
               </Button>
             </fieldset>
           </form>
