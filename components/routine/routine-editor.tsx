@@ -10,6 +10,9 @@ import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
+import { useSkinProfileQuery } from "@/lib/hooks/use-skin-profile";
+import { useWardrobeQuery } from "@/lib/hooks/use-wardrobe";
+import { mapCabinetProducts, skinTypeFromProfile } from "@/lib/routine/step-details";
 import { useOnboardingStore, type SkillMode } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 
@@ -55,6 +58,7 @@ import { streakDateKey } from "@/lib/streak/history";
  * Beginner-mode contract (matches the requirement "rất đơn giản"):
  *   - Hides categories, per-step notes, drag-drop, and reorder arrows
  *   - Hides the day-level Notes card
+ *   - Still shows how_to + dose under each step (expanded); Advanced may collapse
  *   - Skill bar hint switches to a calmer copy
  */
 export function RoutineEditor() {
@@ -65,6 +69,15 @@ export function RoutineEditor() {
   const skillMode = useSkillStore((s) => s.mode);
   const setSkillMode = useSkillStore((s) => s.setMode);
   const onboardingSkill = useOnboardingStore((s) => s.skillMode);
+  const onboardingSkin = useOnboardingStore((s) => s.skinType);
+  const skinProfile = useSkinProfileQuery();
+  const wardrobe = useWardrobeQuery();
+
+  const skinType = useMemo(
+    () => skinTypeFromProfile(skinProfile.data) || onboardingSkin || undefined,
+    [skinProfile.data, onboardingSkin],
+  );
+  const detailsExpandedDefault = skillMode !== "advanced";
 
   const messages = useMemo(
     () => ({
@@ -79,6 +92,10 @@ export function RoutineEditor() {
   );
 
   const r = useRoutine(messages, locale);
+  const cabinetByStepId = useMemo(
+    () => mapCabinetProducts(r.routine.morning, r.routine.evening, wardrobe.products),
+    [r.routine.morning, r.routine.evening, wardrobe.products],
+  );
   const suggest = useRoutineSuggest(locale, skillMode ?? null);
   const [suggestToastDismissed, setSuggestToastDismissed] = useState(false);
 
@@ -501,6 +518,10 @@ export function RoutineEditor() {
           icon={<Sun className="size-4 text-amber-500" aria-hidden />}
           steps={r.routine.morning}
           beginnerSimple={beginnerSimple}
+          detailsExpandedDefault={detailsExpandedDefault}
+          skinType={skinType}
+          locale={locale}
+          cabinetByStepId={cabinetByStepId}
           accent="am"
           highlightEmptyTitles={validation.hasEmptyTitles && validationEngaged}
           sectionAlert={
@@ -552,6 +573,10 @@ export function RoutineEditor() {
           icon={<Moon className="size-4 text-indigo-500" aria-hidden />}
           steps={r.routine.evening}
           beginnerSimple={beginnerSimple}
+          detailsExpandedDefault={detailsExpandedDefault}
+          skinType={skinType}
+          locale={locale}
+          cabinetByStepId={cabinetByStepId}
           accent="pm"
           highlightEmptyTitles={validation.hasEmptyTitles && validationEngaged}
           onAdd={() => {
@@ -902,6 +927,13 @@ function editorLabels(t: TFn): SectionLabels {
     emptySectionHint: t("emptySectionHint"),
     emptySectionBeginnerHint: t("emptySectionBeginnerHint"),
     categories: catLabels(t),
+    details: {
+      howTo: t("stepHowToLabel"),
+      dose: t("stepDoseLabel"),
+      cabinet: t("stepCabinetLabel"),
+      show: t("stepDetailsShow"),
+      hide: t("stepDetailsHide"),
+    },
   };
 }
 

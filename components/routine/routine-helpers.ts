@@ -88,18 +88,24 @@ export function cloneStepsForToday(steps: RoutineStepDTO[]): RoutineStepDTO[] {
     title: s.title,
     category: s.category,
     notes: s.notes,
+    how_to: s.how_to,
+    dose: s.dose,
     completed: false,
   }));
 }
 
 /** Strip transient fields and trim strings before sending to the API. */
 export function stripStep(s: RoutineStepDTO): RoutineStepDTO {
+  const howTo = (s.how_to ?? "").trim();
+  const dose = (s.dose ?? "").trim();
   return {
     id: s.id,
     title: s.title.trim(),
     category: (s.category ?? "other").trim(),
     notes: (s.notes ?? "").trim(),
     completed: !!s.completed,
+    ...(howTo ? { how_to: howTo } : {}),
+    ...(dose ? { dose } : {}),
   };
 }
 

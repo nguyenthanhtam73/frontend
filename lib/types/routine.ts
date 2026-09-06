@@ -11,6 +11,10 @@ export type RoutineStepDTO = {
   category?: string;
   notes?: string;
   completed?: boolean;
+  /** 1–2 short technique sentences. Optional — FE seeds when the API omits it. */
+  how_to?: string;
+  /** Amount hint, e.g. "1–2 pump". Optional — FE seeds when the API omits it. */
+  dose?: string;
 };
 
 /** Matches backend `dto.RoutineResponse`. */

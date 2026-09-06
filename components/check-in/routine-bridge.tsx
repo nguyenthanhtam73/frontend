@@ -563,11 +563,15 @@ function QuickColumn({
 }
 
 function stripStep(s: RoutineStepDTO): RoutineStepDTO {
+  const howTo = (s.how_to ?? "").trim();
+  const dose = (s.dose ?? "").trim();
   return {
     id: s.id,
     title: s.title.trim(),
     category: (s.category ?? "other").trim(),
     notes: (s.notes ?? "").trim(),
     completed: !!s.completed,
+    ...(howTo ? { how_to: howTo } : {}),
+    ...(dose ? { dose } : {}),
   };
 }
