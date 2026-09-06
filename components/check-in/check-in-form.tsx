@@ -48,6 +48,7 @@ import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { streakDateKey } from "@/lib/streak/history";
+import { canSubmitCheckIn, isSkipModeReady } from "@/lib/check-in/check-in-submit";
 import { CHECKIN_PHOTO_MAX_MB } from "@/lib/check-in/photo-upload-validation";
 import { cn } from "@/lib/utils";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
@@ -136,11 +137,12 @@ export function CheckInForm() {
   const onboardingDone = useOnboardingStore((s) => s.completedAt);
 
   const items = compactPhotoSlots(photoSlots);
-  const skipModeReady =
-    conditions.length > 0 ||
-    symptoms.length > 0 ||
-    userNote.trim().length > 0;
-  const canSubmit = skipFaceCapture ? skipModeReady : items.length > 0;
+  const skipModeReady = isSkipModeReady({ conditions, symptoms, userNote });
+  const canSubmit = canSubmitCheckIn({
+    skipMode: skipFaceCapture,
+    photoCount: items.length,
+    skipModeReady,
+  });
 
   const itemsRef = useRef(items);
   itemsRef.current = items;
@@ -315,6 +317,8 @@ export function CheckInForm() {
               showError(
                 t("photoErrorTooLargeShort", { maxMb: CHECKIN_PHOTO_MAX_MB }),
               );
+            } else if (errCode === "invalid_image") {
+              showError(t("photoErrorHeicConvert"));
             } else if (errCode === "moderation_failed") {
               showError(t("photoErrorModeration"));
             } else if (errCode === "missing_images" && skipFaceCapture) {
@@ -366,6 +370,7 @@ export function CheckInForm() {
               <UploadPhotos
                 slots={photoSlots}
                 onSlotsChange={handleSlotsChange}
+                onSkipPhotos={enterSkipMode}
               />
             ) : (
               <SkipModePanel
@@ -634,16 +639,38 @@ export function CheckInForm() {
         )}
       >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-          <span className="inline-flex items-center gap-2">
-            <Sparkles className="size-4 shrink-0 text-primary" aria-hidden />
-            {t("afterSubmit")}
-          </span>
-          <Link
-            href="/cabinet"
-            className="font-medium text-primary underline underline-offset-4"
-          >
-            {t("linkCabinet")}
-          </Link>
+          {!canSubmit && !skipFaceCapture ? (
+            <span
+              data-testid="checkin-submit-hint"
+              className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"
+            >
+              {t("submitNeedPhotoHint")}
+              <button
+                type="button"
+                data-testid="checkin-submit-skip"
+                onClick={enterSkipMode}
+                disabled={feedback.isWaiting}
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                {t("modeToggleSkip")}
+              </button>
+            </span>
+          ) : !canSubmit && skipFaceCapture ? (
+            <span data-testid="checkin-submit-hint">{t("skipModeNeedTagsHint")}</span>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-2">
+                <Sparkles className="size-4 shrink-0 text-primary" aria-hidden />
+                {t("afterSubmit")}
+              </span>
+              <Link
+                href="/cabinet"
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                {t("linkCabinet")}
+              </Link>
+            </>
+          )}
         </div>
         <div className="flex w-full gap-2 sm:w-auto">
           <Button

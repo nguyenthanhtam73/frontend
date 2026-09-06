@@ -18,9 +18,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
+import { prepareCheckInPhoto } from "@/lib/check-in/prepare-check-in-photo";
 import {
+  CHECKIN_PHOTO_ACCEPT,
   CHECKIN_PHOTO_MAX_MB,
-  validateCheckInPhoto,
   type PhotoValidationError,
 } from "@/lib/check-in/photo-upload-validation";
 import {
@@ -61,9 +62,12 @@ function fileToItem(file: File): UploadItem {
 export function UploadPhotos({
   slots,
   onSlotsChange,
+  onSkipPhotos,
 }: {
   slots: PhotoSlots;
   onSlotsChange: (slots: PhotoSlots) => void;
+  /** Switch to existing no-photo (tag + notes) mode from the empty photo card. */
+  onSkipPhotos?: () => void;
 }) {
   const t = useTranslations("checkIn");
   const advancedGate = useFeatureGate(Feature.AdvancedSkinAnalysis);
@@ -74,6 +78,8 @@ export function UploadPhotos({
   const fileRefs = useRef<(HTMLInputElement | null)[]>([null, null]);
   const [slotErrors, setSlotErrors] = useState<SlotErrors>([null, null]);
   const [showAdvancedUpsell, setShowAdvancedUpsell] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const preparingRef = useRef(false);
   const filledCount = (slots[0] ? 1 : 0) + (slots[1] ? 1 : 0);
 
   const requestAdvancedUpsell = useCallback(() => {
@@ -104,6 +110,8 @@ export function UploadPhotos({
           return t("photoErrorInvalidTypeShort");
         case "too_large":
           return t("photoErrorTooLargeShort", { maxMb: CHECKIN_PHOTO_MAX_MB });
+        case "heic_convert_failed":
+          return t("photoErrorHeicConvert");
       }
     },
     [t],
@@ -142,9 +150,12 @@ export function UploadPhotos({
 
   /** Assign one or more files starting at `targetIndex` (replace target, then fill empties). */
   const ingestFilesAtSlot = useCallback(
-    (targetIndex: PhotoSlotIndex, rawFiles: FileList | File[] | null | undefined) => {
+    async (
+      targetIndex: PhotoSlotIndex,
+      rawFiles: FileList | File[] | null | undefined,
+    ) => {
       const files = rawFiles ? Array.from(rawFiles) : [];
-      if (files.length === 0) return;
+      if (files.length === 0 || preparingRef.current) return;
 
       // Hydrating / Free / Premium: block filling the angle slot (2nd photo).
       if (multiPhotoDisabled && targetIndex === 1) {
@@ -152,67 +163,75 @@ export function UploadPhotos({
         return;
       }
 
+      preparingRef.current = true;
+      setPreparing(true);
+
       const next: PhotoSlots = [...slots] as PhotoSlots;
       const errors: SlotErrors = [null, null];
       let fileCursor = 0;
       let blockedSecond = false;
 
-      const tryAssign = (index: PhotoSlotIndex, file: File): boolean => {
+      const tryAssign = async (index: PhotoSlotIndex, file: File): Promise<boolean> => {
         if (multiPhotoDisabled && index === 1) {
           blockedSecond = true;
           return false;
         }
-        const code = validateCheckInPhoto(file);
-        if (code) {
-          errors[index] = errorMessage(code);
+        const prepared = await prepareCheckInPhoto(file);
+        if ("error" in prepared) {
+          errors[index] = errorMessage(prepared.error);
           return false;
         }
         const prev = next[index];
         if (prev) URL.revokeObjectURL(prev.url);
-        next[index] = fileToItem(file);
+        next[index] = fileToItem(prepared.file);
         errors[index] = null;
         return true;
       };
 
-      if (fileCursor < files.length) {
-        tryAssign(targetIndex, files[fileCursor]!);
-        fileCursor += 1;
-      }
+      try {
+        if (fileCursor < files.length) {
+          await tryAssign(targetIndex, files[fileCursor]!);
+          fileCursor += 1;
+        }
 
-      for (const slotIdx of [0, 1] as const) {
-        if (fileCursor >= files.length) break;
-        if (next[slotIdx] !== null) continue;
-        if (!tryAssign(slotIdx, files[fileCursor]!)) {
-          if (multiPhotoDisabled && slotIdx === 1) {
-            blockedSecond = true;
-            break;
+        for (const slotIdx of [0, 1] as const) {
+          if (fileCursor >= files.length) break;
+          if (next[slotIdx] !== null) continue;
+          if (!(await tryAssign(slotIdx, files[fileCursor]!))) {
+            if (multiPhotoDisabled && slotIdx === 1) {
+              blockedSecond = true;
+              break;
+            }
+            fileCursor += 1;
+            continue;
           }
           fileCursor += 1;
-          continue;
         }
-        fileCursor += 1;
-      }
 
-      if (
-        !planHydrating &&
-        (blockedSecond || (multiPhotoDisabled && files.length > 1))
-      ) {
-        requestAdvancedUpsell();
-      }
-
-      if (fileCursor < files.length && next[0] && next[1]) {
-        errors[targetIndex] = t("photoDropTooMany");
-      }
-
-      setSlotErrors((prev) => {
-        const merged: SlotErrors = [...prev];
-        for (const idx of [0, 1] as const) {
-          if (errors[idx] !== null) merged[idx] = errors[idx];
-          else if (next[idx] && next[idx] !== slots[idx]) merged[idx] = null;
+        if (
+          !planHydrating &&
+          (blockedSecond || (multiPhotoDisabled && files.length > 1))
+        ) {
+          requestAdvancedUpsell();
         }
-        return merged;
-      });
-      onSlotsChange(next);
+
+        if (fileCursor < files.length && next[0] && next[1]) {
+          errors[targetIndex] = t("photoDropTooMany");
+        }
+
+        setSlotErrors((prev) => {
+          const merged: SlotErrors = [...prev];
+          for (const idx of [0, 1] as const) {
+            if (errors[idx] !== null) merged[idx] = errors[idx];
+            else if (next[idx] && next[idx] !== slots[idx]) merged[idx] = null;
+          }
+          return merged;
+        });
+        onSlotsChange(next);
+      } finally {
+        preparingRef.current = false;
+        setPreparing(false);
+      }
     },
     [
       errorMessage,
@@ -256,6 +275,20 @@ export function UploadPhotos({
           title={t("photoTipsTitle")}
           tips={[t("photoTipLight"), t("photoTipAngle"), t("photoTipClean")]}
         />
+      ) : null}
+
+      {onSkipPhotos && filledCount === 0 ? (
+        <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
+          <button
+            type="button"
+            data-testid="checkin-skip-photos-cta"
+            onClick={onSkipPhotos}
+            className="text-sm font-medium text-primary underline underline-offset-4"
+          >
+            {t("photoSkipTodayCta")}
+          </button>
+          <p className="text-xs text-muted-foreground">{t("photoSkipTodayHint")}</p>
+        </div>
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -305,12 +338,18 @@ export function UploadPhotos({
                 openPicker(slotIndex, slotIndex === 0 ? "user" : "environment")
               }
               onRetry={() => openPicker(slotIndex)}
-              onFilesDrop={(files) => ingestFilesAtSlot(slotIndex, files)}
+              onFilesDrop={(files) => {
+                void ingestFilesAtSlot(slotIndex, files);
+              }}
               fileInputRef={(el) => {
                 fileRefs.current[slotIndex] = el;
               }}
-              onFileChange={(files) => ingestFilesAtSlot(slotIndex, files)}
+              onFileChange={(files) => {
+                void ingestFilesAtSlot(slotIndex, files);
+              }}
               allowMultiple={!multiPhotoDisabled}
+              preparing={preparing}
+              preparingLabel={t("photoPreparing")}
             />
           );
         })}
@@ -416,6 +455,8 @@ function PhotoSlotCard({
   fileInputRef,
   onFileChange,
   allowMultiple = true,
+  preparing = false,
+  preparingLabel,
 }: {
   slotIndex: PhotoSlotIndex;
   item: UploadItem | null;
@@ -440,6 +481,8 @@ function PhotoSlotCard({
   onFileChange: (files: FileList | null) => void;
   /** When false, file picker accepts a single image (Free / Premium). */
   allowMultiple?: boolean;
+  preparing?: boolean;
+  preparingLabel: string;
 }) {
   const isFront = slotIndex === 0;
   const [dragOver, setDragOver] = useState(false);
@@ -563,7 +606,8 @@ function PhotoSlotCard({
           <button
             type="button"
             onClick={onPickFront}
-            className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60"
+            disabled={preparing}
+            className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60 disabled:opacity-50"
           >
             <Camera className="size-3.5 shrink-0 text-primary" aria-hidden />
             <span className="truncate">{cameraLabel}</span>
@@ -571,7 +615,8 @@ function PhotoSlotCard({
           <button
             type="button"
             onClick={onPickLibrary}
-            className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60"
+            disabled={preparing}
+            className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60 disabled:opacity-50"
           >
             <ImageIcon className="size-3.5 shrink-0 text-primary" aria-hidden />
             <span className="truncate">{albumLabel}</span>
@@ -581,14 +626,24 @@ function PhotoSlotCard({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+          accept={CHECKIN_PHOTO_ACCEPT}
           multiple={allowMultiple}
+          disabled={preparing}
           className="sr-only"
           onChange={(e) => {
             onFileChange(e.target.files);
             e.target.value = "";
           }}
         />
+        {preparing ? (
+          <p
+            role="status"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            {preparingLabel}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -665,8 +720,9 @@ function PhotoSlotCard({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+        accept={CHECKIN_PHOTO_ACCEPT}
         multiple={allowMultiple}
+        disabled={preparing}
         className="sr-only"
         onChange={(e) => {
           if (e.target.files?.length) triggerReplaceFlash();
@@ -674,6 +730,15 @@ function PhotoSlotCard({
           e.target.value = "";
         }}
       />
+      {preparing ? (
+        <p
+          role="status"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+        >
+          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+          {preparingLabel}
+        </p>
+      ) : null}
     </figure>
   );
 }

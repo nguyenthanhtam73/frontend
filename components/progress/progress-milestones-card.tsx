@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
+import { hasNeverCheckedIn } from "@/lib/activation/first-check-in";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
@@ -13,6 +14,7 @@ import {
   BASIC_MILESTONE_DAYS,
   milestonesForPlan,
   premiumOnlyMilestones,
+  shouldLockPremiumMilestones,
   STREAK_MILESTONES,
   type StreakMilestone,
 } from "@/lib/streak/milestones";
@@ -25,17 +27,22 @@ type ProgressMilestonesCardProps = {
 /**
  * Streak milestone list on Progress.
  * Free sees basic (3 + 7); "View full list" unlocks Premium catalog or UpsellBanner.
+ * Before the first check-in, the Premium catalog is not locked.
  */
 export function ProgressMilestonesCard({ className }: ProgressMilestonesCardProps) {
   const t = useTranslations("progress.streak.milestone");
   const gate = useFeatureGate(Feature.MilestoneFull);
   const { data: streak } = useStreak();
   const current = streak?.current_streak ?? 0;
+  const premiumLocked = shouldLockPremiumMilestones({
+    neverCheckedIn: hasNeverCheckedIn(streak),
+    premiumFullLocked: gate.locked,
+  });
 
   const [expanded, setExpanded] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
 
-  const fullAccess = !gate.locked && gate.allowed;
+  const fullAccess = !premiumLocked;
   const showingFull = fullAccess && expanded;
 
   const visible = useMemo(
@@ -46,8 +53,8 @@ export function ProgressMilestonesCard({ className }: ProgressMilestonesCardProp
   const lockedCount = premiumOnlyMilestones().length;
 
   const onViewFull = useCallback(() => {
-    if (gate.isLoading) return;
-    if (gate.locked) {
+    if (gate.isLoading && premiumLocked) return;
+    if (premiumLocked) {
       setShowUpsell(true);
       requestAnimationFrame(() => {
         document.getElementById("upsell-milestone-full")?.scrollIntoView({
@@ -59,7 +66,7 @@ export function ProgressMilestonesCard({ className }: ProgressMilestonesCardProp
     }
     setShowUpsell(false);
     setExpanded(true);
-  }, [gate.isLoading, gate.locked]);
+  }, [gate.isLoading, premiumLocked]);
 
   const onCollapse = useCallback(() => {
     setExpanded(false);
@@ -93,11 +100,11 @@ export function ProgressMilestonesCard({ className }: ProgressMilestonesCardProp
             size="sm"
             variant="outline"
             className="min-h-9 gap-1.5 shrink-0"
-            disabled={gate.isLoading}
-            title={gate.locked ? t("list.lockedHint") : t("list.viewFull")}
+            disabled={gate.isLoading && premiumLocked}
+            title={premiumLocked ? t("list.lockedHint") : t("list.viewFull")}
             onClick={onViewFull}
           >
-            {gate.locked ? <Lock className="size-3.5 opacity-70" aria-hidden /> : null}
+            {premiumLocked ? <Lock className="size-3.5 opacity-70" aria-hidden /> : null}
             {t("list.viewFull")}
           </Button>
         ) : (
@@ -117,20 +124,20 @@ export function ProgressMilestonesCard({ className }: ProgressMilestonesCardProp
         {visible.map((m) => (
           <MilestoneRow key={m.days} milestone={m} current={current} locked={false} />
         ))}
-        {!showingFull && gate.locked
+        {!showingFull && premiumLocked
           ? premiumOnlyMilestones().slice(0, 2).map((m) => (
               <MilestoneRow key={`teaser-${m.days}`} milestone={m} current={current} locked />
             ))
           : null}
       </ul>
 
-      {!showingFull && gate.locked && lockedCount > 0 ? (
+      {!showingFull && premiumLocked && lockedCount > 0 ? (
         <p className="text-[11px] text-muted-foreground">
           {t("list.remaining", { n: lockedCount })}
         </p>
       ) : null}
 
-      {showUpsell && gate.locked ? (
+      {showUpsell && premiumLocked ? (
         <UpsellBanner
           id="upsell-milestone-full"
           feature={Feature.MilestoneFull}

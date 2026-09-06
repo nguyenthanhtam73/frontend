@@ -13,7 +13,14 @@ const ALLOWED_MIME = new Set([
 
 const ALLOWED_EXT = /\.(jpe?g|png|webp|gif|heic|heif)$/i;
 
-export type PhotoValidationError = "empty" | "invalid_type" | "too_large";
+export const CHECKIN_PHOTO_ACCEPT =
+  "image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif";
+
+export type PhotoValidationError =
+  | "empty"
+  | "invalid_type"
+  | "too_large"
+  | "heic_convert_failed";
 
 export function validateCheckInPhoto(file: File): PhotoValidationError | null {
   if (file.size <= 0) return "empty";
