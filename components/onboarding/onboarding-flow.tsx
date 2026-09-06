@@ -449,7 +449,7 @@ export function OnboardingFlow() {
 
     if (state.skillMode) setSkillGlobal(state.skillMode);
     state.markComplete();
-    if (!guestish) markAwaitingFirstCheckIn();
+    if (!guestish) markAwaitingFirstCheckIn(useAuthStore.getState().user?.id);
     router.push("/onboarding/coach-welcome");
   }
 

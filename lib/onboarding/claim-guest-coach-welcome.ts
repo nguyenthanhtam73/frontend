@@ -498,7 +498,7 @@ export async function claimGuestCoachWelcomeIfNeeded(
       void clearGuestClaimPhotos();
     }
 
-    markAwaitingFirstCheckIn();
+    markAwaitingFirstCheckIn(auth.user?.id);
     return {
       profileId: result.profileId,
       starterRoutinePending: result.starterRoutinePending,

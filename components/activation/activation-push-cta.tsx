@@ -5,43 +5,56 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import { isFirstCheckInStreak } from "@/lib/check-in/first-check-in-push";
+import {
+  hasNeverCheckedIn,
+} from "@/lib/activation/first-check-in";
 import { useActivationPushPrompt } from "@/lib/hooks/use-activation-push";
 import { useStreak } from "@/lib/hooks/use-streak";
-import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
+import { cn } from "@/lib/utils";
 
 type Props = {
-  completed: boolean;
-  payload: CreateSkinCheckResponseDTO | null;
+  surface: string;
+  /** When true, only show for users who have never checked in. */
+  onlyIfNeverCheckedIn?: boolean;
+  className?: string;
+  onVisibilityChange?: (visible: boolean) => void;
 };
 
-/**
- * Fallback Web Push nudge after the first check-in.
- * Hidden if the user already opted in or dismissed the pre-check-in CTA.
- */
-export function FirstCheckInPushNudge({ completed, payload }: Props) {
-  const t = useTranslations("checkIn.pushNudge");
+/** Dismissible Web Push CTA before first check-in (coach-welcome / /check-in). */
+export function ActivationPushCta({
+  surface,
+  onlyIfNeverCheckedIn = false,
+  className,
+  onVisibilityChange,
+}: Props) {
+  const t = useTranslations("activation.push");
   const streakQuery = useStreak();
-
-  const isFirst = useMemo(() => {
-    if (streakQuery.data) return isFirstCheckInStreak(streakQuery.data);
-    if (streakQuery.isPending) return false;
-    return payload?.streak ? isFirstCheckInStreak(payload.streak) : false;
-  }, [payload?.streak, streakQuery.data, streakQuery.isPending]);
+  const neverCheckedIn = hasNeverCheckedIn(streakQuery.data);
+  const gatedOff =
+    onlyIfNeverCheckedIn &&
+    (!streakQuery.isSuccess || !neverCheckedIn);
 
   const { visible, enabling, error, enable, dismiss } = useActivationPushPrompt({
-    surface: "first_check_in_fallback",
-    mode: "post_first_checkin",
-    checkInCompleted: completed,
-    isFirstCheckIn: isFirst,
+    surface,
+    mode: "pre_checkin",
+    onVisibilityChange,
   });
 
-  if (!visible) return null;
+  const show = useMemo(
+    () => visible && !gatedOff,
+    [gatedOff, visible],
+  );
+
+  if (!show) return null;
 
   return (
     <aside
-      className="rounded-2xl border border-primary/30 bg-primary/[0.07] px-4 py-4 sm:px-5"
-      data-testid="first-check-in-push-nudge"
+      className={cn(
+        "rounded-2xl border border-primary/30 bg-primary/[0.07] px-4 py-4 sm:px-5",
+        className,
+      )}
+      data-testid="activation-push-cta"
+      data-surface={surface}
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -62,6 +75,7 @@ export function FirstCheckInPushNudge({ completed, payload }: Props) {
               className="gap-1.5"
               onClick={() => void enable()}
               disabled={enabling}
+              data-testid="activation-push-cta-enable"
             >
               {enabling ? (
                 <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -76,6 +90,7 @@ export function FirstCheckInPushNudge({ completed, payload }: Props) {
               variant="ghost"
               onClick={dismiss}
               disabled={enabling}
+              data-testid="activation-push-cta-dismiss"
             >
               {t("later")}
             </Button>

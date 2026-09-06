@@ -14,6 +14,8 @@
  * | signup_success     | onboarding_register_success                        |
  * | first_checkin      | activation_first_checkin                           |
  * | d1_checkin         | activation_d1_checkin (+ d1 reminder shown)        |
+ * | push_opt_in        | activation_push_opt_in                             |
+ * | push_dismissed     | activation_push_dismissed                          |
  * | paywall_view       | paywall_view                                       |
  * | checkout_confirm   | checkout_confirm                                   |
  * | paid               | paid (+ Meta Purchase via trackMetaPurchaseOnce)   |
@@ -32,6 +34,8 @@ export const FUNNEL_EVENTS = {
   firstCheckIn: "activation_first_checkin",
   d1CheckIn: "activation_d1_checkin",
   d1ReminderShown: "activation_d1_reminder_shown",
+  pushOptIn: "activation_push_opt_in",
+  pushDismissed: "activation_push_dismissed",
   paywallView: "paywall_view",
   checkoutConfirm: "checkout_confirm",
   paid: "paid",
@@ -172,6 +176,22 @@ export function trackFunnelEventOnce(
   if (!claimOnceFlag(store, funnelOnceKey(name, scope))) return false;
   trackFunnelEvent(name, params);
   return true;
+}
+
+function defaultLocalStore(): OnceStore | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage;
+}
+
+/** Once per user across tabs — uses localStorage keyed by `userId`. */
+export function trackFunnelEventOncePerUser(
+  name: FunnelEventName,
+  userId: string,
+  params?: Record<string, unknown>,
+): boolean {
+  const id = userId.trim();
+  if (!id) return trackFunnelEventOnce(name, params, "anon", defaultLocalStore());
+  return trackFunnelEventOnce(name, params, id, defaultLocalStore());
 }
 
 /**

@@ -31,7 +31,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link } from "@/i18n/navigation";
 import { resolveCheckInReminderKind, signupDayKey } from "@/lib/activation/check-in-reminder";
-import { hasNeverCheckedIn } from "@/lib/activation/first-check-in";
+import { clearAwaitingFirstCheckIn, hasNeverCheckedIn } from "@/lib/activation/first-check-in";
 import {
   funnelEventForCheckInKind,
   resolveCheckInFunnelKinds,
@@ -284,6 +284,9 @@ export function CheckInForm() {
               trackFunnelEvent(funnelEventForCheckInKind(kind), {
                 surface: "check_in_form",
               });
+            }
+            if (checkInFunnelKindsRef.current.includes("first")) {
+              clearAwaitingFirstCheckIn(user?.id);
             }
             feedback.onSubmitSuccess(raw.data as CreateSkinCheckResponseDTO);
             scrollToFeedback();

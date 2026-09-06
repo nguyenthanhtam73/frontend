@@ -24,13 +24,13 @@ import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   claimGuestCoachWelcomeIfNeeded,
-  GUEST_CLAIM_RETURN_PATH,
   isClaimableGuestCoachSession,
   isGuestRoutineSaveReturn,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { readClaimableGuestSession } from "@/lib/onboarding/coach-welcome-session";
 import { trackMetaEvent } from "@/lib/meta-pixel";
-import { resolveAuthReturnDestination } from "@/lib/onboarding/post-auth-destination";
+import { markAwaitingFirstCheckIn } from "@/lib/activation/first-check-in";
+import { postRegisterDestination } from "@/lib/onboarding/post-auth-destination";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY?.trim() ?? "";
@@ -213,11 +213,17 @@ function RegisterPageInner() {
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
+                if (claimed || json.data?.user?.onboarding_completed) {
+                  markAwaitingFirstCheckIn(json.data?.user?.id);
+                }
                 const nextPath = checkoutIntent
                   ? buildPricingCheckoutHref(checkoutIntent)
-                  : claimed || hadClaimableGuest
-                    ? GUEST_CLAIM_RETURN_PATH
-                    : resolveAuthReturnDestination(json.data?.user, returnPath);
+                  : postRegisterDestination({
+                      claimed,
+                      hadClaimableGuest,
+                      user: json.data?.user,
+                      returnPath,
+                    });
                 // Keep loading until navigation replaces this screen.
                 startTransition(() => {
                   router.push(nextPath);

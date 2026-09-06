@@ -25,6 +25,8 @@ type CoachWelcomeCtaBaseProps = {
   saveLoading?: boolean;
   onSaveToAccount?: () => void;
   guestVariant?: "ready" | "fallback";
+  /** Hide home / review escapes while first check-in is still due. */
+  hideSecondaryLinks?: boolean;
   className?: string;
 };
 
@@ -295,6 +297,7 @@ export function CoachWelcomeCta({
   saveLoading = false,
   onSaveToAccount,
   guestVariant = "ready",
+  hideSecondaryLinks = false,
   showPrimary = false,
   className,
 }: CoachWelcomeCtaBaseProps & { showPrimary?: boolean }) {
@@ -390,7 +393,7 @@ export function CoachWelcomeCta({
         </div>
       ) : null}
 
-      <CoachWelcomeSecondaryLinks />
+      {hideSecondaryLinks ? null : <CoachWelcomeSecondaryLinks />}
     </div>
   );
 }

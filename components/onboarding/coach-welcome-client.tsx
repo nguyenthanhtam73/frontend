@@ -19,6 +19,7 @@ import {
   CoachWelcomePrimaryCtaBlock,
   CoachWelcomeStickyBar,
 } from "@/components/onboarding/coach-welcome-cta";
+import { ActivationPushCta } from "@/components/activation/activation-push-cta";
 import { FirstCheckInPrompt } from "@/components/onboarding/first-check-in-prompt";
 import {
   CoachWelcomeCelebrationHeader,
@@ -40,7 +41,7 @@ import { StarterRoutineFeedback } from "@/components/onboarding/starter-routine-
 import { StarterRoutineGenerationNotice } from "@/components/onboarding/starter-routine-generation-notice";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
@@ -64,7 +65,13 @@ import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
+import {
+  hasNeverCheckedIn,
+  isFirstCheckInLaterToday,
+} from "@/lib/activation/first-check-in";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
+import { useStreak } from "@/lib/hooks/use-streak";
+import { streakDateKey } from "@/lib/streak/history";
 import { consumeJustCompletedOnboarding } from "@/lib/stores/onboarding-store";
 import {
   COACH_WELCOME_SESSION_EVENT,
@@ -148,6 +155,9 @@ function CoachWelcomeLoaded({
   const tReview = useTranslations("onboarding.review");
   const formatter = useFormatter();
   const toast = useToast();
+  const router = useRouter();
+  const userId = useAuthStore((s) => s.user?.id);
+  const streakQuery = useStreak();
   const [profileId, setProfileId] = useState(initialProfileId);
   const [livePhotoUrls, setLivePhotoUrls] = useState<string[] | null>(null);
   const [idbPhotoUrls, setIdbPhotoUrls] = useState<string[]>([]);
@@ -179,6 +189,23 @@ function CoachWelcomeLoaded({
     isClaimableGuestCoachSession(session);
   const signedIn = Boolean(getAccessToken());
   const analysis = session?.reviewSummary?.skin_analysis;
+  const [laterToday, setLaterToday] = useState(false);
+  const hideSecondaryLinks =
+    signedIn &&
+    !isGuest &&
+    !pendingAccountClaim &&
+    !laterToday &&
+    hasNeverCheckedIn(streakQuery.data);
+
+  useEffect(() => {
+    setLaterToday(
+      Boolean(userId) && isFirstCheckInLaterToday(userId ?? "", streakDateKey()),
+    );
+  }, [userId]);
+
+  useEffect(() => {
+    if (signedIn && !isGuest) router.prefetch("/check-in");
+  }, [isGuest, router, signedIn]);
 
   useEffect(() => {
     setProfileId(initialProfileId);
@@ -365,6 +392,10 @@ function CoachWelcomeLoaded({
           <CoachWelcomeCelebrationHeader isGuest={isGuest} />
         </CoachWelcomeSection>
 
+        {signedIn && !isGuest && !pendingAccountClaim ? (
+          <ActivationPushCta surface="coach_welcome" />
+        ) : null}
+
         <FirstCheckInPrompt
           signedIn={signedIn}
           isGuest={isGuest}
@@ -492,6 +523,7 @@ function CoachWelcomeLoaded({
             saveLoading={saveLoading}
             onSaveToAccount={handleSaveToAccount}
             guestVariant={guestVariant}
+            hideSecondaryLinks={hideSecondaryLinks}
           />
         </CoachWelcomeSection>
 

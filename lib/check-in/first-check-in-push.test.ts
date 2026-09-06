@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   isFirstCheckInStreak,
+  shouldPromptActivationPush,
   shouldPromptFirstCheckInPush,
 } from "./first-check-in-push";
 
@@ -80,6 +81,41 @@ describe("shouldPromptFirstCheckInPush", () => {
     );
     assert.equal(
       shouldPromptFirstCheckInPush({ ...base, nudgeStatus: "enabled" }),
+      false,
+    );
+  });
+});
+
+describe("shouldPromptActivationPush", () => {
+  const base = {
+    signedIn: true,
+    supportOk: true,
+    permission: "default" as const,
+    localPushEnabled: false,
+    nudgeStatus: null,
+  };
+
+  it("shows before first check-in when push is available", () => {
+    assert.equal(shouldPromptActivationPush(base), true);
+  });
+
+  it("hides for guests, unsupported, denied, already on, or already decided", () => {
+    assert.equal(shouldPromptActivationPush({ ...base, signedIn: false }), false);
+    assert.equal(shouldPromptActivationPush({ ...base, supportOk: false }), false);
+    assert.equal(
+      shouldPromptActivationPush({ ...base, permission: "denied" }),
+      false,
+    );
+    assert.equal(
+      shouldPromptActivationPush({ ...base, localPushEnabled: true }),
+      false,
+    );
+    assert.equal(
+      shouldPromptActivationPush({ ...base, nudgeStatus: "dismissed" }),
+      false,
+    );
+    assert.equal(
+      shouldPromptActivationPush({ ...base, nudgeStatus: "enabled" }),
       false,
     );
   });

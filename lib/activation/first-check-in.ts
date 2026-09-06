@@ -1,11 +1,16 @@
 /**
  * Activation helpers: get a newly signed-in user to /check-in in the same session.
- * Session-only — never persist across tabs/devices, and never block the guest funnel.
+ *
+ * Awaiting is session + per-user localStorage so a refresh / new tab still
+ * prompts until the first check-in lands. Guest funnel is never blocked.
  */
 
-const AWAITING_KEY = "dadiary_awaiting_first_checkin_v1";
-const PROMPT_DISMISS_KEY = "dadiary_first_checkin_prompt_dismissed_v1";
-const BANNER_DISMISS_KEY = "dadiary_activation_banner_dismissed_v1";
+const AWAITING_SESSION_KEY = "dadiary_awaiting_first_checkin_v1";
+const AWAITING_PERSIST_KEY = "dadiary:awaiting-first-checkin-v1";
+const LATER_TODAY_KEY = "dadiary:first-checkin-later-today-v1";
+
+/** Delay before the demoted “later today” control appears. */
+export const FIRST_CHECK_IN_LATER_DELAY_MS = 8_000;
 
 export type FirstCheckInStreakHint = {
   current_streak?: number | null;
@@ -22,7 +27,7 @@ export function hasNeverCheckedIn(streak: FirstCheckInStreakHint | null | undefi
   return true;
 }
 
-function readFlag(key: string): boolean {
+function readSessionFlag(key: string): boolean {
   if (typeof window === "undefined") return false;
   try {
     return window.sessionStorage.getItem(key) === "1";
@@ -31,7 +36,7 @@ function readFlag(key: string): boolean {
   }
 }
 
-function writeFlag(key: string): void {
+function writeSessionFlag(key: string): void {
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.setItem(key, "1");
@@ -40,48 +45,156 @@ function writeFlag(key: string): void {
   }
 }
 
-/** Call after guest claim or signed-in onboarding finish — same session only. */
-export function markAwaitingFirstCheckIn(): void {
-  writeFlag(AWAITING_KEY);
+function clearSessionFlag(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    /* private mode */
+  }
 }
 
-export function isAwaitingFirstCheckIn(): boolean {
-  return readFlag(AWAITING_KEY);
+type AwaitMap = Record<string, boolean>;
+
+function readAwaitingMap(): AwaitMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(AWAITING_PERSIST_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: AwaitMap = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (v === true) out[k] = true;
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
-export function dismissFirstCheckInPrompt(): void {
-  writeFlag(PROMPT_DISMISS_KEY);
+function writeAwaitingUser(userId: string, on: boolean): void {
+  if (typeof window === "undefined") return;
+  const id = userId.trim();
+  if (!id) return;
+  try {
+    const next = { ...readAwaitingMap() };
+    if (on) next[id] = true;
+    else delete next[id];
+    window.localStorage.setItem(AWAITING_PERSIST_KEY, JSON.stringify(next));
+  } catch {
+    /* private mode / quota */
+  }
 }
 
-export function isFirstCheckInPromptDismissed(): boolean {
-  return readFlag(PROMPT_DISMISS_KEY);
+/** Call after guest claim, register, or signed-in onboarding finish. */
+export function markAwaitingFirstCheckIn(userId?: string | null): void {
+  writeSessionFlag(AWAITING_SESSION_KEY);
+  const id = userId?.trim();
+  if (id) writeAwaitingUser(id, true);
 }
 
-export function dismissActivationBanner(): void {
-  writeFlag(BANNER_DISMISS_KEY);
+export function isAwaitingFirstCheckIn(userId?: string | null): boolean {
+  if (readSessionFlag(AWAITING_SESSION_KEY)) return true;
+  const id = userId?.trim();
+  if (id) return readAwaitingMap()[id] === true;
+  return false;
 }
 
-export function isActivationBannerDismissed(): boolean {
-  return readFlag(BANNER_DISMISS_KEY);
+/** Clear after a successful first check-in (or streak proves they already have one). */
+export function clearAwaitingFirstCheckIn(userId?: string | null): void {
+  clearSessionFlag(AWAITING_SESSION_KEY);
+  const id = userId?.trim();
+  if (id) writeAwaitingUser(id, false);
+}
+
+type LaterMap = Record<string, string>;
+
+function readLaterMap(): LaterMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(LATER_TODAY_KEY);
+    if (!raw) return {};
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: LaterMap = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) out[k] = v;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/** UI snooze for the first-check-in prompt/bar. Does not touch D0 reminder due. */
+export function writeFirstCheckInLaterToday(userId: string, day: string): void {
+  if (typeof window === "undefined") return;
+  const id = userId.trim();
+  if (!id || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+  try {
+    const next = { ...readLaterMap(), [id]: day };
+    window.localStorage.setItem(LATER_TODAY_KEY, JSON.stringify(next));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+export function isFirstCheckInLaterToday(userId: string, today: string): boolean {
+  const id = userId.trim();
+  if (!id) return false;
+  return readLaterMap()[id] === today;
+}
+
+/** Parse helpers for unit tests (no window). */
+export function laterTodayFromMap(raw: unknown, userId: string): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const value = (raw as Record<string, unknown>)[userId];
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? value
+    : null;
 }
 
 export function shouldShowFirstCheckInPrompt(input: {
   signedIn: boolean;
   isGuest: boolean;
   pendingAccountClaim: boolean;
-  dismissed: boolean;
+  laterToday: boolean;
   awaiting: boolean;
   streakStatus: "loading" | "ready" | "error";
   neverCheckedIn: boolean;
 }): boolean {
   if (!input.signedIn || input.isGuest || input.pendingAccountClaim) return false;
-  if (input.dismissed) return false;
+  if (input.laterToday) return false;
   if (input.awaiting) return true;
   if (input.streakStatus === "loading") return false;
   if (input.streakStatus === "error") return true;
   return input.neverCheckedIn;
 }
 
+/**
+ * Persistent in-app bar for users who have never checked in.
+ * Hidden after first check-in or an explicit “later today” UI snooze.
+ * Snooze must not write the D0/D1 reminder-dismiss key.
+ */
+export function shouldShowNeverCheckedInBar(input: {
+  signedIn: boolean;
+  laterToday: boolean;
+  onFunnelPath: boolean;
+  onCheckInPath: boolean;
+  onCoachWelcomePath: boolean;
+  streakStatus: "loading" | "ready" | "error";
+  neverCheckedIn: boolean;
+}): boolean {
+  if (!input.signedIn || input.laterToday) return false;
+  if (input.onFunnelPath || input.onCheckInPath || input.onCoachWelcomePath) {
+    return false;
+  }
+  if (input.streakStatus !== "ready") return false;
+  return input.neverCheckedIn;
+}
+
+/** @deprecated Use shouldShowNeverCheckedInBar — kept for existing tests. */
 export function shouldShowActivationBanner(input: {
   signedIn: boolean;
   dismissed: boolean;
@@ -91,12 +204,15 @@ export function shouldShowActivationBanner(input: {
   streakStatus: "loading" | "ready" | "error";
   neverCheckedIn: boolean;
 }): boolean {
-  if (!input.signedIn || input.dismissed) return false;
-  if (input.onFunnelPath || input.onCheckInPath || input.onCoachWelcomePath) {
-    return false;
-  }
-  if (input.streakStatus !== "ready") return false;
-  return input.neverCheckedIn;
+  return shouldShowNeverCheckedInBar({
+    signedIn: input.signedIn,
+    laterToday: input.dismissed,
+    onFunnelPath: input.onFunnelPath,
+    onCheckInPath: input.onCheckInPath,
+    onCoachWelcomePath: input.onCoachWelcomePath,
+    streakStatus: input.streakStatus,
+    neverCheckedIn: input.neverCheckedIn,
+  });
 }
 
 export function shouldShowCheckInFirstVisit(input: {

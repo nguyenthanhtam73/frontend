@@ -517,7 +517,16 @@
         "body": "Bạn đã check-in hôm qua. Một lần nữa hôm nay để chuỗi ngày không đứt."
       },
       "cta": "Check-in ~30 giây",
-      "dismiss": "Để sau"
+      "dismiss": "Để sau",
+      "laterToday": "Để hôm nay"
+    },
+    "push": {
+      "title": "Bật nhắc tối để khỏi quên check-in?",
+      "body": "Một thông báo nhẹ buổi tối — tắt bất cứ lúc nào trong Cài đặt. Chưa cần check-in trước.",
+      "enable": "Bật thông báo",
+      "enabling": "Đang bật…",
+      "later": "Để sau",
+      "error": "Chưa bật được. Thử lại, hoặc mở Cài đặt."
     },
     "streak": {
       "ariaLabel": "Chuỗi ngày check-in",
@@ -894,8 +903,10 @@
       "body": "Một ảnh + cảm nhận da là đủ. Check-in nhanh để mở streak hôm nay.",
       "bodySaved": "Routine đã gắn vào tài khoản. Check-in lần đầu ngay để mở streak — đừng để sang ngày mai.",
       "cta": "Check-in ~30 giây",
-      "skip": "Xem routine trước",
-      "skipHint": "Bạn có thể check-in sau, nhưng làm ngay thì dễ nhớ hơn."
+      "skip": "Để hôm nay",
+      "skipHint": "Mình vẫn nhắc tối nay — streak chưa mất. Xem routine trước cũng được.",
+      "laterToday": "Để hôm nay",
+      "laterTodayHint": "Mình vẫn nhắc tối nay — streak chưa mất. Xem routine trước cũng được."
     }
   },
   "premium": {

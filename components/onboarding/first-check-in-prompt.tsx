@@ -7,14 +7,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import {
-  dismissFirstCheckInPrompt,
+  FIRST_CHECK_IN_LATER_DELAY_MS,
+  clearAwaitingFirstCheckIn,
   hasNeverCheckedIn,
   isAwaitingFirstCheckIn,
-  isFirstCheckInPromptDismissed,
+  isFirstCheckInLaterToday,
   shouldShowFirstCheckInPrompt,
+  writeFirstCheckInLaterToday,
 } from "@/lib/activation/first-check-in";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { useStreak } from "@/lib/hooks/use-streak";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { streakDateKey } from "@/lib/streak/history";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -22,6 +26,7 @@ type Props = {
   isGuest: boolean;
   pendingAccountClaim: boolean;
   className?: string;
+  onLaterToday?: () => void;
 };
 
 /** Same-session first check-in CTA after claim / signed-in onboarding finish. */
@@ -30,18 +35,23 @@ export function FirstCheckInPrompt({
   isGuest,
   pendingAccountClaim,
   className,
+  onLaterToday,
 }: Props) {
   const t = useTranslations("coachWelcome.firstCheckIn");
+  const userId = useAuthStore((s) => s.user?.id);
   const streakQuery = useStreak();
   const [hydrated, setHydrated] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [laterToday, setLaterToday] = useState(false);
   const [awaiting, setAwaiting] = useState(false);
+  const [laterReady, setLaterReady] = useState(false);
+
+  const today = streakDateKey();
 
   useEffect(() => {
-    setDismissed(isFirstCheckInPromptDismissed());
-    setAwaiting(isAwaitingFirstCheckIn());
+    setLaterToday(userId ? isFirstCheckInLaterToday(userId, today) : false);
+    setAwaiting(isAwaitingFirstCheckIn(userId));
     setHydrated(true);
-  }, []);
+  }, [today, userId]);
 
   const streakStatus = streakQuery.isPending
     ? "loading"
@@ -50,6 +60,12 @@ export function FirstCheckInPrompt({
       : "ready";
   const neverCheckedIn = hasNeverCheckedIn(streakQuery.data);
 
+  useEffect(() => {
+    if (streakStatus === "ready" && !neverCheckedIn && userId) {
+      clearAwaitingFirstCheckIn(userId);
+    }
+  }, [neverCheckedIn, streakStatus, userId]);
+
   const visible = useMemo(
     () =>
       hydrated &&
@@ -57,7 +73,7 @@ export function FirstCheckInPrompt({
         signedIn,
         isGuest,
         pendingAccountClaim,
-        dismissed,
+        laterToday,
         awaiting,
         streakStatus,
         neverCheckedIn,
@@ -67,20 +83,30 @@ export function FirstCheckInPrompt({
       signedIn,
       isGuest,
       pendingAccountClaim,
-      dismissed,
+      laterToday,
       awaiting,
       streakStatus,
       neverCheckedIn,
     ],
   );
 
-  const skip = useCallback(() => {
-    dismissFirstCheckInPrompt();
-    setDismissed(true);
-    document
-      .getElementById("coach-welcome-routine")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  useEffect(() => {
+    if (!visible) {
+      setLaterReady(false);
+      return;
+    }
+    const id = window.setTimeout(
+      () => setLaterReady(true),
+      FIRST_CHECK_IN_LATER_DELAY_MS,
+    );
+    return () => window.clearTimeout(id);
+  }, [visible]);
+
+  const snooze = useCallback(() => {
+    if (userId) writeFirstCheckInLaterToday(userId, today);
+    setLaterToday(true);
+    onLaterToday?.();
+  }, [onLaterToday, today, userId]);
 
   if (!visible) return null;
 
@@ -120,19 +146,23 @@ export function FirstCheckInPrompt({
           {t("cta")}
           <ArrowRight className="size-5 shrink-0" aria-hidden />
         </ButtonLink>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-full text-muted-foreground"
-          data-testid="first-check-in-prompt-skip"
-          onClick={skip}
-        >
-          {t("skip")}
-        </Button>
-        <p className="text-center text-[11px] leading-snug text-muted-foreground">
-          {t("skipHint")}
-        </p>
+        {laterReady ? (
+          <div className="space-y-1.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-muted-foreground"
+              data-testid="first-check-in-prompt-skip"
+              onClick={snooze}
+            >
+              {t("laterToday")}
+            </Button>
+            <p className="text-center text-[11px] leading-snug text-muted-foreground">
+              {t("laterTodayHint")}
+            </p>
+          </div>
+        ) : null}
       </div>
     </section>
   );
