@@ -12,7 +12,11 @@ export type AdminFunnelStats = {
   d1_checkin_users_7d: number;
   d1_eligible_users_7d: number;
   paid_orders_7d: number;
-  /** Always null — paywall is client-only and is not persisted. */
+  /** Rolling 24h impressions. Absent/null on the pre-ingest API. */
+  paywall_views_1d?: number | null;
+  /** Rolling 7d impressions. Absent/null on the pre-ingest API. */
+  paywall_views_7d?: number | null;
+  /** Same as paywall_views_7d on the new API; null on the pre-ingest API. */
   paywall_views: number | null;
   notes?: {
     paywall?: string;
