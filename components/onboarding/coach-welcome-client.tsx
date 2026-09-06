@@ -400,6 +400,7 @@ function CoachWelcomeLoaded({
           signedIn={signedIn}
           isGuest={isGuest}
           pendingAccountClaim={pendingAccountClaim}
+          onLaterToday={() => setLaterToday(true)}
         />
 
         <CoachWelcomeSection>
