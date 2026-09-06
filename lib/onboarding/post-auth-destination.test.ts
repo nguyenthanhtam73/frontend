@@ -2,15 +2,36 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  isOnboardingGatedPath,
   postRegisterDestination,
   resolveAuthReturnDestination,
 } from "./post-auth-destination";
 
+describe("isOnboardingGatedPath", () => {
+  it("keeps check-in open so D0/D1 CTAs are not a dead end", () => {
+    assert.equal(isOnboardingGatedPath("/check-in"), false);
+    assert.equal(isOnboardingGatedPath("/check-in/"), false);
+    assert.equal(isOnboardingGatedPath("/routine"), true);
+    assert.equal(isOnboardingGatedPath("/progress"), true);
+    assert.equal(isOnboardingGatedPath("/cabinet"), true);
+    assert.equal(isOnboardingGatedPath("/wardrobe"), true);
+    assert.equal(isOnboardingGatedPath("/"), false);
+  });
+});
+
 describe("resolveAuthReturnDestination", () => {
-  it("sends incomplete users to onboarding when next is gated", () => {
+  it("honors next=/check-in for incomplete users", () => {
     const user = { id: "u1", onboarding_completed: false };
     assert.equal(
       resolveAuthReturnDestination(user, "/check-in"),
+      "/check-in",
+    );
+  });
+
+  it("sends incomplete users to onboarding when next is still gated", () => {
+    const user = { id: "u1", onboarding_completed: false };
+    assert.equal(
+      resolveAuthReturnDestination(user, "/routine"),
       "/onboarding",
     );
   });
@@ -75,13 +96,34 @@ describe("postRegisterDestination", () => {
     );
   });
 
-  it("keeps incomplete users on onboarding when there is no claim", () => {
+  it("sends incomplete users to check-in when there is no claim", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: false,
+        hadClaimableGuest: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: null,
+      }),
+      "/check-in",
+    );
     assert.equal(
       postRegisterDestination({
         claimed: false,
         hadClaimableGuest: false,
         user: { id: "u1", onboarding_completed: false },
         returnPath: "/check-in",
+      }),
+      "/check-in",
+    );
+  });
+
+  it("still blocks incomplete register next= onto remaining gated shells", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: false,
+        hadClaimableGuest: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: "/routine",
       }),
       "/onboarding",
     );

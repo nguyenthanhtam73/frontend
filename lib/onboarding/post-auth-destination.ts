@@ -22,7 +22,8 @@ export function postLoginDestination(user: AuthUserLike): "/onboarding" | "/chec
 
 /**
  * Honor `?next=` after auth, but never dump incomplete users onto gated
- * surfaces (check-in / routine / …) — OnboardingGate would bounce them anyway.
+ * surfaces (routine / progress / …) — OnboardingGate would bounce them.
+ * `/check-in` is intentionally open: D0/D1 CTAs all point there.
  */
 export function resolveAuthReturnDestination(
   user: AuthUserLike,
@@ -47,8 +48,8 @@ export function resolveAuthReturnDestination(
 export function isOnboardingGatedPath(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";
   // Marketing home `/` stays open so incomplete users can still read the landing.
-  // Core app shells require finish or skip first.
-  if (p === "/check-in" || p.startsWith("/check-in/")) return true;
+  // Check-in is the D0 activation action — do not bounce it back to onboarding.
+  // Other core shells still require finish or skip first.
   if (p === "/routine" || p.startsWith("/routine/")) return true;
   if (p === "/progress" || p.startsWith("/progress/")) return true;
   if (p === "/cabinet" || p.startsWith("/cabinet/")) return true;
@@ -59,7 +60,7 @@ export function isOnboardingGatedPath(pathname: string): boolean {
 /**
  * Where to send the user after a successful register (non-checkout).
  * Claimed guest trial → coach-welcome (check-in is the primary CTA there).
- * Completed onboarding → /check-in. Incomplete → /onboarding (gate).
+ * Otherwise → /check-in (or an explicit non-gated `?next=`).
  */
 export function postRegisterDestination(input: {
   claimed: boolean;
@@ -68,6 +69,7 @@ export function postRegisterDestination(input: {
   returnPath: string | null | undefined;
 }): string {
   if (input.claimed || input.hadClaimableGuest) return COACH_WELCOME_PATH;
+  if (!input.returnPath) return "/check-in";
   return resolveAuthReturnDestination(input.user, input.returnPath);
 }
 

@@ -15,6 +15,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
  * Client equivalent of an onboarding middleware gate.
  * JWT lives in localStorage, so Next middleware cannot enforce this.
  * Relies on SiteHeader (or login) to populate auth store — does not call /me itself.
+ * `/check-in` is not gated (see `isOnboardingGatedPath`).
  */
 export function OnboardingGate() {
   const pathname = usePathname();

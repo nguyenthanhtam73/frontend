@@ -189,15 +189,18 @@ test.describe("Onboarding smoke (P1 + P2)", () => {
     });
     await expect(page.getByTestId("onboarding-skip-to-app")).toBeVisible();
 
-    // Marketing home stays open; core shells (e.g. /check-in) remain gated.
+    // Marketing home stays open. Check-in is ungated so D0 CTAs can land.
     await page.goto("/");
     await expect(page.getByTestId("auth-signed-in").first()).toBeVisible({
       timeout: 20_000,
     });
     expect(page.url()).not.toMatch(/\/onboarding/);
     await page.goto("/check-in");
-    await page.waitForURL(/\/onboarding/, { timeout: 20_000 });
-    expect(page.url()).toMatch(/\/onboarding/);
+    await expect(page.getByTestId("checkin-submit")).toBeVisible({
+      timeout: 20_000,
+    });
+    expect(page.url()).toMatch(/\/check-in/);
+    expect(page.url()).not.toMatch(/\/onboarding/);
   });
 
   test("3) Complete login → /check-in (not trapped on onboarding)", async ({
