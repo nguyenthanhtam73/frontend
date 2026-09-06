@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   cloneStepsForToday,
   overlayStepCompletions,
+  routineSaveUnsavedHint,
   type LocalRoutine,
 } from "./routine-helpers";
 
@@ -68,5 +69,20 @@ describe("cloneStepsForToday", () => {
     assert.equal(cloned[0]?.title, "SPF");
     assert.equal(cloned[0]?.completed, false);
     assert.notEqual(cloned[0]?.id, "old");
+  });
+});
+
+describe("routineSaveUnsavedHint", () => {
+  const labels = {
+    saveToday: "template — tap Save today",
+    structural: "unsaved structure — tap Save today",
+  };
+
+  it("uses save-today copy until today is persisted", () => {
+    assert.equal(routineSaveUnsavedHint(false, labels), labels.saveToday);
+  });
+
+  it("uses structural copy after today is saved", () => {
+    assert.equal(routineSaveUnsavedHint(true, labels), labels.structural);
   });
 });
