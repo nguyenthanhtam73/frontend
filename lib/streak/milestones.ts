@@ -38,6 +38,18 @@ export function premiumOnlyMilestones(): readonly StreakMilestone[] {
 }
 
 /**
+ * Full-catalog Premium lock is for users who already have a check-in.
+ * Zero-check-in Progress should not paywall 14/30/60/100-day rows.
+ */
+export function shouldLockPremiumMilestones(input: {
+  neverCheckedIn: boolean;
+  premiumFullLocked: boolean;
+}): boolean {
+  if (input.neverCheckedIn) return false;
+  return input.premiumFullLocked;
+}
+
+/**
  * Highest milestone with days ≤ currentStreak that is not yet celebrated,
  * constrained to `catalog` (Free = basic only).
  */
