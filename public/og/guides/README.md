@@ -13,6 +13,9 @@ Each guide article uses a **unique** 1200×630 image:
 | `/guides/da-kho` | `da-kho.png` |
 | `/guides/da-nhay-cam` | `da-nhay-cam.png` |
 | `/guides/retinol-cho-nguoi-moi` | `retinol-cho-nguoi-moi.png` |
+| `/guides/kich-ung-adapalene` | `kich-ung-adapalene.png` |
+| `/guides/tham-vs-nam` | `tham-vs-nam.png` |
+| `/guides/mun-an` | `mun-an.png` |
 | `/guides/da-nong-am` | `da-nong-am.png` |
 
 SVG sources sit next to the PNGs (accent + kicker differ per slug). Metadata in `lib/guides/catalog.ts` points at `/og/guides/{slug}.png`.

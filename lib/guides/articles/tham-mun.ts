@@ -58,7 +58,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           heading: "Thâm khác sẹo lõm như thế nào",
           paragraphs: [
-            "Thâm thường phẳng, nâu hoặc xám, chỗ từng có mụn. Sẹo lõm hay lồi là thay đổi địa hình da.",
+            "Thâm thường phẳng, nâu hoặc xám, chỗ từng có mụn. Sẹo lõm hay lồi là thay đổi địa hình da. Mảng rộng hơn, không nhớ ‘ổ mụn nào’ — phân biệt thận trọng ở [thâm và nám](/guides/tham-vs-nam), không tự chẩn.",
             "Thâm có thể lắng khi hết viêm và ít nắng. Không ai trên trang này cam kết số tuần.",
             "Viêm + UV là đôi bạn của sắc tố. Xe máy, sân trường, cửa sổ văn phòng đều tính. Mồ hôi không ‘rửa thâm’, nhưng chà khi đổ mồ hôi làm da thêm kích.",
           ],
@@ -178,7 +178,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
       {
         heading: "A mark versus a dented scar",
         paragraphs: [
-          "A mark is usually flat, brown or grey, where a spot lived. A dented or raised scar is a change in terrain.",
+          "A mark is usually flat, brown or grey, where a spot lived. A dented or raised scar is a change in terrain. A wider patch with no remembered spot — the cautious split is in [marks and melasma](/guides/tham-vs-nam); do not self-diagnose.",
           "Marks may ease when inflammation ends and UV stays lower. Nobody here promises a week count.",
           "Inflammation plus UV is a familiar pair for pigment. Motorbikes, school yards, and office windows all count. Sweat does not wash a mark off, but rubbing sweaty skin adds irritation.",
         ],

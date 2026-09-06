@@ -3,10 +3,13 @@ import { daDauVanPhong } from "./articles/da-dau-van-phong";
 import { daKho } from "./articles/da-kho";
 import { daNhayCam } from "./articles/da-nhay-cam";
 import { kemChongNang } from "./articles/kem-chong-nang";
+import { kichUngAdapalene } from "./articles/kich-ung-adapalene";
 import { mun } from "./articles/mun";
+import { munAn } from "./articles/mun-an";
 import { retinolChoNguoiMoi } from "./articles/retinol-cho-nguoi-moi";
 import { routineChamDa } from "./articles/routine-cham-da";
 import { thamMun } from "./articles/tham-mun";
+import { thamVsNam } from "./articles/tham-vs-nam";
 import type {
   GuideArticle,
   GuideArticleCopy,
@@ -42,10 +45,10 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
   vi: {
     indexTitle: "Hướng dẫn chăm da nóng ẩm · DaDiary",
     indexDescription:
-      "Chín bài cho da dầu, da khô, da nhạy, mụn, thâm, SPF, routine người mới, retinol chậm, và ngày văn phòng máy lạnh — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
+      "Bài cho da dầu, da khô, da nhạy, mụn ẩn, thâm và nám, kích ứng sau adapalene hoặc BHA, SPF, routine người mới, retinol chậm, và ngày văn phòng — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
     indexHeading: "Hướng dẫn chăm da cho khí hậu nóng ẩm",
     indexSub:
-      "Chín bài cho da Việt: dầu, khô, nhạy cảm, mụn, thâm, SPF, routine ngắn, retinol người mới, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",
+      "Bài cho da Việt: dầu, khô, nhạy cảm, mụn, mụn ẩn, thâm, nám, kích ứng hàng rào, SPF, routine ngắn, retinol người mới, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",
     ctaPhoto: "Chụp ảnh nhận routine",
     ctaHint: "Không cần tạo tài khoản trước. Xem routine rồi hãy lưu.",
     relatedHeading: "Đọc tiếp",
@@ -63,10 +66,10 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
   en: {
     indexTitle: "Humid-heat skincare guides · DaDiary",
     indexDescription:
-      "Nine guides on oily, dry, and sensitive skin, acne, marks, sunscreen, beginner routines, slow retinol, and air-con office days — then take a photo for a starter routine from the AI Coach.",
+      "Guides on oily, dry, and sensitive skin, clogged pores, marks and melasma, irritation after adapalene or BHA, sunscreen, beginner routines, slow retinol, and air-con office days — then take a photo for a starter routine from the AI Coach.",
     indexHeading: "Skincare guides for humid heat",
     indexSub:
-      "Nine reads for Vietnamese-climate skin: oil, dry, sensitive, acne, marks, SPF, a short routine, beginner retinol, and office air-con. Then take one photo for a starter routine — sign up after you see it.",
+      "Reads for Vietnamese-climate skin: oil, dry, sensitive, acne, clogged pores, marks, melasma, barrier irritation, SPF, a short routine, beginner retinol, and office air-con. Then take one photo for a starter routine — sign up after you see it.",
     ctaPhoto: "Take a photo, get a routine",
     ctaHint: "No account needed first. See the routine, then save it.",
     relatedHeading: "Keep reading",
@@ -93,6 +96,9 @@ const ARTICLES: Record<GuideSlug, Record<GuideLocale, GuideArticleCopy>> = {
   "da-kho": daKho,
   "da-nhay-cam": daNhayCam,
   "retinol-cho-nguoi-moi": retinolChoNguoiMoi,
+  "kich-ung-adapalene": kichUngAdapalene,
+  "tham-vs-nam": thamVsNam,
+  "mun-an": munAn,
 };
 
 /** First public ship of the four pillar guides. */
@@ -101,6 +107,8 @@ export const GUIDE_PILLAR_PUBLISHED = "2026-08-16";
 export const GUIDE_CONTENT_EXPANDED = "2026-09-05";
 /** Dry, sensitive, and beginner-retinol URLs (wave 2). */
 export const GUIDE_WAVE2_PUBLISHED = "2026-09-05";
+/** FAQ-style pages from real user question themes (wave 3). */
+export const GUIDE_WAVE3_PUBLISHED = "2026-09-06";
 
 const DATES: Record<GuideSlug, { datePublished: string; dateModified: string }> = {
   "da-dau": { datePublished: GUIDE_PILLAR_PUBLISHED, dateModified: GUIDE_CONTENT_EXPANDED },
@@ -133,18 +141,33 @@ const DATES: Record<GuideSlug, { datePublished: string; dateModified: string }> 
     datePublished: GUIDE_WAVE2_PUBLISHED,
     dateModified: GUIDE_WAVE2_PUBLISHED,
   },
+  "kich-ung-adapalene": {
+    datePublished: GUIDE_WAVE3_PUBLISHED,
+    dateModified: GUIDE_WAVE3_PUBLISHED,
+  },
+  "tham-vs-nam": {
+    datePublished: GUIDE_WAVE3_PUBLISHED,
+    dateModified: GUIDE_WAVE3_PUBLISHED,
+  },
+  "mun-an": {
+    datePublished: GUIDE_WAVE3_PUBLISHED,
+    dateModified: GUIDE_WAVE3_PUBLISHED,
+  },
 };
 
 const RELATED: Record<GuideSlug, GuideSlug[]> = {
-  "da-dau": ["da-dau-van-phong", "kem-chong-nang", "mun"],
-  mun: ["tham-mun", "da-dau", "da-nhay-cam"],
-  "kem-chong-nang": ["tham-mun", "da-dau", "da-dau-van-phong"],
+  "da-dau": ["da-dau-van-phong", "mun-an", "mun"],
+  mun: ["mun-an", "tham-mun", "kich-ung-adapalene"],
+  "kem-chong-nang": ["tham-vs-nam", "tham-mun", "da-dau"],
   "routine-cham-da": ["kem-chong-nang", "da-dau", "retinol-cho-nguoi-moi"],
-  "tham-mun": ["mun", "kem-chong-nang", "retinol-cho-nguoi-moi"],
+  "tham-mun": ["tham-vs-nam", "mun", "kem-chong-nang"],
   "da-dau-van-phong": ["da-dau", "kem-chong-nang", "da-kho"],
   "da-kho": ["da-dau-van-phong", "routine-cham-da", "da-nhay-cam"],
-  "da-nhay-cam": ["da-kho", "mun", "retinol-cho-nguoi-moi"],
-  "retinol-cho-nguoi-moi": ["routine-cham-da", "da-nhay-cam", "tham-mun"],
+  "da-nhay-cam": ["kich-ung-adapalene", "da-kho", "mun"],
+  "retinol-cho-nguoi-moi": ["kich-ung-adapalene", "da-nhay-cam", "tham-mun"],
+  "kich-ung-adapalene": ["da-nhay-cam", "mun-an", "retinol-cho-nguoi-moi"],
+  "tham-vs-nam": ["tham-mun", "kem-chong-nang", "kich-ung-adapalene"],
+  "mun-an": ["mun", "da-dau", "kich-ung-adapalene"],
 };
 
 export function isGuideSlug(value: string): value is GuideSlug {

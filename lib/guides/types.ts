@@ -8,6 +8,9 @@ export const GUIDE_SLUGS = [
   "da-kho",
   "da-nhay-cam",
   "retinol-cho-nguoi-moi",
+  "kich-ung-adapalene",
+  "tham-vs-nam",
+  "mun-an",
 ] as const;
 
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
@@ -26,7 +29,7 @@ export type GuideClusterDef = {
 /** Every article slug appears in exactly one cluster. */
 export const GUIDE_CLUSTERS: readonly GuideClusterDef[] = [
   { id: "skinTypes", slugs: ["da-dau", "da-kho", "da-nhay-cam"] },
-  { id: "concerns", slugs: ["mun", "tham-mun"] },
+  { id: "concerns", slugs: ["mun", "mun-an", "tham-mun", "tham-vs-nam", "kich-ung-adapalene"] },
   { id: "sunOffice", slugs: ["kem-chong-nang", "da-dau-van-phong"] },
   { id: "startHere", slugs: ["routine-cham-da", "retinol-cho-nguoi-moi"] },
 ] as const;

@@ -109,7 +109,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Chọn một để bắt đầu",
               paragraphs: [
-                "BHA thường dùng vùng dầu, mụn ẩn — vẫn có thể khô. Benzoyl peroxide thường nhắm mụn viêm; dễ khô và phai vải — nồng độ thấp, vùng nhỏ. Retinol không phải bước đầu khi da đỏ rát — xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi).",
+                "BHA thường dùng vùng dầu, mụn ẩn — vẫn có thể khô. Tần suất chậm và việc không nặn nằm ở [mụn ẩn](/guides/mun-an). Benzoyl peroxide thường nhắm mụn viêm; dễ khô và phai vải — nồng độ thấp, vùng nhỏ. Retinol không phải bước đầu khi da đỏ rát — xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi). Da đang rát sau acid: [dừng kích](/guides/kich-ung-adapalene).",
               ],
             },
             {
@@ -258,7 +258,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Start with one",
             paragraphs: [
-              "BHA is often used on oilier, clogged areas — it can still dry. Benzoyl peroxide is often aimed at inflamed spots; it dries and can bleach fabric — start low, small area. Retinol is not step one on stinging skin — see [retinol for beginners](/guides/retinol-cho-nguoi-moi).",
+              "BHA is often used on oilier, clogged areas — it can still dry. Slow frequency and not extracting sit in the [clogged-pore guide](/guides/mun-an). Benzoyl peroxide is often aimed at inflamed spots; it dries and can bleach fabric — start low, small area. Retinol is not step one on stinging skin — see [retinol for beginners](/guides/retinol-cho-nguoi-moi). Already stinging after an acid: [pause irritants](/guides/kich-ung-adapalene).",
             ],
           },
           {

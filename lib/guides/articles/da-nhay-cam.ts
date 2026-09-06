@@ -98,7 +98,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Hoạt chất để sau",
               paragraphs: [
-                "Retinol, AHA, BHA, vitamin C mạnh — không phải bước đầu khi da đang đỏ. Xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi) khi da đã êm vài tuần.",
+                "Retinol, AHA, BHA, vitamin C mạnh — không phải bước đầu khi da đang đỏ. Rát sau adapalene hoặc BHA: [dừng kích](/guides/kich-ung-adapalene). Xem [retinol cho người mới](/guides/retinol-cho-nguoi-moi) khi da đã êm vài tuần.",
                 "Đang có đơn từ bác sĩ: giữ giờ dặn. Đừng thêm tip mạng lên cùng vùng.",
               ],
             },
@@ -238,7 +238,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           {
             heading: "Actives wait",
             paragraphs: [
-              "Retinol, AHA, BHA, strong vitamin C — not step one on a red face. Read the [beginner retinol guide](/guides/retinol-cho-nguoi-moi) once skin has been calm for a few weeks.",
+              "Retinol, AHA, BHA, strong vitamin C — not step one on a red face. Sting after adapalene or BHA: [pause irritants](/guides/kich-ung-adapalene). Read the [beginner retinol guide](/guides/retinol-cho-nguoi-moi) once skin has been calm for a few weeks.",
               "Already on a prescription? Keep that schedule. Don’t add an internet tip on the same area.",
             ],
           },
