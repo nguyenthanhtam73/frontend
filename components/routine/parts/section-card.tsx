@@ -21,8 +21,11 @@ import {
 } from "@/lib/types/routine";
 import { cn } from "@/lib/utils";
 
+import { resolveStepDetails } from "@/lib/routine/step-details";
+
 import { useCanDragReorder } from "../hooks/use-can-drag-reorder";
 import { AutoGrowTextarea } from "./auto-grow-textarea";
+import { StepDetails, type StepDetailLabels } from "./step-details";
 import type { StepSection } from "../routine-helpers";
 
 export type SectionAlert = {
@@ -48,6 +51,7 @@ export type SectionLabels = {
   emptySectionHint: string;
   emptySectionBeginnerHint: string;
   categories: Record<RoutineCategory, string>;
+  details: StepDetailLabels;
 };
 
 const STEP_EXIT_MS = 220;
@@ -89,6 +93,10 @@ export function SectionCard({
   highlightEmptyTitles = false,
   sectionAlert,
   onEditLockedAttempt,
+  detailsExpandedDefault,
+  skinType,
+  locale,
+  cabinetByStepId,
 }: {
   section: StepSection;
   title: string;
@@ -108,6 +116,10 @@ export function SectionCard({
   highlightEmptyTitles?: boolean;
   sectionAlert?: SectionAlert | null;
   onEditLockedAttempt?: () => void;
+  detailsExpandedDefault: boolean;
+  skinType?: string | null;
+  locale: string;
+  cabinetByStepId?: Record<string, string>;
 }) {
   const canDrag = useCanDragReorder();
   const dragIdx = useRef<number | null>(null);
@@ -285,6 +297,10 @@ export function SectionCard({
                   onToggle={() => onToggle(step.id)}
                   labels={labels}
                   highlightEmptyTitle={highlightEmptyTitles && !step.title.trim()}
+                  detailsExpandedDefault={detailsExpandedDefault}
+                  skinType={skinType}
+                  locale={locale}
+                  productLabel={cabinetByStepId?.[step.id]}
                 />
                 </li>
               );
@@ -455,6 +471,10 @@ function StepRow({
   onToggle,
   labels,
   highlightEmptyTitle = false,
+  detailsExpandedDefault,
+  skinType,
+  locale,
+  productLabel,
 }: {
   section: StepSection;
   index: number;
@@ -471,12 +491,26 @@ function StepRow({
   onToggle: () => void;
   labels: SectionLabels;
   highlightEmptyTitle?: boolean;
+  detailsExpandedDefault: boolean;
+  skinType?: string | null;
+  locale: string;
+  productLabel?: string;
 }) {
   const [showNotes, setShowNotes] = useState(!!step.notes);
   const cat = useMemo(() => normalizeCategory(step.category), [step.category]);
   const locked = editLocked;
   const showReorder = !beginnerSimple && !locked;
   const showRemove = !locked;
+  const details = useMemo(
+    () =>
+      resolveStepDetails(step, {
+        period: section,
+        skinType,
+        locale,
+        productLabel,
+      }),
+    [step, section, skinType, locale, productLabel],
+  );
 
   return (
     <div className="space-y-2.5 p-3 sm:space-y-2 sm:p-3.5">
@@ -571,6 +605,14 @@ function StepRow({
                 />
               ) : null}
             </>
+          ) : null}
+          {details ? (
+            <StepDetails
+              details={details}
+              labels={labels.details}
+              defaultExpanded={detailsExpandedDefault}
+              testId={`routine-step-details-${section}-${index}`}
+            />
           ) : null}
         </div>
 

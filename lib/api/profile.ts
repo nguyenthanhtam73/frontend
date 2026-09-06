@@ -3,6 +3,8 @@ import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { authHeaders } from "@/lib/auth-token";
 import type { SkinProfileResponse } from "@/lib/types/profile";
 
+export const skinProfileQueryKey = ["profile", "skin"] as const;
+
 export type DeleteOnboardingDTO = {
   deleted_at: string;
 };

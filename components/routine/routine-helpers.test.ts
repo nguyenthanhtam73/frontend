@@ -5,6 +5,7 @@ import {
   cloneStepsForToday,
   overlayStepCompletions,
   routineSaveUnsavedHint,
+  stripStep,
   type LocalRoutine,
 } from "./routine-helpers";
 
@@ -69,6 +70,45 @@ describe("cloneStepsForToday", () => {
     assert.equal(cloned[0]?.title, "SPF");
     assert.equal(cloned[0]?.completed, false);
     assert.notEqual(cloned[0]?.id, "old");
+  });
+
+  it("includes how_to and dose in the API payload when present", () => {
+    const stripped = stripStep({
+      id: "m1",
+      title: "  Cleanser  ",
+      category: "cleanser",
+      how_to: "  Warm water → rinse.  ",
+      dose: " 1–2 pump ",
+      completed: false,
+    });
+    assert.equal(stripped.how_to, "Warm water → rinse.");
+    assert.equal(stripped.dose, "1–2 pump");
+    assert.equal(stripped.title, "Cleanser");
+  });
+
+  it("omits empty how_to/dose so older backends stay unchanged", () => {
+    const stripped = stripStep({
+      id: "m1",
+      title: "Cleanser",
+      completed: false,
+    });
+    assert.equal("how_to" in stripped, false);
+    assert.equal("dose" in stripped, false);
+  });
+
+  it("copies how_to and dose when cloning a history day", () => {
+    const cloned = cloneStepsForToday([
+      {
+        id: "old",
+        title: "Sữa rửa mặt",
+        category: "cleanser",
+        how_to: "Nước ấm → sữa rửa → 60 giây.",
+        dose: "1–2 pump",
+        completed: true,
+      },
+    ]);
+    assert.equal(cloned[0]?.how_to, "Nước ấm → sữa rửa → 60 giây.");
+    assert.equal(cloned[0]?.dose, "1–2 pump");
   });
 });
 
