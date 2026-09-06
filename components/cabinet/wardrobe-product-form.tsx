@@ -187,14 +187,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
     );
 
   if (!hasAuth) {
-    return (
-      <Card className="opacity-80">
-        <CardContent className="space-y-2 p-5 sm:p-6">
-          <h2 className="text-lg font-semibold tracking-tight">{t("addTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("needAuth")}</p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   if (wardrobeGate.isLoading) {

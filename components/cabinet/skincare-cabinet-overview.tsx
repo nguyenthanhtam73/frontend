@@ -30,7 +30,7 @@ export function SkincareCabinetOverview() {
       </div>
 
       <WardrobeProvider>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 lg:[&:not(:has(#wardrobe-add-form))]:grid-cols-1">
           <WardrobeProductList
             onAddClick={() => {
               document.getElementById("wardrobe-add-form")?.scrollIntoView({

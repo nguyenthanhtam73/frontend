@@ -4,12 +4,14 @@ import { Check, Loader2, Plus, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { useCabinetEmptyIntent } from "@/components/cabinet/use-cabinet-empty-intent";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
+import { shouldShowCabinetSetupStarter } from "@/lib/cabinet/empty-intent";
 import { isSameShelfName } from "@/lib/cabinet/normalize-product-name";
 import { buildStarterShelfCandidates } from "@/lib/cabinet/starter-shelf";
 import { Feature } from "@/lib/premium/features";
@@ -24,6 +26,7 @@ export function CabinetStarterPack() {
   const ob = useOnboardingStore();
   const toast = useToast();
   const { hasAuth, products, createProduct } = useWardrobe();
+  const emptyIntent = useCabinetEmptyIntent();
   const wardrobeGate = useFeatureGate(Feature.WardrobeFull);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -33,8 +36,14 @@ export function CabinetStarterPack() {
   );
 
   if (!ob.completedAt) {
+    if (!shouldShowCabinetSetupStarter(emptyIntent)) {
+      return null;
+    }
     return (
-      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card
+        className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
+        data-testid="cabinet-setup-starter"
+      >
         <CardContent className="space-y-3 p-6">
           <p className="text-sm font-medium">{t("noStarterTitle")}</p>
           <p className="text-sm text-muted-foreground">{t("noStarter")}</p>
