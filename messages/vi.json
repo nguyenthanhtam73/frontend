@@ -1363,6 +1363,7 @@
       "freezesLabel": "Lượt bảo vệ còn lại",
       "historyLabel": "{n} ngày gần nhất",
       "historyHint": "Từ khi bạn bắt đầu dùng DaDiary",
+      "historyHintEmpty": "Các ngày sẽ hiện sau lần check-in đầu",
       "historyAria": "Các ngày check-in gần đây",
       "today": "Hôm nay",
       "endedHint": "Chuỗi ngày đã kết thúc sau {date}. Check-in để bắt đầu lại.",
@@ -1391,8 +1392,9 @@
       },
       "freeze": {
         "title": "Bảo vệ chuỗi ngày",
-        "contextIdle": "Bỏ lỡ 1 ngày mà còn lượt bảo vệ, check-in ngày sau sẽ tự cứu — hoặc dùng trước khi biết sẽ nghỉ.",
+        "contextIdle": "Check-in để bắt đầu chuỗi ngày. Sau đó, 1 lượt bảo vệ có thể cứu một ngày bỏ lỡ.",
         "contextManual": "Dùng bảo vệ khi biết sẽ bỏ lỡ — phủ hôm nay hoặc ngày mai.",
+        "contextAtRisk": "Check-in hôm nay để giữ chuỗi ngày, hoặc dùng 1 lượt bảo vệ nếu bạn sẽ bỏ lỡ.",
         "contextAutoSave": "Check-in hôm nay, hệ thống sẽ tự dùng 1 lượt bảo vệ để giữ chuỗi ngày.",
         "remaining": "Còn {n} lần bảo vệ",
         "exhausted": "Đã hết lượt bảo vệ",
@@ -1432,6 +1434,7 @@
         "list": {
           "title": "Cột mốc thành tích",
           "sub": "Các mốc streak bạn đã đạt — Premium mở danh sách đầy đủ.",
+          "subBeforeCheckIn": "Các mốc streak bạn có thể hướng tới — check-in hôm nay để bắt đầu.",
           "ariaLabel": "Danh sách cột mốc streak",
           "viewFull": "Xem danh sách đầy đủ",
           "showBasic": "Chỉ xem mốc cơ bản",

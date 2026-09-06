@@ -1363,6 +1363,7 @@
       "freezesLabel": "Streak freezes left",
       "historyLabel": "Last {n} days",
       "historyHint": "Since you started DaDiary",
+      "historyHintEmpty": "Days fill in after your first check-in",
       "historyAria": "Recent check-in days",
       "today": "Today",
       "endedHint": "Streak ended after {date}. Check in to start again.",
@@ -1391,8 +1392,9 @@
       },
       "freeze": {
         "title": "Streak protection",
-        "contextIdle": "Miss one day with a freeze left and we'll save your streak on the next check-in — or use one ahead of time.",
+        "contextIdle": "Check in to start a streak. After that, a freeze can cover one missed day.",
         "contextManual": "Use a freeze when you know you'll skip — covers today or tomorrow.",
+        "contextAtRisk": "Check in today to keep your streak, or use a freeze if you'll miss today.",
         "contextAutoSave": "Check in today and we'll automatically use 1 freeze to save your streak.",
         "remaining": "{n} freezes left",
         "exhausted": "No freezes left",
@@ -1432,6 +1434,7 @@
         "list": {
           "title": "Streak milestones",
           "sub": "Milestones you've earned — Premium unlocks the full list.",
+          "subBeforeCheckIn": "Streak goals you can work toward — check in today to start.",
           "ariaLabel": "Streak milestone list",
           "viewFull": "View full list",
           "showBasic": "Show basic only",
