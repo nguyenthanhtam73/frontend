@@ -24,6 +24,10 @@ import {
   streakDateKey,
   streakFlameTier,
 } from "@/lib/streak/history";
+import {
+  streakHistoryHintKey,
+  streakProtectionContextKey,
+} from "@/lib/streak/protection-copy";
 import type { StreakDTO, StreakDayCell, StreakStatus } from "@/lib/types/streak";
 import { cn } from "@/lib/utils";
 
@@ -306,7 +310,9 @@ function StreakCardBody({
             <p className={cn("text-[11px] font-semibold uppercase tracking-wider", tone.label)}>
               {t("historyLabel", { n: historyDays })}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t("historyHint")}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {t(streakHistoryHintKey(streak))}
+            </p>
           </div>
           <ol className="flex justify-between gap-1 sm:gap-1.5" aria-label={t("historyAria")}>
             {history.map((cell) => (
@@ -350,25 +356,23 @@ function freezeContextLine(
     blockReason,
     pendingAuto,
     isProtected,
+    atRisk,
   }: {
     allowFreeze: boolean;
     blockReason: ReturnType<typeof freezeBlockReason>;
     pendingAuto: boolean;
     isProtected: boolean;
+    atRisk: boolean;
   },
 ): string {
-  if (isProtected) {
-    return ""; // activeUntil line handles it
-  }
-  if (pendingAuto) return t("freeze.contextAutoSave");
-  if (blockReason === "bridged_catch_up") return t("freeze.block.bridged_catch_up");
-  if (blockReason === "catch_up_required") return t("freeze.block.catch_up_required");
-  if (blockReason === "soft_expired") return t("freeze.block.soft_expired");
-  if (blockReason === "no_freezes") return t("freeze.exhausted");
-  if (blockReason === "already_protected") return t("freeze.block.already_protected");
-  if (blockReason === "no_streak") return t("freeze.block.no_streak");
-  if (allowFreeze) return t("freeze.contextManual");
-  return t("freeze.contextIdle");
+  const key = streakProtectionContextKey({
+    allowFreeze,
+    blockReason,
+    pendingAuto,
+    isProtected,
+    atRisk,
+  });
+  return key ? t(key) : "";
 }
 
 function StreakProtectionSection({
@@ -394,6 +398,7 @@ function StreakProtectionSection({
     blockReason,
     pendingAuto,
     isProtected,
+    atRisk: streak.is_at_risk && streak.current_streak > 0,
   });
   const untilLabel =
     isProtected && streak.protected_until

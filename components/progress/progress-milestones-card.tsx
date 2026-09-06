@@ -18,6 +18,7 @@ import {
   STREAK_MILESTONES,
   type StreakMilestone,
 } from "@/lib/streak/milestones";
+import { streakMilestoneSubKey } from "@/lib/streak/protection-copy";
 import { cn } from "@/lib/utils";
 
 type ProgressMilestonesCardProps = {
@@ -90,7 +91,7 @@ export function ProgressMilestonesCard({ className }: ProgressMilestonesCardProp
             <h3 className="text-sm font-semibold tracking-tight">{t("list.title")}</h3>
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
-            {t("list.sub")}
+            {t(streakMilestoneSubKey(streak))}
           </p>
         </div>
 
