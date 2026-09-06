@@ -20,5 +20,8 @@ node scripts/write-guide-svgs.mjs
 | `da-kho` | `hero.svg` `layers.svg` `climate.svg` |
 | `da-nhay-cam` | `hero.svg` `minimal.svg` `patch.svg` |
 | `retinol-cho-nguoi-moi` | `calendar.svg` `sandwich.svg` `daytime.svg` |
+| `kich-ung-adapalene` | `hero.svg` `pause.svg` `flags.svg` |
+| `tham-vs-nam` | `hero.svg` `sun.svg` `weekly.svg` |
+| `mun-an` | `hero.svg` `slow.svg` `calendar.svg` |
 
 Open Graph cards stay at `/og/guides/{slug}.png`.

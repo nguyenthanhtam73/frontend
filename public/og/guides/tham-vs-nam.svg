@@ -2,12 +2,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="DaDiary">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#E8F5F3"/>
+      <stop offset="0%" stop-color="#F1E8F4"/>
       <stop offset="55%" stop-color="#9DD7D4"/>
       <stop offset="100%" stop-color="#F4C7CE"/>
     </linearGradient>
     <linearGradient id="tile" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#2A8F88"/>
+      <stop offset="0%" stop-color="#7A5A8A"/>
       <stop offset="100%" stop-color="#E8A4B0"/>
     </linearGradient>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
@@ -27,9 +27,9 @@
   <text x="248" y="188" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
     font-size="28" font-weight="700" fill="#0F2E2C">DaDiary</text>
   <text x="248" y="226" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
-    font-size="20" font-weight="600" fill="#2A8F88">Da nóng ẩm · Việt Nam</text>
+    font-size="20" font-weight="600" fill="#7A5A8A">Thâm và nám</text>
   <text x="128" y="340" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
-    font-size="48" font-weight="700" fill="#0F2E2C">Đọc bài, rồi chụp ảnh</text>
+    font-size="48" font-weight="700" fill="#0F2E2C">Không tự chẩn, chống nắng</text>
   <text x="128" y="400" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
     font-size="24" font-weight="500" fill="#2A5552">Hướng dẫn chăm da · chụp ảnh nhận routine</text>
   <text x="128" y="456" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"

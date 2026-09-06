@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 import { Link } from "@/i18n/navigation";
 
-const GUIDE_LINK = /\[([^\]]+)\]\((\/guides\/[a-z0-9-]+)\)/g;
+const GUIDE_LINK = /\[([^\]]+)\]\((\/(?:guides\/[a-z0-9-]+|check-in|onboarding))\)/g;
 
-/** Renders ` [label](/guides/slug) ` in catalog copy as in-article links. */
+/** Renders catalog markdown links: `/guides/slug`, `/check-in`, `/onboarding`. */
 export function GuideRichText({ text }: { text: string }) {
   const nodes: ReactNode[] = [];
   let last = 0;
@@ -12,7 +12,7 @@ export function GuideRichText({ text }: { text: string }) {
   for (const match of text.matchAll(GUIDE_LINK)) {
     const start = match.index ?? 0;
     if (start > last) nodes.push(text.slice(last, start));
-    const href = match[2] as "/guides" | `/guides/${string}`;
+    const href = match[2] as "/guides" | `/guides/${string}` | "/check-in" | "/onboarding";
     nodes.push(
       <Link
         key={`${href}-${key++}`}

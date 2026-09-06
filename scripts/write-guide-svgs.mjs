@@ -349,7 +349,100 @@ write(
 write(
   "retinol-cho-nguoi-moi",
   "daytime",
-  `${t(400, 64, "Sáng hôm sau: SPF", 26)}
+  `  ${t(400, 64, "Sáng hôm sau: SPF", 26)}
   ${card(70, 120, 300, 260, "#F8F0DC")}${t(220, 230, "SPF", 28, "#C48A2A")}${t(220, 280, "Hai ngón tay", 18)}
   ${card(430, 120, 300, 260, "#D8F0EE")}${t(580, 230, "Mũ", 28, "#2A8F88")}${t(580, 280, "Không thêm acid", 18)}`,
+);
+
+// --- kich-ung-adapalene ---
+write(
+  "kich-ung-adapalene",
+  "hero",
+  `${t(400, 64, "Rát cả ngày: dừng kích", 26)}
+  <ellipse cx="260" cy="240" rx="88" ry="108" fill="#F7D4C8"/>
+  <ellipse cx="260" cy="250" rx="58" ry="40" fill="#F4C7CE" opacity="0.7"/>
+  <rect x="430" y="155" width="70" height="150" rx="22" fill="#C5D5D4"/>
+  <rect x="530" y="170" width="70" height="150" rx="22" fill="#C5D5D4"/>
+  <path d="M415 175 L510 315" stroke="#C45C74" stroke-width="10" stroke-linecap="round"/>
+  <path d="M515 185 L610 320" stroke="#C45C74" stroke-width="10" stroke-linecap="round"/>
+  ${t(400, 400, "Adapalene · BHA — để sang một bên", 18, "#C45C74")}`,
+);
+write(
+  "kich-ung-adapalene",
+  "pause",
+  `${t(400, 64, "Ba việc khi da đang kêu", 26)}
+  ${card(50, 110, 220, 280, "#D8F0EE")}${t(160, 210, "Rửa dịu", 22, "#2A8F88")}${t(160, 260, "Không hạt", 16, "#2A5552", 500)}
+  ${card(290, 110, 220, 280, "#E8F2EC")}${t(400, 210, "Dưỡng", 22, "#3B7A5A")}${t(400, 260, "Mỏng, ít mùi", 16, "#2A5552", 500)}
+  ${card(530, 110, 220, 280, "#F8F0DC")}${t(640, 210, "SPF", 22, "#C48A2A")}${t(640, 260, "Không thêm acid", 16, "#2A5552", 500)}`,
+);
+write(
+  "kich-ung-adapalene",
+  "flags",
+  `${t(400, 70, "Khi nào gặp bác sĩ", 26)}
+  ${card(140, 120, 520, 260, "#F8E8EC")}
+  <rect x="360" y="160" width="80" height="80" rx="16" fill="#C45C74"/>
+  <rect x="390" y="172" width="20" height="56" rx="4" fill="#FFFFFF"/>
+  <rect x="372" y="190" width="56" height="20" rx="4" fill="#FFFFFF"/>
+  ${t(400, 290, "Sưng · mủ · ban lan · mắt sưng", 20)}
+  ${t(400, 330, "Đừng tự tăng acid", 18, "#C45C74", 600)}`,
+);
+
+// --- tham-vs-nam ---
+write(
+  "tham-vs-nam",
+  "hero",
+  `${t(400, 64, "Vết nhỏ ≠ mảng rộng", 26)}
+  ${card(70, 110, 300, 280, "#F1E8F4")}<ellipse cx="220" cy="230" rx="70" ry="90" fill="#E8D0C4"/><ellipse cx="220" cy="250" rx="18" ry="12" fill="#A67C52" opacity="0.55"/>${t(220, 360, "Chỗ từng mụn", 20)}
+  ${card(430, 110, 300, 280, "#E7F0F5")}<ellipse cx="580" cy="230" rx="70" ry="90" fill="#E8D0C4"/><ellipse cx="555" cy="235" rx="36" ry="22" fill="#A67C52" opacity="0.4"/>${t(580, 360, "Mảng (hỏi bác sĩ)", 18)}`,
+);
+write(
+  "tham-vs-nam",
+  "sun",
+  `${t(400, 64, "Việc chung: nắng", 26)}
+  ${card(40, 120, 230, 260, "#F8F0DC")}${t(155, 240, "SPF", 28, "#C48A2A")}${t(155, 290, "Mỗi sáng", 18)}
+  ${card(285, 120, 230, 260, "#D8F0EE")}${t(400, 240, "Mũ", 28, "#2A8F88")}${t(400, 290, "Bóng râm", 18)}
+  ${card(530, 120, 230, 260, "#E7F0F5")}${t(645, 240, "Cửa sổ", 24, "#3D6B8A")}${t(645, 290, "Vẫn có UV", 18)}`,
+);
+write(
+  "tham-vs-nam",
+  "weekly",
+  `${t(400, 64, "So ảnh theo tuần", 26)}
+  ${card(90, 120, 280, 260, "#D8F0EE")}${t(230, 230, "Tuần 1", 24)}${t(230, 280, "Cùng cửa sổ", 18, "#2A5552", 500)}
+  ${card(430, 120, 280, 260, "#E7F3EA")}${t(570, 230, "Tuần 3–4", 24)}${t(570, 280, "Cùng góc", 18, "#2A5552", 500)}
+  ${t(400, 420, "Không phải trước-sau trị nám", 16, "#2A5552", 500)}`,
+);
+
+// --- mun-an ---
+write(
+  "mun-an",
+  "hero",
+  `${t(400, 70, "Tay xuống. Đừng nặn hạt.", 26)}
+  <circle cx="400" cy="230" r="92" fill="#F7D4C8"/>
+  <circle cx="368" cy="215" r="8" fill="#0F2E2C"/>
+  <circle cx="432" cy="215" r="8" fill="#0F2E2C"/>
+  <circle cx="385" cy="255" r="5" fill="#C4A090"/>
+  <circle cx="415" cy="262" r="4" fill="#C4A090"/>
+  <path d="M250 180 L300 210" stroke="#C45C74" stroke-width="8" stroke-linecap="round"/>
+  <path d="M250 210 L300 180" stroke="#C45C74" stroke-width="8" stroke-linecap="round"/>
+  ${t(400, 380, "Hạt nhỏ · không kẹp · không kim", 20, "#2A5552", 600)}`,
+);
+write(
+  "mun-an",
+  "slow",
+  `${t(400, 64, "Nền trước, BHA sau", 26)}
+  ${card(50, 110, 220, 280, "#D8F0EE")}${t(160, 200, "1", 48, "#2A8F88")}${t(160, 260, "Rửa dịu", 22)}${t(160, 296, "Không sạch bóng", 16, "#2A5552", 500)}
+  ${card(290, 110, 220, 280, "#E7F3EA")}${t(400, 200, "2", 48, "#3B7A5A")}${t(400, 260, "Gel mỏng", 22)}${t(400, 296, "Khi da hơi ẩm", 16, "#2A5552", 500)}
+  ${card(530, 110, 220, 280, "#F8F0DC")}${t(640, 200, "3", 48, "#C48A2A")}${t(640, 260, "SPF sáng", 22)}${t(640, 296, "Rồi mới nghĩ BHA", 16, "#2A5552", 500)}`,
+);
+write(
+  "mun-an",
+  "calendar",
+  `${t(400, 58, "Hai đêm BHA / tuần đã là bắt đầu", 22)}
+  ${[0, 1, 2, 3, 4, 5, 6]
+    .map((d) => {
+      const x = 70 + d * 96;
+      const active = d === 1 || d === 4;
+      return `${card(x, 130, 84, 220, active ? "#F8E8EC" : "#E7F3EA")}${t(x + 42, 240, active ? "B" : "·", 32, active ? "#C45C74" : "#2A8F88")}${t(x + 42, 300, active ? "BHA" : "Dưỡng", 14, "#2A5552", 600)}`;
+    })
+    .join("")}`,
 );

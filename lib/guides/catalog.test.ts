@@ -36,12 +36,13 @@ import {
 } from "./schema";
 import { countGuideWords } from "./word-count";
 
-const NEW_SLUGS = ["da-kho", "da-nhay-cam", "retinol-cho-nguoi-moi"] as const;
+const WAVE2_SLUGS = ["da-kho", "da-nhay-cam", "retinol-cho-nguoi-moi"] as const;
+const WAVE3_SLUGS = ["kich-ung-adapalene", "tham-vs-nam", "mun-an"] as const;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const OG_DIR = path.join(ROOT, "public/og/guides");
 
 describe("guide catalog", () => {
-  it("exposes nine slugs and matching public paths", () => {
+  it("exposes twelve slugs and matching public paths", () => {
     assert.deepEqual([...GUIDE_SLUGS], [
       "da-dau",
       "mun",
@@ -52,6 +53,9 @@ describe("guide catalog", () => {
       "da-kho",
       "da-nhay-cam",
       "retinol-cho-nguoi-moi",
+      "kich-ung-adapalene",
+      "tham-vs-nam",
+      "mun-an",
     ]);
     assert.deepEqual(guidePublicPaths(), [
       "/guides",
@@ -65,6 +69,9 @@ describe("guide catalog", () => {
       "/guides/da-kho",
       "/guides/da-nhay-cam",
       "/guides/retinol-cho-nguoi-moi",
+      "/guides/kich-ung-adapalene",
+      "/guides/tham-vs-nam",
+      "/guides/mun-an",
     ]);
     assert.equal(isGuideSlug("da-nong-am"), false);
     for (const path of guidePublicPaths()) {
@@ -118,8 +125,8 @@ describe("guide catalog", () => {
         }
       }
     }
-    assert.equal(listGuideArticles("vi").length, 9);
-    assert.equal(listGuideArticles("en").length, 9);
+    assert.equal(listGuideArticles("vi").length, 12);
+    assert.equal(listGuideArticles("en").length, 12);
   });
 
   it("keeps Vietnamese pillar and new guides in the useful-length band", () => {
@@ -139,8 +146,8 @@ describe("guide catalog", () => {
     }
   });
 
-  it("publishes the three new high-intent URLs in both locales", () => {
-    for (const slug of NEW_SLUGS) {
+  it("publishes the three wave-2 high-intent URLs in both locales", () => {
+    for (const slug of WAVE2_SLUGS) {
       const vi = getGuideArticle(slug, "vi");
       const en = getGuideArticle(slug, "en");
       assert.equal(vi.path, `/guides/${slug}`);
@@ -178,10 +185,24 @@ describe("guide catalog", () => {
 
     const indexLd = guidesIndexCollectionJsonLd("vi", chrome, listGuideArticles("vi"));
     assert.equal(indexLd["@type"], "CollectionPage");
-    assert.equal(indexLd.mainEntity.numberOfItems, 9);
+    assert.equal(indexLd.mainEntity.numberOfItems, 12);
   });
 
-  it("clusters all nine guides once on the climate hub", () => {
+  it("publishes the three FAQ-theme URLs in both locales", () => {
+    for (const slug of WAVE3_SLUGS) {
+      const vi = getGuideArticle(slug, "vi");
+      const en = getGuideArticle(slug, "en");
+      assert.equal(vi.path, `/guides/${slug}`);
+      assert.notEqual(vi.title, en.title);
+      assert.ok(vi.datePublished <= vi.dateModified);
+      assert.match(vi.lede, /Beta/i);
+      assert.match(en.lede, /Beta/i);
+      assert.match(JSON.stringify(vi), /\]\(\/(check-in|onboarding)\)/);
+      assert.match(JSON.stringify(en), /\]\(\/(check-in|onboarding)\)/);
+    }
+  });
+
+  it("clusters all twelve guides once on the climate hub", () => {
     const clustered = clusteredSlugSet();
     assert.equal(clustered.size, GUIDE_SLUGS.length);
     for (const slug of GUIDE_SLUGS) {
@@ -189,7 +210,7 @@ describe("guide catalog", () => {
     }
     assert.equal(
       GUIDE_CLUSTERS.reduce((n, cluster) => n + cluster.slugs.length, 0),
-      9,
+      12,
     );
 
     for (const locale of ["vi", "en"] as const) {
@@ -202,7 +223,7 @@ describe("guide catalog", () => {
       assert.ok(hub.faqs.length >= 3);
       assert.equal(
         hub.clusters.reduce((n, cluster) => n + cluster.articles.length, 0),
-        9,
+        12,
       );
       assert.equal(hub.ogImage.url, climateHubOgPath());
       assert.equal(existsSync(path.join(OG_DIR, "da-nong-am.png")), true);
@@ -212,7 +233,7 @@ describe("guide catalog", () => {
       const hubFaq = climateHubFaqJsonLd(hub);
       const hubCrumbs = climateHubBreadcrumbJsonLd(locale, guideChrome(locale));
       assert.equal(hubLd["@type"], "CollectionPage");
-      assert.equal(hubLd.mainEntity.numberOfItems, 9);
+      assert.equal(hubLd.mainEntity.numberOfItems, 12);
       assert.equal(hubFaq.mainEntity.length, hub.faqs.length);
       assert.equal(hubCrumbs.itemListElement.length, 3);
       assert.ok(String(hubCrumbs.itemListElement[2]?.item).includes("/guides/da-nong-am"));
