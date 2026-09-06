@@ -1,5 +1,8 @@
 import { hasSkippedOnboarding } from "@/lib/onboarding/skip";
 
+/** Keep in sync with `GUEST_CLAIM_RETURN_PATH` — avoid importing the claim module. */
+const COACH_WELCOME_PATH = "/onboarding/coach-welcome";
+
 type AuthUserLike = {
   id?: string;
   onboarding_completed?: boolean;
@@ -51,6 +54,21 @@ export function isOnboardingGatedPath(pathname: string): boolean {
   if (p === "/cabinet" || p.startsWith("/cabinet/")) return true;
   if (p === "/wardrobe" || p.startsWith("/wardrobe/")) return true;
   return false;
+}
+
+/**
+ * Where to send the user after a successful register (non-checkout).
+ * Claimed guest trial → coach-welcome (check-in is the primary CTA there).
+ * Completed onboarding → /check-in. Incomplete → /onboarding (gate).
+ */
+export function postRegisterDestination(input: {
+  claimed: boolean;
+  hadClaimableGuest: boolean;
+  user: AuthUserLike;
+  returnPath: string | null | undefined;
+}): string {
+  if (input.claimed || input.hadClaimableGuest) return COACH_WELCOME_PATH;
+  return resolveAuthReturnDestination(input.user, input.returnPath);
 }
 
 /** Paths that must never be redirected away by the onboarding gate. */

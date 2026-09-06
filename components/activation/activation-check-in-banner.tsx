@@ -16,6 +16,11 @@ import {
   writeReminderDismissedDay,
   type CheckInReminderKind,
 } from "@/lib/activation/check-in-reminder";
+import {
+  hasNeverCheckedIn,
+  isFirstCheckInLaterToday,
+  writeFirstCheckInLaterToday,
+} from "@/lib/activation/first-check-in";
 import { FUNNEL_EVENTS, trackFunnelEvent, trackFunnelEventOnce } from "@/lib/analytics/funnel";
 import { getAccessToken } from "@/lib/auth-token";
 import { useCheckInReminder } from "@/lib/hooks/use-check-in-reminder";
@@ -49,12 +54,15 @@ export function ActivationCheckInBanner() {
   const reminderQuery = useCheckInReminder();
   const [hydrated, setHydrated] = useState(false);
   const [dismissedToday, setDismissedToday] = useState(false);
+  const [laterToday, setLaterToday] = useState(false);
 
   const today = streakDateKey();
+  const neverCheckedIn = hasNeverCheckedIn(streakQuery.data);
 
   useEffect(() => {
     const id = user?.id ?? "";
     setDismissedToday(id ? isReminderDismissedToday(id, today) : false);
+    setLaterToday(id ? isFirstCheckInLaterToday(id, today) : false);
     setHydrated(true);
   }, [today, user?.id]);
 
@@ -92,12 +100,14 @@ export function ActivationCheckInBanner() {
     [clientKind, reminderQuery.data, reminderStatus],
   );
 
+  const uiDismissed = neverCheckedIn ? laterToday : dismissedToday;
+
   const visible = useMemo(
     () =>
       hydrated &&
       shouldShowDailyCheckInReminder({
         signedIn,
-        dismissedToday,
+        dismissedToday: uiDismissed,
         onFunnelPath: isOnboardingFunnelPath(pathname),
         onCheckInPath: isCheckInPath(pathname),
         onCoachWelcomePath: isCoachWelcomePath(pathname),
@@ -106,20 +116,27 @@ export function ActivationCheckInBanner() {
         kind,
       }),
     [
-      dismissedToday,
       hydrated,
       kind,
       pathname,
       reminderStatus,
       signedIn,
       streakStatus,
+      uiDismissed,
     ],
   );
 
   const dismiss = useCallback(() => {
-    if (user?.id) writeReminderDismissedDay(user.id, today);
+    if (!user?.id) return;
+    if (neverCheckedIn) {
+      // UI snooze only — do not write reminder-dismiss (D0 stays due).
+      writeFirstCheckInLaterToday(user.id, today);
+      setLaterToday(true);
+      return;
+    }
+    writeReminderDismissedDay(user.id, today);
     setDismissedToday(true);
-  }, [today, user?.id]);
+  }, [neverCheckedIn, today, user?.id]);
 
   useEffect(() => {
     if (!visible || kind !== "d1") return;
@@ -163,17 +180,30 @@ export function ActivationCheckInBanner() {
             <CalendarCheck className="size-3.5 shrink-0" aria-hidden />
             {t("cta")}
           </ButtonLink>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-10 text-muted-foreground"
-            aria-label={t("dismiss")}
-            data-testid="activation-check-in-banner-dismiss"
-            onClick={dismiss}
-          >
-            <X className="size-4" aria-hidden />
-          </Button>
+          {neverCheckedIn ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="min-h-10 text-xs text-muted-foreground"
+              data-testid="activation-check-in-banner-dismiss"
+              onClick={dismiss}
+            >
+              {t("laterToday")}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-10 text-muted-foreground"
+              aria-label={t("dismiss")}
+              data-testid="activation-check-in-banner-dismiss"
+              onClick={dismiss}
+            >
+              <X className="size-4" aria-hidden />
+            </Button>
+          )}
         </div>
       </div>
     </div>

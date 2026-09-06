@@ -26,6 +26,8 @@ describe("funnel analytics", () => {
     assert.equal(FUNNEL_EVENTS.firstCheckIn, "activation_first_checkin");
     assert.equal(FUNNEL_EVENTS.d1CheckIn, "activation_d1_checkin");
     assert.equal(FUNNEL_EVENTS.d1ReminderShown, "activation_d1_reminder_shown");
+    assert.equal(FUNNEL_EVENTS.pushOptIn, "activation_push_opt_in");
+    assert.equal(FUNNEL_EVENTS.pushDismissed, "activation_push_dismissed");
     assert.equal(FUNNEL_EVENTS.paywallView, "paywall_view");
     assert.equal(FUNNEL_EVENTS.checkoutConfirm, "checkout_confirm");
     assert.equal(FUNNEL_EVENTS.paid, "paid");

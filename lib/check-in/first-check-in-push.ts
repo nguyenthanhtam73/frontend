@@ -16,6 +16,35 @@ export function isFirstCheckInStreak(streak: {
   return first === last;
 }
 
+export type ActivationPushGate = {
+  supportOk: boolean;
+  permission: NotificationPermission | "unknown";
+  localPushEnabled: boolean;
+  nudgeStatus: PushNudgeStatus | null;
+};
+
+/** Shared “already decided / cannot prompt” gates for activation + fallback. */
+export function canOfferActivationPush(input: ActivationPushGate): boolean {
+  if (!input.supportOk) return false;
+  if (input.permission === "denied") return false;
+  if (input.localPushEnabled) return false;
+  if (input.nudgeStatus === "dismissed" || input.nudgeStatus === "enabled") {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Pre-check-in Web Push CTA (register / coach-welcome / /check-in).
+ * Does not require a completed first check-in.
+ */
+export function shouldPromptActivationPush(
+  input: ActivationPushGate & { signedIn: boolean },
+): boolean {
+  if (!input.signedIn) return false;
+  return canOfferActivationPush(input);
+}
+
 export function shouldPromptFirstCheckInPush(input: {
   checkInCompleted: boolean;
   isFirstCheckIn: boolean;
@@ -25,13 +54,7 @@ export function shouldPromptFirstCheckInPush(input: {
   nudgeStatus: PushNudgeStatus | null;
 }): boolean {
   if (!input.checkInCompleted || !input.isFirstCheckIn) return false;
-  if (!input.supportOk) return false;
-  if (input.permission === "denied") return false;
-  if (input.localPushEnabled) return false;
-  if (input.nudgeStatus === "dismissed" || input.nudgeStatus === "enabled") {
-    return false;
-  }
-  return true;
+  return canOfferActivationPush(input);
 }
 
 function readMap(): NudgeMap {

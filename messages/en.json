@@ -517,7 +517,16 @@
         "body": "You checked in yesterday. One more today keeps the streak going."
       },
       "cta": "Check in (~30s)",
-      "dismiss": "Later"
+      "dismiss": "Later",
+      "laterToday": "Later today"
+    },
+    "push": {
+      "title": "Turn on an evening nudge so you don't forget to check in?",
+      "body": "A light evening reminder — turn it off anytime in Settings. You don't need to check in first.",
+      "enable": "Enable notifications",
+      "enabling": "Enabling…",
+      "later": "Later",
+      "error": "Couldn't enable. Try again, or open Settings."
     },
     "streak": {
       "ariaLabel": "Check-in streak",
@@ -894,8 +903,10 @@
       "body": "One photo plus how your skin feels is enough. A quick check-in opens your streak today.",
       "bodySaved": "Your routine is on your account. Do the first check-in now to open your streak — don't leave it for tomorrow.",
       "cta": "Check in (~30s)",
-      "skip": "See the routine first",
-      "skipHint": "You can check in later, but doing it now is easier to remember."
+      "skip": "Later today",
+      "skipHint": "We'll still nudge you this evening — your reminder stays on. You can peek at the routine first.",
+      "laterToday": "Later today",
+      "laterTodayHint": "We'll still nudge you this evening — your reminder stays on. You can peek at the routine first."
     }
   },
   "premium": {

@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 
 import {
   hasNeverCheckedIn,
+  laterTodayFromMap,
   shouldShowActivationBanner,
   shouldShowCheckInFirstVisit,
   shouldShowFirstCheckInPrompt,
+  shouldShowNeverCheckedInBar,
 } from "./first-check-in";
 
 describe("hasNeverCheckedIn", () => {
@@ -34,7 +36,7 @@ describe("shouldShowFirstCheckInPrompt", () => {
     signedIn: true,
     isGuest: false,
     pendingAccountClaim: false,
-    dismissed: false,
+    laterToday: false,
     awaiting: false,
     streakStatus: "ready" as const,
     neverCheckedIn: true,
@@ -44,7 +46,7 @@ describe("shouldShowFirstCheckInPrompt", () => {
     assert.equal(shouldShowFirstCheckInPrompt(readyNever), true);
   });
 
-  it("hides for guests, pending claim, or dismissed skip", () => {
+  it("hides for guests, pending claim, or later-today snooze", () => {
     assert.equal(
       shouldShowFirstCheckInPrompt({ ...readyNever, isGuest: true }),
       false,
@@ -58,7 +60,7 @@ describe("shouldShowFirstCheckInPrompt", () => {
       false,
     );
     assert.equal(
-      shouldShowFirstCheckInPrompt({ ...readyNever, dismissed: true }),
+      shouldShowFirstCheckInPrompt({ ...readyNever, laterToday: true }),
       false,
     );
   });
@@ -95,6 +97,41 @@ describe("shouldShowFirstCheckInPrompt", () => {
   it("hides once the user already has a check-in", () => {
     assert.equal(
       shouldShowFirstCheckInPrompt({ ...readyNever, neverCheckedIn: false }),
+      false,
+    );
+  });
+});
+
+describe("laterTodayFromMap", () => {
+  it("reads a YYYY-MM-DD snooze day and ignores junk", () => {
+    assert.equal(
+      laterTodayFromMap({ u1: "2026-09-06" }, "u1"),
+      "2026-09-06",
+    );
+    assert.equal(laterTodayFromMap({ u1: "nope" }, "u1"), null);
+    assert.equal(laterTodayFromMap(null, "u1"), null);
+  });
+});
+
+describe("shouldShowNeverCheckedInBar", () => {
+  const base = {
+    signedIn: true,
+    laterToday: false,
+    onFunnelPath: false,
+    onCheckInPath: false,
+    onCoachWelcomePath: false,
+    streakStatus: "ready" as const,
+    neverCheckedIn: true,
+  };
+
+  it("stays up until first check-in or later-today", () => {
+    assert.equal(shouldShowNeverCheckedInBar(base), true);
+    assert.equal(
+      shouldShowNeverCheckedInBar({ ...base, laterToday: true }),
+      false,
+    );
+    assert.equal(
+      shouldShowNeverCheckedInBar({ ...base, neverCheckedIn: false }),
       false,
     );
   });
