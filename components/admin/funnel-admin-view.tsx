@@ -12,7 +12,8 @@ import {
   adminFunnelLoadError,
   d1Ratio,
   d1Ratio7d,
-  isPaywallUntracked,
+  formatPaywallCard,
+  resolvePaywallViews7d,
 } from "@/lib/admin/funnel-stats";
 import {
   adminFunnelStatsQueryKey,
@@ -173,7 +174,7 @@ export function FunnelAdminView() {
 
       <section className="space-y-3">
         <SectionHeading title={t("groups.paid")} />
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <MetricCard
             label={t("cards.paid7d")}
             value={data ? String(data.paid_orders_7d) : "—"}
@@ -181,9 +182,15 @@ export function FunnelAdminView() {
             loading={isLoading}
           />
           <MetricCard
-            label={t("cards.paywall")}
-            value={data && !isPaywallUntracked(data.paywall_views) ? String(data.paywall_views) : t("paywallNa")}
-            hint={t("cards.paywallHint")}
+            label={t("cards.paywall1d")}
+            value={data ? formatPaywallCard(data.paywall_views_1d, t("paywallNa")) : "—"}
+            hint={t("cards.paywall1dHint")}
+            loading={isLoading}
+          />
+          <MetricCard
+            label={t("cards.paywall7d")}
+            value={data ? formatPaywallCard(resolvePaywallViews7d(data), t("paywallNa")) : "—"}
+            hint={t("cards.paywall7dHint")}
             loading={isLoading}
           />
         </div>

@@ -6,7 +6,9 @@ import {
   d1Ratio,
   d1Ratio7d,
   formatEligibleRatio,
+  formatPaywallCard,
   isPaywallUntracked,
+  resolvePaywallViews7d,
 } from "./funnel-stats";
 
 describe("admin funnel-stats display helpers", () => {
@@ -28,6 +30,20 @@ describe("admin funnel-stats display helpers", () => {
     assert.equal(isPaywallUntracked(undefined), true);
     assert.equal(isPaywallUntracked(0), false);
     assert.equal(isPaywallUntracked(12), false);
+    assert.equal(formatPaywallCard(null, "N/A"), "N/A");
+    assert.equal(formatPaywallCard(undefined, "N/A"), "N/A");
+    assert.equal(formatPaywallCard(0, "N/A"), "0");
+    assert.equal(formatPaywallCard(12, "N/A"), "12");
+  });
+
+  it("prefers paywall_views_7d and falls back to the legacy field", () => {
+    assert.equal(resolvePaywallViews7d({ paywall_views_7d: 9, paywall_views: 9 }), 9);
+    assert.equal(resolvePaywallViews7d({ paywall_views_7d: 0, paywall_views: 0 }), 0);
+    assert.equal(resolvePaywallViews7d({ paywall_views: null }), null);
+    assert.equal(
+      resolvePaywallViews7d({ paywall_views_7d: undefined, paywall_views: 3 }),
+      3,
+    );
   });
 
   it("maps 401/403 fetch errors for the admin gate", () => {

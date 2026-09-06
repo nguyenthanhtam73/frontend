@@ -21,6 +21,7 @@
  * | paid               | paid (+ Meta Purchase via trackMetaPurchaseOnce)   |
  */
 
+import { persistPaywallView } from "@/lib/api/paywall-view";
 import { trackMetaCustomEvent, trackMetaEvent, trackMetaPurchaseOnce } from "@/lib/meta-pixel";
 
 export const FUNNEL_EVENTS = {
@@ -51,7 +52,7 @@ export type FunnelEventPayload = {
 
 export type CheckInFunnelKind = "first" | "d1";
 
-export type PaywallSurface = "upsell_banner" | "pricing";
+export type PaywallSurface = "upsell_banner" | "pricing" | "upgrade";
 
 declare global {
   interface Window {
@@ -192,6 +193,31 @@ export function trackFunnelEventOncePerUser(
   const id = userId.trim();
   if (!id) return trackFunnelEventOnce(name, params, "anon", defaultLocalStore());
   return trackFunnelEventOnce(name, params, id, defaultLocalStore());
+}
+
+/**
+ * Meta / dataLayer first. Persist to the backend only when this tab has not
+ * already recorded the same surface+scope (same once-flag as the pixel).
+ */
+export function reportPaywallView(
+  input: {
+    surface: PaywallSurface;
+    feature?: string | null;
+    recommendedPlan?: string | null;
+  },
+  scope = "",
+): boolean {
+  if (typeof window === "undefined") return false;
+  const params = paywallViewParams(input);
+  const first = trackFunnelEventOnce(FUNNEL_EVENTS.paywallView, params, scope);
+  if (first) {
+    void persistPaywallView({
+      surface: input.surface,
+      feature: typeof params.feature === "string" ? params.feature : undefined,
+      recommendedPlan: input.recommendedPlan ?? undefined,
+    });
+  }
+  return first;
 }
 
 /**

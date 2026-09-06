@@ -11,6 +11,22 @@ export function isPaywallUntracked(views: number | null | undefined): boolean {
   return views == null;
 }
 
+/** Prefer the dedicated 7d field; fall back to the legacy single count. */
+export function resolvePaywallViews7d(
+  stats: Pick<AdminFunnelStats, "paywall_views" | "paywall_views_7d">,
+): number | null {
+  if (!isPaywallUntracked(stats.paywall_views_7d)) return stats.paywall_views_7d as number;
+  if (!isPaywallUntracked(stats.paywall_views)) return stats.paywall_views as number;
+  return null;
+}
+
+export function formatPaywallCard(
+  views: number | null | undefined,
+  untrackedLabel: string,
+): string {
+  return isPaywallUntracked(views) ? untrackedLabel : String(views);
+}
+
 export function adminFunnelLoadError(error: unknown): AdminFunnelLoadError {
   if (error instanceof Error) {
     if (error.message === "auth") return "auth";

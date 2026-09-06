@@ -8,6 +8,7 @@ import {
   funnelOnceKey,
   isFunnelEventName,
   paywallViewParams,
+  reportPaywallView,
   resolveCheckInFunnelKinds,
 } from "./funnel";
 
@@ -101,6 +102,76 @@ describe("paywallViewParams", () => {
         recommended_plan: "premium",
       },
     );
+    assert.deepEqual(
+      paywallViewParams({ surface: "upgrade", feature: "  " }),
+      { surface: "upgrade", feature: "generic" },
+    );
+  });
+});
+
+describe("reportPaywallView", () => {
+  it("does not persist on SSR (no window)", () => {
+    assert.equal(typeof window, "undefined");
+    assert.equal(reportPaywallView({ surface: "pricing", feature: "generic" }), false);
+  });
+
+  it("posts ingest only the first time a scope is claimed", async () => {
+    const g = globalThis as typeof globalThis & {
+      window?: { dataLayer?: Record<string, unknown>[]; __dadiaryFunnel?: unknown[] };
+      sessionStorage?: Storage;
+    };
+    const mem = new Map<string, string>();
+    const store = {
+      get length() {
+        return mem.size;
+      },
+      clear() {
+        mem.clear();
+      },
+      getItem(key: string) {
+        return mem.get(key) ?? null;
+      },
+      key() {
+        return null;
+      },
+      removeItem(key: string) {
+        mem.delete(key);
+      },
+      setItem(key: string, value: string) {
+        mem.set(key, value);
+      },
+    } as Storage;
+    const originalFetch = globalThis.fetch;
+    const urls: string[] = [];
+    g.window = { dataLayer: [], __dadiaryFunnel: [] };
+    g.sessionStorage = store;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      urls.push(String(input));
+      return new Response(
+        JSON.stringify({ success: true, data: { id: "1", logged_at: "t" } }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      );
+    }) as typeof fetch;
+
+    try {
+      assert.equal(
+        reportPaywallView({ surface: "pricing", feature: "generic" }, "pricing:generic"),
+        true,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      assert.equal(urls.length, 1);
+      assert.match(urls[0]!, /\/api\/v1\/analytics\/paywall-view$/);
+      assert.equal(
+        reportPaywallView({ surface: "pricing", feature: "generic" }, "pricing:generic"),
+        false,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      assert.equal(urls.length, 1);
+    } finally {
+      globalThis.fetch = originalFetch;
+      delete g.window;
+      delete g.sessionStorage;
+    }
   });
 });
 

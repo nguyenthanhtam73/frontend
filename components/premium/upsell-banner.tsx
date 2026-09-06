@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { PremiumUpsellBanner } from "@/components/premium/premium-upsell-banner";
-import { FUNNEL_EVENTS, paywallViewParams, trackFunnelEventOnce } from "@/lib/analytics/funnel";
+import { reportPaywallView } from "@/lib/analytics/funnel";
 import { Feature, type FeatureId } from "@/lib/premium/features";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import {
@@ -152,13 +152,12 @@ function resolveCopy(
 
 function PaywallViewTracker({ feature }: { feature?: FeatureId }) {
   useEffect(() => {
-    trackFunnelEventOnce(
-      FUNNEL_EVENTS.paywallView,
-      paywallViewParams({
+    reportPaywallView(
+      {
         surface: "upsell_banner",
         feature,
         recommendedPlan: recommendedPlanForFeature(feature),
-      }),
+      },
       `upsell:${feature ?? "generic"}`,
     );
   }, [feature]);

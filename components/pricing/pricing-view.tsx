@@ -32,7 +32,7 @@ import {
   readUpsellFeatureFromSearch,
   recommendedPlanForFeature,
 } from "@/lib/premium/upsell-href";
-import { FUNNEL_EVENTS, paywallViewParams, trackFunnelEventOnce } from "@/lib/analytics/funnel";
+import { reportPaywallView } from "@/lib/analytics/funnel";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** Client shell: billing interval state + plan cards + compare + FAQ. */
@@ -73,15 +73,14 @@ function PricingViewInner() {
   const highlightPlan = recommendedPlanForFeature(upsellFrom ?? undefined);
 
   useEffect(() => {
-    if (!upsellFrom) return;
-    trackFunnelEventOnce(
-      FUNNEL_EVENTS.paywallView,
-      paywallViewParams({
+    const feature = upsellFrom ?? "generic";
+    reportPaywallView(
+      {
         surface: "pricing",
-        feature: upsellFrom,
+        feature,
         recommendedPlan: highlightPlan,
-      }),
-      `pricing:${upsellFrom}`,
+      },
+      `pricing:${feature}`,
     );
   }, [highlightPlan, upsellFrom]);
 

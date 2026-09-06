@@ -2688,7 +2688,11 @@
       "paid7d": "Paid orders",
       "paid7dHint": "Last 7 days",
       "paywall": "Pricing page views",
-      "paywallHint": "The paywall is only on the device and is not saved on the server"
+      "paywallHint": "The paywall is only on the device and is not saved on the server",
+      "paywall1d": "Paywall views",
+      "paywall1dHint": "Last 24 hours",
+      "paywall7d": "Paywall views",
+      "paywall7dHint": "Last 7 days"
     }
   },
   "adminPayments": {

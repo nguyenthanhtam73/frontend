@@ -2688,7 +2688,11 @@
       "paid7d": "Đơn đã thanh toán",
       "paid7dHint": "7 ngày vừa qua",
       "paywall": "Xem bảng giá",
-      "paywallHint": "Trang thanh toán chỉ xem trên máy, chưa lưu trên máy chủ"
+      "paywallHint": "Trang thanh toán chỉ xem trên máy, chưa lưu trên máy chủ",
+      "paywall1d": "Xem bảng giá",
+      "paywall1dHint": "24 giờ vừa qua",
+      "paywall7d": "Xem bảng giá",
+      "paywall7dHint": "7 ngày vừa qua"
     }
   },
   "adminPayments": {
