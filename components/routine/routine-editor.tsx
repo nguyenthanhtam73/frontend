@@ -27,7 +27,13 @@ import { SkillModeBar } from "./parts/skill-mode-bar";
 import { SuggestionPreview } from "./parts/suggestion-preview";
 import { ValidationPanel, getVisibleValidationIssues } from "./parts/validation-panel";
 import { AiSuggestLoading } from "./ai-suggest-loading";
-import { countCompletion, localId, resolveRoutineSource, validateRoutine } from "./routine-helpers";
+import {
+  countCompletion,
+  localId,
+  resolveRoutineSource,
+  routineSaveUnsavedHint,
+  validateRoutine,
+} from "./routine-helpers";
 import { useRoutine } from "./use-routine";
 import { useRoutineSuggest, type SuggestError } from "./use-routine-suggest";
 import { useDirtyBeforeUnload } from "./hooks/use-dirty-beforeunload";
@@ -848,7 +854,10 @@ export function RoutineEditor() {
           autosaving: t("autoSaving"),
           autosavingDirty: t("autosavingDirty"),
           saved: t("saveSuccess"),
-          unsavedHint: t("unsavedHint"),
+          unsavedHint: routineSaveUnsavedHint(r.routine.saved, {
+            saveToday: t("saveTodayHint"),
+            structural: t("unsavedHint"),
+          }),
           quotaHint: saveBarQuotaHint,
         }}
       />

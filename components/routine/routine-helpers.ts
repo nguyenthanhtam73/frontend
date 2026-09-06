@@ -245,6 +245,17 @@ export function isFreshlyEmpty(routine: LocalRoutine): boolean {
   );
 }
 
+/**
+ * Sticky save-bar hint: first lock-in is “save today” (template / carry-over),
+ * later dirty edits use the structural-unsaved copy.
+ */
+export function routineSaveUnsavedHint(
+  savedToday: boolean,
+  labels: { saveToday: string; structural: string },
+): string {
+  return savedToday ? labels.structural : labels.saveToday;
+}
+
 export type RoutineSourceKind = "saved_today" | "carried" | "onboarding_seed" | "ai_suggested";
 
 export type RoutineSourceInfo = {
