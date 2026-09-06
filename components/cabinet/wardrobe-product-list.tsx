@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Droplets, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { AlertCircle, Camera, Droplets, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
@@ -11,11 +11,14 @@ import {
   WardrobeCategoryFilter,
   type WardrobeCategoryFilterValue,
 } from "@/components/cabinet/wardrobe-category-filter";
+import { useCabinetEmptyIntent } from "@/components/cabinet/use-cabinet-empty-intent";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
+import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
 import { getPaoHint } from "@/lib/cabinet/pao";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
@@ -25,6 +28,7 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
   const t = useTranslations("cabinet");
   const formatter = useFormatter();
   const { hasAuth, products, isLoading, isError, error, refetch, isFetching } = useWardrobe();
+  const emptyIntent = useCabinetEmptyIntent();
   const { canWardrobeManage } = usePlanTier();
   const [editProduct, setEditProduct] = useState<WardrobeProductDTO | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<WardrobeProductDTO | null>(null);
@@ -48,12 +52,18 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
 
   if (!hasAuth) {
     return (
-      <Card className="border-dashed border-primary/25">
+      <Card className="border-dashed border-primary/25" data-testid="cabinet-empty-guest">
         <CardContent className="space-y-3 p-5 sm:p-6">
-          <p className="text-sm text-muted-foreground">{t("needAuth")}</p>
-          <Link href="/login" className={buttonVariants({ size: "sm", className: "min-h-11" })}>
+          <p className="text-base font-semibold tracking-tight">{t("guestTitle")}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{t("guestBody")}</p>
+          <ButtonLink
+            href={buildAuthHrefWithNext("/login", "/cabinet")}
+            size="sm"
+            className="min-h-11"
+            data-testid="cabinet-empty-sign-in"
+          >
             {t("signIn")}
-          </Link>
+          </ButtonLink>
         </CardContent>
       </Card>
     );
@@ -124,27 +134,54 @@ export function WardrobeProductList({ onAddClick }: { onAddClick?: () => void })
           ) : null}
 
           {products.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-gradient-to-b from-muted/30 to-transparent px-4 py-10 text-center">
-              <div className="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Droplets className="size-6" aria-hidden />
-              </div>
-              <p className="text-base font-semibold tracking-tight">{t("emptyTitle")}</p>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                <span className="hidden sm:inline">{t("emptyBodyDesktop")}</span>
-                <span className="sm:hidden">{t("emptyBodyMobile")}</span>
-              </p>
-              {onAddClick ? (
-                <Button
-                  type="button"
+            emptyIntent === "checkInFirst" ? (
+              <div
+                className="rounded-xl border border-dashed border-primary/25 bg-gradient-to-b from-primary/8 to-transparent px-4 py-10 text-center"
+                data-testid="cabinet-empty-check-in"
+              >
+                <div className="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Camera className="size-6" aria-hidden />
+                </div>
+                <p className="text-base font-semibold tracking-tight">{t("emptyCheckInTitle")}</p>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  {t("emptyCheckInBody")}
+                </p>
+                <ButtonLink
+                  href="/check-in"
                   size="sm"
                   className="mt-4 min-h-11"
-                  onClick={onAddClick}
+                  data-testid="cabinet-empty-check-in-cta"
                 >
-                  <Plus className="size-4" aria-hidden />
-                  {t("emptyCta")}
-                </Button>
-              ) : null}
-            </div>
+                  <Camera className="size-4" aria-hidden />
+                  {t("emptyCheckInCta")}
+                </ButtonLink>
+              </div>
+            ) : (
+              <div
+                className="rounded-xl border border-dashed border-border bg-gradient-to-b from-muted/30 to-transparent px-4 py-10 text-center"
+                data-testid="cabinet-empty-add"
+              >
+                <div className="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Droplets className="size-6" aria-hidden />
+                </div>
+                <p className="text-base font-semibold tracking-tight">{t("emptyTitle")}</p>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                  <span className="hidden sm:inline">{t("emptyBodyDesktop")}</span>
+                  <span className="sm:hidden">{t("emptyBodyMobile")}</span>
+                </p>
+                {onAddClick && emptyIntent !== "pending" ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mt-4 min-h-11"
+                    onClick={onAddClick}
+                  >
+                    <Plus className="size-4" aria-hidden />
+                    {t("emptyCta")}
+                  </Button>
+                ) : null}
+              </div>
+            )
           ) : filteredProducts.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center">
               <p className="text-sm font-medium">{t("filterEmptyTitle")}</p>
