@@ -213,9 +213,7 @@ function RegisterPageInner() {
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
-                if (claimed || json.data?.user?.onboarding_completed) {
-                  markAwaitingFirstCheckIn(json.data?.user?.id);
-                }
+                markAwaitingFirstCheckIn(json.data?.user?.id);
                 const nextPath = checkoutIntent
                   ? buildPricingCheckoutHref(checkoutIntent)
                   : postRegisterDestination({
