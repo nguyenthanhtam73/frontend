@@ -992,7 +992,7 @@
     "monthlyHint": "Chuyển sang Thanh toán năm để tiết kiệm khoảng {percent}%.",
     "trustLine": "Thanh toán qua SePay — gói kích hoạt tự động sau khi trả thành công.",
     "trustLineBeta": "Beta: chưa thu tiền. Free đủ dùng; Premium do team cấp khi bạn được mời.",
-    "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay (cổng thử trong Beta). Sau khi trả thành công, gói Premium được kích hoạt tự động.",
+    "legalNote": "Giá hiển thị bằng VND. Thanh toán qua SePay. Sau khi trả thành công, gói Premium được kích hoạt tự động.",
     "legalNoteBeta": "Giá tham khảo bằng VND. Trong Beta chưa mở thanh toán trên trang này — Premium chỉ cấp khi team mời.",
     "summary": {
       "eyebrow": "Gói bạn đang chọn",

@@ -992,7 +992,7 @@
     "monthlyHint": "Switch to yearly billing to save about {percent}%.",
     "trustLine": "Pay via SePay — your plan activates automatically after a successful payment.",
     "trustLineBeta": "Beta: no charges. Free is fully usable; Premium is granted by the team.",
-    "legalNote": "Prices shown in VND. Payments run through SePay (test checkout during Beta). After a successful payment, Premium activates automatically.",
+    "legalNote": "Prices shown in VND. Payments run through SePay. After a successful payment, Premium activates automatically.",
     "legalNoteBeta": "Prices in VND are for reference. Payments are not open on this page in Beta — Premium comes from the team if you're invited.",
     "summary": {
       "eyebrow": "Plan you picked",
