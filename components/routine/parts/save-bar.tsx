@@ -16,6 +16,9 @@ export type SaveBarStatus =
 /**
  * Mobile: fixed bottom save bar (safe-area inset) so it cannot overlay AM/PM
  * steps or empty-state CTAs. Desktop: in-flow card.
+ *
+ * Quota hint sits under the status line in a separate column — never as a
+ * flex-1 sibling of the CTAs (that crushed it into a vertical letter column).
  */
 export function SaveBar({
   saving,
@@ -66,24 +69,30 @@ export function SaveBar({
         status === "saved" && "border-emerald-500/30 bg-emerald-500/5",
       )}
     >
-      <StatusHint
-        status={status}
-        hint={hint}
-        autosaveDirty={autosaveDirty}
-        labels={labels}
-      />
-      {labels.quotaHint ? (
-        <p className="hidden text-pretty text-xs leading-relaxed text-muted-foreground lg:order-first lg:block lg:flex-1 lg:text-[11px] lg:leading-snug">
-          {labels.quotaHint}
-        </p>
-      ) : null}
+      {/* Status + quota stack in their own column so quota never shares the CTA flex row. */}
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <StatusHint
+          status={status}
+          hint={hint}
+          autosaveDirty={autosaveDirty}
+          labels={labels}
+        />
+        {labels.quotaHint ? (
+          <p
+            data-testid="routine-save-quota"
+            className="truncate text-xs leading-snug text-muted-foreground lg:text-[11px]"
+          >
+            {labels.quotaHint}
+          </p>
+        ) : null}
+      </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
+      <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-auto min-h-11 whitespace-normal px-2 text-sm leading-tight sm:min-h-9 sm:whitespace-nowrap"
+          className="h-auto min-h-11 whitespace-normal px-2 text-sm leading-tight sm:whitespace-nowrap"
           onClick={onReset}
           disabled={saving || autoSaving}
         >
@@ -95,7 +104,7 @@ export function SaveBar({
           size="default"
           data-testid="routine-save"
           className={cn(
-            "h-auto min-h-11 whitespace-normal px-2 text-sm leading-tight transition-all duration-300 sm:min-h-9 sm:whitespace-nowrap",
+            "h-auto min-h-11 whitespace-normal px-2 text-sm leading-tight transition-all duration-300 sm:whitespace-nowrap",
             hasUnsaved &&
               canSave &&
               !saving &&
