@@ -1,4 +1,5 @@
 import { apiBaseUrl } from "@/lib/api";
+import { apiPost } from "@/lib/api-client";
 import { getAccessToken } from "@/lib/auth-token";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
@@ -61,4 +62,15 @@ export async function fetchSkinCheck(
 
 export function isAnalysisSettled(status: string | undefined): boolean {
   return status === "completed" || status === "failed";
+}
+
+/** POST /api/v1/skin-checks/:id/reanalyze — owner-only; poll GET until settled. */
+export async function reanalyzeSkinCheck(
+  id: string,
+): Promise<CreateSkinCheckResponseDTO> {
+  return apiPost<CreateSkinCheckResponseDTO>(
+    `/api/v1/skin-checks/${encodeURIComponent(id)}/reanalyze`,
+    undefined,
+    { toastOnError: false },
+  );
 }

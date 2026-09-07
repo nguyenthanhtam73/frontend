@@ -15,6 +15,7 @@ import { getAccessToken } from "@/lib/auth-token";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type {
+  ProgressEntryDTO,
   ProgressRangeKey,
   ProgressTimelineDTO,
 } from "@/lib/types/progress";
@@ -172,6 +173,19 @@ export function ProgressTimeline() {
   const [highlightedEntryId, setHighlightedEntryId] = useState<string | null>(null);
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const patchEntry = useCallback((next: ProgressEntryDTO) => {
+    setData((prev) => {
+      if (!prev) return prev;
+      let changed = false;
+      const entries = prev.entries.map((e) => {
+        if (e.id !== next.id) return e;
+        changed = true;
+        return next;
+      });
+      return changed ? { ...prev, entries } : prev;
+    });
+  }, []);
+
   useEffect(() => {
     // Clear any pending highlight timer on unmount.
     return () => {
@@ -267,6 +281,7 @@ export function ProgressTimeline() {
                   key={entry.id}
                   entry={entry}
                   highlighted={entry.id === highlightedEntryId}
+                  onEntryChange={patchEntry}
                 />
               ))}
             </div>

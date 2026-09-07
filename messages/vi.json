@@ -1572,7 +1572,15 @@
       "untitled": "Nhật ký",
       "processing": "Bạn đồng hành đang đọc…",
       "failed": "Đọc không thành công — thử ghi nhật ký lại nhé.",
-      "photoCount": "{n} ảnh"
+      "photoCount": "{n} ảnh",
+      "reanalyzeCta": "Soi lại da",
+      "reanalyzeBusy": "Đang soi lại…",
+      "reanalyzeNoPhotos": "Không soi lại được vì nhật ký này chưa có ảnh.",
+      "reanalyzeDailyLimit": "Bạn đã soi lại da hôm nay. Mai soi tiếp nhé.",
+      "reanalyzeRateLimit": "Bạn đang thao tác quá nhanh, thử lại sau.",
+      "reanalyzeTimeout": "Bạn đồng hành đang soi lâu hơn dự kiến — thử lại sau nhé.",
+      "reanalyzeNetwork": "Mạng chưa ổn — thử soi lại sau giây lát nhé.",
+      "reanalyzeError": "Không soi lại được lúc này. Thử lại sau nhé."
     },
     "empty": {
       "cta": "Check-in hôm nay",

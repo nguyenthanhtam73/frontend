@@ -1572,7 +1572,15 @@
       "untitled": "Check-in",
       "processing": "Buddy is reading…",
       "failed": "Couldn't read the entry — try checking in again.",
-      "photoCount": "{n} photos"
+      "photoCount": "{n} photos",
+      "reanalyzeCta": "Re-scan skin",
+      "reanalyzeBusy": "Re-scanning…",
+      "reanalyzeNoPhotos": "Can't re-scan — this check-in has no photos.",
+      "reanalyzeDailyLimit": "This check-in was already re-scanned today. Try again tomorrow.",
+      "reanalyzeRateLimit": "You're going too fast — please wait a moment and try again.",
+      "reanalyzeTimeout": "Buddy is taking longer than usual — try again in a bit.",
+      "reanalyzeNetwork": "Network hiccup — try re-scanning in a moment.",
+      "reanalyzeError": "Couldn't re-scan right now. Please try again."
     },
     "empty": {
       "cta": "Check in today",
