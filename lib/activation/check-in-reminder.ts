@@ -107,16 +107,23 @@ export function kindFromServerCheckInReminder(
  * The API does not return `keep` (day 2+ is `kind=none`). Preserve a client
  * `keep` so streak-continue copy still shows when the server says D0/D1 is
  * not due.
+ *
+ * Server `due` is only the 2-day email/push window. Never-checked-in users
+ * still need the in-app CTA after D1 — keep the client d0/d1 kind then.
  */
 export function resolvePreferredCheckInReminderKind(input: {
   reminderStatus: ReminderQueryStatus;
   serverData: unknown;
   clientKind: CheckInReminderKind | null;
+  neverCheckedIn?: boolean;
 }): CheckInReminderKind | null {
   if (input.reminderStatus === "ready") {
     const mapped = kindFromServerCheckInReminder(input.serverData);
     if (mapped === undefined) return input.clientKind;
     if (mapped === "d0" || mapped === "d1") return mapped;
+    if (input.neverCheckedIn && (input.clientKind === "d0" || input.clientKind === "d1")) {
+      return input.clientKind;
+    }
     return input.clientKind === "keep" ? "keep" : null;
   }
   return input.clientKind;

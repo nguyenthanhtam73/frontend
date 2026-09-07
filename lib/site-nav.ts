@@ -29,6 +29,12 @@ export function isOnboardingFunnelPath(pathname: string) {
   );
 }
 
+/** Login/register only — the wizard itself can still show a first-check-in CTA. */
+export function isAuthEntryPath(pathname: string) {
+  const p = appPath(pathname);
+  return p === "/login" || p === "/register";
+}
+
 /**
  * Conversion-critical screens where the install banner collides with CTAs
  * or the sticky billing bar. Update toasts still show.

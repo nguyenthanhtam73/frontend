@@ -135,6 +135,21 @@ describe("shouldShowNeverCheckedInBar", () => {
       false,
     );
   });
+
+  it("stays hidden on check-in and coach-welcome, but can show on the wizard", () => {
+    assert.equal(
+      shouldShowNeverCheckedInBar({ ...base, onCheckInPath: true }),
+      false,
+    );
+    assert.equal(
+      shouldShowNeverCheckedInBar({ ...base, onCoachWelcomePath: true }),
+      false,
+    );
+    assert.equal(
+      shouldShowNeverCheckedInBar({ ...base, onFunnelPath: false }),
+      true,
+    );
+  });
 });
 
 describe("shouldShowActivationBanner", () => {

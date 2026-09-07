@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   hasMobileBottomChrome,
   hidesPwaInstallBanner,
+  isAuthEntryPath,
   isOnboardingFunnelPath,
   normalizePath,
 } from "./site-nav";
@@ -22,6 +23,15 @@ describe("site-nav funnel helpers", () => {
     assert.equal(isOnboardingFunnelPath("/login"), true);
     assert.equal(isOnboardingFunnelPath("/check-in"), false);
     assert.equal(isOnboardingFunnelPath("/"), false);
+  });
+
+  it("treats only login/register as auth-entry (wizard can still show check-in CTA)", () => {
+    assert.equal(isAuthEntryPath("/login"), true);
+    assert.equal(isAuthEntryPath("/register"), true);
+    assert.equal(isAuthEntryPath("/en/login"), true);
+    assert.equal(isAuthEntryPath("/onboarding"), false);
+    assert.equal(isAuthEntryPath("/onboarding/coach-welcome"), false);
+    assert.equal(isAuthEntryPath("/check-in"), false);
   });
 
   it("keeps coach-welcome in mobile bottom chrome", () => {
