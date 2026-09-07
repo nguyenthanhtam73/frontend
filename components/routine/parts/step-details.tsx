@@ -75,14 +75,14 @@ export function StepDetails({
           </div>
           <p
             data-testid={testId ? `${testId}-why` : undefined}
-            className="text-pretty text-sm leading-relaxed text-foreground/90 break-words [overflow-wrap:anywhere] sm:text-xs"
+            className="w-full text-pretty text-sm leading-relaxed text-foreground/90 break-words [overflow-wrap:anywhere] sm:text-xs"
           >
             <span className="font-semibold text-foreground/80">{labels.why}: </span>
             {details.why}
           </p>
           <p
             data-testid={testId ? `${testId}-howto` : undefined}
-            className="text-pretty text-sm leading-relaxed text-muted-foreground break-words [overflow-wrap:anywhere] sm:text-xs"
+            className="w-full text-pretty text-sm leading-relaxed text-muted-foreground break-words [overflow-wrap:anywhere] sm:text-xs"
           >
             <span className="sr-only">{labels.howTo}: </span>
             {details.how_to}

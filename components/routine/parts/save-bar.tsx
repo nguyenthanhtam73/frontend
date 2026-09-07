@@ -57,7 +57,7 @@ export function SaveBar({
     <div
       data-testid="routine-save-bar"
       className={cn(
-        "z-20 flex min-w-0 flex-col gap-2.5 border-t bg-background px-4 py-3",
+        "z-20 flex min-w-0 flex-col gap-2 border-t bg-background px-4 py-2.5",
         "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:bg-background/95 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-lg:backdrop-blur-md",
         "sm:px-6 lg:static lg:z-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4 lg:shadow-none",
         status === "unsaved"
@@ -73,7 +73,7 @@ export function SaveBar({
         labels={labels}
       />
       {labels.quotaHint ? (
-        <p className="text-pretty text-xs leading-relaxed text-muted-foreground lg:order-first lg:flex-1 lg:text-[11px] lg:leading-snug">
+        <p className="hidden text-pretty text-xs leading-relaxed text-muted-foreground lg:order-first lg:block lg:flex-1 lg:text-[11px] lg:leading-snug">
           {labels.quotaHint}
         </p>
       ) : null}
@@ -146,7 +146,7 @@ function StatusHint({
     <p
       data-testid="routine-save-hint"
       className={cn(
-        "flex min-h-[1.25rem] items-start text-pretty text-sm leading-relaxed break-words [overflow-wrap:anywhere] transition-colors duration-200 sm:items-center sm:leading-snug",
+        "flex min-h-[1.25rem] items-start text-pretty text-xs leading-snug break-words [overflow-wrap:anywhere] transition-colors duration-200 sm:items-center sm:text-sm sm:leading-snug",
         status === "autosaving" && "font-medium text-primary",
         status === "manual-saving" && "font-medium text-primary",
         status === "saved" && "font-medium text-emerald-700 dark:text-emerald-300",

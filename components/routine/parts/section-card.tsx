@@ -350,7 +350,7 @@ function SectionEmptyState({
       }}
       aria-disabled={editLocked}
       className={cn(
-        "group flex w-full min-h-[10.5rem] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-3 py-6 text-center transition-all duration-200 active:scale-[0.99] sm:min-h-[9rem] sm:px-4 sm:py-8",
+        "group flex w-full min-h-11 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-3 py-5 text-center transition-all duration-200 active:scale-[0.99] sm:min-h-[9rem] sm:gap-3 sm:px-4 sm:py-8",
         editLocked
           ? "cursor-not-allowed border-border bg-muted/30 opacity-60"
           : "border-primary/25 bg-linear-to-b hover:border-primary/45 hover:shadow-md active:border-primary/50",
@@ -359,7 +359,7 @@ function SectionEmptyState({
     >
       <span
         className={cn(
-          "inline-flex size-14 shrink-0 items-center justify-center rounded-2xl bg-background/90 shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 group-active:scale-95",
+          "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl bg-background/90 shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:size-14",
           accent === "am" ? "ring-amber-400/40" : "ring-indigo-400/40",
         )}
       >

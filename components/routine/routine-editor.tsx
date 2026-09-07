@@ -393,7 +393,10 @@ export function RoutineEditor() {
     return <RoutineEditorSkeleton />;
   }
 
-  const showSaveBar = !r.routine.saved || r.dirty || r.saving || savedFlash;
+  const showSaveBar =
+    r.saving ||
+    savedFlash ||
+    ((r.dirty || !r.routine.saved) && hasEditorContent);
 
   return (
     <div
@@ -401,7 +404,7 @@ export function RoutineEditor() {
       className={cn(
         "space-y-4 sm:space-y-5 lg:pb-0",
         showSaveBar
-          ? "pb-[max(13.5rem,calc(env(safe-area-inset-bottom,0px)+11.5rem))]"
+          ? "pb-[max(11rem,calc(env(safe-area-inset-bottom,0px)+9rem))]"
           : "pb-8",
       )}
     >
