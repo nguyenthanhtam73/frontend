@@ -1,11 +1,14 @@
 "use client";
 
-import { Clock3, Sparkles, Tag } from "lucide-react";
+import { Clock3, Loader2, ScanSearch, Sparkles, Tag } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ProgressPhoto } from "@/components/progress/progress-photo";
+import { useProgressReanalyze } from "@/components/progress/use-progress-reanalyze";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
+import { canShowReanalyzeCta } from "@/lib/progress/reanalyze";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
 import { cn } from "@/lib/utils";
 
@@ -17,17 +20,22 @@ import { cn } from "@/lib/utils";
 export function ProgressEntryCard({
   entry,
   highlighted = false,
+  onEntryChange,
 }: {
   entry: ProgressEntryDTO;
   /** When true (set briefly after a sparkline click), the card pulses a ring so
    *  the user can spot which entry the data point maps to. */
   highlighted?: boolean;
+  /** Patch this row after 「Soi lại da」 POST + GET poll settles. */
+  onEntryChange: (next: ProgressEntryDTO) => void;
 }) {
   const t = useTranslations("progress.entry");
   const tFeel = useTranslations("progress.summary");
   const thumb = entry.image_urls?.[0];
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
+  const { inFlight, run } = useProgressReanalyze(entry, onEntryChange);
+  const showReanalyze = canShowReanalyzeCta(entry) || inFlight;
 
   return (
     <Card
@@ -104,6 +112,29 @@ export function ProgressEntryCard({
           ) : null}
         </CardContent>
       </div>
+
+      {showReanalyze ? (
+        <div className="border-t border-border/60 px-3 pb-3 pt-2 sm:px-4 sm:pb-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-testid="progress-reanalyze"
+            className="min-h-11 w-full max-w-full gap-1.5 text-xs"
+            disabled={inFlight}
+            aria-busy={inFlight}
+            onClick={() => void run()}
+          >
+            {inFlight ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            ) : (
+              <ScanSearch className="size-3.5" aria-hidden />
+            )}
+            {inFlight ? t("reanalyzeBusy") : t("reanalyzeCta")}
+          </Button>
+        </div>
+      ) : null}
     </Card>
   );
 }
+
