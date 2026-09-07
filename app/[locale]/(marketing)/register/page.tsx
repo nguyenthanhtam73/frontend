@@ -22,6 +22,7 @@ import {
 import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
+import { claimLocalGuestCheckInIfNeeded } from "@/lib/check-in/claim-guest-check-in";
 import {
   claimGuestCoachWelcomeIfNeeded,
   isClaimableGuestCoachSession,
@@ -213,7 +214,14 @@ function RegisterPageInner() {
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
-                markAwaitingFirstCheckIn(json.data?.user?.id);
+                try {
+                  const claimedCheckIn = await claimLocalGuestCheckInIfNeeded(token);
+                  if (!claimedCheckIn) {
+                    markAwaitingFirstCheckIn(json.data?.user?.id);
+                  }
+                } catch {
+                  markAwaitingFirstCheckIn(json.data?.user?.id);
+                }
                 const nextPath = checkoutIntent
                   ? buildPricingCheckoutHref(checkoutIntent)
                   : postRegisterDestination({
