@@ -1642,10 +1642,14 @@
       "optionalBadge": "Tùy chọn",
       "photosReadyHint": "Ảnh đủ rồi — bấm Tiếp tục để AI phân tích.",
       "continueBlockedHint": "Chọn mục tiêu da và ít nhất 1 vấn đề da để bấm Tiếp tục.",
-      "continueWithoutPhotos": "Tiếp tục với routine từ mục tiêu đã chọn",
-      "continueWithoutPhotosHint": "Không cần chụp ảnh — bạn vẫn nhận routine khởi đầu phù hợp với mục tiêu và vấn đề da.",
+      "continueWithoutPhotos": "Bỏ qua ảnh",
+      "continueWithoutPhotosHint": "Không cần ảnh — chọn loại da, rồi bấm Tiếp tục.",
       "skipAnalyzeUseDefault": "Dùng routine từ mục tiêu đã chọn",
-      "aiResultTitle": "Da bạn đang thế nào"
+      "aiResultTitle": "Da bạn đang thế nào",
+      "skinTypeTitle": "Loại da",
+      "skinTypeHintAi": "AI đoán từ ảnh — chọn loại khác nếu chưa khớp.",
+      "skinTypeHintManual": "Chọn loại da gần đúng nhất. Cần chọn để tiếp tục.",
+      "skinTypeRequiredHint": "Chọn loại da để tiếp tục."
     },
     "skinReadback": {
       "title": "Da bạn đang thế nào",
@@ -1823,6 +1827,7 @@
       }
     },
     "photoGuide": {
+      "collapsedLabel": "Ảnh thế nào?",
       "title": "Ảnh nào giúp AI đọc tốt?",
       "goodExample": "Ảnh tốt",
       "avoidExample": "Tránh",

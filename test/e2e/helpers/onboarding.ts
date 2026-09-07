@@ -1,15 +1,28 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+/** Skip photos (tertiary) and pick one of the 5 skin types on step 1. */
+export async function skipPhotosAndPickSkinType(
+  page: Page,
+  skinTypeId = "combo",
+): Promise<void> {
+  const skip = page.getByTestId("onboarding-continue-without-photos");
+  if (await skip.isVisible().catch(() => false)) {
+    await skip.click();
+  }
+  await page.getByTestId(`onboarding-skin-type-${skinTypeId}`).click();
+}
+
 /**
  * Minimal skip-face onboarding UI path:
- * goal + concern → continue without photos → optional starter edits → finish.
+ * goal + concern → skip photos → pick skin type → starter edits → finish.
  */
 export async function completeOnboardingViaUi(
   page: Page,
   opts?: {
     goalId?: string;
     concernId?: string;
+    skinTypeId?: string;
     morningEdit?: string;
     eveningEdit?: string;
     /** When already on /onboarding (e.g. post-login), skip the extra navigation. */
@@ -18,6 +31,7 @@ export async function completeOnboardingViaUi(
 ): Promise<void> {
   const goalId = opts?.goalId ?? "clear_acne";
   const concernId = opts?.concernId ?? "acne";
+  const skinTypeId = opts?.skinTypeId ?? "combo";
 
   if (!opts?.skipGoto) {
     await page.goto("/onboarding");
@@ -28,7 +42,8 @@ export async function completeOnboardingViaUi(
 
   await page.getByTestId(`onboarding-goal-${goalId}`).click();
   await page.getByTestId(`onboarding-concern-${concernId}`).click();
-  await page.getByTestId("onboarding-continue-without-photos").click();
+  await skipPhotosAndPickSkinType(page, skinTypeId);
+  await page.getByTestId("onboarding-nav-continue").click();
 
   await expect(page.getByTestId("onboarding-step-starter-routine")).toBeVisible({
     timeout: 20_000,

@@ -1642,10 +1642,14 @@
       "optionalBadge": "Optional",
       "photosReadyHint": "Photos ready — tap Continue for AI analysis.",
       "continueBlockedHint": "Pick a skin goal and at least one concern to continue.",
-      "continueWithoutPhotos": "Continue with a goal-based routine",
-      "continueWithoutPhotosHint": "No photos needed — you'll still get a starter routine matched to your goal and concerns.",
+      "continueWithoutPhotos": "Skip photos",
+      "continueWithoutPhotosHint": "No photos needed — pick your skin type, then tap Continue.",
       "skipAnalyzeUseDefault": "Use goal-based routine",
-      "aiResultTitle": "How your skin looks right now"
+      "aiResultTitle": "How your skin looks right now",
+      "skinTypeTitle": "Skin type",
+      "skinTypeHintAi": "AI guessed this from your photos — tap another if it feels off.",
+      "skinTypeHintManual": "Pick the type that feels closest. Required to continue.",
+      "skinTypeRequiredHint": "Pick a skin type to continue."
     },
     "skinReadback": {
       "title": "How your skin looks right now",
@@ -1823,6 +1827,7 @@
       }
     },
     "photoGuide": {
+      "collapsedLabel": "How should photos look?",
       "title": "What photos help the AI?",
       "goodExample": "Good photo",
       "avoidExample": "Avoid",

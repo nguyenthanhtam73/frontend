@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowRight,
   CalendarCheck,
   Camera,
   CheckCircle2,
@@ -9,7 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   CoachWelcomeAchievementCard,
@@ -22,26 +21,26 @@ import {
 } from "@/components/onboarding/onboarding-photo-guide";
 import { OnboardingSkinReadback } from "@/components/onboarding/onboarding-skin-readback";
 import { OnboardingRoutinePeriodSection } from "@/components/onboarding/onboarding-starter-routine-step";
-import { ProductGuidanceSection } from "@/components/onboarding/product-guidance-card";
 import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
 import {
   ConcernChipRow,
   QuickChipGrid,
+  SkinProfilePanel,
 } from "@/components/onboarding/onboarding-ui";
 import { AiDisclaimer } from "@/components/ui/ai-disclaimer";
 import { Button } from "@/components/ui/button";
+import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import {
+  MANUAL_QUICK_SKIN_TYPES,
   ONBOARDING_MAX_CONCERNS,
   ONBOARDING_MAX_PHOTOS,
   ONBOARDING_MIN_PHOTOS,
   QUICK_GOALS,
   STEP1_CONCERNS,
 } from "@/lib/onboarding/constants";
-import {
-  filterGuidanceForPhase,
-  resolveCarePhaseFromAnalysis,
-} from "@/lib/onboarding/guest-starter";
+import { isQuickSkinType } from "@/lib/onboarding/step1-gate";
 import { useOnboardingRoutineStepTips } from "@/lib/onboarding/use-onboarding-routine-step-tips";
+import type { SkinTypeCard } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { isPhotoInputError } from "@/lib/onboarding/onboarding-ai";
 import type { OnboardingAiErrorKind } from "@/lib/onboarding/onboarding-ai";
@@ -76,6 +75,7 @@ export type OnboardingStepSkinProfileProps = {
   analyzeFailed: boolean;
   analyzeErrorKind: OnboardingAiErrorKind | null;
   aiSnapshot: OnboardingSkinAnalyzeDTO | null;
+  showSkinTypePicker: boolean;
   onRetryAnalyze: () => void;
   onSkipAnalyze: () => void;
   openCamera: () => void;
@@ -88,6 +88,7 @@ export function OnboardingStepSkinProfile({
   analyzeFailed,
   analyzeErrorKind,
   aiSnapshot,
+  showSkinTypePicker,
   onRetryAnalyze,
   onSkipAnalyze,
   openCamera,
@@ -102,13 +103,7 @@ export function OnboardingStepSkinProfile({
   // since the starter routine is derived from this read.
   const [readbackAgreed, setReadbackAgreed] = useState<boolean | null>(null);
 
-  const step1Guidance = useMemo(() => {
-    if (!aiSnapshot?.product_guidance?.length) return undefined;
-    return filterGuidanceForPhase(
-      aiSnapshot.product_guidance,
-      resolveCarePhaseFromAnalysis(aiSnapshot),
-    );
-  }, [aiSnapshot]);
+  const selectedSkinType = isQuickSkinType(ob.skinType) ? ob.skinType : null;
 
   return (
     <section
@@ -203,14 +198,14 @@ export function OnboardingStepSkinProfile({
                     alt={tCheckIn("altPhoto", { n: i + 1 })}
                     className="size-full object-cover"
                   />
-                  <button
-                    type="button"
+                  <IconDismissButton
                     onClick={() => ob.removePhotoAt(i)}
-                    aria-label={tPrivacy("captureCard.remove")}
-                    className="absolute right-1.5 top-1.5 inline-flex size-7 items-center justify-center rounded-full bg-black/60 text-white"
+                    ariaLabel={tPrivacy("captureCard.remove")}
+                    data-testid={`onboarding-photo-remove-${i}`}
+                    className="absolute right-0 top-0 z-10 bg-black/55 text-white hover:bg-black/75"
                   >
-                    <X className="size-3.5" aria-hidden />
-                  </button>
+                    <X className="size-4" aria-hidden />
+                  </IconDismissButton>
                 </figure>
               ))}
             </div>
@@ -223,21 +218,22 @@ export function OnboardingStepSkinProfile({
           </div>
         )}
 
-        <div className="space-y-1.5 rounded-xl border border-primary/35 bg-background px-3 py-3 shadow-sm">
-          <button
-            type="button"
-            onClick={onContinueWithoutPhotos}
-            disabled={analyzing}
-            data-testid="onboarding-continue-without-photos"
-            className="flex min-h-11 w-full items-center justify-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80 disabled:opacity-50"
-          >
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
-            {t("step1.continueWithoutPhotos")}
-          </button>
-          <p className="text-center text-[11px] leading-snug text-muted-foreground">
-            {t("step1.continueWithoutPhotosHint")}
+        {ob.photos.length < ONBOARDING_MIN_PHOTOS ? (
+          <p className="pt-1">
+            <button
+              type="button"
+              onClick={onContinueWithoutPhotos}
+              disabled={analyzing}
+              data-testid="onboarding-continue-without-photos"
+              className="min-h-11 w-full text-center text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground disabled:opacity-50"
+            >
+              {t("step1.continueWithoutPhotos")}
+            </button>
+            <span className="mt-1 block text-center text-[11px] leading-snug text-muted-foreground">
+              {t("step1.continueWithoutPhotosHint")}
+            </span>
           </p>
-        </div>
+        ) : null}
       </div>
 
       {analyzeFailed && !analyzing && (
@@ -275,14 +271,6 @@ export function OnboardingStepSkinProfile({
                 : t("readbackConfirm.thanksNo")}
             </p>
           ) : null}
-          <ProductGuidanceSection
-            items={step1Guidance}
-            commerceOnly
-            forceExpanded
-            enrichContext={{
-              phase: resolveCarePhaseFromAnalysis(aiSnapshot),
-            }}
-          />
           <AiDisclaimer variant="short" />
           <details className="rounded-xl border border-border/60 bg-muted p-3 text-sm">
             <summary className="cursor-pointer font-medium">
@@ -302,6 +290,31 @@ export function OnboardingStepSkinProfile({
           </details>
         </div>
       )}
+
+      {showSkinTypePicker && !analyzing ? (
+        <SkinProfilePanel
+          title={t("step1.skinTypeTitle")}
+          subtitle={
+            aiSnapshot ? t("step1.skinTypeHintAi") : t("step1.skinTypeHintManual")
+          }
+        >
+          <QuickChipGrid
+            title={t("step1.skinTypeTitle")}
+            hideTitle
+            options={MANUAL_QUICK_SKIN_TYPES.map((k) => ({
+              id: k,
+              label: t(`skinType.${k}` as const),
+            }))}
+            selected={selectedSkinType}
+            onSelect={(id: SkinTypeCard) => ob.setSkinType(id)}
+            columns={2}
+            size="large"
+            required
+            requiredLabel={t("step1.requiredBadge")}
+            testIdPrefix="onboarding-skin-type"
+          />
+        </SkinProfilePanel>
+      ) : null}
     </section>
   );
 }
