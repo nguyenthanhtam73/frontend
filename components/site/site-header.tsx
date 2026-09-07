@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useGuardedRouter } from "@/lib/hooks/use-guarded-router";
-import { normalizePath } from "@/lib/site-nav";
+import { hidesFunnelMarketingNav, normalizePath } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useClientMounted } from "@/lib/use-client-mounted";
 import { useCurrentHash } from "@/lib/use-current-hash";
@@ -268,6 +268,7 @@ export function SiteHeader() {
   ];
 
   const showGuestNav = useShowGuestNav();
+  const hideFunnelNav = hidesFunnelMarketingNav(pathname);
   const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
 
   // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.
@@ -309,8 +310,16 @@ export function SiteHeader() {
   );
 
   return (
-    <header className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 overflow-x-clip border-b border-border/50 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1.5 px-4 py-1.5 sm:gap-3 sm:px-6 sm:py-2 lg:gap-2 lg:py-3">
+    <header
+      className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 overflow-x-clip border-b border-border/50 bg-background/80 backdrop-blur-xl"
+      data-funnel-chrome={hideFunnelNav ? "compact" : "full"}
+    >
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-6xl flex-col px-4 py-1.5 sm:px-6 sm:py-2 lg:py-3",
+          hideFunnelNav ? "gap-0" : "gap-1.5 sm:gap-3 lg:gap-2",
+        )}
+      >
         <div className="flex min-h-11 items-center gap-1.5 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
@@ -329,19 +338,28 @@ export function SiteHeader() {
           </div>
         </div>
 
-        <nav className="hidden lg:block" aria-label={t("mainNavAria")}>
-          {navWrapped}
-        </nav>
+        {!hideFunnelNav ? (
+          <nav
+            className="hidden lg:block"
+            aria-label={t("mainNavAria")}
+            data-testid="site-header-nav-desktop"
+          >
+            {navWrapped}
+          </nav>
+        ) : null}
       </div>
 
-      <nav
-        className="border-t border-border/40 py-1 lg:hidden"
-        aria-label={t("mainNavAria")}
-      >
-        <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
-          {navStrip}
-        </div>
-      </nav>
+      {!hideFunnelNav ? (
+        <nav
+          className="border-t border-border/40 py-1 lg:hidden"
+          aria-label={t("mainNavAria")}
+          data-testid="site-header-nav-mobile"
+        >
+          <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+            {navStrip}
+          </div>
+        </nav>
+      ) : null}
     </header>
   );
 }

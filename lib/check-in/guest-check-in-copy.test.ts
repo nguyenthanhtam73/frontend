@@ -11,7 +11,11 @@ function readMessages(locale: "vi" | "en") {
     fs.readFileSync(path.join(ROOT, "messages", `${locale}.json`), "utf8"),
   ) as {
     coachWelcome: Record<string, string>;
-    checkIn: { guestLocal: Record<string, string> };
+    checkIn: {
+      guestLocal: Record<string, string> & {
+        wait?: Record<string, string>;
+      };
+    };
   };
 }
 
@@ -30,6 +34,18 @@ describe("guest check-in copy policy", () => {
     );
   });
 
+  it("keeps guest AI-wait copy local-only (no server-saved claim)", () => {
+    const vi = readMessages("vi");
+    const wait = vi.checkIn.guestLocal.wait;
+    assert.ok(wait);
+    const blob = JSON.stringify(wait);
+    assert.equal(blob.includes("rồi mới check-in"), false);
+    assert.equal(blob.includes("máy chủ"), true);
+    assert.equal(wait.savedLocal.includes("máy này"), true);
+    assert.equal(wait.hint.includes("Đăng ký để lưu nhật ký"), true);
+    assert.equal(wait.status1.includes("chưa gửi lên máy chủ"), true);
+  });
+
   it("matches the locked EN equivalents", () => {
     const en = readMessages("en");
     const blob = JSON.stringify({
@@ -41,5 +57,10 @@ describe("guest check-in copy policy", () => {
       en.coachWelcome.ctaGuestRegisterToCheckIn.includes("journal"),
       true,
     );
+    const wait = en.checkIn.guestLocal.wait;
+    assert.ok(wait);
+    assert.equal(/then you can check in/i.test(JSON.stringify(wait)), false);
+    assert.equal(wait.savedLocal.toLowerCase().includes("device"), true);
+    assert.equal(wait.hint.toLowerCase().includes("sign up"), true);
   });
 });

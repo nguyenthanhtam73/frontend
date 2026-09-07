@@ -23,7 +23,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
 import { FirstCheckInPushNudge } from "@/components/check-in/first-check-in-push-nudge";
+import { GuestAiWait } from "@/components/check-in/guest-ai-wait";
 import { useCheckInFeedback } from "@/components/check-in/use-check-in-feedback";
+import { useGuestAiWait } from "@/components/check-in/use-guest-ai-wait";
 import { StreakMilestoneHost } from "@/components/progress/streak-milestone-celebration";
 import { StreakContinueHost } from "@/components/share/streak-continue-celebration";
 import { Button } from "@/components/ui/button";
@@ -54,6 +56,7 @@ import {
   canSubmitCheckIn,
   isSkipModeReady,
 } from "@/lib/check-in/check-in-submit";
+import { shouldGuestAiWait } from "@/lib/check-in/guest-ai-wait";
 import {
   clearLocalGuestCheckIn,
   readPersistedGuestCheckIn,
@@ -119,6 +122,7 @@ export function CheckInForm() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [guestLocal, setGuestLocal] = useState<GuestCheckInPayload | null>(null);
   const [guestSaving, setGuestSaving] = useState(false);
+  const guestWait = useGuestAiWait();
   const feedbackAnchorRef = useRef<HTMLDivElement>(null);
   const errorAnchorRef = useRef<HTMLDivElement>(null);
   const signedIn = Boolean(user || getAccessToken());
@@ -258,11 +262,23 @@ export function CheckInForm() {
     };
   }, [onSubmitSuccess, scrollToFeedback, user?.id]);
 
+  if (!signedIn && guestWait.isWaiting) {
+    return (
+      <GuestAiWait
+        variant={guestWait.phase === "submitting" ? "submitting" : "processing"}
+        progress={guestWait.progress}
+        statusStep={guestWait.statusStep}
+        onSkipWait={guestWait.skip}
+      />
+    );
+  }
+
   if (guestLocal && !signedIn) {
     return (
       <GuestLocalCheckInCard
         payload={guestLocal}
         onRedo={() => {
+          guestWait.reset();
           void clearLocalGuestCheckIn().then(() => setGuestLocal(null));
         }}
       />
@@ -287,6 +303,14 @@ export function CheckInForm() {
 
         const auth = getAccessToken();
         if (!auth) {
+          const waitForAi = shouldGuestAiWait({
+            hasPhotos: !skipFaceCapture && items.length > 0,
+            skipMode: skipFaceCapture,
+          });
+          if (waitForAi) {
+            guestWait.beginSubmit();
+            scrollToFeedback();
+          }
           setGuestSaving(true);
           try {
             const result = await saveLocalGuestCheckIn({
@@ -303,10 +327,17 @@ export function CheckInForm() {
               files: skipFaceCapture ? [] : items.map((x) => x.file),
             });
             if (result === "failed") {
+              guestWait.reset();
               showError(t("guestLocal.saveError"));
               return;
             }
-            setGuestLocal(readPersistedGuestCheckIn());
+            const saved = readPersistedGuestCheckIn();
+            setGuestLocal(saved);
+            if (waitForAi && saved) {
+              guestWait.startAnalyzing();
+            } else {
+              guestWait.reset();
+            }
           } finally {
             setGuestSaving(false);
           }

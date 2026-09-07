@@ -226,7 +226,7 @@ export type SaveLocalGuestCheckInResult = "ok" | "already_saved" | "failed";
 
 /**
  * Persist one local guest check-in. Photos live in IndexedDB; metadata in
- * localStorage. Does not call the API (no AI wait).
+ * localStorage. Does not call the API (no server skin-check id until claim).
  */
 export async function saveLocalGuestCheckIn(input: {
   payload: Omit<GuestCheckInPayload, "hasPhotos">;
