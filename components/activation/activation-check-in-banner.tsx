@@ -19,13 +19,14 @@ import {
 import {
   hasNeverCheckedIn,
   isFirstCheckInLaterToday,
+  shouldShowNeverCheckedInBar,
   writeFirstCheckInLaterToday,
 } from "@/lib/activation/first-check-in";
 import { FUNNEL_EVENTS, trackFunnelEvent, trackFunnelEventOnce } from "@/lib/analytics/funnel";
 import { getAccessToken } from "@/lib/auth-token";
 import { useCheckInReminder } from "@/lib/hooks/use-check-in-reminder";
 import { useStreak } from "@/lib/hooks/use-streak";
-import { isOnboardingFunnelPath } from "@/lib/site-nav";
+import { isAuthEntryPath, isOnboardingFunnelPath } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { streakDateKey } from "@/lib/streak/history";
 
@@ -42,7 +43,8 @@ function isCheckInPath(pathname: string) {
 
 /**
  * Soft D0/D1 / keep-streak reminder for signed-in users who have not checked in today.
- * Hidden on the guest funnel, coach-welcome (dedicated prompt), and /check-in.
+ * Hidden on login/register, coach-welcome (dedicated prompt), and /check-in.
+ * Never-checked-in users still see it on /onboarding after the server D0/D1 window.
  * Dismiss lasts for today's Vietnam calendar day only.
  */
 export function ActivationCheckInBanner() {
@@ -96,28 +98,48 @@ export function ActivationCheckInBanner() {
         reminderStatus,
         serverData: reminderQuery.data,
         clientKind,
+        neverCheckedIn,
       }),
-    [clientKind, reminderQuery.data, reminderStatus],
+    [clientKind, neverCheckedIn, reminderQuery.data, reminderStatus],
   );
 
   const uiDismissed = neverCheckedIn ? laterToday : dismissedToday;
+  const onCheckIn = isCheckInPath(pathname);
+  const onCoachWelcome = isCoachWelcomePath(pathname);
 
   const visible = useMemo(
-    () =>
-      hydrated &&
-      shouldShowDailyCheckInReminder({
+    () => {
+      if (!hydrated) return false;
+      const daily = shouldShowDailyCheckInReminder({
         signedIn,
         dismissedToday: uiDismissed,
         onFunnelPath: isOnboardingFunnelPath(pathname),
-        onCheckInPath: isCheckInPath(pathname),
-        onCoachWelcomePath: isCoachWelcomePath(pathname),
+        onCheckInPath: onCheckIn,
+        onCoachWelcomePath: onCoachWelcome,
         streakStatus,
         reminderStatus,
         kind,
-      }),
+      });
+      // Server `due` ends after D1. The unused-until-now helper keeps a CTA
+      // for never-checked-in users, including those still on /onboarding.
+      const neverBar = shouldShowNeverCheckedInBar({
+        signedIn,
+        laterToday,
+        onFunnelPath: isAuthEntryPath(pathname),
+        onCheckInPath: onCheckIn,
+        onCoachWelcomePath: onCoachWelcome,
+        streakStatus,
+        neverCheckedIn,
+      });
+      return daily || neverBar;
+    },
     [
       hydrated,
       kind,
+      laterToday,
+      neverCheckedIn,
+      onCheckIn,
+      onCoachWelcome,
       pathname,
       reminderStatus,
       signedIn,
@@ -138,24 +160,26 @@ export function ActivationCheckInBanner() {
     setDismissedToday(true);
   }, [neverCheckedIn, today, user?.id]);
 
+  const displayKind = kind ?? (neverCheckedIn ? "d1" : null);
+
   useEffect(() => {
-    if (!visible || kind !== "d1") return;
+    if (!visible || displayKind !== "d1") return;
     trackFunnelEventOnce(
       FUNNEL_EVENTS.d1ReminderShown,
       { surface: "activation_banner" },
       `${today}:${user?.id ?? "anon"}`,
     );
-  }, [kind, today, user?.id, visible]);
+  }, [displayKind, today, user?.id, visible]);
 
-  if (!visible || !kind) return null;
+  if (!visible || !displayKind) return null;
 
-  const copy = reminderCopy(kind, t, streakQuery.data?.current_streak ?? 0);
+  const copy = reminderCopy(displayKind, t, streakQuery.data?.current_streak ?? 0);
 
   return (
     <div
       className="border-b border-primary/20 bg-primary/[0.06]"
       data-testid="activation-check-in-banner"
-      data-reminder-kind={kind}
+      data-reminder-kind={displayKind}
     >
       <div className="mx-auto flex w-full max-w-5xl items-start gap-3 px-4 py-3 sm:items-center sm:px-6">
         <div className="min-w-0 flex-1 space-y-0.5">

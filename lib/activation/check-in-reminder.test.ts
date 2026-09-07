@@ -313,6 +313,36 @@ describe("resolvePreferredCheckInReminderKind", () => {
     );
   });
 
+  it("keeps client d0/d1 after the server 2-day window if they never checked in", () => {
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: notDue,
+        clientKind: "d1",
+        neverCheckedIn: true,
+      }),
+      "d1",
+    );
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: notDue,
+        clientKind: "d0",
+        neverCheckedIn: true,
+      }),
+      "d0",
+    );
+    assert.equal(
+      resolvePreferredCheckInReminderKind({
+        reminderStatus: "ready",
+        serverData: notDue,
+        clientKind: "d1",
+        neverCheckedIn: false,
+      }),
+      null,
+    );
+  });
+
   it("falls back to the client kind while loading, on error, or bad payload", () => {
     assert.equal(
       resolvePreferredCheckInReminderKind({
