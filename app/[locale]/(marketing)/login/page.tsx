@@ -13,6 +13,7 @@ import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
+import { claimLocalGuestCheckInIfNeeded } from "@/lib/check-in/claim-guest-check-in";
 import {
   claimGuestCoachWelcomeIfNeeded,
   GUEST_CLAIM_RETURN_PATH,
@@ -129,6 +130,11 @@ function LoginPageInner() {
                   claimed = Boolean(claim);
                 } catch {
                   claimed = false;
+                }
+                try {
+                  await claimLocalGuestCheckInIfNeeded(token);
+                } catch {
+                  /* local check-in stays on device for retry */
                 }
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));

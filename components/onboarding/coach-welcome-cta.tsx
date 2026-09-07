@@ -64,11 +64,9 @@ function SaveToAccountButton({
   );
 }
 
-/** Hero primary CTA — guests go to register; pending claim → save; else check-in. */
+/** Hero primary CTA — guests check in locally; pending claim → save; else check-in. */
 export function CoachWelcomePrimaryCta({
   className,
-  isGuest = false,
-  signedIn = false,
   pendingAccountClaim = false,
   saveLoading = false,
   onSaveToAccount,
@@ -92,32 +90,19 @@ export function CoachWelcomePrimaryCta({
     );
   }
 
-  // Never send an already-signed-in user back to register.
-  const showGuestAuth = isGuest && !signedIn;
-  const href = showGuestAuth
-    ? buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)
-    : "/check-in";
-
   return (
     <ButtonLink
-      href={href}
+      href="/check-in"
       size="lg"
       className={cn(primaryBtnClass, className)}
-      onClick={
-        showGuestAuth
-          ? () => trackSignupCta("primary")
-          : () =>
-              trackFunnelEvent(FUNNEL_EVENTS.firstCheckInCtaClick, {
-                surface: "coach_welcome_primary",
-              })
+      onClick={() =>
+        trackFunnelEvent(FUNNEL_EVENTS.firstCheckInCtaClick, {
+          surface: "coach_welcome_primary",
+        })
       }
     >
-      {showGuestAuth ? (
-        <UserPlus className="size-5 shrink-0" aria-hidden />
-      ) : (
-        <CalendarCheck className="size-5 shrink-0" aria-hidden />
-      )}
-      {showGuestAuth ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
+      <CalendarCheck className="size-5 shrink-0" aria-hidden />
+      {t("ctaCheckInPrimary")}
       <ArrowRight className="size-5 shrink-0" aria-hidden />
     </ButtonLink>
   );
@@ -180,14 +165,24 @@ export function CoachWelcomePrimaryCtaBlock({
             : t("ctaCheckInBenefit")}
       </p>
       {showGuestAuth ? (
-        <Link
-          href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
-          className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          data-testid="coach-welcome-guest-login-link"
-          onClick={() => trackSignupCta("primary_login", "login")}
-        >
-          {t("guestSignInExistingCta")}
-        </Link>
+        <div className="space-y-2">
+          <Link
+            href={buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)}
+            className="block text-center text-sm font-medium text-primary underline-offset-4 hover:underline"
+            data-testid="coach-welcome-guest-register-link"
+            onClick={() => trackSignupCta("primary")}
+          >
+            {t("ctaGuestRegisterToCheckIn")}
+          </Link>
+          <Link
+            href={buildAuthHrefWithNext("/login", GUEST_AUTH_NEXT)}
+            className="block text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            data-testid="coach-welcome-guest-login-link"
+            onClick={() => trackSignupCta("primary_login", "login")}
+          >
+            {t("guestSignInExistingCta")}
+          </Link>
+        </div>
       ) : null}
     </div>
   );
@@ -211,9 +206,6 @@ export function CoachWelcomeStickyBar({
 }) {
   const t = useTranslations("coachWelcome");
   const showGuestAuth = isGuest && !signedIn && !pendingAccountClaim;
-  const href = showGuestAuth
-    ? buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)
-    : "/check-in";
 
   return (
     <div
@@ -236,27 +228,30 @@ export function CoachWelcomeStickyBar({
           />
         ) : (
           <ButtonLink
-            href={href}
+            href="/check-in"
             size="lg"
             className={primaryBtnClass}
-            onClick={
-              showGuestAuth
-                ? () => trackSignupCta("sticky")
-                : () =>
-                    trackFunnelEvent(FUNNEL_EVENTS.firstCheckInCtaClick, {
-                      surface: "coach_welcome_sticky",
-                    })
+            onClick={() =>
+              trackFunnelEvent(FUNNEL_EVENTS.firstCheckInCtaClick, {
+                surface: "coach_welcome_sticky",
+              })
             }
           >
-            {showGuestAuth ? (
-              <UserPlus className="size-5 shrink-0" aria-hidden />
-            ) : (
-              <CalendarCheck className="size-5 shrink-0" aria-hidden />
-            )}
-            {showGuestAuth ? t("ctaGuestRegisterToCheckIn") : t("ctaCheckInPrimary")}
+            <CalendarCheck className="size-5 shrink-0" aria-hidden />
+            {t("ctaCheckInPrimary")}
             <ArrowRight className="size-5 shrink-0" aria-hidden />
           </ButtonLink>
         )}
+        {showGuestAuth ? (
+          <Link
+            href={buildAuthHrefWithNext("/register", GUEST_AUTH_NEXT)}
+            className="mt-2 block text-center text-xs font-medium text-primary underline-offset-4 hover:underline"
+            data-testid="coach-welcome-sticky-register"
+            onClick={() => trackSignupCta("sticky")}
+          >
+            {t("ctaGuestRegisterToCheckIn")}
+          </Link>
+        ) : null}
       </div>
     </div>
   );

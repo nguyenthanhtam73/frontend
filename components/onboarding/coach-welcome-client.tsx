@@ -204,8 +204,8 @@ function CoachWelcomeLoaded({
   }, [userId]);
 
   useEffect(() => {
-    if (signedIn && !isGuest) router.prefetch("/check-in");
-  }, [isGuest, router, signedIn]);
+    router.prefetch("/check-in");
+  }, [router]);
 
   useEffect(() => {
     setProfileId(initialProfileId);
@@ -387,7 +387,7 @@ function CoachWelcomeLoaded({
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl space-y-4 pb-24 sm:space-y-5 sm:pb-6">
+      <div className="mx-auto w-full max-w-2xl space-y-4 pb-28 sm:space-y-5 sm:pb-6">
         <CoachWelcomeSection>
           <CoachWelcomeCelebrationHeader isGuest={isGuest} />
         </CoachWelcomeSection>

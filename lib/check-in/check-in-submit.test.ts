@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { canSubmitCheckIn, isSkipModeReady } from "./check-in-submit";
+import {
+  buildSkinCheckFormData,
+  canSubmitCheckIn,
+  isSkipModeReady,
+} from "./check-in-submit";
 
 describe("isSkipModeReady", () => {
   it("requires a tag or a non-empty note", () => {
@@ -56,5 +60,26 @@ describe("canSubmitCheckIn", () => {
       canSubmitCheckIn({ skipMode: true, photoCount: 0, skipModeReady: true }),
       true,
     );
+  });
+});
+
+describe("buildSkinCheckFormData", () => {
+  it("sets skip_mode and keeps check-in fields for a later claim POST", () => {
+    const fd = buildSkinCheckFormData({
+      skipMode: true,
+      files: [],
+      title: "t",
+      userNote: "n",
+      environmentNote: "e",
+      conditions: ["oily"],
+      symptoms: ["itching"],
+      skillMode: "beginner",
+      locale: "vi",
+    });
+    assert.equal(fd.get("skip_mode"), "true");
+    assert.equal(fd.get("images"), null);
+    assert.equal(fd.get("user_note"), "n");
+    assert.equal(fd.get("visibility"), "private");
+    assert.equal(fd.get("conditions"), JSON.stringify(["oily"]));
   });
 });

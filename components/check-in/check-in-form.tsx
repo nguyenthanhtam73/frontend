@@ -48,10 +48,25 @@ import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { streakDateKey } from "@/lib/streak/history";
-import { canSubmitCheckIn, isSkipModeReady } from "@/lib/check-in/check-in-submit";
+import { claimLocalGuestCheckInIfNeeded } from "@/lib/check-in/claim-guest-check-in";
+import {
+  buildSkinCheckFormData,
+  canSubmitCheckIn,
+  isSkipModeReady,
+} from "@/lib/check-in/check-in-submit";
+import {
+  clearLocalGuestCheckIn,
+  readPersistedGuestCheckIn,
+  saveLocalGuestCheckIn,
+  type GuestCheckInPayload,
+} from "@/lib/check-in/guest-check-in-persist";
 import { CHECKIN_PHOTO_MAX_MB } from "@/lib/check-in/photo-upload-validation";
 import { cn } from "@/lib/utils";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
+import {
+  GuestCheckInHint,
+  GuestLocalCheckInCard,
+} from "@/components/check-in/guest-local-check-in-card";
 
 /** Matches backend `domain.SkinCondition` string values. */
 const conditionIds = [
@@ -93,18 +108,20 @@ export function CheckInForm() {
   const [environmentNote, setEnvironmentNote] = useState("");
   const [conditions, setConditions] = useState<string[]>([]);
   const [symptoms, setSymptoms] = useState<string[]>([]);
-  // Public timeline is not shipped yet — always private to avoid a false privacy choice.
-  const visibility = "private" as const;
   const router = useRouter();
   const feedback = useCheckInFeedback();
+  const onSubmitSuccess = feedback.onSubmitSuccess;
   const user = useAuthStore((s) => s.user);
   const streakQuery = useStreak();
   const checkInFunnelKindsRef = useRef<CheckInFunnelKind[]>([]);
   // Inline error banner replaces native alert() — much friendlier on mobile (no modal
   // popups stealing focus or breaking scroll). Auto-cleared on next submit attempt.
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [guestLocal, setGuestLocal] = useState<GuestCheckInPayload | null>(null);
+  const [guestSaving, setGuestSaving] = useState(false);
   const feedbackAnchorRef = useRef<HTMLDivElement>(null);
   const errorAnchorRef = useRef<HTMLDivElement>(null);
+  const signedIn = Boolean(user || getAccessToken());
 
   const privacyHydrated = usePrivacyHydrated();
   const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
@@ -222,6 +239,36 @@ export function CheckInForm() {
     setErrorMsg(null);
   }, [setSkipFaceCapture]);
 
+  useEffect(() => {
+    setGuestLocal(readPersistedGuestCheckIn());
+  }, []);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token || !readPersistedGuestCheckIn()) return;
+    let cancelled = false;
+    void claimLocalGuestCheckInIfNeeded(token).then((data) => {
+      if (cancelled || !data) return;
+      setGuestLocal(null);
+      onSubmitSuccess(data);
+      scrollToFeedback();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onSubmitSuccess, scrollToFeedback, user?.id]);
+
+  if (guestLocal && !signedIn) {
+    return (
+      <GuestLocalCheckInCard
+        payload={guestLocal}
+        onRedo={() => {
+          void clearLocalGuestCheckIn().then(() => setGuestLocal(null));
+        }}
+      />
+    );
+  }
+
   return (
     <form
       className="mx-auto w-full max-w-lg space-y-6 lg:max-w-none"
@@ -237,6 +284,35 @@ export function CheckInForm() {
           showError(t("needImage"));
           return;
         }
+
+        const auth = getAccessToken();
+        if (!auth) {
+          setGuestSaving(true);
+          try {
+            const result = await saveLocalGuestCheckIn({
+              payload: {
+                skipMode: skipFaceCapture,
+                title,
+                userNote,
+                environmentNote,
+                conditions,
+                symptoms,
+                skillMode,
+                locale,
+              },
+              files: skipFaceCapture ? [] : items.map((x) => x.file),
+            });
+            if (result === "failed") {
+              showError(t("guestLocal.saveError"));
+              return;
+            }
+            setGuestLocal(readPersistedGuestCheckIn());
+          } finally {
+            setGuestSaving(false);
+          }
+          return;
+        }
+
         feedback.beginSubmit();
         scrollToFeedback();
         checkInFunnelKindsRef.current = resolveCheckInFunnelKinds({
@@ -248,30 +324,21 @@ export function CheckInForm() {
           }),
         });
         try {
-          const fd = new FormData();
-          if (skipFaceCapture) {
-            fd.append("skip_mode", "true");
-          } else {
-            items.forEach((x) => fd.append("images", x.file));
-          }
-          fd.append("title", title);
-          fd.append("user_note", userNote);
-          fd.append("environment_note", environmentNote);
-          fd.append("conditions", JSON.stringify(conditions));
-          fd.append("symptoms", JSON.stringify(symptoms));
-          fd.append("visibility", visibility);
-          fd.append(
-            "climate_context",
-            JSON.stringify({
-              coach_skill_level: skillMode ?? "beginner",
-              client: "dadiary-web",
-              ui_locale: locale,
-            }),
-          );
+          const fd = buildSkinCheckFormData({
+            skipMode: skipFaceCapture,
+            files: skipFaceCapture ? [] : items.map((x) => x.file),
+            title,
+            userNote,
+            environmentNote,
+            conditions,
+            symptoms,
+            skillMode,
+            locale,
+          });
 
-          const headers: Record<string, string> = {};
-          const auth = getAccessToken();
-          if (auth) headers.Authorization = `Bearer ${auth}`;
+          const headers: Record<string, string> = {
+            Authorization: `Bearer ${auth}`,
+          };
 
           const res = await fetch(`${apiBaseUrl}/api/v1/skin-checks`, {
             method: "POST",
@@ -349,6 +416,7 @@ export function CheckInForm() {
         }
       }}
     >
+      {!signedIn ? <GuestCheckInHint /> : null}
       <div className="flex flex-col gap-6 lg:grid lg:max-w-5xl lg:grid-cols-[1.05fr_1fr] lg:gap-8 xl:mx-auto">
       <div className="space-y-3">
         <CaptureModeToggle
@@ -661,14 +729,16 @@ export function CheckInForm() {
             <>
               <span className="inline-flex items-center gap-2">
                 <Sparkles className="size-4 shrink-0 text-primary" aria-hidden />
-                {t("afterSubmit")}
+                {signedIn ? t("afterSubmit") : t("guestLocal.afterSubmit")}
               </span>
-              <Link
-                href="/cabinet"
-                className="font-medium text-primary underline underline-offset-4"
-              >
-                {t("linkCabinet")}
-              </Link>
+              {signedIn ? (
+                <Link
+                  href="/cabinet"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {t("linkCabinet")}
+                </Link>
+              ) : null}
             </>
           )}
         </div>
@@ -688,13 +758,17 @@ export function CheckInForm() {
             data-testid="checkin-submit"
             size="default"
             className="min-h-12 flex-[2] sm:min-h-9 sm:flex-initial"
-            disabled={feedback.isWaiting || !canSubmit}
+            disabled={feedback.isWaiting || guestSaving || !canSubmit}
           >
-            {feedback.phase === "submitting"
-              ? t("submitting")
-              : skipFaceCapture
-                ? t("noFaceSubmit")
-                : t("analyzeToday")}
+            {feedback.phase === "submitting" || guestSaving
+              ? signedIn
+                ? t("submitting")
+                : t("guestLocal.saving")
+              : !signedIn
+                ? t("guestLocal.submitLabel")
+                : skipFaceCapture
+                  ? t("noFaceSubmit")
+                  : t("analyzeToday")}
           </Button>
         </div>
       </div>
