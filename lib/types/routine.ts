@@ -15,6 +15,8 @@ export type RoutineStepDTO = {
   how_to?: string;
   /** Amount hint, e.g. "1–2 pump". Optional — FE seeds when the API omits it. */
   dose?: string;
+  /** One easy sentence on the purpose of the step. Optional — FE seeds when omitted. */
+  why?: string;
 };
 
 /** Matches backend `dto.RoutineResponse`. */

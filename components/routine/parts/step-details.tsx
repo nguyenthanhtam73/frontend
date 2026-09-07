@@ -9,13 +9,14 @@ import { cn } from "@/lib/utils";
 export type StepDetailLabels = {
   howTo: string;
   dose: string;
+  why: string;
   cabinet: string;
   show: string;
   hide: string;
 };
 
 /**
- * how_to + dose under a routine step. Tick stays on the parent row.
+ * why + how_to + dose under a routine step. Tick stays on the parent row.
  * Beginner/intermediate: expanded. Advanced: collapsed until opened.
  */
 export function StepDetails({
@@ -63,7 +64,7 @@ export function StepDetails({
             {details.productLabel ? (
               <span
                 data-testid={testId ? `${testId}-product` : undefined}
-                className="inline-flex max-w-full items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] leading-snug text-violet-900 dark:text-violet-100"
+              className="inline-flex min-w-0 max-w-full items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] leading-snug text-violet-900 dark:text-violet-100"
               >
                 <span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-violet-700/80 dark:text-violet-200/80">
                   {labels.cabinet}
@@ -73,8 +74,15 @@ export function StepDetails({
             ) : null}
           </div>
           <p
+            data-testid={testId ? `${testId}-why` : undefined}
+            className="w-full text-pretty text-sm leading-relaxed text-foreground/90 break-words [overflow-wrap:anywhere] sm:text-xs"
+          >
+            <span className="font-semibold text-foreground/80">{labels.why}: </span>
+            {details.why}
+          </p>
+          <p
             data-testid={testId ? `${testId}-howto` : undefined}
-            className="text-sm leading-relaxed text-muted-foreground sm:text-xs"
+            className="w-full text-pretty text-sm leading-relaxed text-muted-foreground break-words [overflow-wrap:anywhere] sm:text-xs"
           >
             <span className="sr-only">{labels.howTo}: </span>
             {details.how_to}

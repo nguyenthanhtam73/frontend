@@ -41,7 +41,7 @@ export function SkillModeBar({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:pb-0 [&::-webkit-scrollbar]:hidden"
+      className="flex gap-2 sm:flex-wrap sm:overflow-visible sm:pb-0"
     >
       {OPTIONS.map((o) => {
         const Icon = o.icon;
@@ -54,14 +54,14 @@ export function SkillModeBar({
             type="button"
             onClick={() => onChange(o.id)}
             className={cn(
-              "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-all active:scale-[0.98] sm:min-h-9 sm:px-3 sm:py-1.5 sm:text-xs",
+              "inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1 rounded-full border px-2 py-2 text-center text-xs font-medium leading-tight transition-all active:scale-[0.98] sm:min-h-9 sm:flex-none sm:px-3 sm:py-1.5 sm:text-xs",
               isActive
                 ? "border-primary bg-primary/12 text-primary shadow-sm shadow-primary/10"
                 : "border-border text-muted-foreground hover:border-primary/30 hover:bg-muted hover:text-foreground",
             )}
           >
             <Icon className="size-3.5" aria-hidden />
-            <span>{labels[o.id]}</span>
+            <span className="text-pretty text-center leading-tight">{labels[o.id]}</span>
           </button>
         );
       })}
@@ -82,7 +82,7 @@ export function SkillModeBar({
   return (
     <details className="group rounded-xl border border-border/80 bg-card">
       <summary
-        className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 sm:px-3.5 [&::-webkit-details-marker]:hidden"
+        className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 sm:min-h-10 sm:px-3.5 sm:py-2 [&::-webkit-details-marker]:hidden"
         aria-controls={panelId}
       >
         <span className="text-xs text-muted-foreground">

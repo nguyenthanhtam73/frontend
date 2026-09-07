@@ -63,7 +63,7 @@ export function MiniStreakStrip({
           <button
             type="button"
             onClick={onOpenHistory}
-            className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+            className="inline-flex min-h-11 items-center text-xs font-medium text-primary underline-offset-2 hover:underline sm:min-h-0 sm:text-[11px]"
           >
             {labels.openHistory}
           </button>
@@ -112,7 +112,7 @@ function MiniDayPill({
         title={entry ? `${label} · ${pct}%` : label}
         data-testid={isToday ? "routine-mini-streak-today" : undefined}
         className={cn(
-          "flex min-w-[3.25rem] flex-col items-center rounded-lg border px-2 py-1.5 text-center transition-colors",
+          "flex min-h-11 min-w-[3.25rem] flex-col items-center justify-center rounded-lg border px-2 py-1.5 text-center transition-colors",
           isToday && "border-primary/50 bg-primary/10",
           !isToday && entry && "border-border/80 bg-muted/30 hover:bg-muted/50",
           !entry && "border-dashed border-border/60 bg-muted/15 opacity-70",

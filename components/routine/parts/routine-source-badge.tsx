@@ -103,7 +103,7 @@ export function RoutineSourceBadge({
       <div className="flex flex-wrap items-start gap-2">
         <span
           className={cn(
-            "inline-flex min-h-10 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold leading-snug sm:min-h-9 sm:text-sm",
+            "inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold leading-snug sm:min-h-9 sm:text-sm",
             toneCls,
           )}
         >
@@ -116,7 +116,7 @@ export function RoutineSourceBadge({
           onClick={() => setHintOpen((v) => !v)}
           aria-expanded={hintOpen}
           aria-label={labels.infoToggle}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background/80 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground active:scale-[0.98] sm:size-9"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background/80 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground active:scale-[0.98] sm:size-9"
         >
           <Info className="size-4" aria-hidden />
         </button>
@@ -138,7 +138,7 @@ export function RoutineSourceBadge({
       {meta.editHref ? (
         <Link
           href={meta.editHref}
-          className="inline-flex min-h-10 items-center text-sm font-medium text-primary underline-offset-4 hover:underline sm:min-h-9"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline-offset-4 hover:underline sm:min-h-9"
         >
           {labels.onboardingEditLink}
         </Link>

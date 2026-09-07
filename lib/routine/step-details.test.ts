@@ -20,7 +20,9 @@ describe("seedStepDetails", () => {
     assert.match(out.how_to, /60/);
     assert.match(out.how_to, /xả mát/);
     assert.equal(out.dose, "1–2 pump");
+    assert.match(out.why, /dầu|bụi/);
     assert.doesNotMatch(out.how_to, /chữa|khỏi bệnh|chẩn đoán|cure|diagnos/i);
+    assert.doesNotMatch(out.why, /chữa|khỏi bệnh|chẩn đoán|cure|diagnos/i);
   });
 
   it("uses a gentler dry-skin cleanser seed and pea-size dose", () => {
@@ -31,6 +33,7 @@ describe("seedStepDetails", () => {
     assert.equal(out.category, "cleanser");
     assert.match(out.how_to, /dạng kem|không nóng/);
     assert.equal(out.dose, "hạt đậu");
+    assert.match(out.why, /căng/);
   });
 
   it("evening cleanser mentions removing sunscreen", () => {
@@ -39,6 +42,7 @@ describe("seedStepDetails", () => {
       { period: "evening", skinType: "combo", locale: "vi" },
     );
     assert.match(out.how_to, /kem chống nắng/);
+    assert.match(out.why, /kem chống nắng/);
   });
 
   it("seeds SPF dose as two finger-lengths (vi)", () => {
@@ -48,20 +52,53 @@ describe("seedStepDetails", () => {
     );
     assert.equal(out.dose, "2 ngón tay");
     assert.match(out.how_to, /sáng/);
+    assert.match(out.why, /sáng/);
+    assert.match(out.why, /thâm/);
   });
 
-  it("prefers persisted how_to and dose over seeds", () => {
+  it("prefers persisted how_to, dose, and why over seeds", () => {
     const out = seedStepDetails(
       {
         title: "Cleanser",
         category: "cleanser",
         how_to: "Custom rinse.",
         dose: "½ pump",
+        why: "Custom purpose.",
       },
       { period: "morning", skinType: "oily", locale: "en" },
     );
     assert.equal(out.how_to, "Custom rinse.");
     assert.equal(out.dose, "½ pump");
+    assert.equal(out.why, "Custom purpose.");
+  });
+
+  it("varies moisturizer why by oily AM vs PM and dry skin", () => {
+    const oilyAm = seedStepDetails(
+      { title: "Kem dưỡng", category: "moisturizer" },
+      { period: "morning", skinType: "oily", locale: "vi" },
+    );
+    const oilyPm = seedStepDetails(
+      { title: "Kem dưỡng", category: "moisturizer" },
+      { period: "evening", skinType: "oily", locale: "vi" },
+    );
+    const dryAm = seedStepDetails(
+      { title: "Kem dưỡng", category: "moisturizer" },
+      { period: "morning", skinType: "dry", locale: "vi" },
+    );
+    assert.match(oilyAm.why, /nhờn|mỏng/);
+    assert.match(oilyPm.why, /qua đêm/);
+    assert.match(dryAm.why, /khô căng|ẩm/);
+    assert.notEqual(oilyAm.why, oilyPm.why);
+    assert.notEqual(oilyAm.why, dryAm.why);
+  });
+
+  it("keeps treatment why as support, not a medical claim", () => {
+    const out = seedStepDetails(
+      { title: "BHA", category: "treatment" },
+      { period: "evening", locale: "vi" },
+    );
+    assert.match(out.why, /Tuỳ chọn|hỗ trợ/i);
+    assert.doesNotMatch(out.why, /chữa|khỏi bệnh|chẩn đoán|cure|diagnos/i);
   });
 
   it("infers toner / treatment from title when category is other", () => {

@@ -198,21 +198,21 @@ function IssueActions({
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11 gap-2 border-amber-500/35 bg-background/95 px-3 text-sm sm:min-h-10"
+          className="h-auto min-h-11 gap-2 whitespace-normal border-amber-500/35 bg-background/95 px-2.5 text-xs leading-tight sm:min-h-10 sm:px-3 sm:text-sm"
           onClick={onAddMorning}
         >
           <Sun className="size-4 shrink-0 text-amber-500" aria-hidden />
-          <span className="truncate">{labels.addMorning}</span>
+          <span className="text-pretty text-center">{labels.addMorning}</span>
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11 gap-2 border-indigo-500/35 bg-background/95 px-3 text-sm sm:min-h-10"
+          className="h-auto min-h-11 gap-2 whitespace-normal border-indigo-500/35 bg-background/95 px-2.5 text-xs leading-tight sm:min-h-10 sm:px-3 sm:text-sm"
           onClick={onAddEvening}
         >
           <Moon className="size-4 shrink-0 text-indigo-500" aria-hidden />
-          <span className="truncate">{labels.addEvening}</span>
+          <span className="text-pretty text-center">{labels.addEvening}</span>
         </Button>
       </div>
     );

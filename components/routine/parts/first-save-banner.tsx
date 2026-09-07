@@ -14,7 +14,7 @@ export function FirstSaveBanner({ message }: { message: string }) {
       className="flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/[0.06] px-4 py-3 text-sm text-foreground shadow-sm"
     >
       <Info className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-      <p className="leading-relaxed">{message}</p>
+      <p className="min-w-0 text-pretty leading-relaxed">{message}</p>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { useWardrobeQuery } from "@/lib/hooks/use-wardrobe";
 import { mapCabinetProducts, skinTypeFromProfile } from "@/lib/routine/step-details";
 import { useOnboardingStore, type SkillMode } from "@/lib/stores/onboarding-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
+import { cn } from "@/lib/utils";
 
 import { Banner } from "./parts/banner";
 import { AISuggestCard } from "./parts/ai-suggest-card";
@@ -51,14 +52,14 @@ import { streakDateKey } from "@/lib/streak/history";
  * outside this file so the layout reads like a recipe.
  *
  * Mobile-first principles applied here:
- *   - Sticky save bar with safe-area inset on phones, regular row on desktop
+ *   - Fixed save bar on phones (safe-area inset); in-flow card on desktop
  *   - Touch targets ≥ 44px, comfortable spacing
- *   - Bottom-of-page padding so the sticky bar never covers content
+ *   - Extra bottom padding so the save bar never covers AM/PM steps
  *
  * Beginner-mode contract (matches the requirement "rất đơn giản"):
  *   - Hides categories, per-step notes, drag-drop, and reorder arrows
  *   - Hides the day-level Notes card
- *   - Still shows how_to + dose under each step (expanded); Advanced may collapse
+ *   - Still shows why + how_to + dose under each step (expanded); Advanced may collapse
  *   - Skill bar hint switches to a calmer copy
  */
 export function RoutineEditor() {
@@ -392,8 +393,21 @@ export function RoutineEditor() {
     return <RoutineEditorSkeleton />;
   }
 
+  const showSaveBar =
+    r.saving ||
+    savedFlash ||
+    ((r.dirty || !r.routine.saved) && hasEditorContent);
+
   return (
-    <div ref={editorTopRef} className="space-y-4 pb-40 sm:space-y-5 lg:pb-0">
+    <div
+      ref={editorTopRef}
+      className={cn(
+        "space-y-4 sm:space-y-5 lg:pb-0",
+        showSaveBar
+          ? "pb-[max(11rem,calc(env(safe-area-inset-bottom,0px)+9rem))]"
+          : "pb-8",
+      )}
+    >
       {r.loadError ? (
         <Banner kind="err" message={r.loadError} onClose={r.dismissLoadError} />
       ) : null}
@@ -476,7 +490,7 @@ export function RoutineEditor() {
       ) : null}
 
       {r.fresh ? (
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
           {beginnerSimple ? t("emptyHeroBeginnerBody") : t("emptyHeroBody")}
         </p>
       ) : null}
@@ -846,7 +860,7 @@ export function RoutineEditor() {
         </div>
       ) : null}
 
-      {!r.routine.saved || r.dirty || r.saving || savedFlash ? (
+      {showSaveBar ? (
       <SaveBar
         saving={r.saving}
         autoSaving={r.autoSaving}
@@ -930,6 +944,7 @@ function editorLabels(t: TFn): SectionLabels {
     details: {
       howTo: t("stepHowToLabel"),
       dose: t("stepDoseLabel"),
+      why: t("stepWhyLabel"),
       cabinet: t("stepCabinetLabel"),
       show: t("stepDetailsShow"),
       hide: t("stepDetailsHide"),
