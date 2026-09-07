@@ -23,10 +23,10 @@ describe("SaveBar quota hint layout", () => {
     assert.match(src, /data-testid="routine-save-hint"/);
     assert.match(src, /data-testid="routine-save-quota"/);
 
-    const hintIdx = src.indexOf('data-testid="routine-save-hint"');
+    const statusIdx = src.indexOf("<StatusHint");
     const quotaIdx = src.indexOf('data-testid="routine-save-quota"');
     const ctaIdx = src.indexOf('data-testid="routine-save"');
-    assert.ok(hintIdx > 0 && quotaIdx > hintIdx && ctaIdx > quotaIdx);
+    assert.ok(statusIdx > 0 && quotaIdx > statusIdx && ctaIdx > quotaIdx);
 
     const quota = quotaParagraph();
     assert.doesNotMatch(quota, /\bflex-1\b/);
