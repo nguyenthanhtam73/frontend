@@ -90,6 +90,7 @@ export function cloneStepsForToday(steps: RoutineStepDTO[]): RoutineStepDTO[] {
     notes: s.notes,
     how_to: s.how_to,
     dose: s.dose,
+    why: s.why,
     completed: false,
   }));
 }
@@ -98,6 +99,7 @@ export function cloneStepsForToday(steps: RoutineStepDTO[]): RoutineStepDTO[] {
 export function stripStep(s: RoutineStepDTO): RoutineStepDTO {
   const howTo = (s.how_to ?? "").trim();
   const dose = (s.dose ?? "").trim();
+  const why = (s.why ?? "").trim();
   return {
     id: s.id,
     title: s.title.trim(),
@@ -106,6 +108,7 @@ export function stripStep(s: RoutineStepDTO): RoutineStepDTO {
     completed: !!s.completed,
     ...(howTo ? { how_to: howTo } : {}),
     ...(dose ? { dose } : {}),
+    ...(why ? { why } : {}),
   };
 }
 

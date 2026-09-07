@@ -43,10 +43,10 @@ export function EmptyHero({
           <h2 className="text-xl font-semibold leading-tight tracking-tight sm:text-2xl">
             {labels.title}
           </h2>
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
             {body}
           </p>
-          <p className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-2 text-xs font-medium text-primary lg:hidden">
+          <p className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-2 text-pretty text-xs font-medium leading-snug text-primary lg:hidden">
             <ArrowDown className="size-3.5 animate-bounce" aria-hidden />
             {labels.scrollHint}
           </p>

@@ -82,7 +82,7 @@ export function SkillModeBar({
   return (
     <details className="group rounded-xl border border-border/80 bg-card">
       <summary
-        className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 sm:px-3.5 [&::-webkit-details-marker]:hidden"
+        className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 sm:min-h-10 sm:px-3.5 sm:py-2 [&::-webkit-details-marker]:hidden"
         aria-controls={panelId}
       >
         <span className="text-xs text-muted-foreground">

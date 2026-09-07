@@ -36,7 +36,7 @@ export default async function RoutinePage({ params }: Props) {
         <h1 className="text-2xl font-semibold tracking-tight sm:text-4xl">
           {t("pageTitle")}
         </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
           {t("pageSub")}
         </p>
       </header>

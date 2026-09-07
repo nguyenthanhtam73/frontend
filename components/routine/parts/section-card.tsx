@@ -151,7 +151,7 @@ export function SectionCard({
 
   return (
     <Card
-      className="overflow-hidden transition-shadow hover:shadow-md"
+      className="transition-shadow hover:shadow-md"
       data-testid={`routine-section-${section}`}
     >
       <CardContent className="space-y-3 p-3.5 sm:space-y-4 sm:p-6">
@@ -204,7 +204,7 @@ export function SectionCard({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="min-h-10 shrink-0 gap-1.5 border-amber-500/35 bg-background/90 px-2.5 text-xs sm:px-3"
+                className="h-auto min-h-11 shrink-0 gap-1.5 whitespace-normal border-amber-500/35 bg-background/90 px-2.5 text-xs leading-tight sm:px-3"
                 onClick={sectionAlert.onAction}
               >
                 <Plus className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
@@ -340,6 +340,7 @@ function SectionEmptyState({
   return (
     <button
       type="button"
+      data-testid={`routine-section-empty-${section}`}
       onClick={() => {
         if (editLocked) {
           onEditLockedAttempt?.();
@@ -349,7 +350,7 @@ function SectionEmptyState({
       }}
       aria-disabled={editLocked}
       className={cn(
-        "group flex w-full min-h-[10.5rem] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all duration-200 active:scale-[0.99] sm:min-h-[9rem]",
+        "group flex w-full min-h-[10.5rem] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-3 py-6 text-center transition-all duration-200 active:scale-[0.99] sm:min-h-[9rem] sm:px-4 sm:py-8",
         editLocked
           ? "cursor-not-allowed border-border bg-muted/30 opacity-60"
           : "border-primary/25 bg-linear-to-b hover:border-primary/45 hover:shadow-md active:border-primary/50",
@@ -358,7 +359,7 @@ function SectionEmptyState({
     >
       <span
         className={cn(
-          "inline-flex size-14 items-center justify-center rounded-2xl bg-background/90 shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 group-active:scale-95",
+          "inline-flex size-14 shrink-0 items-center justify-center rounded-2xl bg-background/90 shadow-sm ring-1 transition-transform duration-200 group-hover:scale-105 group-active:scale-95",
           accent === "am" ? "ring-amber-400/40" : "ring-indigo-400/40",
         )}
       >
@@ -368,13 +369,15 @@ function SectionEmptyState({
           <Plus className="size-7 text-primary" aria-hidden />
         )}
       </span>
-      <div className="space-y-1.5">
-        <p className="text-base font-semibold text-foreground sm:text-sm">{cta}</p>
-        <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{hint}</p>
+      <div className="w-full min-w-0 space-y-1.5">
+        <p className="text-pretty text-base font-semibold text-foreground sm:text-sm">{cta}</p>
+        <p className="text-pretty text-sm leading-relaxed text-muted-foreground break-words [overflow-wrap:anywhere]">
+          {hint}
+        </p>
       </div>
       {!editLocked ? (
-        <span className="inline-flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors group-hover:bg-primary/90 sm:w-auto sm:min-w-[12rem]">
-          <Plus className="size-4" aria-hidden />
+        <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors group-hover:bg-primary/90 sm:w-auto sm:min-w-[12rem]">
+          <Plus className="size-4 shrink-0" aria-hidden />
           {labels.add}
         </span>
       ) : null}

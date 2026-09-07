@@ -86,7 +86,18 @@ describe("cloneStepsForToday", () => {
     assert.equal(stripped.title, "Cleanser");
   });
 
-  it("omits empty how_to/dose so older backends stay unchanged", () => {
+  it("includes why in the API payload when present", () => {
+    const stripped = stripStep({
+      id: "m1",
+      title: "Cleanser",
+      category: "cleanser",
+      why: "  Rửa để sạch bụi.  ",
+      completed: false,
+    });
+    assert.equal(stripped.why, "Rửa để sạch bụi.");
+  });
+
+  it("omits empty how_to/dose/why so older backends stay unchanged", () => {
     const stripped = stripStep({
       id: "m1",
       title: "Cleanser",
@@ -94,9 +105,10 @@ describe("cloneStepsForToday", () => {
     });
     assert.equal("how_to" in stripped, false);
     assert.equal("dose" in stripped, false);
+    assert.equal("why" in stripped, false);
   });
 
-  it("copies how_to and dose when cloning a history day", () => {
+  it("copies how_to, dose, and why when cloning a history day", () => {
     const cloned = cloneStepsForToday([
       {
         id: "old",
@@ -104,11 +116,13 @@ describe("cloneStepsForToday", () => {
         category: "cleanser",
         how_to: "Nước ấm → sữa rửa → 60 giây.",
         dose: "1–2 pump",
+        why: "Rửa để sạch bụi trên mặt trước khi dưỡng.",
         completed: true,
       },
     ]);
     assert.equal(cloned[0]?.how_to, "Nước ấm → sữa rửa → 60 giây.");
     assert.equal(cloned[0]?.dose, "1–2 pump");
+    assert.equal(cloned[0]?.why, "Rửa để sạch bụi trên mặt trước khi dưỡng.");
   });
 });
 

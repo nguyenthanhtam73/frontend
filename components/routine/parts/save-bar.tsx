@@ -14,7 +14,8 @@ export type SaveBarStatus =
   | "warning";
 
 /**
- * Sticky save bar — shown only while today’s routine is not yet saved (or during save feedback).
+ * Mobile: fixed bottom save bar (safe-area inset) so it cannot overlay AM/PM
+ * steps or empty-state CTAs. Desktop: in-flow card.
  */
 export function SaveBar({
   saving,
@@ -56,10 +57,12 @@ export function SaveBar({
     <div
       data-testid="routine-save-bar"
       className={cn(
-        "sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 border-t px-4 py-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 lg:static lg:z-0 lg:mx-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4 lg:shadow-none",
+        "z-20 flex min-w-0 flex-col gap-2.5 border-t bg-background px-4 py-3",
+        "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:bg-background/95 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-lg:backdrop-blur-md",
+        "sm:px-6 lg:static lg:z-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4 lg:shadow-none",
         status === "unsaved"
-          ? "border-primary/30 bg-background shadow-[0_-6px_28px_-6px_rgba(0,0,0,0.12)]"
-          : "border-border/80 bg-background shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.12)]",
+          ? "border-primary/30 max-lg:shadow-[0_-6px_28px_-6px_rgba(0,0,0,0.12)]"
+          : "border-border/80 max-lg:shadow-[0_-4px_24px_-8px_rgba(0,0,0,0.12)]",
         status === "saved" && "border-emerald-500/30 bg-emerald-500/5",
       )}
     >
@@ -70,29 +73,29 @@ export function SaveBar({
         labels={labels}
       />
       {labels.quotaHint ? (
-        <p className="text-[11px] leading-snug text-muted-foreground lg:order-first lg:flex-1">
+        <p className="text-pretty text-xs leading-relaxed text-muted-foreground lg:order-first lg:flex-1 lg:text-[11px] lg:leading-snug">
           {labels.quotaHint}
         </p>
       ) : null}
 
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] gap-2 sm:flex sm:w-auto">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="min-h-12 text-sm sm:min-h-9"
+          className="h-auto min-h-11 whitespace-normal px-2 text-sm leading-tight sm:min-h-9 sm:whitespace-nowrap"
           onClick={onReset}
           disabled={saving || autoSaving}
         >
-          <RefreshCw className="size-4" aria-hidden />
-          <span className="truncate">{labels.reset}</span>
+          <RefreshCw className="size-4 shrink-0" aria-hidden />
+          <span className="text-pretty text-center">{labels.reset}</span>
         </Button>
         <Button
           type="button"
           size="default"
           data-testid="routine-save"
           className={cn(
-            "min-h-12 text-sm transition-all duration-300 sm:min-h-9",
+            "h-auto min-h-11 whitespace-normal px-2 text-sm leading-tight transition-all duration-300 sm:min-h-9 sm:whitespace-nowrap",
             hasUnsaved &&
               canSave &&
               !saving &&
@@ -106,18 +109,18 @@ export function SaveBar({
         >
           {saving ? (
             <>
-              <Loader2 className="size-4 animate-spin" aria-hidden />
+              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
               <span>{labels.saving}</span>
             </>
           ) : savedFlash ? (
             <>
-              <Check className="size-4" aria-hidden />
+              <Check className="size-4 shrink-0" aria-hidden />
               <span>{labels.saved}</span>
             </>
           ) : (
             <>
-              <Check className="size-4" aria-hidden />
-              <span className="truncate">{labels.save}</span>
+              <Check className="size-4 shrink-0" aria-hidden />
+              <span className="text-pretty text-center">{labels.save}</span>
             </>
           )}
         </Button>
@@ -143,7 +146,7 @@ function StatusHint({
     <p
       data-testid="routine-save-hint"
       className={cn(
-        "flex min-h-[1.25rem] items-center text-sm leading-snug transition-colors duration-200",
+        "flex min-h-[1.25rem] items-start text-pretty text-sm leading-relaxed break-words [overflow-wrap:anywhere] transition-colors duration-200 sm:items-center sm:leading-snug",
         status === "autosaving" && "font-medium text-primary",
         status === "manual-saving" && "font-medium text-primary",
         status === "saved" && "font-medium text-emerald-700 dark:text-emerald-300",

@@ -15,6 +15,8 @@ export type StepSkinKind = "oily" | "dry" | "sensitive" | "default";
 export type ResolvedStepDetails = {
   how_to: string;
   dose: string;
+  /** One easy sentence: purpose of this step (not a diagnosis). */
+  why: string;
   /** Cabinet product label when a shelf item maps to this step. */
   productLabel?: string;
 };
@@ -67,9 +69,10 @@ export function resolveStepCategory(step: Pick<RoutineStepDTO, "title" | "catego
   return inferCategory(step.title ?? "");
 }
 
-type Seed = { how_to: string; dose: string };
+type TechniqueSeed = { how_to: string; dose: string };
+type Seed = TechniqueSeed & { why: string };
 
-function cleanserSeed(skin: StepSkinKind, period: StepPeriod, en: boolean): Seed {
+function cleanserSeed(skin: StepSkinKind, period: StepPeriod, en: boolean): TechniqueSeed {
   if (period === "evening") {
     if (en) {
       return {
@@ -133,7 +136,7 @@ function cleanserSeed(skin: StepSkinKind, period: StepPeriod, en: boolean): Seed
       };
 }
 
-function moisturizerSeed(skin: StepSkinKind, period: StepPeriod, en: boolean): Seed {
+function moisturizerSeed(skin: StepSkinKind, period: StepPeriod, en: boolean): TechniqueSeed {
   if (en) {
     if (skin === "oily") {
       return {
@@ -188,48 +191,196 @@ function moisturizerSeed(skin: StepSkinKind, period: StepPeriod, en: boolean): S
   };
 }
 
+/** One easy purpose sentence. Not a diagnosis or cure claim. */
+function whyForCategory(
+  category: RoutineCategory,
+  skin: StepSkinKind,
+  period: StepPeriod,
+  en: boolean,
+): string {
+  switch (category) {
+    case "cleanser":
+      return cleanserWhy(skin, period, en);
+    case "moisturizer":
+      return moisturizerWhy(skin, period, en);
+    case "spf":
+      return en
+        ? "Morning sunscreen helps limit new dark marks — window light at home counts too."
+        : "Kem chống nắng buổi sáng giúp hạn chế thâm mới — kể cả nắng cửa sổ trong nhà.";
+    case "toner":
+      return tonerWhy(skin, en);
+    case "serum":
+      return serumWhy(skin, en);
+    case "treatment":
+      return en
+        ? "Optional at night — support for this step, not a medical treatment. Skip if skin stings."
+        : "Tuỳ chọn buổi tối — hỗ trợ bước này, không phải điều trị y khoa. Bỏ qua nếu da đang rát.";
+    case "eye":
+      return en
+        ? "A tiny amount for the thin skin around the eyes — don’t drag."
+        : "Lượng rất nhỏ cho vùng mắt mỏng — đừng kéo da.";
+    case "mask":
+      return en
+        ? "An extra rest step when you have time — not a medical treatment."
+        : "Bước thêm khi da cần nghỉ — không phải điều trị y khoa.";
+    default:
+      return en
+        ? "Supports this step as the product label describes."
+        : "Hỗ trợ bước này theo hướng dẫn trên sản phẩm.";
+  }
+}
+
+function cleanserWhy(skin: StepSkinKind, period: StepPeriod, en: boolean): string {
+  if (period === "evening") {
+    if (skin === "dry") {
+      return en
+        ? "Gently take off sunscreen so skin isn’t tight before you moisturize."
+        : "Gỡ kem chống nắng nhẹ nhàng để da không căng trước khi dưỡng.";
+    }
+    return en
+      ? "Take off sunscreen and the day’s dirt so later steps sit on clean skin."
+      : "Gỡ kem chống nắng và bụi trong ngày để bước sau thấm trên da sạch.";
+  }
+  if (skin === "oily") {
+    return en
+      ? "Wash off oil and dust so later steps sit evenly — not to strip the face."
+      : "Rửa để gỡ dầu và bụi, giúp bước sau thấm đều — không phải để ‘tẩy sạch’ da.";
+  }
+  if (skin === "dry") {
+    return en
+      ? "A gentle wash so skin is clean without feeling tight."
+      : "Rửa dịu để sạch nhẹ mà da không bị căng.";
+  }
+  if (skin === "sensitive") {
+    return en
+      ? "A light wash to clear dust without rubbing reactive skin."
+      : "Rửa nhẹ để sạch bụi, không chà lên da đang nhạy.";
+  }
+  return en
+    ? "Clear dust from the face before you moisturize."
+    : "Rửa để sạch bụi trên mặt trước khi dưỡng.";
+}
+
+function moisturizerWhy(skin: StepSkinKind, period: StepPeriod, en: boolean): string {
+  if (skin === "oily") {
+    return period === "evening"
+      ? en
+        ? "A light layer so skin stays comfortable overnight without feeling greasy."
+        : "Một lớp mỏng để da êm qua đêm, không bí dầu."
+      : en
+        ? "A thin layer so skin stays comfortable after washing, without extra shine."
+        : "Lớp mỏng để da êm sau rửa, không thêm nhờn.";
+  }
+  if (skin === "dry") {
+    return en
+      ? "Hold moisture after washing so skin feels less tight."
+      : "Giữ ẩm sau rửa để da đỡ khô căng.";
+  }
+  if (skin === "sensitive") {
+    return en
+      ? "Keep skin comfortable after washing — skip if it stings."
+      : "Giữ da êm sau rửa — bỏ qua nếu đang rát.";
+  }
+  return period === "evening"
+    ? en
+      ? "Keep skin comfortable overnight after washing."
+      : "Giữ da êm qua đêm sau khi rửa."
+    : en
+      ? "Keep skin comfortable after washing, before sunscreen."
+      : "Giữ da êm sau rửa, trước kem chống nắng.";
+}
+
+function tonerWhy(skin: StepSkinKind, en: boolean): string {
+  if (skin === "oily") {
+    return en
+      ? "Helps the face feel less oily after washing so moisturizer sits better."
+      : "Giúp mặt bớt nhờn sau rửa, kem dưỡng thấm dễ hơn.";
+  }
+  if (skin === "dry") {
+    return en
+      ? "A light sip of moisture after washing so cream absorbs more easily."
+      : "Thêm ẩm nhẹ sau rửa, giúp kem dưỡng thấm dễ hơn.";
+  }
+  if (skin === "sensitive") {
+    return en
+      ? "A calm pat after washing — skip if skin is stinging."
+      : "Vỗ nhẹ sau rửa — bỏ qua nếu da đang rát.";
+  }
+  return en
+    ? "Preps clean skin so moisturizer absorbs more easily."
+    : "Chuẩn bị da sạch, giúp kem dưỡng thấm dễ hơn.";
+}
+
+function serumWhy(skin: StepSkinKind, en: boolean): string {
+  if (skin === "oily") {
+    return en
+      ? "A focused thin layer before cream — one serum at a time is enough."
+      : "Dưỡng mỏng, tập trung trước kem — một serum một lần là đủ.";
+  }
+  if (skin === "dry") {
+    return en
+      ? "Adds extra comfort before moisturizer on dry-feeling skin."
+      : "Thêm dưỡng trước kem khi da dễ khô.";
+  }
+  if (skin === "sensitive") {
+    return en
+      ? "A light leave-on before cream — skip if it stings."
+      : "Dưỡng nhẹ trước kem — bỏ qua nếu da đang rát.";
+  }
+  return en
+    ? "A focused leave-on before moisturizer."
+    : "Bổ sung dưỡng chất tập trung trước kem dưỡng.";
+}
+
 function seedForCategory(
   category: RoutineCategory,
   skin: StepSkinKind,
   period: StepPeriod,
   en: boolean,
 ): Seed {
+  const why = whyForCategory(category, skin, period, en);
   switch (category) {
     case "cleanser":
-      return cleanserSeed(skin, period, en);
+      return { ...cleanserSeed(skin, period, en), why };
     case "moisturizer":
-      return moisturizerSeed(skin, period, en);
+      return { ...moisturizerSeed(skin, period, en), why };
     case "spf":
       return en
         ? {
             how_to:
               "Last morning step — cover face and neck. Window light at home can still darken marks.",
             dose: "2 finger-lengths",
+            why,
           }
         : {
             how_to:
               "Bước cuối buổi sáng — phủ đều mặt và cổ. Nắng cửa sổ trong nhà vẫn có thể làm thâm.",
             dose: "2 ngón tay",
+            why,
           };
     case "toner":
       return en
         ? {
             how_to: "Pat onto clean skin — don’t rub. Wait a moment, then moisturizer.",
             dose: "2–3 drops",
+            why,
           }
         : {
             how_to: "Vỗ nhẹ lên da sạch — đừng chà. Chờ thấm rồi tới bước dưỡng.",
             dose: "2–3 giọt",
+            why,
           };
     case "serum":
       return en
         ? {
             how_to: "A few drops on damp skin; pat in. One serum at a time is enough.",
             dose: "3–4 drops",
+            why,
           }
         : {
             how_to: "Vài giọt lúc da còn hơi ẩm, vỗ nhẹ. Một serum một lần là đủ.",
             dose: "3–4 giọt",
+            why,
           };
     case "treatment":
       return en
@@ -237,53 +388,61 @@ function seedForCategory(
             how_to:
               "At most one treatment at night, on a small area. Skip if skin stings. Not medical advice.",
             dose: "thin layer",
+            why,
           }
         : {
             how_to:
               "Tối đa một sản phẩm trị mỗi đêm, vùng nhỏ. Bỏ qua nếu da đang rát. Không phải lời khuyên y khoa.",
             dose: "lớp mỏng",
+            why,
           };
     case "eye":
       return en
         ? {
             how_to: "Tap a tiny amount along the orbital bone — don’t drag the skin.",
             dose: "rice-grain / eye",
+            why,
           }
         : {
             how_to: "Chấm ít dọc xương ổ mắt — đừng kéo da.",
             dose: "hạt gạo / mắt",
+            why,
           };
     case "mask":
       return en
         ? {
             how_to: "A thin layer on clean skin; follow the product’s time. Not a medical treatment.",
             dose: "1 thin layer",
+            why,
           }
         : {
             how_to: "Một lớp mỏng trên da sạch; giữ đúng thời gian ghi trên sản phẩm. Không phải điều trị y khoa.",
             dose: "1 lớp mỏng",
+            why,
           };
     default:
       return en
         ? {
             how_to: "Use a small amount as the product label describes. Stop if it stings.",
             dose: "as labelled",
+            why,
           }
         : {
             how_to: "Dùng lượng nhỏ theo hướng dẫn trên sản phẩm. Ngưng nếu da rát.",
             dose: "theo nhãn",
+            why,
           };
   }
 }
 
 export function seedStepDetails(
-  step: Pick<RoutineStepDTO, "title" | "category" | "how_to" | "dose">,
+  step: Pick<RoutineStepDTO, "title" | "category" | "how_to" | "dose" | "why">,
   opts: {
     period: StepPeriod;
     skinType?: string | null;
     locale?: string;
   },
-): { how_to: string; dose: string; category: RoutineCategory } {
+): { how_to: string; dose: string; why: string; category: RoutineCategory } {
   const en = (opts.locale ?? "vi").toLowerCase().startsWith("en");
   const category = resolveStepCategory(step);
   const seeded = seedForCategory(category, normalizeStepSkin(opts.skinType), opts.period, en);
@@ -291,6 +450,7 @@ export function seedStepDetails(
     category,
     how_to: step.how_to?.trim() || seeded.how_to,
     dose: step.dose?.trim() || seeded.dose,
+    why: step.why?.trim() || seeded.why,
   };
 }
 
@@ -377,6 +537,7 @@ export function resolveStepDetails(
   return {
     how_to: seeded.how_to,
     dose: seeded.dose,
+    why: seeded.why,
     productLabel: opts.productLabel?.trim() || undefined,
   };
 }
