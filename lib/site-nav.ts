@@ -29,6 +29,15 @@ export function isOnboardingFunnelPath(pathname: string) {
   );
 }
 
+/**
+ * Conversion funnel where marketing header/footer chips steal focus
+ * (especially ~390px). Includes check-in plus the onboarding/auth funnel.
+ */
+export function hidesFunnelMarketingNav(pathname: string) {
+  const p = appPath(pathname);
+  return isOnboardingFunnelPath(pathname) || p === "/check-in";
+}
+
 /** Login/register only — the wizard itself can still show a first-check-in CTA. */
 export function isAuthEntryPath(pathname: string) {
   const p = appPath(pathname);
@@ -41,7 +50,7 @@ export function isAuthEntryPath(pathname: string) {
  */
 export function hidesPwaInstallBanner(pathname: string) {
   const p = appPath(pathname);
-  return isOnboardingFunnelPath(pathname) || p === "/pricing";
+  return hidesFunnelMarketingNav(pathname) || p === "/pricing";
 }
 
 /** Marketing surfaces where guests see the short funnel nav. */

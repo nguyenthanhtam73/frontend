@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
-import { normalizePath } from "@/lib/site-nav";
+import { hidesFunnelMarketingNav, normalizePath } from "@/lib/site-nav";
 import { useShowGuestNav } from "@/lib/use-show-guest-nav";
 
 const linkClass =
@@ -19,6 +19,11 @@ export function SiteFooterNav() {
   const pathname = usePathname();
   const showGuestNav = useShowGuestNav();
 
+  const legalLinks = [
+    { href: "/privacy" as const, label: t("footer.privacy") },
+    { href: "/terms" as const, label: t("footer.terms") },
+  ];
+
   const guestLinks = [
     { href: "/#how" as const, label: t("nav.howItWorks") },
     { href: "/guides" as const, label: t("nav.guides") },
@@ -26,8 +31,7 @@ export function SiteFooterNav() {
     { href: "/#faq" as const, label: t("nav.faq") },
     { href: "/register" as const, label: t("register") },
     { href: "/login" as const, label: t("signIn") },
-    { href: "/privacy" as const, label: t("footer.privacy") },
-    { href: "/terms" as const, label: t("footer.terms") },
+    ...legalLinks,
   ].filter((link) => normalizePath(link.href) !== normalizePath(pathname));
 
   const signedInLinks = [
@@ -39,15 +43,21 @@ export function SiteFooterNav() {
     { href: "/pricing" as const, label: t("nav.pricing") },
     { href: "/settings" as const, label: t("nav.settings") },
     { href: "/feedback" as const, label: t("nav.feedback") },
-    { href: "/privacy" as const, label: t("footer.privacy") },
-    { href: "/terms" as const, label: t("footer.terms") },
+    ...legalLinks,
   ];
 
-  const links = showGuestNav ? guestLinks : signedInLinks;
+  const hideMarketing = hidesFunnelMarketingNav(pathname);
+  const links = hideMarketing
+    ? legalLinks.filter((link) => normalizePath(link.href) !== normalizePath(pathname))
+    : showGuestNav
+      ? guestLinks
+      : signedInLinks;
 
   return (
     <nav
       aria-label={t("footer.navAria")}
+      data-testid="site-footer-nav"
+      data-funnel-legal={hideMarketing ? "true" : "false"}
       className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
     >
       {links.map((link) => (

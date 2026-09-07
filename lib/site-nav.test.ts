@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   hasMobileBottomChrome,
+  hidesFunnelMarketingNav,
   hidesPwaInstallBanner,
   isAuthEntryPath,
   isOnboardingFunnelPath,
@@ -39,10 +40,24 @@ describe("site-nav funnel helpers", () => {
     assert.equal(hasMobileBottomChrome("/onboarding"), false);
   });
 
+  it("hides marketing nav on check-in / onboarding / register funnel", () => {
+    assert.equal(hidesFunnelMarketingNav("/check-in"), true);
+    assert.equal(hidesFunnelMarketingNav("/en/check-in"), true);
+    assert.equal(hidesFunnelMarketingNav("/onboarding"), true);
+    assert.equal(hidesFunnelMarketingNav("/onboarding/coach-welcome"), true);
+    assert.equal(hidesFunnelMarketingNav("/register"), true);
+    assert.equal(hidesFunnelMarketingNav("/login"), true);
+    assert.equal(hidesFunnelMarketingNav("/"), false);
+    assert.equal(hidesFunnelMarketingNav("/pricing"), false);
+    assert.equal(hidesFunnelMarketingNav("/guides"), false);
+    assert.equal(hidesFunnelMarketingNav("/progress"), false);
+  });
+
   it("hides the install banner on funnel + pricing", () => {
     assert.equal(hidesPwaInstallBanner("/pricing"), true);
     assert.equal(hidesPwaInstallBanner("/en/pricing"), true);
     assert.equal(hidesPwaInstallBanner("/register"), true);
-    assert.equal(hidesPwaInstallBanner("/check-in"), false);
+    assert.equal(hidesPwaInstallBanner("/check-in"), true);
+    assert.equal(hidesPwaInstallBanner("/"), false);
   });
 });

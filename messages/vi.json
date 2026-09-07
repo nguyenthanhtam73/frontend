@@ -685,7 +685,20 @@
       "registerCta": "Đăng ký để lưu nhật ký & soi da dài hạn",
       "loginCta": "Đăng nhập nếu đã có tài khoản",
       "redo": "Thử lại check-in này",
-      "saveError": "Chưa lưu được trên máy này. Thử lại nhé."
+      "saveError": "Chưa lưu được trên máy này. Thử lại nhé.",
+      "wait": {
+        "title": "Đang xem lại check-in thử",
+        "submittingTitle": "Đang lưu trên máy này…",
+        "submittingSubtitle": "Ảnh và cảm nhận ở lại thiết bị này — chưa gửi lên máy chủ.",
+        "submittingProgress": "Đang lưu trên máy",
+        "progressLabel": "Đang xem lại trên máy này",
+        "status1": "Đang xem ảnh trên máy này — chưa gửi lên máy chủ…",
+        "status2": "Đang đối chiếu cảm nhận bạn ghi với ảnh…",
+        "status3": "Gần xong — soi da đầy đủ sau khi đăng ký…",
+        "savedLocal": "Đã lưu trên máy này. AI đầy đủ sau khi đăng ký.",
+        "skipWait": "Bỏ qua, xem kết quả thử",
+        "hint": "Chưa có phân tích trên máy chủ. Đăng ký để lưu nhật ký & soi da dài hạn."
+      }
     },
     "networkError": "Chưa kết nối được tới máy chủ (hoặc CORS). Kiểm tra `NEXT_PUBLIC_API_URL` và backend — form đã dùng đúng field multipart.",
     "submitErrorNetwork": "Không gửi được — kiểm tra mạng và thử lại. Dữ liệu bạn nhập vẫn được giữ.",

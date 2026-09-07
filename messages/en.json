@@ -685,7 +685,20 @@
       "registerCta": "Sign up to keep your journal & long-term skin tracking",
       "loginCta": "Log in if you already have an account",
       "redo": "Redo this check-in",
-      "saveError": "Couldn't save on this device. Please try again."
+      "saveError": "Couldn't save on this device. Please try again.",
+      "wait": {
+        "title": "Reviewing your trial check-in",
+        "submittingTitle": "Saving on this device…",
+        "submittingSubtitle": "Photos and notes stay on this device — not sent to the server yet.",
+        "submittingProgress": "Saving on this device",
+        "progressLabel": "Reviewing on this device",
+        "status1": "Looking at your photos on this device — not sent to the server yet…",
+        "status2": "Matching the notes you wrote to today's photos…",
+        "status3": "Almost done — full skin analysis after you sign up…",
+        "savedLocal": "Saved on this device. Full AI after you sign up.",
+        "skipWait": "Skip, see the trial result",
+        "hint": "No server analysis yet. Sign up to keep your journal & long-term skin tracking."
+      }
     },
     "networkError": "Could not reach the API (or CORS). Check `NEXT_PUBLIC_API_URL` and the backend — multipart field names are correct.",
     "submitErrorNetwork": "Couldn't submit — check your connection and try again. Your entries are still here.",
