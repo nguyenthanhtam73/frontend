@@ -37,6 +37,11 @@ export type SkinCoachDetailDTO = {
   product_suggestions?: ProductSuggestionDTO[];
   product_guidance?: ProductGuidanceItemDTO[];
   care_phase?: string;
+  /** skip | limited | ok — from backend photo evidence; FE also infers skip from empty image_urls. */
+  photo_evidence?: string;
+  /** True when vision flagged blur / dark / crop. */
+  photo_limited?: boolean;
+  photo_limited_note?: string;
   error_message?: string;
 };
 

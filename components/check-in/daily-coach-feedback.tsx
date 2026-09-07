@@ -13,7 +13,9 @@ import {
   Sun,
 } from "lucide-react";
 
+import { CabinetFirstCare } from "@/components/check-in/cabinet-first-care";
 import { CheckInBeforeAfterShare } from "@/components/check-in/check-in-before-after-share";
+import { CoachPhotoEvidenceBanner } from "@/components/check-in/coach-photo-evidence-banner";
 import { RoutineBridge } from "@/components/check-in/routine-bridge";
 import { splitRoutineHints } from "@/components/check-in/routine-hint-parser";
 import { ProductSuggestionsCard } from "@/components/coach/product-suggestions-card";
@@ -23,6 +25,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { getAccessToken } from "@/lib/auth-token";
+import {
+  cabinetCoveredRoles,
+  isAffiliateRoleCovered,
+  matchCabinetToCare,
+} from "@/lib/check-in/cabinet-care";
+import {
+  isUncertainPhotoEvidence,
+  resolveCoachPhotoEvidence,
+} from "@/lib/check-in/coach-evidence";
+import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
+import { useWardrobeQuery } from "@/lib/hooks/use-wardrobe";
 import type {
   CoachCareSuggestionDTO,
   CreateSkinCheckResponseDTO,
@@ -51,6 +64,7 @@ export function DailyCoachFeedback({
   onRetry?: () => void;
 }) {
   const t = useTranslations("checkIn.coach");
+  const wardrobe = useWardrobeQuery();
 
   const a = payload.analysis;
   const c = a.coach;
@@ -90,6 +104,27 @@ export function DailyCoachFeedback({
   // Prefer care_suggestions block; keep legacy tips only when checklist is empty.
   const showLegacyTips =
     !hasCare && !!c.improvements && c.improvements.length > 0;
+  const evidence = resolveCoachPhotoEvidence({
+    imageUrls: payload.image_urls,
+    photoEvidence: c.photo_evidence,
+    photoLimited: c.photo_limited,
+  });
+  const uncertain = isUncertainPhotoEvidence(evidence.kind);
+  const cabinetMatches = matchCabinetToCare({
+    products: wardrobe.products,
+    careSteps: c.care_suggestions,
+    guidance: c.product_guidance,
+  });
+  const coveredRoles = cabinetCoveredRoles(wardrobe.products);
+  const guidanceForBuy =
+    c.product_guidance?.filter((item) => {
+      const isBuy = Boolean(item.affiliate_product_id && item.affiliate_link?.trim());
+      return !isBuy || !isAffiliateRoleCovered(item, coveredRoles);
+    }) ?? [];
+  const suggestionsForBuy =
+    c.product_suggestions?.filter(
+      (item) => !isAffiliateRoleCovered({ step: item.step, name_or_category: item.product_name }, coveredRoles),
+    ) ?? [];
 
   return (
     <div
@@ -97,6 +132,10 @@ export function DailyCoachFeedback({
       data-coach-feedback
     >
       <CheckInBeforeAfterShare payload={payload} />
+
+      {evidence.kind !== "ok" ? (
+        <CoachPhotoEvidenceBanner kind={evidence.kind} chips={evidence.chips} />
+      ) : null}
 
       {c.situation_summary ? (
         <Card>
@@ -125,23 +164,45 @@ export function DailyCoachFeedback({
       ) : null}
 
       {hasGauges ? (
-        <Card className="border-muted">
+        <Card className={uncertain ? "border-amber-500/20 bg-amber-500/[0.03]" : "border-muted"}>
           <CardContent className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {t("softGauges")}
-            </p>
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("softGauges")}
+              </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t("softGaugesHint")}
+              </p>
+            </div>
             <div className="space-y-2.5">
               {g!.overall != null ? (
-                <ScoreBar label={t("gaugeOverall")} value={g!.overall} emphasis />
+                <ScoreBar
+                  label={t("gaugeOverall")}
+                  value={g!.overall}
+                  feelLabel={t(softGaugeFeelKey(g!.overall))}
+                  emphasis
+                />
               ) : null}
               {g!.hydration != null ? (
-                <ScoreBar label={t("gaugeHydration")} value={g!.hydration} />
+                <ScoreBar
+                  label={t("gaugeHydration")}
+                  value={g!.hydration}
+                  feelLabel={t(softGaugeFeelKey(g!.hydration))}
+                />
               ) : null}
               {g!.clarity != null ? (
-                <ScoreBar label={t("gaugeClarity")} value={g!.clarity} />
+                <ScoreBar
+                  label={t("gaugeClarity")}
+                  value={g!.clarity}
+                  feelLabel={t(softGaugeFeelKey(g!.clarity))}
+                />
               ) : null}
               {g!.barrier != null ? (
-                <ScoreBar label={t("gaugeBarrier")} value={g!.barrier} />
+                <ScoreBar
+                  label={t("gaugeBarrier")}
+                  value={g!.barrier}
+                  feelLabel={t(softGaugeFeelKey(g!.barrier))}
+                />
               ) : null}
             </div>
           </CardContent>
@@ -275,9 +336,11 @@ export function DailyCoachFeedback({
         </Card>
       ) : null}
 
-      {c.product_guidance && c.product_guidance.length > 0 ? (
+      {cabinetMatches.length > 0 ? <CabinetFirstCare items={cabinetMatches} /> : null}
+
+      {guidanceForBuy.length > 0 ? (
         <ProductGuidanceSection
-          items={c.product_guidance}
+          items={guidanceForBuy}
           contextId={a.id}
           source="daily_feedback"
           variant="coach"
@@ -285,7 +348,7 @@ export function DailyCoachFeedback({
         />
       ) : (
         <ProductSuggestionsCard
-          suggestions={c.product_suggestions}
+          suggestions={suggestionsForBuy}
           source="daily_feedback"
           contextId={a.id}
         />
@@ -419,14 +482,16 @@ function CareSlotBlock({
   );
 }
 
-/** Soft 0-1 gauge bar; color-coded so users feel the read instantly. */
+/** Soft 0-1 bar framed as today's feel — qualitative label, not an exam %. */
 function ScoreBar({
   label,
   value,
+  feelLabel,
   emphasis,
 }: {
   label: string;
   value: number;
+  feelLabel: string;
   emphasis?: boolean;
 }) {
   const clamped = Math.min(1, Math.max(0, value));
@@ -443,11 +508,12 @@ function ScoreBar({
         <span className={emphasis ? "font-medium text-foreground" : undefined}>
           {label}
         </span>
-        <span className="tabular-nums">{pct}%</span>
+        <span>{feelLabel}</span>
       </div>
       <div
         className={`${emphasis ? "h-2.5" : "h-2"} overflow-hidden rounded-full bg-muted`}
         role="presentation"
+        aria-hidden
       >
         <div
           className={`${color} h-full rounded-full transition-[width] duration-700 ease-out`}

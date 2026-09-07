@@ -11,6 +11,8 @@ import type {
   ProgressSummaryDataDTO,
 } from "@/lib/types/progress";
 
+import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
+
 import {
   ProgressSparkline,
   type SparklinePoint,
@@ -73,7 +75,7 @@ export function ProgressSummaryCard({
           <StatTile
             icon={<TrendIcon trend={trend} />}
             label={t("overall")}
-            value={pctOrDash(summary.current_month?.overall_avg)}
+            value={feelOrDash(summary.current_month?.overall_avg, t)}
           />
           <StatTile
             icon={<Sparkles className="size-3.5" aria-hidden />}
@@ -194,7 +196,10 @@ function trendColorClass(trend: "up" | "flat" | "down") {
   return "text-muted-foreground";
 }
 
-function pctOrDash(v?: number) {
+function feelOrDash(
+  v: number | undefined,
+  t: ReturnType<typeof useTranslations<"progress.summary">>,
+) {
   if (v == null) return "—";
-  return `${Math.round(v * 100)}%`;
+  return t(softGaugeFeelKey(v));
 }

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { ProgressPhoto } from "@/components/progress/progress-photo";
 import { Card, CardContent } from "@/components/ui/card";
+import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export function ProgressEntryCard({
   highlighted?: boolean;
 }) {
   const t = useTranslations("progress.entry");
+  const tFeel = useTranslations("progress.summary");
   const thumb = entry.image_urls?.[0];
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
@@ -54,8 +56,8 @@ export function ProgressEntryCard({
             </span>
           ) : null}
           {overall != null ? (
-            <span className="absolute right-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-foreground shadow-sm backdrop-blur">
-              {Math.round(overall * 100)}%
+            <span className="absolute right-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-[9px] font-semibold text-foreground shadow-sm backdrop-blur">
+              {tFeel(softGaugeFeelKey(overall))}
             </span>
           ) : null}
         </div>
