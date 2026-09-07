@@ -227,10 +227,15 @@ test.describe("Onboarding analyze — slow read", () => {
     // The old 45s abort would have raised an error by now.
     await expect(errorPanel(page)).toBeHidden();
 
-    // The read that would have been discarded lands and carries the flow on.
+    // The read that would have been discarded lands; user confirms skin type then continues.
+    await expect(page.getByTestId("onboarding-skin-readback")).toBeVisible({
+      timeout: 40_000,
+    });
+    await expect(page.getByTestId("onboarding-skin-type-combo")).toBeVisible();
+    await page.getByTestId("onboarding-nav-continue").click();
     await expect(
       page.getByTestId("onboarding-step-starter-routine"),
-    ).toBeVisible({ timeout: 40_000 });
+    ).toBeVisible({ timeout: 20_000 });
 
     // Built from the analysis, not from the goal fallback.
     await expect(page.getByTestId("onboarding-starter-summary")).toContainText(

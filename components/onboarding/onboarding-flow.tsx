@@ -45,6 +45,14 @@ import {
   persistOnboardingSkipped,
 } from "@/lib/onboarding/skip";
 import { inferSkinTypeFromConcerns } from "@/lib/onboarding/infer-skin-type";
+import {
+  canContinueStep1,
+  canProceedStep1Basics,
+  isQuickSkinType,
+  isStep1SkinTypePickerVisible,
+  shouldAdvanceFromStep1,
+  shouldRunAnalyze as shouldRunAnalyzeGate,
+} from "@/lib/onboarding/step1-gate";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   assertAnalyzeSkinPayload,
@@ -81,27 +89,44 @@ import { useSkillStore } from "@/lib/stores/skill-store";
 
 const steps = ONBOARDING_STEPS;
 
+function step1GateFromStore(
+  ob: ReturnType<typeof useOnboardingStore.getState>,
+  skipFace: boolean,
+  analyzing: boolean,
+) {
+  return {
+    hasGoal: ob.goal != null,
+    concernCount: ob.aiConcernTags.length,
+    skipFace,
+    photoCount: ob.photos.length,
+    hasAiSnapshot: ob.aiSnapshot != null,
+    analyzing,
+    skinType: ob.skinType,
+    skinInputMode: ob.skinInputMode,
+  };
+}
+
 function canProceedStep1(ob: ReturnType<typeof useOnboardingStore.getState>): boolean {
-  return ob.goal != null && ob.aiConcernTags.length >= 1;
+  return canProceedStep1Basics({
+    hasGoal: ob.goal != null,
+    concernCount: ob.aiConcernTags.length,
+  });
 }
 
 function shouldRunAnalyze(
   ob: ReturnType<typeof useOnboardingStore.getState>,
   skipFace: boolean,
 ): boolean {
-  return (
-    !skipFace &&
-    ob.photos.length >= ONBOARDING_MIN_PHOTOS &&
-    !ob.aiSnapshot &&
-    ob.analyzeStatus !== "loading"
-  );
+  return shouldRunAnalyzeGate({
+    skipFace,
+    photoCount: ob.photos.length,
+    hasAiSnapshot: ob.aiSnapshot != null,
+    analyzing: ob.analyzeStatus === "loading",
+  });
 }
 
 function applyManualProfile(skipFace: boolean) {
   const ob = useOnboardingStore.getState();
-  const concerns = ob.aiConcernTags;
-  const inferred = inferSkinTypeFromConcerns(concerns, ob.goal);
-  if (!ob.skinType) ob.setSkinType(inferred);
   if (!ob.undertone) ob.setUndertone("prefer_not");
   ob.setSkinInputMode(skipFace || ob.photos.length === 0 ? "manual_skip" : "manual_fallback");
   ob.setAnalyzeStatus("idle");
@@ -278,6 +303,11 @@ export function OnboardingFlow() {
     analyzeSkipRequested.current = true;
     useOnboardingStore.getState().setAnalyzeStatus("idle");
     applyManualProfile(skipFaceCapture);
+    const state = useOnboardingStore.getState();
+    // Loading/error fallback still infers so a long wait can leave step 1.
+    if (!isQuickSkinType(state.skinType)) {
+      state.setSkinType(inferSkinTypeFromConcerns(state.aiConcernTags, state.goal));
+    }
     buildRoutineForStep2(locale, routineLabelFn);
     setSlideDir(1);
     setIdx((i) => Math.min(i + 1, steps.length - 1));
@@ -298,22 +328,36 @@ export function OnboardingFlow() {
   function continueWithoutPhotos() {
     clearPhotos();
     setSkipFaceCapture(true);
+    const ob = useOnboardingStore.getState();
+    ob.setSkinType(null);
     applyManualProfile(true);
-    if (shouldRunAnalyze(useOnboardingStore.getState(), true)) return;
-    buildRoutineForStep2(locale, routineLabelFn);
-    setSlideDir(1);
-    setIdx((i) => Math.min(i + 1, steps.length - 1));
   }
 
   async function advanceFromStep1() {
     const state = useOnboardingStore.getState();
-    if (!canProceedStep1(state)) return;
+    const gate = step1GateFromStore(state, skipFaceCapture, false);
+    if (!canProceedStep1Basics(gate)) return;
 
     if (shouldRunAnalyze(state, skipFaceCapture)) {
       const ok = await runAnalyze();
       if (!ok) return;
-    } else if (!state.aiSnapshot) {
-      applyManualProfile(skipFaceCapture || state.photos.length === 0);
+      // Stay on step 1 so the user can confirm/override the 5-type guess.
+      return;
+    }
+
+    if (!shouldAdvanceFromStep1(step1GateFromStore(useOnboardingStore.getState(), skipFaceCapture, false))) {
+      if (
+        skipFaceCapture ||
+        useOnboardingStore.getState().photos.length < ONBOARDING_MIN_PHOTOS
+      ) {
+        continueWithoutPhotos();
+      }
+      return;
+    }
+
+    const nextState = useOnboardingStore.getState();
+    if (!nextState.aiSnapshot) {
+      applyManualProfile(skipFaceCapture || nextState.photos.length === 0);
     }
 
     buildRoutineForStep2(locale, routineLabelFn);
@@ -692,7 +736,7 @@ export function OnboardingFlow() {
 
   const stickyCanContinue =
     step === "skinProfile"
-      ? canProceedStep1(ob) && !analyzing
+      ? canContinueStep1(step1GateFromStore(ob, skipFaceCapture, analyzing))
       : ob.starterRoutine != null && !finishing;
 
   if (guestTrialBlocked === null) {
@@ -765,6 +809,11 @@ export function OnboardingFlow() {
                 analyzeFailed={ob.analyzeStatus === "error"}
                 analyzeErrorKind={ob.analyzeErrorKind}
                 aiSnapshot={ob.aiSnapshot}
+                showSkinTypePicker={isStep1SkinTypePickerVisible({
+                  hasAiSnapshot: ob.aiSnapshot != null,
+                  skipFace: skipFaceCapture,
+                  skinInputMode: ob.skinInputMode,
+                })}
                 onRetryAnalyze={() => {
                   ob.setAnalyzeStatus("idle");
                   void runAnalyze();
@@ -839,10 +888,20 @@ export function OnboardingFlow() {
             )}
           </OnboardingStepPanel>
 
-          {step === "skinProfile" && !canProceedStep1(ob) && !analyzing ? (
-            <p className="mt-4 text-center text-xs leading-snug text-amber-700 dark:text-amber-300 sm:text-left">
-              {t("step1.continueBlockedHint")}
-            </p>
+          {step === "skinProfile" && !analyzing ? (
+            !canProceedStep1(ob) ? (
+              <p className="mt-4 text-center text-xs leading-snug text-amber-700 dark:text-amber-300 sm:text-left">
+                {t("step1.continueBlockedHint")}
+              </p>
+            ) : isStep1SkinTypePickerVisible({
+                hasAiSnapshot: ob.aiSnapshot != null,
+                skipFace: skipFaceCapture,
+                skinInputMode: ob.skinInputMode,
+              }) && !isQuickSkinType(ob.skinType) ? (
+              <p className="mt-4 text-center text-xs leading-snug text-amber-700 dark:text-amber-300 sm:text-left">
+                {t("step1.skinTypeRequiredHint")}
+              </p>
+            ) : null
           ) : null}
 
           <OnboardingStickyNav

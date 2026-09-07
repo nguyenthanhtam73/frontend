@@ -35,6 +35,7 @@ import {
   injectSkipFaceCapture,
 } from "./helpers/browser";
 import { defaultPassword, e2eSecret } from "./helpers/env";
+import { skipPhotosAndPickSkinType } from "./helpers/onboarding";
 
 test.describe.configure({ mode: "serial" });
 
@@ -99,7 +100,7 @@ test.describe("Affiliate funnel smoke", () => {
     await waitForUsageGate(page);
     await injectAiAnalyzeFixture(page, denseCalmFirstAnalyzeFixture());
 
-    await expect(guidanceSection(page)).toBeVisible({
+    await expect(page.getByTestId("onboarding-skin-readback")).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByTestId("onboarding-phase")).toContainText(
@@ -108,8 +109,26 @@ test.describe("Affiliate funnel smoke", () => {
     await expect(page.getByTestId("onboarding-severity")).toContainText(
       /dày|dense/i,
     );
+    await expect(page.getByTestId("onboarding-skin-type-combo")).toBeVisible();
 
-    // Step 1 commerceOnly: only catalog CTA cards (≤2), not full role wall.
+    // Shopee / product guidance belongs on step 2, not step 1.
+    await expect(page.getByTestId("onboarding-product-guidance")).toHaveCount(0);
+    await expect(
+      page.getByTestId("onboarding-step-skin-profile").locator(
+        '[data-testid="affiliate-cta"], [data-testid="onboarding-affiliate-cta"]',
+      ),
+    ).toHaveCount(0);
+
+    await page.getByTestId("onboarding-nav-continue").click();
+    await expect(page.getByTestId("onboarding-step-starter-routine")).toBeVisible(
+      { timeout: 20_000 },
+    );
+
+    await expect(guidanceSection(page)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Step 2: catalog CTA cards (≤2), not a treat/active wall.
     await expect(guidanceCard(page, "cleanse")).toBeVisible();
     await expect(guidanceCard(page, "spf")).toBeVisible();
     await expect(guidanceCard(page, "treat")).toHaveCount(0);
@@ -158,6 +177,10 @@ test.describe("Affiliate funnel smoke", () => {
     await landOnStep1WithGoals(page);
     await waitForUsageGate(page);
     await injectAiAnalyzeFixture(page, denseCalmFirstAnalyzeFixture());
+    await page.getByTestId("onboarding-nav-continue").click();
+    await expect(page.getByTestId("onboarding-step-starter-routine")).toBeVisible(
+      { timeout: 20_000 },
+    );
 
     // Premium keeps catalog CTAs / brand tips (same commerce surface as Free).
     await expect
@@ -193,6 +216,10 @@ test.describe("Affiliate funnel smoke", () => {
 
     await landOnStep1WithGoals(page);
     await injectAiAnalyzeFixture(page, denseCalmFirstAnalyzeFixture());
+    await page.getByTestId("onboarding-nav-continue").click();
+    await expect(page.getByTestId("onboarding-step-starter-routine")).toBeVisible(
+      { timeout: 20_000 },
+    );
 
     const cta = page.locator(
       `[data-testid="affiliate-cta"][data-affiliate-product-id="${CATALOG_CLEANSE.id}"]`,
@@ -262,7 +289,8 @@ test.describe("Affiliate funnel smoke", () => {
     await injectSkipFaceCapture(page, true);
 
     await landOnStep1WithGoals(page);
-    await page.getByTestId("onboarding-continue-without-photos").click();
+    await skipPhotosAndPickSkinType(page);
+    await page.getByTestId("onboarding-nav-continue").click();
 
     await expect(page.getByTestId("onboarding-step-starter-routine")).toBeVisible(
       { timeout: 20_000 },
@@ -334,10 +362,7 @@ test.describe("Affiliate funnel smoke", () => {
     await landOnStep1WithGoals(page);
     await waitForUsageGate(page);
     await injectAiAnalyzeFixture(page, denseCalmFirstAnalyzeFixture());
-
-    await expect(guidanceSection(page)).toBeVisible({
-      timeout: 15_000,
-    });
+    await expect(page.getByTestId("onboarding-skin-type-combo")).toBeVisible();
     await page.getByTestId("onboarding-nav-continue").click();
 
     await expect(page.getByTestId("onboarding-step-starter-routine")).toBeVisible(
