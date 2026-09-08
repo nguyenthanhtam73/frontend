@@ -32,8 +32,13 @@ export function isOnboardingFunnelPath(pathname: string) {
 /**
  * Conversion funnel where marketing header/footer chips steal focus
  * (especially ~390px). Includes check-in plus the onboarding/auth funnel.
+ *
+ * Guests only — signed-in users keep the app nav (Check-in / Progress /
+ * Routine / Cabinet / …) on these same routes. PWA install-banner hiding
+ * still uses the path-only form (`signedIn` defaults to false).
  */
-export function hidesFunnelMarketingNav(pathname: string) {
+export function hidesFunnelMarketingNav(pathname: string, signedIn = false) {
+  if (signedIn) return false;
   const p = appPath(pathname);
   return isOnboardingFunnelPath(pathname) || p === "/check-in";
 }

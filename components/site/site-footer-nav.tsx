@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { hidesFunnelMarketingNav, normalizePath } from "@/lib/site-nav";
-import { useShowGuestNav } from "@/lib/use-show-guest-nav";
+import { useHasAppSession, useShowGuestNav } from "@/lib/use-show-guest-nav";
 
 const linkClass =
   "inline-flex min-h-9 items-center hover:text-foreground focus-visible:outline-none focus-visible:underline";
@@ -13,11 +13,14 @@ const linkClass =
  * Footer links follow the same guest vs signed-in split as the header:
  * guests on marketing pages get the short funnel; app routes / logged-in
  * get product links (no admin — those stay in the header).
+ * Funnel screens hide marketing chips for guests only — signed-in users
+ * keep product links.
  */
 export function SiteFooterNav() {
   const t = useTranslations("common");
   const pathname = usePathname();
   const showGuestNav = useShowGuestNav();
+  const hasSession = useHasAppSession();
 
   const legalLinks = [
     { href: "/privacy" as const, label: t("footer.privacy") },
@@ -46,7 +49,7 @@ export function SiteFooterNav() {
     ...legalLinks,
   ];
 
-  const hideMarketing = hidesFunnelMarketingNav(pathname);
+  const hideMarketing = hidesFunnelMarketingNav(pathname, hasSession);
   const links = hideMarketing
     ? legalLinks.filter((link) => normalizePath(link.href) !== normalizePath(pathname))
     : showGuestNav
