@@ -25,6 +25,8 @@ describe("funnel analytics", () => {
       "activation_first_checkin_cta_click",
     );
     assert.equal(FUNNEL_EVENTS.firstCheckIn, "activation_first_checkin");
+    assert.equal(FUNNEL_EVENTS.guestCheckInSave, "guest_checkin_save");
+    assert.equal(FUNNEL_EVENTS.guestCheckInClaim, "guest_checkin_claim");
     assert.equal(FUNNEL_EVENTS.d1CheckIn, "activation_d1_checkin");
     assert.equal(FUNNEL_EVENTS.d1ReminderShown, "activation_d1_reminder_shown");
     assert.equal(FUNNEL_EVENTS.pushOptIn, "activation_push_opt_in");
@@ -37,6 +39,8 @@ describe("funnel analytics", () => {
   it("accepts only known funnel event names", () => {
     assert.equal(isFunnelEventName("onboarding_routine_shown"), true);
     assert.equal(isFunnelEventName("activation_first_checkin"), true);
+    assert.equal(isFunnelEventName("guest_checkin_save"), true);
+    assert.equal(isFunnelEventName("guest_checkin_claim"), true);
     assert.equal(isFunnelEventName("paywall_view"), true);
     assert.equal(isFunnelEventName("Purchase"), false);
   });

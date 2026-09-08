@@ -11,6 +11,7 @@ function readMessages(locale: "vi" | "en") {
     fs.readFileSync(path.join(ROOT, "messages", `${locale}.json`), "utf8"),
   ) as {
     coachWelcome: Record<string, string>;
+    auth: Record<string, string>;
     checkIn: {
       guestLocal: Record<string, string> & {
         wait?: Record<string, string>;
@@ -44,6 +45,16 @@ describe("guest check-in copy policy", () => {
     assert.equal(wait.savedLocal.includes("máy này"), true);
     assert.equal(wait.hint.includes("Đăng ký để lưu nhật ký"), true);
     assert.equal(wait.status1.includes("chưa gửi lên máy chủ"), true);
+  });
+
+  it("explains signed-in claim retry, especially missing photos", () => {
+    const vi = readMessages("vi");
+    const guest = vi.checkIn.guestLocal;
+    assert.equal(guest.retryTitle.includes("tài khoản"), true);
+    assert.equal(guest.retryCta.includes("gắn lại"), true);
+    assert.equal(guest.retryPhotosMissing.includes("IndexedDB"), true);
+    assert.equal(vi.auth.claimGuestCheckInFailed.includes("Nhật ký da"), true);
+    assert.equal(vi.auth.claimGuestCheckInPhotosMissing.includes("ảnh"), true);
   });
 
   it("matches the locked EN equivalents", () => {

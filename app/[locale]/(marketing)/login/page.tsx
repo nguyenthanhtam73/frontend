@@ -13,7 +13,11 @@ import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
-import { claimLocalGuestCheckInIfNeeded } from "@/lib/check-in/claim-guest-check-in";
+import {
+  claimLocalGuestCheckInIfNeeded,
+  isGuestCheckInClaimFailure,
+  isGuestCheckInPhotosMissing,
+} from "@/lib/check-in/claim-guest-check-in";
 import {
   claimGuestCoachWelcomeIfNeeded,
   GUEST_CLAIM_RETURN_PATH,
@@ -132,9 +136,16 @@ function LoginPageInner() {
                   claimed = false;
                 }
                 try {
-                  await claimLocalGuestCheckInIfNeeded(token);
+                  const checkInClaim = await claimLocalGuestCheckInIfNeeded(token);
+                  if (isGuestCheckInClaimFailure(checkInClaim)) {
+                    toast.error(
+                      isGuestCheckInPhotosMissing(checkInClaim.reason)
+                        ? t("claimGuestCheckInPhotosMissing")
+                        : t("claimGuestCheckInFailed"),
+                    );
+                  }
                 } catch {
-                  /* local check-in stays on device for retry */
+                  toast.error(t("claimGuestCheckInFailed"));
                 }
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
