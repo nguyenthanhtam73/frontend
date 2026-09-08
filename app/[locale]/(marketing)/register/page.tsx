@@ -22,7 +22,12 @@ import {
 import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
-import { claimLocalGuestCheckInIfNeeded } from "@/lib/check-in/claim-guest-check-in";
+import {
+  claimLocalGuestCheckInIfNeeded,
+  isGuestCheckInClaimFailure,
+  isGuestCheckInPhotosMissing,
+} from "@/lib/check-in/claim-guest-check-in";
+import { hasPersistedGuestCheckIn } from "@/lib/check-in/guest-check-in-persist";
 import {
   claimGuestCoachWelcomeIfNeeded,
   isClaimableGuestCoachSession,
@@ -207,19 +212,33 @@ function RegisterPageInner() {
                 } catch {
                   claimed = false;
                 }
+                const hadGuestCheckIn = hasPersistedGuestCheckIn();
+                let claimedCheckIn = false;
+                try {
+                  const checkInClaim = await claimLocalGuestCheckInIfNeeded(token);
+                  claimedCheckIn = checkInClaim.ok;
+                  if (isGuestCheckInClaimFailure(checkInClaim)) {
+                    toast.error(
+                      isGuestCheckInPhotosMissing(checkInClaim.reason)
+                        ? t("claimGuestCheckInPhotosMissing")
+                        : t("claimGuestCheckInFailed"),
+                    );
+                  }
+                } catch {
+                  claimedCheckIn = false;
+                  toast.error(t("claimGuestCheckInFailed"));
+                }
+                // `claimed` stays routine-only — check-in uses had_guest_checkin / claimed_checkin.
                 trackFunnelEvent(FUNNEL_EVENTS.registerSuccess, {
                   claimed,
                   had_guest_routine: hadClaimableGuest,
+                  had_guest_checkin: hadGuestCheckIn,
+                  claimed_checkin: claimedCheckIn,
                 });
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
-                try {
-                  const claimedCheckIn = await claimLocalGuestCheckInIfNeeded(token);
-                  if (!claimedCheckIn) {
-                    markAwaitingFirstCheckIn(json.data?.user?.id);
-                  }
-                } catch {
+                if (!claimedCheckIn) {
                   markAwaitingFirstCheckIn(json.data?.user?.id);
                 }
                 const nextPath = checkoutIntent

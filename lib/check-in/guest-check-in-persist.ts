@@ -1,3 +1,5 @@
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
+
 /** Matches check-in upload slots (front + optional angle). */
 const MAX_GUEST_CHECKIN_PHOTOS = 2;
 
@@ -224,6 +226,19 @@ export async function clearGuestCheckInPhotos(): Promise<void> {
 
 export type SaveLocalGuestCheckInResult = "ok" | "already_saved" | "failed";
 
+function trackGuestCheckInSave(input: {
+  skipMode: boolean;
+  hasPhotos: boolean;
+  result: SaveLocalGuestCheckInResult;
+}): SaveLocalGuestCheckInResult {
+  trackFunnelEvent(FUNNEL_EVENTS.guestCheckInSave, {
+    skip_mode: input.skipMode,
+    has_photos: input.hasPhotos,
+    result: input.result,
+  });
+  return input.result;
+}
+
 /**
  * Persist one local guest check-in. Photos live in IndexedDB; metadata in
  * localStorage. Does not call the API (no server skin-check id until claim).
@@ -233,9 +248,21 @@ export async function saveLocalGuestCheckIn(input: {
   files: File[];
   replace?: boolean;
 }): Promise<SaveLocalGuestCheckInResult> {
-  if (typeof window === "undefined") return "failed";
+  if (typeof window === "undefined") {
+    return trackGuestCheckInSave({
+      skipMode: input.payload.skipMode,
+      hasPhotos: input.files.length > 0,
+      result: "failed",
+    });
+  }
   const existing = readPersistedGuestCheckIn();
-  if (!input.replace && !canWriteGuestCheckIn(existing)) return "already_saved";
+  if (!input.replace && !canWriteGuestCheckIn(existing)) {
+    return trackGuestCheckInSave({
+      skipMode: input.payload.skipMode,
+      hasPhotos: existing?.hasPhotos ?? input.files.length > 0,
+      result: "already_saved",
+    });
+  }
 
   const files = input.files.slice(0, MAX_GUEST_CHECKIN_PHOTOS);
   let hasPhotos = false;
@@ -243,17 +270,37 @@ export async function saveLocalGuestCheckIn(input: {
     if (files.length > 0) {
       const n = await saveGuestCheckInPhotos(files);
       hasPhotos = n > 0;
-      if (!hasPhotos && !input.payload.skipMode) return "failed";
+      if (!hasPhotos && !input.payload.skipMode) {
+        return trackGuestCheckInSave({
+          skipMode: input.payload.skipMode,
+          hasPhotos: false,
+          result: "failed",
+        });
+      }
     } else {
       await clearGuestCheckInPhotos();
     }
   } catch {
-    return "failed";
+    return trackGuestCheckInSave({
+      skipMode: input.payload.skipMode,
+      hasPhotos: false,
+      result: "failed",
+    });
   }
 
   persistGuestCheckInRecord({ ...input.payload, hasPhotos });
-  if (!readPersistedGuestCheckIn()) return "failed";
-  return "ok";
+  if (!readPersistedGuestCheckIn()) {
+    return trackGuestCheckInSave({
+      skipMode: input.payload.skipMode,
+      hasPhotos,
+      result: "failed",
+    });
+  }
+  return trackGuestCheckInSave({
+    skipMode: input.payload.skipMode,
+    hasPhotos,
+    result: "ok",
+  });
 }
 
 export async function clearLocalGuestCheckIn(): Promise<void> {

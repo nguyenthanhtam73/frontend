@@ -31,6 +31,7 @@ import { StreakContinueHost } from "@/components/share/streak-continue-celebrati
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
+import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
 import { resolveCheckInReminderKind, signupDayKey } from "@/lib/activation/check-in-reminder";
 import { clearAwaitingFirstCheckIn, hasNeverCheckedIn } from "@/lib/activation/first-check-in";
@@ -50,7 +51,12 @@ import { usePrivacyStore } from "@/lib/stores/privacy-store";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useSkillStore } from "@/lib/stores/skill-store";
 import { streakDateKey } from "@/lib/streak/history";
-import { claimLocalGuestCheckInIfNeeded } from "@/lib/check-in/claim-guest-check-in";
+import {
+  claimLocalGuestCheckInIfNeeded,
+  isGuestCheckInClaimFailure,
+  isGuestCheckInPhotosMissing,
+  type GuestCheckInClaimReason,
+} from "@/lib/check-in/claim-guest-check-in";
 import {
   buildSkinCheckFormData,
   canSubmitCheckIn,
@@ -102,8 +108,10 @@ const symptomIds = [
 
 export function CheckInForm() {
   const t = useTranslations("checkIn");
+  const tAuth = useTranslations("auth");
   const tCoach = useTranslations("checkIn.coach");
   const tRoutine = useTranslations("routine");
+  const toast = useToast();
   const locale = useLocale();
   const [photoSlots, setPhotoSlots] = useState<PhotoSlots>([null, null]);
   const [title, setTitle] = useState("");
@@ -122,6 +130,9 @@ export function CheckInForm() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [guestLocal, setGuestLocal] = useState<GuestCheckInPayload | null>(null);
   const [guestSaving, setGuestSaving] = useState(false);
+  const [guestClaiming, setGuestClaiming] = useState(false);
+  const [guestClaimReason, setGuestClaimReason] =
+    useState<GuestCheckInClaimReason | null>(null);
   const guestWait = useGuestAiWait();
   const feedbackAnchorRef = useRef<HTMLDivElement>(null);
   const errorAnchorRef = useRef<HTMLDivElement>(null);
@@ -247,20 +258,58 @@ export function CheckInForm() {
     setGuestLocal(readPersistedGuestCheckIn());
   }, []);
 
+  const applyGuestClaimResult = useCallback(
+    (result: Awaited<ReturnType<typeof claimLocalGuestCheckInIfNeeded>>) => {
+      if (result.ok) {
+        setGuestLocal(null);
+        setGuestClaimReason(null);
+        if (hasNeverCheckedIn(streakQuery.data)) {
+          clearAwaitingFirstCheckIn(user?.id);
+        }
+        onSubmitSuccess(result.data);
+        scrollToFeedback();
+        return;
+      }
+      setGuestLocal(readPersistedGuestCheckIn());
+      setGuestClaimReason(result.reason);
+      if (isGuestCheckInClaimFailure(result)) {
+        toast.error(
+          isGuestCheckInPhotosMissing(result.reason)
+            ? tAuth("claimGuestCheckInPhotosMissing")
+            : tAuth("claimGuestCheckInFailed"),
+        );
+      }
+    },
+    [onSubmitSuccess, scrollToFeedback, streakQuery.data, tAuth, toast, user?.id],
+  );
+
+  async function retryGuestClaim() {
+    const token = getAccessToken();
+    if (!token || !readPersistedGuestCheckIn()) return;
+    setGuestClaiming(true);
+    try {
+      applyGuestClaimResult(await claimLocalGuestCheckInIfNeeded(token));
+    } finally {
+      setGuestClaiming(false);
+    }
+  }
+
   useEffect(() => {
     const token = getAccessToken();
     if (!token || !readPersistedGuestCheckIn()) return;
     let cancelled = false;
-    void claimLocalGuestCheckInIfNeeded(token).then((data) => {
-      if (cancelled || !data) return;
-      setGuestLocal(null);
-      onSubmitSuccess(data);
-      scrollToFeedback();
+    setGuestClaiming(true);
+    void claimLocalGuestCheckInIfNeeded(token).then((result) => {
+      if (cancelled) return;
+      setGuestClaiming(false);
+      applyGuestClaimResult(result);
     });
     return () => {
       cancelled = true;
     };
-  }, [onSubmitSuccess, scrollToFeedback, user?.id]);
+    // One auto-claim per signed-in user; retry is explicit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- user.id is the claim key
+  }, [user?.id]);
 
   if (!signedIn && guestWait.isWaiting) {
     return (
@@ -273,12 +322,19 @@ export function CheckInForm() {
     );
   }
 
-  if (guestLocal && !signedIn) {
+  if (guestLocal) {
     return (
       <GuestLocalCheckInCard
         payload={guestLocal}
+        variant={signedIn ? "retry" : "guest"}
+        claimReason={guestClaimReason}
+        claiming={guestClaiming}
+        onRetryClaim={() => {
+          void retryGuestClaim();
+        }}
         onRedo={() => {
           guestWait.reset();
+          setGuestClaimReason(null);
           void clearLocalGuestCheckIn().then(() => setGuestLocal(null));
         }}
       />

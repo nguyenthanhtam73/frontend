@@ -142,5 +142,19 @@ describe("saveLocalGuestCheckIn", () => {
     });
     assert.equal(replaced, "ok");
     assert.equal(readPersistedGuestCheckIn()?.userNote, "redo");
+    const funnel = (
+      globalThis as typeof globalThis & {
+        window?: { __dadiaryFunnel?: { name: string; params?: Record<string, unknown> }[] };
+      }
+    ).window?.__dadiaryFunnel;
+    const saves = (funnel ?? []).filter((e) => e.name === "guest_checkin_save");
+    assert.equal(saves.length >= 3, true);
+    assert.deepEqual(saves[0]?.params, {
+      skip_mode: true,
+      has_photos: false,
+      result: "ok",
+    });
+    assert.equal(saves[1]?.params?.result, "already_saved");
+    assert.equal(saves[2]?.params?.result, "ok");
   });
 });
