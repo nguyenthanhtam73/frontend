@@ -13,7 +13,7 @@ import { hidesFunnelMarketingNav, normalizePath } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useClientMounted } from "@/lib/use-client-mounted";
 import { useCurrentHash } from "@/lib/use-current-hash";
-import { useShowGuestNav } from "@/lib/use-show-guest-nav";
+import { useHasAppSession, useShowGuestNav } from "@/lib/use-show-guest-nav";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 
@@ -268,7 +268,8 @@ export function SiteHeader() {
   ];
 
   const showGuestNav = useShowGuestNav();
-  const hideFunnelNav = hidesFunnelMarketingNav(pathname);
+  const hasSession = useHasAppSession();
+  const hideFunnelNav = hidesFunnelMarketingNav(pathname, hasSession);
   const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
 
   // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.

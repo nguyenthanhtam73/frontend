@@ -40,7 +40,7 @@ describe("site-nav funnel helpers", () => {
     assert.equal(hasMobileBottomChrome("/onboarding"), false);
   });
 
-  it("hides marketing nav on check-in / onboarding / register funnel", () => {
+  it("hides marketing nav on check-in / onboarding / register funnel for guests", () => {
     assert.equal(hidesFunnelMarketingNav("/check-in"), true);
     assert.equal(hidesFunnelMarketingNav("/en/check-in"), true);
     assert.equal(hidesFunnelMarketingNav("/onboarding"), true);
@@ -51,6 +51,17 @@ describe("site-nav funnel helpers", () => {
     assert.equal(hidesFunnelMarketingNav("/pricing"), false);
     assert.equal(hidesFunnelMarketingNav("/guides"), false);
     assert.equal(hidesFunnelMarketingNav("/progress"), false);
+  });
+
+  it("never hides the strip for signed-in users (app nav stays)", () => {
+    assert.equal(hidesFunnelMarketingNav("/check-in", true), false);
+    assert.equal(hidesFunnelMarketingNav("/en/check-in", true), false);
+    assert.equal(hidesFunnelMarketingNav("/onboarding", true), false);
+    assert.equal(hidesFunnelMarketingNav("/onboarding/coach-welcome", true), false);
+    assert.equal(hidesFunnelMarketingNav("/register", true), false);
+    assert.equal(hidesFunnelMarketingNav("/login", true), false);
+    assert.equal(hidesFunnelMarketingNav("/", true), false);
+    assert.equal(hidesFunnelMarketingNav("/progress", true), false);
   });
 
   it("hides the install banner on funnel + pricing", () => {
