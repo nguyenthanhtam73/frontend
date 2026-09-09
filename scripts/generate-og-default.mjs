@@ -61,7 +61,7 @@ const svg = `<?xml version="1.0" encoding="UTF-8"?>
     font-size="78" font-weight="700" fill="#0F2E2C">DaDiary</text>
   <text x="600" y="390" text-anchor="middle"
     font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
-    font-size="34" font-weight="550" fill="#1A3D3A">Nhật ký da + AI Coach</text>
+    font-size="34" font-weight="550" fill="#1A3D3A">Nhật ký da · Trợ lý của riêng bạn</text>
   <text x="600" y="448" text-anchor="middle"
     font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
     font-size="22" font-weight="500" fill="#2A5552" opacity="0.85">Check-in ảnh · Streak · Gợi ý chăm da mỗi ngày</text>

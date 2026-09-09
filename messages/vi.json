@@ -12,7 +12,7 @@
   },
   "metadata": {
     "root": {
-      "title": "DaDiary — Theo dõi da mỗi ngày · Nhận gợi ý từ AI Coach",
+      "title": "DaDiary — Nhật ký da · Trợ lý của riêng bạn",
       "description": "Beta DaDiary — nhật ký da bằng ảnh, streak và AI Coach. Bắt đầu Free; Premium khi cần không giới hạn. Phù hợp da Việt (dầu, mụn, nóng ẩm)."
     },
     "checkIn": {
@@ -183,7 +183,7 @@
       "adminFunnel": "Người dùng mới"
     },
     "footer": {
-      "tagline": "Nhật ký da của bạn · AI Coach · trước–sau & tiến bộ",
+      "tagline": "Nhật ký da · Trợ lý của riêng bạn",
       "copyright": "© {year} DaDiary. Đang trong giai đoạn Beta.",
       "disclaimer": "DaDiary đưa ra gợi ý chăm da mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
       "privacy": "Quyền riêng tư",
@@ -263,7 +263,7 @@
   },
   "hero": {
     "badge": "Đang mở Beta · Free",
-    "slogan": "Nhật ký da + AI Coach",
+    "slogan": "DaDiary — Nhật ký da · Trợ lý của riêng bạn",
     "titleLead": "Theo dõi da hằng ngày —",
     "titleGradient": "AI gợi ý đúng việc cần làm.",
     "body": "Da dầu, mụn hay thâm vì nóng ẩm? <b>Ghi nhật ký bằng ảnh</b>, giữ streak, nhận gợi ý AI. Bắt đầu Free — Premium khi cần không giới hạn.",
