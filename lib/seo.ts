@@ -49,7 +49,7 @@ export const DEFAULT_OG_IMAGE = {
   url: "/og/og-default.png",
   width: 1200,
   height: 630,
-  alt: "DaDiary — Nhật ký da + AI Coach",
+  alt: "DaDiary — Nhật ký da · Trợ lý của riêng bạn",
 } as const;
 
 export type OgImage = {

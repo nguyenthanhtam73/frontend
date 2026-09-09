@@ -1,7 +1,7 @@
 {
-  "name": "DaDiary — Skin Diary & AI Coach",
+  "name": "DaDiary — Nhật ký da · Trợ lý của riêng bạn",
   "short_name": "DaDiary",
-  "description": "Personal skin diary + AI Skincare Coach: photo check-ins, before/after, friendly routines.",
+  "description": "Nhật ký da · Trợ lý của riêng bạn. Check-in ảnh, streak và gợi ý chăm da.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

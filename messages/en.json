@@ -12,7 +12,7 @@
   },
   "metadata": {
     "root": {
-      "title": "DaDiary — Your skin diary · Friendly AI skincare buddy every day",
+      "title": "DaDiary — Skin diary · Your own assistant",
       "description": "DaDiary Beta — photo skin diary, streaks, and AI Coach. Start Free; Premium when you want unlimited AI. Built for humid, oily, acne-prone skin."
     },
     "checkIn": {
@@ -183,7 +183,7 @@
       "adminFunnel": "New users"
     },
     "footer": {
-      "tagline": "Your skin diary · AI Coach · progress & before/after",
+      "tagline": "Skin diary · Your own assistant",
       "copyright": "© {year} DaDiary. Currently in Beta.",
       "disclaimer": "DaDiary offers skincare suggestions for reference only and does not replace professional medical advice.",
       "privacy": "Privacy",
@@ -263,7 +263,7 @@
   },
   "hero": {
     "badge": "Beta open · Free",
-    "slogan": "Skin diary + AI Coach",
+    "slogan": "DaDiary — Skin diary · Your own assistant",
     "titleLead": "Track your skin daily —",
     "titleGradient": "AI tells you what to do next.",
     "body": "Oily skin, breakouts, or humidity? <b>Log with photos</b>, keep a streak, get AI tips. Start Free — Premium when you want unlimited.",
