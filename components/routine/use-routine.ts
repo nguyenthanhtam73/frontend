@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { apiBaseUrl } from "@/lib/api";
-import { authHeaders, getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiGet, apiPost } from "@/lib/api-client";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { redirectToLoginWithNext } from "@/lib/auth/redirect-to-login";
 import { usageQueryKey } from "@/lib/api/usage";
 import { streakDateKey } from "@/lib/streak/history";
@@ -96,23 +96,16 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
   }, [locale]);
 
   const refreshHistorySilent = useCallback(async () => {
-    if (!getAccessToken()) return;
+    if (!getAccessToken() && !getRefreshToken()) return;
     try {
-      const historyRes = await fetch(`${apiBaseUrl}/api/v1/routines/history?range=30`, {
-        headers: authHeaders(),
+      const history = await apiGet<RoutineHistoryDTO>("/api/v1/routines/history?range=30", {
+        toastOnError: false,
       });
-      if (historyRes.status === 401) {
+      if (history) setHistory(history);
+    } catch (err) {
+      if (err instanceof ApiError && err.kind === "unauthorized") {
         handleUnauthorized();
-        return;
       }
-      if (historyRes.ok) {
-        const historyJson = await historyRes.json().catch(() => ({}));
-        if (historyJson?.success && historyJson?.data) {
-          setHistory(historyJson.data as RoutineHistoryDTO);
-        }
-      }
-    } catch {
-      /* non-fatal */
     }
   }, [handleUnauthorized]);
 
@@ -128,19 +121,14 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
     setStatus("loading");
     setLoadError(null);
     try {
-      const headers = authHeaders();
-      const [routineRes, historyRes] = await Promise.all([
-        fetch(`${apiBaseUrl}/api/v1/routines`, { headers }),
-        fetch(`${apiBaseUrl}/api/v1/routines/history?range=30`, { headers }),
+      const [routine, history] = await Promise.all([
+        apiGet<RoutineDTO>("/api/v1/routines", { toastOnError: false }),
+        apiGet<RoutineHistoryDTO>("/api/v1/routines/history?range=30", {
+          toastOnError: false,
+        }).catch(() => null),
       ]);
-      if (routineRes.status === 401) {
-        handleUnauthorized();
-        clearPersistBaseline();
-        return;
-      }
-      const routineJson = await routineRes.json().catch(() => ({}));
-      if (routineRes.ok && routineJson?.success && routineJson?.data) {
-        const next = toLocal(routineJson.data as RoutineDTO);
+      if (routine) {
+        const next = toLocal(routine);
         setRoutine(next);
         setDirty(false);
         rememberPersisted(next);
@@ -149,14 +137,14 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
         setDirty(false);
         clearPersistBaseline();
       }
-      if (historyRes.ok) {
-        const historyJson = await historyRes.json().catch(() => ({}));
-        if (historyJson?.success && historyJson?.data) {
-          setHistory(historyJson.data as RoutineHistoryDTO);
-        }
-      }
+      if (history) setHistory(history);
       setStatus("success");
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.kind === "unauthorized") {
+        handleUnauthorized();
+        clearPersistBaseline();
+        return;
+      }
       setLoadError(msg.loadError);
       setRoutine(emptyRoutine);
       setDirty(false);
@@ -270,7 +258,7 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
 
       const hasSteps = payload.morning.length > 0 || payload.evening.length > 0;
       if (!preferenceOnly && !hasSteps) return null;
-      if (!getAccessToken()) {
+      if (!getAccessToken() && !getRefreshToken()) {
         if (!opts.silent) setSaveMsg({ kind: "err", text: msg.needAuth });
         return null;
       }
@@ -284,18 +272,11 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
         ...(payload.routineDate ? { routine_date: payload.routineDate } : {}),
       };
       try {
-        const res = await fetch(`${apiBaseUrl}/api/v1/routines`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify(body),
+        const saved = await apiPost<RoutineDTO>("/api/v1/routines", body, {
+          toastOnError: false,
         });
-        const json = await res.json().catch(() => ({}));
-        if (res.status === 401) {
-          handleUnauthorized();
-          return null;
-        }
-        if (res.ok && json?.success && json?.data) {
-          const next = toLocal(json.data as RoutineDTO);
+        if (saved) {
+          const next = toLocal(saved);
           rememberPersisted(next);
           void queryClient.invalidateQueries({ queryKey: usageQueryKey });
           if (tickOnly) {
@@ -316,11 +297,21 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
           setDirty(false);
           return next;
         }
-        const mapped = mapRoutineApiError(json, msg.saveError);
-        if (!opts.silent) setSaveMsg({ kind: "err", text: mapped });
-        return null;
-      } catch {
         if (!opts.silent) setSaveMsg({ kind: "err", text: msg.saveError });
+        return null;
+      } catch (err) {
+        if (err instanceof ApiError && err.kind === "unauthorized") {
+          handleUnauthorized();
+          return null;
+        }
+        const mapped =
+          err instanceof ApiError
+            ? mapRoutineApiError(
+                { error: { code: err.code, message: err.serverMessage } },
+                msg.saveError,
+              )
+            : msg.saveError;
+        if (!opts.silent) setSaveMsg({ kind: "err", text: mapped });
         return null;
       }
     },
@@ -364,7 +355,7 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
         false,
       );
       if (!lastPersistedRef.current?.saved) return;
-      if (!getAccessToken()) return;
+      if (!getAccessToken() && !getRefreshToken()) return;
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       const generation = persistGenerationRef.current;
       autoSaveTimer.current = setTimeout(() => {
@@ -392,7 +383,7 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
     (mode: string | null) => {
       if (!mode) return;
       if (!lastPersistedRef.current?.saved) return;
-      if (!getAccessToken()) return;
+      if (!getAccessToken() && !getRefreshToken()) return;
       if (skillSaveTimer.current) clearTimeout(skillSaveTimer.current);
       skillSaveTimer.current = setTimeout(() => {
         void persist({ silent: true, saveKind: "preference_only", skillMode: mode });

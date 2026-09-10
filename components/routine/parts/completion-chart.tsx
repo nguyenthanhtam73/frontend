@@ -280,7 +280,7 @@ function BarChart({
         viewBox={`0 0 ${width} ${height}`}
         className="block w-full select-none"
         role="img"
-        aria-label="Daily completion chart"
+        aria-label={labels.title}
         style={{ height: `${height}px` }}
       >
         {[0, 25, 50, 75, 100].map((tick) => {

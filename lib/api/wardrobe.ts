@@ -1,7 +1,5 @@
-import { apiBaseUrl } from "@/lib/api";
-import { ApiError, apiPost } from "@/lib/api-client";
-import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
-import { authHeaders, getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api-client";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import type {
   CreateWardrobeProductInput,
   UpdateWardrobeProductInput,
@@ -13,92 +11,69 @@ import type {
 /** Vision OCR can take a while — align with onboarding analyze budget. */
 const SCAN_TIMEOUT_MS = 120_000;
 
-function throwWardrobeWriteError(res: Response, json: ApiEnvelope<unknown>, fallback: string): never {
-  if (res.status === 401) {
+function requireSession(): void {
+  if (!getAccessToken() && !getRefreshToken()) {
     throw new Error("auth");
   }
-  const code = json.error?.code;
-  if (code === "premium_required") {
-    throw new Error("premium_required");
+}
+
+function throwWardrobeApiError(err: unknown, fallback: string): never {
+  if (err instanceof ApiError) {
+    if (err.kind === "unauthorized" || err.status === 401) throw new Error("auth");
+    if (err.code === "premium_required") throw new Error("premium_required");
+    if (err.code === "quota_exceeded") throw new Error("quota_exceeded");
+    if (err.status === 404 || err.code === "not_found") throw new Error("not_found");
+    throw new Error(err.serverMessage || fallback);
   }
-  if (code === "quota_exceeded") {
-    throw new Error("quota_exceeded");
-  }
-  if (res.status === 404 || code === "not_found") {
-    throw new Error("not_found");
-  }
-  throw new Error(getApiErrorMessage(json, fallback));
+  throw err instanceof Error ? err : new Error(fallback);
 }
 
 export async function fetchWardrobe(): Promise<WardrobeListDTO> {
-  if (!getAccessToken()) {
-    throw new Error("auth");
+  requireSession();
+  try {
+    return await apiGet<WardrobeListDTO>("/api/v1/wardrobe", { toastOnError: false });
+  } catch (err) {
+    throwWardrobeApiError(err, "wardrobe_fetch_failed");
   }
-  const res = await fetch(`${apiBaseUrl}/api/v1/wardrobe`, { headers: authHeaders() });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<WardrobeListDTO>;
-  if (res.status === 401) {
-    throw new Error("auth");
-  }
-  if (!res.ok || !json.data) {
-    throw new Error(getApiErrorMessage(json, "wardrobe_fetch_failed"));
-  }
-  return json.data;
 }
 
 export async function createWardrobeProduct(
   input: CreateWardrobeProductInput,
 ): Promise<WardrobeProductDTO> {
-  if (!getAccessToken()) {
-    throw new Error("auth");
+  requireSession();
+  try {
+    return await apiPost<WardrobeProductDTO>("/api/v1/wardrobe/products", input, {
+      toastOnError: false,
+    });
+  } catch (err) {
+    throwWardrobeApiError(err, "wardrobe_create_failed");
   }
-  const res = await fetch(`${apiBaseUrl}/api/v1/wardrobe/products`, {
-    method: "POST",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<WardrobeProductDTO>;
-  if (!res.ok || !json.data) {
-    throwWardrobeWriteError(res, json, "wardrobe_create_failed");
-  }
-  return json.data;
 }
 
 export async function updateWardrobeProduct(
   id: string,
   input: UpdateWardrobeProductInput,
 ): Promise<WardrobeProductDTO> {
-  if (!getAccessToken()) {
-    throw new Error("auth");
+  requireSession();
+  try {
+    return await apiPatch<WardrobeProductDTO>(
+      `/api/v1/wardrobe/products/${encodeURIComponent(id)}`,
+      input,
+      { toastOnError: false },
+    );
+  } catch (err) {
+    throwWardrobeApiError(err, "wardrobe_update_failed");
   }
-  const res = await fetch(`${apiBaseUrl}/api/v1/wardrobe/products/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<WardrobeProductDTO>;
-  if (!res.ok || !json.data) {
-    throwWardrobeWriteError(res, json, "wardrobe_update_failed");
-  }
-  return json.data;
 }
 
 export async function deleteWardrobeProduct(id: string): Promise<void> {
-  if (!getAccessToken()) {
-    throw new Error("auth");
-  }
-  const res = await fetch(`${apiBaseUrl}/api/v1/wardrobe/products/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<{ ok?: boolean }>;
-  if (!res.ok) {
-    throwWardrobeWriteError(res, json, "wardrobe_delete_failed");
+  requireSession();
+  try {
+    await apiDelete(`/api/v1/wardrobe/products/${encodeURIComponent(id)}`, {
+      toastOnError: false,
+    });
+  } catch (err) {
+    throwWardrobeApiError(err, "wardrobe_delete_failed");
   }
 }
 
@@ -110,9 +85,7 @@ export async function scanWardrobeProductLabel(input: {
   file: File;
   locale: string;
 }): Promise<WardrobeLabelScanDTO> {
-  if (!getAccessToken()) {
-    throw new Error("auth");
-  }
+  requireSession();
   const fd = new FormData();
   fd.append("image", input.file);
   fd.append("locale", input.locale);

@@ -118,9 +118,7 @@ function GuestActions({
         data-testid="auth-sign-in"
         className={cn(
           "min-h-9 justify-center",
-          compact
-            ? "hidden"
-            : "hidden min-w-[4.5rem] lg:inline-flex",
+          compact ? "inline-flex min-h-11 px-2.5" : "inline-flex min-w-[4.5rem]",
         )}
       >
         {signInLabel}

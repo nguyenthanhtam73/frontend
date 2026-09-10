@@ -31,7 +31,7 @@ import { deleteAllUserData } from "@/lib/api/user-data";
 import { wardrobeQueryKey } from "@/lib/api/wardrobe";
 import { clearLocalUserData } from "@/lib/clear-local-user-data";
 import { Link, useRouter } from "@/i18n/navigation";
-import { getAccessToken } from "@/lib/auth-token";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { PRIVACY_FACE_MODE_ID } from "@/lib/privacy/anchors";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
@@ -156,7 +156,7 @@ export function PrivacyControls() {
     setToast(null);
     obClearPhotos();
 
-    const token = getAccessToken();
+    const token = getAccessToken() || getRefreshToken();
     if (!token) {
       await logout();
       clearLocalUserData();

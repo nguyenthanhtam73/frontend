@@ -5,9 +5,8 @@ import { useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { apiBaseUrl } from "@/lib/api";
-import { getApiErrorMessage } from "@/lib/api-envelope";
-import { getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiPost } from "@/lib/api-client";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { cn } from "@/lib/utils";
 
 /**
@@ -120,34 +119,26 @@ export function FeedbackButtons({
 
   async function postFeedback(rating: FeedbackVote, comment: string): Promise<boolean> {
     if (!targetId) return false;
-    const token = getAccessToken();
+    const token = getAccessToken() || getRefreshToken();
     if (!token) {
       setError(L.needLogin);
       return false;
     }
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/ai/feedback`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          target_type: targetType,
-          target_id: targetId,
-          rating,
-          comment: comment.trim() || undefined,
-        }),
-      });
-      const raw = await res.json().catch(() => ({}));
-      if (!res.ok || !raw?.success) {
-        setError(getApiErrorMessage(raw, L.error));
-        return false;
-      }
+      await apiPost("/api/v1/ai/feedback", {
+        target_type: targetType,
+        target_id: targetId,
+        rating,
+        comment: comment.trim() || undefined,
+      }, { toastOnError: false });
       setError(null);
       onSubmitted?.(rating, comment.trim());
       return true;
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.userMessage(L.error));
+        return false;
+      }
       setError(L.error);
       return false;
     }

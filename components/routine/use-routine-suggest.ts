@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { apiBaseUrl } from "@/lib/api";
-import { authHeaders, getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiDelete, apiGet, apiPost } from "@/lib/api-client";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { usageQueryKey } from "@/lib/api/usage";
 import type {
   SuggestJobCreatedDTO,
@@ -160,27 +160,30 @@ function normalizeSuggestion(data: SuggestRoutineDTO): SuggestRoutineDTO {
 
 async function fetchJobStatus(jobId: string): Promise<StatusFetchResult> {
   try {
-    const res = await fetch(
-      `${apiBaseUrl}/api/v1/routines/suggest/status?job_id=${encodeURIComponent(jobId)}`,
-      { headers: authHeaders() },
+    const data = await apiGet<SuggestJobStatusDTO>(
+      `/api/v1/routines/suggest/status?job_id=${encodeURIComponent(jobId)}`,
+      { toastOnError: false },
     );
-    const json = await res.json().catch(() => ({}));
-
-    if (res.status === 404) {
-      return { ok: false, kind: "expired" };
+    if (!data) {
+      return { ok: false, kind: "api", code: "unknown" };
     }
-
-    if (!res.ok || !json?.success) {
+    return { ok: true, data };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      if (err.status === 404) return { ok: false, kind: "expired" };
+      if (err.kind === "unauthorized") {
+        return { ok: false, kind: "api", code: "need_auth" };
+      }
+      if (err.kind === "network" || err.kind === "timeout" || err.kind === "offline") {
+        return { ok: false, kind: "network" };
+      }
       return {
         ok: false,
         kind: "api",
-        code: mapApiErrorCode(json),
-        detail: json.error?.message,
+        code: mapApiErrorCode({ error: { code: err.code, message: err.serverMessage } }),
+        detail: err.serverMessage,
       };
     }
-
-    return { ok: true, data: json.data as SuggestJobStatusDTO };
-  } catch {
     return { ok: false, kind: "network" };
   }
 }
@@ -464,7 +467,7 @@ export function useRoutineSuggest(locale: string, skillMode: string | null) {
 
   const requestSuggestion = useCallback(
     async (overrideFocus?: string) => {
-      if (!getAccessToken()) {
+      if (!getAccessToken() && !getRefreshToken()) {
         setPhase("failed");
         setError({ code: "need_auth" });
         setToast({ kind: "err", variant: "failed" });
@@ -493,27 +496,34 @@ export function useRoutineSuggest(locale: string, skillMode: string | null) {
 
       try {
         devLog("creating job");
-        const res = await fetch(`${apiBaseUrl}/api/v1/routines/suggest`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify(body),
-        });
-        const json = await res.json().catch(() => ({}));
+        const created = await apiPost<SuggestJobCreatedDTO>(
+          "/api/v1/routines/suggest",
+          body,
+          { toastOnError: false, timeoutMs: 30_000 },
+        );
         if (abortedRef.current) return;
 
-        if (!res.ok || !json?.success || !json?.data?.job_id) {
-          const code = mapApiErrorCode(json);
-          fail(code, json.error?.message);
+        if (!created?.job_id) {
+          fail("unknown");
           return;
         }
 
-        const created = json.data as SuggestJobCreatedDTO;
         pollMetaRef.current = { attempt: 0, startedAt, networkRetries: 0 };
         beginJob(created.job_id, startedAt);
-      } catch {
-        if (!abortedRef.current) {
-          fail("network");
+      } catch (err) {
+        if (abortedRef.current) return;
+        if (err instanceof ApiError) {
+          if (err.kind === "unauthorized") {
+            fail("need_auth");
+            return;
+          }
+          fail(
+            mapApiErrorCode({ error: { code: err.code, message: err.serverMessage } }),
+            err.serverMessage,
+          );
+          return;
         }
+        fail("network");
       }
     },
     [beginJob, clearToast, fail, focusNote, locale, skillMode, stopPolling],
@@ -531,11 +541,12 @@ export function useRoutineSuggest(locale: string, skillMode: string | null) {
 
     if (id) {
       try {
-        const res = await fetch(
-          `${apiBaseUrl}/api/v1/routines/suggest?job_id=${encodeURIComponent(id)}`,
-          { method: "DELETE", headers: authHeaders() },
+        await apiDelete(
+          `/api/v1/routines/suggest?job_id=${encodeURIComponent(id)}`,
+          { toastOnError: false },
         );
-        if (!res.ok && res.status !== 404) {
+      } catch (err) {
+        if (!(err instanceof ApiError && err.status === 404)) {
           setCancelling(false);
           abortedRef.current = false;
           setPhase("failed");
@@ -543,13 +554,6 @@ export function useRoutineSuggest(locale: string, skillMode: string | null) {
           setToast({ kind: "err", variant: "failed" });
           return;
         }
-      } catch {
-        setCancelling(false);
-        abortedRef.current = false;
-        setPhase("failed");
-        setError({ code: "network" });
-        setToast({ kind: "err", variant: "failed" });
-        return;
       }
     }
 
@@ -577,7 +581,7 @@ export function useRoutineSuggest(locale: string, skillMode: string | null) {
    */
   const resumeFromSession = useCallback(async () => {
     const persisted = readPersistedJob();
-    if (!persisted || !getAccessToken()) return;
+    if (!persisted || (!getAccessToken() && !getRefreshToken())) return;
 
     if (processingRef.current) {
       devLog("resume skipped — already processing", {
@@ -653,7 +657,7 @@ export function useRoutineSuggest(locale: string, skillMode: string | null) {
 
   useEffect(() => {
     const persisted = readPersistedJob();
-    if (!persisted || !getAccessToken()) return;
+    if (!persisted || (!getAccessToken() && !getRefreshToken())) return;
 
     if (activeResumePromise) {
       devLog("resume skipped — promise in flight", {

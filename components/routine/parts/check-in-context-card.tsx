@@ -24,8 +24,8 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchSkinCheck } from "@/lib/api/skin-check";
-import { apiBaseUrl } from "@/lib/api";
-import { authHeaders, getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiGet } from "@/lib/api-client";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import type { RoutineStepDTO } from "@/lib/types/routine";
 import { streakDateKey } from "@/lib/streak/history";
 import { cn } from "@/lib/utils";
@@ -97,7 +97,7 @@ export function CheckInContextCard({
   );
 
   const load = useCallback(async () => {
-    if (!getAccessToken()) {
+    if (!getAccessToken() && !getRefreshToken()) {
       setStatus("anon");
       return;
     }
@@ -105,16 +105,11 @@ export function CheckInContextCard({
     setHintsReady(null);
     setCachedHints(null);
     try {
-      const res = await fetch(
-        `${apiBaseUrl}/api/v1/progress?range=30&limit=1`,
-        { headers: authHeaders() },
+      const timeline = await apiGet<{ entries?: ProgressEntry[] }>(
+        "/api/v1/progress?range=30&limit=1",
+        { toastOnError: false },
       );
-      if (!res.ok) {
-        setStatus("error");
-        return;
-      }
-      const json = await res.json().catch(() => ({}));
-      const list = (json?.data?.entries ?? []) as ProgressEntry[];
+      const list = (timeline?.entries ?? []) as ProgressEntry[];
       const top = list[0];
       if (!top) {
         setEntry(null);
@@ -123,7 +118,11 @@ export function CheckInContextCard({
         setEntry(top);
         setStatus("ready");
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.kind === "unauthorized") {
+        setStatus("anon");
+        return;
+      }
       setStatus("error");
     }
   }, []);

@@ -1,6 +1,4 @@
-import { apiBaseUrl } from "@/lib/api";
-import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
-import { authHeaders } from "@/lib/auth-token";
+import { ApiError, apiDelete, apiGet } from "@/lib/api-client";
 import type { SkinProfileResponse } from "@/lib/types/profile";
 
 export const skinProfileQueryKey = ["profile", "skin"] as const;
@@ -9,31 +7,32 @@ export type DeleteOnboardingDTO = {
   deleted_at: string;
 };
 
+function throwProfileError(err: unknown, fallback: string): never {
+  if (err instanceof ApiError) {
+    if (err.kind === "unauthorized" || err.status === 401 || err.status === 403) {
+      throw new Error("auth");
+    }
+    throw new Error(err.serverMessage || fallback);
+  }
+  throw err instanceof Error ? err : new Error(fallback);
+}
+
 export async function fetchSkinProfile(): Promise<SkinProfileResponse | null> {
-  const res = await fetch(`${apiBaseUrl}/api/v1/profile/skin`, {
-    headers: authHeaders(),
-  });
-  if (res.status === 401 || res.status === 403) {
-    throw new Error("auth");
+  try {
+    return await apiGet<SkinProfileResponse>("/api/v1/profile/skin", {
+      toastOnError: false,
+    });
+  } catch (err) {
+    throwProfileError(err, "fetch_failed");
   }
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<SkinProfileResponse>;
-  if (!res.ok) {
-    throw new Error(getApiErrorMessage(json, "fetch_failed"));
-  }
-  return json.data ?? null;
 }
 
 export async function deleteOnboarding(): Promise<DeleteOnboardingDTO> {
-  const res = await fetch(`${apiBaseUrl}/api/v1/profile/onboarding`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<DeleteOnboardingDTO>;
-  if (res.status === 401 || res.status === 403) {
-    throw new Error("auth");
+  try {
+    return await apiDelete<DeleteOnboardingDTO>("/api/v1/profile/onboarding", {
+      toastOnError: false,
+    });
+  } catch (err) {
+    throwProfileError(err, "delete_failed");
   }
-  if (!res.ok || !json.data) {
-    throw new Error(getApiErrorMessage(json, "delete_failed"));
-  }
-  return json.data;
 }

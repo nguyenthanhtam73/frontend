@@ -83,6 +83,7 @@ export function useCheckInFeedback() {
   const queryClient = useQueryClient();
   const { success: toastSuccess } = useToast();
   const tStreak = useTranslations("progress.streak");
+  const tCheckIn = useTranslations("checkIn");
   const [phase, setPhase] = useState<CheckInFeedbackPhase>("idle");
   const [payload, setPayload] = useState<CreateSkinCheckResponseDTO | null>(
     null,
@@ -282,6 +283,11 @@ export function useCheckInFeedback() {
       return;
     }
 
+    if (result.kind === "unauthorized") {
+      settleFailed(null, tCheckIn("needAuth"));
+      return;
+    }
+
     pollMetaRef.current.networkRetries += 1;
     devLog("poll network error", {
       checkId: id,
@@ -462,7 +468,7 @@ export function useCheckInFeedback() {
       devLog("resume session", pending);
       const result = await fetchSkinCheckResult(pending.checkId);
       if (result.ok === false) {
-        if (result.kind === "not_found") {
+        if (result.kind === "not_found" || result.kind === "unauthorized") {
           clearPersistedCheckInPending();
         }
         return;

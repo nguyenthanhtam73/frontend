@@ -41,8 +41,8 @@ import {
   trackFunnelEvent,
   type CheckInFunnelKind,
 } from "@/lib/analytics/funnel";
-import { apiBaseUrl } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiPost } from "@/lib/api-client";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { useStreak } from "@/lib/hooks/use-streak";
 import type { SkillMode } from "@/lib/stores/onboarding-store";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
@@ -136,7 +136,7 @@ export function CheckInForm() {
   const guestWait = useGuestAiWait();
   const feedbackAnchorRef = useRef<HTMLDivElement>(null);
   const errorAnchorRef = useRef<HTMLDivElement>(null);
-  const signedIn = Boolean(user || getAccessToken());
+  const signedIn = Boolean(user || getAccessToken() || getRefreshToken());
 
   const privacyHydrated = usePrivacyHydrated();
   const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
@@ -357,7 +357,7 @@ export function CheckInForm() {
           return;
         }
 
-        const auth = getAccessToken();
+        const auth = getAccessToken() || getRefreshToken();
         if (!auth) {
           const waitForAi = shouldGuestAiWait({
             hasPhotos: !skipFaceCapture && items.length > 0,
@@ -423,51 +423,34 @@ export function CheckInForm() {
             locale,
           });
 
-          const headers: Record<string, string> = {
-            Authorization: `Bearer ${auth}`,
-          };
-
-          const res = await fetch(`${apiBaseUrl}/api/v1/skin-checks`, {
-            method: "POST",
-            body: fd,
-            // Omit credentials: auth is Bearer-only. `include` + CORS `*` breaks browsers (opaque CORS error).
-            headers,
-          });
-
-          const raw = await res.json().catch(() => ({}));
-          if (res.ok && raw?.success && raw?.data) {
-            for (const kind of checkInFunnelKindsRef.current) {
-              trackFunnelEvent(funnelEventForCheckInKind(kind), {
-                surface: "check_in_form",
-              });
-            }
-            if (checkInFunnelKindsRef.current.includes("first")) {
-              clearAwaitingFirstCheckIn(user?.id);
-            }
-            feedback.onSubmitSuccess(raw.data as CreateSkinCheckResponseDTO);
-            scrollToFeedback();
-          } else if (res.status === 401) {
+          const data = await apiPost<CreateSkinCheckResponseDTO>(
+            "/api/v1/skin-checks",
+            fd,
+            { toastOnError: false, timeoutMs: 180_000 },
+          );
+          if (!data) {
             feedback.onSubmitError();
-            showError(t("needAuth"));
-          } else {
-            feedback.onSubmitError();
-            const errCode =
-              typeof raw === "object" &&
-              raw !== null &&
-              "error" in raw &&
-              typeof (raw as { error?: { code?: string } }).error?.code === "string"
-                ? (raw as { error: { code: string } }).error.code
-                : "";
-            const serverMsg =
-              typeof raw === "object" &&
-              raw !== null &&
-              "error" in raw &&
-              typeof (raw as { error?: { message?: string } }).error?.message ===
-                "string"
-                ? (raw as { error: { message: string } }).error.message
-                : "";
-
-            if (res.status === 413 || errCode === "file_too_large") {
+            showError(t("submitErrorNetwork"));
+            return;
+          }
+          for (const kind of checkInFunnelKindsRef.current) {
+            trackFunnelEvent(funnelEventForCheckInKind(kind), {
+              surface: "check_in_form",
+            });
+          }
+          if (checkInFunnelKindsRef.current.includes("first")) {
+            clearAwaitingFirstCheckIn(user?.id);
+          }
+          feedback.onSubmitSuccess(data);
+          scrollToFeedback();
+        } catch (err) {
+          feedback.onSubmitError();
+          if (err instanceof ApiError) {
+            const errCode = err.code ?? "";
+            const status = err.status ?? 0;
+            if (err.kind === "unauthorized") {
+              showError(t("needAuth"));
+            } else if (status === 413 || errCode === "file_too_large") {
               showError(
                 t("photoErrorTooLargeShort", { maxMb: CHECKIN_PHOTO_MAX_MB }),
               );
@@ -477,28 +460,35 @@ export function CheckInForm() {
               showError(t("photoErrorModeration"));
             } else if (errCode === "missing_images" && skipFaceCapture) {
               showError(t("submitErrorMissingImages"));
-            } else if (res.status === 429 || errCode === "rate_limited") {
+            } else if (err.kind === "rate_limited" || errCode === "rate_limited") {
               showError(t("submitErrorRateLimited"));
             } else if (
-              res.status === 403 &&
+              err.kind === "forbidden" &&
               (errCode === "feature_denied" || errCode === "premium_required")
             ) {
               showError(t("photoAngleLockedHint"));
-            } else if (res.status >= 500 || res.status === 0) {
+            } else if (
+              err.kind === "server" ||
+              err.kind === "network" ||
+              err.kind === "timeout" ||
+              err.kind === "offline"
+            ) {
               showError(t("submitErrorNetwork"));
             } else {
               showError(
-                serverMsg
-                  ? t("submitErrorGeneric", { status: res.status, detail: serverMsg })
+                err.serverMessage
+                  ? t("submitErrorGeneric", {
+                      status: status || 0,
+                      detail: err.serverMessage,
+                    })
                   : t("submitErrorGeneric", {
-                      status: res.status,
+                      status: status || 0,
                       detail: t("submitErrorUnknown"),
                     }),
               );
             }
+            return;
           }
-        } catch {
-          feedback.onSubmitError();
           showError(t("submitErrorNetwork"));
         }
       }}
@@ -614,6 +604,7 @@ export function CheckInForm() {
                       key={id}
                       type="button"
                       data-testid={`checkin-condition-${id}`}
+                      aria-pressed={on}
                       onClick={() => toggleCondition(id)}
                       className={cn(
                         "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
@@ -638,6 +629,7 @@ export function CheckInForm() {
                     <button
                       key={id}
                       type="button"
+                      aria-pressed={on}
                       onClick={() => toggleSymptom(id)}
                       className={cn(
                         "rounded-full border px-3 py-1 text-xs font-medium transition-colors",

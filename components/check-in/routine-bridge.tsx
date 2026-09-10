@@ -19,8 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Link } from "@/i18n/navigation";
-import { apiBaseUrl } from "@/lib/api";
-import { authHeaders } from "@/lib/auth-token";
+import { ApiError, apiGet, apiPost } from "@/lib/api-client";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 import { cn } from "@/lib/utils";
 
@@ -90,18 +89,11 @@ export function RoutineBridge({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/api/v1/routines`, {
-          headers: authHeaders(),
+        const data = await apiGet<RoutineDTO>("/api/v1/routines", {
+          toastOnError: false,
         });
-        if (!res.ok) {
-          if (!cancelled) setLoadError(t("loadError"));
-          return;
-        }
-        const json = await res.json().catch(() => ({}));
         if (cancelled) return;
-        if (json?.success && json?.data) {
-          setRoutine(json.data as RoutineDTO);
-        }
+        if (data) setRoutine(data);
       } catch {
         if (!cancelled) setLoadError(t("loadError"));
       } finally {
@@ -137,15 +129,10 @@ export function RoutineBridge({
           next.source === "ai_suggested" ? "ai_suggested" : "manual",
         skill_mode: next.skill_mode ?? "",
       };
-      const res = await fetch(`${apiBaseUrl}/api/v1/routines`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify(body),
+      const saved = await apiPost<RoutineDTO>("/api/v1/routines", body, {
+        toastOnError: false,
       });
-      if (!res.ok) throw new Error("save_failed");
-      const json = await res.json().catch(() => ({}));
-      if (!json?.success || !json?.data) throw new Error("save_failed");
-      const saved = json.data as RoutineDTO;
+      if (!saved) throw new Error("save_failed");
       setRoutine(saved);
       return saved;
     },

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinCheckResult } from "@/lib/api/skin-check";
+import { apiGet } from "@/lib/api-client";
 import {
   clearPersistedCheckInPending,
   dismissBannerForCheck,
@@ -11,7 +11,7 @@ import {
   isBannerDismissedForCheck,
   readPersistedCheckInPending,
 } from "@/lib/check-in/pending-feedback-session";
-import { getAccessToken } from "@/lib/auth-token";
+import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import type { ProgressTimelineDTO } from "@/lib/types/progress";
 
 /** 8s for first 2 min, then 15s; stop polling after 5 min. */
@@ -50,17 +50,14 @@ async function resolvePendingCheckId(): Promise<{
     };
   }
 
-  const token = getAccessToken();
+  const token = getAccessToken() || getRefreshToken();
   if (!token) return null;
 
   try {
-    const res = await fetch(`${apiBaseUrl}/api/v1/progress?range=30`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const data = await apiGet<ProgressTimelineDTO>("/api/v1/progress?range=30", {
+      toastOnError: false,
     });
-    const raw = await res.json().catch(() => ({}));
-    if (!res.ok || !raw?.success || !raw.data) return null;
-
-    const entries = (raw.data as ProgressTimelineDTO).entries;
+    const entries = data?.entries;
     const latest = entries?.[0];
     if (!latest || !isAnalysisProcessing(latest.status)) return null;
 

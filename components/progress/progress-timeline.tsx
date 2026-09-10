@@ -9,9 +9,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
-import { apiBaseUrl } from "@/lib/api";
-import { getApiErrorMessage } from "@/lib/api-envelope";
-import { getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiGet } from "@/lib/api-client";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import type {
@@ -73,32 +71,21 @@ export function ProgressTimeline() {
   // new user apart from an empty range, so we resolve this via an all-time probe.
   const [everCheckedIn, setEverCheckedIn] = useState<boolean | null>(null);
 
-  const authHeaders = useCallback((): Record<string, string> => {
-    const headers: Record<string, string> = {};
-    const token = getAccessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-    return headers;
-  }, []);
-
-  // Cheap all-time probe: hits the summary endpoint (no entries payload) purely to
-  // learn whether any check-in exists at all. Only called when a ranged view came
-  // back empty and the range isn't already "all".
   const probeEverCheckedIn = useCallback(
     async (isStale?: () => boolean) => {
       try {
-        const res = await fetch(`${apiBaseUrl}/api/v1/progress/summary?range=all`, {
-          headers: authHeaders(),
-        });
-        const raw = await res.json().catch(() => ({}));
+        const summary = await apiGet<{ summary?: { total_checks?: number } }>(
+          "/api/v1/progress/summary?range=all",
+          { toastOnError: false },
+        );
         if (isStale?.()) return;
-        const total = raw?.data?.summary?.total_checks ?? 0;
+        const total = summary?.summary?.total_checks ?? 0;
         setEverCheckedIn(total > 0);
       } catch {
-        // On failure, default to the encouraging first-time copy.
         if (!isStale?.()) setEverCheckedIn(false);
       }
     },
-    [authHeaders],
+    [],
   );
 
   const loadTimeline = useCallback(
@@ -106,41 +93,46 @@ export function ProgressTimeline() {
       setLoading(true);
       setErrMsg(null);
       try {
-        const res = await fetch(`${apiBaseUrl}/api/v1/progress?range=${r}`, {
-          headers: authHeaders(),
+        const timeline = await apiGet<ProgressTimelineDTO>(`/api/v1/progress?range=${r}`, {
+          toastOnError: false,
         });
-        const raw = await res.json().catch(() => ({}));
         if (isStale?.()) return;
-        if (res.status === 401) {
+        if (!timeline) {
+          setErrMsg(t("errors.fetchFail"));
+          setData(null);
+          return;
+        }
+        setData(timeline);
+        if (timeline.entries.length > 0) {
+          setEverCheckedIn(true);
+        } else if (r === "all") {
+          setEverCheckedIn(false);
+        } else {
+          void probeEverCheckedIn(isStale);
+        }
+      } catch (err) {
+        if (isStale?.()) return;
+        if (err instanceof ApiError && err.kind === "unauthorized") {
           setErrMsg(t("errors.needAuth"));
           setData(null);
           return;
         }
-        if (!res.ok || !raw?.success) {
-          setErrMsg(getApiErrorMessage(raw, t("errors.fetchFail")));
+        if (err instanceof ApiError && err.kind === "offline") {
+          setErrMsg(t("errors.networkError"));
           setData(null);
           return;
         }
-        const timeline = raw.data as ProgressTimelineDTO;
-        setData(timeline);
-        // Resolve which empty state to show (only matters when this range is empty).
-        if (timeline.entries.length > 0) {
-          setEverCheckedIn(true);
-        } else if (r === "all") {
-          setEverCheckedIn(false); // empty across all time = genuinely never
-        } else {
-          void probeEverCheckedIn(isStale);
-        }
-      } catch {
-        if (!isStale?.()) {
-          setErrMsg(t("errors.networkError"));
-          setData(null);
-        }
+        setErrMsg(
+          err instanceof ApiError
+            ? err.userMessage(t("errors.fetchFail"))
+            : t("errors.networkError"),
+        );
+        setData(null);
       } finally {
         if (!isStale?.()) setLoading(false);
       }
     },
-    [t, authHeaders, probeEverCheckedIn],
+    [t, probeEverCheckedIn],
   );
 
   useEffect(() => {

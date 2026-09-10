@@ -1,3 +1,5 @@
+import { apiBaseUrl } from "@/lib/api";
+import { ensureFreshAccessToken, getAccessToken } from "@/lib/auth-token";
 import type { OnboardingSkinAnalyzeDTO } from "@/lib/types/onboarding-ai";
 
 /** Friendly error kinds — never surface raw HTTP / stack traces in UI. */
@@ -38,7 +40,11 @@ export async function fetchOnboardingAi(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const fresh = await ensureFreshAccessToken(apiBaseUrl);
+    const headers = new Headers(init.headers);
+    const token = fresh || getAccessToken();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    return await fetch(url, { ...init, headers, signal: controller.signal });
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new OnboardingAiError("timeout");

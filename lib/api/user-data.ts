@@ -1,7 +1,4 @@
-import { apiBaseUrl } from "@/lib/api";
-import { apiGet, ApiError } from "@/lib/api-client";
-import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
-import { authHeaders } from "@/lib/auth-token";
+import { apiGet, apiDelete, ApiError } from "@/lib/api-client";
 
 export type DeleteUserDataDTO = {
   deleted_at: string;
@@ -20,18 +17,19 @@ export type ExportUserDataDTO = {
 };
 
 export async function deleteAllUserData(): Promise<DeleteUserDataDTO> {
-  const res = await fetch(`${apiBaseUrl}/api/v1/me/data`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  const json = (await res.json().catch(() => ({}))) as ApiEnvelope<DeleteUserDataDTO>;
-  if (res.status === 401 || res.status === 403) {
-    throw new Error("auth");
+  try {
+    return await apiDelete<DeleteUserDataDTO>("/api/v1/me/data", {
+      toastOnError: false,
+    });
+  } catch (err) {
+    if (err instanceof ApiError) {
+      if (err.kind === "unauthorized" || err.status === 401 || err.status === 403) {
+        throw new Error("auth");
+      }
+      throw new Error(err.serverMessage || "delete_failed");
+    }
+    throw err instanceof Error ? err : new Error("delete_failed");
   }
-  if (!res.ok || !json.data) {
-    throw new Error(getApiErrorMessage(json, "delete_failed"));
-  }
-  return json.data;
 }
 
 /** Fetch Premium data export. Throws {@link ApiError} on failure (incl. feature gate). */

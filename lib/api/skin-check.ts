@@ -1,12 +1,5 @@
-import { apiBaseUrl } from "@/lib/api";
-import { apiPost } from "@/lib/api-client";
-import { getAccessToken } from "@/lib/auth-token";
+import { ApiError, apiGet, apiPost } from "@/lib/api-client";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
-
-type ApiEnvelope<T> = {
-  success?: boolean;
-  data?: T;
-};
 
 export type FetchSkinCheckResult =
   | { ok: true; data: CreateSkinCheckResponseDTO }
@@ -19,35 +12,28 @@ export type FetchSkinCheckResult =
 export async function fetchSkinCheckResult(
   id: string,
 ): Promise<FetchSkinCheckResult> {
-  const headers: Record<string, string> = {};
-  const auth = getAccessToken();
-  if (auth) headers.Authorization = `Bearer ${auth}`;
-
   try {
-    const res = await fetch(
-      `${apiBaseUrl}/api/v1/skin-checks/${encodeURIComponent(id)}`,
-      { headers },
+    const data = await apiGet<CreateSkinCheckResponseDTO>(
+      `/api/v1/skin-checks/${encodeURIComponent(id)}`,
+      { toastOnError: false },
     );
-    const raw = (await res.json().catch(() => ({}))) as ApiEnvelope<CreateSkinCheckResponseDTO>;
-
-    if (res.status === 404) {
-      return { ok: false, kind: "not_found" };
+    if (!data) {
+      return { ok: false, kind: "api" };
     }
-    if (res.status === 401) {
-      return { ok: false, kind: "unauthorized" };
+    return { ok: true, data };
+  } catch (err) {
+    if (err instanceof ApiError) {
+      if (err.status === 404) return { ok: false, kind: "not_found" };
+      if (err.kind === "unauthorized") return { ok: false, kind: "unauthorized" };
+      if (
+        err.kind === "network" ||
+        err.kind === "timeout" ||
+        err.kind === "offline"
+      ) {
+        return { ok: false, kind: "network" };
+      }
+      return { ok: false, kind: "api", message: err.serverMessage };
     }
-    if (res.ok && raw?.success && raw.data) {
-      return { ok: true, data: raw.data };
-    }
-    return {
-      ok: false,
-      kind: "api",
-      message:
-        typeof raw === "object" && raw !== null && "error" in raw
-          ? (raw as { error?: { message?: string } }).error?.message
-          : undefined,
-    };
-  } catch {
     return { ok: false, kind: "network" };
   }
 }

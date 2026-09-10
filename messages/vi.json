@@ -91,6 +91,14 @@
       "title": "Bảng giá · DaDiary",
       "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
     },
+    "privacyPage": {
+      "title": "Quyền riêng tư · DaDiary",
+      "description": "Cách DaDiary dùng email, ảnh da và dữ liệu nhật ký — bạn có thể xoá bất cứ lúc nào."
+    },
+    "termsPage": {
+      "title": "Điều khoản sử dụng · DaDiary",
+      "description": "Điều khoản ngắn cho DaDiary Beta: tài khoản, thanh toán, và gợi ý chăm da không phải điều trị."
+    },
     "paymentSuccess": {
       "title": "Thanh toán thành công · DaDiary",
       "description": "Gói Premium của bạn đã được kích hoạt."
@@ -190,6 +198,8 @@
       "terms": "Điều khoản",
       "betaContact": "Tham gia Beta: đăng ký tài khoản miễn phí để trải nghiệm sớm nhất.",
       "navAria": "Liên kết chân trang",
+      "privacy": "Quyền riêng tư",
+      "terms": "Điều khoản",
       "social": {
         "navAria": "Mạng xã hội DaDiary",
         "follow": "Theo dõi",

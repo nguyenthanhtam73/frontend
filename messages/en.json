@@ -91,6 +91,14 @@
       "title": "Pricing · DaDiary",
       "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
     },
+    "privacyPage": {
+      "title": "Privacy · DaDiary",
+      "description": "How DaDiary uses your email, skin photos, and diary data — you can delete anytime."
+    },
+    "termsPage": {
+      "title": "Terms of use · DaDiary",
+      "description": "Short Beta terms: your account, payments, and skincare suggestions that are not medical treatment."
+    },
     "paymentSuccess": {
       "title": "Payment successful · DaDiary",
       "description": "Your Premium plan is now active."
@@ -190,6 +198,8 @@
       "terms": "Terms",
       "betaContact": "Join Beta: create a free account to try it first.",
       "navAria": "Footer links",
+      "privacy": "Privacy",
+      "terms": "Terms",
       "social": {
         "navAria": "DaDiary social media",
         "follow": "Follow",
