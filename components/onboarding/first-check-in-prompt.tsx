@@ -146,7 +146,8 @@ export function FirstCheckInPrompt({
           {t("cta")}
           <ArrowRight className="size-5 shrink-0" aria-hidden />
         </ButtonLink>
-        {laterReady ? (
+        {/* Same-session D0: hide skip so Later today cannot dismiss the prompt. */}
+        {laterReady && !awaiting ? (
           <div className="space-y-1.5">
             <Button
               type="button"

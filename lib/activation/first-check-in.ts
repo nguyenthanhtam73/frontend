@@ -9,8 +9,8 @@ const AWAITING_SESSION_KEY = "dadiary_awaiting_first_checkin_v1";
 const AWAITING_PERSIST_KEY = "dadiary:awaiting-first-checkin-v1";
 const LATER_TODAY_KEY = "dadiary:first-checkin-later-today-v1";
 
-/** Delay before the demoted “later today” control appears. */
-export const FIRST_CHECK_IN_LATER_DELAY_MS = 8_000;
+/** Delay before the demoted “later today” control appears (not while awaiting D0). */
+export const FIRST_CHECK_IN_LATER_DELAY_MS = 30_000;
 
 export type FirstCheckInStreakHint = {
   current_streak?: number | null;

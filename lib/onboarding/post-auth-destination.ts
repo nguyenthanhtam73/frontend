@@ -57,17 +57,33 @@ export function isOnboardingGatedPath(pathname: string): boolean {
   return false;
 }
 
+function isCheckInDestination(path: string | null | undefined): boolean {
+  if (!path) return false;
+  const bare = path.split("?")[0]?.split("#")[0]?.replace(/\/+$/, "") || "/";
+  return bare === "/check-in" || bare.startsWith("/check-in/");
+}
+
 /**
  * Where to send the user after a successful register (non-checkout).
- * Claimed guest trial → coach-welcome (check-in is the primary CTA there).
+ * Unclaimed check-in (D0) → /check-in even with a guest routine / `?next=`
+ * coach-welcome. Claim-fail uses the same path so the #33 retry card can show.
+ * Claimed check-in + guest trial → coach-welcome.
  * Otherwise → /check-in (or an explicit non-gated `?next=`).
  */
 export function postRegisterDestination(input: {
   claimed: boolean;
   hadClaimableGuest: boolean;
+  claimedCheckIn: boolean;
   user: AuthUserLike;
   returnPath: string | null | undefined;
 }): string {
+  // Guest routine must not divert an unclaimed D0 (or a failed guest claim).
+  if (!input.claimedCheckIn) {
+    if (isCheckInDestination(input.returnPath)) {
+      return resolveAuthReturnDestination(input.user, input.returnPath);
+    }
+    return "/check-in";
+  }
   if (input.claimed || input.hadClaimableGuest) return COACH_WELCOME_PATH;
   if (!input.returnPath) return "/check-in";
   return resolveAuthReturnDestination(input.user, input.returnPath);

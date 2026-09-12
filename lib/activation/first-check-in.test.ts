@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  FIRST_CHECK_IN_LATER_DELAY_MS,
   hasNeverCheckedIn,
   laterTodayFromMap,
   shouldShowActivationBanner,
@@ -99,6 +100,12 @@ describe("shouldShowFirstCheckInPrompt", () => {
       shouldShowFirstCheckInPrompt({ ...readyNever, neverCheckedIn: false }),
       false,
     );
+  });
+});
+
+describe("FIRST_CHECK_IN_LATER_DELAY_MS", () => {
+  it("keeps Later today off the first-check-in prompt for the first 30s", () => {
+    assert.equal(FIRST_CHECK_IN_LATER_DELAY_MS, 30_000);
   });
 });
 

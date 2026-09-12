@@ -246,6 +246,7 @@ function RegisterPageInner() {
                   : postRegisterDestination({
                       claimed,
                       hadClaimableGuest,
+                      claimedCheckIn,
                       user: json.data?.user,
                       returnPath,
                     });
