@@ -63,11 +63,12 @@ describe("resolveAuthReturnDestination", () => {
 });
 
 describe("postRegisterDestination", () => {
-  it("sends claimed / guest-trial register to coach-welcome", () => {
+  it("sends claimed check-in + guest-trial register to coach-welcome", () => {
     assert.equal(
       postRegisterDestination({
         claimed: true,
         hadClaimableGuest: false,
+        claimedCheckIn: true,
         user: { id: "u1", onboarding_completed: true },
         returnPath: "/pricing",
       }),
@@ -77,10 +78,60 @@ describe("postRegisterDestination", () => {
       postRegisterDestination({
         claimed: false,
         hadClaimableGuest: true,
+        claimedCheckIn: true,
         user: { id: "u1", onboarding_completed: false },
         returnPath: null,
       }),
       "/onboarding/coach-welcome",
+    );
+  });
+
+  it("keeps D0 on /check-in when check-in is unclaimed, even with a guest routine", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: true,
+        hadClaimableGuest: true,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: "/onboarding/coach-welcome",
+      }),
+      "/check-in",
+    );
+    assert.equal(
+      postRegisterDestination({
+        claimed: false,
+        hadClaimableGuest: true,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: null,
+      }),
+      "/check-in",
+    );
+  });
+
+  it("honors next=/check-in when check-in is unclaimed", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: true,
+        hadClaimableGuest: true,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: "/check-in",
+      }),
+      "/check-in",
+    );
+  });
+
+  it("prefers /check-in after a guest check-in claim fail", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: true,
+        hadClaimableGuest: true,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: true },
+        returnPath: "/onboarding/coach-welcome",
+      }),
+      "/check-in",
     );
   });
 
@@ -89,6 +140,7 @@ describe("postRegisterDestination", () => {
       postRegisterDestination({
         claimed: false,
         hadClaimableGuest: false,
+        claimedCheckIn: false,
         user: { id: "u1", onboarding_completed: true },
         returnPath: null,
       }),
@@ -101,6 +153,7 @@ describe("postRegisterDestination", () => {
       postRegisterDestination({
         claimed: false,
         hadClaimableGuest: false,
+        claimedCheckIn: false,
         user: { id: "u1", onboarding_completed: false },
         returnPath: null,
       }),
@@ -110,6 +163,7 @@ describe("postRegisterDestination", () => {
       postRegisterDestination({
         claimed: false,
         hadClaimableGuest: false,
+        claimedCheckIn: false,
         user: { id: "u1", onboarding_completed: false },
         returnPath: "/check-in",
       }),
@@ -117,15 +171,29 @@ describe("postRegisterDestination", () => {
     );
   });
 
-  it("still blocks incomplete register next= onto remaining gated shells", () => {
+  it("still blocks incomplete register next= onto remaining gated shells after a claimed check-in", () => {
     assert.equal(
       postRegisterDestination({
         claimed: false,
         hadClaimableGuest: false,
+        claimedCheckIn: true,
         user: { id: "u1", onboarding_completed: false },
         returnPath: "/routine",
       }),
       "/onboarding",
+    );
+  });
+
+  it("sends unclaimed D0 to /check-in instead of a gated next=", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: false,
+        hadClaimableGuest: false,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: "/routine",
+      }),
+      "/check-in",
     );
   });
 });
