@@ -27,6 +27,11 @@ describe("funnel analytics", () => {
     assert.equal(FUNNEL_EVENTS.firstCheckIn, "activation_first_checkin");
     assert.equal(FUNNEL_EVENTS.guestCheckInSave, "guest_checkin_save");
     assert.equal(FUNNEL_EVENTS.guestCheckInClaim, "guest_checkin_claim");
+    assert.equal(FUNNEL_EVENTS.checkInFormView, "checkin_form_view");
+    assert.equal(FUNNEL_EVENTS.checkInPhotoStaged, "checkin_photo_staged");
+    assert.equal(FUNNEL_EVENTS.checkInSkipSelected, "checkin_skip_selected");
+    assert.equal(FUNNEL_EVENTS.checkInSubmitAttempt, "checkin_submit_attempt");
+    assert.equal(FUNNEL_EVENTS.checkInSubmitFail, "checkin_submit_fail");
     assert.equal(FUNNEL_EVENTS.d1CheckIn, "activation_d1_checkin");
     assert.equal(FUNNEL_EVENTS.d1ReminderShown, "activation_d1_reminder_shown");
     assert.equal(FUNNEL_EVENTS.pushOptIn, "activation_push_opt_in");
@@ -41,6 +46,11 @@ describe("funnel analytics", () => {
     assert.equal(isFunnelEventName("activation_first_checkin"), true);
     assert.equal(isFunnelEventName("guest_checkin_save"), true);
     assert.equal(isFunnelEventName("guest_checkin_claim"), true);
+    assert.equal(isFunnelEventName("checkin_form_view"), true);
+    assert.equal(isFunnelEventName("checkin_photo_staged"), true);
+    assert.equal(isFunnelEventName("checkin_skip_selected"), true);
+    assert.equal(isFunnelEventName("checkin_submit_attempt"), true);
+    assert.equal(isFunnelEventName("checkin_submit_fail"), true);
     assert.equal(isFunnelEventName("paywall_view"), true);
     assert.equal(isFunnelEventName("Purchase"), false);
   });

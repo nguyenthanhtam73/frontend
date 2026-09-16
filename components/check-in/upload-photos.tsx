@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
+import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { prepareCheckInPhoto } from "@/lib/check-in/prepare-check-in-photo";
 import {
   CHECKIN_PHOTO_ACCEPT,
@@ -185,6 +186,10 @@ export function UploadPhotos({
         if (prev) URL.revokeObjectURL(prev.url);
         next[index] = fileToItem(prepared.file);
         errors[index] = null;
+        trackFunnelEvent(FUNNEL_EVENTS.checkInPhotoStaged, {
+          slot: index,
+          count: (next[0] ? 1 : 0) + (next[1] ? 1 : 0),
+        });
         return true;
       };
 
