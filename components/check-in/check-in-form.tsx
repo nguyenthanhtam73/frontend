@@ -36,6 +36,7 @@ import { Link } from "@/i18n/navigation";
 import { resolveCheckInReminderKind, signupDayKey } from "@/lib/activation/check-in-reminder";
 import { clearAwaitingFirstCheckIn, hasNeverCheckedIn } from "@/lib/activation/first-check-in";
 import {
+  FUNNEL_EVENTS,
   funnelEventForCheckInKind,
   resolveCheckInFunnelKinds,
   trackFunnelEvent,
@@ -57,6 +58,10 @@ import {
   isGuestCheckInPhotosMissing,
   type GuestCheckInClaimReason,
 } from "@/lib/check-in/claim-guest-check-in";
+import {
+  checkInSubmitFailReason,
+  type CheckInSkipSource,
+} from "@/lib/check-in/check-in-analytics";
 import {
   buildSkinCheckFormData,
   canSubmitCheckIn,
@@ -129,7 +134,9 @@ export function CheckInForm() {
   // popups stealing focus or breaking scroll). Auto-cleared on next submit attempt.
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [guestLocal, setGuestLocal] = useState<GuestCheckInPayload | null>(null);
+  const [guestPersistReady, setGuestPersistReady] = useState(false);
   const [guestSaving, setGuestSaving] = useState(false);
+  const formViewedRef = useRef(false);
   const [guestClaiming, setGuestClaiming] = useState(false);
   const [guestClaimReason, setGuestClaimReason] =
     useState<GuestCheckInClaimReason | null>(null);
@@ -242,12 +249,18 @@ export function CheckInForm() {
   }
 
   /** Switch into skip-face (tag + notes only) mode. Clears staged photos. */
-  const enterSkipMode = useCallback(() => {
-    revokeAllPhotos(photoSlots);
-    setPhotoSlots([null, null]);
-    setSkipFaceCapture(true);
-    setErrorMsg(null);
-  }, [photoSlots, revokeAllPhotos, setSkipFaceCapture]);
+  const enterSkipMode = useCallback(
+    (source: CheckInSkipSource) => {
+      if (!skipFaceCapture) {
+        trackFunnelEvent(FUNNEL_EVENTS.checkInSkipSelected, { source });
+      }
+      revokeAllPhotos(photoSlots);
+      setPhotoSlots([null, null]);
+      setSkipFaceCapture(true);
+      setErrorMsg(null);
+    },
+    [photoSlots, revokeAllPhotos, setSkipFaceCapture, skipFaceCapture],
+  );
 
   const exitSkipMode = useCallback(() => {
     setSkipFaceCapture(false);
@@ -256,7 +269,31 @@ export function CheckInForm() {
 
   useEffect(() => {
     setGuestLocal(readPersistedGuestCheckIn());
+    setGuestPersistReady(true);
   }, []);
+
+  useEffect(() => {
+    if (formViewedRef.current) return;
+    if (!privacyHydrated || !guestPersistReady) return;
+    if (guestLocal) return;
+    if (!signedIn && guestWait.isWaiting) return;
+    if (signedIn && streakQuery.isLoading) return;
+    formViewedRef.current = true;
+    trackFunnelEvent(FUNNEL_EVENTS.checkInFormView, {
+      never_checked_in: hasNeverCheckedIn(streakQuery.data),
+      skip_mode: skipFaceCapture,
+      signed_in: signedIn,
+    });
+  }, [
+    guestLocal,
+    guestPersistReady,
+    guestWait.isWaiting,
+    privacyHydrated,
+    signedIn,
+    skipFaceCapture,
+    streakQuery.data,
+    streakQuery.isLoading,
+  ]);
 
   const applyGuestClaimResult = useCallback(
     (result: Awaited<ReturnType<typeof claimLocalGuestCheckInIfNeeded>>) => {
@@ -347,6 +384,11 @@ export function CheckInForm() {
       onSubmit={async (e) => {
         e.preventDefault();
         setErrorMsg(null);
+        trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitAttempt, {
+          skip_mode: skipFaceCapture,
+          signed_in: signedIn,
+          photo_count: items.length,
+        });
         if (skipFaceCapture) {
           if (!skipModeReady) {
             showError(t("skipModeNeedTags"));
@@ -429,6 +471,9 @@ export function CheckInForm() {
             { toastOnError: false, timeoutMs: 180_000 },
           );
           if (!data) {
+            trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitFail, {
+              reason: "empty_response",
+            });
             feedback.onSubmitError();
             showError(t("submitErrorNetwork"));
             return;
@@ -444,6 +489,9 @@ export function CheckInForm() {
           feedback.onSubmitSuccess(data);
           scrollToFeedback();
         } catch (err) {
+          trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitFail, {
+            reason: checkInSubmitFailReason(err),
+          });
           feedback.onSubmitError();
           if (err instanceof ApiError) {
             const errCode = err.code ?? "";
@@ -501,7 +549,7 @@ export function CheckInForm() {
           photoLabel={t("modeTogglePhoto")}
           skipLabel={t("modeToggleSkip")}
           onSelectPhoto={exitSkipMode}
-          onSelectSkip={enterSkipMode}
+          onSelectSkip={() => enterSkipMode("toggle")}
           disabled={feedback.isWaiting}
         />
         <Card
@@ -515,7 +563,7 @@ export function CheckInForm() {
               <UploadPhotos
                 slots={photoSlots}
                 onSlotsChange={handleSlotsChange}
-                onSkipPhotos={enterSkipMode}
+                onSkipPhotos={() => enterSkipMode("panel")}
               />
             ) : (
               <SkipModePanel
@@ -795,7 +843,7 @@ export function CheckInForm() {
               <button
                 type="button"
                 data-testid="checkin-submit-skip"
-                onClick={enterSkipMode}
+                onClick={() => enterSkipMode("sticky")}
                 disabled={feedback.isWaiting}
                 className="font-medium text-primary underline underline-offset-4"
               >

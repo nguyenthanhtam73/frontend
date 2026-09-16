@@ -15,6 +15,11 @@
  * | first_checkin      | activation_first_checkin                           |
  * | guest_checkin_save | guest_checkin_save { skip_mode, has_photos, result } |
  * | guest_checkin_claim| guest_checkin_claim { ok, reason }                 |
+ * | checkin_form_view  | checkin_form_view { never_checked_in, skip_mode, signed_in } |
+ * | checkin_photo_staged | checkin_photo_staged { slot, count }             |
+ * | checkin_skip_selected | checkin_skip_selected { source }                |
+ * | checkin_submit_attempt | checkin_submit_attempt { skip_mode, signed_in, photo_count } |
+ * | checkin_submit_fail | checkin_submit_fail { reason }                    |
  * | d1_checkin         | activation_d1_checkin (+ d1 reminder shown)        |
  * | push_opt_in        | activation_push_opt_in                             |
  * | push_dismissed     | activation_push_dismissed                          |
@@ -37,6 +42,11 @@ export const FUNNEL_EVENTS = {
   firstCheckIn: "activation_first_checkin",
   guestCheckInSave: "guest_checkin_save",
   guestCheckInClaim: "guest_checkin_claim",
+  checkInFormView: "checkin_form_view",
+  checkInPhotoStaged: "checkin_photo_staged",
+  checkInSkipSelected: "checkin_skip_selected",
+  checkInSubmitAttempt: "checkin_submit_attempt",
+  checkInSubmitFail: "checkin_submit_fail",
   d1CheckIn: "activation_d1_checkin",
   d1ReminderShown: "activation_d1_reminder_shown",
   pushOptIn: "activation_push_opt_in",
@@ -88,6 +98,8 @@ const STANDARD_BY_CUSTOM: Partial<
   // checkoutConfirm is custom-only — SePay start already fires InitiateCheckout.
   // paid is custom-only — trackPaidOnce also fires Meta Purchase once.
   // guestCheckInSave / guestCheckInClaim / firstCheckIn are custom-only (no standard map).
+  // checkInFormView / photoStaged / skipSelected / submitAttempt / submitFail
+  // are custom-only — same as guest check-in events (no Meta standard map).
 };
 
 function recordLocal(name: FunnelEventName, params?: Record<string, unknown>): void {
