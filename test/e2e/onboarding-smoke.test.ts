@@ -196,9 +196,10 @@ test.describe("Onboarding smoke (P1 + P2)", () => {
     });
     expect(page.url()).not.toMatch(/\/onboarding/);
     await page.goto("/check-in");
-    await expect(page.getByTestId("checkin-submit")).toBeVisible({
+    await expect(page.getByTestId("checkin-sticky-take-photo")).toBeVisible({
       timeout: 20_000,
     });
+    await expect(page.getByTestId("checkin-sticky-skip")).toBeVisible();
     expect(page.url()).toMatch(/\/check-in/);
     expect(page.url()).not.toMatch(/\/onboarding/);
   });
