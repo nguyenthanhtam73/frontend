@@ -4,7 +4,9 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   AlertCircle,
   AlertTriangle,
+  Camera,
   ChevronDown,
+  ImageOff,
   RefreshCw,
   Sparkles,
   X,
@@ -75,6 +77,10 @@ import {
   type GuestCheckInPayload,
 } from "@/lib/check-in/guest-check-in-persist";
 import { CHECKIN_PHOTO_MAX_MB } from "@/lib/check-in/photo-upload-validation";
+import {
+  isNeverCheckedInCheckIn,
+  shouldShowD0StickyActions,
+} from "@/lib/check-in/d0-form";
 import { cn } from "@/lib/utils";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 import {
@@ -144,6 +150,8 @@ export function CheckInForm() {
   const feedbackAnchorRef = useRef<HTMLDivElement>(null);
   const errorAnchorRef = useRef<HTMLDivElement>(null);
   const signedIn = Boolean(user || getAccessToken() || getRefreshToken());
+  const [completedThisSession, setCompletedThisSession] = useState(false);
+  const [d0TagsOpen, setD0TagsOpen] = useState(false);
 
   const privacyHydrated = usePrivacyHydrated();
   const skipFaceCaptureStored = usePrivacyStore((s) => s.skipFaceCapture);
@@ -181,6 +189,15 @@ export function CheckInForm() {
     skipMode: skipFaceCapture,
     photoCount: items.length,
     skipModeReady,
+  });
+  const neverCheckedIn = isNeverCheckedInCheckIn({
+    streak: streakQuery.data,
+    completedThisSession,
+  });
+  const showD0Sticky = shouldShowD0StickyActions({
+    neverCheckedIn,
+    skipMode: skipFaceCapture,
+    canSubmit,
   });
 
   const itemsRef = useRef(items);
@@ -267,6 +284,18 @@ export function CheckInForm() {
     setErrorMsg(null);
   }, [setSkipFaceCapture]);
 
+  const handleStickyTakePhoto = useCallback(() => {
+    const el = document.querySelector<HTMLButtonElement>(
+      '[data-testid="checkin-capture-front"]',
+    );
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.click();
+  }, []);
+
+  useEffect(() => {
+    if (skipFaceCapture) setD0TagsOpen(true);
+  }, [skipFaceCapture]);
+
   useEffect(() => {
     setGuestLocal(readPersistedGuestCheckIn());
     setGuestPersistReady(true);
@@ -303,6 +332,7 @@ export function CheckInForm() {
         if (hasNeverCheckedIn(streakQuery.data)) {
           clearAwaitingFirstCheckIn(user?.id);
         }
+        setCompletedThisSession(true);
         onSubmitSuccess(result.data);
         scrollToFeedback();
         return;
@@ -486,6 +516,7 @@ export function CheckInForm() {
           if (checkInFunnelKindsRef.current.includes("first")) {
             clearAwaitingFirstCheckIn(user?.id);
           }
+          setCompletedThisSession(true);
           feedback.onSubmitSuccess(data);
           scrollToFeedback();
         } catch (err) {
@@ -564,6 +595,7 @@ export function CheckInForm() {
                 slots={photoSlots}
                 onSlotsChange={handleSlotsChange}
                 onSkipPhotos={() => enterSkipMode("panel")}
+                hideAngleSlot={neverCheckedIn}
               />
             ) : (
               <SkipModePanel
@@ -643,55 +675,46 @@ export function CheckInForm() {
               ) : null}
             </Field>
 
-            <Field label={t("fieldConditions")}>
-              <div className="flex flex-wrap gap-1.5">
-                {conditionIds.map((id) => {
-                  const on = conditions.includes(id);
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      data-testid={`checkin-condition-${id}`}
-                      aria-pressed={on}
-                      onClick={() => toggleCondition(id)}
-                      className={cn(
-                        "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                        on
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      {t(`conditions.${id}` as const)}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
-
-            <Field label={t("fieldSymptoms")}>
-              <p className="text-xs text-muted-foreground">{t("symptomsHint")}</p>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {symptomIds.map((id) => {
-                  const on = symptoms.includes(id);
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => toggleSymptom(id)}
-                      className={cn(
-                        "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                        on
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-                      )}
-                    >
-                      {t(`symptoms.${id}` as const)}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
+            {neverCheckedIn ? (
+              <details
+                className="group rounded-xl border border-border bg-muted open:bg-muted"
+                open={d0TagsOpen}
+                onToggle={(e) => {
+                  setD0TagsOpen((e.currentTarget as HTMLDetailsElement).open);
+                }}
+                data-testid="checkin-d0-tags"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0">
+                    <span className="block">{t("d0TagsToggle")}</span>
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                      {t("d0TagsHint")}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <div className="space-y-4 border-t border-border px-4 py-4">
+                  <ConditionSymptomChips
+                    conditions={conditions}
+                    symptoms={symptoms}
+                    onToggleCondition={toggleCondition}
+                    onToggleSymptom={toggleSymptom}
+                    t={t}
+                  />
+                </div>
+              </details>
+            ) : (
+              <ConditionSymptomChips
+                conditions={conditions}
+                symptoms={symptoms}
+                onToggleCondition={toggleCondition}
+                onToggleSymptom={toggleSymptom}
+                t={t}
+              />
+            )}
 
             <details className="group rounded-xl border border-border bg-muted open:bg-muted">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
@@ -834,7 +857,9 @@ export function CheckInForm() {
         )}
       >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-          {!canSubmit && !skipFaceCapture ? (
+          {showD0Sticky ? (
+            <span data-testid="checkin-submit-hint">{t("d0StickyHint")}</span>
+          ) : !canSubmit && !skipFaceCapture ? (
             <span
               data-testid="checkin-submit-hint"
               className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"
@@ -869,6 +894,33 @@ export function CheckInForm() {
             </>
           )}
         </div>
+        {showD0Sticky ? (
+          <div className="flex w-full gap-2">
+            <Button
+              type="button"
+              data-testid="checkin-sticky-take-photo"
+              size="default"
+              className="min-h-12 flex-1 gap-1.5 text-sm sm:min-h-11"
+              disabled={feedback.isWaiting}
+              onClick={handleStickyTakePhoto}
+            >
+              <Camera className="size-4 shrink-0" aria-hidden />
+              {t("d0StickyTakePhoto")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              data-testid="checkin-sticky-skip"
+              size="default"
+              className="min-h-12 flex-1 gap-1.5 text-sm sm:min-h-11"
+              disabled={feedback.isWaiting}
+              onClick={() => enterSkipMode("sticky")}
+            >
+              <ImageOff className="size-4 shrink-0" aria-hidden />
+              {t("d0StickySkipNoPhoto")}
+            </Button>
+          </div>
+        ) : (
         <div className="flex w-full gap-2 sm:w-auto">
           <Button
             type="button"
@@ -898,6 +950,7 @@ export function CheckInForm() {
                   : t("analyzeToday")}
           </Button>
         </div>
+        )}
       </div>
 
       <StreakContinueHost
@@ -928,6 +981,73 @@ function Field({
       </label>
       {children}
     </div>
+  );
+}
+
+function ConditionSymptomChips({
+  conditions,
+  symptoms,
+  onToggleCondition,
+  onToggleSymptom,
+  t,
+}: {
+  conditions: string[];
+  symptoms: string[];
+  onToggleCondition: (id: string) => void;
+  onToggleSymptom: (id: string) => void;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <>
+      <Field label={t("fieldConditions")}>
+        <div className="flex flex-wrap gap-1.5">
+          {conditionIds.map((id) => {
+            const on = conditions.includes(id);
+            return (
+              <button
+                key={id}
+                type="button"
+                data-testid={`checkin-condition-${id}`}
+                aria-pressed={on}
+                onClick={() => onToggleCondition(id)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  on
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {t(`conditions.${id}` as const)}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+      <Field label={t("fieldSymptoms")}>
+        <p className="text-xs text-muted-foreground">{t("symptomsHint")}</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {symptomIds.map((id) => {
+            const on = symptoms.includes(id);
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={on}
+                onClick={() => onToggleSymptom(id)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  on
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {t(`symptoms.${id}` as const)}
+              </button>
+            );
+          })}
+        </div>
+      </Field>
+    </>
   );
 }
 

@@ -64,11 +64,14 @@ export function UploadPhotos({
   slots,
   onSlotsChange,
   onSkipPhotos,
+  hideAngleSlot = false,
 }: {
   slots: PhotoSlots;
   onSlotsChange: (slots: PhotoSlots) => void;
   /** Switch to existing no-photo (tag + notes) mode from the empty photo card. */
   onSkipPhotos?: () => void;
+  /** D0 / never_checked_in: hide the Premium+ angle slot until first check-in. */
+  hideAngleSlot?: boolean;
 }) {
   const t = useTranslations("checkIn");
   const advancedGate = useFeatureGate(Feature.AdvancedSkinAnalysis);
@@ -267,8 +270,12 @@ export function UploadPhotos({
   return (
     <div className="space-y-4 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-right-2 motion-safe:duration-300">
       <div>
-        <h2 className="text-base font-semibold tracking-tight">{t("photoTitle")}</h2>
-        <p className="text-sm text-muted-foreground">{t("photoHint")}</p>
+        <h2 className="text-base font-semibold tracking-tight">
+          {hideAngleSlot ? t("d0PhotoTitle") : t("photoTitle")}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {hideAngleSlot ? t("d0PhotoHint") : t("photoHint")}
+        </p>
         <PhotoPrivacyNote className="mt-1.5" />
         <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
           {t("photoDragHintDesktop")}
@@ -278,7 +285,11 @@ export function UploadPhotos({
       {filledCount === 0 ? (
         <PhotoTipsCard
           title={t("photoTipsTitle")}
-          tips={[t("photoTipLight"), t("photoTipAngle"), t("photoTipClean")]}
+          tips={
+            hideAngleSlot
+              ? [t("photoTipLight"), t("d0PhotoTipEnough"), t("photoTipClean")]
+              : [t("photoTipLight"), t("photoTipAngle"), t("photoTipClean")]
+          }
         />
       ) : null}
 
@@ -296,8 +307,15 @@ export function UploadPhotos({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {([0, 1] as const).map((slotIndex) => {
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-3",
+          !hideAngleSlot && "sm:grid-cols-2",
+        )}
+      >
+        {([0, 1] as const)
+          .filter((slotIndex) => slotIndex === 0 || !hideAngleSlot)
+          .map((slotIndex) => {
           if (slotIndex === 1 && planHydrating) {
             return (
               <LoadingAngleSlot
@@ -352,7 +370,7 @@ export function UploadPhotos({
               onFileChange={(files) => {
                 void ingestFilesAtSlot(slotIndex, files);
               }}
-              allowMultiple={!multiPhotoDisabled}
+              allowMultiple={!multiPhotoDisabled && !hideAngleSlot}
               preparing={preparing}
               preparingLabel={t("photoPreparing")}
             />
@@ -360,7 +378,7 @@ export function UploadPhotos({
         })}
       </div>
 
-      {showAdvancedUpsell && multiPhotoLocked ? (
+      {showAdvancedUpsell && multiPhotoLocked && !hideAngleSlot ? (
         <UpsellBanner
           id="upsell-advanced-skin"
           feature={Feature.AdvancedSkinAnalysis}
@@ -374,7 +392,7 @@ export function UploadPhotos({
         <p className="text-center text-xs text-muted-foreground">
           {t("photoCountLabel", { n: filledCount })}
           <span className="mx-1.5 text-border">·</span>
-          {t("photoCountHint")}
+          {hideAngleSlot ? t("d0PhotoCountHint") : t("photoCountHint")}
         </p>
       ) : null}
     </div>
@@ -612,6 +630,8 @@ function PhotoSlotCard({
             type="button"
             onClick={onPickFront}
             disabled={preparing}
+            id={isFront ? "checkin-capture-front" : undefined}
+            data-testid={isFront ? "checkin-capture-front" : undefined}
             className="flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl border bg-background px-2 text-xs font-medium shadow-sm transition-colors hover:bg-muted/60 disabled:opacity-50"
           >
             <Camera className="size-3.5 shrink-0 text-primary" aria-hidden />
