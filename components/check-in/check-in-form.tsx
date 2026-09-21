@@ -78,8 +78,10 @@ import {
 } from "@/lib/check-in/guest-check-in-persist";
 import { CHECKIN_PHOTO_MAX_MB } from "@/lib/check-in/photo-upload-validation";
 import {
+  canRequestSubmitAfterD0StickySkip,
   isNeverCheckedInCheckIn,
   shouldShowD0StickyActions,
+  userNoteForD0StickySkipSubmit,
 } from "@/lib/check-in/d0-form";
 import { cn } from "@/lib/utils";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
@@ -143,6 +145,8 @@ export function CheckInForm() {
   const [guestPersistReady, setGuestPersistReady] = useState(false);
   const [guestSaving, setGuestSaving] = useState(false);
   const formViewedRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const pendingD0StickySkipSubmitRef = useRef(false);
   const [guestClaiming, setGuestClaiming] = useState(false);
   const [guestClaimReason, setGuestClaimReason] =
     useState<GuestCheckInClaimReason | null>(null);
@@ -292,6 +296,34 @@ export function CheckInForm() {
     el?.click();
   }, []);
 
+  /** D0 sticky skip is "send without photo" — enter skip, canned note, submit. */
+  const handleStickySkip = useCallback(() => {
+    pendingD0StickySkipSubmitRef.current = true;
+    setUserNote((prev) =>
+      userNoteForD0StickySkipSubmit({
+        conditions,
+        symptoms,
+        userNote: prev,
+        cannedNote: t("d0StickySkipDefaultNote"),
+      }),
+    );
+    enterSkipMode("sticky");
+  }, [conditions, enterSkipMode, symptoms, t]);
+
+  useEffect(() => {
+    if (
+      !canRequestSubmitAfterD0StickySkip({
+        pending: pendingD0StickySkipSubmitRef.current,
+        skipMode: skipFaceCapture,
+        skipModeReady,
+      })
+    ) {
+      return;
+    }
+    pendingD0StickySkipSubmitRef.current = false;
+    formRef.current?.requestSubmit();
+  }, [skipFaceCapture, skipModeReady]);
+
   useEffect(() => {
     if (skipFaceCapture) setD0TagsOpen(true);
   }, [skipFaceCapture]);
@@ -410,6 +442,7 @@ export function CheckInForm() {
 
   return (
     <form
+      ref={formRef}
       className="mx-auto w-full max-w-lg space-y-6 lg:max-w-none"
       onSubmit={async (e) => {
         e.preventDefault();
@@ -914,7 +947,7 @@ export function CheckInForm() {
               size="default"
               className="min-h-12 flex-1 gap-1.5 text-sm sm:min-h-11"
               disabled={feedback.isWaiting}
-              onClick={() => enterSkipMode("sticky")}
+              onClick={handleStickySkip}
             >
               <ImageOff className="size-4 shrink-0" aria-hidden />
               {t("d0StickySkipNoPhoto")}

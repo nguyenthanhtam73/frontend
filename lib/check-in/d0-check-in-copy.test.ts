@@ -22,6 +22,7 @@ describe("D0 never_checked_in check-in copy", () => {
     const vi = readCheckIn("vi");
     assert.equal(vi.d0StickyTakePhoto, "Chụp ảnh");
     assert.equal(vi.d0StickySkipNoPhoto, "Gửi không ảnh");
+    assert.equal(vi.d0StickySkipDefaultNote, "Check-in không ảnh — lần đầu");
   });
 
   it("says one face photo is enough in VI and EN", () => {
@@ -51,5 +52,6 @@ describe("D0 never_checked_in check-in copy", () => {
     const en = readCheckIn("en");
     assert.equal(en.d0StickyTakePhoto, "Take photo");
     assert.equal(en.d0StickySkipNoPhoto, "Send without photo");
+    assert.equal(en.d0StickySkipDefaultNote, "First check-in without photo");
   });
 });

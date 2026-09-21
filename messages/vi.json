@@ -606,6 +606,7 @@
     "d0StickyHint": "Một tấm ảnh mặt là đủ — hoặc gửi không ảnh.",
     "d0StickyTakePhoto": "Chụp ảnh",
     "d0StickySkipNoPhoto": "Gửi không ảnh",
+    "d0StickySkipDefaultNote": "Check-in không ảnh — lần đầu",
     "d0TagsToggle": "Cảm nhận da (không bắt buộc)",
     "d0TagsHint": "Không bắt buộc — một tấm ảnh mặt là đủ để gửi.",
     "photoErrorTooLarge": "Ảnh quá lớn — tối đa {maxMb}MB mỗi tấm.",
