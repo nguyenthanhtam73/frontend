@@ -606,6 +606,7 @@
     "d0StickyHint": "One face photo is enough — or send without a photo.",
     "d0StickyTakePhoto": "Take photo",
     "d0StickySkipNoPhoto": "Send without photo",
+    "d0StickySkipDefaultNote": "First check-in without photo",
     "d0TagsToggle": "How your skin feels (optional)",
     "d0TagsHint": "Optional — one face photo is enough to send.",
     "photoErrorTooLarge": "Image too large — max {maxMb}MB each.",
