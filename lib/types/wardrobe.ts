@@ -1,3 +1,5 @@
+import type { WardrobeProductInsight } from "@/lib/cabinet/product-insight";
+
 /** GET /api/v1/wardrobe — `data` envelope. */
 export type WardrobeProductDTO = {
   id: string;
@@ -9,6 +11,10 @@ export type WardrobeProductDTO = {
   opened_at?: string;
   created_at: string;
   updated_at: string;
+  /** Omitted until insight has been generated. Cleared when name, brand, category, or notes change. */
+  insight?: WardrobeProductInsight;
+  /** RFC3339. Present when `insight` is set. */
+  insight_at?: string;
 };
 
 export type WardrobeListDTO = {

@@ -1335,7 +1335,20 @@
     "setupLink": "set up in ~2 minutes",
     "premiumWardrobeTitle": "Free shelf limit reached",
     "premiumWardrobeBody": "Free can add up to 3 products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
-    "premiumWardrobeCta": "Upgrade to Premium now"
+    "premiumWardrobeCta": "Upgrade to Premium now",
+    "insight": {
+      "regionLabel": "Suggestion for this product",
+      "whatLabel": "What it does",
+      "fitLabel": "Right for my skin?",
+      "activesLabel": "Ingredients, in plain words",
+      "verdictYes": "Fits",
+      "verdictMaybe": "Maybe",
+      "verdictNo": "Not a fit",
+      "loading": "Checking if this fits your skin…",
+      "error": "Couldn’t load this. Tap try again.",
+      "rateLimited": "Hourly limit reached. Try again later.",
+      "retry": "Try again"
+    }
   },
   "settingsPage": {
     "sectionLabel": "Account",

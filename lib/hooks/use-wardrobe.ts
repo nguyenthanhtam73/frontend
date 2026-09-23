@@ -1,11 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 import {
   createWardrobeProduct,
   deleteWardrobeProduct,
   fetchWardrobe,
+  requestWardrobeProductInsight,
   updateWardrobeProduct,
   wardrobeQueryKey,
 } from "@/lib/api/wardrobe";
@@ -15,6 +17,8 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
   CreateWardrobeProductInput,
   UpdateWardrobeProductInput,
+  WardrobeListDTO,
+  WardrobeProductDTO,
 } from "@/lib/types/wardrobe";
 
 async function invalidateWardrobeQueries(queryClient: ReturnType<typeof useQueryClient>) {
@@ -22,6 +26,25 @@ async function invalidateWardrobeQueries(queryClient: ReturnType<typeof useQuery
     queryClient.invalidateQueries({ queryKey: wardrobeQueryKey }),
     queryClient.invalidateQueries({ queryKey: usageQueryKey }),
   ]);
+}
+
+/** POST insight for one saved product and write it onto the wardrobe list cache. */
+export function useRequestWardrobeInsight() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (id: string): Promise<WardrobeProductDTO> => {
+      const product = await requestWardrobeProductInsight(id);
+      queryClient.setQueryData<WardrobeListDTO>(wardrobeQueryKey, (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          products: current.products.map((item) => (item.id === product.id ? product : item)),
+        };
+      });
+      return product;
+    },
+    [queryClient],
+  );
 }
 
 /** Wardrobe list + create/update/delete — TanStack Query, gated on auth. */

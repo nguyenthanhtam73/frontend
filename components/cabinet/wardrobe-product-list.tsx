@@ -4,6 +4,7 @@ import { AlertCircle, Camera, Droplets, Loader2, Package, Pencil, Plus, Trash2 }
 import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { ProductInsightCard } from "@/components/cabinet/product-insight-card";
 import { WardrobeProductDeleteDialog } from "@/components/cabinet/wardrobe-product-delete-dialog";
 import { WardrobeProductEditDialog } from "@/components/cabinet/wardrobe-product-edit-dialog";
 import { categoryLabelFor } from "@/components/cabinet/wardrobe-product-fields";
@@ -353,6 +354,7 @@ function ProductRow({
       {product.notes ? (
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{product.notes}</p>
       ) : null}
+      <ProductInsightCard product={product} />
     </li>
   );
 }
