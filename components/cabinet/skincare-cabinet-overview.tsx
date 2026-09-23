@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Settings2 } from "lucide-react";
 
+import { CabinetInsightProvider } from "@/components/cabinet/cabinet-insight-context";
 import { CabinetStarterPack } from "@/components/cabinet/cabinet-starter-pack";
 import { WardrobeProductForm } from "@/components/cabinet/wardrobe-product-form";
 import { WardrobeProductList } from "@/components/cabinet/wardrobe-product-list";
@@ -30,19 +31,21 @@ export function SkincareCabinetOverview() {
       </div>
 
       <WardrobeProvider>
-        <div className="grid gap-6 lg:grid-cols-2 lg:[&:not(:has(#wardrobe-add-form))]:grid-cols-1">
-          <WardrobeProductList
-            onAddClick={() => {
-              document.getElementById("wardrobe-add-form")?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            }}
-          />
-          <WardrobeProductForm formId="wardrobe-add-form" />
-        </div>
+        <CabinetInsightProvider>
+          <div className="grid gap-6 lg:grid-cols-2 lg:[&:not(:has(#wardrobe-add-form))]:grid-cols-1">
+            <WardrobeProductList
+              onAddClick={() => {
+                document.getElementById("wardrobe-add-form")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
+            />
+            <WardrobeProductForm formId="wardrobe-add-form" />
+          </div>
 
-        <CabinetStarterPack />
+          <CabinetStarterPack />
+        </CabinetInsightProvider>
       </WardrobeProvider>
     </div>
   );

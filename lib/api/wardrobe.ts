@@ -66,26 +66,6 @@ export async function updateWardrobeProduct(
   }
 }
 
-/**
- * POST /api/v1/wardrobe/products/:id/insight
- * Returns the cached card, or builds and stores one. `force` refreshes fit from latest check-ins.
- */
-export async function ensureWardrobeProductInsight(
-  id: string,
-  input: { locale: string; force?: boolean },
-): Promise<WardrobeProductDTO> {
-  requireSession();
-  try {
-    return await apiPost<WardrobeProductDTO>(
-      `/api/v1/wardrobe/products/${encodeURIComponent(id)}/insight`,
-      { locale: input.locale, force: Boolean(input.force) },
-      { toastOnError: false },
-    );
-  } catch (err) {
-    throwWardrobeApiError(err, "wardrobe_insight_failed");
-  }
-}
-
 export async function deleteWardrobeProduct(id: string): Promise<void> {
   requireSession();
   try {

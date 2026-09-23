@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Loader2, Plus, Sparkles } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { useCabinetEmptyIntent } from "@/components/cabinet/use-cabinet-empty-intent";
@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 
 export function CabinetStarterPack() {
   const t = useTranslations("cabinet");
-  const locale = useLocale();
   const tOnboarding = useTranslations("onboarding");
   const ob = useOnboardingStore();
   const toast = useToast();
@@ -100,7 +99,6 @@ export function CabinetStarterPack() {
         brand: candidate.brand.trim() || undefined,
         category: candidate.category,
         notes: t("starterAddNote"),
-        locale,
       });
       toast.success(t("starterAddSuccess", { name: candidate.name }));
     } catch (err) {

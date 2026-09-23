@@ -1,12 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createWardrobeProduct,
   deleteWardrobeProduct,
-  ensureWardrobeProductInsight,
   fetchWardrobe,
   updateWardrobeProduct,
   wardrobeQueryKey,
@@ -17,7 +15,6 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import type {
   CreateWardrobeProductInput,
   UpdateWardrobeProductInput,
-  WardrobeListDTO,
 } from "@/lib/types/wardrobe";
 
 async function invalidateWardrobeQueries(queryClient: ReturnType<typeof useQueryClient>) {
@@ -63,24 +60,6 @@ export function useWardrobeQuery() {
     },
   });
 
-  const ensureInsight = useCallback(
-    async (id: string, input: { locale: string; force?: boolean }) => {
-      const product = await ensureWardrobeProductInsight(id, input);
-      queryClient.setQueryData<WardrobeListDTO | undefined>(wardrobeQueryKey, (old) => {
-        if (!old) return old;
-        let found = false;
-        const products = old.products.map((row) => {
-          if (row.id !== product.id) return row;
-          found = true;
-          return product;
-        });
-        return { products: found ? products : [product, ...old.products] };
-      });
-      return product;
-    },
-    [queryClient],
-  );
-
   return {
     hasAuth,
     ...listQuery,
@@ -94,6 +73,5 @@ export function useWardrobeQuery() {
     isUpdating: updateMutation.isPending,
     deleteProduct: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
-    ensureInsight,
   };
 }

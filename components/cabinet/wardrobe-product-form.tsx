@@ -161,7 +161,6 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
         category: category || undefined,
         opened_at: openedAt.trim() || undefined,
         notes: notes.trim() || undefined,
-        locale,
       });
       resetFormFields();
       toast.success(t("addSuccess"));
