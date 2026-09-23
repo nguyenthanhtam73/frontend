@@ -1,9 +1,15 @@
 /**
  * Activation + conversion funnel events.
  *
- * Stack: Meta Pixel (prod only) + `window.dataLayer` + `window.__dadiaryFunnel`.
- * No second analytics vendor — `track()` / `trackFunnelEvent()` no-op on SSR
- * and Pixel itself no-ops in local/dev (`shouldLoadMetaPixel`).
+ * Stack: Meta Pixel + TikTok Pixel (both prod only) + `window.dataLayer` +
+ * `window.__dadiaryFunnel`. `track()` / `trackFunnelEvent()` no-op on SSR.
+ * Pixels no-op in local/dev (`shouldLoadMetaPixel` / `shouldLoadTikTokPixel`).
+ *
+ * TikTok: every funnel name is `ttq.track(name)`. Where TikTok has a standard
+ * event, `TIKTOK_STANDARD_BY_CUSTOM` fires that too. `ttq.page()` is the
+ * PageView equivalent (see `components/site/tiktok-pixel.tsx`).
+ * Direct standards that are not funnel names: CompleteRegistration (register),
+ * InitiateCheckout (SePay), CompletePayment (Meta Purchase), SubmitForm (beta Lead).
  *
  * Naming: snake_case custom events, prefixed by surface.
  *
@@ -25,11 +31,12 @@
  * | push_dismissed     | activation_push_dismissed                          |
  * | paywall_view       | paywall_view                                       |
  * | checkout_confirm   | checkout_confirm                                   |
- * | paid               | paid (+ Meta Purchase via trackMetaPurchaseOnce)   |
+ * | paid               | paid (+ Meta Purchase / TikTok CompletePayment)    |
  */
 
 import { persistPaywallView } from "@/lib/api/paywall-view";
 import { trackMetaCustomEvent, trackMetaEvent, trackMetaPurchaseOnce } from "@/lib/meta-pixel";
+import { trackTikTokEvent } from "@/lib/tiktok-pixel";
 
 export const FUNNEL_EVENTS = {
   photoAdded: "onboarding_photo_added",
@@ -102,6 +109,48 @@ const STANDARD_BY_CUSTOM: Partial<
   // are custom-only — same as guest check-in events (no Meta standard map).
 };
 
+/**
+ * TikTok standard events fired in addition to `ttq.track(funnelName)`.
+ * Check-in steps stay custom (`checkin_*`, `activation_first_checkin`) because
+ * TikTok has no matching standard. SubmitForm is the exception: it is TikTok's
+ * form-submit standard, so `checkin_submit_attempt` fires both.
+ * `once: false` fires on every call; omitted means once per tab (same idea as Meta).
+ */
+export const TIKTOK_STANDARD_BY_CUSTOM: Partial<
+  Record<
+    FunnelEventName,
+    { event: string; extra?: Record<string, unknown>; once?: boolean }
+  >
+> = {
+  [FUNNEL_EVENTS.photosSubmitted]: {
+    event: "ViewContent",
+    extra: { content_name: "onboarding_photos", content_category: "onboarding" },
+  },
+  [FUNNEL_EVENTS.routineShown]: {
+    event: "ViewContent",
+    extra: { content_name: "starter_routine", content_category: "onboarding" },
+  },
+  // TikTok has no Lead standard. ClickButton is the CTA equivalent of Meta Lead.
+  [FUNNEL_EVENTS.signupCtaClick]: {
+    event: "ClickButton",
+    extra: { content_name: "save_routine", content_category: "onboarding" },
+  },
+  [FUNNEL_EVENTS.paywallView]: {
+    event: "ViewContent",
+    extra: { content_name: "paywall", content_category: "pricing" },
+  },
+  [FUNNEL_EVENTS.checkInSubmitAttempt]: {
+    event: "SubmitForm",
+    extra: { content_name: "checkin", content_category: "checkin" },
+    once: false,
+  },
+  // firstCheckIn / d1 / form view / photo / skip / submit fail / guest claim:
+  // custom name only (ttq.track of the funnel event).
+  // registerSuccess: custom only — register page fires CompleteRegistration.
+  // checkoutConfirm: custom only — SePay start fires InitiateCheckout.
+  // paid: custom only — trackPaidOnce fires TikTok CompletePayment.
+};
+
 function recordLocal(name: FunnelEventName, params?: Record<string, unknown>): void {
   if (typeof window === "undefined") return;
   const entry: FunnelEventPayload = { name, params, ts: Date.now() };
@@ -132,7 +181,23 @@ function trackStandardOnce(
   trackMetaEvent(event, params);
 }
 
-/** Fire a funnel event (local queue + Meta custom + mapped standard event). */
+const TIKTOK_STANDARD_ONCE_PREFIX = "dadiary_tiktok_std_";
+
+function trackTikTokStandardOnce(
+  event: string,
+  params?: Record<string, unknown>,
+): void {
+  const key = `${TIKTOK_STANDARD_ONCE_PREFIX}${event}:${String(params?.content_name ?? "")}`;
+  try {
+    if (sessionStorage.getItem(key) === "1") return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    /* still fire — better a duplicate than a miss if storage is blocked */
+  }
+  trackTikTokEvent(event, params);
+}
+
+/** Fire a funnel event (local queue + Meta + TikTok custom, plus mapped standards). */
 export function trackFunnelEvent(
   name: FunnelEventName,
   params?: Record<string, unknown>,
@@ -140,10 +205,20 @@ export function trackFunnelEvent(
   if (typeof window === "undefined") return;
   recordLocal(name, params);
   trackMetaCustomEvent(name, params);
+  trackTikTokEvent(name, params);
   if (params?.intent === "login") return;
   const mapped = STANDARD_BY_CUSTOM[name];
   if (mapped) {
     trackStandardOnce(mapped.event, { ...mapped.extra, ...params });
+  }
+  const tiktokMapped = TIKTOK_STANDARD_BY_CUSTOM[name];
+  if (tiktokMapped) {
+    const tiktokParams = { ...tiktokMapped.extra, ...params };
+    if (tiktokMapped.once === false) {
+      trackTikTokEvent(tiktokMapped.event, tiktokParams);
+    } else {
+      trackTikTokStandardOnce(tiktokMapped.event, tiktokParams);
+    }
   }
 }
 
