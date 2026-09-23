@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   FUNNEL_EVENTS,
+  TIKTOK_STANDARD_BY_CUSTOM,
   claimOnceFlag,
   funnelEventForCheckInKind,
   funnelOnceKey,
@@ -53,6 +54,20 @@ describe("funnel analytics", () => {
     assert.equal(isFunnelEventName("checkin_submit_fail"), true);
     assert.equal(isFunnelEventName("paywall_view"), true);
     assert.equal(isFunnelEventName("Purchase"), false);
+  });
+
+  it("maps TikTok standards without renaming check-in custom events", () => {
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInSubmitAttempt]?.event, "SubmitForm");
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInSubmitAttempt]?.once, false);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.signupCtaClick]?.event, "ClickButton");
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.photosSubmitted]?.event, "ViewContent");
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.firstCheckIn], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInFormView], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInPhotoStaged], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInSkipSelected], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInSubmitFail], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.guestCheckInClaim], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.registerSuccess], undefined);
   });
 });
 

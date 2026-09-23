@@ -1,3 +1,5 @@
+import { trackTikTokCompletePayment } from "@/lib/tiktok-pixel";
+
 /** Public Meta Pixel ID (override via env if needed). */
 export const META_PIXEL_ID =
   process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "1673924784100065";
@@ -171,4 +173,6 @@ export function trackMetaPurchaseOnce(opts?: TrackPurchaseOpts): void {
   if (payload?.contentName) params.content_name = payload.contentName;
   if (payload?.invoice) params.order_id = payload.invoice;
   trackMetaEvent("Purchase", params);
+  // TikTok's purchase standard. Same dedupe as Meta Purchase.
+  trackTikTokCompletePayment(params);
 }

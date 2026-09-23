@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { ActivationCheckInBanner } from "@/components/activation/activation-check-in-banner";
 import { HashScroll } from "@/components/site/hash-scroll";
 import { MetaPixel } from "@/components/site/meta-pixel";
+import { TikTokPixel } from "@/components/site/tiktok-pixel";
 import { NavigationBlockListener } from "@/components/navigation/navigation-block-listener";
 import { OfflineIndicator } from "@/components/site/offline-indicator";
 import { PwaRegister } from "@/components/site/pwa-register";
@@ -94,6 +95,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className="flex min-h-full min-w-0 flex-col antialiased">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <MetaPixel />
+          <TikTokPixel />
           <AppProviders>
             <OfflineIndicator />
             <NavigationBlockListener />

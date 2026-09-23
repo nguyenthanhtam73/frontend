@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { betaSignupErrorKey, submitBetaSignup } from "@/lib/api/beta-signup";
 import { trackMetaEvent } from "@/lib/meta-pixel";
+import { trackTikTokEvent } from "@/lib/tiktok-pixel";
 import { cn } from "@/lib/utils";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -52,6 +53,11 @@ export function BetaSignupForm({ className }: { className?: string }) {
     try {
       await submitBetaSignup({ email: email.trim() });
       trackMetaEvent("Lead");
+      // TikTok has no Lead standard. SubmitForm is the form-submit equivalent.
+      trackTikTokEvent("SubmitForm", {
+        content_name: "beta_signup",
+        content_category: "lead",
+      });
       setSubmitted(true);
       setEmail("");
       success({

@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/payment";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { rememberMetaCheckout, trackMetaEvent } from "@/lib/meta-pixel";
+import { trackTikTokEvent } from "@/lib/tiktok-pixel";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import type { BillingInterval, PricedPlan } from "@/lib/premium/pricing";
 
@@ -73,11 +74,17 @@ export function useSePayCheckout(): UseSePayCheckoutResult {
           contentName: data.plan_tier,
           invoice: data.invoice_number,
         });
-        trackMetaEvent("InitiateCheckout", {
+        const checkoutParams = {
           value: Number(data.amount_vnd),
           currency: (data.currency || "VND").toUpperCase(),
           content_name: data.plan_tier,
           num_items: 1,
+        };
+        trackMetaEvent("InitiateCheckout", checkoutParams);
+        trackTikTokEvent("InitiateCheckout", {
+          ...checkoutParams,
+          content_type: "product",
+          content_id: data.plan_tier,
         });
         submitSePayCheckoutForm(data.checkout_url, data.form_fields);
         // If navigation is blocked, clear busy so the user can retry.
