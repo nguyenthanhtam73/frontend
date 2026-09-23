@@ -1335,7 +1335,24 @@
     "setupLink": "tạo trong khoảng 2 phút",
     "premiumWardrobeTitle": "Đã hết suất tủ đồ Free",
     "premiumWardrobeBody": "Free thêm tới 3 sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
-    "premiumWardrobeCta": "Nâng cấp Premium ngay"
+    "premiumWardrobeCta": "Nâng cấp Premium ngay",
+    "insight": {
+      "regionLabel": "Gợi ý cho món này",
+      "whatLabel": "Làm gì",
+      "fitLabel": "Hợp da mình?",
+      "activesLabel": "Thành phần dễ hiểu",
+      "verdictYes": "Hợp",
+      "verdictMaybe": "Có thể hợp",
+      "verdictNo": "Chưa hợp",
+      "buyYes": "Nên mua",
+      "buyWait": "Chưa nên",
+      "loading": "Đang xem món này hợp da bạn không…",
+      "refreshing": "Đang xem lại…",
+      "error": "Chưa xem được. Bấm thử lại nhé.",
+      "retry": "Thử lại",
+      "reanalyze": "Xem lại theo da gần đây",
+      "disclaimerFallback": "Gợi ý này chỉ để tham khảo, không thay bác sĩ da liễu."
+    }
   },
   "settingsPage": {
     "sectionLabel": "Tài khoản",

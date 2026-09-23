@@ -1335,7 +1335,24 @@
     "setupLink": "set up in ~2 minutes",
     "premiumWardrobeTitle": "Free shelf limit reached",
     "premiumWardrobeBody": "Free can add up to 3 products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
-    "premiumWardrobeCta": "Upgrade to Premium now"
+    "premiumWardrobeCta": "Upgrade to Premium now",
+    "insight": {
+      "regionLabel": "Suggestion for this product",
+      "whatLabel": "What it does",
+      "fitLabel": "Right for my skin?",
+      "activesLabel": "Ingredients, in plain words",
+      "verdictYes": "Fits",
+      "verdictMaybe": "Maybe",
+      "verdictNo": "Not a fit",
+      "buyYes": "Worth buying",
+      "buyWait": "Not yet",
+      "loading": "Checking if this fits your skin…",
+      "refreshing": "Checking again…",
+      "error": "Couldn’t load this. Tap try again.",
+      "retry": "Try again",
+      "reanalyze": "Update from recent check-ins",
+      "disclaimerFallback": "This suggestion is for reference only. It does not replace a dermatologist."
+    }
   },
   "settingsPage": {
     "sectionLabel": "Account",

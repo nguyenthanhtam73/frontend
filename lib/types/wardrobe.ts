@@ -9,6 +9,8 @@ export type WardrobeProductDTO = {
   opened_at?: string;
   created_at: string;
   updated_at: string;
+  /** Cached plain-language card. Null until the first build. */
+  insight?: unknown;
 };
 
 export type WardrobeListDTO = {
@@ -21,6 +23,8 @@ export type CreateWardrobeProductInput = {
   category?: string;
   notes?: string;
   opened_at?: string;
+  /** Language for the insight card. Not stored as its own column. */
+  locale?: string;
 };
 
 export type UpdateWardrobeProductInput = {
