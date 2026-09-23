@@ -1,30 +1,24 @@
-/** Cached cabinet card. Mirrors backend dto.ProductInsight. */
-export type ProductInsightActive = {
-  label: string;
-  plain: string;
+/** Locked card from POST /api/v1/wardrobe/products/:id/insight and GET /api/v1/wardrobe. */
+export type WardrobeInsightFitVerdict = "yes" | "maybe" | "no";
+export type WardrobeInsightBuyAdvice = "nên mua" | "chưa nên";
+
+export type WardrobeInsightActive = {
+  name: string;
+  gloss: string;
 };
 
-export type ProductInsightFitVerdict = "yes" | "maybe" | "no";
-export type ProductInsightBuyVerdict = "buy" | "wait";
-
-export type ProductInsight = {
-  whatItDoes: string;
-  fit: { verdict: ProductInsightFitVerdict; reason: string };
-  buy: { verdict: ProductInsightBuyVerdict; reason: string };
-  actives: ProductInsightActive[];
+export type WardrobeProductInsight = {
+  what_it_does: string;
+  fit: { verdict: WardrobeInsightFitVerdict; reason: string };
+  buy: { advice: WardrobeInsightBuyAdvice; why: string };
+  actives?: WardrobeInsightActive[];
   disclaimer: string;
-  locale: string;
-  version: number;
 };
 
-/** Bump together with backend CabinetInsightVersion. */
-export const PRODUCT_INSIGHT_VERSION = 1;
+/** Server-set line. Shown when a stored card omits `disclaimer`. */
+export const WARDROBE_INSIGHT_DISCLAIMER = "không thay bác sĩ da liễu";
 
-const MAX_ACTIVES = 3;
-
-export function insightLocale(locale: string): "vi" | "en" {
-  return locale.toLowerCase().startsWith("en") ? "en" : "vi";
-}
+const MAX_ACTIVES = 5;
 
 function asRecord(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
@@ -35,59 +29,53 @@ function asText(raw: unknown): string {
   return typeof raw === "string" ? raw.trim() : "";
 }
 
-function fitVerdict(raw: unknown): ProductInsightFitVerdict {
-  if (raw === "yes" || raw === "no" || raw === "maybe") return raw;
-  return "maybe";
-}
-
-function buyVerdict(raw: unknown): ProductInsightBuyVerdict {
-  if (raw === "buy" || raw === "wait") return raw;
-  return "wait";
-}
-
-function readActives(raw: unknown): ProductInsightActive[] {
+function readActives(raw: unknown): { name: string; gloss: string }[] {
   if (!Array.isArray(raw)) return [];
-  const out: ProductInsightActive[] = [];
+  const out: { name: string; gloss: string }[] = [];
+  const seen = new Set<string>();
   for (const item of raw) {
     const row = asRecord(item);
     if (!row) continue;
-    const label = asText(row.label);
-    const plain = asText(row.plain);
-    if (!label || !plain) continue;
-    out.push({ label, plain });
+    const name = asText(row.name);
+    const gloss = asText(row.gloss);
+    if (!name || !gloss) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ name, gloss });
     if (out.length === MAX_ACTIVES) break;
   }
   return out;
 }
 
 /**
- * Map a wardrobe `insight` payload into the card model.
- * Returns null when the card cannot be shown (missing what / fit / buy / disclaimer).
+ * Read `WardrobeProduct.insight` from GET /api/v1/wardrobe.
+ * Returns null unless the locked fields are present. Does not coerce the
+ * retired client shape (`fit_for_you`, `buy`/`wait`, `{label, plain}`).
  */
-export function normalizeProductInsight(raw: unknown): ProductInsight | null {
+export function parseWardrobeProductInsight(raw: unknown): WardrobeProductInsight | null {
   const row = asRecord(raw);
   if (!row) return null;
-  const whatItDoes = asText(row.what_it_does);
-  const disclaimer = asText(row.disclaimer);
-  const fit = asRecord(row.fit_for_you);
-  const buy = asRecord(row.buy_advice);
-  const fitReason = asText(fit?.reason);
-  const buyReason = asText(buy?.reason);
-  if (!whatItDoes || !disclaimer || !fitReason || !buyReason) return null;
-  const version = typeof row.version === "number" && Number.isFinite(row.version) ? row.version : 0;
-  return {
-    whatItDoes,
-    fit: { verdict: fitVerdict(fit?.verdict), reason: fitReason },
-    buy: { verdict: buyVerdict(buy?.verdict), reason: buyReason },
-    actives: readActives(row.actives),
-    disclaimer,
-    locale: insightLocale(asText(row.locale) || "vi"),
-    version,
-  };
-}
 
-/** True when the stored card matches this UI language and copy version. */
-export function isInsightCurrent(insight: ProductInsight | null, locale: string): boolean {
-  if (!insight) return false;
-  return insight.locale === insightLocale(locale) && insight.version === PRODUCT_INSIGHT_VERSION;
+  const what_it_does = asText(row.what_it_does);
+  const fit = asRecord(row.fit);
+  const buy = asRecord(row.buy);
+  const reason = asText(fit?.reason);
+  const why = asText(buy?.why);
+  const verdict = fit?.verdict;
+  const advice = buy?.advice;
+  if (!what_it_does || !reason || !why) return null;
+  if (verdict !== "yes" && verdict !== "maybe" && verdict !== "no") return null;
+  if (advice !== "nên mua" && advice !== "chưa nên") return null;
+
+  const actives = readActives(row.actives);
+  const disclaimer = asText(row.disclaimer) || WARDROBE_INSIGHT_DISCLAIMER;
+  const card: WardrobeProductInsight = {
+    what_it_does,
+    fit: { verdict, reason },
+    buy: { advice, why },
+    disclaimer,
+  };
+  if (actives.length > 0) card.actives = actives;
+  return card;
 }

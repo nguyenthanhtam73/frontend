@@ -11,6 +11,11 @@ import type {
 /** Vision OCR can take a while — align with onboarding analyze budget. */
 const SCAN_TIMEOUT_MS = 120_000;
 
+/** Text insight uses the same client budget as label scan. */
+const INSIGHT_TIMEOUT_MS = 120_000;
+
+const insightInflight = new Map<string, Promise<WardrobeProductDTO>>();
+
 function requireSession(): void {
   if (!getAccessToken() && !getRefreshToken()) {
     throw new Error("auth");
@@ -103,6 +108,47 @@ export async function scanWardrobeProductLabel(input: {
     }
     throw err instanceof Error ? err : new Error("scan_failed");
   }
+}
+
+/**
+ * POST /api/v1/wardrobe/products/:id/insight — no body.
+ * One in-flight call per id so a remounted card does not bill twice.
+ * Caller should skip this when `product.insight` is already present.
+ */
+export function requestWardrobeProductInsight(id: string): Promise<WardrobeProductDTO> {
+  const existing = insightInflight.get(id);
+  if (existing) return existing;
+
+  const pending = (async () => {
+    requireSession();
+    try {
+      return await apiPost<WardrobeProductDTO>(
+        `/api/v1/wardrobe/products/${encodeURIComponent(id)}/insight`,
+        undefined,
+        { toastOnError: false, timeoutMs: INSIGHT_TIMEOUT_MS },
+      );
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.kind === "unauthorized" || err.status === 401) throw new Error("auth");
+        if (err.status === 429) throw new Error("rate_limited");
+        if (err.status === 422 || err.code === "insight_failed") throw new Error("insight_failed");
+        if (
+          err.code === "openai_not_configured" ||
+          err.code === "service_unavailable" ||
+          err.status === 503
+        ) {
+          throw new Error("service_unavailable");
+        }
+        if (err.status === 404 || err.code === "not_found") throw new Error("not_found");
+      }
+      throw err instanceof Error ? err : new Error("insight_failed");
+    }
+  })().finally(() => {
+    insightInflight.delete(id);
+  });
+
+  insightInflight.set(id, pending);
+  return pending;
 }
 
 export const wardrobeQueryKey = ["wardrobe"] as const;

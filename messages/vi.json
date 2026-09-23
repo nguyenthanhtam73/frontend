@@ -1344,14 +1344,10 @@
       "verdictYes": "Hợp",
       "verdictMaybe": "Có thể hợp",
       "verdictNo": "Chưa hợp",
-      "buyYes": "Nên mua",
-      "buyWait": "Chưa nên",
       "loading": "Đang xem món này hợp da bạn không…",
-      "refreshing": "Đang xem lại…",
       "error": "Chưa xem được. Bấm thử lại nhé.",
-      "retry": "Thử lại",
-      "reanalyze": "Xem lại theo da gần đây",
-      "disclaimerFallback": "Gợi ý này chỉ để tham khảo, không thay bác sĩ da liễu."
+      "rateLimited": "Hết lượt xem trong giờ này. Thử lại sau nhé.",
+      "retry": "Thử lại"
     }
   },
   "settingsPage": {

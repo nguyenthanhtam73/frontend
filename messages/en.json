@@ -1344,14 +1344,10 @@
       "verdictYes": "Fits",
       "verdictMaybe": "Maybe",
       "verdictNo": "Not a fit",
-      "buyYes": "Worth buying",
-      "buyWait": "Not yet",
       "loading": "Checking if this fits your skin…",
-      "refreshing": "Checking again…",
       "error": "Couldn’t load this. Tap try again.",
-      "retry": "Try again",
-      "reanalyze": "Update from recent check-ins",
-      "disclaimerFallback": "This suggestion is for reference only. It does not replace a dermatologist."
+      "rateLimited": "Hourly limit reached. Try again later.",
+      "retry": "Try again"
     }
   },
   "settingsPage": {
