@@ -346,16 +346,17 @@ export function SiteHeader() {
           hideFunnelNav ? "gap-0" : "gap-1.5 sm:gap-3 lg:gap-2",
         )}
       >
-        <div className="flex min-h-11 items-center gap-1.5 sm:min-h-14 sm:gap-3">
+        <div className="flex min-h-11 items-center gap-1 sm:min-h-14 sm:gap-3">
+          {/* Below 420px the wordmark collides with the locale toggle. Keep the mark; drop the text. */}
           <Link
             href="/"
             prefetch
-            className="min-w-0 shrink rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring max-[22.5rem]:[&_.dd-wordmark]:hidden"
+            className="shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring max-[26.25rem]:[&_.dd-wordmark]:hidden"
           >
             <Logo />
           </Link>
 
-          <div className="ml-auto flex min-h-9 min-w-0 items-center justify-end gap-1 self-center sm:gap-2">
+          <div className="ml-auto flex min-h-9 shrink-0 items-center justify-end gap-0.5 self-center sm:gap-2">
             <LocaleSwitcher compact className="md:hidden" />
             <LocaleSwitcher className="hidden md:inline-flex" />
             <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
