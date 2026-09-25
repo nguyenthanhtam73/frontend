@@ -14,7 +14,7 @@ export function LocaleSwitcher({
   compact = false,
 }: {
   className?: string;
-  /** Short VI / EN labels — keeps the header on one row on phones. */
+  /** One current-language button. Tap switches locale. Phones only. */
   compact?: boolean;
 }) {
   const t = useTranslations("common.language");
@@ -49,6 +49,24 @@ export function LocaleSwitcher({
     });
   }
 
+  if (compact) {
+    const nextLocale: AppLocale = activeLocale === "vi" ? "en" : "vi";
+    return (
+      <button
+        type="button"
+        onClick={() => select(nextLocale)}
+        aria-label="Đổi ngôn ngữ / Switch language"
+        aria-busy={isPending || undefined}
+        className={cn(
+          "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-background text-[11px] font-medium tabular-nums text-foreground transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+          className,
+        )}
+      >
+        {activeLocale.toUpperCase()}
+      </button>
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -67,16 +85,13 @@ export function LocaleSwitcher({
           aria-pressed={activeLocale === loc}
           aria-label={loc === "vi" ? t("vietnamese") : t("english")}
           className={cn(
-            "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md text-center font-medium leading-snug tracking-normal whitespace-nowrap transition-colors",
-            compact
-              ? "min-h-10 min-w-8 px-2 pt-[5px] pb-1 text-[11px] tabular-nums"
-              : "px-2.5 pt-[5px] pb-1 text-[11px] sm:px-3 sm:text-xs",
+            "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-md px-2.5 pt-[5px] pb-1 text-center text-[11px] font-medium leading-snug tracking-normal whitespace-nowrap transition-colors sm:px-3 sm:text-xs",
             activeLocale === loc
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {compact ? loc.toUpperCase() : loc === "vi" ? t("vietnamese") : t("english")}
+          {loc === "vi" ? t("vietnamese") : t("english")}
         </button>
       ))}
     </div>
