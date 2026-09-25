@@ -14,18 +14,23 @@ describe("account email format", () => {
     assert.equal(isValidAccountEmail("\ta.b+tag@sub.domain.vn\n"), true);
   });
 
-  it("accepts a domain and letter TLD", () => {
+  it("accepts a dotted domain and a letter TLD of at least 2", () => {
     assert.equal(isValidAccountEmail("ten@gmail.com"), true);
     assert.equal(isValidAccountEmail("a.b+tag@sub.domain.vn"), true);
-    assert.equal(isValidAccountEmail("Ten@Gmail.COM"), true);
+    assert.equal(isValidAccountEmail("user.name+tag@example.co.uk"), true);
+    assert.equal(isValidAccountEmail("  Ten@Gmail.COM  "), true);
   });
 
-  it("rejects missing domain, missing TLD, and spaces", () => {
+  it("rejects missing domain, a TLD shorter than 2 letters, and spaces", () => {
     assert.equal(isValidAccountEmail("abc@1995"), false);
     assert.equal(isValidAccountEmail("danghaiduong@1995"), false);
     assert.equal(isValidAccountEmail("abc"), false);
     assert.equal(isValidAccountEmail("abc@gmail"), false);
     assert.equal(isValidAccountEmail("abc @gmail.com"), false);
+    assert.equal(isValidAccountEmail("  ABC@1995  "), false);
+    assert.equal(isValidAccountEmail("user@gmail.c"), false);
+    assert.equal(isValidAccountEmail("user@domain.123"), false);
+    assert.equal(isValidAccountEmail("user@localhost"), false);
     assert.equal(isValidAccountEmail("abc@gmail .com"), false);
     assert.equal(isValidAccountEmail("ten@gmail.com extra"), false);
     assert.equal(isValidAccountEmail(""), false);
@@ -55,15 +60,19 @@ describe("register invalid-email responses", () => {
     );
   });
 
-  it("maps known invalid-email codes on any 4xx", () => {
+  it("maps error.code invalid_email from POST /auth/register", () => {
     assert.equal(
-      isRegisterInvalidEmailResponse(400, { error: { code: "invalid_email" } }),
+      isRegisterInvalidEmailResponse(400, {
+        success: false,
+        error: {
+          code: "invalid_email",
+          message: "Email chưa đúng, ví dụ: ten@gmail.com",
+        },
+      }),
       true,
     );
     assert.equal(
-      isRegisterInvalidEmailResponse(409, {
-        error: { code: "invalid_email_format", message: "nope" },
-      }),
+      isRegisterInvalidEmailResponse(400, { error: { code: "invalid_email" } }),
       true,
     );
   });
@@ -90,6 +99,12 @@ describe("register invalid-email responses", () => {
     assert.equal(
       isRegisterInvalidEmailResponse(500, {
         error: { code: "invalid_email", message: "email" },
+      }),
+      false,
+    );
+    assert.equal(
+      isRegisterInvalidEmailResponse(400, {
+        error: { code: "invalid_input", message: "email and password are required" },
       }),
       false,
     );
