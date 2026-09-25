@@ -16,6 +16,11 @@ import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { getAccessToken, setAuthTokens } from "@/lib/auth-token";
 import {
+  isRegisterInvalidEmailResponse,
+  isValidAccountEmail,
+  normalizeAccountEmail,
+} from "@/lib/auth/email-format";
+import {
   buildAuthHref,
   buildPricingCheckoutHref,
 } from "@/lib/premium/checkout-intent";
@@ -77,10 +82,12 @@ function RegisterPageInner() {
   );
 
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
   const toast = useToast();
@@ -147,8 +154,18 @@ function RegisterPageInner() {
         <CardContent className="space-y-4 p-6">
           <form
             className="space-y-4"
+            noValidate
             onSubmit={async (e) => {
               e.preventDefault();
+              if (!isValidAccountEmail(email)) {
+                setEmailError(t("invalidEmail"));
+                return;
+              }
+              setEmailError(null);
+              if (passwordRef.current && !passwordRef.current.checkValidity()) {
+                passwordRef.current.reportValidity();
+                return;
+              }
               setErr(null);
               if (submitBlocked) {
                 setErr(t("captchaRequired"));
@@ -157,7 +174,7 @@ function RegisterPageInner() {
               setLoading(true);
               try {
                 const body: Record<string, unknown> = {
-                  email,
+                  email: normalizeAccountEmail(email),
                   password,
                   display_name: displayName.trim() || undefined,
                 };
@@ -177,6 +194,11 @@ function RegisterPageInner() {
                 const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
                   invalidateCaptcha();
+                  if (isRegisterInvalidEmailResponse(res.status, json)) {
+                    setEmailError(t("invalidEmail"));
+                    setLoading(false);
+                    return;
+                  }
                   const code = json.error?.code?.trim();
                   if (code === "captcha_required") {
                     setErr(t("captchaRequired"));
@@ -271,12 +293,33 @@ function RegisterPageInner() {
                 <input
                   id="register-email"
                   type="email"
+                  inputMode="email"
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-base outline-none ring-ring/40 focus:ring-2 sm:h-9 sm:text-sm"
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? "register-email-error" : undefined}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setEmail(next);
+                    if (emailError && isValidAccountEmail(next)) setEmailError(null);
+                  }}
+                  onBlur={(e) => {
+                    const next = e.currentTarget.value;
+                    if (!normalizeAccountEmail(next)) return;
+                    if (!isValidAccountEmail(next)) setEmailError(t("invalidEmail"));
+                  }}
+                  className={`flex h-11 w-full rounded-md border bg-background px-3 text-base outline-none ring-ring/40 focus:ring-2 sm:h-9 sm:text-sm ${emailError ? "border-destructive/60" : "border-input"}`}
                 />
+                {/* Reserved line so the hint does not push the submit button. */}
+                <p
+                  id="register-email-error"
+                  role={emailError ? "alert" : undefined}
+                  aria-hidden={emailError ? undefined : true}
+                  className="min-h-5 text-sm leading-5 text-destructive"
+                >
+                  {emailError ?? "\u00a0"}
+                </p>
               </Field>
               <Field label={t("displayNameOptional")} htmlFor="register-display-name">
                 <input
@@ -289,6 +332,7 @@ function RegisterPageInner() {
               </Field>
               <Field label={t("password")} htmlFor="register-password">
                 <input
+                  ref={passwordRef}
                   id="register-password"
                   type="password"
                   autoComplete="new-password"

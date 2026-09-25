@@ -145,6 +145,7 @@
     "registerLink": "Đăng ký",
     "loginLink": "Đăng nhập",
     "errorGeneric": "Chưa thành công. Kiểm tra lại thông tin hoặc xem backend có đang chạy không.",
+    "invalidEmail": "Email chưa đúng, ví dụ: ten@gmail.com",
     "captchaRequired": "Hoàn tất xác nhận bảo mật (ô bên dưới) rồi thử đăng ký lại.",
     "captchaFailed": "Xác nhận bảo mật không thành công — thử lại.",
     "captchaUnavailable": "Không kiểm tra được xác nhận lúc này. Thử lại sau vài giây.",
