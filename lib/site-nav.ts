@@ -75,6 +75,24 @@ export function isMarketingPath(pathname: string) {
   );
 }
 
+/**
+ * How far to scroll a horizontal strip so `item` sits fully inside `container`.
+ * Positive moves content left (increase scrollLeft). Zero when it already fits.
+ * If the item is wider than the padded strip, the start edge is pinned in view.
+ */
+export function revealScrollDelta(
+  container: { left: number; right: number },
+  item: { left: number; right: number },
+  pad = 12,
+): number {
+  const overflowLeft = container.left + pad - item.left;
+  const overflowRight = item.right - (container.right - pad);
+  if (overflowLeft > 0.5 && overflowRight > 0.5) return -overflowLeft;
+  if (overflowLeft > 0.5) return -overflowLeft;
+  if (overflowRight > 0.5) return overflowRight;
+  return 0;
+}
+
 /** Routes with a sticky/fixed bar at the bottom of the phone viewport. */
 export function hasMobileBottomChrome(pathname: string) {
   const p = appPath(pathname);

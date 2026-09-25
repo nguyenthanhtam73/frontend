@@ -8,6 +8,7 @@ import {
   isAuthEntryPath,
   isOnboardingFunnelPath,
   normalizePath,
+  revealScrollDelta,
 } from "./site-nav";
 
 describe("site-nav funnel helpers", () => {
@@ -70,5 +71,25 @@ describe("site-nav funnel helpers", () => {
     assert.equal(hidesPwaInstallBanner("/register"), true);
     assert.equal(hidesPwaInstallBanner("/check-in"), true);
     assert.equal(hidesPwaInstallBanner("/"), false);
+  });
+});
+
+describe("revealScrollDelta", () => {
+  const strip = { left: 16, right: 374 };
+
+  it("returns 0 when the item is already fully inside the strip", () => {
+    assert.equal(revealScrollDelta(strip, { left: 40, right: 180 }), 0);
+  });
+
+  it("scrolls a clipped right-edge tab fully into view", () => {
+    assert.equal(revealScrollDelta(strip, { left: 280, right: 420 }), 58);
+  });
+
+  it("scrolls a clipped left-edge tab fully into view", () => {
+    assert.equal(revealScrollDelta(strip, { left: -20, right: 90 }), -48);
+  });
+
+  it("pins the start of a tab wider than the strip", () => {
+    assert.equal(revealScrollDelta(strip, { left: 0, right: 500 }), -28);
   });
 });

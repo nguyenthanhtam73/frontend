@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  ownedInsightUse,
   parseWardrobeProductInsight,
   WARDROBE_INSIGHT_DISCLAIMER,
-  type WardrobeInsightBuyAdvice,
+  type OwnedInsightUse,
   type WardrobeInsightFitVerdict,
   type WardrobeProductInsight,
 } from "@/lib/cabinet/product-insight";
@@ -22,8 +23,8 @@ function fitClass(verdict: WardrobeInsightFitVerdict): string {
   return "text-amber-800 dark:text-amber-200";
 }
 
-function buyClass(advice: WardrobeInsightBuyAdvice): string {
-  return advice === "nên mua"
+function useClass(use: OwnedInsightUse): string {
+  return use === "keep"
     ? "text-emerald-800 dark:text-emerald-200"
     : "text-amber-900 dark:text-amber-100";
 }
@@ -36,13 +37,15 @@ function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
       : insight.fit.verdict === "no"
         ? t("insight.verdictNo")
         : t("insight.verdictMaybe");
+  const useKind = ownedInsightUse(insight.buy.advice);
+  const useLabel = useKind === "keep" ? t("insight.keepUsing") : t("insight.pauseUsing");
 
   return (
     <section
       className="mt-3 space-y-2.5 rounded-lg border border-border/70 bg-muted/40 p-3"
       data-testid="cabinet-product-insight"
       data-insight-fit={insight.fit.verdict}
-      data-insight-buy={insight.buy.advice}
+      data-insight-use={useKind}
       aria-label={t("insight.regionLabel")}
     >
       <div>
@@ -70,7 +73,7 @@ function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
       </div>
 
       <div>
-        <p className={cn("text-sm font-semibold", buyClass(insight.buy.advice))}>{insight.buy.advice}</p>
+        <p className={cn("text-sm font-semibold", useClass(useKind))}>{useLabel}</p>
         <p className="text-sm leading-relaxed text-muted-foreground">{insight.buy.why}</p>
       </div>
 
