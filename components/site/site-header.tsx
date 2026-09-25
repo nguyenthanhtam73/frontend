@@ -342,11 +342,11 @@ export function SiteHeader() {
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-6xl flex-col px-1.5 py-1.5 min-[24rem]:px-4 sm:px-6 sm:py-2 lg:py-3",
+          "mx-auto flex w-full max-w-6xl flex-col px-2.5 py-1.5 min-[24rem]:px-4 sm:px-6 sm:py-2 lg:py-3",
           hideFunnelNav ? "gap-0" : "gap-1.5 sm:gap-3 lg:gap-2",
         )}
       >
-        <div className="flex min-h-11 items-center gap-1 sm:min-h-14 sm:gap-3">
+        <div className="flex min-h-11 items-center gap-0 min-[24rem]:gap-1 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
             prefetch
@@ -355,7 +355,7 @@ export function SiteHeader() {
             <Logo className="max-[24rem]:gap-1" />
           </Link>
 
-          <div className="ml-auto flex min-h-9 min-w-0 items-center justify-end gap-0.5 self-center sm:gap-2">
+          <div className="ml-auto flex min-h-9 min-w-0 items-center justify-end gap-px min-[24rem]:gap-0.5 self-center sm:gap-2">
             <LocaleSwitcher compact className="md:hidden" />
             <LocaleSwitcher className="hidden md:inline-flex" />
             <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
@@ -383,7 +383,7 @@ export function SiteHeader() {
         >
           <div
             ref={mobileNavScrollerRef}
-            className="mx-auto w-full min-w-0 max-w-6xl overflow-x-auto overscroll-x-contain px-1.5 min-[24rem]:px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden"
+            className="mx-auto w-full min-w-0 max-w-6xl overflow-x-auto overscroll-x-contain px-2.5 min-[24rem]:px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden"
           >
             {navStrip}
           </div>
