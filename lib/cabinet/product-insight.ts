@@ -2,6 +2,12 @@
 export type WardrobeInsightFitVerdict = "yes" | "maybe" | "no";
 export type WardrobeInsightBuyAdvice = "nên mua" | "chưa nên";
 
+/**
+ * How to talk about a product that is already in the cabinet.
+ * The API `buy.advice` field is a purchase verdict ("nên mua" / "chưa nên").
+ */
+export type OwnedInsightUse = "keep" | "pause";
+
 export type WardrobeInsightActive = {
   name: string;
   gloss: string;
@@ -19,6 +25,14 @@ export type WardrobeProductInsight = {
 export const WARDROBE_INSIGHT_DISCLAIMER = "không thay bác sĩ da liễu";
 
 const MAX_ACTIVES = 5;
+
+/**
+ * Cabinet rows are products the user already owns. Never surface the raw
+ * purchase verdict — map it to keep-using vs pause instead.
+ */
+export function ownedInsightUse(advice: WardrobeInsightBuyAdvice): OwnedInsightUse {
+  return advice === "nên mua" ? "keep" : "pause";
+}
 
 function asRecord(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;

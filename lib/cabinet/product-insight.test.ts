@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { parseWardrobeProductInsight, WARDROBE_INSIGHT_DISCLAIMER } from "./product-insight";
+import {
+  ownedInsightUse,
+  parseWardrobeProductInsight,
+  WARDROBE_INSIGHT_DISCLAIMER,
+} from "./product-insight";
 
 const sample = {
   what_it_does: "  Sữa rửa mặt dịu, lấy dầu thừa mà không kéo căng.  ",
@@ -20,6 +24,13 @@ const sample = {
   ],
   disclaimer: "không thay bác sĩ da liễu",
 };
+
+describe("ownedInsightUse", () => {
+  it("does not tell the owner to buy a product already in the cabinet", () => {
+    assert.equal(ownedInsightUse("nên mua"), "keep");
+    assert.equal(ownedInsightUse("chưa nên"), "pause");
+  });
+});
 
 describe("parseWardrobeProductInsight", () => {
   it("maps the locked wardrobe insight and caps actives at 5", () => {

@@ -2,14 +2,14 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useGuardedRouter } from "@/lib/hooks/use-guarded-router";
-import { hidesFunnelMarketingNav, normalizePath } from "@/lib/site-nav";
+import { hidesFunnelMarketingNav, normalizePath, revealScrollDelta } from "@/lib/site-nav";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { useClientMounted } from "@/lib/use-client-mounted";
 import { useCurrentHash } from "@/lib/use-current-hash";
@@ -269,6 +269,33 @@ export function SiteHeader() {
   const hasSession = useHasAppSession();
   const hideFunnelNav = hidesFunnelMarketingNav(pathname, hasSession);
   const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
+  const mobileNavScrollerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const scroller = mobileNavScrollerRef.current;
+    if (!scroller) return;
+
+    const align = () => {
+      if (scroller.clientWidth === 0) return;
+      const active = scroller.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!active) return;
+      const delta = revealScrollDelta(scroller.getBoundingClientRect(), active.getBoundingClientRect());
+      if (delta !== 0) scroller.scrollLeft += delta;
+    };
+
+    align();
+    const frame = requestAnimationFrame(align);
+    window.addEventListener("resize", align);
+    let cancelled = false;
+    void document.fonts?.ready.then(() => {
+      if (!cancelled) align();
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", align);
+    };
+  }, [pathname, hash, showGuestNav, user?.is_admin, user?.can_skin_review]);
 
   // Mobile: denser chips but min-h-11 (≥44px) for touch. Desktop: roomier pills.
   const linkBase =
@@ -302,7 +329,7 @@ export function SiteHeader() {
   }
 
   const navStrip = renderNavUl(
-    "flex flex-nowrap items-center justify-start gap-0.5 sm:gap-1",
+    "flex w-max min-w-full flex-nowrap items-center justify-start gap-0.5 pr-1 sm:gap-1",
   );
   const navWrapped = renderNavUl(
     "flex flex-wrap items-center justify-center gap-x-2 gap-y-2",
@@ -350,11 +377,14 @@ export function SiteHeader() {
 
       {!hideFunnelNav ? (
         <nav
-          className="border-t border-border/40 py-1 lg:hidden"
+          className="min-w-0 max-w-full border-t border-border/40 py-1 lg:hidden"
           aria-label={t("mainNavAria")}
           data-testid="site-header-nav-mobile"
         >
-          <div className="mx-auto flex w-full max-w-6xl justify-start overflow-x-auto overscroll-x-contain px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+          <div
+            ref={mobileNavScrollerRef}
+            className="mx-auto w-full min-w-0 max-w-6xl overflow-x-auto overscroll-x-contain px-4 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden"
+          >
             {navStrip}
           </div>
         </nav>
