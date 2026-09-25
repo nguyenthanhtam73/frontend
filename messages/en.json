@@ -145,6 +145,7 @@
     "registerLink": "Sign up",
     "loginLink": "Sign in",
     "errorGeneric": "Something didn't work. Check your details or that the backend is running.",
+    "invalidEmail": "That email doesn't look right. Example: ten@gmail.com",
     "captchaRequired": "Finish the security check below, then try signing up again.",
     "captchaFailed": "The security check did not pass — please try again.",
     "captchaUnavailable": "We could not verify the security check right now. Try again in a moment.",
