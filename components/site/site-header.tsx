@@ -111,7 +111,14 @@ function GuestActions({
   return (
     <div
       data-testid="auth-guest"
-      className={cn("flex shrink-0 items-center gap-1.5", className)}
+      className={cn(
+        "flex shrink-0 items-center gap-1.5",
+        // Below 384px the logo-to-controls gap is 4px. Guest pages have no
+        // truncating email, so recover that width from the space between
+        // Sign in and Register. 384px and up keeps gap-1.5.
+        compact && "max-[383px]:gap-0.5",
+        className,
+      )}
     >
       <ButtonLink
         href="/login"
