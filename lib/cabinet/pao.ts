@@ -59,3 +59,30 @@ export function getPaoHint(
     category,
   };
 }
+
+/** Translation key + values for the existing "use by" hint. */
+export function paoHintCopy(pao: PaoHint):
+  | { key: "paoHintFreshFixed"; values: { months: number } }
+  | { key: "paoHintFreshRange"; values: { min: number; max: number } }
+  | { key: "paoHintFixed"; values: { monthsOpen: number; months: number } }
+  | { key: "paoHintRange"; values: { monthsOpen: number; min: number; max: number } } {
+  if (pao.monthsOpen < 1) {
+    if (pao.suggestedMin === pao.suggestedMax) {
+      return { key: "paoHintFreshFixed", values: { months: pao.suggestedMax } };
+    }
+    return {
+      key: "paoHintFreshRange",
+      values: { min: pao.suggestedMin, max: pao.suggestedMax },
+    };
+  }
+  if (pao.suggestedMin === pao.suggestedMax) {
+    return {
+      key: "paoHintFixed",
+      values: { monthsOpen: pao.monthsOpen, months: pao.suggestedMax },
+    };
+  }
+  return {
+    key: "paoHintRange",
+    values: { monthsOpen: pao.monthsOpen, min: pao.suggestedMin, max: pao.suggestedMax },
+  };
+}

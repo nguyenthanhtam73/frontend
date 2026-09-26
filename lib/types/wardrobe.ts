@@ -48,4 +48,6 @@ export type WardrobeLabelScanDTO = {
   category: string;
   notes?: string;
   confidence?: number;
+  /** YYYY-MM-DD when the label scan includes an opened date. Absent otherwise. */
+  opened_at?: string;
 };

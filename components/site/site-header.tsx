@@ -69,7 +69,10 @@ function SignedInActions({
       <span
         className={cn(
           "min-w-0 truncate text-xs text-muted-foreground",
-          compact ? "max-w-[7.5rem]" : "max-w-40",
+          // Below 384px the logo-to-controls gap is 4px. That width comes off
+          // this truncating label (7.5rem → 7.5rem − 4px), not side padding or
+          // the 44px buttons. 384px and up keeps the 7.5rem cap.
+          compact ? "max-w-[7.5rem] max-[383px]:max-w-[calc(7.5rem-4px)]" : "max-w-40",
         )}
         title={email}
       >
@@ -346,7 +349,7 @@ export function SiteHeader() {
           hideFunnelNav ? "gap-0" : "gap-1.5 sm:gap-3 lg:gap-2",
         )}
       >
-        <div className="flex min-h-11 items-center gap-0 min-[24rem]:gap-1 sm:min-h-14 sm:gap-3">
+        <div className="flex min-h-11 items-center gap-1 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
             prefetch
