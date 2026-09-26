@@ -1276,7 +1276,7 @@
     "fieldNotes": "Ghi chú",
     "placeholderName": "VD: Sữa rửa mặt dưỡng ẩm",
     "placeholderBrand": "VD: CeraVe",
-    "placeholderBrandOptional": "VD: CeraVe (không bắt buộc)",
+    "placeholderBrandOptional": "VD: tên hãng trên nhãn (không bắt buộc)",
     "brandUnknown": "Không rõ",
     "placeholderNotes": "VD: dùng sáng tối, patch test 24h trước khi thoa full mặt",
     "categoryUnset": "— Chọn loại —",

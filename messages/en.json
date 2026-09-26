@@ -1276,7 +1276,7 @@
     "fieldNotes": "Notes",
     "placeholderName": "e.g. Hydrating cleanser",
     "placeholderBrand": "e.g. CeraVe",
-    "placeholderBrandOptional": "e.g. CeraVe (optional)",
+    "placeholderBrandOptional": "e.g. brand name on the label (optional)",
     "brandUnknown": "Unknown",
     "placeholderNotes": "e.g. AM/PM, patch test 24h before full face",
     "categoryUnset": "— Pick category —",
