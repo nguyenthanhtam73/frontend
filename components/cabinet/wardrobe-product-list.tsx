@@ -13,6 +13,7 @@ import {
   type WardrobeCategoryFilterValue,
 } from "@/components/cabinet/wardrobe-category-filter";
 import { useCabinetEmptyIntent } from "@/components/cabinet/use-cabinet-empty-intent";
+import { usePaoHintLabel } from "@/components/cabinet/use-pao-hint-label";
 import { useWardrobe } from "@/components/cabinet/wardrobe-provider";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -20,7 +21,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
-import { getPaoHint } from "@/lib/cabinet/pao";
 import { usePlanTier } from "@/lib/premium/plan-tier-context";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
@@ -254,34 +254,13 @@ function ProductRow({
 }) {
   const t = useTranslations("cabinet");
   const categoryLabel = product.category ? categoryLabelFor(t, product.category) : null;
-  const pao = getPaoHint(product.opened_at, product.category);
+  const paoLabel = usePaoHintLabel(product.opened_at, product.category);
 
   let openedLabel: string | null = null;
   if (product.opened_at) {
     const d = new Date(`${product.opened_at}T00:00:00Z`);
     if (!Number.isNaN(d.getTime())) {
       openedLabel = formatter.dateTime(d, { dateStyle: "medium" });
-    }
-  }
-
-  let paoLabel: string | null = null;
-  if (pao) {
-    if (pao.monthsOpen < 1) {
-      paoLabel =
-        pao.suggestedMin === pao.suggestedMax
-          ? t("paoHintFreshFixed", { months: pao.suggestedMax })
-          : t("paoHintFreshRange", { min: pao.suggestedMin, max: pao.suggestedMax });
-    } else if (pao.suggestedMin === pao.suggestedMax) {
-      paoLabel = t("paoHintFixed", {
-        monthsOpen: pao.monthsOpen,
-        months: pao.suggestedMax,
-      });
-    } else {
-      paoLabel = t("paoHintRange", {
-        monthsOpen: pao.monthsOpen,
-        min: pao.suggestedMin,
-        max: pao.suggestedMax,
-      });
     }
   }
 
