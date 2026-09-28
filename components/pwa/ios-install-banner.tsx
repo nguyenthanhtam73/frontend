@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { usePathname } from "@/i18n/navigation";
+import { whenInstallPromptEarned } from "@/lib/pwa/install-gate";
 import { hasMobileBottomChrome, hidesPwaInstallBanner } from "@/lib/site-nav";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
  *     iOS browsers only from iOS 16.4+)
  *   - the app isn't already installed (not running standalone)
  *   - the user hasn't dismissed the banner within the cooldown window
+ *   - a check-in has succeeded on this device (lib/pwa/install-gate)
  * ----------------------------------------------------------------------- */
 
 const DISMISS_KEY = "dadiary_ios_pwa_dismissed";
@@ -60,8 +62,14 @@ export function IosInstallBanner() {
     if (!isPwaCapableIosBrowser()) return;
     if (recentlyDismissed()) return;
 
-    const id = window.setTimeout(() => setVisible(true), SHOW_DELAY_MS);
-    return () => clearTimeout(id);
+    let timer: number | undefined;
+    const unsubscribe = whenInstallPromptEarned(() => {
+      timer = window.setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+    });
+    return () => {
+      unsubscribe();
+      if (timer !== undefined) clearTimeout(timer);
+    };
   }, []);
 
   const dismiss = useCallback(() => {
@@ -215,16 +223,12 @@ function GuideStep({
 function isIosDevice(): boolean {
   if (typeof navigator === "undefined" || typeof document === "undefined") return false;
   const ua = navigator.userAgent || "";
-  // Three-pronged check for robustness:
-  //  1. classic iOS UA,
-  //  2. iPadOS 13+ that reports a desktop macOS UA (distinguished by touch),
-  //  3. a touch-capable fallback for cases where the UA is stripped/spoofed.
-  // The Safari-only capability gate (isPwaCapableIosBrowser) prevents this
-  // broad touch fallback from ever firing on non-Apple devices (e.g. Android).
+  // Classic iOS UA, or iPadOS 13+ reporting a desktop macOS UA (told apart by
+  // touch). No generic touch fallback: Windows touch laptops and Chromebooks
+  // carry "Safari" in their UA and would get iPhone install instructions.
   return (
     /iPad|iPhone|iPod/.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
-    "ontouchend" in document
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
   );
 }
 

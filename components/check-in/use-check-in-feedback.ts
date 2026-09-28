@@ -16,6 +16,7 @@ import {
   readPersistedCheckInPending,
 } from "@/lib/check-in/pending-feedback-session";
 import { useToast } from "@/hooks/use-toast";
+import { markInstallPromptEarned } from "@/lib/pwa/install-gate";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
 /** Smart polling: 1s for first 20s, then 2.5s; hard stop at TIMEOUT_MS. */
@@ -341,6 +342,7 @@ export function useCheckInFeedback() {
   const onSubmitSuccess = useCallback(
     (data: CreateSkinCheckResponseDTO) => {
       const id = data.check.id;
+      markInstallPromptEarned();
       devLog("submit success", {
         checkId: id,
         status: data.analysis.status,

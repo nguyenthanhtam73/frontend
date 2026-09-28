@@ -83,6 +83,7 @@ import {
   shouldShowD0StickyActions,
   userNoteForD0StickySkipSubmit,
 } from "@/lib/check-in/d0-form";
+import { markInstallPromptEarned } from "@/lib/pwa/install-gate";
 import { cn } from "@/lib/utils";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 import {
@@ -492,6 +493,7 @@ export function CheckInForm() {
               showError(t("guestLocal.saveError"));
               return;
             }
+            markInstallPromptEarned();
             const saved = readPersistedGuestCheckIn();
             setGuestLocal(saved);
             if (waitForAi && saved) {
