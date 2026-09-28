@@ -155,7 +155,7 @@ export function CheckInDetailSheet({
           dragY.current = 0;
         }}
         className={cn(
-          "relative flex max-h-[min(90vh,680px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl transition-all ease-out lg:max-w-lg lg:rounded-2xl",
+          "relative flex max-h-[min(90dvh,680px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl transition-all ease-out lg:max-w-lg lg:rounded-2xl",
           closing
             ? "translate-y-full opacity-0 duration-[260ms] lg:translate-y-3 lg:scale-[0.98] lg:opacity-0"
             : "translate-y-0 opacity-100 duration-300 in-animate animate-in slide-in-from-bottom-6 fade-in lg:zoom-in-95",

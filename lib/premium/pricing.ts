@@ -24,7 +24,9 @@ export function priceForDisplay(
   if (interval === "monthly") {
     return { amount: row.monthly, perMonth: row.monthly, billedTotal: row.monthly };
   }
-  const perMonth = Math.round(row.yearlyTotal / 12);
+  // Display-only (checkout bills yearlyTotal): an exact yearly/12 reads as
+  // "70.750 ₫", so show the nearest thousand next to the real billed total.
+  const perMonth = Math.round(row.yearlyTotal / 12 / 1000) * 1000;
   return { amount: perMonth, perMonth, billedTotal: row.yearlyTotal };
 }
 

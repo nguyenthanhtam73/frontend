@@ -378,11 +378,11 @@ function ErrorCard({
           {message}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+          <Button type="button" variant="outline" size="sm" className="min-h-11 sm:min-h-7" onClick={onRetry}>
             {retryLabel}
           </Button>
           {showLogin && loginLabel ? (
-            <ButtonLink href="/login" variant="default" size="sm">
+            <ButtonLink href="/login" variant="default" size="sm" className="min-h-11 sm:min-h-7">
               {loginLabel}
             </ButtonLink>
           ) : null}

@@ -8,6 +8,7 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { usePathname } from "@/i18n/navigation";
+import { whenInstallPromptEarned } from "@/lib/pwa/install-gate";
 import { hasMobileBottomChrome, hidesPwaInstallBanner } from "@/lib/site-nav";
 import { hasToastHandler, pushToast } from "@/lib/toast-bridge";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,9 @@ export function PwaRegister() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installing, setInstalling] = useState(false);
   const [installHidden, setInstallHidden] = useState(false);
+  const [installEarned, setInstallEarned] = useState(false);
+
+  useEffect(() => whenInstallPromptEarned(() => setInstallEarned(true)), []);
 
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -355,6 +359,7 @@ export function PwaRegister() {
   const showInstall =
     !showUpdate &&
     installEvent !== null &&
+    installEarned &&
     !installHidden &&
     !hideInstallOnFunnel;
 
