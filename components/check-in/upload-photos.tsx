@@ -299,7 +299,7 @@ export function UploadPhotos({
             type="button"
             data-testid="checkin-skip-photos-cta"
             onClick={onSkipPhotos}
-            className="text-sm font-medium text-primary underline underline-offset-4"
+            className="-my-2 inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4"
           >
             {t("photoSkipTodayCta")}
           </button>

@@ -560,7 +560,7 @@ function PhotoPicker({
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-black/50 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200"
       />
-      <div className="relative z-10 flex max-h-[80vh] w-full max-w-lg flex-col rounded-t-2xl border bg-background shadow-lg motion-safe:animate-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-300 sm:rounded-2xl sm:zoom-in-95">
+      <div className="relative z-10 flex max-h-[80dvh] w-full max-w-lg flex-col rounded-t-2xl border bg-background shadow-lg motion-safe:animate-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-300 sm:rounded-2xl sm:zoom-in-95">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h4 className="text-sm font-semibold tracking-tight">{title}</h4>
           <Button

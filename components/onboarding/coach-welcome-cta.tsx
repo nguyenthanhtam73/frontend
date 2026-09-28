@@ -210,7 +210,7 @@ export function CoachWelcomeStickyBar({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background p-4 sm:hidden",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-primary/20 bg-background px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:hidden",
         className,
       )}
       data-testid="coach-welcome-sticky-cta"

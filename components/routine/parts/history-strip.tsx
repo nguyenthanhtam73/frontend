@@ -275,7 +275,7 @@ function RangeToggle({
             type="button"
             onClick={() => onChange(days)}
             className={cn(
-              "relative z-10 min-w-[4.25rem] rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-200 sm:min-w-[4.75rem]",
+              "relative z-10 min-h-11 min-w-[4.25rem] rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors duration-200 sm:min-h-0 sm:min-w-[4.75rem] sm:text-[11px]",
               value === days
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground/80",

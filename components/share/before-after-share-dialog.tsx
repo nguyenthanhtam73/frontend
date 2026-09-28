@@ -118,7 +118,7 @@ export function BeforeAfterShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg" aria-busy={busy != null}>
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg" aria-busy={busy != null}>
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{t("body")}</DialogDescription>

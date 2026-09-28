@@ -387,7 +387,7 @@ function CoachWelcomeLoaded({
 
   return (
     <>
-      <div className="mx-auto w-full max-w-2xl space-y-4 pb-28 sm:space-y-5 sm:pb-6">
+      <div className="mx-auto w-full max-w-2xl space-y-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:space-y-5 sm:pb-6">
         <CoachWelcomeSection>
           <CoachWelcomeCelebrationHeader isGuest={isGuest} />
         </CoachWelcomeSection>

@@ -55,7 +55,7 @@ export function LocaleSwitcher({
       <button
         type="button"
         onClick={() => select(nextLocale)}
-        aria-label="Đổi ngôn ngữ / Switch language"
+        aria-label={t("label")}
         aria-busy={isPending || undefined}
         className={cn(
           "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-background text-[11px] font-medium tabular-nums text-foreground transition-colors hover:bg-muted focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",

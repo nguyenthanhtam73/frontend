@@ -34,9 +34,11 @@ export function Toaster() {
   return createPortal(
     <div
       className={cn(
-        "pointer-events-none fixed z-[100] flex max-h-screen w-full flex-col gap-2 p-4 sm:max-w-sm",
+        "pointer-events-none fixed z-[100] flex max-h-dvh w-full flex-col gap-2 p-4 sm:max-w-sm",
         // Top-anchored: reverse so the newest toast sits at the top edge.
-        isTop ? "flex-col-reverse" : "flex-col",
+        isTop
+          ? "flex-col-reverse pt-[max(1rem,env(safe-area-inset-top))]"
+          : "flex-col pb-[max(1rem,env(safe-area-inset-bottom))]",
         POSITION_CLASSES[position],
       )}
     >

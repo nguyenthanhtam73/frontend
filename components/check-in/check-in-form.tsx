@@ -671,7 +671,7 @@ export function CheckInForm() {
                   type="button"
                   onClick={() => setSkillMode(id as SkillMode)}
                   className={cn(
-                    "min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    "min-h-11 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors sm:min-h-9 sm:px-3 sm:py-1.5 sm:text-xs",
                     skillMode === id
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -1033,7 +1033,7 @@ function ConditionSymptomChips({
   return (
     <>
       <Field label={t("fieldConditions")}>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2 sm:gap-1.5">
           {conditionIds.map((id) => {
             const on = conditions.includes(id);
             return (
@@ -1044,7 +1044,7 @@ function ConditionSymptomChips({
                 aria-pressed={on}
                 onClick={() => onToggleCondition(id)}
                 className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  "min-h-11 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors sm:min-h-8 sm:px-3 sm:py-1 sm:text-xs",
                   on
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -1058,7 +1058,7 @@ function ConditionSymptomChips({
       </Field>
       <Field label={t("fieldSymptoms")}>
         <p className="text-xs text-muted-foreground">{t("symptomsHint")}</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <div className="mt-1.5 flex flex-wrap gap-2 sm:gap-1.5">
           {symptomIds.map((id) => {
             const on = symptoms.includes(id);
             return (
@@ -1068,7 +1068,7 @@ function ConditionSymptomChips({
                 aria-pressed={on}
                 onClick={() => onToggleSymptom(id)}
                 className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  "min-h-11 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors sm:min-h-8 sm:px-3 sm:py-1 sm:text-xs",
                   on
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",

@@ -188,7 +188,7 @@ export function HistoryDaySheet({
           dragY.current = 0;
         }}
         className={cn(
-          "relative flex max-h-[min(88vh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl will-change-transform",
+          "relative flex max-h-[min(88dvh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl will-change-transform",
           "transition-[transform,opacity] duration-300 ease-out lg:max-w-lg lg:rounded-2xl",
           sheetOpen
             ? "translate-y-0 opacity-100 lg:translate-y-0 lg:scale-100"

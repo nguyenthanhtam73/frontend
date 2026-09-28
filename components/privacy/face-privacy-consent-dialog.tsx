@@ -47,6 +47,7 @@ export function FacePrivacyConsentDialog({
   const descId = useId();
   const acceptRef = useRef<HTMLButtonElement>(null);
   const declineRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -64,7 +65,9 @@ export function FacePrivacyConsentDialog({
         return;
       }
       if (e.key === "Tab") {
-        const targets = [acceptRef.current, declineRef.current].filter(Boolean) as HTMLElement[];
+        const targets = [closeRef.current, acceptRef.current, declineRef.current].filter(
+          Boolean,
+        ) as HTMLElement[];
         if (!targets.length) return;
         const active = document.activeElement as HTMLElement | null;
         const idx = active ? targets.indexOf(active) : -1;
@@ -101,7 +104,7 @@ export function FacePrivacyConsentDialog({
     <div
       role="presentation"
       onClick={handleBackdrop}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 py-4 backdrop-blur-sm motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200 sm:items-center"
     >
       <div
         role="dialog"
@@ -111,16 +114,17 @@ export function FacePrivacyConsentDialog({
         className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-popover/95 shadow-2xl backdrop-blur supports-backdrop-filter:bg-popover/85 motion-safe:animate-in motion-safe:zoom-in-95 motion-safe:slide-in-from-bottom-4 motion-safe:duration-200"
       >
         <button
+          ref={closeRef}
           type="button"
           onClick={onCancel}
           aria-label={t("dialogCloseAria")}
-          className="absolute right-3 top-3 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="absolute right-1.5 top-1.5 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-4" aria-hidden />
         </button>
 
         <div className="space-y-4 p-5 sm:p-6">
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 pr-8">
             <span
               aria-hidden
               className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20"

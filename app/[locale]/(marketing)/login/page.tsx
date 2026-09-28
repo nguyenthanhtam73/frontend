@@ -176,6 +176,7 @@ function LoginPageInner() {
                 <input
                   id="login-email"
                   type="email"
+                  inputMode="email"
                   autoComplete="email"
                   required
                   value={email}
