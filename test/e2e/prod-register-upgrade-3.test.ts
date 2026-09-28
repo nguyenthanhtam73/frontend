@@ -89,17 +89,14 @@ test("register + upgrade Premium Monthly × 3 on production", async ({
       is_premium: usage.is_premium,
     });
 
-    // eslint-disable-next-line no-console
     console.log(
       `[${i}/${COUNT}] OK ${email} → premium expires=${me.plan_expires_at} invoice=${checkout.invoice_number}`,
     );
   }
 
   expect(results).toHaveLength(COUNT);
-  // eslint-disable-next-line no-console
   console.log("\n=== 3 Premium accounts ready ===");
   for (const r of results) {
-    // eslint-disable-next-line no-console
     console.log(
       `#${r.n} email=${r.email} password=${r.password} plan=${r.plan_tier} expires=${r.plan_expires_at}`,
     );

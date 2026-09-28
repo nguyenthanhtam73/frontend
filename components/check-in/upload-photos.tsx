@@ -130,14 +130,6 @@ export function UploadPhotos({
     });
   }, []);
 
-  const setSlotError = useCallback((index: PhotoSlotIndex, message: string) => {
-    setSlotErrors((prev) => {
-      const next: SlotErrors = [...prev];
-      next[index] = message;
-      return next;
-    });
-  }, []);
-
   const assignSlot = useCallback(
     (index: PhotoSlotIndex, item: UploadItem | null) => {
       const next: PhotoSlots = [...slots] as PhotoSlots;

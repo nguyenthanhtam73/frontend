@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Link } from "@/i18n/navigation";
-import { ApiError, apiGet, apiPost } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 import { cn } from "@/lib/utils";
 
