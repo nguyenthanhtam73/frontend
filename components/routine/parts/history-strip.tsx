@@ -120,6 +120,10 @@ export function HistoryStrip({
   }, [visibleEntries, todayISO]);
 
   function handleDayClick(date: string) {
+    if (date === todayISO && onSelectToday) {
+      onSelectToday();
+      return;
+    }
     const entry = entriesByDate.get(date);
     if (!entry) return;
     if (selectedDate === date) return;
