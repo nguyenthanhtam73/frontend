@@ -79,7 +79,7 @@ export async function Hero() {
         </div>
 
         <div
-          className="relative isolate mx-auto aspect-[4/5] w-full max-w-[17.5rem] sm:aspect-square sm:max-w-md lg:max-w-none"
+          className="relative isolate mx-auto aspect-[4/5] w-full max-w-[14rem] sm:aspect-square sm:max-w-md lg:max-w-none"
           aria-hidden={phoneSrc ? undefined : true}
         >
           <div className="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-primary/15 via-accent/30 to-transparent blur-xl" />
