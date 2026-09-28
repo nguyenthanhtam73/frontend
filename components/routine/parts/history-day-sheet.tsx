@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { Check, Lock, Moon, Pencil, Sun, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import type { RoutineDTO } from "@/lib/types/routine";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { cn } from "@/lib/utils";
@@ -115,6 +116,7 @@ export function HistoryDaySheet({
   }, [visible, closing, displayEntry?.routine_date]);
 
   useBodyScrollLock(visible);
+  useFocusTrap(sheetRef, visible && !closing);
 
   useEffect(() => {
     if (!visible) return;
@@ -153,6 +155,7 @@ export function HistoryDaySheet({
     >
       <button
         type="button"
+        tabIndex={-1}
         aria-label={labels.detailClose}
         className={cn(
           "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300 ease-out lg:bg-black/50",
@@ -163,6 +166,7 @@ export function HistoryDaySheet({
 
       <div
         ref={sheetRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-day-sheet-title"
@@ -188,7 +192,7 @@ export function HistoryDaySheet({
           dragY.current = 0;
         }}
         className={cn(
-          "relative flex max-h-[min(88dvh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl will-change-transform",
+          "relative flex max-h-[min(88dvh,640px)] w-full flex-col rounded-t-2xl border border-border/80 bg-background shadow-2xl outline-none will-change-transform",
           "transition-[transform,opacity] duration-300 ease-out lg:max-w-lg lg:rounded-2xl",
           sheetOpen
             ? "translate-y-0 opacity-100 lg:translate-y-0 lg:scale-100"
