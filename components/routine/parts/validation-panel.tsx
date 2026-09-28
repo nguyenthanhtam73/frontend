@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { AlertCircle, AlertTriangle, Moon, Plus, Sun, SunMedium } from "lucide-react";
+import { AlertCircle, AlertTriangle, Moon, Sun, SunMedium } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

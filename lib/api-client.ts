@@ -138,7 +138,6 @@ async function requestOnce<T>(url: string, opts: ApiRequestOptions): Promise<T> 
     auth = true,
     timeoutMs = DEFAULT_TIMEOUT_MS,
     signal,
-    clearTokenOn401 = true,
     raw = false,
   } = opts;
 
