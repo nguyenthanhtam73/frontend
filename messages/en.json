@@ -151,6 +151,8 @@
     "captchaUnavailable": "We could not verify the security check right now. Try again in a moment.",
     "captchaHint": "Quick check to prevent automated sign-ups — usually one tap.",
     "networkError": "Network error or could not reach the backend.",
+    "emailAlreadyHasAccount": "This email already has an account.",
+    "signInWithThisEmail": "Sign in with this email",
     "finishNetworkError": "Couldn't save your onboarding. You'll need to sign in and have the backend running — but you can still use the local UI.",
     "finishNeedAuth": "You need to sign in to save this. You can sign in and come back to this step.",
     "finishRetry": "Try again",
