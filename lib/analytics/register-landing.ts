@@ -80,6 +80,30 @@ export function trackRegisterEmailExists(): void {
   trackRegister(FUNNEL_EVENTS.registerEmailExists);
 }
 
+/**
+ * TODO(#53): delete this copy after rebasing onto main (#53, then #54, then #52).
+ * Import `isRegisterEmailTakenResponse` from `@/lib/auth/register-email-taken` instead.
+ * Same rule as that helper: a 409 is an email conflict unless `error.code` is `username_taken`.
+ */
+const EMAIL_TAKEN_EXCLUDED_CODES = new Set(["username_taken"]);
+
+function readRegisterErrorCode(body: unknown): string {
+  if (!body || typeof body !== "object") return "";
+  const error = (body as { error?: { code?: unknown } }).error;
+  return typeof error?.code === "string" ? error.code.trim().toLowerCase() : "";
+}
+
+export function isRegisterEmailTakenResponse(status: number, body: unknown): boolean {
+  if (status !== 409) return false;
+  return !EMAIL_TAKEN_EXCLUDED_CODES.has(readRegisterErrorCode(body));
+}
+
+/** Fire `register_email_exists` only for an email-conflict 409. */
+export function trackRegisterEmailExistsForResponse(status: number, body: unknown): void {
+  if (!isRegisterEmailTakenResponse(status, body)) return;
+  trackRegisterEmailExists();
+}
+
 /** First-touch object for POST /auth/register. Null when nothing was stored. */
 export function registerRequestAttribution(): AttributionTouch | null {
   capturePageAttribution();

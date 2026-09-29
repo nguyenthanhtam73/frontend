@@ -10,6 +10,7 @@ import {
   registerRequestAttribution,
   trackLandingCtaClick,
   trackRegisterClientError,
+  trackRegisterEmailExistsForResponse,
   trackRegisterSubmitAttempt,
 } from "./register-landing";
 
@@ -155,6 +156,35 @@ describe("register and landing funnel events", () => {
     assert.deepEqual(body.props, { button: "hero_primary" });
     assert.deepEqual(meta[0], ["trackCustom", "landing_cta_click", { button: "hero_primary" }]);
     assert.deepEqual(tiktok[0], ["landing_cta_click", { button: "hero_primary" }]);
+  });
+
+  it("fires register_email_exists for an email 409 and not for a username 409", async () => {
+    installWindow("?utm_source=test&utm_campaign=x");
+    process.env.NODE_ENV = "production";
+    const calls: RequestInit[] = [];
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push(init ?? {});
+      return new Response("", { status: 204 });
+    }) as typeof fetch;
+
+    trackRegisterEmailExistsForResponse(409, {
+      success: false,
+      error: { code: "email_taken", message: "email already registered" },
+    });
+    trackRegisterEmailExistsForResponse(409, {
+      error: { code: "username_taken", message: "username already taken" },
+    });
+    await Promise.resolve();
+
+    assert.equal(calls.length, 1);
+    const body = JSON.parse(String(calls[0]!.body)) as {
+      event: string;
+      props: Record<string, unknown>;
+    };
+    assert.equal(body.event, "register_email_exists");
+    assert.equal(body.props.error_type, undefined);
+    assert.equal(JSON.stringify(body).includes("email already registered"), false);
+    assert.equal(JSON.stringify(body).includes("username"), false);
   });
 
   it("does not first-party post existing check-in events from the shared helper", async () => {

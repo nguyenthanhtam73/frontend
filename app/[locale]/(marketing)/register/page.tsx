@@ -31,7 +31,7 @@ import {
   classifyRegisterClientBlock,
   registerRequestAttribution,
   trackRegisterClientError,
-  trackRegisterEmailExists,
+  trackRegisterEmailExistsForResponse,
   trackRegisterFormView,
   trackRegisterSubmitAttempt,
 } from "@/lib/analytics/register-landing";
@@ -215,9 +215,7 @@ function RegisterPageInner() {
                 const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
                   invalidateCaptcha();
-                  if (res.status === 409) {
-                    trackRegisterEmailExists();
-                  }
+                  trackRegisterEmailExistsForResponse(res.status, json);
                   if (isRegisterInvalidEmailResponse(res.status, json)) {
                     setEmailError(t("invalidEmail"));
                     setLoading(false);
