@@ -5,6 +5,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 
 import { ActivationCheckInBanner } from "@/components/activation/activation-check-in-banner";
+import { AttributionCapture } from "@/components/site/attribution-capture";
 import { HashScroll } from "@/components/site/hash-scroll";
 import { MetaPixel } from "@/components/site/meta-pixel";
 import { TikTokPixel } from "@/components/site/tiktok-pixel";
@@ -96,6 +97,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <NextIntlClientProvider messages={messages} locale={locale}>
           <MetaPixel />
           <TikTokPixel />
+          <AttributionCapture />
           <AppProviders>
             <OfflineIndicator />
             <NavigationBlockListener />

@@ -25,6 +25,7 @@ export async function Cta() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start">
             <LandingStartCta
+              trackAs="bottom_cta"
               size="lg"
               className="h-12 w-full gap-2 px-8 text-base shadow-lg shadow-primary/25 sm:w-auto"
             >

@@ -27,6 +27,11 @@
  * | checkin_skip_selected | checkin_skip_selected { source }                |
  * | checkin_submit_attempt | checkin_submit_attempt { skip_mode, signed_in, photo_count } |
  * | checkin_submit_fail | checkin_submit_fail { reason }                    |
+ * | register_form_view | register_form_view { utm_source?, utm_campaign? }  |
+ * | register_submit_attempt | register_submit_attempt { utm_source?, utm_campaign? } |
+ * | register_client_error | register_client_error { error_type, utm_source?, utm_campaign? } |
+ * | register_email_exists | register_email_exists { utm_source?, utm_campaign? } |
+ * | landing_cta_click  | landing_cta_click { button }                       |
  * | d1_checkin         | activation_d1_checkin (+ d1 reminder shown)        |
  * | push_opt_in        | activation_push_opt_in                             |
  * | push_dismissed     | activation_push_dismissed                          |
@@ -36,6 +41,7 @@
  */
 
 import { persistPaywallView } from "@/lib/api/paywall-view";
+import { sendFunnelEvent } from "@/lib/analytics/funnel-events";
 import { trackMetaCustomEvent, trackMetaEvent, trackMetaPurchaseOnce } from "@/lib/meta-pixel";
 import { trackTikTokEvent } from "@/lib/tiktok-pixel";
 
@@ -56,6 +62,11 @@ export const FUNNEL_EVENTS = {
   checkInSkipSelected: "checkin_skip_selected",
   checkInSubmitAttempt: "checkin_submit_attempt",
   checkInSubmitFail: "checkin_submit_fail",
+  registerFormView: "register_form_view",
+  registerSubmitAttempt: "register_submit_attempt",
+  registerClientError: "register_client_error",
+  registerEmailExists: "register_email_exists",
+  landingCtaClick: "landing_cta_click",
   d1CheckIn: "activation_d1_checkin",
   d1ReminderShown: "activation_d1_reminder_shown",
   pushOptIn: "activation_push_opt_in",
@@ -148,6 +159,7 @@ export const TIKTOK_STANDARD_BY_CUSTOM: Partial<
   },
   // firstCheckIn / d1 / form view / photo / skip / submit fail / guest claim:
   // custom name only (ttq.track of the funnel event).
+  // register form / landing CTA events are custom-only too (same name on Meta).
   // registerSuccess: custom only — register page fires CompleteRegistration.
   // checkoutConfirm: custom only — SePay start fires InitiateCheckout.
   // paid: custom only — trackPaidOnce fires TikTok CompletePayment.
@@ -199,6 +211,22 @@ function trackTikTokStandardOnce(
   trackTikTokEvent(event, params);
 }
 
+/**
+ * Register + landing events also POST /api/v1/funnel-events.
+ * Other funnel names stay pixel-only here; check-in first-party uses its own names.
+ */
+const FIRST_PARTY_WITH_PIXEL: ReadonlySet<string> = new Set<FunnelEventName>([
+  FUNNEL_EVENTS.registerFormView,
+  FUNNEL_EVENTS.registerSubmitAttempt,
+  FUNNEL_EVENTS.registerClientError,
+  FUNNEL_EVENTS.registerEmailExists,
+  FUNNEL_EVENTS.landingCtaClick,
+]);
+
+export function funnelEventPostsFirstParty(name: FunnelEventName): boolean {
+  return FIRST_PARTY_WITH_PIXEL.has(name);
+}
+
 /** Fire a funnel event (local queue + Meta + TikTok custom, plus mapped standards). */
 export function trackFunnelEvent(
   name: FunnelEventName,
@@ -208,6 +236,9 @@ export function trackFunnelEvent(
   recordLocal(name, params);
   trackMetaCustomEvent(name, params);
   trackTikTokEvent(name, params);
+  if (funnelEventPostsFirstParty(name)) {
+    sendFunnelEvent(name, params ?? {});
+  }
   if (params?.intent === "login") return;
   const mapped = STANDARD_BY_CUSTOM[name];
   if (mapped) {

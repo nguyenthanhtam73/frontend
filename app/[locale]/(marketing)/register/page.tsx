@@ -28,6 +28,14 @@ import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
+  classifyRegisterClientBlock,
+  registerRequestAttribution,
+  trackRegisterClientError,
+  trackRegisterEmailExists,
+  trackRegisterFormView,
+  trackRegisterSubmitAttempt,
+} from "@/lib/analytics/register-landing";
+import {
   claimLocalGuestCheckInIfNeeded,
   isGuestCheckInClaimFailure,
   isGuestCheckInPhotosMissing,
@@ -99,6 +107,13 @@ function RegisterPageInner() {
     router.replace(buildPricingCheckoutHref(checkoutIntent));
   }, [checkoutIntent, router]);
 
+  const registerViewedRef = useRef(false);
+  useEffect(() => {
+    if (registerViewedRef.current) return;
+    registerViewedRef.current = true;
+    trackRegisterFormView();
+  }, []);
+
   const invalidateCaptcha = useCallback(() => {
     setTurnstileToken(null);
     turnRef.current?.reset();
@@ -157,13 +172,17 @@ function RegisterPageInner() {
             noValidate
             onSubmit={async (e) => {
               e.preventDefault();
-              if (!isValidAccountEmail(email)) {
+              trackRegisterSubmitAttempt();
+              const clientBlock = classifyRegisterClientBlock(email, password);
+              if (clientBlock === "email_empty" || clientBlock === "email_invalid") {
                 setEmailError(t("invalidEmail"));
+                trackRegisterClientError(clientBlock);
                 return;
               }
               setEmailError(null);
-              if (passwordRef.current && !passwordRef.current.checkValidity()) {
-                passwordRef.current.reportValidity();
+              if (clientBlock === "password_short") {
+                passwordRef.current?.reportValidity();
+                trackRegisterClientError("password_short");
                 return;
               }
               setErr(null);
@@ -178,6 +197,8 @@ function RegisterPageInner() {
                   password,
                   display_name: displayName.trim() || undefined,
                 };
+                const attribution = registerRequestAttribution();
+                if (attribution) body.attribution = attribution;
                 if (captchaEnabled && turnstileToken) {
                   body.turnstile_token = turnstileToken;
                 }
@@ -194,6 +215,9 @@ function RegisterPageInner() {
                 const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
                   invalidateCaptcha();
+                  if (res.status === 409) {
+                    trackRegisterEmailExists();
+                  }
                   if (isRegisterInvalidEmailResponse(res.status, json)) {
                     setEmailError(t("invalidEmail"));
                     setLoading(false);
@@ -283,6 +307,7 @@ function RegisterPageInner() {
                 });
               } catch {
                 invalidateCaptcha();
+                trackRegisterClientError("network");
                 setErr(t("networkError"));
                 setLoading(false);
               }
