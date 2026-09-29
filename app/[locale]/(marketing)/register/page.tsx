@@ -64,7 +64,7 @@ export default function RegisterPage() {
 
 function RegisterPageFallback() {
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
+    <div className="mx-auto min-w-0 max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="h-8 w-48 animate-pulse rounded-md bg-muted mx-auto" />
       <div className="h-64 animate-pulse rounded-xl bg-muted" />
     </div>
@@ -141,7 +141,7 @@ function RegisterPageInner() {
       : t("registerCta");
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
+    <div className="mx-auto min-w-0 max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
@@ -290,7 +290,7 @@ function RegisterPageInner() {
               }
             }}
           >
-            <fieldset disabled={loading} className="space-y-4 disabled:opacity-70">
+            <fieldset disabled={loading} className="min-w-0 space-y-4 disabled:opacity-70">
               <Field label={t("email")} htmlFor="register-email">
                 <input
                   id="register-email"
@@ -321,7 +321,7 @@ function RegisterPageInner() {
                   role={emailError ? "alert" : undefined}
                   aria-live={emailSuggestion && !emailError ? "polite" : undefined}
                   aria-hidden={emailError || emailSuggestion ? undefined : true}
-                  className={`min-h-5 text-sm leading-5 ${emailError ? "text-destructive" : "text-primary"}`}
+                  className={`grid min-h-5 grid-cols-[minmax(0,1fr)] text-sm leading-5 ${emailError ? "text-destructive" : "text-primary"}`}
                 >
                   {emailError ? (
                     emailError
