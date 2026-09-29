@@ -20,6 +20,7 @@ import {
   isValidAccountEmail,
   normalizeAccountEmail,
 } from "@/lib/auth/email-format";
+import { suggestEmailDomain } from "@/lib/auth/email-domain-typo";
 import {
   buildAuthHref,
   buildPricingCheckoutHref,
@@ -110,6 +111,7 @@ function RegisterPageInner() {
   }, []);
 
   const submitBlocked = captchaEnabled && !turnstileToken;
+  const emailSuggestion = suggestEmailDomain(email);
   const loginHref = buildAuthHref("/login", {
     intent: checkoutIntent,
     next: returnPath,
@@ -298,7 +300,9 @@ function RegisterPageInner() {
                   required
                   value={email}
                   aria-invalid={emailError ? true : undefined}
-                  aria-describedby={emailError ? "register-email-error" : undefined}
+                  aria-describedby={
+                    emailError || emailSuggestion ? "register-email-error" : undefined
+                  }
                   onChange={(e) => {
                     const next = e.target.value;
                     setEmail(next);
@@ -311,14 +315,32 @@ function RegisterPageInner() {
                   }}
                   className={`flex h-11 w-full rounded-md border bg-background px-3 text-base outline-none ring-ring/40 focus:ring-2 sm:h-9 sm:text-sm ${emailError ? "border-destructive/60" : "border-input"}`}
                 />
-                {/* Reserved line so the hint does not push the submit button. */}
+                {/* Reserved line so the error or typo hint does not push the submit button. */}
                 <p
                   id="register-email-error"
                   role={emailError ? "alert" : undefined}
-                  aria-hidden={emailError ? undefined : true}
-                  className="min-h-5 text-sm leading-5 text-destructive"
+                  aria-live={emailSuggestion && !emailError ? "polite" : undefined}
+                  aria-hidden={emailError || emailSuggestion ? undefined : true}
+                  className={`min-h-5 text-sm leading-5 ${emailError ? "text-destructive" : "text-primary"}`}
                 >
-                  {emailError ?? "\u00a0"}
+                  {emailError ? (
+                    emailError
+                  ) : emailSuggestion ? (
+                    <button
+                      type="button"
+                      id="register-email-suggestion"
+                      data-testid="register-email-suggestion"
+                      className="block w-full min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-sm font-medium leading-5 text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      onClick={() => {
+                        setEmail(emailSuggestion);
+                        setEmailError(null);
+                      }}
+                    >
+                      {t("emailDomainSuggestion", { email: emailSuggestion })}
+                    </button>
+                  ) : (
+                    "\u00a0"
+                  )}
                 </p>
               </Field>
               <Field label={t("displayNameOptional")} htmlFor="register-display-name">
