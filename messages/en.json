@@ -123,8 +123,9 @@
   "auth": {
     "loginTitle": "Sign in to DaDiary",
     "loginSub": "Use your email and password to check in and save your skin profile.",
-    "registerTitle": "Create your account",
-    "registerSub": "After sign-up you'll go through getting to know your skin — save your skin type and get a starter routine from your AI buddy.",
+    "registerTitle": "Create your free skin diary",
+    "registerSub": "Take one photo a day, in under a minute. Look back and see how your skin changed — less guessing.",
+    "registerReassurance": "Free · Photos stay private and are never posted publicly",
     "registerTitleSaveRoutine": "Save your routine",
     "registerSubSaveRoutine": "Create a free account to keep the routine you just saw — it won't vanish when you close the tab.",
     "registerCtaSaveRoutine": "Save routine & create account",
