@@ -1349,6 +1349,8 @@
       "verdictNo": "Not a fit",
       "keepUsing": "Keep using",
       "pauseUsing": "Don't keep using",
+      "unknownUsing": "Not sure if you should keep using this",
+      "unknownUsingWhy": "Watch your skin for a few weeks. If it feels dry and sore, or more spots show up, pause for now.",
       "loading": "Checking if this fits your skin…",
       "error": "Couldn’t load this. Tap try again.",
       "rateLimited": "Hourly limit reached. Try again later.",
