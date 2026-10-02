@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { clampOpenedDate, vietnamDateKey } from "@/lib/cabinet/local-date";
 import type { WardrobeProductDTO } from "@/lib/types/wardrobe";
 
 export function WardrobeProductEditDialog({
@@ -40,6 +41,7 @@ export function WardrobeProductEditDialog({
   const [openedAt, setOpenedAt] = useState("");
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const openedDateMax = vietnamDateKey();
 
   useEffect(() => {
     if (!product || !open) return;
@@ -91,7 +93,8 @@ export function WardrobeProductEditDialog({
           <DialogDescription>{t("editSub")}</DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-3" onSubmit={(e) => void handleSubmit(e)}>
+        {/* A saved future date must not block edits to the other fields. */}
+        <form className="space-y-3" noValidate onSubmit={(e) => void handleSubmit(e)}>
           <WardrobeField label={t("fieldName")} htmlFor="wardrobe-edit-name" required>
             <input
               id="wardrobe-edit-name"
@@ -127,8 +130,9 @@ export function WardrobeProductEditDialog({
               id="wardrobe-edit-opened"
               type="date"
               className={wardrobeInputClass}
+              max={openedDateMax}
               value={openedAt}
-              onChange={(e) => setOpenedAt(e.target.value)}
+              onChange={(e) => setOpenedAt(clampOpenedDate(e.target.value, openedDateMax))}
             />
           </WardrobeField>
 
