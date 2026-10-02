@@ -74,8 +74,8 @@ function readActives(raw: unknown): { name: string; gloss: string }[] {
     const row = asRecord(item);
     if (!row) continue;
     const name = asText(row.name);
-    if (!name) continue;
     const gloss = asText(row.gloss);
+    if (!name || !gloss) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

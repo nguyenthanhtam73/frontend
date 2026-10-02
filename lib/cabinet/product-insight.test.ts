@@ -42,13 +42,6 @@ describe("formatActiveLine", () => {
     assert.equal(formatActiveLine("  BHA  ", "  làm thông lỗ chân lông  "), "BHA: làm thông lỗ chân lông");
   });
 
-  it("shows only the name when the gloss is empty", () => {
-    assert.equal(formatActiveLine("Dầu dừa", ""), "Dầu dừa");
-    assert.equal(formatActiveLine("Dầu dừa", "   "), "Dầu dừa");
-    assert.equal(formatActiveLine("Coconut oil", null), "Coconut oil");
-    assert.equal(formatActiveLine("Coconut oil."), "Coconut oil.");
-  });
-
   it("does not add a second mark when the name already ends with punctuation", () => {
     assert.equal(formatActiveLine("Dầu dừa.", coconutGloss), `Dầu dừa. ${coconutGloss}`);
     assert.equal(formatActiveLine("Dầu dừa:", coconutGloss), `Dầu dừa: ${coconutGloss}`);
@@ -82,16 +75,31 @@ describe("parseWardrobeProductInsight", () => {
     assert.equal(card.actives?.[0]?.gloss, "giữ lớp bảo vệ da khỏi khô rát");
   });
 
-  it("keeps a name when the gloss is empty", () => {
+  it("drops ingredients with a blank gloss", () => {
     const card = parseWardrobeProductInsight({
       what_it_does: "Dầu dừa thường dùng để dưỡng ẩm cho da.",
       fit: { verdict: "no", reason: "Có thể chưa hợp." },
       buy: { advice: "chưa nên", why: "Cân nhắc món khác." },
-      actives: [{ name: " Dầu dừa ", gloss: " " }],
+      actives: [
+        { name: "Niacinamide", gloss: "" },
+        { name: "Dầu dừa", gloss: "   " },
+        { name: "BHA", gloss: "làm thông lỗ chân lông" },
+      ],
     });
     assert.ok(card);
-    assert.deepEqual(card.actives, [{ name: "Dầu dừa", gloss: "" }]);
-    assert.equal(formatActiveLine(card.actives?.[0]?.name ?? "", card.actives?.[0]?.gloss), "Dầu dừa");
+    assert.deepEqual(card.actives, [{ name: "BHA", gloss: "làm thông lỗ chân lông" }]);
+
+    const none = parseWardrobeProductInsight({
+      what_it_does: "Dầu dừa thường dùng để dưỡng ẩm cho da.",
+      fit: { verdict: "no", reason: "Có thể chưa hợp." },
+      buy: { advice: "chưa nên", why: "Cân nhắc món khác." },
+      actives: [
+        { name: "Niacinamide", gloss: "" },
+        { name: "Dầu dừa", gloss: " " },
+      ],
+    });
+    assert.ok(none);
+    assert.equal(none.actives, undefined);
   });
 
   it("omits actives when none are usable and fills an empty disclaimer", () => {
