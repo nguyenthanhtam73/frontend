@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  formatActiveLine,
   ownedInsightUse,
   parseWardrobeProductInsight,
   WARDROBE_INSIGHT_DISCLAIMER,
@@ -25,6 +26,31 @@ const sample = {
   disclaimer: "không thay bác sĩ da liễu",
 };
 
+describe("formatActiveLine", () => {
+  const coconutGloss = "dưỡng ẩm, nhưng khá đặc nên có thể bít lỗ chân lông trên da mặt";
+
+  it("joins the ingredient and gloss with a colon in Vietnamese and English", () => {
+    assert.equal(formatActiveLine("Dầu dừa", coconutGloss), `Dầu dừa: ${coconutGloss}`);
+    assert.equal(
+      formatActiveLine("Niacinamide", "làm dịu vùng đỏ"),
+      "Niacinamide: làm dịu vùng đỏ",
+    );
+    assert.equal(
+      formatActiveLine("Coconut oil", "moisturizes, but it is quite thick and may clog pores"),
+      "Coconut oil: moisturizes, but it is quite thick and may clog pores",
+    );
+    assert.equal(formatActiveLine("  BHA  ", "  làm thông lỗ chân lông  "), "BHA: làm thông lỗ chân lông");
+  });
+
+  it("does not add a second mark when the name already ends with punctuation", () => {
+    assert.equal(formatActiveLine("Dầu dừa.", coconutGloss), `Dầu dừa. ${coconutGloss}`);
+    assert.equal(formatActiveLine("Dầu dừa:", coconutGloss), `Dầu dừa: ${coconutGloss}`);
+    assert.equal(formatActiveLine("BHA!", "làm thông lỗ chân lông"), "BHA! làm thông lỗ chân lông");
+    assert.equal(formatActiveLine("Zinc?", "reduces shine"), "Zinc? reduces shine");
+    assert.equal(formatActiveLine("Panthenol…", "soothes"), "Panthenol… soothes");
+  });
+});
+
 describe("ownedInsightUse", () => {
   it("does not tell the owner to buy a product already in the cabinet", () => {
     assert.equal(ownedInsightUse("nên mua"), "keep");
@@ -47,6 +73,33 @@ describe("parseWardrobeProductInsight", () => {
       ["Ceramide", "BHA", "Niacinamide", "Kẽm", "Panthenol"],
     );
     assert.equal(card.actives?.[0]?.gloss, "giữ lớp bảo vệ da khỏi khô rát");
+  });
+
+  it("drops ingredients with a blank gloss", () => {
+    const card = parseWardrobeProductInsight({
+      what_it_does: "Dầu dừa thường dùng để dưỡng ẩm cho da.",
+      fit: { verdict: "no", reason: "Có thể chưa hợp." },
+      buy: { advice: "chưa nên", why: "Cân nhắc món khác." },
+      actives: [
+        { name: "Niacinamide", gloss: "" },
+        { name: "Dầu dừa", gloss: "   " },
+        { name: "BHA", gloss: "làm thông lỗ chân lông" },
+      ],
+    });
+    assert.ok(card);
+    assert.deepEqual(card.actives, [{ name: "BHA", gloss: "làm thông lỗ chân lông" }]);
+
+    const none = parseWardrobeProductInsight({
+      what_it_does: "Dầu dừa thường dùng để dưỡng ẩm cho da.",
+      fit: { verdict: "no", reason: "Có thể chưa hợp." },
+      buy: { advice: "chưa nên", why: "Cân nhắc món khác." },
+      actives: [
+        { name: "Niacinamide", gloss: "" },
+        { name: "Dầu dừa", gloss: " " },
+      ],
+    });
+    assert.ok(none);
+    assert.equal(none.actives, undefined);
   });
 
   it("omits actives when none are usable and fills an empty disclaimer", () => {

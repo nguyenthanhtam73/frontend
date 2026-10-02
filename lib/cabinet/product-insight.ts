@@ -43,6 +43,29 @@ function asText(raw: unknown): string {
   return typeof raw === "string" ? raw.trim() : "";
 }
 
+/** A name that already closes with punctuation should not gain another mark. */
+const ACTIVE_NAME_ENDS_WITH_PUNCTUATION = /[.,:;!?…。：；！？、]$/u;
+
+/** Name stays in the bold span; `mark` is the colon, `gloss` includes its leading space. */
+export function activeLineParts(
+  name: string,
+  gloss?: string | null,
+): { name: string; mark: ":" | ""; gloss: string } {
+  const ingredient = name.trim();
+  const explanation = (gloss ?? "").trim();
+  if (!ingredient) return { name: "", mark: "", gloss: explanation };
+  if (!explanation) return { name: ingredient, mark: "", gloss: "" };
+  if (ACTIVE_NAME_ENDS_WITH_PUNCTUATION.test(ingredient)) {
+    return { name: ingredient, mark: "", gloss: ` ${explanation}` };
+  }
+  return { name: ingredient, mark: ":", gloss: ` ${explanation}` };
+}
+
+export function formatActiveLine(name: string, gloss?: string | null): string {
+  const parts = activeLineParts(name, gloss);
+  return `${parts.name}${parts.mark}${parts.gloss}`;
+}
+
 function readActives(raw: unknown): { name: string; gloss: string }[] {
   if (!Array.isArray(raw)) return [];
   const out: { name: string; gloss: string }[] = [];
