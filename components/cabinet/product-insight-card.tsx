@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  activeLineParts,
   ownedInsightUse,
   parseWardrobeProductInsight,
   WARDROBE_INSIGHT_DISCLAIMER,
@@ -57,11 +58,18 @@ function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
         <div>
           <p className="text-xs font-semibold text-foreground">{t("insight.activesLabel")}</p>
           <ul className="mt-0.5 space-y-1">
-            {insight.actives.map((active) => (
-              <li key={active.name} className="text-sm leading-relaxed">
-                <span className="font-medium">{active.name}.</span> {active.gloss}
-              </li>
-            ))}
+            {insight.actives.map((active) => {
+              const parts = activeLineParts(active.name, active.gloss);
+              return (
+                <li key={active.name} className="text-sm leading-relaxed">
+                  <span className="font-medium">
+                    {parts.name}
+                    {parts.mark}
+                  </span>
+                  {parts.gloss}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
