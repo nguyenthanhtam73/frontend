@@ -59,11 +59,38 @@ describe("cabinet user-facing copy", () => {
       "Đã mở quá thời gian gợi ý, bạn cân nhắc thay món mới.",
     );
     assert.match(cabinet.paoAddOpenedCta as string, /Thêm ngày mở/);
-    const insight = cabinet.insight as { keepUsing: string; pauseUsing: string };
+    const insight = cabinet.insight as {
+      keepUsing: string;
+      pauseUsing: string;
+      unknownUsing: string;
+      unknownUsingWhy: string;
+    };
     assert.equal(insight.keepUsing, "Nên dùng tiếp");
     assert.equal(insight.pauseUsing, "Chưa nên dùng tiếp");
+    assert.equal(insight.unknownUsing, "Chưa biết có nên dùng tiếp");
+    assert.equal(
+      insight.unknownUsingWhy,
+      "Để ý da vài tuần, thấy khô rát hay nổi mụn thêm thì tạm dừng.",
+    );
+    assert.notEqual(insight.unknownUsing, insight.pauseUsing);
     assert.doesNotMatch(insight.keepUsing, /mua/i);
     assert.doesNotMatch(insight.pauseUsing, /mua/i);
+    assert.doesNotMatch(insight.unknownUsing, /mua/i);
+    assert.doesNotMatch(insight.unknownUsingWhy, /mua/i);
+
+    const en = readLocale("en").cabinet.insight as {
+      keepUsing: string;
+      pauseUsing: string;
+      unknownUsing: string;
+      unknownUsingWhy: string;
+    };
+    assert.equal(en.keepUsing, "Keep using");
+    assert.equal(en.pauseUsing, "Don't keep using");
+    assert.equal(en.unknownUsing, "Not sure if you should keep using this");
+    assert.equal(
+      en.unknownUsingWhy,
+      "Watch your skin for a few weeks. If it feels dry and sore, or more spots show up, pause for now.",
+    );
   });
 
   it("keeps opened-date hints free of tildes and dashes, and drops the unused brand placeholder", () => {
