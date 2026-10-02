@@ -151,6 +151,8 @@
     "captchaUnavailable": "Không kiểm tra được xác nhận lúc này. Thử lại sau vài giây.",
     "captchaHint": "Xác nhận nhanh để tránh đăng ký tự động — thường chỉ một lần chạm.",
     "networkError": "Lỗi mạng hoặc chưa kết nối được tới máy chủ.",
+    "emailAlreadyHasAccount": "Email này đã có tài khoản.",
+    "signInWithThisEmail": "Đăng nhập bằng email này",
     "finishNetworkError": "Chưa lưu được phần làm quen với da. Cần đăng nhập và máy chủ đang chạy — nhưng bạn vẫn có thể dùng tạm trên thiết bị này.",
     "finishNeedAuth": "Cần đăng nhập để lưu phần làm quen với da. Bạn có thể đăng nhập rồi quay lại bước này.",
     "finishRetry": "Thử lại",
