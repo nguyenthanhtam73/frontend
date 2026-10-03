@@ -19,12 +19,30 @@ const COMMON_EMAIL_DOMAIN_SET = new Set<string>(COMMON_EMAIL_DOMAINS);
 /**
  * Real mailbox domains that sit within 1–2 edits of a provider above.
  * Suggesting a "fix" here would rewrite a legitimate address.
+ * Country Yahoo/Hotmail domains and cloud.com are real, not typos.
  */
 const REAL_DOMAINS_NEAR_PROVIDERS = new Set([
   "mail.com",
   "email.com",
   "ymail.com",
+  "yahoo.com.au",
+  "yahoo.com.sg",
+  "yahoo.com.ph",
+  "yahoo.com.tw",
+  "yahoo.com.my",
+  "yahoo.ca",
+  "hotmail.ca",
+  "cloud.com",
 ]);
+
+/**
+ * Vietnamese Gmail mistakes that are more than two edits away from gmail.com
+ * (an extra `.vn`, or `.vn` instead of `.com`).
+ */
+const DOMAIN_FIXES: Record<string, string> = {
+  "gmail.com.vn": "gmail.com",
+  "gmail.vn": "gmail.com",
+};
 
 /** Insertions, deletions, and substitutions. One adjacent swap costs 2. */
 const MAX_EDITS = 2;
@@ -45,6 +63,8 @@ export function suggestEmailDomain(value: string): string | null {
   const domain = trimmed.slice(at + 1).toLowerCase();
   if (COMMON_EMAIL_DOMAIN_SET.has(domain)) return null;
   if (REAL_DOMAINS_NEAR_PROVIDERS.has(domain)) return null;
+  const fixed = DOMAIN_FIXES[domain];
+  if (fixed) return `${local}@${fixed}`;
 
   let best: string | null = null;
   let bestDistance = MAX_EDITS + 1;

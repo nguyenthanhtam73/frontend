@@ -38,6 +38,8 @@ describe("suggestEmailDomain", () => {
       ["icloud.co", "icloud.com"],
       ["icloud.con", "icloud.com"],
       ["icluod.com", "icloud.com"],
+      ["gmail.com.vn", "gmail.com"],
+      ["gmail.vn", "gmail.com"],
     ];
 
     for (const [typo, expected] of cases) {
@@ -61,6 +63,21 @@ describe("suggestEmailDomain", () => {
     ]) {
       assert.equal(suggestEmailDomain(`ten@${domain}`), null, domain);
       assert.equal(suggestEmailDomain(`Ten@${domain.toUpperCase()}`), null, domain);
+    }
+  });
+
+  it("does not correct real country domains or cloud.com", () => {
+    for (const domain of [
+      "yahoo.com.au",
+      "yahoo.com.sg",
+      "yahoo.com.ph",
+      "yahoo.com.tw",
+      "yahoo.com.my",
+      "yahoo.ca",
+      "hotmail.ca",
+      "cloud.com",
+    ]) {
+      assert.equal(suggestEmailDomain(`ten@${domain}`), null, domain);
     }
   });
 

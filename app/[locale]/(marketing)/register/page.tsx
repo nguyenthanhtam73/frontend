@@ -90,11 +90,13 @@ function RegisterPageInner() {
 
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [takenEmail, setTakenEmail] = useState<string | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const inFlightRef = useRef(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -144,7 +146,6 @@ function RegisterPageInner() {
   );
 
   const submitBlocked = captchaEnabled && !turnstileToken;
-  const emailSuggestion = suggestEmailDomain(email);
   const loginHref = buildAuthHref("/login", {
     intent: checkoutIntent,
     next: returnPath,
@@ -357,6 +358,7 @@ function RegisterPageInner() {
             <fieldset disabled={loading} className="relative space-y-4 disabled:opacity-70">
               <Field label={t("email")} htmlFor="register-email">
                 <input
+                  ref={emailRef}
                   id="register-email"
                   type="email"
                   inputMode="email"
@@ -365,15 +367,27 @@ function RegisterPageInner() {
                   value={email}
                   aria-invalid={emailError ? true : undefined}
                   aria-describedby={emailError ? "register-email-error" : undefined}
+                  onFocus={() => {
+                    setEmailSuggestion(null);
+                  }}
                   onChange={(e) => {
                     const next = e.target.value;
                     setEmail(next);
+                    setEmailSuggestion(null);
                     if (emailError && isValidAccountEmail(next)) setEmailError(null);
                   }}
                   onBlur={(e) => {
                     const next = e.currentTarget.value;
-                    if (!normalizeAccountEmail(next)) return;
-                    if (!isValidAccountEmail(next)) setEmailError(t("invalidEmail"));
+                    if (!normalizeAccountEmail(next)) {
+                      setEmailSuggestion(null);
+                      return;
+                    }
+                    if (!isValidAccountEmail(next)) {
+                      setEmailError(t("invalidEmail"));
+                      setEmailSuggestion(null);
+                      return;
+                    }
+                    setEmailSuggestion(suggestEmailDomain(next));
                   }}
                   className={`flex h-11 w-full rounded-md border bg-background px-3 text-base outline-none ring-ring/40 focus:ring-2 sm:h-9 sm:text-sm ${emailError ? "border-destructive/60" : "border-input"}`}
                 />
@@ -387,15 +401,20 @@ function RegisterPageInner() {
                   </p>
                 ) : null}
                 {emailSuggestion ? (
-                  <div className="grid grid-cols-[minmax(0,1fr)]">
+                  <div className="grid grid-cols-[minmax(0,1fr)]" aria-live="polite">
                     <button
                       type="button"
                       id="register-email-suggestion"
                       data-testid="register-email-suggestion"
                       className="block w-full min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-sm font-medium leading-5 text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                      }}
                       onClick={() => {
                         setEmail(emailSuggestion);
                         setEmailError(null);
+                        setEmailSuggestion(null);
+                        emailRef.current?.focus();
                       }}
                     >
                       {t("emailDomainSuggestion", { email: emailSuggestion })}
