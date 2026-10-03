@@ -26,6 +26,12 @@ import {
 } from "@/lib/premium/checkout-intent";
 import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
+import {
+  accountEmailKey,
+  isRegisterEmailTakenResponse,
+  isRegisterSubmitHeld,
+  stashLoginPrefillEmail,
+} from "@/lib/auth/register-email-taken";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   claimLocalGuestCheckInIfNeeded,
@@ -87,7 +93,9 @@ function RegisterPageInner() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [takenEmail, setTakenEmail] = useState<string | null>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const inFlightRef = useRef(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
   const toast = useToast();
@@ -140,6 +148,16 @@ function RegisterPageInner() {
     : savingGuestRoutine
       ? t("registerCtaSaveRoutine")
       : t("registerCta");
+  const submitHeld = isRegisterSubmitHeld({
+    inFlight: loading,
+    email,
+    takenEmail,
+  });
+  const emailMatchesTaken = isRegisterSubmitHeld({
+    inFlight: false,
+    email,
+    takenEmail,
+  });
 
   return (
     <div className="mx-auto max-w-md space-y-3 px-4 pb-8 pt-3 sm:space-y-6 sm:py-16">
@@ -163,6 +181,8 @@ function RegisterPageInner() {
             noValidate
             onSubmit={async (e) => {
               e.preventDefault();
+              if (inFlightRef.current) return;
+              if (isRegisterSubmitHeld({ inFlight: false, email, takenEmail })) return;
               if (!isValidAccountEmail(email)) {
                 setEmailError(t("invalidEmail"));
                 return;
@@ -177,6 +197,7 @@ function RegisterPageInner() {
                 setErr(t("captchaRequired"));
                 return;
               }
+              inFlightRef.current = true;
               setLoading(true);
               try {
                 const body: Record<string, unknown> = {
@@ -199,12 +220,22 @@ function RegisterPageInner() {
                 const token = json.data?.tokens?.access_token;
                 const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
+                  inFlightRef.current = false;
                   invalidateCaptcha();
                   if (isRegisterInvalidEmailResponse(res.status, json)) {
+                    setTakenEmail(null);
                     setEmailError(t("invalidEmail"));
                     setLoading(false);
                     return;
                   }
+                  if (isRegisterEmailTakenResponse(res.status, json)) {
+                    setErr(null);
+                    setEmailError(null);
+                    setTakenEmail(accountEmailKey(email));
+                    setLoading(false);
+                    return;
+                  }
+                  setTakenEmail(null);
                   const code = json.error?.code?.trim();
                   if (code === "captcha_required") {
                     setErr(t("captchaRequired"));
@@ -288,7 +319,9 @@ function RegisterPageInner() {
                   router.push(nextPath);
                 });
               } catch {
+                inFlightRef.current = false;
                 invalidateCaptcha();
+                setTakenEmail(null);
                 setErr(t("networkError"));
                 setLoading(false);
               }
@@ -365,18 +398,43 @@ function RegisterPageInner() {
                   />
                 </div>
               ) : null}
-              {err && (
+              {emailMatchesTaken ? (
+                <div className="space-y-2" data-testid="register-email-taken">
+                  <p role="alert" className="text-sm text-destructive">
+                    {t("emailAlreadyHasAccount")}
+                  </p>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    data-testid="register-email-taken-login"
+                    onClick={() => {
+                      // Same loginHref as the footer link: keeps next and plan.
+                      // Login still claims a pending guest routine or check-in.
+                      stashLoginPrefillEmail(email);
+                      startTransition(() => {
+                        router.push(loginHref);
+                      });
+                    }}
+                  >
+                    {t("signInWithThisEmail")}
+                  </Button>
+                </div>
+              ) : err ? (
                 <p role="alert" className="text-sm text-destructive">
                   {err}
                 </p>
-              )}
+              ) : null}
               <p
                 data-testid="register-legal-consent"
                 className="text-center text-xs leading-relaxed text-muted-foreground"
               >
                 {t("legalConsent")} <LegalInlineLinks />
               </p>
-              <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={submitHeld || submitBlocked}
+              >
                 {loading ? t("submitting") : ctaLabel}
               </Button>
             </fieldset>
