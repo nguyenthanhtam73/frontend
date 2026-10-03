@@ -87,6 +87,10 @@
       "title": "Người đăng ký & check-in · DaDiary Admin",
       "description": "Xem số người đăng ký, check-in và đơn thanh toán gần đây."
     },
+    "adminRetention": {
+      "title": "Ai còn dùng · DaDiary Admin",
+      "description": "Xem bao nhiêu người đã đăng ký, đã check-in, dùng nhiều ngày và quay lại ngay hôm sau."
+    },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
       "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
@@ -194,7 +198,8 @@
       "adminAffiliate": "Affiliate",
       "adminSkinReview": "Skin review",
       "adminActivity": "Hôm nay",
-      "adminFunnel": "Người dùng mới"
+      "adminFunnel": "Người dùng mới",
+      "adminRetention": "Còn dùng"
     },
     "footer": {
       "tagline": "Nhật ký da · Trợ lý của riêng bạn",
@@ -2677,6 +2682,7 @@
     "sectionLabel": "Admin",
     "title": "Quản lý góp ý người dùng",
     "sub": "Theo dõi feedback Beta — lọc theo loại và trạng thái, cập nhật trực tiếp từ bảng.",
+    "linkRetention": "Còn dùng",
     "needAuth": "Đăng nhập để truy cập trang quản trị.",
     "signIn": "Đăng nhập",
     "forbidden": "Bạn không có quyền truy cập trang này.",
@@ -2714,6 +2720,7 @@
     "sub": "Grant / revoke Premium & Premium+ cho test nội bộ. Mọi thay đổi đều được ghi log.",
     "linkFeedbacks": "← Quản lý góp ý",
     "linkActivity": "Check-in hôm nay →",
+    "linkRetention": "Còn dùng",
     "authLoading": "Đang tải quyền admin…",
     "needAuth": "Đăng nhập để truy cập trang quản trị.",
     "signIn": "Đăng nhập",
@@ -2764,6 +2771,7 @@
     "sub": "User nào check-in ảnh, và ai đã tick dùng sản phẩm — theo ngày Việt Nam. Ảnh mới trên Cloudflare cũng nằm trong thư mục YYYY/MM/DD/check-in/username.",
     "linkUsers": "← Quản lý gói",
     "linkFunnel": "Người dùng mới →",
+    "linkRetention": "Còn dùng",
     "dateLabel": "Ngày",
     "prevDay": "Hôm trước",
     "nextDay": "Hôm sau",
@@ -2789,6 +2797,7 @@
     "linkActivity": "← Hôm nay",
     "linkPayments": "Thanh toán",
     "linkSkinReview": "Skin review",
+    "linkRetention": "Còn dùng",
     "loadError": "Không tải được số liệu.",
     "asOf": "Cập nhật {time}",
     "calendarNote": "Ngày check-in theo lịch Việt Nam.",
@@ -2828,6 +2837,46 @@
       "paywall7dHint": "7 ngày vừa qua"
     }
   },
+  "adminRetention": {
+    "sectionLabel": "Admin",
+    "title": "Ai còn dùng",
+    "sub": "Bao nhiêu người đã đăng ký, đã check-in, dùng nhiều ngày, và quay lại ngay hôm sau. Có thể lọc theo ngày đăng ký.",
+    "linkFunnel": "← Người dùng mới",
+    "linkActivity": "Hôm nay",
+    "fromLabel": "Từ ngày đăng ký",
+    "toLabel": "Đến ngày đăng ký",
+    "clearRange": "Xóa lọc",
+    "rangeOrder": "Ngày bắt đầu đang sau ngày kết thúc.",
+    "registered": "Đã đăng ký",
+    "checkedIn": "Có check-in ít nhất 1 ngày",
+    "checkedInHint": "{pct} trong số người đã đăng ký",
+    "daysTitle": "Đã dùng bao nhiêu ngày",
+    "daysHint": "Mỗi ngày là một ngày có check-in.",
+    "maxDays": "Ngày dùng nhiều nhất: {n}",
+    "consecutiveTitle": "Chuỗi liên tiếp dài nhất",
+    "consecutiveHint": "Những ngày check-in liền nhau. Nghỉ một ngày là chuỗi mới.",
+    "daysRow": "Dùng ít nhất {n} ngày",
+    "consecutiveRow": "Chuỗi liên tiếp ít nhất {n} ngày",
+    "colMilestone": "Mốc",
+    "colCount": "Số người",
+    "colOfRegistered": "% đã đăng ký",
+    "colOfCheckedIn": "% có check-in",
+    "returnTitle": "Quay lại ngay hôm sau",
+    "returnHint": "Check-in vào đúng ngày sau ngày check-in đầu tiên.",
+    "returnShares": "{ofRegistered} đã đăng ký · {ofCheckedIn} có check-in",
+    "weeksTitle": "Theo tuần đăng ký",
+    "weeksHint": "Mỗi dòng là một tuần người ta tạo tài khoản.",
+    "weeksEmpty": "Chưa có tuần nào.",
+    "colWeek": "Tuần",
+    "colWeekRegistered": "Đã đăng ký",
+    "colWeekCheckedIn": "Có check-in",
+    "colWeekTwoDays": "Dùng ít nhất 2 ngày",
+    "colWeekReturn": "Quay lại ngay hôm sau",
+    "notReady": "Chưa có dữ liệu",
+    "loadError": "Không tải được số liệu.",
+    "asOf": "Cập nhật {time}",
+    "calendarNote": "Ngày check-in và ngày đăng ký theo lịch Việt Nam. Giờ cập nhật theo Bangkok."
+  },
   "adminPayments": {
     "sectionLabel": "Admin",
     "title": "Chỉ số thanh toán",
@@ -2835,6 +2884,7 @@
     "linkUsers": "← Quản lý gói",
     "linkFeedbacks": "Quản lý góp ý",
     "linkFunnel": "Người dùng mới",
+    "linkRetention": "Còn dùng",
     "loadError": "Không tải được chỉ số thanh toán.",
     "cards": {
       "revenue": "Doanh thu hôm nay",
@@ -2879,6 +2929,7 @@
     "sub": "Click Shopee theo SKU — tối ưu catalog. Làm mới khoảng mỗi phút.",
     "linkPayments": "← Thanh toán",
     "linkUsers": "Quản lý gói",
+    "linkRetention": "Còn dùng",
     "loadError": "Không tải được chỉ số affiliate.",
     "kpi7d": "Click 7 ngày",
     "kpi30d": "Click 30 ngày",
@@ -2901,6 +2952,7 @@
     "sub": "Tải 1 ảnh da rõ để AI nhận xét tình trạng — không sinh routine, sản phẩm hay bước chăm sóc.",
     "linkUsers": "← Quản lý gói",
     "linkFunnel": "Người dùng mới",
+    "linkRetention": "Còn dùng",
     "authLoading": "Đang tải quyền admin…",
     "needAuth": "Đăng nhập để truy cập trang quản trị.",
     "signIn": "Đăng nhập",

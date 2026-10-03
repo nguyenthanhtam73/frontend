@@ -32,12 +32,18 @@ export default async function AdminFeedbacksPage() {
         </p>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t("title")}</h1>
         <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">{t("sub")}</p>
-        <p className="text-sm">
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <Link
             href="/admin/users"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
             {tUsers("title")} →
+          </Link>
+          <Link
+            href="/admin/retention"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("linkRetention")}
           </Link>
         </p>
       </div>

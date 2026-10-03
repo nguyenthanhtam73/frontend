@@ -87,6 +87,10 @@
       "title": "Sign-ups & check-ins · DaDiary Admin",
       "description": "See recent sign-ups, check-ins, and paid orders."
     },
+    "adminRetention": {
+      "title": "Who keeps coming back · DaDiary Admin",
+      "description": "See how many people signed up, checked in, used the diary on several days, and came back the next day."
+    },
     "pricingPage": {
       "title": "Pricing · DaDiary",
       "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
@@ -194,7 +198,8 @@
       "adminAffiliate": "Affiliate",
       "adminSkinReview": "Skin review",
       "adminActivity": "Today",
-      "adminFunnel": "New users"
+      "adminFunnel": "New users",
+      "adminRetention": "Still using"
     },
     "footer": {
       "tagline": "Skin diary · Your own assistant",
@@ -2677,6 +2682,7 @@
     "sectionLabel": "Admin",
     "title": "User feedback inbox",
     "sub": "Track Beta feedback — filter by type and status, update directly from the table.",
+    "linkRetention": "Still using",
     "needAuth": "Sign in to access the admin page.",
     "signIn": "Sign in",
     "forbidden": "You do not have permission to access this page.",
@@ -2714,6 +2720,7 @@
     "sub": "Grant or revoke Premium & Premium+ for internal testing. Every change is logged.",
     "linkFeedbacks": "← Manage feedback",
     "linkActivity": "Today’s check-ins →",
+    "linkRetention": "Still using",
     "authLoading": "Checking admin access…",
     "needAuth": "Sign in to access the admin page.",
     "signIn": "Sign in",
@@ -2764,6 +2771,7 @@
     "sub": "Who checked in with a photo, and who ticked products they used — Vietnam calendar day. New photos on Cloudflare also land under YYYY/MM/DD/check-in/username.",
     "linkUsers": "← Manage plans",
     "linkFunnel": "New users →",
+    "linkRetention": "Still using",
     "dateLabel": "Date",
     "prevDay": "Previous day",
     "nextDay": "Next day",
@@ -2789,6 +2797,7 @@
     "linkActivity": "← Today",
     "linkPayments": "Payments",
     "linkSkinReview": "Skin review",
+    "linkRetention": "Still using",
     "loadError": "Could not load these numbers.",
     "asOf": "Updated {time}",
     "calendarNote": "Check-in days follow the Vietnam calendar.",
@@ -2828,6 +2837,46 @@
       "paywall7dHint": "Last 7 days"
     }
   },
+  "adminRetention": {
+    "sectionLabel": "Admin",
+    "title": "Who keeps coming back",
+    "sub": "How many people signed up, checked in, used the diary on several days, and came back the next day. Filter by the day they registered.",
+    "linkFunnel": "← New users",
+    "linkActivity": "Today",
+    "fromLabel": "Signed up from",
+    "toLabel": "Signed up to",
+    "clearRange": "Clear dates",
+    "rangeOrder": "The start day is after the end day.",
+    "registered": "Signed up",
+    "checkedIn": "Checked in at least 1 day",
+    "checkedInHint": "{pct} of people who signed up",
+    "daysTitle": "How many days they used it",
+    "daysHint": "One day means one calendar day with a check-in.",
+    "maxDays": "Most days used: {n}",
+    "consecutiveTitle": "Longest stretch in a row",
+    "consecutiveHint": "Check-in days back to back. A skipped day starts a new stretch.",
+    "daysRow": "Used at least {n} days",
+    "consecutiveRow": "Longest stretch at least {n} days",
+    "colMilestone": "Mark",
+    "colCount": "People",
+    "colOfRegistered": "% signed up",
+    "colOfCheckedIn": "% checked in",
+    "returnTitle": "Came back the next day",
+    "returnHint": "Checked in on the day right after their first check-in.",
+    "returnShares": "{ofRegistered} of people who signed up · {ofCheckedIn} of people who checked in",
+    "weeksTitle": "By signup week",
+    "weeksHint": "Each row is one week people created an account.",
+    "weeksEmpty": "No weeks in this range.",
+    "colWeek": "Week",
+    "colWeekRegistered": "Signed up",
+    "colWeekCheckedIn": "Checked in",
+    "colWeekTwoDays": "Used at least 2 days",
+    "colWeekReturn": "Came back the next day",
+    "notReady": "No data yet",
+    "loadError": "Could not load these numbers.",
+    "asOf": "Updated {time}",
+    "calendarNote": "Check-in days and signup days use the Vietnam calendar. The update time is shown in Bangkok time."
+  },
   "adminPayments": {
     "sectionLabel": "Admin",
     "title": "Payment metrics",
@@ -2835,6 +2884,7 @@
     "linkUsers": "← Manage plans",
     "linkFeedbacks": "Manage feedback",
     "linkFunnel": "New users",
+    "linkRetention": "Still using",
     "loadError": "Could not load payment metrics.",
     "cards": {
       "revenue": "Revenue today",
@@ -2879,6 +2929,7 @@
     "sub": "Shopee clicks by SKU — tune the catalog. Refreshes about every minute.",
     "linkPayments": "← Payments",
     "linkUsers": "Manage plans",
+    "linkRetention": "Still using",
     "loadError": "Could not load affiliate metrics.",
     "kpi7d": "Clicks · 7 days",
     "kpi30d": "Clicks · 30 days",
@@ -2901,6 +2952,7 @@
     "sub": "Upload 1 clear skin photo for deep AI observations only — no routine, products, or care steps.",
     "linkUsers": "← Manage plans",
     "linkFunnel": "New users",
+    "linkRetention": "Still using",
     "authLoading": "Checking admin access…",
     "needAuth": "Sign in to access the admin page.",
     "signIn": "Sign in",

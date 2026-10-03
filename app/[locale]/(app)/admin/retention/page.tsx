@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-import { FunnelAdminView } from "@/components/admin/funnel-admin-view";
+import { RetentionAdminView } from "@/components/admin/retention-admin-view";
 import { Link } from "@/i18n/navigation";
 import { pageLocaleMetadata } from "@/lib/seo";
 
@@ -8,19 +8,19 @@ type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "metadata.adminFunnel" });
+  const t = await getTranslations({ locale, namespace: "metadata.adminRetention" });
   return pageLocaleMetadata({
     title: t("title"),
     description: t("description"),
     locale,
-    path: "/admin/funnel",
+    path: "/admin/retention",
     noIndex: true,
     noFollow: true,
   });
 }
 
-export default async function AdminFunnelPage() {
-  const t = await getTranslations("adminFunnel");
+export default async function AdminRetentionPage() {
+  const t = await getTranslations("adminRetention");
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
@@ -32,32 +32,20 @@ export default async function AdminFunnelPage() {
         <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">{t("sub")}</p>
         <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <Link
+            href="/admin/funnel"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("linkFunnel")}
+          </Link>
+          <Link
             href="/admin/activity"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
             {t("linkActivity")}
           </Link>
-          <Link
-            href="/admin/payments"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t("linkPayments")}
-          </Link>
-          <Link
-            href="/admin/skin-review"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t("linkSkinReview")}
-          </Link>
-          <Link
-            href="/admin/retention"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t("linkRetention")}
-          </Link>
         </p>
       </div>
-      <FunnelAdminView />
+      <RetentionAdminView />
     </div>
   );
 }

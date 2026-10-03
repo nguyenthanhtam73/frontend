@@ -267,6 +267,7 @@ export function SiteHeader() {
           { href: "/admin/users" as const, label: t("nav.adminUsers") },
           { href: "/admin/activity" as const, label: t("nav.adminActivity") },
           { href: "/admin/funnel" as const, label: t("nav.adminFunnel") },
+          { href: "/admin/retention" as const, label: t("nav.adminRetention") },
           { href: "/admin/feedbacks" as const, label: t("nav.adminFeedbacks") },
         ]
       : []),
