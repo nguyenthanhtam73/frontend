@@ -98,6 +98,11 @@ function RegisterPageInner() {
   const inFlightRef = useRef(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileInteractive, setTurnstileInteractive] = useState(false);
+  // "checking" while the button waits on a token. Failures that leave it
+  // disabled switch to "unavailable" so the line does not stay optimistic.
+  const [captchaNotice, setCaptchaNotice] = useState<"checking" | "unavailable" | null>(
+    captchaEnabled ? "checking" : null,
+  );
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
   const toast = useToast();
   const [, startTransition] = useTransition();
@@ -108,20 +113,34 @@ function RegisterPageInner() {
     router.replace(buildPricingCheckoutHref(checkoutIntent));
   }, [checkoutIntent, router]);
 
-  const invalidateCaptcha = useCallback(() => {
+  const markCaptchaUnavailable = useCallback(() => {
     setTurnstileToken(null);
     setTurnstileInteractive(false);
-    turnRef.current?.reset();
+    setCaptchaNotice("unavailable");
   }, []);
+
+  const invalidateCaptcha = useCallback(() => {
+    // Error and expiry clear the token and reset. The widget is taken out of
+    // flow, so there is no retry checkbox — the button stays disabled until a
+    // new token arrives. Say the check failed instead of "still checking".
+    markCaptchaUnavailable();
+    turnRef.current?.reset();
+  }, [markCaptchaUnavailable]);
 
   const onTurnstileSuccess = useCallback((token: string) => {
     setTurnstileToken(token);
+    setCaptchaNotice(null);
     setErr(null);
   }, []);
 
   const onTurnstileBeforeInteractive = useCallback(() => {
     setTurnstileInteractive(true);
   }, []);
+
+  const turnstileScriptOptions = useMemo(
+    () => ({ onError: markCaptchaUnavailable }),
+    [markCaptchaUnavailable],
+  );
 
   const submitBlocked = captchaEnabled && !turnstileToken;
   const loginHref = buildAuthHref("/login", {
@@ -411,6 +430,9 @@ function RegisterPageInner() {
                     onBeforeInteractive={onTurnstileBeforeInteractive}
                     onExpire={invalidateCaptcha}
                     onError={invalidateCaptcha}
+                    onTimeout={markCaptchaUnavailable}
+                    onUnsupported={markCaptchaUnavailable}
+                    scriptOptions={turnstileScriptOptions}
                     options={{
                       theme: "auto",
                       size: "normal",
@@ -445,17 +467,31 @@ function RegisterPageInner() {
                   {err}
                 </p>
               ) : null}
-              <Button
-                type="submit"
-                data-testid="register-submit"
-                className="w-full"
-                disabled={submitHeld || submitBlocked}
-              >
-                {loading ? t("submitting") : ctaLabel}
-              </Button>
+              <div className="relative">
+                <Button
+                  type="submit"
+                  data-testid="register-submit"
+                  className="w-full"
+                  disabled={submitHeld || submitBlocked}
+                >
+                  {loading ? t("submitting") : ctaLabel}
+                </Button>
+                {captchaNotice ? (
+                  <p
+                    data-testid="register-captcha-status"
+                    role={captchaNotice === "unavailable" ? "alert" : "status"}
+                    className={`pointer-events-none absolute inset-x-0 top-[calc(100%+1rem)] text-center text-xs leading-4 ${captchaNotice === "unavailable" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {captchaNotice === "unavailable"
+                      ? t("captchaUnavailable")
+                      : t("captchaChecking")}
+                  </p>
+                ) : null}
+              </div>
               <p
                 data-testid="register-legal-consent"
-                className="text-center text-xs leading-relaxed text-muted-foreground"
+                aria-hidden={captchaNotice ? true : undefined}
+                className={`text-center text-xs leading-relaxed text-muted-foreground${captchaNotice ? " invisible" : ""}`}
               >
                 {t("legalConsent")} <LegalInlineLinks />
               </p>
