@@ -25,6 +25,14 @@ describe("D0 never_checked_in check-in copy", () => {
     assert.equal(vi.d0StickySkipDefaultNote, "Check-in không ảnh — lần đầu");
   });
 
+  it("VI open actions lead with photo, private-not-public, then skip", () => {
+    const vi = readCheckIn("vi");
+    assert.equal(vi.openTakePhoto, "Chụp ảnh da hôm nay");
+    assert.equal(vi.openSaveWithoutPhoto, "Lưu không cần ảnh");
+    assert.equal(vi.openPhotoPrivacy, "Ảnh được giữ riêng tư, không đăng công khai");
+    assert.equal(vi.openPhotoPrivacy.includes("chỉ mình"), false);
+  });
+
   it("says one face photo is enough in VI and EN", () => {
     const vi = readCheckIn("vi");
     const en = readCheckIn("en");

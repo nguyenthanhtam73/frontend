@@ -112,28 +112,27 @@ describe("claimLocalGuestCheckInIfNeeded", { concurrency: false }, () => {
     assert.equal(funnelNames().length, 0);
   });
 
-  it("returns no_payload and tracks a failed claim", async () => {
+  it("returns no_payload and does not send a claim event", async () => {
     installWindow();
     const result = await claimLocalGuestCheckInIfNeeded("tok");
     assert.deepEqual(result, { ok: false, reason: "no_payload", data: null });
-    assert.equal(funnelNames()[0]?.name, "guest_checkin_claim");
-    assert.deepEqual(funnelNames()[0]?.params, {
-      ok: false,
-      reason: "no_payload",
-    });
+    assert.equal(funnelNames().length, 0);
+    assert.equal(
+      funnelNames().some((event) => event.name === "guest_checkin_claim"),
+      false,
+    );
   });
 
-  it("returns photos_missing when IDB has no files for a photo check-in", async () => {
+  it("returns photos_missing without a claim event when no request is sent", async () => {
     installWindow();
     persistGuestCheckInRecord(photoPayload);
     const result = await claimLocalGuestCheckInIfNeeded("tok");
     assert.equal(result.ok, false);
     assert.equal(result.reason, "photos_missing");
-    assert.equal(funnelNames()[0]?.name, "guest_checkin_claim");
-    assert.deepEqual(funnelNames()[0]?.params, {
-      ok: false,
-      reason: "photos_missing",
-    });
+    assert.equal(
+      funnelNames().some((event) => event.name === "guest_checkin_claim"),
+      false,
+    );
   });
 
   it("returns http_xxx when the API rejects the claim", async () => {
@@ -146,10 +145,12 @@ describe("claimLocalGuestCheckInIfNeeded", { concurrency: false }, () => {
       })) as typeof fetch;
     const result = await claimLocalGuestCheckInIfNeeded("tok");
     assert.deepEqual(result, { ok: false, reason: "http_422", data: null });
-    assert.deepEqual(funnelNames()[0]?.params, {
-      ok: false,
-      reason: "http_422",
-    });
+    assert.equal(funnelNames()[0]?.name, "guest_checkin_claim_fail");
+    assert.deepEqual(funnelNames()[0]?.params, { reason: "http_422" });
+    assert.equal(
+      funnelNames().some((event) => event.name === "guest_checkin_claim"),
+      false,
+    );
   });
 
   it("returns network when fetch throws", async () => {
@@ -160,10 +161,12 @@ describe("claimLocalGuestCheckInIfNeeded", { concurrency: false }, () => {
     }) as typeof fetch;
     const result = await claimLocalGuestCheckInIfNeeded("tok");
     assert.deepEqual(result, { ok: false, reason: "network", data: null });
-    assert.deepEqual(funnelNames()[0]?.params, {
-      ok: false,
-      reason: "network",
-    });
+    assert.equal(funnelNames()[0]?.name, "guest_checkin_claim_fail");
+    assert.deepEqual(funnelNames()[0]?.params, { reason: "network" });
+    assert.equal(
+      funnelNames().some((event) => event.name === "guest_checkin_claim"),
+      false,
+    );
   });
 
   it("clears local payload and fires claim + first check-in on success", async () => {
