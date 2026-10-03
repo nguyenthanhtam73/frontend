@@ -12,6 +12,7 @@ import {
   recommendedPlanForFeature,
 } from "@/lib/premium/upsell-href";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
+import { wardrobeProductLimit } from "@/lib/types/wardrobe";
 
 type UpsellBannerProps = {
   /** Feature that triggered the upsell — picks copy automatically when set. */
@@ -114,7 +115,7 @@ function resolveCopy(
     case Feature.WardrobeFull:
       return {
         title: t("wardrobeTitle"),
-        body: t("wardrobeBody"),
+        body: t("wardrobeBody", { n: wardrobeProductLimit(limit) }),
         benefit: t("benefitWardrobe"),
       };
     case Feature.ProgressFullHistory:
