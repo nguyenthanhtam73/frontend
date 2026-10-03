@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
+import { wwwToApexRedirects } from "./lib/www-redirect";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
@@ -27,6 +29,12 @@ const nextConfig: NextConfig = {
         destination: `${apiOrigin}/uploads/:path*`,
       },
     ];
+  },
+  // 308 only when the Host is www.dadiary.vn. Preview *.vercel.app hosts miss
+  // the condition, and the destination is the apex so the rule cannot loop.
+  // Next.js forwards the query string when the destination does not set one.
+  async redirects() {
+    return wwwToApexRedirects();
   },
 };
 
