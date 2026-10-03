@@ -17,7 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { scanWardrobeProductLabel } from "@/lib/api/wardrobe";
 import { isWardrobeCategoryId } from "@/lib/cabinet/categories";
-import { localDateInputValue } from "@/lib/cabinet/local-date";
+import { clampOpenedDate, vietnamDateKey } from "@/lib/cabinet/local-date";
 import { compressOnboardingPhoto, isLikelyImageFile } from "@/lib/onboarding/compress-photo";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
@@ -63,11 +63,11 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   const [aiFilled, setAiFilled] = useState<AiFilled>({});
   const [isScanning, setIsScanning] = useState(false);
   const toast = useToast();
-  // Client local calendar day. SSR stays empty so hydration matches; layout
-  // effect fills today before paint so a use-by hint derived from this date
-  // is visible immediately. Edit dialogs keep the saved value instead.
+  // Vietnam calendar day. SSR stays empty so hydration matches; layout effect
+  // fills today before paint so a use-by hint derived from this date is
+  // visible immediately. Edit dialogs keep the saved value instead.
   useLayoutEffect(() => {
-    setOpenedAt((current) => (current.trim() ? current : localDateInputValue()));
+    setOpenedAt((current) => (current.trim() ? current : vietnamDateKey()));
   }, []);
   const paoLabel = usePaoHintLabel(openedAt, category);
 
@@ -89,7 +89,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
     setName("");
     setBrand("");
     setCategory("");
-    setOpenedAt(localDateInputValue());
+    setOpenedAt(vietnamDateKey());
     setNotes("");
     setAiFilled({});
   }
@@ -129,7 +129,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
       if (nextNotes) setNotes(nextNotes);
       // Keep today's prefilled opened date unless the scan itself has one.
       const scannedOpened = suggestion.opened_at?.trim() ?? "";
-      if (scannedOpened) setOpenedAt(scannedOpened);
+      if (scannedOpened) setOpenedAt(clampOpenedDate(scannedOpened));
       setAiFilled({
         name: !!nextName,
         brand: !!nextBrand,
@@ -348,8 +348,9 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
               id="wardrobe-opened"
               type="date"
               className={wardrobeInputClass}
+              max={vietnamDateKey()}
               value={openedAt}
-              onChange={(e) => setOpenedAt(e.target.value)}
+              onChange={(e) => setOpenedAt(clampOpenedDate(e.target.value))}
               disabled={isScanning}
             />
             {paoLabel ? (

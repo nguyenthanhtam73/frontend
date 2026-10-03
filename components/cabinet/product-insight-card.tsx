@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  activeLineParts,
   ownedInsightUse,
   parseWardrobeProductInsight,
   WARDROBE_INSIGHT_DISCLAIMER,
@@ -24,9 +25,9 @@ function fitClass(verdict: WardrobeInsightFitVerdict): string {
 }
 
 function useClass(use: OwnedInsightUse): string {
-  return use === "keep"
-    ? "text-emerald-800 dark:text-emerald-200"
-    : "text-amber-900 dark:text-amber-100";
+  if (use === "keep") return "text-emerald-800 dark:text-emerald-200";
+  if (use === "pause") return "text-amber-900 dark:text-amber-100";
+  return "text-muted-foreground";
 }
 
 function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
@@ -37,8 +38,14 @@ function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
       : insight.fit.verdict === "no"
         ? t("insight.verdictNo")
         : t("insight.verdictMaybe");
-  const useKind = ownedInsightUse(insight.buy.advice);
-  const useLabel = useKind === "keep" ? t("insight.keepUsing") : t("insight.pauseUsing");
+  const useKind = ownedInsightUse(insight.buy.advice, insight.buy.why);
+  const useLabel =
+    useKind === "keep"
+      ? t("insight.keepUsing")
+      : useKind === "pause"
+        ? t("insight.pauseUsing")
+        : t("insight.unknownUsing");
+  const useWhy = useKind === "unknown" ? t("insight.unknownUsingWhy") : insight.buy.why;
 
   return (
     <section
@@ -57,11 +64,18 @@ function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
         <div>
           <p className="text-xs font-semibold text-foreground">{t("insight.activesLabel")}</p>
           <ul className="mt-0.5 space-y-1">
-            {insight.actives.map((active) => (
-              <li key={active.name} className="text-sm leading-relaxed">
-                <span className="font-medium">{active.name}.</span> {active.gloss}
-              </li>
-            ))}
+            {insight.actives.map((active) => {
+              const parts = activeLineParts(active.name, active.gloss);
+              return (
+                <li key={active.name} className="text-sm leading-relaxed">
+                  <span className="font-medium">
+                    {parts.name}
+                    {parts.mark}
+                  </span>
+                  {parts.gloss}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
@@ -74,7 +88,7 @@ function InsightBody({ insight }: { insight: WardrobeProductInsight }) {
 
       <div>
         <p className={cn("text-sm font-semibold", useClass(useKind))}>{useLabel}</p>
-        <p className="text-sm leading-relaxed text-muted-foreground">{insight.buy.why}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">{useWhy}</p>
       </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
