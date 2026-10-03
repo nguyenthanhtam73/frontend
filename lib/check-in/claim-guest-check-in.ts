@@ -46,16 +46,31 @@ export function isGuestCheckInPhotosMissing(
   return reason === "photos_missing";
 }
 
+/** True only after `POST /skin-checks` was actually sent for a stored guest check-in. */
+function claimRequestWasMade(result: GuestCheckInClaimResult): boolean {
+  if (result.ok) return true;
+  return result.reason === "network" || result.reason.startsWith("http_");
+}
+
+/**
+ * `guest_checkin_claim` is the successful claim only.
+ * A POST that failed uses `guest_checkin_claim_fail` so Meta does not count
+ * skips (`no_payload`, `photos_missing`, `no_token`) as claims.
+ */
 function trackClaim(result: GuestCheckInClaimResult): GuestCheckInClaimResult {
-  if (result.reason === "no_token") return result;
-  trackFunnelEvent(FUNNEL_EVENTS.guestCheckInClaim, {
-    ok: result.ok,
-    reason: result.reason,
-  });
+  if (!claimRequestWasMade(result)) return result;
   if (result.ok) {
+    trackFunnelEvent(FUNNEL_EVENTS.guestCheckInClaim, {
+      ok: true,
+      reason: "ok",
+    });
     // Custom-only — firstCheckIn is not mapped to a Meta standard event.
     trackFunnelEvent(FUNNEL_EVENTS.firstCheckIn, { surface: "guest_claim" });
+    return result;
   }
+  trackFunnelEvent(FUNNEL_EVENTS.guestCheckInClaimFail, {
+    reason: result.reason,
+  });
   return result;
 }
 
@@ -76,11 +91,11 @@ export async function claimLocalGuestCheckInIfNeeded(
 
   claimInFlight = (async () => {
     const payload = readPersistedGuestCheckIn();
-    if (!payload) return trackClaim(fail("no_payload"));
+    if (!payload) return fail("no_payload");
 
     const files = payload.hasPhotos ? await loadGuestCheckInPhotos() : [];
     if (!payload.skipMode && files.length === 0) {
-      return trackClaim(fail("photos_missing"));
+      return fail("photos_missing");
     }
 
     const fd = buildSkinCheckFormData({

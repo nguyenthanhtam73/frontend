@@ -9,6 +9,7 @@ import { ActivationStreakCard } from "@/components/activation/activation-streak-
 import { CheckInFirstVisit } from "@/components/activation/check-in-first-visit";
 import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
 import { CheckInPageHero } from "@/components/check-in/check-in-page-hero";
+import { CheckInPageView } from "@/components/check-in/check-in-page-view";
 import { OfflineNotice } from "@/components/site/offline-notice";
 
 const CheckInForm = dynamic(
@@ -37,22 +38,21 @@ export default async function CheckInPage({ params }: Props) {
   await params;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 pb-28 sm:px-6 sm:py-10 sm:pb-10 lg:pb-14">
-      <CheckInPageHero />
+    <div className="mx-auto w-full max-w-6xl px-4 pt-3 pb-28 sm:px-6 sm:py-10 sm:pb-10 lg:pb-14">
+      <CheckInPageView />
+      <CheckInPageHero part="title" />
 
-      <ActivationStreakCard className="mb-6 sm:mb-8" hideCheckInCta />
-      <ActivationPushCta
-        surface="check_in_page"
-        onlyIfNeverCheckedIn
-        className="mb-6 sm:mb-8"
-      />
-      <CheckInFirstVisit />
-
-      {/* Surface offline state before the form so users know uploads/AI feedback
-          will likely fail until connectivity returns. */}
-      <OfflineNotice className="mb-6" messageKey="offlineCheckInBody" />
-
-      <CheckInForm />
+      <CheckInForm>
+        {/* Context stays on the page, under the photo / skip actions, so
+            banners and step tiles cannot push those two controls below the fold. */}
+        <div className="space-y-4 sm:space-y-6">
+          <CheckInPageHero part="details" />
+          <ActivationStreakCard hideCheckInCta />
+          <ActivationPushCta surface="check_in_page" onlyIfNeverCheckedIn />
+          <CheckInFirstVisit />
+          <OfflineNotice messageKey="offlineCheckInBody" />
+        </div>
+      </CheckInForm>
     </div>
   );
 }

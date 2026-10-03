@@ -20,7 +20,8 @@
  * | signup_success     | onboarding_register_success                        |
  * | first_checkin      | activation_first_checkin                           |
  * | guest_checkin_save | guest_checkin_save { skip_mode, has_photos, result } |
- * | guest_checkin_claim| guest_checkin_claim { ok, reason }                 |
+ * | guest_checkin_claim| guest_checkin_claim { ok: true, reason: "ok" } — POST succeeded |
+ * | guest_checkin_claim_fail | guest_checkin_claim_fail { reason } — POST was sent and failed |
  * | checkin_form_view  | checkin_form_view { never_checked_in, skip_mode, signed_in } |
  * | checkin_photo_staged | checkin_photo_staged { slot, count }             |
  * | checkin_skip_selected | checkin_skip_selected { source }                |
@@ -49,6 +50,7 @@ export const FUNNEL_EVENTS = {
   firstCheckIn: "activation_first_checkin",
   guestCheckInSave: "guest_checkin_save",
   guestCheckInClaim: "guest_checkin_claim",
+  guestCheckInClaimFail: "guest_checkin_claim_fail",
   checkInFormView: "checkin_form_view",
   checkInPhotoStaged: "checkin_photo_staged",
   checkInSkipSelected: "checkin_skip_selected",
@@ -104,7 +106,7 @@ const STANDARD_BY_CUSTOM: Partial<
   // registerSuccess is custom-only — register page already fires CompleteRegistration.
   // checkoutConfirm is custom-only — SePay start already fires InitiateCheckout.
   // paid is custom-only — trackPaidOnce also fires Meta Purchase once.
-  // guestCheckInSave / guestCheckInClaim / firstCheckIn are custom-only (no standard map).
+  // guestCheckInSave / guestCheckInClaim / guestCheckInClaimFail / firstCheckIn are custom-only (no standard map).
   // checkInFormView / photoStaged / skipSelected / submitAttempt / submitFail
   // are custom-only — same as guest check-in events (no Meta standard map).
 };
