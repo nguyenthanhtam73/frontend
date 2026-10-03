@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { PRICING_FAQ_KEYS } from "@/components/pricing/pricing-faq-keys";
 import { PricingView } from "@/components/pricing/pricing-view";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { pageSocialMetadata } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string }> };
-
-const FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -29,7 +28,7 @@ export default async function PricingPage({ params }: Props) {
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ_KEYS.map((key) => ({
+    mainEntity: PRICING_FAQ_KEYS.map((key) => ({
       "@type": "Question",
       name: tFaq(`${key}.question`),
       acceptedAnswer: {

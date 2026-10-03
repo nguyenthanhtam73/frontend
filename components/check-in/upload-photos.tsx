@@ -8,7 +8,6 @@ import {
   ImagePlus,
   Lightbulb,
   Loader2,
-  Lock,
   RefreshCw,
   Trash2,
   User,
@@ -16,7 +15,6 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
-import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
@@ -64,7 +62,7 @@ function fileToItem(file: File): UploadItem {
 }
 
 /** Two-slot photo upload: front face + slight angle. Mobile-first + desktop drag-drop.
- *  Angle / 2nd photo requires Premium+ (`advanced_skin_analysis`). */
+ *  The angle slot stays hidden unless the account already has advanced analysis. */
 export function UploadPhotos({
   slots,
   onSlotsChange,
@@ -76,7 +74,7 @@ export function UploadPhotos({
   onSlotsChange: (slots: PhotoSlots) => void;
   /** Switch to existing no-photo (tag + notes) mode from the empty photo card. */
   onSkipPhotos?: () => void;
-  /** D0 / never_checked_in: hide the Premium+ angle slot until first check-in. */
+  /** D0 / never_checked_in: hide the angle slot until first check-in. */
   hideAngleSlot?: boolean;
   /** First-party check-in props sent with `checkin_photo_staged`. */
   funnelContext?: CheckInFunnelContext;
@@ -89,20 +87,10 @@ export function UploadPhotos({
   const multiPhotoDisabled = isMultiPhotoDisabled(advancedGate);
   const fileRefs = useRef<(HTMLInputElement | null)[]>([null, null]);
   const [slotErrors, setSlotErrors] = useState<SlotErrors>([null, null]);
-  const [showAdvancedUpsell, setShowAdvancedUpsell] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const preparingRef = useRef(false);
   const filledCount = (slots[0] ? 1 : 0) + (slots[1] ? 1 : 0);
-
-  const requestAdvancedUpsell = useCallback(() => {
-    setShowAdvancedUpsell(true);
-    requestAnimationFrame(() => {
-      document.getElementById("upsell-advanced-skin")?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    });
-  }, []);
+  const showAngleSlot = !hideAngleSlot && !planHydrating && !multiPhotoLocked;
 
   // Drop a 2nd photo only after plan hydrate confirms the feature is locked.
   // Never clear while isLoading — avoids wiping a Premium+ photo during flash.
@@ -171,7 +159,6 @@ export function UploadPhotos({
 
       // Hydrating / Free / Premium: block filling the angle slot (2nd photo).
       if (multiPhotoDisabled && targetIndex === 1) {
-        if (!planHydrating) requestAdvancedUpsell();
         return;
       }
 
@@ -233,7 +220,7 @@ export function UploadPhotos({
           !planHydrating &&
           (blockedSecond || (multiPhotoDisabled && files.length > 1))
         ) {
-          requestAdvancedUpsell();
+          errors[0] = errors[0] ?? t("photoAngleLockedHint");
         }
 
         if (fileCursor < files.length && next[0] && next[1]) {
@@ -260,7 +247,6 @@ export function UploadPhotos({
       multiPhotoDisabled,
       onSlotsChange,
       planHydrating,
-      requestAdvancedUpsell,
       slots,
       t,
     ],
@@ -324,32 +310,12 @@ export function UploadPhotos({
       <div
         className={cn(
           "grid grid-cols-1 gap-3",
-          !hideAngleSlot && "sm:grid-cols-2",
+          showAngleSlot && "sm:grid-cols-2",
         )}
       >
         {([0, 1] as const)
-          .filter((slotIndex) => slotIndex === 0 || !hideAngleSlot)
+          .filter((slotIndex) => slotIndex === 0 || showAngleSlot)
           .map((slotIndex) => {
-          if (slotIndex === 1 && planHydrating) {
-            return (
-              <LoadingAngleSlot
-                key={slotIndex}
-                label={t("photoSlotAngle")}
-                loadingLabel={t("photoAnglePlanLoading")}
-              />
-            );
-          }
-          if (slotIndex === 1 && multiPhotoLocked) {
-            return (
-              <LockedAngleSlot
-                key={slotIndex}
-                label={t("photoSlotAngle")}
-                lockedHint={t("photoAngleLockedHint")}
-                ctaLabel={t("photoAngleLockedCta")}
-                onUnlockClick={requestAdvancedUpsell}
-              />
-            );
-          }
           return (
             <PhotoSlotCard
               key={slotIndex}
@@ -392,16 +358,6 @@ export function UploadPhotos({
         })}
       </div>
 
-      {showAdvancedUpsell && multiPhotoLocked && !hideAngleSlot ? (
-        <UpsellBanner
-          id="upsell-advanced-skin"
-          feature={Feature.AdvancedSkinAnalysis}
-          hideWhenAllowed={false}
-          compact
-          onDismiss={() => setShowAdvancedUpsell(false)}
-        />
-      ) : null}
-
       {filledCount > 0 ? (
         <p className="text-center text-xs text-muted-foreground">
           {t("photoCountLabel", { n: filledCount })}
@@ -409,62 +365,6 @@ export function UploadPhotos({
           {hideAngleSlot ? t("d0PhotoCountHint") : t("photoCountHint")}
         </p>
       ) : null}
-    </div>
-  );
-}
-
-function LoadingAngleSlot({
-  label,
-  loadingLabel,
-}: {
-  label: string;
-  loadingLabel: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <SlotLabel label={label} recommended={false} />
-      <div
-        role="status"
-        aria-busy="true"
-        aria-live="polite"
-        className="flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/80 bg-muted px-3 py-4 text-center sm:min-h-[12rem]"
-      >
-        <span className="inline-flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground shadow-sm ring-1 ring-border/60">
-          <Loader2 className="size-5 animate-spin" aria-hidden />
-        </span>
-        <span className="text-sm font-medium text-foreground">{loadingLabel}</span>
-      </div>
-    </div>
-  );
-}
-
-function LockedAngleSlot({
-  label,
-  lockedHint,
-  ctaLabel,
-  onUnlockClick,
-}: {
-  label: string;
-  lockedHint: string;
-  ctaLabel: string;
-  onUnlockClick: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <SlotLabel label={label} recommended={false} />
-      <button
-        type="button"
-        onClick={onUnlockClick}
-        className="flex min-h-[11rem] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-amber-300/70 bg-amber-50/40 px-3 py-4 text-center transition-colors hover:border-amber-400 hover:bg-amber-50/70 dark:border-amber-500/35 dark:bg-amber-950/20 dark:hover:bg-amber-950/35 sm:min-h-[12rem]"
-      >
-        <span className="inline-flex size-11 items-center justify-center rounded-full bg-amber-100 text-amber-700 shadow-sm ring-1 ring-amber-200/80 dark:bg-amber-900/50 dark:text-amber-200 dark:ring-amber-500/30">
-          <Lock className="size-5" aria-hidden />
-        </span>
-        <span className="text-sm font-medium text-foreground">{ctaLabel}</span>
-        <span className="max-w-[14rem] text-xs leading-snug text-muted-foreground">
-          {lockedHint}
-        </span>
-      </button>
     </div>
   );
 }

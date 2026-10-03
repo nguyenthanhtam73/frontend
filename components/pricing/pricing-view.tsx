@@ -48,8 +48,7 @@ function PricingViewFallback() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
       <div className="mx-auto mb-10 h-10 max-w-md animate-pulse rounded-md bg-muted" />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="h-80 animate-pulse rounded-2xl bg-muted" />
+      <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2">
         <div className="h-80 animate-pulse rounded-2xl bg-muted" />
         <div className="h-80 animate-pulse rounded-2xl bg-muted" />
       </div>
@@ -243,8 +242,8 @@ function PricingViewInner() {
           </div>
         ) : null}
 
-        {/* Mobile: Premium first (most popular). Desktop: Free | Premium | Plus */}
-        <div className="mt-8 grid gap-6 sm:mt-12 sm:gap-5 lg:grid-cols-3 lg:items-stretch lg:gap-6">
+        {/* Mobile: Premium first. Desktop: Free | Premium — one upgrade button. */}
+        <div className="mx-auto mt-8 grid max-w-4xl gap-6 sm:mt-12 sm:gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6">
           <PricingPlanCard
             plan="free"
             interval={interval}
@@ -255,7 +254,7 @@ function PricingViewInner() {
           <PricingPlanCard
             plan="premium"
             interval={interval}
-            highlighted={highlightPlan === "premium"}
+            highlighted
             currentPlan={currentPlan}
             isLoggedIn={isLoggedIn}
             checkoutEnabled={checkoutEnabled}
@@ -268,32 +267,9 @@ function PricingViewInner() {
             }
             className="order-1 in-animate animate-in fade-in slide-in-from-bottom-3 duration-500 delay-75 fill-mode-both lg:order-2"
           />
-          <PricingPlanCard
-            plan="premium_plus"
-            interval={interval}
-            highlighted={highlightPlan === "premium_plus"}
-            currentPlan={currentPlan}
-            isLoggedIn={isLoggedIn}
-            checkoutEnabled={checkoutEnabled}
-            checkoutBusy={checkoutBusy}
-            checkoutBusyPlan={checkoutBusyPlan}
-            onCheckout={
-              checkoutEnabled
-                ? (plan) => void startCheckout(plan, interval)
-                : undefined
-            }
-            className="order-3 in-animate animate-in fade-in slide-in-from-bottom-3 duration-500 delay-150 fill-mode-both"
-          />
         </div>
 
-        <p
-          data-testid="pricing-plus-note"
-          className="mx-auto mt-5 max-w-lg text-center text-sm leading-relaxed text-foreground/80 sm:mt-6"
-        >
-          {t("plusNote")}
-        </p>
-
-        <p className="mx-auto mt-3 max-w-md text-center text-xs leading-relaxed text-muted-foreground">
+        <p className="mx-auto mt-5 max-w-md text-center text-xs leading-relaxed text-muted-foreground sm:mt-6">
           {checkoutEnabled ? t("trustLine") : t("trustLineBeta")}
         </p>
 

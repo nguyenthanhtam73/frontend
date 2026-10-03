@@ -26,11 +26,6 @@ export const MARKETING_SCREENSHOT_META = {
     width: 1200,
     height: 1500,
   },
-  preview: [
-    { file: "preview-1", width: 800, height: 1000 },
-    { file: "preview-2", width: 800, height: 1000 },
-    { file: "preview-3", width: 800, height: 1000 },
-  ],
 } as const;
 
 const PUBLIC_EXTS = ["png", "webp"] as const;
@@ -50,9 +45,6 @@ function publicSrcIfPresent(stem: string): string | undefined {
 
 const HERO_PHONE_SRC = publicSrcIfPresent(MARKETING_SCREENSHOT_META.heroPhone.file);
 const SOLUTION_SRC = publicSrcIfPresent(MARKETING_SCREENSHOT_META.solution.file);
-const PREVIEW_SRCS = MARKETING_SCREENSHOT_META.preview.map((item) =>
-  publicSrcIfPresent(item.file),
-);
 
 export function resolveHeroPhoneSrc(): string | undefined {
   return HERO_PHONE_SRC;
@@ -60,8 +52,4 @@ export function resolveHeroPhoneSrc(): string | undefined {
 
 export function resolveSolutionSrc(): string | undefined {
   return SOLUTION_SRC;
-}
-
-export function resolvePreviewSrcs(): (string | undefined)[] {
-  return PREVIEW_SRCS;
 }
