@@ -25,6 +25,7 @@ export function SiteFooterNav() {
   const legalLinks = [
     { href: "/privacy" as const, label: t("footer.privacy") },
     { href: "/terms" as const, label: t("footer.terms") },
+    { href: "/delete-account" as const, label: t("footer.deleteAccount") },
   ];
 
   const guestLinks = [
