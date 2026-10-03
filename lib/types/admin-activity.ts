@@ -6,7 +6,11 @@ export type AdminActivityCheckIn = {
   check_id: string;
   has_photos: boolean;
   photo_count: number;
-  photo_urls: string[];
+  /**
+   * Old activity API sent paths. Backend #34 sends `[]` or omits the field
+   * and keeps only `photo_count` / `has_photos`. Never render these.
+   */
+  photo_urls?: string[];
   created_at: string;
 };
 

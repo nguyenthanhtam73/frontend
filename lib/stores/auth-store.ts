@@ -136,5 +136,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useSkillStore.getState().setMode(null);
     setLocalPushEnabled(false);
     set({ user: null });
+
+    // Drop cached API JSON (and any leftover photo responses) before the next account.
+    try {
+      const { clearAppCaches } = await import("@/lib/clear-app-caches");
+      await clearAppCaches();
+    } catch {
+      /* Cache Storage / service worker unavailable */
+    }
   },
 }));

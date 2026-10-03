@@ -2,7 +2,8 @@
  * DaDiary service worker.
  *
  * Strategies (kept intentionally small and dependency-free):
- *   • Cache-first      → hashed Next.js static assets, fonts, icons, images.
+ *   • Cache-first      → hashed Next.js static assets, fonts, icons.
+ *                         User face photos under `/uploads/` are never cached.
  *   • Network-first    → top-level HTML navigations: always fetch fresh HTML so
  *                         post-deploy chunk hashes stay in sync; cache is fallback
  *                         when offline (stale-while-revalidate broke mobile after deploys).
@@ -19,7 +20,7 @@
  * is best-effort (expired endpoints are cleaned up server-side).
  */
 
-const CACHE_VERSION = "v16";
+const CACHE_VERSION = "v17";
 const STATIC_CACHE = `dadiary-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `dadiary-runtime-${CACHE_VERSION}`;
 const HTML_CACHE = `dadiary-html-${CACHE_VERSION}`;
@@ -86,10 +87,23 @@ self.addEventListener("activate", (event) => {
 // Activate only when the page asks (Apply update). Pair with a reload on
 // controllerchange — never silent-activate in the page without that reload.
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+  const type = event.data && event.data.type;
+  if (type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
+  }
+  // Logout posts this so authenticated API JSON cannot be served after sign-out.
+  if (type === "CLEAR_CACHES") {
+    event.waitUntil(clearDadiaryCaches());
   }
 });
+
+async function clearDadiaryCaches() {
+  const keys = await caches.keys();
+  await Promise.all(
+    keys.filter((key) => key.startsWith("dadiary-")).map((key) => caches.delete(key)),
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Web Push — display + click routing
@@ -489,7 +503,18 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   if (req.headers.has("range")) return;
 
-  const url = new URL(req.url);
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch {
+    return;
+  }
+
+  // Face photos are short-lived signed URLs. Bypass the worker entirely for
+  // `/uploads/` (same-origin rewrite or the API host). cache-first plus
+  // ignoreSearch would keep an expired signature forever.
+  if (url.pathname.startsWith("/uploads/")) return;
+
   if (url.origin !== self.location.origin && !isAllowedCrossOrigin(url)) return;
   if (url.protocol === "chrome-extension:") return;
 
@@ -528,6 +553,8 @@ function isAllowedCrossOrigin(url) {
 }
 
 function isStaticAsset(url) {
+  // Defense in depth: never treat user uploads as immutable static files.
+  if (url.pathname.startsWith("/uploads/")) return false;
   if (url.pathname.startsWith("/_next/static/")) return true;
   if (url.pathname.startsWith("/icons/")) return true;
   return /\.(?:js|css|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|webp|avif|svg|ico)$/i.test(

@@ -261,28 +261,50 @@ export async function fetchPublicSkinReviewClient(
   }
 }
 
-/** Absolute upload URL for OG / Facebook preview. */
+/** Absolute upload URL for OG / Facebook preview. Query string is kept. */
 export function absoluteUploadUrl(path: string): string {
+  if (path.startsWith("data:") || path.startsWith("blob:")) return path;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   if (path.startsWith("/")) return `${apiBaseUrl}${path}`;
   return `${apiBaseUrl}/${path}`;
 }
 
 /**
+ * Split a relative URL into its path and the `?query#hash` suffix.
+ * `URL.pathname` drops the signature, so callers must keep this suffix.
+ */
+function relativePathAndSuffix(path: string): { pathOnly: string; suffix: string } {
+  const queryAt = path.indexOf("?");
+  const hashAt = path.indexOf("#");
+  const cut =
+    queryAt === -1 ? hashAt : hashAt === -1 ? queryAt : Math.min(queryAt, hashAt);
+  if (cut === -1) return { pathOnly: path, suffix: "" };
+  return { pathOnly: path.slice(0, cut), suffix: path.slice(cut) };
+}
+
+/**
  * Same-origin upload path for canvas / html-to-image export.
  * Uses Next.js rewrite `/uploads/*` → API so the browser never needs cross-origin CORS.
+ * Signed links (`?exp&sig`) must survive — the API 404s without them.
  */
 export function sameOriginUploadUrl(path: string): string {
+  if (path.startsWith("data:") || path.startsWith("blob:")) return path;
   if (path.startsWith("http://") || path.startsWith("https://")) {
     try {
       const u = new URL(path);
-      if (u.pathname.startsWith("/uploads/")) return u.pathname;
+      if (u.pathname.startsWith("/uploads/")) {
+        return `${u.pathname}${u.search}${u.hash}`;
+      }
     } catch {
       /* fall through */
     }
     return path;
   }
-  if (path.startsWith("/uploads/")) return path;
+  const { pathOnly, suffix } = relativePathAndSuffix(path);
+  if (pathOnly.startsWith("/uploads/") || pathOnly.startsWith("uploads/")) {
+    const normalized = pathOnly.startsWith("/") ? pathOnly : `/${pathOnly}`;
+    return `${normalized}${suffix}`;
+  }
   if (path.startsWith("/")) return path;
   return `/uploads/${path}`;
 }
