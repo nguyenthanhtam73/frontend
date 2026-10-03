@@ -1,5 +1,7 @@
 import { ApiError, apiFetch } from "@/lib/api-client";
 
+import { clearDeviceAfterAccountDeletion } from "./clear-device-after-delete";
+
 /** Backend contract: DELETE /api/v1/me with JSON `{ "password": "..." }`. */
 export const DELETE_ACCOUNT_API_PATH = "/api/v1/me";
 
@@ -41,19 +43,17 @@ export async function requestDeleteAccount(password: string): Promise<DeleteAcco
 }
 
 /**
- * After a 204, drop the session the same way sign-out does (`logout`),
- * then wipe leftover device storage.
+ * After a 204, wipe tokens and device state locally.
+ * Do not call `/auth/logout` or push unsubscribe — the account is already gone.
  */
 export async function submitAccountDeletion(deps: {
   password: string;
   request?: (password: string) => Promise<DeleteAccountResult>;
-  logout: () => Promise<void>;
-  clearClientState?: () => void;
+  clearDevice?: () => Promise<void>;
 }): Promise<DeleteAccountResult> {
   const request = deps.request ?? requestDeleteAccount;
   const result = await request(deps.password);
   if (!result.ok) return result;
-  await deps.logout();
-  deps.clearClientState?.();
+  await (deps.clearDevice ?? clearDeviceAfterAccountDeletion)();
   return result;
 }

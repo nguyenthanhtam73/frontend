@@ -10,7 +10,9 @@ export type DeleteAccountCopy = {
   deletedTitle: string;
   deletedBody: string;
   keptTitle: string;
-  keptBody: string;
+  /** Edit these two lines in messages `legal.deleteAccount.retention`. */
+  retentionPayments: string;
+  retentionStats: string;
   undo: string;
   cantSignInTitle: string;
   cantSignInBody: string;
@@ -59,9 +61,22 @@ export function DeleteAccountDoc({ copy, privacyHref, homeHref }: DeleteAccountD
         <p className="text-pretty text-sm leading-relaxed text-muted-foreground">{copy.deletedBody}</p>
       </section>
 
-      <section className="mt-6 space-y-2">
-        <h2 className="text-base font-semibold tracking-tight">{copy.keptTitle}</h2>
-        <p className="text-pretty text-sm leading-relaxed text-muted-foreground">{copy.keptBody}</p>
+      {/*
+        Google Play asks how long kept data is stored.
+        Edit only messages vi/en `legal.deleteAccount.retention`.
+      */}
+      <section
+        className="mt-6 space-y-2 rounded-xl border border-border/70 bg-muted/40 p-4"
+        data-retention-block="kept-data"
+        aria-labelledby="delete-account-retention"
+      >
+        <h2 id="delete-account-retention" className="text-base font-semibold tracking-tight">
+          {copy.keptTitle}
+        </h2>
+        <ul className="list-disc space-y-1.5 pl-5 text-pretty text-sm leading-relaxed text-muted-foreground">
+          <li>{copy.retentionPayments}</li>
+          <li>{copy.retentionStats}</li>
+        </ul>
       </section>
 
       <p className="mt-6 text-pretty text-sm leading-relaxed text-muted-foreground">{copy.undo}</p>

@@ -3277,7 +3277,10 @@
       "deletedTitle": "What gets deleted",
       "deletedBody": "Your account, email, all skin photos and diary entries, cabinet products, and reminders. Every signed-in device is signed out.",
       "keptTitle": "What we keep",
-      "keptBody": "Only statistics with no name or email attached. Payment amounts and dates stay for accounting, with no personal info.",
+      "retention": {
+        "payments": "Payment records (the amount, date, and status; no name or email) are kept for as long as accounting law requires, up to 10 years.",
+        "stats": "Anonymous statistics (no name or email, and not linked to you) are kept long-term."
+      },
       "undo": "This cannot be undone. You can sign up again later with the same email.",
       "cantSignInTitle": "If you can’t sign in",
       "cantSignInBody": "Message DaDiary on Facebook or TikTok — the same contact path as the privacy page — and we’ll delete it for you.",

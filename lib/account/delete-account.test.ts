@@ -13,6 +13,10 @@ import {
 } from "@/lib/auth-token";
 
 import {
+  GUEST_INDEXED_DB_NAMES,
+  clearDeviceAfterAccountDeletion,
+} from "./clear-device-after-delete";
+import {
   DELETE_ACCOUNT_API_PATH,
   canConfirmDeleteAccount,
   classifyDeleteAccountError,
@@ -120,10 +124,11 @@ describe("delete account page is public", () => {
       path.join(ROOT, "components/privacy/delete-account-section.tsx"),
       "utf8",
     );
-    assert.match(section, /useAuthStore\(\(s\) => s\.logout\)/);
     assert.match(section, /submitAccountDeletion/);
-    assert.match(section, /clearLocalUserData/);
     assert.match(section, /accountDeleted: "1"/);
+    assert.match(section, /}, \[open\]\);/);
+    assert.doesNotMatch(section, /\[open, busy\]/);
+    assert.doesNotMatch(section, /s\.logout|clearPushSubscriptionOnLogout|\/auth\/logout/);
   });
 });
 
@@ -148,6 +153,13 @@ describe("delete account copy", () => {
     };
     const viPage = (vi.legal as { deleteAccount: Record<string, unknown> }).deleteAccount;
     assert.deepEqual(Object.keys(en.legal.deleteAccount), Object.keys(viPage));
+    const viRetention = viPage.retention as { payments: string; stats: string };
+    const enRetention = en.legal.deleteAccount.retention as { payments: string; stats: string };
+    assert.deepEqual(Object.keys(enRetention), ["payments", "stats"]);
+    assert.match(viRetention.payments, /10 năm/);
+    assert.match(viRetention.stats, /lâu dài/);
+    assert.match(enRetention.payments, /10 years/);
+    assert.match(enRetention.stats, /long-term/);
     assert.deepEqual(Object.keys(en.legal.deleteAccount.steps as object), ["s1", "s2", "s3", "s4"]);
     assert.equal(typeof en.common.accountDeleted, "string");
     assert.equal(en.common.footer.deleteAccount, "Delete account");
@@ -157,46 +169,43 @@ describe("delete account copy", () => {
 });
 
 describe("submitAccountDeletion", () => {
-  it("clears the session only after a successful delete", async () => {
-    const order: string[] = [];
+  it("clears the device only after a successful delete", async () => {
+    let cleared = false;
     const result = await submitAccountDeletion({
       password: "secret",
       request: async () => ({ ok: true }),
-      logout: async () => {
-        order.push("logout");
-      },
-      clearClientState: () => {
-        order.push("clear");
+      clearDevice: async () => {
+        cleared = true;
       },
     });
     assert.equal(result.ok, true);
-    assert.deepEqual(order, ["logout", "clear"]);
+    assert.equal(cleared, true);
   });
 
-  it("does not clear the session on a wrong password", async () => {
-    let loggedOut = false;
+  it("does not clear the device on a wrong password", async () => {
+    let cleared = false;
     const result = await submitAccountDeletion({
       password: "nope",
       request: async () => ({ ok: false, reason: "invalid_password" }),
-      logout: async () => {
-        loggedOut = true;
+      clearDevice: async () => {
+        cleared = true;
       },
     });
     assert.deepEqual(result, { ok: false, reason: "invalid_password" });
-    assert.equal(loggedOut, false);
+    assert.equal(cleared, false);
   });
 
-  it("does not clear the session when the server says to wait", async () => {
-    let loggedOut = false;
+  it("does not clear the device when the server says to wait", async () => {
+    let cleared = false;
     const result = await submitAccountDeletion({
       password: "secret",
       request: async () => ({ ok: false, reason: "rate_limited" }),
-      logout: async () => {
-        loggedOut = true;
+      clearDevice: async () => {
+        cleared = true;
       },
     });
     assert.deepEqual(result, { ok: false, reason: "rate_limited" });
-    assert.equal(loggedOut, false);
+    assert.equal(cleared, false);
   });
 
   it("maps 401 invalid_password and 429 onto those reasons", () => {
@@ -220,39 +229,45 @@ describe("DELETE /api/v1/me", () => {
   it("sends the password as JSON and clears the session on 204", async () => {
     const token = futureAccessToken();
     setAuthTokens(token, "refresh-token");
+    localStorage.setItem("dadiary_guest_checkin_v1", "draft");
     const calls = mockFetch(204);
-    let loggedOut = false;
     const result = await submitAccountDeletion({
       password: "p@ss",
       request: requestDeleteAccount,
-      logout: async () => {
-        loggedOut = true;
+      clearDevice: async () => {
+        localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+        localStorage.removeItem(AUTH_REFRESH_STORAGE_KEY);
+        localStorage.removeItem("dadiary_guest_checkin_v1");
       },
     });
     assert.equal(result.ok, true);
-    assert.equal(loggedOut, true);
     assert.equal(calls.length, 1);
     assert.equal(calls[0]!.method, "DELETE");
     assert.match(calls[0]!.url, new RegExp(`${DELETE_ACCOUNT_API_PATH}$`));
     assert.equal(calls[0]!.headers.get("authorization"), `Bearer ${token}`);
     assert.deepEqual(JSON.parse(calls[0]!.body), { password: "p@ss" });
-    assert.equal(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY), token);
+    assert.equal(
+      calls.some((call) => /\/auth\/logout|push\/unsubscribe/.test(call.url)),
+      false,
+    );
+    assert.equal(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY), null);
+    assert.equal(localStorage.getItem("dadiary_guest_checkin_v1"), null);
   });
 
   it("keeps the session and does not refresh on invalid_password", async () => {
     const token = futureAccessToken();
     setAuthTokens(token, "refresh-token");
     const calls = mockFetch(401, { error: { code: "invalid_password" } });
-    let loggedOut = false;
+    let cleared = false;
     const result = await submitAccountDeletion({
       password: "wrong",
       request: requestDeleteAccount,
-      logout: async () => {
-        loggedOut = true;
+      clearDevice: async () => {
+        cleared = true;
       },
     });
     assert.deepEqual(result, { ok: false, reason: "invalid_password" });
-    assert.equal(loggedOut, false);
+    assert.equal(cleared, false);
     assert.equal(calls.length, 1);
     assert.equal(calls[0]!.method, "DELETE");
     assert.equal(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY), token);
@@ -263,17 +278,115 @@ describe("DELETE /api/v1/me", () => {
     const token = futureAccessToken();
     setAuthTokens(token);
     const calls = mockFetch(429, { error: { code: "rate_limited" } });
-    let loggedOut = false;
+    let cleared = false;
     const result = await submitAccountDeletion({
       password: "secret",
       request: requestDeleteAccount,
-      logout: async () => {
-        loggedOut = true;
+      clearDevice: async () => {
+        cleared = true;
       },
     });
     assert.deepEqual(result, { ok: false, reason: "rate_limited" });
-    assert.equal(loggedOut, false);
+    assert.equal(cleared, false);
     assert.equal(calls.length, 1);
     assert.equal(calls[0]!.method, "DELETE");
+  });
+});
+
+describe("clearDeviceAfterAccountDeletion", () => {
+  it("drops guest drafts and tokens locally without calling logout or push unsubscribe", async () => {
+    const sessionData = new Map<string, string>();
+    const session = {
+      getItem: (key: string) => (sessionData.has(key) ? sessionData.get(key)! : null),
+      setItem: (key: string, value: string) => {
+        sessionData.set(key, String(value));
+      },
+      removeItem: (key: string) => {
+        sessionData.delete(key);
+      },
+      clear: () => sessionData.clear(),
+      key: (index: number) => [...sessionData.keys()][index] ?? null,
+      get length() {
+        return sessionData.size;
+      },
+    };
+    Object.defineProperty(globalThis, "sessionStorage", { configurable: true, value: session });
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        localStorage,
+        sessionStorage: session,
+        dispatchEvent: () => true,
+      },
+    });
+
+    let cookieJar = "dadiary_guest_onboarding_trial=1; theme=dark";
+    Object.defineProperty(globalThis, "document", {
+      configurable: true,
+      value: {
+        get cookie() {
+          return cookieJar;
+        },
+        set cookie(value: string) {
+          const pair = value.split(";")[0] ?? "";
+          const name = pair.split("=")[0]?.trim() ?? "";
+          const parts = cookieJar
+            .split("; ")
+            .filter((part) => part && !part.startsWith(`${name}=`));
+          if (!/Max-Age=0/i.test(value)) parts.push(pair.trim());
+          cookieJar = parts.join("; ");
+        },
+      },
+    });
+
+    const deletedDbs: string[] = [];
+    Object.defineProperty(globalThis, "indexedDB", {
+      configurable: true,
+      value: {
+        deleteDatabase(name: string) {
+          deletedDbs.push(name);
+          const request = {
+            onsuccess: null as (() => void) | null,
+            onerror: null as (() => void) | null,
+            onblocked: null as (() => void) | null,
+          };
+          queueMicrotask(() => request.onsuccess?.());
+          return request;
+        },
+      },
+    });
+
+    const fetches: string[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      fetches.push(String(input));
+      return new Response(null, { status: 500 });
+    }) as typeof fetch;
+
+    setAuthTokens(futureAccessToken(), "refresh-token");
+    localStorage.setItem("dadiary_guest_checkin_v1", "draft-with-notes");
+    localStorage.setItem("dadiary_guest_routine_v1", "{\"starter\":true}");
+    localStorage.setItem("dadiary_guest_extra", "future-key");
+    localStorage.setItem("hasCompletedOnboardingTrial", "true");
+    localStorage.setItem("keep-unrelated", "stay");
+    session.setItem("dadiary_guest_session", "temp");
+    session.setItem("dadiary_onboarding_exit_anim", "1");
+    session.setItem("keep-session", "stay");
+
+    await clearDeviceAfterAccountDeletion();
+
+    assert.equal(localStorage.getItem(AUTH_TOKEN_STORAGE_KEY), null);
+    assert.equal(localStorage.getItem(AUTH_REFRESH_STORAGE_KEY), null);
+    assert.equal(localStorage.getItem("dadiary_guest_checkin_v1"), null);
+    assert.equal(localStorage.getItem("dadiary_guest_routine_v1"), null);
+    assert.equal(localStorage.getItem("dadiary_guest_extra"), null);
+    assert.equal(localStorage.getItem("hasCompletedOnboardingTrial"), null);
+    assert.equal(localStorage.getItem("keep-unrelated"), "stay");
+    assert.equal(session.getItem("dadiary_guest_session"), null);
+    assert.equal(session.getItem("dadiary_onboarding_exit_anim"), null);
+    assert.equal(session.getItem("keep-session"), "stay");
+    assert.equal(cookieJar.includes("dadiary_guest_onboarding_trial"), false);
+    assert.equal(cookieJar.includes("theme=dark"), true);
+    assert.deepEqual([...deletedDbs].sort(), [...GUEST_INDEXED_DB_NAMES].sort());
+    assert.deepEqual(fetches, []);
   });
 });

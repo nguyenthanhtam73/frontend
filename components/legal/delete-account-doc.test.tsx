@@ -10,15 +10,24 @@ function pageCopy(): DeleteAccountCopy {
   const vi = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), "messages/vi.json"), "utf8"),
   ) as {
-    legal: { deleteAccount: Omit<DeleteAccountCopy, "steps" | "facebookLabel" | "tiktokLabel"> & {
-      steps: Record<string, string>;
-    } };
+    legal: {
+      deleteAccount: Omit<
+        DeleteAccountCopy,
+        "steps" | "facebookLabel" | "tiktokLabel" | "retentionPayments" | "retentionStats"
+      > & {
+        steps: Record<string, string>;
+        retention: { payments: string; stats: string };
+      };
+    };
     common: { footer: { social: { facebook: string; tiktok: string } } };
   };
   const src = vi.legal.deleteAccount;
+  const { steps, retention, ...rest } = src;
   return {
-    ...src,
-    steps: ["s1", "s2", "s3", "s4"].map((key) => src.steps[key]!),
+    ...rest,
+    steps: ["s1", "s2", "s3", "s4"].map((key) => steps[key]!),
+    retentionPayments: retention.payments,
+    retentionStats: retention.stats,
     facebookLabel: vi.common.footer.social.facebook,
     tiktokLabel: vi.common.footer.social.tiktok,
   };
@@ -44,9 +53,11 @@ describe("public delete-account page", () => {
     assert.match(html, /sản phẩm trong tủ/);
     assert.match(html, /nhắc nhở/);
     assert.match(html, /đăng xuất/);
-    assert.match(html, /không gắn tên hay email/);
-    assert.match(html, /Số tiền và ngày thanh toán/);
-    assert.match(html, /không kèm thông tin cá nhân/);
+    assert.match(html, /data-retention-block="kept-data"/);
+    assert.match(html, /không có tên hay email/);
+    assert.match(html, /lâu nhất là 10 năm/);
+    assert.match(html, /không gắn với bạn/);
+    assert.match(html, /được giữ lâu dài/);
     assert.match(html, /không lấy lại được/);
     assert.match(html, /cùng email/);
     assert.match(html, /Nếu bạn không đăng nhập được/);

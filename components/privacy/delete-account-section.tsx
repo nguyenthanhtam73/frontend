@@ -14,21 +14,20 @@ import {
   submitAccountDeletion,
   type DeleteAccountFailure,
 } from "@/lib/account/delete-account-flow";
-import { clearLocalUserData } from "@/lib/clear-local-user-data";
-import { useAuthStore } from "@/lib/stores/auth-store";
 
 /** Signed-in settings control. Leaves the existing "delete my data" flow alone. */
 export function DeleteAccountSection() {
   const t = useTranslations("privacy");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const logout = useAuthStore((s) => s.logout);
   const [, startTransition] = useTransition();
 
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<DeleteAccountFailure | null>(null);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  busyRef.current = busy;
 
   const portalRef = useRef<HTMLDivElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +61,7 @@ export function DeleteAccountSection() {
     document.body.style.overflow = "hidden";
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busy) {
+      if (event.key === "Escape" && !busyRef.current) {
         event.preventDefault();
         setOpen(false);
         setPassword("");
@@ -77,21 +76,17 @@ export function DeleteAccountSection() {
       for (const el of inerted) el.removeAttribute("inert");
       requestAnimationFrame(() => trigger?.focus());
     };
-  }, [open, busy]);
+    // `busy` stays out of the deps: including it re-runs this effect and
+    // yanks focus back to the password field while the delete is in flight.
+  }, [open]);
 
   const confirm = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
-      const result = await submitAccountDeletion({
-        password,
-        logout,
-        clearClientState: () => {
-          clearLocalUserData();
-          queryClient.clear();
-        },
-      });
+      const result = await submitAccountDeletion({ password });
       if (result.ok) {
+        queryClient.clear();
         startTransition(() => {
           router.push({ pathname: "/", query: { accountDeleted: "1" } });
         });
@@ -103,7 +98,7 @@ export function DeleteAccountSection() {
       setError("failed");
       setBusy(false);
     }
-  }, [logout, password, queryClient, router]);
+  }, [password, queryClient, router]);
 
   const copy = {
     title: t("deleteAccountConfirmTitle"),

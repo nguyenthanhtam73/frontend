@@ -3277,7 +3277,10 @@
       "deletedTitle": "Những gì bị xoá",
       "deletedBody": "Tài khoản của bạn, email, toàn bộ ảnh da và nhật ký, sản phẩm trong tủ, và nhắc nhở. Mọi nơi đang đăng nhập sẽ bị đăng xuất.",
       "keptTitle": "Những gì còn giữ",
-      "keptBody": "Chỉ còn số liệu thống kê, không gắn tên hay email. Số tiền và ngày thanh toán được giữ để làm sổ sách, không kèm thông tin cá nhân.",
+      "retention": {
+        "payments": "Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm.",
+        "stats": "Số liệu thống kê không có tên, không có email, và không gắn với bạn, được giữ lâu dài."
+      },
       "undo": "Việc này không lấy lại được. Sau này bạn vẫn đăng ký lại bằng cùng email được.",
       "cantSignInTitle": "Nếu bạn không đăng nhập được",
       "cantSignInBody": "Hãy nhắn DaDiary trên Facebook hoặc TikTok (cùng cách liên hệ ở trang Quyền riêng tư) để được xoá giúp.",
