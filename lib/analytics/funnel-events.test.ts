@@ -4,6 +4,7 @@ import { afterEach, describe, it } from "node:test";
 import { apiBaseUrl } from "@/lib/api";
 import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth-token";
 
+import { ATTRIBUTION_MAX_LEN, FIRST_TOUCH_STORAGE_KEY } from "./attribution";
 import {
   FIRST_PARTY_FUNNEL_EVENTS,
   buildFunnelEventBody,
@@ -196,5 +197,111 @@ describe("funnel event sender", () => {
     await Promise.resolve();
     const parsed = JSON.parse(body) as { session_id: string };
     assert.equal(parsed.session_id, "ephemeral");
+  });
+
+  it("drops keys the register and landing DTOs reject", async () => {
+    const { local } = installWindow({ pathname: "/register" });
+    local.setItem(
+      FIRST_TOUCH_STORAGE_KEY,
+      JSON.stringify({
+        utm_source: "meta",
+        utm_medium: "paid",
+        utm_campaign: "spring",
+        utm_content: "video_tu_do",
+        fbclid: "IwAR",
+        ttclid: "tt.1",
+      }),
+    );
+    const bodies: { event: string; props: Record<string, unknown> }[] = [];
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const parsed = JSON.parse(String(init?.body ?? "{}")) as {
+        event: string;
+        props: Record<string, unknown>;
+      };
+      bodies.push(parsed);
+      return new Response("", { status: 204 });
+    }) as typeof fetch;
+
+    const smuggled = {
+      utm_medium: "paid",
+      ttclid: "tt.1",
+      gclid: "Cjw",
+      email: "person@example.com",
+      password: "secret",
+      error_type: "network",
+      button: "hero_primary",
+    };
+    sendFunnelEvent("register_form_view", smuggled);
+    sendFunnelEvent("register_submit_attempt", smuggled);
+    sendFunnelEvent("register_email_exists", smuggled);
+    sendFunnelEvent("register_client_error", smuggled);
+    sendFunnelEvent("landing_cta_click", smuggled);
+    await Promise.resolve();
+
+    const attr = ["fbclid", "utm_campaign", "utm_content", "utm_source"];
+    const keys = Object.fromEntries(bodies.map((body) => [body.event, Object.keys(body.props).sort()]));
+    assert.deepEqual(keys.register_form_view, attr);
+    assert.deepEqual(keys.register_submit_attempt, attr);
+    assert.deepEqual(keys.register_email_exists, attr);
+    assert.deepEqual(keys.register_client_error, ["error_type", ...attr]);
+    assert.deepEqual(keys.landing_cta_click, ["button", ...attr]);
+    assert.equal(keys.register_form_view.includes("error_type"), false);
+    assert.equal(keys.register_client_error.includes("button"), false);
+    assert.equal(keys.landing_cta_click.includes("error_type"), false);
+    for (const body of bodies) {
+      assert.equal(JSON.stringify(body.props).includes("person@example.com"), false);
+      assert.equal(JSON.stringify(body.props).includes("secret"), false);
+      assert.equal(body.props.utm_medium, undefined);
+      assert.equal(body.props.ttclid, undefined);
+      assert.equal(body.props.gclid, undefined);
+    }
+  });
+
+  it("adds utm_content and fbclid to check-in posts and drops other attribution", async () => {
+    const { local } = installWindow({ pathname: "/check-in" });
+    const fbclid = "f".repeat(ATTRIBUTION_MAX_LEN + 30);
+    local.setItem(
+      FIRST_TOUCH_STORAGE_KEY,
+      JSON.stringify({
+        utm_source: "facebook",
+        utm_medium: "paid",
+        utm_campaign: "chiến dịch da",
+        utm_content: "video_tu_do",
+        fbclid,
+        ttclid: "tt",
+        email: "person@example.com",
+        password: "secret",
+      }),
+    );
+    let body = "";
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      body = String(init?.body ?? "");
+      return new Response("", { status: 204 });
+    }) as typeof fetch;
+
+    sendFunnelEvent(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitClicked, {
+      never_checked_in: true,
+      skip_mode: false,
+      signed_in: true,
+      photo_count: 0,
+    });
+    await Promise.resolve();
+
+    const parsed = JSON.parse(body) as { props: Record<string, unknown> };
+    assert.deepEqual(parsed.props, {
+      utm_source: "facebook",
+      utm_campaign: "chiến dịch da",
+      utm_content: "video_tu_do",
+      fbclid: "f".repeat(ATTRIBUTION_MAX_LEN),
+      never_checked_in: true,
+      skip_mode: false,
+      signed_in: true,
+      photo_count: 0,
+    });
+    assert.equal(parsed.props.fbclid?.toString().length, ATTRIBUTION_MAX_LEN);
+    assert.equal(body.includes("person@example.com"), false);
+    assert.equal(body.includes("secret"), false);
+    assert.equal(body.includes("ttclid"), false);
+    assert.equal(parsed.props.utm_medium, undefined);
   });
 });

@@ -6,6 +6,7 @@ import {
   TIKTOK_STANDARD_BY_CUSTOM,
   claimOnceFlag,
   funnelEventForCheckInKind,
+  funnelEventPostsFirstParty,
   funnelOnceKey,
   isFunnelEventName,
   paywallViewParams,
@@ -34,6 +35,11 @@ describe("funnel analytics", () => {
     assert.equal(FUNNEL_EVENTS.checkInSkipSelected, "checkin_skip_selected");
     assert.equal(FUNNEL_EVENTS.checkInSubmitAttempt, "checkin_submit_attempt");
     assert.equal(FUNNEL_EVENTS.checkInSubmitFail, "checkin_submit_fail");
+    assert.equal(FUNNEL_EVENTS.registerFormView, "register_form_view");
+    assert.equal(FUNNEL_EVENTS.registerSubmitAttempt, "register_submit_attempt");
+    assert.equal(FUNNEL_EVENTS.registerClientError, "register_client_error");
+    assert.equal(FUNNEL_EVENTS.registerEmailExists, "register_email_exists");
+    assert.equal(FUNNEL_EVENTS.landingCtaClick, "landing_cta_click");
     assert.equal(FUNNEL_EVENTS.d1CheckIn, "activation_d1_checkin");
     assert.equal(FUNNEL_EVENTS.d1ReminderShown, "activation_d1_reminder_shown");
     assert.equal(FUNNEL_EVENTS.pushOptIn, "activation_push_opt_in");
@@ -54,6 +60,11 @@ describe("funnel analytics", () => {
     assert.equal(isFunnelEventName("checkin_skip_selected"), true);
     assert.equal(isFunnelEventName("checkin_submit_attempt"), true);
     assert.equal(isFunnelEventName("checkin_submit_fail"), true);
+    assert.equal(isFunnelEventName("register_form_view"), true);
+    assert.equal(isFunnelEventName("register_submit_attempt"), true);
+    assert.equal(isFunnelEventName("register_client_error"), true);
+    assert.equal(isFunnelEventName("register_email_exists"), true);
+    assert.equal(isFunnelEventName("landing_cta_click"), true);
     assert.equal(isFunnelEventName("paywall_view"), true);
     assert.equal(isFunnelEventName("Purchase"), false);
   });
@@ -71,6 +82,22 @@ describe("funnel analytics", () => {
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.guestCheckInClaim], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.guestCheckInClaimFail], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.registerSuccess], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.registerFormView], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.registerSubmitAttempt], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.registerClientError], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.registerEmailExists], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.landingCtaClick], undefined);
+  });
+
+  it("posts register and landing events first-party without widening check-in", () => {
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.registerFormView), true);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.registerSubmitAttempt), true);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.registerClientError), true);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.registerEmailExists), true);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.landingCtaClick), true);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.checkInSubmitAttempt), false);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.checkInFormView), false);
+    assert.equal(funnelEventPostsFirstParty(FUNNEL_EVENTS.registerSuccess), false);
   });
 });
 

@@ -34,6 +34,14 @@ import {
 } from "@/lib/auth/register-email-taken";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
+  classifyRegisterClientBlock,
+  registerRequestAttribution,
+  trackRegisterClientError,
+  trackRegisterEmailExistsForResponse,
+  trackRegisterFormView,
+  trackRegisterSubmitAttempt,
+} from "@/lib/analytics/register-landing";
+import {
   claimLocalGuestCheckInIfNeeded,
   isGuestCheckInClaimFailure,
   isGuestCheckInPhotosMissing,
@@ -106,6 +114,13 @@ function RegisterPageInner() {
     if (!checkoutIntent || !getAccessToken()) return;
     router.replace(buildPricingCheckoutHref(checkoutIntent));
   }, [checkoutIntent, router]);
+
+  const registerViewedRef = useRef(false);
+  useEffect(() => {
+    if (registerViewedRef.current) return;
+    registerViewedRef.current = true;
+    trackRegisterFormView();
+  }, []);
 
   const invalidateCaptcha = useCallback(() => {
     setTurnstileToken(null);
@@ -183,13 +198,17 @@ function RegisterPageInner() {
               e.preventDefault();
               if (inFlightRef.current) return;
               if (isRegisterSubmitHeld({ inFlight: false, email, takenEmail })) return;
-              if (!isValidAccountEmail(email)) {
+              trackRegisterSubmitAttempt();
+              const clientBlock = classifyRegisterClientBlock(email, password);
+              if (clientBlock === "email_empty" || clientBlock === "email_invalid") {
                 setEmailError(t("invalidEmail"));
+                trackRegisterClientError(clientBlock);
                 return;
               }
               setEmailError(null);
-              if (passwordRef.current && !passwordRef.current.checkValidity()) {
-                passwordRef.current.reportValidity();
+              if (clientBlock === "password_short") {
+                passwordRef.current?.reportValidity();
+                trackRegisterClientError("password_short");
                 return;
               }
               setErr(null);
@@ -205,6 +224,8 @@ function RegisterPageInner() {
                   password,
                   display_name: displayName.trim() || undefined,
                 };
+                const attribution = registerRequestAttribution();
+                if (attribution) body.attribution = attribution;
                 if (captchaEnabled && turnstileToken) {
                   body.turnstile_token = turnstileToken;
                 }
@@ -222,6 +243,7 @@ function RegisterPageInner() {
                 if (!res.ok || !token) {
                   inFlightRef.current = false;
                   invalidateCaptcha();
+                  trackRegisterEmailExistsForResponse(res.status, json);
                   if (isRegisterInvalidEmailResponse(res.status, json)) {
                     setTakenEmail(null);
                     setEmailError(t("invalidEmail"));
@@ -322,6 +344,7 @@ function RegisterPageInner() {
                 inFlightRef.current = false;
                 invalidateCaptcha();
                 setTakenEmail(null);
+                trackRegisterClientError("network");
                 setErr(t("networkError"));
                 setLoading(false);
               }

@@ -37,6 +37,7 @@ export async function Hero() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <LandingStartCta
+              trackAs="hero_primary"
               size="lg"
               className="h-12 w-full gap-2 px-6 text-base shadow-lg shadow-primary/20 sm:w-auto"
             >

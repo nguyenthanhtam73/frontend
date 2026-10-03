@@ -6,6 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransitio
 
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
+import { trackLandingCtaClick } from "@/lib/analytics/register-landing";
 import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY, getAccessToken } from "@/lib/auth-token";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useGuardedRouter } from "@/lib/hooks/use-guarded-router";
@@ -126,6 +127,7 @@ function GuestActions({
         variant="ghost"
         size="sm"
         data-testid="auth-sign-in"
+        onClick={() => trackLandingCtaClick("header_login")}
         className={cn(
           "min-h-9 justify-center",
           compact ? "inline-flex min-h-11 px-2.5" : "inline-flex min-w-[4.5rem]",
@@ -137,6 +139,7 @@ function GuestActions({
         href="/register"
         prefetch
         size="sm"
+        onClick={() => trackLandingCtaClick("header_register")}
         className={cn(
           "min-h-9 justify-center",
           compact ? "inline-flex min-h-11 px-3" : "hidden min-w-[5.5rem] sm:inline-flex",
