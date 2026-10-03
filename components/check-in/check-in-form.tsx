@@ -23,6 +23,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
+import { CheckInOpenActions } from "@/components/check-in/check-in-open-actions";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
 import { FirstCheckInPushNudge } from "@/components/check-in/first-check-in-push-nudge";
 import { GuestAiWait } from "@/components/check-in/guest-ai-wait";
@@ -44,6 +45,11 @@ import {
   trackFunnelEvent,
   type CheckInFunnelKind,
 } from "@/lib/analytics/funnel";
+import {
+  FIRST_PARTY_FUNNEL_EVENTS,
+  sendFunnelEvent,
+  type CheckInFunnelContext,
+} from "@/lib/analytics/funnel-events";
 import { ApiError, apiPost } from "@/lib/api-client";
 import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { useStreak } from "@/lib/hooks/use-streak";
@@ -119,7 +125,7 @@ const symptomIds = [
   "mask_friction",
 ] as const;
 
-export function CheckInForm() {
+export function CheckInForm({ children }: { children?: React.ReactNode }) {
   const t = useTranslations("checkIn");
   const tAuth = useTranslations("auth");
   const tCoach = useTranslations("checkIn.coach");
@@ -146,6 +152,8 @@ export function CheckInForm() {
   const [guestSaving, setGuestSaving] = useState(false);
   const formViewedRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const openActionsRef = useRef<HTMLDivElement>(null);
+  const [pinSubmitBar, setPinSubmitBar] = useState(false);
   const pendingD0StickySkipSubmitRef = useRef(false);
   const [guestClaiming, setGuestClaiming] = useState(false);
   const [guestClaimReason, setGuestClaimReason] =
@@ -203,6 +211,22 @@ export function CheckInForm() {
     skipMode: skipFaceCapture,
     canSubmit,
   });
+  const funnelContextRef = useRef<CheckInFunnelContext>({
+    never_checked_in: false,
+    skip_mode: false,
+    signed_in: false,
+  });
+  funnelContextRef.current = {
+    never_checked_in: hasNeverCheckedIn(streakQuery.data),
+    skip_mode: skipFaceCapture,
+    signed_in: signedIn,
+  };
+  const emitFirstParty = useCallback(
+    (event: string, extra?: Record<string, unknown>) => {
+      sendFunnelEvent(event, { ...funnelContextRef.current, ...extra });
+    },
+    [],
+  );
 
   const itemsRef = useRef(items);
   itemsRef.current = items;
@@ -274,19 +298,27 @@ export function CheckInForm() {
     (source: CheckInSkipSource) => {
       if (!skipFaceCapture) {
         trackFunnelEvent(FUNNEL_EVENTS.checkInSkipSelected, { source });
+        emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSkipSelected, { source });
       }
       revokeAllPhotos(photoSlots);
       setPhotoSlots([null, null]);
       setSkipFaceCapture(true);
       setErrorMsg(null);
     },
-    [photoSlots, revokeAllPhotos, setSkipFaceCapture, skipFaceCapture],
+    [emitFirstParty, photoSlots, revokeAllPhotos, setSkipFaceCapture, skipFaceCapture],
   );
 
   const exitSkipMode = useCallback(() => {
     setSkipFaceCapture(false);
     setErrorMsg(null);
   }, [setSkipFaceCapture]);
+
+  const openPhotoPicker = useCallback(() => {
+    const el = document.querySelector<HTMLButtonElement>(
+      '[data-testid="checkin-capture-front"]',
+    );
+    el?.click();
+  }, []);
 
   const handleStickyTakePhoto = useCallback(() => {
     const el = document.querySelector<HTMLButtonElement>(
@@ -295,6 +327,15 @@ export function CheckInForm() {
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.click();
   }, []);
+
+  /** Top-of-form camera button. Exit skip mode first so the existing picker is mounted. */
+  const handleOpenTakePhoto = useCallback(() => {
+    if (skipFaceCapture) {
+      exitSkipMode();
+      return;
+    }
+    openPhotoPicker();
+  }, [exitSkipMode, openPhotoPicker, skipFaceCapture]);
 
   /** D0 sticky skip is "send without photo" — enter skip, canned note, submit. */
   const handleStickySkip = useCallback(() => {
@@ -328,6 +369,22 @@ export function CheckInForm() {
     if (skipFaceCapture) setD0TagsOpen(true);
   }, [skipFaceCapture]);
 
+  // The bottom submit bar stays in normal flow on the first screen so it cannot
+  // cover the photo / skip actions or the step cards. It pins after those
+  // actions scroll away — same shortcut, once the user is down in the form.
+  useEffect(() => {
+    const el = openActionsRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setPinSubmitBar(entry ? !entry.isIntersecting : false);
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     setGuestLocal(readPersistedGuestCheckIn());
     setGuestPersistReady(true);
@@ -340,11 +397,13 @@ export function CheckInForm() {
     if (!signedIn && guestWait.isWaiting) return;
     if (signedIn && streakQuery.isLoading) return;
     formViewedRef.current = true;
-    trackFunnelEvent(FUNNEL_EVENTS.checkInFormView, {
+    const formViewProps = {
       never_checked_in: hasNeverCheckedIn(streakQuery.data),
       skip_mode: skipFaceCapture,
       signed_in: signedIn,
-    });
+    };
+    trackFunnelEvent(FUNNEL_EVENTS.checkInFormView, formViewProps);
+    sendFunnelEvent(FIRST_PARTY_FUNNEL_EVENTS.checkInFormView, formViewProps);
   }, [
     guestLocal,
     guestPersistReady,
@@ -412,31 +471,37 @@ export function CheckInForm() {
 
   if (!signedIn && guestWait.isWaiting) {
     return (
-      <GuestAiWait
-        variant={guestWait.phase === "submitting" ? "submitting" : "processing"}
-        progress={guestWait.progress}
-        statusStep={guestWait.statusStep}
-        onSkipWait={guestWait.skip}
-      />
+      <div className="space-y-6">
+        <GuestAiWait
+          variant={guestWait.phase === "submitting" ? "submitting" : "processing"}
+          progress={guestWait.progress}
+          statusStep={guestWait.statusStep}
+          onSkipWait={guestWait.skip}
+        />
+        {children}
+      </div>
     );
   }
 
   if (guestLocal) {
     return (
-      <GuestLocalCheckInCard
-        payload={guestLocal}
-        variant={signedIn ? "retry" : "guest"}
-        claimReason={guestClaimReason}
-        claiming={guestClaiming}
-        onRetryClaim={() => {
-          void retryGuestClaim();
-        }}
-        onRedo={() => {
-          guestWait.reset();
-          setGuestClaimReason(null);
-          void clearLocalGuestCheckIn().then(() => setGuestLocal(null));
-        }}
-      />
+      <div className="space-y-6">
+        <GuestLocalCheckInCard
+          payload={guestLocal}
+          variant={signedIn ? "retry" : "guest"}
+          claimReason={guestClaimReason}
+          claiming={guestClaiming}
+          onRetryClaim={() => {
+            void retryGuestClaim();
+          }}
+          onRedo={() => {
+            guestWait.reset();
+            setGuestClaimReason(null);
+            void clearLocalGuestCheckIn().then(() => setGuestLocal(null));
+          }}
+        />
+        {children}
+      </div>
     );
   }
 
@@ -447,9 +512,17 @@ export function CheckInForm() {
       onSubmit={async (e) => {
         e.preventDefault();
         setErrorMsg(null);
-        trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitAttempt, {
+        const submitProps = {
           skip_mode: skipFaceCapture,
           signed_in: signedIn,
+          photo_count: items.length,
+        };
+        trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitAttempt, {
+          skip_mode: submitProps.skip_mode,
+          signed_in: submitProps.signed_in,
+          photo_count: submitProps.photo_count,
+        });
+        emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitClicked, {
           photo_count: items.length,
         });
         if (skipFaceCapture) {
@@ -489,9 +562,16 @@ export function CheckInForm() {
             });
             if (result === "failed") {
               guestWait.reset();
+              emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitError, {
+                status: null,
+                reason: "local_save_failed",
+              });
               showError(t("guestLocal.saveError"));
               return;
             }
+            emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitSuccess, {
+              photo_count: items.length,
+            });
             const saved = readPersistedGuestCheckIn();
             setGuestLocal(saved);
             if (waitForAi && saved) {
@@ -537,10 +617,17 @@ export function CheckInForm() {
             trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitFail, {
               reason: "empty_response",
             });
+            emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitError, {
+              status: null,
+              reason: "empty_response",
+            });
             feedback.onSubmitError();
             showError(t("submitErrorNetwork"));
             return;
           }
+          emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitSuccess, {
+            photo_count: items.length,
+          });
           for (const kind of checkInFunnelKindsRef.current) {
             trackFunnelEvent(funnelEventForCheckInKind(kind), {
               surface: "check_in_form",
@@ -553,8 +640,13 @@ export function CheckInForm() {
           feedback.onSubmitSuccess(data);
           scrollToFeedback();
         } catch (err) {
+          const reason = checkInSubmitFailReason(err);
           trackFunnelEvent(FUNNEL_EVENTS.checkInSubmitFail, {
-            reason: checkInSubmitFailReason(err),
+            reason,
+          });
+          emitFirstParty(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitError, {
+            status: err instanceof ApiError ? err.status : null,
+            reason,
           });
           feedback.onSubmitError();
           if (err instanceof ApiError) {
@@ -605,6 +697,14 @@ export function CheckInForm() {
         }
       }}
     >
+      <div ref={openActionsRef}>
+        <CheckInOpenActions
+          disabled={feedback.isWaiting || guestSaving}
+          onTakePhoto={handleOpenTakePhoto}
+          onSaveWithoutPhoto={handleStickySkip}
+        />
+      </div>
+      {children}
       {!signedIn ? <GuestCheckInHint /> : null}
       <div className="flex flex-col gap-6 lg:grid lg:max-w-5xl lg:grid-cols-[1.05fr_1fr] lg:gap-8 xl:mx-auto">
       <div className="space-y-3">
@@ -629,6 +729,7 @@ export function CheckInForm() {
                 onSlotsChange={handleSlotsChange}
                 onSkipPhotos={() => enterSkipMode("panel")}
                 hideAngleSlot={neverCheckedIn}
+                funnelContext={funnelContextRef.current}
               />
             ) : (
               <SkipModePanel
@@ -886,7 +987,8 @@ export function CheckInForm() {
 
       <div
         className={cn(
-          "sticky bottom-0 z-20 -mx-4 flex flex-col gap-3 border-t bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 lg:static lg:z-0 lg:mx-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4",
+          "z-20 -mx-4 flex flex-col gap-3 border-t bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:-mx-6 sm:px-6 lg:z-0 lg:mx-0 lg:flex-row lg:items-center lg:justify-between lg:rounded-xl lg:border lg:bg-card lg:px-4 lg:py-4 lg:pb-4",
+          pinSubmitBar && "sticky bottom-0 lg:static",
         )}
       >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">

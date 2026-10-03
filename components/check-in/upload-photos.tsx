@@ -19,6 +19,11 @@ import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
+import {
+  FIRST_PARTY_FUNNEL_EVENTS,
+  sendFunnelEvent,
+  type CheckInFunnelContext,
+} from "@/lib/analytics/funnel-events";
 import { prepareCheckInPhoto } from "@/lib/check-in/prepare-check-in-photo";
 import {
   CHECKIN_PHOTO_ACCEPT,
@@ -65,6 +70,7 @@ export function UploadPhotos({
   onSlotsChange,
   onSkipPhotos,
   hideAngleSlot = false,
+  funnelContext,
 }: {
   slots: PhotoSlots;
   onSlotsChange: (slots: PhotoSlots) => void;
@@ -72,6 +78,8 @@ export function UploadPhotos({
   onSkipPhotos?: () => void;
   /** D0 / never_checked_in: hide the Premium+ angle slot until first check-in. */
   hideAngleSlot?: boolean;
+  /** First-party check-in props sent with `checkin_photo_staged`. */
+  funnelContext?: CheckInFunnelContext;
 }) {
   const t = useTranslations("checkIn");
   const advancedGate = useFeatureGate(Feature.AdvancedSkinAnalysis);
@@ -189,9 +197,14 @@ export function UploadPhotos({
         if (prev) URL.revokeObjectURL(prev.url);
         next[index] = fileToItem(prepared.file);
         errors[index] = null;
-        trackFunnelEvent(FUNNEL_EVENTS.checkInPhotoStaged, {
+        const staged = {
           slot: index,
           count: (next[0] ? 1 : 0) + (next[1] ? 1 : 0),
+        };
+        trackFunnelEvent(FUNNEL_EVENTS.checkInPhotoStaged, staged);
+        sendFunnelEvent(FIRST_PARTY_FUNNEL_EVENTS.checkInPhotoStaged, {
+          ...funnelContext,
+          ...staged,
         });
         return true;
       };
@@ -243,6 +256,7 @@ export function UploadPhotos({
     },
     [
       errorMessage,
+      funnelContext,
       multiPhotoDisabled,
       onSlotsChange,
       planHydrating,

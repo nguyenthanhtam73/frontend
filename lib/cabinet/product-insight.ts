@@ -1,12 +1,19 @@
 /** Locked card from POST /api/v1/wardrobe/products/:id/insight and GET /api/v1/wardrobe. */
 export type WardrobeInsightFitVerdict = "yes" | "maybe" | "no";
-export type WardrobeInsightBuyAdvice = "nên mua" | "chưa nên";
+/** Machine tokens. "chưa biết" matches backend WardrobeBuyUnknown. */
+export type WardrobeInsightBuyAdvice = "nên mua" | "chưa nên" | "chưa biết";
 
 /**
  * How to talk about a product that is already in the cabinet.
- * The API `buy.advice` field is a purchase verdict ("nên mua" / "chưa nên").
+ * "nên mua" → keep using, "chưa nên" → pause, "chưa biết" → not enough skin info.
  */
-export type OwnedInsightUse = "keep" | "pause";
+export type OwnedInsightUse = "keep" | "pause" | "unknown";
+
+/**
+ * Prod cards saved before the explicit unknown token. Backend sets
+ * advice "chưa nên" and this exact why when the profile has no skin info.
+ */
+export const LEGACY_UNKNOWN_BUY_WHY = "Chưa đủ thông tin da để biết có nên dùng tiếp.";
 
 export type WardrobeInsightActive = {
   name: string;
@@ -16,7 +23,7 @@ export type WardrobeInsightActive = {
 export type WardrobeProductInsight = {
   what_it_does: string;
   fit: { verdict: WardrobeInsightFitVerdict; reason: string };
-  buy: { advice: WardrobeInsightBuyAdvice; why: string };
+  buy: { advice: string; why: string };
   actives?: WardrobeInsightActive[];
   disclaimer: string;
 };
@@ -28,10 +35,17 @@ const MAX_ACTIVES = 5;
 
 /**
  * Cabinet rows are products the user already owns. Never surface the raw
- * purchase verdict — map it to keep-using vs pause instead.
+ * purchase verdict — map it to keep, pause, or not-enough-info.
+ * An empty or unrecognized token does not throw; it stays unknown.
  */
-export function ownedInsightUse(advice: WardrobeInsightBuyAdvice): OwnedInsightUse {
-  return advice === "nên mua" ? "keep" : "pause";
+export function ownedInsightUse(advice: string, why = ""): OwnedInsightUse {
+  const token = advice.trim();
+  if (token === "nên mua") return "keep";
+  if (token === "chưa biết") return "unknown";
+  if (token === "chưa nên") {
+    return why.trim() === LEGACY_UNKNOWN_BUY_WHY ? "unknown" : "pause";
+  }
+  return "unknown";
 }
 
 function asRecord(raw: unknown): Record<string, unknown> | null {
@@ -41,6 +55,29 @@ function asRecord(raw: unknown): Record<string, unknown> | null {
 
 function asText(raw: unknown): string {
   return typeof raw === "string" ? raw.trim() : "";
+}
+
+/** A name that already closes with punctuation should not gain another mark. */
+const ACTIVE_NAME_ENDS_WITH_PUNCTUATION = /[.,:;!?…。：；！？、]$/u;
+
+/** Name stays in the bold span; `mark` is the colon, `gloss` includes its leading space. */
+export function activeLineParts(
+  name: string,
+  gloss?: string | null,
+): { name: string; mark: ":" | ""; gloss: string } {
+  const ingredient = name.trim();
+  const explanation = (gloss ?? "").trim();
+  if (!ingredient) return { name: "", mark: "", gloss: explanation };
+  if (!explanation) return { name: ingredient, mark: "", gloss: "" };
+  if (ACTIVE_NAME_ENDS_WITH_PUNCTUATION.test(ingredient)) {
+    return { name: ingredient, mark: "", gloss: ` ${explanation}` };
+  }
+  return { name: ingredient, mark: ":", gloss: ` ${explanation}` };
+}
+
+export function formatActiveLine(name: string, gloss?: string | null): string {
+  const parts = activeLineParts(name, gloss);
+  return `${parts.name}${parts.mark}${parts.gloss}`;
 }
 
 function readActives(raw: unknown): { name: string; gloss: string }[] {
@@ -77,10 +114,9 @@ export function parseWardrobeProductInsight(raw: unknown): WardrobeProductInsigh
   const reason = asText(fit?.reason);
   const why = asText(buy?.why);
   const verdict = fit?.verdict;
-  const advice = buy?.advice;
-  if (!what_it_does || !reason || !why) return null;
+  const advice = asText(buy?.advice);
+  if (!what_it_does || !reason || !why || !advice) return null;
   if (verdict !== "yes" && verdict !== "maybe" && verdict !== "no") return null;
-  if (advice !== "nên mua" && advice !== "chưa nên") return null;
 
   const actives = readActives(row.actives);
   const disclaimer = asText(row.disclaimer) || WARDROBE_INSIGHT_DISCLAIMER;

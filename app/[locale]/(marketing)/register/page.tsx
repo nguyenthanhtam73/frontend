@@ -27,6 +27,12 @@ import {
 } from "@/lib/premium/checkout-intent";
 import { useCheckoutIntent } from "@/lib/premium/use-checkout-intent";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
+import {
+  accountEmailKey,
+  isRegisterEmailTakenResponse,
+  isRegisterSubmitHeld,
+  stashLoginPrefillEmail,
+} from "@/lib/auth/register-email-taken";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   claimLocalGuestCheckInIfNeeded,
@@ -64,7 +70,7 @@ export default function RegisterPage() {
 
 function RegisterPageFallback() {
   return (
-    <div className="mx-auto min-w-0 max-w-md space-y-6 px-4 py-8 sm:py-16">
+    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
       <div className="h-8 w-48 animate-pulse rounded-md bg-muted mx-auto" />
       <div className="h-64 animate-pulse rounded-xl bg-muted" />
     </div>
@@ -88,8 +94,16 @@ function RegisterPageInner() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [takenEmail, setTakenEmail] = useState<string | null>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const inFlightRef = useRef(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileInteractive, setTurnstileInteractive] = useState(false);
+  // "checking" while the button waits on a token. Failures that leave it
+  // disabled switch to "unavailable" so the line does not stay optimistic.
+  const [captchaNotice, setCaptchaNotice] = useState<"checking" | "unavailable" | null>(
+    captchaEnabled ? "checking" : null,
+  );
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
   const toast = useToast();
   const [, startTransition] = useTransition();
@@ -100,15 +114,34 @@ function RegisterPageInner() {
     router.replace(buildPricingCheckoutHref(checkoutIntent));
   }, [checkoutIntent, router]);
 
-  const invalidateCaptcha = useCallback(() => {
+  const markCaptchaUnavailable = useCallback(() => {
     setTurnstileToken(null);
-    turnRef.current?.reset();
+    setTurnstileInteractive(false);
+    setCaptchaNotice("unavailable");
   }, []);
+
+  const invalidateCaptcha = useCallback(() => {
+    // Error and expiry clear the token and reset. The widget is taken out of
+    // flow, so there is no retry checkbox — the button stays disabled until a
+    // new token arrives. Say the check failed instead of "still checking".
+    markCaptchaUnavailable();
+    turnRef.current?.reset();
+  }, [markCaptchaUnavailable]);
 
   const onTurnstileSuccess = useCallback((token: string) => {
     setTurnstileToken(token);
+    setCaptchaNotice(null);
     setErr(null);
   }, []);
+
+  const onTurnstileBeforeInteractive = useCallback(() => {
+    setTurnstileInteractive(true);
+  }, []);
+
+  const turnstileScriptOptions = useMemo(
+    () => ({ onError: markCaptchaUnavailable }),
+    [markCaptchaUnavailable],
+  );
 
   const submitBlocked = captchaEnabled && !turnstileToken;
   const emailSuggestion = suggestEmailDomain(email);
@@ -134,17 +167,33 @@ function RegisterPageInner() {
     : savingGuestRoutine
       ? t("registerSubSaveRoutine")
       : t("registerSub");
+  // Ad entry only. Guest save-routine and checkout keep their own heading.
+  const reassurance =
+    !checkoutIntent && !savingGuestRoutine ? t("registerReassurance") : null;
   const ctaLabel = checkoutIntent
     ? t("registerCtaUpgrade")
     : savingGuestRoutine
       ? t("registerCtaSaveRoutine")
       : t("registerCta");
+  const submitHeld = isRegisterSubmitHeld({
+    inFlight: loading,
+    email,
+    takenEmail,
+  });
+  const emailMatchesTaken = isRegisterSubmitHeld({
+    inFlight: false,
+    email,
+    takenEmail,
+  });
 
   return (
-    <div className="mx-auto min-w-0 max-w-md space-y-6 px-4 py-8 sm:py-16">
+    <div className="mx-auto max-w-md space-y-3 px-4 pb-8 pt-3 sm:space-y-6 sm:py-16">
       <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="text-2xl font-semibold leading-tight tracking-tight">{title}</h1>
+        <p className="text-sm leading-snug text-muted-foreground">{subtitle}</p>
+        {reassurance ? (
+          <p className="text-xs leading-4 text-muted-foreground">{reassurance}</p>
+        ) : null}
       </div>
       {checkoutIntent ? (
         <CheckoutPlanSummary
@@ -153,12 +202,14 @@ function RegisterPageInner() {
         />
       ) : null}
       <Card>
-        <CardContent className="space-y-4 p-6">
+        <CardContent className="space-y-3 sm:space-y-4">
           <form
             className="space-y-4"
             noValidate
             onSubmit={async (e) => {
               e.preventDefault();
+              if (inFlightRef.current) return;
+              if (isRegisterSubmitHeld({ inFlight: false, email, takenEmail })) return;
               if (!isValidAccountEmail(email)) {
                 setEmailError(t("invalidEmail"));
                 return;
@@ -173,6 +224,7 @@ function RegisterPageInner() {
                 setErr(t("captchaRequired"));
                 return;
               }
+              inFlightRef.current = true;
               setLoading(true);
               try {
                 const body: Record<string, unknown> = {
@@ -195,12 +247,22 @@ function RegisterPageInner() {
                 const token = json.data?.tokens?.access_token;
                 const refresh = json.data?.tokens?.refresh_token;
                 if (!res.ok || !token) {
+                  inFlightRef.current = false;
                   invalidateCaptcha();
                   if (isRegisterInvalidEmailResponse(res.status, json)) {
+                    setTakenEmail(null);
                     setEmailError(t("invalidEmail"));
                     setLoading(false);
                     return;
                   }
+                  if (isRegisterEmailTakenResponse(res.status, json)) {
+                    setErr(null);
+                    setEmailError(null);
+                    setTakenEmail(accountEmailKey(email));
+                    setLoading(false);
+                    return;
+                  }
+                  setTakenEmail(null);
                   const code = json.error?.code?.trim();
                   if (code === "captcha_required") {
                     setErr(t("captchaRequired"));
@@ -284,13 +346,15 @@ function RegisterPageInner() {
                   router.push(nextPath);
                 });
               } catch {
+                inFlightRef.current = false;
                 invalidateCaptcha();
+                setTakenEmail(null);
                 setErr(t("networkError"));
                 setLoading(false);
               }
             }}
           >
-            <fieldset disabled={loading} className="min-w-0 space-y-4 disabled:opacity-70">
+            <fieldset disabled={loading} className="relative space-y-4 disabled:opacity-70">
               <Field label={t("email")} htmlFor="register-email">
                 <input
                   id="register-email"
@@ -300,9 +364,7 @@ function RegisterPageInner() {
                   required
                   value={email}
                   aria-invalid={emailError ? true : undefined}
-                  aria-describedby={
-                    emailError || emailSuggestion ? "register-email-error" : undefined
-                  }
+                  aria-describedby={emailError ? "register-email-error" : undefined}
                   onChange={(e) => {
                     const next = e.target.value;
                     setEmail(next);
@@ -315,17 +377,17 @@ function RegisterPageInner() {
                   }}
                   className={`flex h-11 w-full rounded-md border bg-background px-3 text-base outline-none ring-ring/40 focus:ring-2 sm:h-9 sm:text-sm ${emailError ? "border-destructive/60" : "border-input"}`}
                 />
-                {/* Reserved line so the error or typo hint does not push the submit button. */}
-                <p
-                  id="register-email-error"
-                  role={emailError ? "alert" : undefined}
-                  aria-live={emailSuggestion && !emailError ? "polite" : undefined}
-                  aria-hidden={emailError || emailSuggestion ? undefined : true}
-                  className={`grid min-h-5 grid-cols-[minmax(0,1fr)] text-sm leading-5 ${emailError ? "text-destructive" : "text-primary"}`}
-                >
-                  {emailError ? (
-                    emailError
-                  ) : emailSuggestion ? (
+                {emailError ? (
+                  <p
+                    id="register-email-error"
+                    role="alert"
+                    className="text-sm leading-5 text-destructive"
+                  >
+                    {emailError}
+                  </p>
+                ) : null}
+                {emailSuggestion ? (
+                  <div className="grid grid-cols-[minmax(0,1fr)]">
                     <button
                       type="button"
                       id="register-email-suggestion"
@@ -338,10 +400,8 @@ function RegisterPageInner() {
                     >
                       {t("emailDomainSuggestion", { email: emailSuggestion })}
                     </button>
-                  ) : (
-                    "\u00a0"
-                  )}
-                </p>
+                  </div>
+                ) : null}
               </Field>
               <Field label={t("displayNameOptional")} htmlFor="register-display-name">
                 <input
@@ -366,35 +426,93 @@ function RegisterPageInner() {
                 />
               </Field>
               {captchaEnabled ? (
-                <div className="flex flex-col items-center gap-2 pt-1">
-                  <p className="text-center text-xs text-muted-foreground">{t("captchaHint")}</p>
+                // Idle widget stays out of flow (no min-height or margin). A
+                // challenge moves it back into the form at its natural height.
+                <div
+                  data-testid="register-turnstile"
+                  data-state={turnstileInteractive ? "interactive" : "idle"}
+                  className={
+                    turnstileInteractive
+                      ? "flex w-full flex-col items-center gap-2"
+                      : "absolute h-0 w-0 overflow-hidden"
+                  }
+                >
+                  {turnstileInteractive ? (
+                    <p className="text-center text-xs text-muted-foreground">{t("captchaHint")}</p>
+                  ) : null}
                   <TurnstileWidget
                     ref={turnRef}
+                    className="max-w-full"
                     siteKey={turnstileSiteKey}
                     onSuccess={onTurnstileSuccess}
+                    onBeforeInteractive={onTurnstileBeforeInteractive}
                     onExpire={invalidateCaptcha}
                     onError={invalidateCaptcha}
+                    onTimeout={markCaptchaUnavailable}
+                    onUnsupported={markCaptchaUnavailable}
+                    scriptOptions={turnstileScriptOptions}
                     options={{
                       theme: "auto",
                       size: "normal",
+                      appearance: "interaction-only",
                     }}
                   />
                 </div>
               ) : null}
-              {err && (
+              {emailMatchesTaken ? (
+                <div className="space-y-2" data-testid="register-email-taken">
+                  <p role="alert" className="text-sm text-destructive">
+                    {t("emailAlreadyHasAccount")}
+                  </p>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    data-testid="register-email-taken-login"
+                    onClick={() => {
+                      // Same loginHref as the footer link: keeps next and plan.
+                      // Login still claims a pending guest routine or check-in.
+                      stashLoginPrefillEmail(email);
+                      startTransition(() => {
+                        router.push(loginHref);
+                      });
+                    }}
+                  >
+                    {t("signInWithThisEmail")}
+                  </Button>
+                </div>
+              ) : err ? (
                 <p role="alert" className="text-sm text-destructive">
                   {err}
                 </p>
-              )}
+              ) : null}
+              <div className="relative">
+                <Button
+                  type="submit"
+                  data-testid="register-submit"
+                  className="w-full"
+                  disabled={submitHeld || submitBlocked}
+                >
+                  {loading ? t("submitting") : ctaLabel}
+                </Button>
+                {captchaNotice ? (
+                  <p
+                    data-testid="register-captcha-status"
+                    role={captchaNotice === "unavailable" ? "alert" : "status"}
+                    className={`pointer-events-none absolute inset-x-0 top-[calc(100%+1rem)] text-center text-xs leading-4 ${captchaNotice === "unavailable" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {captchaNotice === "unavailable"
+                      ? t("captchaUnavailable")
+                      : t("captchaChecking")}
+                  </p>
+                ) : null}
+              </div>
               <p
                 data-testid="register-legal-consent"
-                className="text-center text-xs leading-relaxed text-muted-foreground"
+                aria-hidden={captchaNotice ? true : undefined}
+                className={`text-center text-xs leading-relaxed text-muted-foreground${captchaNotice ? " invisible" : ""}`}
               >
                 {t("legalConsent")} <LegalInlineLinks />
               </p>
-              <Button type="submit" className="w-full" disabled={loading || submitBlocked}>
-                {loading ? t("submitting") : ctaLabel}
-              </Button>
             </fieldset>
           </form>
           <p className="text-center text-sm text-muted-foreground">

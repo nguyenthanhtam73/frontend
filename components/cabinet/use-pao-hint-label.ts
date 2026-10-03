@@ -22,5 +22,11 @@ export function usePaoHintLabel(
       return t("paoHintFixed", copy.values);
     case "paoHintRange":
       return t("paoHintRange", copy.values);
+    case "paoHintOverWindow":
+      return t("paoHintOverWindow");
+    default: {
+      const unreachable: never = copy;
+      return unreachable;
+    }
   }
 }

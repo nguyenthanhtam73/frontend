@@ -14,6 +14,10 @@ import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
 import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
 import {
+  clearLoginPrefillEmail,
+  readLoginPrefillEmail,
+} from "@/lib/auth/register-email-taken";
+import {
   claimLocalGuestCheckInIfNeeded,
   isGuestCheckInClaimFailure,
   isGuestCheckInPhotosMissing,
@@ -71,6 +75,21 @@ function LoginPageInner() {
     if (!checkoutIntent) router.prefetch(returnPath || "/check-in");
   }, [router, checkoutIntent, returnPath]);
 
+  // Register 409 hands the address over in this tab only. Drop it after the
+  // field is filled so a later visit does not refill it, and so it never sits
+  // on the URL. The timeout is cancelled if this effect re-runs immediately
+  // (strict mode) so the second read still sees the value.
+  useEffect(() => {
+    const prefilled = readLoginPrefillEmail();
+    if (prefilled) {
+      setEmail((current) => (current.trim() ? current : prefilled));
+    }
+    const id = window.setTimeout(() => {
+      clearLoginPrefillEmail();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
   const registerHref = buildAuthHref("/register", {
     intent: checkoutIntent,
     next: returnPath,
@@ -95,6 +114,7 @@ function LoginPageInner() {
             onSubmit={async (e) => {
               e.preventDefault();
               setErr(null);
+              clearLoginPrefillEmail();
               setLoading(true);
               try {
                 const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
