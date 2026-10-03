@@ -118,6 +118,10 @@
     "termsPage": {
       "title": "Terms of use · DaDiary",
       "description": "Short Beta terms for DaDiary: skincare suggestions, accounts, and payments."
+    },
+    "deleteAccountPage": {
+      "title": "Delete your account · DaDiary",
+      "description": "How to delete your DaDiary account: the steps, what is removed, and what we keep."
     }
   },
   "auth": {
@@ -176,6 +180,7 @@
     "signIn": "Sign in",
     "register": "Sign up",
     "signOut": "Sign out",
+    "accountDeleted": "Your account has been deleted.",
     "nav": {
       "start": "Get started",
       "cabinet": "Skincare shelf",
@@ -206,6 +211,7 @@
       "navAria": "Footer links",
       "privacy": "Privacy",
       "terms": "Terms",
+      "deleteAccount": "Delete account",
       "social": {
         "navAria": "DaDiary social media",
         "follow": "Follow",
@@ -2550,6 +2556,19 @@
     "deleteAuth": "Session expired — sign in again if you still need to delete.",
     "deleteNetwork": "Couldn't delete on the server — check your connection and retry.",
     "deleteLastReset": "Last wipe: {when}.",
+    "deleteAccountRowTitle": "Delete account",
+    "deleteAccountRowSub": "Permanently removes your account, email, skin photos, diary, cabinet products, and reminders. This cannot be undone.",
+    "deleteAccountCta": "Delete account",
+    "deleteAccountConfirmTitle": "Delete this account?",
+    "deleteAccountConfirmBody": "Your account, email, skin photos, diary, cabinet products, and reminders will be removed. Every signed-in device is signed out. This cannot be undone. You can sign up again later with the same email.",
+    "deleteAccountPasswordLabel": "Type your password again",
+    "deleteAccountConfirmCta": "Delete account",
+    "deleteAccountCancel": "Not now",
+    "deleteAccountCloseAria": "Close delete account dialog",
+    "deleteAccountWorking": "Deleting…",
+    "deleteAccountInvalidPassword": "That password isn’t right.",
+    "deleteAccountRateLimited": "Too many tries. Wait a moment, then try again.",
+    "deleteAccountFailed": "Couldn’t delete the account. Please try again in a moment.",
     "dismissToast": "Dismiss",
     "memoryLinkTitle": "What does the AI remember?",
     "memoryLinkSub": "See the memory block used in coaching — transparent and refreshable.",
@@ -3215,6 +3234,7 @@
         "body": "DaDiary suggestions are for reference from the photos and notes you provide — they do not replace a dermatologist. See a professional if your skin needs medical care."
       },
       "disclaimer": "Questions about your data? Send feedback in the app or reach DaDiary on our social channels. We’ll update this page if how we handle data changes.",
+      "deleteAccountLink": "How to delete your account",
       "homeLink": "Back to home"
     },
     "terms": {
@@ -3242,6 +3262,26 @@
         "body": "We may update this page as the product changes. The date is at the top. If you don’t agree, you can stop using DaDiary and delete your data in Settings."
       },
       "disclaimer": "Skincare suggestions are for reference only and do not replace professional medical advice.",
+      "homeLink": "Back to home"
+    },
+    "deleteAccount": {
+      "title": "Delete your DaDiary account",
+      "intro": "This page explains how to delete your DaDiary account for good. You can open it without signing in.",
+      "stepsTitle": "Steps",
+      "steps": {
+        "s1": "On the web or in the app, sign in.",
+        "s2": "Open the account or Settings page.",
+        "s3": "Tap “Delete account”.",
+        "s4": "Type your password again, then confirm."
+      },
+      "deletedTitle": "What gets deleted",
+      "deletedBody": "Your account, email, all skin photos and diary entries, cabinet products, and reminders. Every signed-in device is signed out.",
+      "keptTitle": "What we keep",
+      "keptBody": "Only statistics with no name or email attached. Payment amounts and dates stay for accounting, with no personal info.",
+      "undo": "This cannot be undone. You can sign up again later with the same email.",
+      "cantSignInTitle": "If you can’t sign in",
+      "cantSignInBody": "Message DaDiary on Facebook or TikTok — the same contact path as the privacy page — and we’ll delete it for you.",
+      "privacyLink": "Privacy",
       "homeLink": "Back to home"
     }
   }

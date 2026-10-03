@@ -45,6 +45,17 @@ export async function LegalDoc({ kind }: LegalDocProps) {
         {t("disclaimer")}
       </p>
 
+      {kind === "privacy" ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          <Link
+            href="/delete-account"
+            className="font-medium text-primary underline underline-offset-4"
+          >
+            {t("deleteAccountLink")}
+          </Link>
+        </p>
+      ) : null}
+
       <p className="mt-6 text-sm text-muted-foreground">
         <Link
           href={otherHref}
