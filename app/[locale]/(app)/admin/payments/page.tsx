@@ -50,6 +50,12 @@ export default async function AdminPaymentsPage() {
           >
             {t("linkFunnel")}
           </Link>
+          <Link
+            href="/admin/retention"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("linkRetention")}
+          </Link>
         </p>
       </div>
       <PaymentsAdminView />

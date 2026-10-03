@@ -57,6 +57,7 @@ export const APP_CLIENT_MESSAGE_NAMESPACES = [
   "adminUsers",
   "adminActivity",
   "adminFunnel",
+  "adminRetention",
 ] as const;
 
 /** Every namespace allowed in any client message pick list (shell + segments). */
