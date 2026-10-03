@@ -10,6 +10,7 @@ import {
   registerRequestAttribution,
   trackLandingCtaClick,
   trackRegisterClientError,
+  trackRegisterEmailExists,
   trackRegisterEmailExistsForResponse,
   trackRegisterFormView,
   trackRegisterSubmitAttempt,
@@ -255,6 +256,75 @@ describe("register and landing funnel events", () => {
       "landing_cta_click",
       { ...attr, button: "header_register" },
     ]);
+  });
+
+  it("posts only the backend allowlist for register and landing events", async () => {
+    installWindow(
+      "?utm_source=meta&utm_medium=paid&utm_campaign=spring&utm_content=video_tu_do&fbclid=IwAR&ttclid=tt.1&gclid=Cjw&email=person@example.com&password=secret",
+    );
+    process.env.NODE_ENV = "production";
+    const bodies: { event: string; props: Record<string, unknown> }[] = [];
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const parsed = JSON.parse(String(init?.body ?? "{}")) as {
+        event: string;
+        props: Record<string, unknown>;
+      };
+      bodies.push(parsed);
+      return new Response("", { status: 204 });
+    }) as typeof fetch;
+
+    trackRegisterFormView();
+    trackRegisterSubmitAttempt();
+    trackRegisterClientError("email_invalid");
+    trackRegisterEmailExists();
+    trackLandingCtaClick("bottom_cta");
+    await Promise.resolve();
+
+    const attr = ["fbclid", "utm_campaign", "utm_content", "utm_source"];
+    const keys = Object.fromEntries(bodies.map((body) => [body.event, Object.keys(body.props).sort()]));
+    assert.deepEqual(keys.register_form_view, attr);
+    assert.deepEqual(keys.register_submit_attempt, attr);
+    assert.deepEqual(keys.register_email_exists, attr);
+    assert.deepEqual(keys.register_client_error, ["error_type", ...attr]);
+    assert.deepEqual(keys.landing_cta_click, ["button", ...attr]);
+    assert.equal(bodies.find((body) => body.event === "register_client_error")?.props.error_type, "email_invalid");
+    assert.equal(bodies.find((body) => body.event === "landing_cta_click")?.props.button, "bottom_cta");
+    for (const body of bodies) {
+      assert.equal(body.props.utm_medium, undefined);
+      assert.equal(body.props.ttclid, undefined);
+      assert.equal(body.props.gclid, undefined);
+      assert.equal(body.props.email, undefined);
+      assert.equal(body.props.password, undefined);
+      assert.equal(JSON.stringify(body.props).includes("person@example.com"), false);
+      assert.equal(JSON.stringify(body.props).includes("secret"), false);
+    }
+  });
+
+  it("omits attribution keys that were not stored", async () => {
+    installWindow("?utm_content=video_tu_do&fbclid=abc&utm_medium=cpc&gclid=zzz&ttclid=tt");
+    const bodies: { event: string; props: Record<string, unknown> }[] = [];
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const parsed = JSON.parse(String(init?.body ?? "{}")) as {
+        event: string;
+        props: Record<string, unknown>;
+      };
+      bodies.push(parsed);
+      return new Response("", { status: 204 });
+    }) as typeof fetch;
+
+    trackRegisterFormView();
+    trackRegisterClientError("network");
+    trackLandingCtaClick("hero_primary");
+    await Promise.resolve();
+
+    const keys = Object.fromEntries(bodies.map((body) => [body.event, Object.keys(body.props).sort()]));
+    assert.deepEqual(keys.register_form_view, ["fbclid", "utm_content"]);
+    assert.deepEqual(keys.register_client_error, ["error_type", "fbclid", "utm_content"]);
+    assert.deepEqual(keys.landing_cta_click, ["button", "fbclid", "utm_content"]);
+    assert.equal(bodies[0]?.props.utm_source, undefined);
+    assert.equal(bodies[0]?.props.utm_campaign, undefined);
+    assert.equal(bodies[0]?.props.utm_medium, undefined);
+    assert.equal(bodies[0]?.props.gclid, undefined);
   });
 
   it("does not first-party post existing check-in events from the shared helper", async () => {

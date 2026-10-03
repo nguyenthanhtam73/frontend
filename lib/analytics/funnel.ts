@@ -45,6 +45,9 @@
  * `utm_campaign`, `utm_content`, and `fbclid` were stored on first-touch.
  * `utm_medium` and `ttclid` stay off the event. `fbclid` is capped at 256.
  * Email and password are never event props. Check-in context keys are unchanged.
+ * The first-party POST for register_* and landing_cta_click keeps only the
+ * keys the backend DTO allows. Any other key is dropped before send. Pixel
+ * payloads are not filtered here.
  */
 
 import { funnelEventAttributionProps } from "@/lib/analytics/attribution";
