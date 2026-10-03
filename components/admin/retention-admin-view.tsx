@@ -289,7 +289,7 @@ function RetentionStats({
                 <table className="w-full table-fixed text-left text-[11px] leading-snug sm:text-sm">
                   <thead className="border-b text-muted-foreground">
                     <tr>
-                      <th className="w-[18%] px-1.5 py-2 font-medium whitespace-normal">{t("colWeek")}</th>
+                      <th className="w-[28%] px-1.5 py-2 font-medium whitespace-nowrap">{t("colWeek")}</th>
                       <th className="px-1.5 py-2 text-right font-medium whitespace-normal">{t("colWeekRegistered")}</th>
                       <th className="px-1.5 py-2 text-right font-medium whitespace-normal">{t("colWeekCheckedIn")}</th>
                       <th className="px-1.5 py-2 text-right font-medium whitespace-normal">{t("colWeekTwoDays")}</th>
@@ -321,7 +321,7 @@ function RetentionStats({
 function WeekRow({ week }: { week: AdminRetentionSignupWeek }) {
   return (
     <tr className="border-b border-border/50">
-      <th scope="row" className="px-1.5 py-2.5 text-left font-medium whitespace-normal">
+      <th scope="row" className="px-1.5 py-2.5 text-left font-medium whitespace-nowrap">
         {week.week}
       </th>
       <td className="px-1.5 py-2.5 text-right align-top tabular-nums">{week.registered}</td>
