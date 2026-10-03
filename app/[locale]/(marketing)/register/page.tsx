@@ -140,6 +140,9 @@ function RegisterPageInner() {
     : savingGuestRoutine
       ? t("registerSubSaveRoutine")
       : t("registerSub");
+  // Ad entry only. Guest save-routine and checkout keep their own heading.
+  const reassurance =
+    !checkoutIntent && !savingGuestRoutine ? t("registerReassurance") : null;
   const ctaLabel = checkoutIntent
     ? t("registerCtaUpgrade")
     : savingGuestRoutine
@@ -157,10 +160,13 @@ function RegisterPageInner() {
   });
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-8 sm:py-16">
+    <div className="mx-auto max-w-md space-y-3 px-4 pb-8 pt-3 sm:space-y-6 sm:py-16">
       <div className="space-y-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+        <h1 className="text-2xl font-semibold leading-tight tracking-tight">{title}</h1>
+        <p className="text-sm leading-snug text-muted-foreground">{subtitle}</p>
+        {reassurance ? (
+          <p className="text-xs leading-4 text-muted-foreground">{reassurance}</p>
+        ) : null}
       </div>
       {checkoutIntent ? (
         <CheckoutPlanSummary
@@ -169,7 +175,7 @@ function RegisterPageInner() {
         />
       ) : null}
       <Card>
-        <CardContent className="space-y-4 p-6">
+        <CardContent className="space-y-3 sm:space-y-4">
           <form
             className="space-y-4"
             noValidate
