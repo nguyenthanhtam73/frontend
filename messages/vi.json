@@ -346,13 +346,6 @@
     },
     "mockupAlt": "Màn hình DaDiary: check-in hôm nay, gợi ý AI Coach và tiến trình 7 ngày."
   },
-  "progressPreview": {
-    "sectionTitle": "Xem trước Progress",
-    "heading": "Nhật ký da trông như thế này",
-    "sub": "Mỗi check-in lưu ảnh, cảm nhận và gợi ý coach — đủ để bạn nhìn lại tuần trước và biết mình đang đi đúng hướng.",
-    "cta": "Chụp ảnh nhận routine",
-    "cardPhotoAlt": "Xem trước nhật ký da của {name}"
-  },
   "features": {
     "sectionTitle": "Tính năng nổi bật",
     "heading": "Mọi thứ bạn cần để chăm da có hệ thống",
@@ -427,32 +420,6 @@
       "safe": {
         "title": "An toàn & có trách nhiệm",
         "desc": "Luôn nhắc kem chống nắng, patch test và gặp bác sĩ khi da có dấu hiệu bất thường — gợi ý tham khảo, không phải chẩn đoán."
-      }
-    }
-  },
-  "testimonials": {
-    "sectionTitle": "Người dùng nói gì",
-    "heading": "Chăm da đều hơn — vì thấy mình đang tiến",
-    "sub": "Câu chuyện minh họa phong cách người dùng Beta 20–35: check-in ảnh, streak và coach nhẹ mỗi ngày. Không phải review độc lập đã xác minh.",
-    "collecting": "Minh họa · Beta",
-    "earlyBeta": "Minh họa",
-    "starRatingAria": "Minh họa 5 sao — không phải điểm review đã xác minh",
-    "footnote": "Trải nghiệm minh họa / Beta — không phải đánh giá độc lập đã xác minh, không cam kết kết quả y tế. Da mỗi người khác nhau.",
-    "items": {
-      "t1": {
-        "name": "Ngọc Anh",
-        "role": "28 · Da dầu, hay bóng trưa · TP.HCM",
-        "quote": "Trước mình hay quên skincare lúc deadline. Giờ check-in 1 ảnh buổi tối + tick routine — streak 12 ngày rồi. Coach nhắc giảm BHA khi da khô, mình thấy đỡ đoán mò hơn."
-      },
-      "t2": {
-        "name": "Phương Linh",
-        "role": "24 · Da mụn nhẹ, dễ thâm · Hà Nội",
-        "quote": "Mình không cần app “chữa mụn”, chỉ cần nhìn lại tuần trước. So ảnh cùng góc thấy cằm dịu hơn; tủ đồ giúp mình không mua thêm toner trùng loại đang dùng."
-      },
-      "t3": {
-        "name": "Khánh Vy",
-        "role": "31 · Da hỗn hợp, nóng ẩm · Đà Nẵng",
-        "quote": "Da mình đổi theo thời tiết biển. Free đủ để ghi nhật ký và nhận coach sau mỗi lần check-in. Khi muốn chỉnh routine thoải mái hơn mình mới nghĩ tới Premium — không bị ép."
       }
     }
   },
@@ -1699,11 +1666,6 @@
       "waitElapsedMinSec": "{m} phút {s} giây",
       "waitElapsedSec": "{s} giây"
     }
-  },
-  "skinCard": {
-    "checkInBadge": "Nhật ký",
-    "coachPrefix": "Gợi ý của bạn đồng hành:",
-    "gapPrefix": "Có thể bổ sung:"
   },
   "onboarding": {
     "sectionLabel": "Làm quen với da bạn",

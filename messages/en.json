@@ -346,13 +346,6 @@
     },
     "mockupAlt": "DaDiary screen: today's check-in, an AI Coach note, and 7-day progress."
   },
-  "progressPreview": {
-    "sectionTitle": "Progress preview",
-    "heading": "Your skin diary looks like this",
-    "sub": "Each check-in saves photos, how skin felt, and a coach note — enough to look back a week and see if you're on track.",
-    "cta": "Take a photo, get a routine",
-    "cardPhotoAlt": "Skin diary preview for {name}"
-  },
   "features": {
     "sectionTitle": "Key features",
     "heading": "Everything you need for structured skincare",
@@ -427,32 +420,6 @@
       "safe": {
         "title": "Safe & responsible",
         "desc": "Always reminds SPF, patch tests, and seeing a clinician when skin looks unusual — reference tips, not a diagnosis."
-      }
-    }
-  },
-  "testimonials": {
-    "sectionTitle": "What users say",
-    "heading": "More consistent care — because progress is visible",
-    "sub": "Illustrative Beta-style stories (ages 20–35): photo check-ins, streaks, and a gentle coach each day. Not independently verified reviews.",
-    "collecting": "Illustrative · Beta",
-    "earlyBeta": "Illustrative",
-    "starRatingAria": "Illustrative 5-star styling — not a verified review score",
-    "footnote": "Illustrative / Beta stories — not independently verified reviews, and not medical outcome promises. Everyone's skin is different.",
-    "items": {
-      "t1": {
-        "name": "Ngọc Anh",
-        "role": "28 · Oily, midday shine · Ho Chi Minh City",
-        "quote": "I used to skip skincare on deadline nights. Now one evening photo + routine ticks — 12-day streak. Coach nudged less BHA when I was dry, so I guess less."
-      },
-      "t2": {
-        "name": "Phương Linh",
-        "role": "24 · Mild acne, easy PIH · Hanoi",
-        "quote": "I don't need an app to “cure acne” — I need last week's truth. Same-angle photos showed my chin calmer; the shelf stopped me buying another toner I already own."
-      },
-      "t3": {
-        "name": "Khánh Vy",
-        "role": "31 · Combination, humid heat · Da Nang",
-        "quote": "My skin shifts with coastal weather. Free is enough to diary and get coach notes after each check-in. I'll think about Premium only if I want freer routine edits — no pressure."
       }
     }
   },
@@ -1699,11 +1666,6 @@
       "waitElapsedMinSec": "{m} min {s} sec",
       "waitElapsedSec": "{s} sec"
     }
-  },
-  "skinCard": {
-    "checkInBadge": "Check-in",
-    "coachPrefix": "Buddy tip:",
-    "gapPrefix": "Could add:"
   },
   "onboarding": {
     "sectionLabel": "Get to know your skin",
