@@ -1,4 +1,4 @@
-/** Photo count for an admin activity row. `photo_urls` is absent after backend #34. */
+/** Photo count for an admin activity row. `photo_urls` may be missing or `[]`. */
 export function adminActivityPhotoCount(row: {
   photo_count?: number | null;
   photo_urls?: readonly string[] | null;

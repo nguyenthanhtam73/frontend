@@ -25,6 +25,12 @@ describe("admin activity photo count", () => {
     assert.equal(adminActivityPhotoCount({ photo_urls: null }), 0);
   });
 
+  it("treats an empty photo_urls array as no thumbnails and keeps photo_count", () => {
+    assert.equal(adminActivityPhotoCount({ photo_count: 3, photo_urls: [] }), 3);
+    assert.equal(adminActivityPhotoCount({ photo_urls: [] }), 0);
+    assert.equal(adminActivityPhotoCount({ photo_count: 0, photo_urls: [] }), 0);
+  });
+
   it("does not render thumbnails from photo_urls", () => {
     const src = fs.readFileSync(
       path.join(
