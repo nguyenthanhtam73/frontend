@@ -150,6 +150,7 @@
     "captchaRequired": "Hoàn tất xác nhận bảo mật (ô bên dưới) rồi thử đăng ký lại.",
     "captchaFailed": "Xác nhận bảo mật không thành công — thử lại.",
     "captchaUnavailable": "Không kiểm tra được xác nhận lúc này. Thử lại sau vài giây.",
+    "captchaChecking": "Đang kiểm tra bảo mật…",
     "captchaHint": "Xác nhận nhanh để tránh đăng ký tự động — thường chỉ một lần chạm.",
     "networkError": "Lỗi mạng hoặc chưa kết nối được tới máy chủ.",
     "emailAlreadyHasAccount": "Email này đã có tài khoản.",

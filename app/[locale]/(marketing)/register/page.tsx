@@ -97,6 +97,12 @@ function RegisterPageInner() {
   const passwordRef = useRef<HTMLInputElement>(null);
   const inFlightRef = useRef(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileInteractive, setTurnstileInteractive] = useState(false);
+  // "checking" while the button waits on a token. Failures that leave it
+  // disabled switch to "unavailable" so the line does not stay optimistic.
+  const [captchaNotice, setCaptchaNotice] = useState<"checking" | "unavailable" | null>(
+    captchaEnabled ? "checking" : null,
+  );
   const turnRef = useRef<TurnstileInstance | undefined>(undefined);
   const toast = useToast();
   const [, startTransition] = useTransition();
@@ -107,15 +113,34 @@ function RegisterPageInner() {
     router.replace(buildPricingCheckoutHref(checkoutIntent));
   }, [checkoutIntent, router]);
 
-  const invalidateCaptcha = useCallback(() => {
+  const markCaptchaUnavailable = useCallback(() => {
     setTurnstileToken(null);
-    turnRef.current?.reset();
+    setTurnstileInteractive(false);
+    setCaptchaNotice("unavailable");
   }, []);
+
+  const invalidateCaptcha = useCallback(() => {
+    // Error and expiry clear the token and reset. The widget is taken out of
+    // flow, so there is no retry checkbox — the button stays disabled until a
+    // new token arrives. Say the check failed instead of "still checking".
+    markCaptchaUnavailable();
+    turnRef.current?.reset();
+  }, [markCaptchaUnavailable]);
 
   const onTurnstileSuccess = useCallback((token: string) => {
     setTurnstileToken(token);
+    setCaptchaNotice(null);
     setErr(null);
   }, []);
+
+  const onTurnstileBeforeInteractive = useCallback(() => {
+    setTurnstileInteractive(true);
+  }, []);
+
+  const turnstileScriptOptions = useMemo(
+    () => ({ onError: markCaptchaUnavailable }),
+    [markCaptchaUnavailable],
+  );
 
   const submitBlocked = captchaEnabled && !turnstileToken;
   const loginHref = buildAuthHref("/login", {
@@ -327,7 +352,7 @@ function RegisterPageInner() {
               }
             }}
           >
-            <fieldset disabled={loading} className="space-y-4 disabled:opacity-70">
+            <fieldset disabled={loading} className="relative space-y-4 disabled:opacity-70">
               <Field label={t("email")} htmlFor="register-email">
                 <input
                   id="register-email"
@@ -350,15 +375,15 @@ function RegisterPageInner() {
                   }}
                   className={`flex h-11 w-full rounded-md border bg-background px-3 text-base outline-none ring-ring/40 focus:ring-2 sm:h-9 sm:text-sm ${emailError ? "border-destructive/60" : "border-input"}`}
                 />
-                {/* Reserved line so the hint does not push the submit button. */}
-                <p
-                  id="register-email-error"
-                  role={emailError ? "alert" : undefined}
-                  aria-hidden={emailError ? undefined : true}
-                  className="min-h-5 text-sm leading-5 text-destructive"
-                >
-                  {emailError ?? "\u00a0"}
-                </p>
+                {emailError ? (
+                  <p
+                    id="register-email-error"
+                    role="alert"
+                    className="text-sm leading-5 text-destructive"
+                  >
+                    {emailError}
+                  </p>
+                ) : null}
               </Field>
               <Field label={t("displayNameOptional")} htmlFor="register-display-name">
                 <input
@@ -383,17 +408,35 @@ function RegisterPageInner() {
                 />
               </Field>
               {captchaEnabled ? (
-                <div className="flex flex-col items-center gap-2 pt-1">
-                  <p className="text-center text-xs text-muted-foreground">{t("captchaHint")}</p>
+                // Idle widget stays out of flow (no min-height or margin). A
+                // challenge moves it back into the form at its natural height.
+                <div
+                  data-testid="register-turnstile"
+                  data-state={turnstileInteractive ? "interactive" : "idle"}
+                  className={
+                    turnstileInteractive
+                      ? "flex w-full flex-col items-center gap-2"
+                      : "absolute h-0 w-0 overflow-hidden"
+                  }
+                >
+                  {turnstileInteractive ? (
+                    <p className="text-center text-xs text-muted-foreground">{t("captchaHint")}</p>
+                  ) : null}
                   <TurnstileWidget
                     ref={turnRef}
+                    className="max-w-full"
                     siteKey={turnstileSiteKey}
                     onSuccess={onTurnstileSuccess}
+                    onBeforeInteractive={onTurnstileBeforeInteractive}
                     onExpire={invalidateCaptcha}
                     onError={invalidateCaptcha}
+                    onTimeout={markCaptchaUnavailable}
+                    onUnsupported={markCaptchaUnavailable}
+                    scriptOptions={turnstileScriptOptions}
                     options={{
                       theme: "auto",
                       size: "normal",
+                      appearance: "interaction-only",
                     }}
                   />
                 </div>
@@ -424,19 +467,34 @@ function RegisterPageInner() {
                   {err}
                 </p>
               ) : null}
+              <div className="relative">
+                <Button
+                  type="submit"
+                  data-testid="register-submit"
+                  className="w-full"
+                  disabled={submitHeld || submitBlocked}
+                >
+                  {loading ? t("submitting") : ctaLabel}
+                </Button>
+                {captchaNotice ? (
+                  <p
+                    data-testid="register-captcha-status"
+                    role={captchaNotice === "unavailable" ? "alert" : "status"}
+                    className={`pointer-events-none absolute inset-x-0 top-[calc(100%+1rem)] text-center text-xs leading-4 ${captchaNotice === "unavailable" ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {captchaNotice === "unavailable"
+                      ? t("captchaUnavailable")
+                      : t("captchaChecking")}
+                  </p>
+                ) : null}
+              </div>
               <p
                 data-testid="register-legal-consent"
-                className="text-center text-xs leading-relaxed text-muted-foreground"
+                aria-hidden={captchaNotice ? true : undefined}
+                className={`text-center text-xs leading-relaxed text-muted-foreground${captchaNotice ? " invisible" : ""}`}
               >
                 {t("legalConsent")} <LegalInlineLinks />
               </p>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={submitHeld || submitBlocked}
-              >
-                {loading ? t("submitting") : ctaLabel}
-              </Button>
             </fieldset>
           </form>
           <p className="text-center text-sm text-muted-foreground">
