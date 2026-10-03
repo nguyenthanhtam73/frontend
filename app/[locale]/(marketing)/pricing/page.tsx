@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { PRICING_FAQ_KEYS } from "@/components/pricing/pricing-faq";
+import { PRICING_FAQ_KEYS } from "@/components/pricing/pricing-faq-keys";
 import { PricingView } from "@/components/pricing/pricing-view";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { pageSocialMetadata } from "@/lib/seo";

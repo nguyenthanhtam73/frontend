@@ -2,11 +2,9 @@
 
 import { useTranslations } from "next-intl";
 
+import { PRICING_FAQ_KEYS } from "@/components/pricing/pricing-faq-keys";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { cn } from "@/lib/utils";
-
-/** Keep in sync with FAQPage JSON-LD on the pricing page. */
-export const PRICING_FAQ_KEYS = ["q1", "q2", "q4"] as const;
 
 /** Short FAQ — native disclosure for a11y, no extra accordion dependency. */
 export function PricingFaq({ className }: { className?: string }) {
