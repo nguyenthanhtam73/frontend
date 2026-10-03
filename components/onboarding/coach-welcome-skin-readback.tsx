@@ -4,6 +4,7 @@ import { ChevronDown, Eye, HeartHandshake, Sparkles, Stethoscope } from "lucide-
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { UploadFaceThumb } from "@/components/media/upload-face-thumb";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   parseCoachNoteSections,
@@ -132,10 +133,10 @@ export function CoachWelcomeSkinReadback({
             <ul className="flex gap-2 overflow-x-auto pb-0.5">
               {photos.slice(0, 3).map((url, i) => (
                 <li key={`${url}-${i}`} className="shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
+                  <UploadFaceThumb
+                    url={url}
                     alt={photoAlt?.(i + 1) ?? ""}
+                    source="profile"
                     className="size-14 rounded-lg border border-border/70 object-cover shadow-sm sm:size-16"
                   />
                 </li>

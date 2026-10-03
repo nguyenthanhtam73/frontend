@@ -6,7 +6,8 @@ export type AdminActivityCheckIn = {
   check_id: string;
   has_photos: boolean;
   photo_count: number;
-  photo_urls: string[];
+  /** Present on the old activity API. Backend #34 omits this and sends only the count. */
+  photo_urls?: string[];
   created_at: string;
 };
 

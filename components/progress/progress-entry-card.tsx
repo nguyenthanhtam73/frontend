@@ -54,6 +54,8 @@ export function ProgressEntryCard({
             <ProgressPhoto
               url={thumb}
               alt={`${entry.title?.trim() || t("untitled")} — ${entry.check_date}`}
+              source="skin-check"
+              checkId={entry.id}
             />
           ) : (
             <div className="flex size-full items-center justify-center text-xs text-muted-foreground">—</div>

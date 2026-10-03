@@ -25,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/navigation";
-import { apiBaseUrl } from "@/lib/api";
+import { displayPhotoSrc } from "@/lib/media/display-photo-src";
 import {
   createAdminSkinReview,
   patchAdminSkinReview,
@@ -50,9 +50,7 @@ const selectClass =
   "min-h-9 w-full rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 function resolveImageUrl(path: string): string {
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (path.startsWith("/uploads/")) return `${apiBaseUrl}${path}`;
-  return path;
+  return displayPhotoSrc(path);
 }
 
 /** Admin Skin Review console: upload → Premium vision → observations-only result. */

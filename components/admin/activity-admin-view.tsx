@@ -14,7 +14,7 @@ import {
   adminActivityQueryKey,
   fetchAdminActivity,
 } from "@/lib/api/admin-activity";
-import { sameOriginUploadUrl } from "@/lib/api/admin-skin-review";
+import { adminActivityPhotoCount } from "@/lib/admin/activity-photos";
 import { useAdminGate } from "@/lib/hooks/use-admin-gate";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { cn } from "@/lib/utils";
@@ -186,7 +186,7 @@ export function ActivityAdminView() {
                       <div className="flex items-center gap-2">
                         <Badge variant={row.has_photos ? "success" : "secondary"}>
                           {row.has_photos
-                            ? t("badgeWithPhoto", { n: row.photo_count })
+                            ? t("badgeWithPhoto", { n: adminActivityPhotoCount(row) })
                             : t("badgeNoPhoto")}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
@@ -196,27 +196,6 @@ export function ActivityAdminView() {
                         </span>
                       </div>
                     </div>
-                    {row.photo_urls.length > 0 ? (
-                      <ul className="mt-3 flex flex-wrap gap-2">
-                        {row.photo_urls.map((url) => (
-                          <li key={url}>
-                            <a
-                              href={sameOriginUploadUrl(url)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="block size-20 overflow-hidden rounded-md border border-border/60 bg-muted"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={sameOriginUploadUrl(url)}
-                                alt=""
-                                className="size-full object-cover"
-                              />
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
                   </div>
                 ))
               )}

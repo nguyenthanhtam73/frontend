@@ -356,6 +356,7 @@ export function ProgressBeforeAfter({
               date={before.date}
               score={before.score}
               url={before.url}
+              checkId={before.entryId}
               imageLabel={photoLabel(before)}
               changeLabel={t("changePhoto")}
               onChange={() => setPicker("before")}
@@ -365,6 +366,7 @@ export function ProgressBeforeAfter({
               date={after.date}
               score={after.score}
               url={after.url}
+              checkId={after.entryId}
               imageLabel={photoLabel(after)}
               changeLabel={t("changePhoto")}
               badge={afterIsLatest ? t("latestBadge") : undefined}
@@ -436,6 +438,7 @@ function PhotoSlot({
   date,
   score,
   url,
+  checkId,
   imageLabel,
   changeLabel,
   onChange,
@@ -446,6 +449,7 @@ function PhotoSlot({
   date: string;
   score?: number;
   url: string;
+  checkId: string;
   /** e.g. "2/3" when the source check-in has multiple photos; undefined otherwise. */
   imageLabel?: string;
   changeLabel: string;
@@ -469,7 +473,12 @@ function PhotoSlot({
           key={url}
           className="size-full motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
         >
-          <ProgressPhoto url={url} alt={`${label} · ${formatShareDate(date)}`} />
+          <ProgressPhoto
+            url={url}
+            alt={`${label} · ${formatShareDate(date)}`}
+            source="progress"
+            checkId={checkId}
+          />
         </div>
       </div>
 
@@ -591,7 +600,12 @@ function PhotoPicker({
                 )}
               >
                 <div className="relative aspect-square w-full">
-                  <ProgressPhoto url={item.url} alt={formatShareDate(item.date)} />
+                  <ProgressPhoto
+                    url={item.url}
+                    alt={formatShareDate(item.date)}
+                    source="progress"
+                    checkId={item.entryId}
+                  />
                 </div>
                 {key === latestKey ? (
                   <span className="absolute left-1 top-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground shadow-sm">
