@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { isSePayCheckoutEnabled } from "@/lib/premium/payments-enabled";
 import { cn } from "@/lib/utils";
 
-const FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
+/** Keep in sync with FAQPage JSON-LD on the pricing page. */
+export const PRICING_FAQ_KEYS = ["q1", "q2", "q4"] as const;
 
 /** Short FAQ — native disclosure for a11y, no extra accordion dependency. */
 export function PricingFaq({ className }: { className?: string }) {
@@ -27,7 +28,7 @@ export function PricingFaq({ className }: { className?: string }) {
       </div>
 
       <div className="mx-auto max-w-2xl divide-y divide-border/60 rounded-2xl border border-border/70 bg-card px-1 shadow-sm">
-        {FAQ_KEYS.map((key) => (
+        {PRICING_FAQ_KEYS.map((key) => (
           <details
             key={key}
             className="group px-4 py-0.5 open:bg-muted/20 transition-colors duration-200 sm:px-5"

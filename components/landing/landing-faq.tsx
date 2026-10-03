@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
 /** Keep in sync with FAQPage JSON-LD on the home page. */
-export const LANDING_FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5"] as const;
+export const LANDING_FAQ_KEYS = ["q1", "q2", "q3", "q4"] as const;
 
 /** Landing FAQ — visible Q&A + pairs with FAQPage JSON-LD on the home page. */
 export async function LandingFaq() {
