@@ -4,6 +4,7 @@ import { afterEach, describe, it } from "node:test";
 import { apiBaseUrl } from "@/lib/api";
 import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth-token";
 
+import { ATTRIBUTION_MAX_LEN, FIRST_TOUCH_STORAGE_KEY } from "./attribution";
 import {
   FIRST_PARTY_FUNNEL_EVENTS,
   buildFunnelEventBody,
@@ -196,5 +197,53 @@ describe("funnel event sender", () => {
     await Promise.resolve();
     const parsed = JSON.parse(body) as { session_id: string };
     assert.equal(parsed.session_id, "ephemeral");
+  });
+
+  it("adds utm_content and fbclid to check-in posts and drops other attribution", async () => {
+    const { local } = installWindow({ pathname: "/check-in" });
+    const fbclid = "f".repeat(ATTRIBUTION_MAX_LEN + 30);
+    local.setItem(
+      FIRST_TOUCH_STORAGE_KEY,
+      JSON.stringify({
+        utm_source: "facebook",
+        utm_medium: "paid",
+        utm_campaign: "chiến dịch da",
+        utm_content: "video_tu_do",
+        fbclid,
+        ttclid: "tt",
+        email: "person@example.com",
+        password: "secret",
+      }),
+    );
+    let body = "";
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      body = String(init?.body ?? "");
+      return new Response("", { status: 204 });
+    }) as typeof fetch;
+
+    sendFunnelEvent(FIRST_PARTY_FUNNEL_EVENTS.checkInSubmitClicked, {
+      never_checked_in: true,
+      skip_mode: false,
+      signed_in: true,
+      photo_count: 0,
+    });
+    await Promise.resolve();
+
+    const parsed = JSON.parse(body) as { props: Record<string, unknown> };
+    assert.deepEqual(parsed.props, {
+      utm_source: "facebook",
+      utm_campaign: "chiến dịch da",
+      utm_content: "video_tu_do",
+      fbclid: "f".repeat(ATTRIBUTION_MAX_LEN),
+      never_checked_in: true,
+      skip_mode: false,
+      signed_in: true,
+      photo_count: 0,
+    });
+    assert.equal(parsed.props.fbclid?.toString().length, ATTRIBUTION_MAX_LEN);
+    assert.equal(body.includes("person@example.com"), false);
+    assert.equal(body.includes("secret"), false);
+    assert.equal(body.includes("ttclid"), false);
+    assert.equal(parsed.props.utm_medium, undefined);
   });
 });

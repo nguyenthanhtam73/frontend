@@ -19,7 +19,22 @@ export type AttributionKey = (typeof ATTRIBUTION_KEYS)[number];
 
 export type AttributionTouch = Partial<Record<AttributionKey, string>>;
 
-/** Cap every stored click id and UTM value. */
+/**
+ * First-touch keys copied onto funnel events.
+ * `utm_medium` and `ttclid` stay on the register request only.
+ */
+export const FUNNEL_EVENT_ATTRIBUTION_KEYS = [
+  "utm_source",
+  "utm_campaign",
+  "utm_content",
+  "fbclid",
+] as const;
+
+export type FunnelEventAttributionKey = (typeof FUNNEL_EVENT_ATTRIBUTION_KEYS)[number];
+
+export type FunnelEventAttributionProps = Partial<Record<FunnelEventAttributionKey, string>>;
+
+/** Cap every stored click id and UTM value. `fbclid` uses this same 256 cap. */
 export const ATTRIBUTION_MAX_LEN = 256;
 
 export const FIRST_TOUCH_STORAGE_KEY = "dadiary:attr:first";
@@ -124,4 +139,25 @@ export function readPageFirstTouch(): AttributionTouch | null {
   const storage = browserStorage();
   if (!storage) return null;
   return readFirstTouch(storage);
+}
+
+/**
+ * `utm_source`, `utm_campaign`, `utm_content`, and `fbclid` from first-touch.
+ * Whichever of those exist. Other attribution stays off the event.
+ * Values are capped at {@link ATTRIBUTION_MAX_LEN} (256), including `fbclid`.
+ * Internal spaces and Vietnamese text are kept; email and password are not keys here.
+ */
+export function funnelEventAttributionProps(
+  touch: AttributionTouch | null = readPageFirstTouch(),
+): FunnelEventAttributionProps {
+  if (!touch) return {};
+  const props: FunnelEventAttributionProps = {};
+  for (const key of FUNNEL_EVENT_ATTRIBUTION_KEYS) {
+    const raw = touch[key];
+    if (typeof raw !== "string") continue;
+    const value = capAttributionValue(raw);
+    if (!value) continue;
+    props[key] = value;
+  }
+  return props;
 }

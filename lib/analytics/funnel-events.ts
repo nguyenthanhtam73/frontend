@@ -1,3 +1,4 @@
+import { funnelEventAttributionProps } from "@/lib/analytics/attribution";
 import { apiBaseUrl } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-token";
 
@@ -25,7 +26,11 @@ export const FIRST_PARTY_FUNNEL_EVENTS = {
 export type FirstPartyFunnelEvent =
   (typeof FIRST_PARTY_FUNNEL_EVENTS)[keyof typeof FIRST_PARTY_FUNNEL_EVENTS];
 
-/** Shared check-in props, matching the Meta check-in events. */
+/**
+ * Shared check-in props, matching the Meta check-in events.
+ * Optional first-touch `utm_source`, `utm_campaign`, `utm_content`, and
+ * `fbclid` are merged in `sendFunnelEvent` and are not part of this context.
+ */
 export type CheckInFunnelContext = {
   never_checked_in: boolean;
   skip_mode: boolean;
@@ -87,9 +92,17 @@ function authHeader(): Record<string, string> {
   }
 }
 
+function propsWithFirstTouch(props: Record<string, unknown>): Record<string, unknown> {
+  const attr = funnelEventAttributionProps();
+  if (Object.keys(attr).length === 0) return props;
+  return { ...attr, ...props };
+}
+
 /**
  * POST one funnel event. Returns immediately. Never throws.
  * Ignores 404 and every other failure (the backend route may not be deployed yet).
+ * Check-in posts pick up the same four optional first-touch keys as register.
+ * Caller props win, so existing check-in keys are unchanged.
  */
 export function sendFunnelEvent(
   event: string,
@@ -97,7 +110,7 @@ export function sendFunnelEvent(
 ): void {
   if (typeof window === "undefined") return;
   try {
-    const body = JSON.stringify(buildFunnelEventBody(event, props));
+    const body = JSON.stringify(buildFunnelEventBody(event, propsWithFirstTouch(props)));
     const url = funnelEventsUrl();
     const headers: Record<string, string> = {
       Accept: "application/json",

@@ -6,6 +6,7 @@ import {
   FIRST_TOUCH_STORAGE_KEY,
   LAST_TOUCH_STORAGE_KEY,
   captureAttribution,
+  funnelEventAttributionProps,
   readAttributionParams,
   readFirstTouch,
   readLastTouch,
@@ -76,5 +77,25 @@ describe("attribution", () => {
     captureAttribution("", storage);
     assert.deepEqual(readFirstTouch(storage), { utm_source: "test", utm_campaign: "x" });
     assert.deepEqual(readLastTouch(storage), { utm_source: "test", utm_campaign: "x" });
+  });
+
+  it("copies only utm_source, utm_campaign, utm_content, and fbclid onto events", () => {
+    const props = funnelEventAttributionProps({
+      utm_source: "meta",
+      utm_medium: "cpc",
+      utm_campaign: "chiến dịch da",
+      utm_content: "video_tu_do",
+      fbclid: "f".repeat(ATTRIBUTION_MAX_LEN + 40),
+      ttclid: "tt",
+    });
+    assert.deepEqual(props, {
+      utm_source: "meta",
+      utm_campaign: "chiến dịch da",
+      utm_content: "video_tu_do",
+      fbclid: "f".repeat(ATTRIBUTION_MAX_LEN),
+    });
+    assert.equal(props.fbclid?.length, ATTRIBUTION_MAX_LEN);
+    assert.equal("utm_medium" in props, false);
+    assert.equal("ttclid" in props, false);
   });
 });

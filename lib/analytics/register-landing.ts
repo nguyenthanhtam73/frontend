@@ -3,8 +3,10 @@ import { isRegisterEmailTakenResponse } from "@/lib/auth/register-email-taken";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   capturePageAttribution,
+  funnelEventAttributionProps,
   readPageFirstTouch,
   type AttributionTouch,
+  type FunnelEventAttributionProps,
 } from "@/lib/analytics/attribution";
 
 /**
@@ -38,17 +40,9 @@ export function classifyRegisterClientBlock(
   return null;
 }
 
-/** utm_source and utm_campaign from first-touch. Other attribution stays off the event. */
-export function registerAttributionEventProps(): {
-  utm_source?: string;
-  utm_campaign?: string;
-} {
-  const touch = readPageFirstTouch();
-  if (!touch) return {};
-  const props: { utm_source?: string; utm_campaign?: string } = {};
-  if (touch.utm_source) props.utm_source = touch.utm_source;
-  if (touch.utm_campaign) props.utm_campaign = touch.utm_campaign;
-  return props;
+/** First-touch `utm_source`, `utm_campaign`, `utm_content`, and `fbclid` for funnel events. */
+export function registerAttributionEventProps(): FunnelEventAttributionProps {
+  return funnelEventAttributionProps();
 }
 
 function trackRegister(
@@ -106,5 +100,9 @@ export type LandingCtaButton = (typeof LANDING_CTA_BUTTONS)[number];
 
 /** Fire-and-forget. Does not prevent or await navigation. */
 export function trackLandingCtaClick(button: LandingCtaButton): void {
-  trackFunnelEvent(FUNNEL_EVENTS.landingCtaClick, { button });
+  capturePageAttribution();
+  trackFunnelEvent(FUNNEL_EVENTS.landingCtaClick, {
+    ...registerAttributionEventProps(),
+    button,
+  });
 }

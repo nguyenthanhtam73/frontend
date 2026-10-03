@@ -27,19 +27,27 @@
  * | checkin_skip_selected | checkin_skip_selected { source }                |
  * | checkin_submit_attempt | checkin_submit_attempt { skip_mode, signed_in, photo_count } |
  * | checkin_submit_fail | checkin_submit_fail { reason }                    |
- * | register_form_view | register_form_view { utm_source?, utm_campaign? }  |
- * | register_submit_attempt | register_submit_attempt { utm_source?, utm_campaign? } |
- * | register_client_error | register_client_error { error_type, utm_source?, utm_campaign? } |
- * | register_email_exists | register_email_exists { utm_source?, utm_campaign? } |
- * | landing_cta_click  | landing_cta_click { button }                       |
+ * | register_form_view | register_form_view { utm_source?, utm_campaign?, utm_content?, fbclid? } |
+ * | register_submit_attempt | register_submit_attempt { utm_source?, utm_campaign?, utm_content?, fbclid? } |
+ * | register_client_error | register_client_error { error_type, utm_source?, utm_campaign?, utm_content?, fbclid? } |
+ * | register_email_exists | register_email_exists { utm_source?, utm_campaign?, utm_content?, fbclid? } |
+ * | landing_cta_click  | landing_cta_click { button, utm_source?, utm_campaign?, utm_content?, fbclid? } |
  * | d1_checkin         | activation_d1_checkin (+ d1 reminder shown)        |
  * | push_opt_in        | activation_push_opt_in                             |
  * | push_dismissed     | activation_push_dismissed                          |
  * | paywall_view       | paywall_view                                       |
  * | checkout_confirm   | checkout_confirm                                   |
  * | paid               | paid (+ Meta Purchase / TikTok CompletePayment)    |
+ *
+ * Register events, `landing_cta_click`, and check-in events (`guest_checkin_*`,
+ * `checkin_*`, `activation_first_checkin`, `activation_d1_checkin`, and the
+ * first-party `checkin_*` posts) also include whichever of `utm_source`,
+ * `utm_campaign`, `utm_content`, and `fbclid` were stored on first-touch.
+ * `utm_medium` and `ttclid` stay off the event. `fbclid` is capped at 256.
+ * Email and password are never event props. Check-in context keys are unchanged.
  */
 
+import { funnelEventAttributionProps } from "@/lib/analytics/attribution";
 import { persistPaywallView } from "@/lib/api/paywall-view";
 import { sendFunnelEvent } from "@/lib/analytics/funnel-events";
 import { trackMetaCustomEvent, trackMetaEvent, trackMetaPurchaseOnce } from "@/lib/meta-pixel";
@@ -223,6 +231,33 @@ const FIRST_PARTY_WITH_PIXEL: ReadonlySet<string> = new Set<FunnelEventName>([
   FUNNEL_EVENTS.landingCtaClick,
 ]);
 
+/**
+ * Check-in pixel events do not go through the register helper. They still get
+ * the same four optional first-touch props. Existing check-in keys win.
+ */
+const CHECK_IN_WITH_ATTRIBUTION: ReadonlySet<FunnelEventName> = new Set([
+  FUNNEL_EVENTS.guestCheckInSave,
+  FUNNEL_EVENTS.guestCheckInClaim,
+  FUNNEL_EVENTS.guestCheckInClaimFail,
+  FUNNEL_EVENTS.checkInFormView,
+  FUNNEL_EVENTS.checkInPhotoStaged,
+  FUNNEL_EVENTS.checkInSkipSelected,
+  FUNNEL_EVENTS.checkInSubmitAttempt,
+  FUNNEL_EVENTS.checkInSubmitFail,
+  FUNNEL_EVENTS.firstCheckIn,
+  FUNNEL_EVENTS.d1CheckIn,
+]);
+
+function paramsWithCheckInAttribution(
+  name: FunnelEventName,
+  params?: Record<string, unknown>,
+): Record<string, unknown> | undefined {
+  if (!CHECK_IN_WITH_ATTRIBUTION.has(name)) return params;
+  const attr = funnelEventAttributionProps();
+  if (Object.keys(attr).length === 0) return params;
+  return { ...attr, ...(params ?? {}) };
+}
+
 export function funnelEventPostsFirstParty(name: FunnelEventName): boolean {
   return FIRST_PARTY_WITH_PIXEL.has(name);
 }
@@ -233,20 +268,21 @@ export function trackFunnelEvent(
   params?: Record<string, unknown>,
 ): void {
   if (typeof window === "undefined") return;
-  recordLocal(name, params);
-  trackMetaCustomEvent(name, params);
-  trackTikTokEvent(name, params);
+  const payload = paramsWithCheckInAttribution(name, params);
+  recordLocal(name, payload);
+  trackMetaCustomEvent(name, payload);
+  trackTikTokEvent(name, payload);
   if (funnelEventPostsFirstParty(name)) {
-    sendFunnelEvent(name, params ?? {});
+    sendFunnelEvent(name, payload ?? {});
   }
-  if (params?.intent === "login") return;
+  if (payload?.intent === "login") return;
   const mapped = STANDARD_BY_CUSTOM[name];
   if (mapped) {
-    trackStandardOnce(mapped.event, { ...mapped.extra, ...params });
+    trackStandardOnce(mapped.event, { ...mapped.extra, ...payload });
   }
   const tiktokMapped = TIKTOK_STANDARD_BY_CUSTOM[name];
   if (tiktokMapped) {
-    const tiktokParams = { ...tiktokMapped.extra, ...params };
+    const tiktokParams = { ...tiktokMapped.extra, ...payload };
     if (tiktokMapped.once === false) {
       trackTikTokEvent(tiktokMapped.event, tiktokParams);
     } else {
