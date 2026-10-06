@@ -49,6 +49,7 @@ describe("reminder timezone", () => {
     assert.equal(isAcceptableReminderTimezone("x".repeat(65)), false);
 
     assert.equal(resolveReminderTimezone("America/New_York"), "America/New_York");
+    assert.equal(resolveReminderTimezone("Asia/Saigon"), DEFAULT_REMINDER_TIMEZONE);
     assert.equal(resolveReminderTimezone(""), DEFAULT_REMINDER_TIMEZONE);
     assert.equal(resolveReminderTimezone(null), DEFAULT_REMINDER_TIMEZONE);
     assert.equal(resolveReminderTimezone("Local"), DEFAULT_REMINDER_TIMEZONE);
@@ -60,7 +61,9 @@ describe("reminder timezone", () => {
     assert.equal(browserReminderTimezone(null), DEFAULT_REMINDER_TIMEZONE);
     assert.equal(browserReminderTimezone("Local"), DEFAULT_REMINDER_TIMEZONE);
     assert.equal(browserReminderTimezone("Europe/Paris"), "Europe/Paris");
+    assert.equal(browserReminderTimezone("Asia/Saigon"), DEFAULT_REMINDER_TIMEZONE);
     assert.equal(reminderTimezoneKind("Asia/Ho_Chi_Minh"), "vietnam");
+    assert.equal(reminderTimezoneKind("Asia/Saigon"), "vietnam");
     assert.equal(reminderTimezoneKind(""), "vietnam");
     assert.equal(reminderTimezoneKind("Europe/Paris"), "device");
   });
@@ -123,6 +126,14 @@ describe("schedule read and put bodies", () => {
       buildDailyReminderTimePut({
         time: "20:00",
         timezone: "Asia/Ho_Chi_Minh",
+        previous: null,
+      }),
+      { enabled: true, time: "20:00", timezone: "Asia/Ho_Chi_Minh" },
+    );
+    assert.deepEqual(
+      buildDailyReminderTimePut({
+        time: "20:00",
+        timezone: "Asia/Saigon",
         previous: null,
       }),
       { enabled: true, time: "20:00", timezone: "Asia/Ho_Chi_Minh" },

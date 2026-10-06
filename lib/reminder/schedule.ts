@@ -9,6 +9,11 @@
 
 export const DEFAULT_REMINDER_TIMEZONE = "Asia/Ho_Chi_Minh";
 
+/**
+ * Same Vietnam clock. Some browsers still resolve Ho Chi Minh as Asia/Saigon.
+ */
+const VIETNAM_TIMEZONE_ALIASES = new Set(["asia/ho_chi_minh", "asia/saigon"]);
+
 /** Evening wall-clock shown until the user has saved their own time. */
 export const DEFAULT_REMINDER_DISPLAY_TIME = "20:00";
 
@@ -56,7 +61,9 @@ export function isAcceptableReminderTimezone(raw: string | null | undefined): bo
 /** Known IANA zone, or Asia/Ho_Chi_Minh when the browser zone is missing. */
 export function resolveReminderTimezone(raw: string | null | undefined): string {
   if (!isAcceptableReminderTimezone(raw)) return DEFAULT_REMINDER_TIMEZONE;
-  return raw!.trim();
+  const name = raw!.trim();
+  if (VIETNAM_TIMEZONE_ALIASES.has(name.toLowerCase())) return DEFAULT_REMINDER_TIMEZONE;
+  return name;
 }
 
 /**
