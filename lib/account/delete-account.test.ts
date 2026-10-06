@@ -12,8 +12,12 @@ import {
   setAuthTokens,
 } from "@/lib/auth-token";
 
+import { CLEAR_APP_CACHES_MESSAGE } from "@/lib/clear-app-caches";
+import { PUSH_CLICK_DB_NAME } from "@/lib/push/click-queue";
+
 import {
   GUEST_INDEXED_DB_NAMES,
+  REMINDER_PUSH_OPT_IN_STORAGE_KEYS,
   clearDeviceAfterAccountDeletion,
 } from "./clear-device-after-delete";
 import {
@@ -386,7 +390,121 @@ describe("clearDeviceAfterAccountDeletion", () => {
     assert.equal(session.getItem("keep-session"), "stay");
     assert.equal(cookieJar.includes("dadiary_guest_onboarding_trial"), false);
     assert.equal(cookieJar.includes("theme=dark"), true);
-    assert.deepEqual([...deletedDbs].sort(), [...GUEST_INDEXED_DB_NAMES].sort());
+    assert.deepEqual(
+      [...deletedDbs].sort(),
+      [...GUEST_INDEXED_DB_NAMES, PUSH_CLICK_DB_NAME].sort(),
+    );
     assert.deepEqual(fetches, []);
+  });
+
+  it("drops the push-click queue, reminder opt-in keys, and app caches without unregistering the worker", async () => {
+    for (const key of REMINDER_PUSH_OPT_IN_STORAGE_KEYS) {
+      localStorage.setItem(key, "1");
+    }
+    localStorage.setItem("dadiary:push-nudge-v2", "later");
+    localStorage.setItem("dadiary_push_extra", "flag");
+    localStorage.setItem("keep-unrelated", "stay");
+    localStorage.setItem("dadiary:pwa-install-dismissed-at", "keep-install");
+
+    const deletedDbs: string[] = [];
+    Object.defineProperty(globalThis, "indexedDB", {
+      configurable: true,
+      value: {
+        deleteDatabase(name: string) {
+          deletedDbs.push(name);
+          const request = {
+            onsuccess: null as (() => void) | null,
+            onerror: null as (() => void) | null,
+            onblocked: null as (() => void) | null,
+          };
+          queueMicrotask(() => request.onsuccess?.());
+          return request;
+        },
+      },
+    });
+
+    const deletedCaches: string[] = [];
+    const messages: unknown[] = [];
+    let unregistered = false;
+    const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+    const registration = {
+      active: {
+        postMessage(message: unknown) {
+          messages.push(message);
+        },
+      },
+      waiting: null,
+      installing: null,
+      unregister() {
+        unregistered = true;
+        return Promise.resolve(true);
+      },
+    };
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        localStorage,
+        sessionStorage: localStorage,
+        dispatchEvent: () => true,
+        caches: {
+          async keys() {
+            return ["dadiary-api-v18", "dadiary-static-v18", "other-app"];
+          },
+          async delete(name: string) {
+            deletedCaches.push(name);
+            return true;
+          },
+        },
+      },
+    });
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: {
+        serviceWorker: {
+          controller: {
+            postMessage(message: unknown) {
+              messages.push(message);
+            },
+          },
+          getRegistration() {
+            return Promise.resolve(registration);
+          },
+        },
+      },
+    });
+
+    const fetches: string[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      fetches.push(String(input));
+      return new Response(null, { status: 500 });
+    }) as typeof fetch;
+
+    try {
+      await clearDeviceAfterAccountDeletion();
+
+      for (const key of REMINDER_PUSH_OPT_IN_STORAGE_KEYS) {
+        assert.equal(localStorage.getItem(key), null, key);
+      }
+      assert.equal(localStorage.getItem("dadiary:push-nudge-v2"), null);
+      assert.equal(localStorage.getItem("dadiary_push_extra"), null);
+      assert.equal(localStorage.getItem("keep-unrelated"), "stay");
+      assert.equal(localStorage.getItem("dadiary:pwa-install-dismissed-at"), "keep-install");
+      assert.ok(deletedDbs.includes(PUSH_CLICK_DB_NAME));
+      assert.deepEqual(deletedCaches.sort(), ["dadiary-api-v18", "dadiary-static-v18"]);
+      assert.ok(
+        messages.some(
+          (message) =>
+            typeof message === "object" &&
+            message !== null &&
+            (message as { type?: string }).type === CLEAR_APP_CACHES_MESSAGE,
+        ),
+      );
+      assert.equal(unregistered, false);
+      assert.deepEqual(fetches, []);
+    } finally {
+      if (originalNavigator) {
+        Object.defineProperty(globalThis, "navigator", originalNavigator);
+      }
+    }
   });
 });
