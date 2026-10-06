@@ -31,6 +31,13 @@ import {
   matchCabinetToCare,
 } from "@/lib/check-in/cabinet-care";
 import {
+  clarifyBox,
+  scoreNoteText,
+  visibleZoneNotes,
+  type CoachSeverityLabelKey,
+  type VisibleZoneNote,
+} from "@/lib/check-in/coach-detail-view";
+import {
   isUncertainPhotoEvidence,
   resolveCoachPhotoEvidence,
 } from "@/lib/check-in/coach-evidence";
@@ -93,6 +100,9 @@ export function DailyCoachFeedback({
 
   const split = splitRoutineHints(c.routine_hints);
   const g = c.skin_score_gauges;
+  const scoreNotes = c.skin_score_notes;
+  const zoneNotes = visibleZoneNotes(c.zone_notes);
+  const followUp = clarifyBox(c);
   const hasGauges =
     !!g &&
     (g.hydration != null ||
@@ -180,6 +190,8 @@ export function DailyCoachFeedback({
                   label={t("gaugeOverall")}
                   value={g!.overall}
                   feelLabel={t(softGaugeFeelKey(g!.overall))}
+                  note={scoreNoteText(scoreNotes, "overall")}
+                  scoreKey="overall"
                   emphasis
                 />
               ) : null}
@@ -188,6 +200,8 @@ export function DailyCoachFeedback({
                   label={t("gaugeHydration")}
                   value={g!.hydration}
                   feelLabel={t(softGaugeFeelKey(g!.hydration))}
+                  note={scoreNoteText(scoreNotes, "hydration")}
+                  scoreKey="hydration"
                 />
               ) : null}
               {g!.clarity != null ? (
@@ -195,6 +209,8 @@ export function DailyCoachFeedback({
                   label={t("gaugeClarity")}
                   value={g!.clarity}
                   feelLabel={t(softGaugeFeelKey(g!.clarity))}
+                  note={scoreNoteText(scoreNotes, "clarity")}
+                  scoreKey="clarity"
                 />
               ) : null}
               {g!.barrier != null ? (
@@ -202,11 +218,36 @@ export function DailyCoachFeedback({
                   label={t("gaugeBarrier")}
                   value={g!.barrier}
                   feelLabel={t(softGaugeFeelKey(g!.barrier))}
+                  note={scoreNoteText(scoreNotes, "barrier")}
+                  scoreKey="barrier"
                 />
               ) : null}
             </div>
           </CardContent>
         </Card>
+      ) : null}
+
+      {zoneNotes.length > 0 ? <ZoneNotesCard notes={zoneNotes} /> : null}
+
+      {followUp ? (
+        <div
+          className="rounded-xl border border-primary/15 bg-primary/[0.04] px-3.5 py-3"
+          data-testid="coach-clarify"
+          data-clarify={followUp.kind}
+        >
+          <p className="text-sm font-medium leading-snug">
+            {followUp.kind === "retake" ? t("clarifyRetakeTitle") : t("clarifyQuestionsTitle")}
+          </p>
+          {followUp.items.length > 0 ? (
+            <ul className="mt-1.5 list-disc space-y-1 pl-4 text-sm leading-relaxed text-foreground/90">
+              {followUp.items.map((line, i) => (
+                <li key={`clarify-${i}`} className="min-w-0 break-words">
+                  {line}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       ) : null}
 
       {hasCare ? (
@@ -482,16 +523,66 @@ function CareSlotBlock({
   );
 }
 
+const SEVERITY_DOT: Record<CoachSeverityLabelKey, string> = {
+  severityMild: "bg-muted-foreground/40",
+  severityModerate: "bg-primary/50",
+  severityPronounced: "bg-foreground/45",
+};
+
+function ZoneNotesCard({ notes }: { notes: VisibleZoneNote[] }) {
+  const t = useTranslations("checkIn.coach");
+  return (
+    <Card data-testid="coach-zone-notes">
+      <CardContent className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {t("zoneNotesTitle")}
+        </p>
+        <ul className="divide-y divide-border/60">
+          {notes.map((item, i) => {
+            const label = item.labelKey ? t(item.labelKey) : "";
+            const severity = item.severityKey ? t(item.severityKey) : "";
+            return (
+              <li key={`${item.zone || "zone"}-${i}`} className="min-w-0 py-2 first:pt-0 last:pb-0">
+                {label || severity ? (
+                  <div className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    {label ? (
+                      <span className="text-xs font-medium text-foreground/85">{label}</span>
+                    ) : null}
+                    {item.severityKey && severity ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <span
+                          className={`size-1.5 shrink-0 rounded-full ${SEVERITY_DOT[item.severityKey]}`}
+                          aria-hidden
+                        />
+                        {severity}
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+                <p className="text-sm leading-snug break-words">{item.note}</p>
+              </li>
+            );
+          })}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
 /** Soft 0-1 bar framed as today's feel — qualitative label, not an exam %. */
 function ScoreBar({
   label,
   value,
   feelLabel,
+  note,
+  scoreKey,
   emphasis,
 }: {
   label: string;
   value: number;
   feelLabel: string;
+  note?: string;
+  scoreKey?: string;
   emphasis?: boolean;
 }) {
   const clamped = Math.min(1, Math.max(0, value));
@@ -520,6 +611,15 @@ function ScoreBar({
           style={{ width: `${pct}%` }}
         />
       </div>
+      {note ? (
+        <p
+          className="text-[11px] leading-snug break-words text-muted-foreground"
+          data-testid="coach-score-note"
+          data-score={scoreKey}
+        >
+          {note}
+        </p>
+      ) : null}
     </div>
   );
 }

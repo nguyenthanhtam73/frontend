@@ -52,7 +52,7 @@ function installWindow() {
     localStorage,
     __dadiaryFunnel: [],
     dataLayer: [],
-  };
+  } as unknown as typeof g.window;
   return g.window;
 }
 

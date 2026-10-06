@@ -21,12 +21,41 @@ export type SkinCoachScoreGaugesDTO = {
   barrier?: number;
 };
 
+/** One short "looks like" line for a zone the photo actually showed. */
+export type CoachZoneNoteDTO = {
+  zone: string;
+  note: string;
+  /** mild | moderate | pronounced — how visible the sign is. */
+  severity?: string;
+};
+
+/** One short reason per soft gauge, including overall. Not a score. */
+export type SkinCoachScoreNotesDTO = {
+  overall?: string;
+  hydration?: string;
+  clarity?: string;
+  barrier?: string;
+};
+
 export type SkinCoachDetailDTO = {
   summary_notes?: string;
   strengths?: string[];
   situation_summary?: string;
   concern_alignment?: string;
   skin_score_gauges?: SkinCoachScoreGaugesDTO;
+  /** Per-zone look notes. Omitted on older checks. Max 5 from the API. */
+  zone_notes?: CoachZoneNoteDTO[];
+  /** Why each gauge sits where it does. Omitted on older checks. */
+  skin_score_notes?: SkinCoachScoreNotesDTO;
+  /** high | medium | low. Omitted on older checks. */
+  confidence?: string;
+  /** True when a follow-up would change the read. */
+  needs_more_info?: boolean;
+  /**
+   * Follow-ups still worth asking (max 3). When the photo is limited these
+   * are retake tips, not questions.
+   */
+  clarify_questions?: string[];
   improvements?: CoachImprovementDTO[];
   /** Detailed in-app care checklist (richer than public soothing_tips). */
   care_suggestions?: CoachCareSuggestionDTO[];
