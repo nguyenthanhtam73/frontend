@@ -118,6 +118,10 @@
     "termsPage": {
       "title": "Điều khoản sử dụng · DaDiary",
       "description": "Điều khoản ngắn cho Beta DaDiary: gợi ý chăm da, tài khoản và thanh toán."
+    },
+    "deleteAccountPage": {
+      "title": "Xoá tài khoản · DaDiary",
+      "description": "Cách xoá tài khoản DaDiary: các bước, những gì bị xoá và những gì còn giữ."
     }
   },
   "auth": {
@@ -176,6 +180,7 @@
     "signIn": "Đăng nhập",
     "register": "Đăng ký",
     "signOut": "Đăng xuất",
+    "accountDeleted": "Tài khoản đã được xoá.",
     "nav": {
       "start": "Bắt đầu",
       "cabinet": "Tủ đồ chăm da",
@@ -206,6 +211,7 @@
       "navAria": "Liên kết chân trang",
       "privacy": "Quyền riêng tư",
       "terms": "Điều khoản",
+      "deleteAccount": "Xoá tài khoản",
       "social": {
         "navAria": "Mạng xã hội DaDiary",
         "follow": "Theo dõi",
@@ -2550,6 +2556,20 @@
     "deleteAuth": "Phiên đăng nhập hết hạn — đăng nhập lại rồi thử xoá nếu cần.",
     "deleteNetwork": "Chưa xoá được trên máy chủ — kiểm tra mạng và thử lại.",
     "deleteLastReset": "Lần xoá gần nhất: {when}.",
+    "deleteAccountRowTitle": "Xoá tài khoản",
+    "deleteAccountRowSub": "Xoá hẳn tài khoản, email, ảnh da, nhật ký, sản phẩm trong tủ và nhắc nhở. Không lấy lại được.",
+    "deleteAccountCta": "Xoá tài khoản",
+    "deleteAccountConfirmTitle": "Xoá tài khoản này?",
+    "deleteAccountConfirmBody": "Tài khoản, email, ảnh da, nhật ký, sản phẩm trong tủ và nhắc nhở sẽ mất. Mọi nơi đang đăng nhập sẽ bị đăng xuất. Không lấy lại được. Bạn vẫn đăng ký lại bằng cùng email được.",
+    "deleteAccountPremium": "Gói Premium đang dùng (nếu có) sẽ mất khi xoá tài khoản và không được hoàn tiền.",
+    "deleteAccountPasswordLabel": "Nhập lại mật khẩu",
+    "deleteAccountConfirmCta": "Xoá tài khoản",
+    "deleteAccountCancel": "Để sau",
+    "deleteAccountCloseAria": "Đóng hộp thoại xoá tài khoản",
+    "deleteAccountWorking": "Đang xoá…",
+    "deleteAccountInvalidPassword": "Mật khẩu chưa đúng.",
+    "deleteAccountRateLimited": "Bạn thử nhiều lần quá, đợi một lúc rồi thử lại.",
+    "deleteAccountFailed": "Chưa xoá được tài khoản. Bạn thử lại sau nhé.",
     "dismissToast": "Đóng",
     "memoryLinkTitle": "AI đang nhớ gì về bạn?",
     "memoryLinkSub": "Xem khối trí nhớ dùng cho lời khuyên — minh bạch, có thể làm mới.",
@@ -3215,6 +3235,7 @@
         "body": "Gợi ý của DaDiary mang tính tham khảo từ ảnh và thông tin bạn cung cấp — không thay thế bác sĩ da liễu. Nếu da có vấn đề nghiêm trọng, hãy gặp chuyên gia."
       },
       "disclaimer": "Nếu có câu hỏi về dữ liệu, gửi góp ý trong app hoặc liên hệ qua các kênh mạng xã hội của DaDiary. Mình sẽ cập nhật trang này khi cách xử lý dữ liệu thay đổi.",
+      "deleteAccountLink": "Cách xoá tài khoản",
       "homeLink": "Về trang chủ"
     },
     "terms": {
@@ -3242,6 +3263,32 @@
         "body": "Mình có thể cập nhật trang này khi sản phẩm đổi. Ngày cập nhật nằm ở đầu trang. Nếu không đồng ý, bạn có thể ngừng dùng và xoá dữ liệu trong Cài đặt."
       },
       "disclaimer": "Gợi ý chăm da chỉ mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
+      "homeLink": "Về trang chủ"
+    },
+    "deleteAccount": {
+      "title": "Xoá tài khoản DaDiary",
+      "intro": "Trang này nói cách xoá hẳn tài khoản DaDiary. Bạn mở được mà không cần đăng nhập.",
+      "stepsTitle": "Các bước",
+      "steps": {
+        "s1": "Trên web hoặc trong app, bạn đăng nhập.",
+        "s2": "Mở trang Cài đặt.",
+        "s3": "Bấm “Xoá tài khoản”.",
+        "s4": "Nhập lại mật khẩu, rồi xác nhận."
+      },
+      "deletedTitle": "Những gì bị xoá",
+      "deletedBody": "Tài khoản của bạn, email, toàn bộ ảnh da và nhật ký, sản phẩm trong tủ, và nhắc nhở. Mọi nơi đang đăng nhập sẽ bị đăng xuất.",
+      "premium": "Gói Premium đang dùng (nếu có) sẽ mất khi xoá tài khoản và không được hoàn tiền.",
+      "settingsLink": "Cài đặt",
+      "keptTitle": "Những gì còn giữ",
+      "retention": {
+        "payments": "Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm.",
+        "stats": "Số liệu thống kê không có tên, không có email, và không gắn với bạn, được giữ lâu dài."
+      },
+      "undo": "Việc này không lấy lại được. Sau này bạn vẫn đăng ký lại bằng cùng email được.",
+      "cantSignInTitle": "Nếu bạn không đăng nhập được",
+      "cantSignInBody": "Nếu bạn quên mật khẩu hoặc không đăng nhập được, hãy gửi email xin xoá tài khoản từ đúng email bạn đã dùng để đăng ký.",
+      "cantSignInAlso": "Bạn cũng có thể nhắn trên Facebook hoặc TikTok.",
+      "privacyLink": "Quyền riêng tư",
       "homeLink": "Về trang chủ"
     }
   }

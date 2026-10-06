@@ -215,6 +215,7 @@ export function resolvePushDeviceSyncState(
 
 /** Unsubscribe the browser PushManager subscription (best-effort). */
 export async function removeBrowserPushSubscription(): Promise<void> {
+  if (typeof navigator === "undefined" || typeof window === "undefined") return;
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
   try {
     const reg = await navigator.serviceWorker.getRegistration("/");

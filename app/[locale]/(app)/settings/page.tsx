@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { pageLocaleMetadata } from "@/lib/seo";
 
+import { DeleteAccountSection } from "@/components/privacy/delete-account-section";
 import { PrivacyControls } from "@/components/privacy/privacy-controls";
 import { Link } from "@/i18n/navigation";
 
@@ -39,7 +40,10 @@ export default async function SettingsPage() {
         </Link>
       </div>
 
-      <PrivacyControls />
+      <div className="space-y-6">
+        <PrivacyControls />
+        <DeleteAccountSection />
+      </div>
     </div>
   );
 }
