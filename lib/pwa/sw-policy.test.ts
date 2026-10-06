@@ -31,7 +31,7 @@ describe("service worker upload bypass", () => {
 
   it("bumps cache names and clears dadiary caches on CLEAR_CACHES", () => {
     const sw = fs.readFileSync(swPath, "utf8");
-    assert.match(sw, /const CACHE_VERSION = "v17"/);
+    assert.match(sw, /const CACHE_VERSION = "v18"/);
     assert.match(sw, /dadiary-static-\$\{CACHE_VERSION\}/);
     assert.match(sw, /dadiary-api-\$\{CACHE_VERSION\}/);
     const bypass = sw.indexOf('if (url.pathname.startsWith("/uploads/")) return;');

@@ -8,6 +8,8 @@ import { IosInstallBanner } from "@/components/pwa/ios-install-banner";
 import { Button } from "@/components/ui/button";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { usePathname } from "@/i18n/navigation";
+import { AUTH_CHANGED_EVENT, AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth-token";
+import { drainQueuedPushClicks, relayPushClickMessage } from "@/lib/push/relay-push-clicks";
 import { hasMobileBottomChrome, hidesPwaInstallBanner } from "@/lib/site-nav";
 import { hasToastHandler, pushToast } from "@/lib/toast-bridge";
 import { cn } from "@/lib/utils";
@@ -283,12 +285,33 @@ export function PwaRegister() {
     const onMessage = (event: MessageEvent) => {
       onPushNavigate(event);
       onPushForeground(event);
+      relayPushClickMessage(event.data);
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => {
       navigator.serviceWorker.removeEventListener("message", onMessage);
     };
   }, [tPush]);
+
+  // Upload clicks the service worker queued. Guests stay queued until login.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    void drainQueuedPushClicks();
+    const onAuth = () => {
+      void drainQueuedPushClicks();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_TOKEN_STORAGE_KEY && event.newValue) {
+        void drainQueuedPushClicks();
+      }
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuth);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuth);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // ---------------------------------------------------------------------
   // 2. beforeinstallprompt — defer the native prompt to our own toast
