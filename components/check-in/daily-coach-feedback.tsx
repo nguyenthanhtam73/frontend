@@ -34,6 +34,7 @@ import {
   clarifyBox,
   scoreNoteText,
   visibleZoneNotes,
+  zoneLabelMap,
   type CoachSeverityLabelKey,
   type VisibleZoneNote,
 } from "@/lib/check-in/coach-detail-view";
@@ -101,8 +102,7 @@ export function DailyCoachFeedback({
   const split = splitRoutineHints(c.routine_hints);
   const g = c.skin_score_gauges;
   const scoreNotes = c.skin_score_notes;
-  const zoneNotes = visibleZoneNotes(c.zone_notes);
-  const followUp = clarifyBox(c);
+  const zoneNotes = visibleZoneNotes(c.zone_notes, zoneLabelMap((key) => t(key)));
   const hasGauges =
     !!g &&
     (g.hydration != null ||
@@ -118,6 +118,11 @@ export function DailyCoachFeedback({
     imageUrls: payload.image_urls,
     photoEvidence: c.photo_evidence,
     photoLimited: c.photo_limited,
+  });
+  const followUp = clarifyBox({
+    photoKind: evidence.kind,
+    clarify_questions: c.clarify_questions,
+    confidence: c.confidence,
   });
   const uncertain = isUncertainPhotoEvidence(evidence.kind);
   const cabinetMatches = matchCabinetToCare({
@@ -549,7 +554,7 @@ function ZoneNotesCard({ notes }: { notes: VisibleZoneNote[] }) {
                       <span className="text-xs font-medium text-foreground/85">{label}</span>
                     ) : null}
                     {item.severityKey && severity ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                         <span
                           className={`size-1.5 shrink-0 rounded-full ${SEVERITY_DOT[item.severityKey]}`}
                           aria-hidden
@@ -613,7 +618,7 @@ function ScoreBar({
       </div>
       {note ? (
         <p
-          className="text-[11px] leading-snug break-words text-muted-foreground"
+          className="text-xs leading-snug break-words text-muted-foreground"
           data-testid="coach-score-note"
           data-score={scoreKey}
         >
