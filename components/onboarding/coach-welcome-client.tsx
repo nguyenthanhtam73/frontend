@@ -43,7 +43,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { apiBaseUrl } from "@/lib/api";
 import { fetchSkinProfile } from "@/lib/api/profile";
 import { getAccessToken } from "@/lib/auth-token";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
@@ -60,6 +59,7 @@ import {
   sessionLooksLikeGuestTrial,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { buildCoachWelcomeFromProfile } from "@/lib/onboarding/coach-welcome-from-profile";
+import { isUserUploadUrl, preferFreshProfilePhotoUrls } from "@/lib/media/upload-url";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
@@ -80,19 +80,6 @@ import {
   type StarterRoutineDTO,
 } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
-
-function absUploadUrl(url: string): string {
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("blob:") ||
-    url.startsWith("data:")
-  ) {
-    return url;
-  }
-  const base = apiBaseUrl.replace(/\/$/, "");
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
-}
 
 type LoadedCoachWelcome = {
   profileId: string | null;
@@ -126,7 +113,10 @@ function loadedFromCoachSession(
     completedAt: session.reviewSummary?.completed_at ?? null,
     isGuest,
     coachingNotes: sessionNotes || undefined,
-    photoUrls: normalizeReviewPhotoUrls(session.reviewSummary?.photo_urls ?? []),
+    photoUrls: preferFreshProfilePhotoUrls(
+      normalizeReviewPhotoUrls(session.reviewSummary?.photo_urls ?? []),
+      undefined,
+    ),
     analysisPhase: session.reviewSummary?.skin_analysis?.phase ?? null,
     analysisSeverity: session.reviewSummary?.skin_analysis?.severity_level ?? null,
     analysisRegions: session.reviewSummary?.skin_analysis?.primary_regions,
@@ -234,9 +224,7 @@ function CoachWelcomeLoaded({
       const nextPhotos = patch?.reviewSummary?.photo_urls;
       if (nextPhotos?.length) {
         setPhotosAttachFailed(false);
-        setLivePhotoUrls(
-          normalizeReviewPhotoUrls(nextPhotos).map(absUploadUrl),
-        );
+        setLivePhotoUrls(normalizeReviewPhotoUrls(nextPhotos));
         setIdbPhotoUrls((prev) => {
           for (const u of prev) {
             if (u.startsWith("blob:")) {
@@ -273,10 +261,11 @@ function CoachWelcomeLoaded({
 
   const photoUrls = useMemo(() => {
     if (livePhotoUrls?.length) return livePhotoUrls;
-    const fromProps = initialPhotoUrls?.length
-      ? initialPhotoUrls
-      : normalizeReviewPhotoUrls(session?.reviewSummary?.photo_urls ?? []);
-    return fromProps.map(absUploadUrl);
+    if (initialPhotoUrls?.length) return initialPhotoUrls;
+    return preferFreshProfilePhotoUrls(
+      normalizeReviewPhotoUrls(session?.reviewSummary?.photo_urls ?? []),
+      undefined,
+    );
   }, [
     livePhotoUrls,
     initialPhotoUrls,
@@ -603,8 +592,11 @@ export function CoachWelcomeClient() {
     if (!token || base.isGuest) return;
 
     const hasRichNotes = Boolean(base.coachingNotes?.trim());
-    const hasPhotos = Boolean(base.photoUrls?.length);
-    if (hasRichNotes && hasPhotos) return;
+    const storedPhotos = base.photoUrls ?? [];
+    // Signed `/uploads` links in session expire. Re-read GET /profile/skin.
+    const mustRefreshPhotos =
+      storedPhotos.length === 0 || storedPhotos.some((url) => isUserUploadUrl(url));
+    if (hasRichNotes && !mustRefreshPhotos) return;
 
     try {
       const prof = await fetchSkinProfile();
@@ -621,12 +613,7 @@ export function CoachWelcomeClient() {
           coachingNotes: hasRichNotes
             ? prev.coachingNotes
             : fromProf.coachingNotes || prev.coachingNotes,
-          photoUrls:
-            hasPhotos && prev.photoUrls?.length
-              ? prev.photoUrls
-              : fromProf.photoUrls?.length
-                ? fromProf.photoUrls
-                : prev.photoUrls,
+          photoUrls: preferFreshProfilePhotoUrls(prev.photoUrls, fromProf.photoUrls),
           analysisPhase: prev.analysisPhase ?? fromProf.analysisPhase,
           analysisSeverity:
             prev.analysisSeverity ?? fromProf.analysisHints.severity,

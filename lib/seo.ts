@@ -85,6 +85,7 @@ export function absoluteUrl(locale: string, path = ""): string {
  * raw Railway/API host, which is uglier and easier for scrapers to miss.
  */
 export function absoluteSiteUploadUrl(path: string): string {
+  if (path.startsWith("data:") || path.startsWith("blob:")) return path;
   if (path.startsWith("http://") || path.startsWith("https://")) {
     try {
       const u = new URL(path);
@@ -96,11 +97,18 @@ export function absoluteSiteUploadUrl(path: string): string {
     }
     return path;
   }
-  const normalized = path.startsWith("/") ? path : `/${path}`;
+  // Keep `?exp&sig` (and any hash). Parsing only `pathname` would 404 signed files.
+  const queryAt = path.indexOf("?");
+  const hashAt = path.indexOf("#");
+  const cut =
+    queryAt === -1 ? hashAt : hashAt === -1 ? queryAt : Math.min(queryAt, hashAt);
+  const pathOnly = cut === -1 ? path : path.slice(0, cut);
+  const suffix = cut === -1 ? "" : path.slice(cut);
+  const normalized = pathOnly.startsWith("/") ? pathOnly : `/${pathOnly}`;
   if (normalized.startsWith("/uploads/")) {
-    return `${siteOrigin()}${normalized}`;
+    return `${siteOrigin()}${normalized}${suffix}`;
   }
-  return `${siteOrigin()}/uploads/${path.replace(/^\//, "")}`;
+  return `${siteOrigin()}/uploads/${pathOnly.replace(/^\//, "")}${suffix}`;
 }
 
 export function ogLocale(locale: string): "vi_VN" | "en_US" {

@@ -4,6 +4,8 @@
  */
 
 import { sameOriginUploadUrl } from "@/lib/api/admin-skin-review";
+import { isUserUploadUrl } from "@/lib/media/upload-url";
+import { refetchSignedUploadUrl } from "@/lib/media/refetch-signed-photo";
 import {
   beforeAfterCardLayout,
   coverSourceRect,
@@ -70,9 +72,23 @@ export async function loadSharePhoto(url: string): Promise<HTMLImageElement> {
   try {
     const dataUrl = await fetchImageAsDataUrl(sameOrigin);
     return loadImageElement(dataUrl);
-  } catch {
-    const dataUrl = await fetchImageAsDataUrl(url);
-    return loadImageElement(dataUrl);
+  } catch (err) {
+    if (isUserUploadUrl(url)) {
+      try {
+        const fresh = await refetchSignedUploadUrl(url, "progress");
+        if (fresh) {
+          const dataUrl = await fetchImageAsDataUrl(sameOriginUploadUrl(fresh));
+          return loadImageElement(dataUrl);
+        }
+      } catch {
+        /* fall through to the original URL */
+      }
+    }
+    if (sameOrigin !== url) {
+      const dataUrl = await fetchImageAsDataUrl(url);
+      return loadImageElement(dataUrl);
+    }
+    throw err;
   }
 }
 

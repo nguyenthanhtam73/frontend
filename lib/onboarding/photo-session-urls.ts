@@ -1,3 +1,4 @@
+import { omitSignedUploadUrls } from "@/lib/media/upload-url";
 import type { PhotoItem } from "@/lib/stores/onboarding-store";
 
 /** URLs that survive sessionStorage reload and blob revocation. */
@@ -15,6 +16,18 @@ export function isPersistentPhotoUrl(url: string): boolean {
 export function normalizeReviewPhotoUrls(urls: string[] | undefined): string[] {
   if (!urls?.length) return [];
   return urls.map((u) => u.trim()).filter((u) => u !== "" && isPersistentPhotoUrl(u));
+}
+
+/**
+ * Session/local storage must not keep signed `/uploads?exp&sig` links.
+ * Data URLs and unsigned old-backend paths stay; fresh signatures come from
+ * `GET /profile/skin` when the account has one.
+ */
+export function photoUrlsForSessionStorage(
+  urls: string[] | undefined,
+): string[] | undefined {
+  const kept = omitSignedUploadUrls(normalizeReviewPhotoUrls(urls));
+  return kept.length > 0 ? kept : undefined;
 }
 
 /**

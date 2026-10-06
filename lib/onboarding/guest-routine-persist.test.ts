@@ -25,7 +25,12 @@ describe("slimGuestRoutinePayload", () => {
       reviewSummary: {
         skin_type: "combo",
         goal: "clear_acne",
-        photo_urls: ["data:image/png;base64,xx", "/uploads/face.jpg", "blob:https://x"],
+        photo_urls: [
+          "data:image/png;base64,xx",
+          "/uploads/face.jpg",
+          "/uploads/face.jpg?exp=1893456000&sig=deadbeef",
+          "blob:https://x",
+        ],
         skin_analysis: {
           skin_type_guess: "combo",
           undertone_guess: "prefer_not",
@@ -50,6 +55,7 @@ describe("slimGuestRoutinePayload", () => {
     assert.equal(slim.reviewSummary?.skin_type, "combo");
     assert.equal(slim.reviewSummary?.goal, "clear_acne");
     assert.equal(slim.reviewSummary?.photo_urls, undefined);
+    assert.equal(JSON.stringify(slim).includes("sig=deadbeef"), false);
     assert.equal(slim.reviewSummary?.skin_analysis, undefined);
     assert.equal(slim.coachingNotes, undefined);
   });

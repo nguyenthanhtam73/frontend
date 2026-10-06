@@ -22,6 +22,7 @@ import {
   hasGuestCompletedOnboardingTrial,
 } from "@/lib/stores/onboarding-store";
 import { ONBOARDING_MAX_PHOTOS } from "@/lib/onboarding/constants";
+import { preferFreshProfilePhotoUrls } from "@/lib/media/upload-url";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 
 export type OnboardingReviewData = {
@@ -59,7 +60,7 @@ export function buildReviewFromProfile(profile: SkinProfileResponse): Onboarding
     ? snap.body_concerns
     : profile.concerns ?? [];
   const photoUrls = normalizeReviewPhotoUrls(
-    (profile.photo_urls?.length ? profile.photo_urls : snap?.photo_urls ?? []).slice(
+    preferFreshProfilePhotoUrls(snap?.photo_urls, profile.photo_urls).slice(
       0,
       ONBOARDING_MAX_PHOTOS,
     ),
@@ -98,7 +99,10 @@ export function loadGuestReviewFromSession(): OnboardingReviewData | null {
       skillLevel: summary?.skill_level ?? null,
       concerns: summary?.body_concerns ?? [],
       photoUrls: normalizeReviewPhotoUrls(
-        (summary?.photo_urls ?? []).slice(0, ONBOARDING_MAX_PHOTOS),
+        preferFreshProfilePhotoUrls(summary?.photo_urls, undefined).slice(
+          0,
+          ONBOARDING_MAX_PHOTOS,
+        ),
       ),
       photosSkipped: summary?.photos_skipped === true,
       starter: p.starterRoutine,

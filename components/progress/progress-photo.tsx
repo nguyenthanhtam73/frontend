@@ -1,31 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { apiBaseUrl } from "@/lib/api";
+import { displayPhotoSrc } from "@/lib/media/display-photo-src";
+import { useRecoveredUploadSrc } from "@/lib/media/use-recovered-upload-src";
+import type { SignedPhotoOwner } from "@/lib/media/refresh-signed-photo";
 import { cn } from "@/lib/utils";
 
 /** ProgressPhoto — resilient thumbnail for timeline / before-after cards.
  *
- *  Skin-check uploads are served as backend-relative paths ("/uploads/..."), so
- *  we prefix `apiBaseUrl` for cross-origin dev (frontend :3000 → backend :8080).
- *
- *  Why the loading/error states matter here: historical photos can 404 when the
- *  underlying file is missing on disk (e.g. storage wiped on a redeploy). Without
- *  an `onError` fallback the browser paints its native broken-image icon, which
- *  is exactly the "ảnh ngày cũ bị lỗi" symptom. We degrade gracefully to the same
- *  "—" placeholder used when an entry has no photo at all. */
+ *  User photos are `/uploads/...` (optionally `?exp&sig`). Same-origin rewrite
+ *  serves them. When a signed link 404s, we refetch the owning progress list,
+ *  skin check, or profile once, then fall back to the "—" placeholder. */
 export function ProgressPhoto({
   url,
   alt,
   className,
+  source,
+  checkId,
 }: {
   url: string;
   alt: string;
   className?: string;
+  /** Owning API to re-query once after an `/uploads/` image fails. */
+  source?: SignedPhotoOwner;
+  /** Required when `source` is `skin-check`. */
+  checkId?: string;
 }) {
+  const owner: SignedPhotoOwner = source ?? (checkId ? "skin-check" : "progress");
+  const { src, failed, onError } = useRecoveredUploadSrc(url, owner, checkId);
   const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
 
   if (failed) {
     return (
@@ -42,12 +50,12 @@ export function ProgressPhoto({
       ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={absURL(url)}
+        src={displayPhotoSrc(src)}
         alt={alt}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        onError={() => setFailed(true)}
+        onError={onError}
         className={cn(
           "size-full object-cover transition-opacity duration-200",
           loaded ? "opacity-100" : "opacity-0",
@@ -56,9 +64,4 @@ export function ProgressPhoto({
       />
     </>
   );
-}
-
-function absURL(u: string): string {
-  if (u.startsWith("http")) return u;
-  return `${apiBaseUrl}${u}`;
 }

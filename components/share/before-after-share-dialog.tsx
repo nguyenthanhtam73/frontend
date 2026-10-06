@@ -223,7 +223,12 @@ function ShareSlot({
       )}
     >
       <div className="relative aspect-square w-full">
-        <ProgressPhoto url={photo.url} alt={`${label} · ${formatShareDate(photo.date)}`} />
+        <ProgressPhoto
+          url={photo.url}
+          alt={`${label} · ${formatShareDate(photo.date)}`}
+          source="progress"
+          checkId={photo.entryId}
+        />
       </div>
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent px-2 py-1.5">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-white/90">{label}</p>
@@ -297,7 +302,12 @@ function MiniPhotoPicker({
               )}
             >
               <div className="relative aspect-square w-full">
-                <ProgressPhoto url={item.url} alt={formatShareDate(item.date)} />
+                <ProgressPhoto
+                  url={item.url}
+                  alt={formatShareDate(item.date)}
+                  source="progress"
+                  checkId={item.entryId}
+                />
               </div>
               {key === latestKey ? (
                 <span className="absolute left-1 top-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-semibold text-primary-foreground">

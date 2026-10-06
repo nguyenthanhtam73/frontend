@@ -1,4 +1,5 @@
 import { ONBOARDING_MAX_PHOTOS } from "@/lib/onboarding/constants";
+import { preferFreshProfilePhotoUrls } from "@/lib/media/upload-url";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import {
   isStarterRoutinePending,
@@ -68,10 +69,10 @@ export function buildCoachWelcomeFromProfile(
       : null;
 
   const photoUrls = normalizeReviewPhotoUrls(
-    (profile.photo_urls?.length
-      ? profile.photo_urls
-      : snap?.photo_urls ?? []
-    ).slice(0, ONBOARDING_MAX_PHOTOS),
+    preferFreshProfilePhotoUrls(snap?.photo_urls, profile.photo_urls).slice(
+      0,
+      ONBOARDING_MAX_PHOTOS,
+    ),
   );
 
   const coachingNotes =
