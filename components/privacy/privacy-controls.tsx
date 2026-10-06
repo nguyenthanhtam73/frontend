@@ -24,6 +24,7 @@ import {
 import { createPortal } from "react-dom";
 
 import { PushNotificationSetting } from "@/components/privacy/push-notification-setting";
+import { DailyReminderScheduleCard } from "@/components/reminder/daily-reminder-schedule-card";
 import { ToastBanner } from "@/components/ui/toast-banner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -244,6 +245,8 @@ export function PrivacyControls() {
         </ul>
 
         <PushNotificationSetting />
+
+        <DailyReminderScheduleCard placement="settings" />
 
         <section
           id={PRIVACY_FACE_MODE_ID}

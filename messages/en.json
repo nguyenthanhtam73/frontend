@@ -536,7 +536,22 @@
       },
       "cta": "Check in (~30s)",
       "dismiss": "Later",
-      "laterToday": "Later today"
+      "laterToday": "Later today",
+      "scheduleTitle": "Remind me to take a skin photo each day",
+      "scheduleHelper": "At most one reminder a day. If you already checked in that day, we stay quiet.",
+      "scheduleOff": "Reminders off",
+      "scheduleOn": "On at {time}",
+      "scheduleOnPending": "On — pick a time below",
+      "scheduleToggleLabel": "Turn the daily reminder on or off",
+      "scheduleTimeLabel": "Reminder time",
+      "scheduleSave": "Save this time",
+      "scheduleSaving": "Saving…",
+      "scheduleSaved": "Saved. We'll remind you at this time.",
+      "scheduleError": "Couldn't save. Please try again.",
+      "scheduleLoading": "Loading your reminder time…",
+      "scheduleDefaultHint": "No time picked yet — the usual evening reminder still runs.",
+      "scheduleZoneVietnam": "Vietnam time",
+      "scheduleZoneDevice": "This device's time"
     },
     "push": {
       "title": "Turn on an evening nudge so you don't forget to check in?",
