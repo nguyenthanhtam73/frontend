@@ -31,6 +31,7 @@ export default async function DeleteAccountPage({ params }: Props) {
     <DeleteAccountDoc
       privacyHref={localePath(locale, "/privacy")}
       homeHref={localePath(locale, "/")}
+      settingsHref={localePath(locale, "/settings")}
       copy={{
         title: t("title"),
         intro: t("intro"),
@@ -38,12 +39,15 @@ export default async function DeleteAccountPage({ params }: Props) {
         steps: DELETE_ACCOUNT_STEP_KEYS.map((key) => t(`steps.${key}`)),
         deletedTitle: t("deletedTitle"),
         deletedBody: t("deletedBody"),
+        premium: t("premium"),
+        settingsLink: t("settingsLink"),
         keptTitle: t("keptTitle"),
         retentionPayments: t("retention.payments"),
         retentionStats: t("retention.stats"),
         undo: t("undo"),
         cantSignInTitle: t("cantSignInTitle"),
         cantSignInBody: t("cantSignInBody"),
+        cantSignInAlso: t("cantSignInAlso"),
         privacyLink: t("privacyLink"),
         homeLink: t("homeLink"),
         facebookLabel: tSocial("facebook"),

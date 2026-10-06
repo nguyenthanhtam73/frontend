@@ -2561,6 +2561,7 @@
     "deleteAccountCta": "Xoá tài khoản",
     "deleteAccountConfirmTitle": "Xoá tài khoản này?",
     "deleteAccountConfirmBody": "Tài khoản, email, ảnh da, nhật ký, sản phẩm trong tủ và nhắc nhở sẽ mất. Mọi nơi đang đăng nhập sẽ bị đăng xuất. Không lấy lại được. Bạn vẫn đăng ký lại bằng cùng email được.",
+    "deleteAccountPremium": "Gói Premium đang dùng (nếu có) sẽ mất khi xoá tài khoản và không được hoàn tiền.",
     "deleteAccountPasswordLabel": "Nhập lại mật khẩu",
     "deleteAccountConfirmCta": "Xoá tài khoản",
     "deleteAccountCancel": "Để sau",
@@ -3270,12 +3271,14 @@
       "stepsTitle": "Các bước",
       "steps": {
         "s1": "Trên web hoặc trong app, bạn đăng nhập.",
-        "s2": "Mở trang tài khoản hoặc Cài đặt.",
+        "s2": "Mở trang Cài đặt.",
         "s3": "Bấm “Xoá tài khoản”.",
         "s4": "Nhập lại mật khẩu, rồi xác nhận."
       },
       "deletedTitle": "Những gì bị xoá",
       "deletedBody": "Tài khoản của bạn, email, toàn bộ ảnh da và nhật ký, sản phẩm trong tủ, và nhắc nhở. Mọi nơi đang đăng nhập sẽ bị đăng xuất.",
+      "premium": "Gói Premium đang dùng (nếu có) sẽ mất khi xoá tài khoản và không được hoàn tiền.",
+      "settingsLink": "Cài đặt",
       "keptTitle": "Những gì còn giữ",
       "retention": {
         "payments": "Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm.",
@@ -3283,7 +3286,8 @@
       },
       "undo": "Việc này không lấy lại được. Sau này bạn vẫn đăng ký lại bằng cùng email được.",
       "cantSignInTitle": "Nếu bạn không đăng nhập được",
-      "cantSignInBody": "Hãy nhắn DaDiary trên Facebook hoặc TikTok (cùng cách liên hệ ở trang Quyền riêng tư) để được xoá giúp.",
+      "cantSignInBody": "Nếu bạn quên mật khẩu hoặc không đăng nhập được, hãy gửi email xin xoá tài khoản từ đúng email bạn đã dùng để đăng ký.",
+      "cantSignInAlso": "Bạn cũng có thể nhắn trên Facebook hoặc TikTok.",
       "privacyLink": "Quyền riêng tư",
       "homeLink": "Về trang chủ"
     }

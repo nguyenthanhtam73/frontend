@@ -17,6 +17,7 @@ function copy(): DeleteAccountDialogCopy {
   return {
     title: p.deleteAccountConfirmTitle!,
     body: p.deleteAccountConfirmBody!,
+    premium: p.deleteAccountPremium!,
     passwordLabel: p.deleteAccountPasswordLabel!,
     confirm: p.deleteAccountConfirmCta!,
     cancel: p.deleteAccountCancel!,
@@ -43,6 +44,7 @@ describe("delete account dialog", () => {
         onClose={noop}
       />,
     );
+    assert.match(html, /Gói Premium đang dùng \(nếu có\) sẽ mất khi xoá tài khoản và không được hoàn tiền\./);
     assert.match(html, /max-h-\[calc\(100dvh-1\.5rem\)\]/);
     assert.match(html, /min-h-11 w-full/);
     assert.match(html, /data-testid="delete-account-confirm"[^>]*disabled/);

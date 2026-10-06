@@ -6,6 +6,7 @@ import { canConfirmDeleteAccount, type DeleteAccountFailure } from "@/lib/accoun
 export type DeleteAccountDialogCopy = {
   title: string;
   body: string;
+  premium: string;
   passwordLabel: string;
   confirm: string;
   cancel: string;
@@ -54,7 +55,11 @@ export function DeleteAccountDialogPanel({
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="delete-account-title"
-      aria-describedby={error ? "delete-account-body delete-account-error" : "delete-account-body"}
+      aria-describedby={
+        error
+          ? "delete-account-body delete-account-premium delete-account-error"
+          : "delete-account-body delete-account-premium"
+      }
       aria-busy={busy}
       data-testid="delete-account-dialog"
       className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl border-2 border-destructive/40 bg-background shadow-2xl"
@@ -76,6 +81,13 @@ export function DeleteAccountDialogPanel({
           </h2>
           <p id="delete-account-body" className="text-sm leading-relaxed text-muted-foreground">
             {copy.body}
+          </p>
+          <p
+            id="delete-account-premium"
+            data-testid="delete-account-premium"
+            className="text-sm leading-relaxed text-muted-foreground"
+          >
+            {copy.premium}
           </p>
           <div className="space-y-1.5">
             <label

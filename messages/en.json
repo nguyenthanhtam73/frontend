@@ -2561,6 +2561,7 @@
     "deleteAccountCta": "Delete account",
     "deleteAccountConfirmTitle": "Delete this account?",
     "deleteAccountConfirmBody": "Your account, email, skin photos, diary, cabinet products, and reminders will be removed. Every signed-in device is signed out. This cannot be undone. You can sign up again later with the same email.",
+    "deleteAccountPremium": "If you have a Premium plan, it ends when the account is deleted and is not refunded.",
     "deleteAccountPasswordLabel": "Type your password again",
     "deleteAccountConfirmCta": "Delete account",
     "deleteAccountCancel": "Not now",
@@ -3270,12 +3271,14 @@
       "stepsTitle": "Steps",
       "steps": {
         "s1": "On the web or in the app, sign in.",
-        "s2": "Open the account or Settings page.",
+        "s2": "Open Settings.",
         "s3": "Tap “Delete account”.",
         "s4": "Type your password again, then confirm."
       },
       "deletedTitle": "What gets deleted",
       "deletedBody": "Your account, email, all skin photos and diary entries, cabinet products, and reminders. Every signed-in device is signed out.",
+      "premium": "If you have a Premium plan, it ends when the account is deleted and is not refunded.",
+      "settingsLink": "Settings",
       "keptTitle": "What we keep",
       "retention": {
         "payments": "Payment records (the amount, date, and status; no name or email) are kept for as long as accounting law requires, up to 10 years.",
@@ -3283,7 +3286,8 @@
       },
       "undo": "This cannot be undone. You can sign up again later with the same email.",
       "cantSignInTitle": "If you can’t sign in",
-      "cantSignInBody": "Message DaDiary on Facebook or TikTok — the same contact path as the privacy page — and we’ll delete it for you.",
+      "cantSignInBody": "If you forgot your password or cannot sign in, email us from the address you signed up with and ask us to delete the account.",
+      "cantSignInAlso": "You can also message us on Facebook or TikTok.",
       "privacyLink": "Privacy",
       "homeLink": "Back to home"
     }

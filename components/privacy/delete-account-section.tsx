@@ -103,6 +103,7 @@ export function DeleteAccountSection() {
   const copy = {
     title: t("deleteAccountConfirmTitle"),
     body: t("deleteAccountConfirmBody"),
+    premium: t("deleteAccountPremium"),
     passwordLabel: t("deleteAccountPasswordLabel"),
     confirm: t("deleteAccountConfirmCta"),
     cancel: t("deleteAccountCancel"),

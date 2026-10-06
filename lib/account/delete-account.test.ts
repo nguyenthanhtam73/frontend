@@ -40,7 +40,18 @@ function futureAccessToken(): string {
   return `hdr.${payload}.sig`;
 }
 
+function installNavigatorStub(): void {
+  // Node 20 has no global `navigator`. A bare `navigator` read throws
+  // "navigator is not defined" before any `"serviceWorker" in navigator` check.
+  if (typeof globalThis.navigator !== "undefined") return;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {},
+  });
+}
+
 function installMemoryStorage(): void {
+  installNavigatorStub();
   const data = new Map<string, string>();
   const storage = {
     getItem: (key: string) => (data.has(key) ? data.get(key)! : null),

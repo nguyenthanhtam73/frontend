@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "@/lib/config";
 import { FACEBOOK_PROFILE_URL, TIKTOK_PROFILE_URL } from "@/lib/seo";
 
 export const DELETE_ACCOUNT_STEP_KEYS = ["s1", "s2", "s3", "s4"] as const;
@@ -9,6 +10,10 @@ export type DeleteAccountCopy = {
   steps: readonly string[];
   deletedTitle: string;
   deletedBody: string;
+  /** Active Premium ends with the account and is not refunded. */
+  premium: string;
+  /** Visible label inside step 2. The word itself is the /settings link. */
+  settingsLink: string;
   keptTitle: string;
   /** Edit these two lines in messages `legal.deleteAccount.retention`. */
   retentionPayments: string;
@@ -16,6 +21,7 @@ export type DeleteAccountCopy = {
   undo: string;
   cantSignInTitle: string;
   cantSignInBody: string;
+  cantSignInAlso: string;
   privacyLink: string;
   homeLink: string;
   facebookLabel: string;
@@ -26,12 +32,32 @@ type DeleteAccountDocProps = {
   copy: DeleteAccountCopy;
   privacyHref: string;
   homeHref: string;
+  settingsHref: string;
 };
+
+function stepWithSettingsLink(step: string, label: string, href: string) {
+  const at = step.indexOf(label);
+  if (at < 0) return step;
+  return (
+    <>
+      {step.slice(0, at)}
+      <a href={href} className={linkClass}>
+        {label}
+      </a>
+      {step.slice(at + label.length)}
+    </>
+  );
+}
 
 const linkClass = "font-medium text-primary underline underline-offset-4";
 
 /** Public help article. No session check — anyone can read it. */
-export function DeleteAccountDoc({ copy, privacyHref, homeHref }: DeleteAccountDocProps) {
+export function DeleteAccountDoc({
+  copy,
+  privacyHref,
+  homeHref,
+  settingsHref,
+}: DeleteAccountDocProps) {
   return (
     <article
       data-testid="delete-account-page"
@@ -51,7 +77,7 @@ export function DeleteAccountDoc({ copy, privacyHref, homeHref }: DeleteAccountD
         <h2 className="text-base font-semibold tracking-tight">{copy.stepsTitle}</h2>
         <ol className="list-decimal space-y-1.5 pl-5 text-pretty text-sm leading-relaxed text-muted-foreground">
           {copy.steps.map((step) => (
-            <li key={step}>{step}</li>
+            <li key={step}>{stepWithSettingsLink(step, copy.settingsLink, settingsHref)}</li>
           ))}
         </ol>
       </section>
@@ -59,6 +85,12 @@ export function DeleteAccountDoc({ copy, privacyHref, homeHref }: DeleteAccountD
       <section className="mt-6 space-y-2">
         <h2 className="text-base font-semibold tracking-tight">{copy.deletedTitle}</h2>
         <p className="text-pretty text-sm leading-relaxed text-muted-foreground">{copy.deletedBody}</p>
+        <p
+          data-testid="delete-account-premium"
+          className="text-pretty text-sm leading-relaxed text-muted-foreground"
+        >
+          {copy.premium}
+        </p>
       </section>
 
       {/*
@@ -84,6 +116,12 @@ export function DeleteAccountDoc({ copy, privacyHref, homeHref }: DeleteAccountD
       <section className="mt-8 space-y-2">
         <h2 className="text-base font-semibold tracking-tight">{copy.cantSignInTitle}</h2>
         <p className="text-pretty text-sm leading-relaxed text-muted-foreground">{copy.cantSignInBody}</p>
+        <p className="text-sm text-muted-foreground">
+          <a href={`mailto:${SUPPORT_EMAIL}`} className={linkClass}>
+            {SUPPORT_EMAIL}
+          </a>
+        </p>
+        <p className="text-pretty text-sm leading-relaxed text-muted-foreground">{copy.cantSignInAlso}</p>
         <p className="text-sm text-muted-foreground">
           <a href={FACEBOOK_PROFILE_URL} className={linkClass}>
             {copy.facebookLabel}
