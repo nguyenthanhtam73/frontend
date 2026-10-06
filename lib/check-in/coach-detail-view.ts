@@ -64,27 +64,61 @@ export function coachSeverityLabelKey(severity: unknown): CoachSeverityLabelKey 
   return null;
 }
 
-function foldForMatch(value: string): string {
-  return value.normalize("NFC").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+function lowerChar(ch: string): string {
+  return ch.toLocaleLowerCase("vi");
+}
+
+function isSpace(ch: string): boolean {
+  return /^\s$/u.test(ch);
+}
+
+function isLetter(ch: string): boolean {
+  return /^\p{L}$/u.test(ch);
+}
+
+/** Comma, colon, or a dash. A following letter is never a boundary. */
+function isSeparator(ch: string): boolean {
+  return ch === "," || ch === ":" || ch === "-" || ch === "–" || ch === "—";
+}
+
+function capitalizeFirst(value: string): string {
+  const chars = Array.from(value);
+  const first = chars[0];
+  if (!first) return value;
+  return first.toLocaleUpperCase("vi") + chars.slice(1).join("");
 }
 
 /**
  * Drop a leading zone label from a note, then capitalize what's left.
- * Match is case- and accent-insensitive after NFC. No label, or nothing
- * left after the name, keeps the original sentence.
+ * Match is NFC + lowercase and keeps diacritics. The label must be the whole
+ * prefix and be followed by whitespace or , : - – —. A glued letter stays put.
+ * The label alone, or nothing left after the separator, keeps the original note.
  */
 export function stripLeadingZoneLabel(note: string, label: string): string {
   const noteChars = Array.from(note.normalize("NFC"));
   const labelChars = Array.from(label.normalize("NFC").trim());
-  if (labelChars.length === 0 || noteChars.length < labelChars.length) return note;
+  if (labelChars.length === 0 || noteChars.length <= labelChars.length) return note;
   for (let i = 0; i < labelChars.length; i++) {
-    if (foldForMatch(noteChars[i]!) !== foldForMatch(labelChars[i]!)) return note;
+    if (lowerChar(noteChars[i]!) !== lowerChar(labelChars[i]!)) return note;
   }
-  const rest = noteChars.slice(labelChars.length).join("").trimStart();
-  if (!rest) return note;
-  const restChars = Array.from(rest);
-  const first = restChars[0]!;
-  return first.toLocaleUpperCase("vi") + restChars.slice(1).join("");
+
+  let j = labelChars.length;
+  const boundary = noteChars[j]!;
+  if (isLetter(boundary) || (!isSpace(boundary) && !isSeparator(boundary))) return note;
+  if (isSpace(boundary)) {
+    while (j < noteChars.length && isSpace(noteChars[j]!)) j++;
+    if (j < noteChars.length && isSeparator(noteChars[j]!)) {
+      j++;
+      while (j < noteChars.length && isSpace(noteChars[j]!)) j++;
+    }
+  } else {
+    j++;
+    while (j < noteChars.length && isSpace(noteChars[j]!)) j++;
+  }
+
+  const rest = noteChars.slice(j).join("");
+  if (!/[\p{L}\p{N}]/u.test(rest)) return note;
+  return capitalizeFirst(rest);
 }
 
 /** Drop blank notes, keep API order, cap at 5. Missing or non-array → nothing. */

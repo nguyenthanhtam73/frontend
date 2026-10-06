@@ -86,15 +86,31 @@ describe("visibleZoneNotes", () => {
       "Trông giống nốt nhỏ",
     );
     assert.equal(
-      stripLeadingZoneLabel("ma trai trông giống nốt nhỏ", "Má trái"),
-      "Trông giống nốt nhỏ",
+      stripLeadingZoneLabel("Má trái: hơi khô", "Má trái"),
+      "Hơi khô",
     );
+    assert.equal(
+      stripLeadingZoneLabel("Má trái – hơi khô", "Má trái"),
+      "Hơi khô",
+    );
+    assert.equal(stripLeadingZoneLabel("Má trái", "Má trái"), "Má trái");
     const decomposed = `${"Má trái".normalize("NFD")} trông giống nốt nhỏ`;
     assert.equal(stripLeadingZoneLabel(decomposed, "Má trái"), "Trông giống nốt nhỏ");
     assert.equal(
       stripLeadingZoneLabel("Có nốt nhỏ ở má trái.", "Má trái"),
       "Có nốt nhỏ ở má trái.",
     );
+    assert.equal(stripLeadingZoneLabel("Cơ địa dễ khô.", "Cổ"), "Cơ địa dễ khô.");
+    assert.equal(stripLeadingZoneLabel("Có vài nốt đỏ.", "Cổ"), "Có vài nốt đỏ.");
+    assert.equal(stripLeadingZoneLabel("Tràn nhẹ ở giữa.", "Trán"), "Tràn nhẹ ở giữa.");
+    assert.equal(stripLeadingZoneLabel("Tràn…", "Trán"), "Tràn…");
+    assert.equal(stripLeadingZoneLabel("Mùi hơi lạ.", "Mũi"), "Mùi hơi lạ.");
+    assert.equal(stripLeadingZoneLabel("Mùi…", "Mũi"), "Mùi…");
+    assert.equal(stripLeadingZoneLabel("Cam sần một chút.", "Cằm"), "Cam sần một chút.");
+    assert.equal(stripLeadingZoneLabel("Cam…", "Cằm"), "Cam…");
+    assert.equal(stripLeadingZoneLabel("Má tráii hơi đỏ.", "Má trái"), "Má tráii hơi đỏ.");
+    assert.equal(stripLeadingZoneLabel("Má trái - hơi khô", "Má trái"), "Hơi khô");
+    assert.equal(stripLeadingZoneLabel("Má trái—hơi khô", "Má trái"), "Hơi khô");
 
     const shown = visibleZoneNotes(
       [{ zone: "left_cheek", note: "Má trái trông giống nốt nhỏ", severity: "mild" }],
