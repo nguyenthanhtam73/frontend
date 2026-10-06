@@ -154,6 +154,24 @@ function setStoredVapidPublicKey(key: string): void {
 }
 
 /**
+ * Whether this browser has a PushManager subscription.
+ * `false` when there is no registration or the subscription is null.
+ * `null` when the lookup failed (caller should not treat that as "unsubscribed").
+ */
+export async function probeBrowserPushSubscription(): Promise<boolean | null> {
+  if (typeof navigator === "undefined") return null;
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration("/");
+    if (!reg) return false;
+    const sub = await reg.pushManager.getSubscription();
+    return sub != null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Current browser PushManager subscription endpoint, or null.
  * Ensures `/sw.js` is registered + ready first so Settings sync does not
  * briefly treat a missing registration as "other device".

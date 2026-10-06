@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { subscribePush } from "@/lib/api/push";
+import { skipPushOptIn } from "@/lib/api/reminder";
 import { FUNNEL_EVENTS, trackFunnelEventOncePerUser } from "@/lib/analytics/funnel";
 import { getAccessToken } from "@/lib/auth-token";
 import {
@@ -11,6 +12,7 @@ import {
   shouldPromptFirstCheckInPush,
   writePushNudgeStatus,
 } from "@/lib/check-in/first-check-in-push";
+import { shouldReshowPushAfterCheckIn } from "@/lib/check-in/push-opt-in-reshow";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   checkPushSupport,
@@ -20,7 +22,7 @@ import {
   setLocalPushEnabled,
 } from "@/lib/web-push";
 
-export type ActivationPushMode = "pre_checkin" | "post_first_checkin";
+export type ActivationPushMode = "pre_checkin" | "post_first_checkin" | "post_checkin_reshow";
 
 type Args = {
   surface: string;
@@ -28,6 +30,16 @@ type Args = {
   checkInCompleted?: boolean;
   isFirstCheckIn?: boolean;
   onVisibilityChange?: (visible: boolean) => void;
+  onReadyChange?: (ready: boolean) => void;
+  /** Server `push_opt_in_reshow_eligible`. Only read for `post_checkin_reshow`. */
+  reshowEligible?: boolean;
+  /**
+   * PushManager subscription. `null` while the lookup is in flight.
+   * Only read for `post_checkin_reshow`.
+   */
+  hasBrowserSubscription?: boolean | null;
+  /** When the first-check-in card is already on screen, the re-show stays hidden. */
+  firstCheckInNudgeVisible?: boolean;
 };
 
 export function useActivationPushPrompt({
@@ -36,6 +48,10 @@ export function useActivationPushPrompt({
   checkInCompleted = false,
   isFirstCheckIn = false,
   onVisibilityChange,
+  onReadyChange,
+  reshowEligible = false,
+  hasBrowserSubscription = null,
+  firstCheckInNudgeVisible = false,
 }: Args) {
   const userId = useAuthStore((s) => s.user?.id);
   const signedIn = Boolean(userId || getAccessToken());
@@ -48,6 +64,21 @@ export function useActivationPushPrompt({
     const support = checkPushSupport();
     const permission: NotificationPermission | "unknown" =
       typeof Notification === "undefined" ? "unknown" : Notification.permission;
+    if (mode === "post_checkin_reshow") {
+      const show =
+        typeof hasBrowserSubscription === "boolean" &&
+        shouldReshowPushAfterCheckIn({
+          pushOptInReshowEligible: reshowEligible,
+          supportOk: support.ok,
+          permission,
+          hasBrowserSubscription,
+          localPushEnabled: getLocalPushEnabled(),
+          firstCheckInNudgeVisible,
+        });
+      setVisible(show);
+      setReady(true);
+      return;
+    }
     const gate = {
       supportOk: support.ok,
       permission,
@@ -64,11 +95,24 @@ export function useActivationPushPrompt({
           });
     setVisible(show);
     setReady(true);
-  }, [checkInCompleted, isFirstCheckIn, mode, signedIn, userId]);
+  }, [
+    checkInCompleted,
+    firstCheckInNudgeVisible,
+    hasBrowserSubscription,
+    isFirstCheckIn,
+    mode,
+    reshowEligible,
+    signedIn,
+    userId,
+  ]);
 
   useEffect(() => {
     onVisibilityChange?.(visible);
   }, [onVisibilityChange, visible]);
+
+  useEffect(() => {
+    onReadyChange?.(ready);
+  }, [onReadyChange, ready]);
 
   const dismiss = useCallback(() => {
     if (userId) {
@@ -77,6 +121,11 @@ export function useActivationPushPrompt({
         surface,
         mode,
       });
+    }
+    // Explicit Later only. permission_denied is handled in `enable` and must
+    // not tell the server the user skipped the opt-in.
+    if (getAccessToken()) {
+      void skipPushOptIn();
     }
     setVisible(false);
   }, [mode, surface, userId]);

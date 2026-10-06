@@ -1,11 +1,46 @@
 import { ApiError, apiDelete, apiGet, apiPost } from "@/lib/api-client";
 import { getAccessToken } from "@/lib/auth-token";
+import type { PushClickRecord } from "@/lib/push/click-record";
 import type {
   PushSubscriptionResponse,
   PushTestResponse,
   PushUnsubscribeResponse,
   SubscribePushPayload,
 } from "@/lib/types/push";
+
+/** `data` from POST /api/v1/me/push/click. A duplicate key is still HTTP 200. */
+export type PushClickResult = {
+  recorded: boolean;
+  duplicate: boolean;
+};
+
+/**
+ * Record a notification click. Guests (no access token) are a no-op.
+ * Failures are swallowed — callers treat `null` as "leave it queued".
+ */
+export async function recordPushClick(
+  click: PushClickRecord,
+): Promise<PushClickResult | null> {
+  if (!getAccessToken()) return null;
+  try {
+    const data = await apiPost<PushClickResult>(
+      "/api/v1/me/push/click",
+      {
+        kind: click.kind,
+        tag: click.tag,
+        idempotency_key: click.idempotency_key,
+        clicked_at: click.clicked_at,
+      },
+      { toastOnError: false },
+    );
+    return {
+      recorded: Boolean(data?.recorded),
+      duplicate: Boolean(data?.duplicate),
+    };
+  } catch {
+    return null;
+  }
+}
 
 /** Persist a browser Web Push subscription for the authenticated user. */
 export async function subscribePush(

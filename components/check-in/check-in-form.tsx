@@ -25,7 +25,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
 import { CheckInOpenActions } from "@/components/check-in/check-in-open-actions";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
-import { FirstCheckInPushNudge } from "@/components/check-in/first-check-in-push-nudge";
+import { CheckInPushOffers } from "@/components/check-in/check-in-push-offers";
 import { GuestAiWait } from "@/components/check-in/guest-ai-wait";
 import { useCheckInFeedback } from "@/components/check-in/use-check-in-feedback";
 import { useGuestAiWait } from "@/components/check-in/use-guest-ai-wait";
@@ -962,9 +962,10 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
               payload={feedback.payload}
               onRetry={feedback.resetFeedback}
             />
-            <FirstCheckInPushNudge
+            <CheckInPushOffers
               completed
               payload={feedback.payload}
+              signedIn={signedIn}
             />
           </>
         ) : null}
