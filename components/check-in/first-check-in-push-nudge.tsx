@@ -13,35 +13,29 @@ import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 type Props = {
   completed: boolean;
   payload: CreateSkinCheckResponseDTO | null;
+  onVisibilityChange?: (visible: boolean) => void;
+  onReadyChange?: (ready: boolean) => void;
 };
 
-/**
- * Fallback Web Push nudge after the first check-in.
- * Hidden if the user already opted in or dismissed the pre-check-in CTA.
- */
-export function FirstCheckInPushNudge({ completed, payload }: Props) {
+export function PushNudgeCard({
+  testId,
+  enabling,
+  error,
+  onEnable,
+  onDismiss,
+}: {
+  testId: string;
+  enabling: boolean;
+  error: string | null;
+  onEnable: () => void;
+  onDismiss: () => void;
+}) {
   const t = useTranslations("checkIn.pushNudge");
-  const streakQuery = useStreak();
-
-  const isFirst = useMemo(() => {
-    if (streakQuery.data) return isFirstCheckInStreak(streakQuery.data);
-    if (streakQuery.isPending) return false;
-    return payload?.streak ? isFirstCheckInStreak(payload.streak) : false;
-  }, [payload?.streak, streakQuery.data, streakQuery.isPending]);
-
-  const { visible, enabling, error, enable, dismiss } = useActivationPushPrompt({
-    surface: "first_check_in_fallback",
-    mode: "post_first_checkin",
-    checkInCompleted: completed,
-    isFirstCheckIn: isFirst,
-  });
-
-  if (!visible) return null;
 
   return (
     <aside
       className="rounded-2xl border border-primary/30 bg-primary/[0.07] px-4 py-4 sm:px-5"
-      data-testid="first-check-in-push-nudge"
+      data-testid={testId}
     >
       <div className="flex items-start gap-3">
         <span className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -60,7 +54,7 @@ export function FirstCheckInPushNudge({ completed, payload }: Props) {
               type="button"
               size="sm"
               className="gap-1.5"
-              onClick={() => void enable()}
+              onClick={onEnable}
               disabled={enabling}
             >
               {enabling ? (
@@ -74,7 +68,7 @@ export function FirstCheckInPushNudge({ completed, payload }: Props) {
               type="button"
               size="sm"
               variant="ghost"
-              onClick={dismiss}
+              onClick={onDismiss}
               disabled={enabling}
             >
               {t("later")}
@@ -83,5 +77,45 @@ export function FirstCheckInPushNudge({ completed, payload }: Props) {
         </div>
       </div>
     </aside>
+  );
+}
+
+/**
+ * Fallback Web Push nudge after the first check-in.
+ * Hidden if the user already opted in or dismissed the pre-check-in CTA.
+ */
+export function FirstCheckInPushNudge({
+  completed,
+  payload,
+  onVisibilityChange,
+  onReadyChange,
+}: Props) {
+  const streakQuery = useStreak();
+
+  const isFirst = useMemo(() => {
+    if (streakQuery.data) return isFirstCheckInStreak(streakQuery.data);
+    if (streakQuery.isPending) return false;
+    return payload?.streak ? isFirstCheckInStreak(payload.streak) : false;
+  }, [payload?.streak, streakQuery.data, streakQuery.isPending]);
+
+  const { visible, enabling, error, enable, dismiss } = useActivationPushPrompt({
+    surface: "first_check_in_fallback",
+    mode: "post_first_checkin",
+    checkInCompleted: completed,
+    isFirstCheckIn: isFirst,
+    onVisibilityChange,
+    onReadyChange,
+  });
+
+  if (!visible) return null;
+
+  return (
+    <PushNudgeCard
+      testId="first-check-in-push-nudge"
+      enabling={enabling}
+      error={error}
+      onEnable={() => void enable()}
+      onDismiss={dismiss}
+    />
   );
 }
