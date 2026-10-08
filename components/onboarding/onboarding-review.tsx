@@ -36,7 +36,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { Link, useRouter } from "@/i18n/navigation";
-import { apiBaseUrl } from "@/lib/api";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
@@ -45,6 +44,8 @@ import {
   dedupeConcernIds,
   dedupeConcernLabels,
 } from "@/lib/onboarding/dedupe-concerns";
+import { displayPhotoSrc } from "@/lib/media/display-photo-src";
+import { useRecoveredUploadSrc } from "@/lib/media/use-recovered-upload-src";
 import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import { GUEST_COACH_PROFILE_ID } from "@/lib/types/starter-routine";
 import { cn } from "@/lib/utils";
@@ -65,19 +66,6 @@ type OnboardingReviewProps = {
   data: OnboardingReviewData;
   onDeleted?: () => void;
 };
-
-function absUploadUrl(url: string): string {
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("blob:") ||
-    url.startsWith("data:")
-  ) {
-    return url;
-  }
-  const base = apiBaseUrl.replace(/\/$/, "");
-  return `${base}${url.startsWith("/") ? url : `/${url}`}`;
-}
 
 /**
  * Archive / profile summary after onboarding — not a clone of coach-welcome.
@@ -508,10 +496,10 @@ function ReviewPhotoGrid({
       {urls.map((url, i) => (
         <li key={`${url}-${i}`}>
           <ReviewPhotoThumb
-            src={absUploadUrl(url)}
+            url={url}
             alt={altLabel(i + 1)}
             eagerLoad={eagerLoad}
-            onOpen={() => onOpen(absUploadUrl(url))}
+            onOpen={onOpen}
           />
         </li>
       ))}
@@ -520,23 +508,28 @@ function ReviewPhotoGrid({
 }
 
 function ReviewPhotoThumb({
-  src,
+  url,
   alt,
   onOpen,
   eagerLoad = false,
 }: {
-  src: string;
+  url: string;
   alt: string;
-  onOpen: () => void;
+  onOpen: (shown: string) => void;
   eagerLoad?: boolean;
 }) {
+  const { src, failed, onError } = useRecoveredUploadSrc(url, "profile");
+  const shown = displayPhotoSrc(src);
   const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [shown]);
 
   return (
     <button
       type="button"
-      onClick={onOpen}
+      onClick={() => onOpen(shown)}
       disabled={failed}
       className="group relative aspect-3/4 w-full overflow-hidden rounded-xl border border-border/80 bg-muted shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-70"
     >
@@ -553,12 +546,12 @@ function ReviewPhotoThumb({
       ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={shown}
         alt={alt}
         loading={eagerLoad ? "eager" : "lazy"}
         decoding="async"
         onLoad={() => setLoaded(true)}
-        onError={() => setFailed(true)}
+        onError={onError}
         className={cn(
           "size-full object-cover transition-opacity duration-200",
           loaded && !failed ? "opacity-100" : "opacity-0",

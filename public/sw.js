@@ -2,7 +2,8 @@
  * DaDiary service worker.
  *
  * Strategies (kept intentionally small and dependency-free):
- *   • Cache-first      → hashed Next.js static assets, fonts, icons, images.
+ *   • Cache-first      → hashed Next.js static assets, fonts, icons.
+ *                         User face photos under `/uploads/` are never cached.
  *   • Network-first    → top-level HTML navigations: always fetch fresh HTML so
  *                         post-deploy chunk hashes stay in sync; cache is fallback
  *                         when offline (stale-while-revalidate broke mobile after deploys).
@@ -19,7 +20,7 @@
  * is best-effort (expired endpoints are cleaned up server-side).
  */
 
-const CACHE_VERSION = "v17";
+const CACHE_VERSION = "v19";
 const STATIC_CACHE = `dadiary-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `dadiary-runtime-${CACHE_VERSION}`;
 const HTML_CACHE = `dadiary-html-${CACHE_VERSION}`;
@@ -86,10 +87,23 @@ self.addEventListener("activate", (event) => {
 // Activate only when the page asks (Apply update). Pair with a reload on
 // controllerchange — never silent-activate in the page without that reload.
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+  const type = event.data && event.data.type;
+  if (type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
+  }
+  // Logout posts this so authenticated API JSON cannot be served after sign-out.
+  if (type === "CLEAR_CACHES") {
+    event.waitUntil(clearDadiaryCaches());
   }
 });
+
+async function clearDadiaryCaches() {
+  const keys = await caches.keys();
+  await Promise.all(
+    keys.filter((key) => key.startsWith("dadiary-")).map((key) => caches.delete(key)),
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Web Push — display + click routing
@@ -315,8 +329,139 @@ self.addEventListener("notificationclick", (event) => {
   }
 
   const targetPath = resolveNotificationPath(clickAction, payload);
-  event.waitUntil(openAppWindow(targetPath));
+  // Open the app first. Click tracking runs beside it and must not reject
+  // this waitUntil (IndexedDB / postMessage failures are swallowed).
+  const navigation = openAppWindow(targetPath);
+  const tracking = capturePushClick(event.notification);
+  event.waitUntil(
+    (async () => {
+      let navError = null;
+      let navResult = null;
+      try {
+        navResult = await navigation;
+      } catch (err) {
+        navError = err;
+      }
+      try {
+        const click = await tracking;
+        // Second broadcast so a window opened by this click can see it.
+        if (click) await broadcastPushClick(click);
+      } catch {
+        // tracking is best-effort
+      }
+      if (navError) throw navError;
+      return navResult;
+    })(),
+  );
 });
+
+/**
+ * Click record for POST /api/v1/me/push/click.
+ * Formula matches `buildPushClickRecord` in lib/push/click-record.ts.
+ */
+function buildServiceWorkerPushClick(notification) {
+  const data = (notification && notification.data) || {};
+  const tag = notification && typeof notification.tag === "string" ? notification.tag : "";
+  const kind = typeof data.type === "string" ? data.type : "";
+  const timestamp = (notification && notification.timestamp) || Date.now();
+  return {
+    kind,
+    tag,
+    idempotency_key: `${tag || kind || "push"}-${timestamp}`,
+    clicked_at: new Date().toISOString(),
+  };
+}
+
+function capturePushClick(notification) {
+  return (async () => {
+    let click = null;
+    try {
+      click = buildServiceWorkerPushClick(notification);
+    } catch {
+      return null;
+    }
+    try {
+      await Promise.all([
+        enqueuePushClick(click).catch(() => {}),
+        broadcastPushClick(click).catch(() => {}),
+      ]);
+    } catch {
+      // still return the record so a later broadcast can retry delivery
+    }
+    return click;
+  })();
+}
+
+async function broadcastPushClick(click) {
+  const windowClients = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+  for (const client of windowClients) {
+    try {
+      if (!client.url || !client.url.startsWith(self.location.origin)) continue;
+      client.postMessage({ type: "DADIARY_PUSH_CLICK", click });
+    } catch {
+      // one client failing must not drop the others
+    }
+  }
+}
+
+// IndexedDB queue so a cold start can upload the click once the page has a JWT.
+// Keep in sync with lib/push/click-queue.ts (name, store, cap, 7-day TTL).
+const PUSH_CLICK_DB_NAME = "dadiary-push-clicks";
+const PUSH_CLICK_STORE = "clicks";
+const PUSH_CLICK_DB_VERSION = 1;
+const PUSH_CLICK_QUEUE_MAX = 20;
+const PUSH_CLICK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function openPushClickDb() {
+  return new Promise((resolve, reject) => {
+    if (typeof indexedDB === "undefined") {
+      reject(new Error("no-idb"));
+      return;
+    }
+    const req = indexedDB.open(PUSH_CLICK_DB_NAME, PUSH_CLICK_DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(PUSH_CLICK_STORE)) {
+        db.createObjectStore(PUSH_CLICK_STORE, { keyPath: "idempotency_key" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error("idb"));
+  });
+}
+
+async function enqueuePushClick(click) {
+  const db = await openPushClickDb();
+  try {
+    const rows = await new Promise((resolve, reject) => {
+      const tx = db.transaction(PUSH_CLICK_STORE, "readonly");
+      const req = tx.objectStore(PUSH_CLICK_STORE).getAll();
+      req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+      req.onerror = () => reject(req.error || new Error("idb"));
+    });
+    const now = Date.now();
+    const record = { ...click, queued_at: now };
+    const merged = rows.filter((row) => row && row.idempotency_key !== record.idempotency_key);
+    merged.push(record);
+    const fresh = merged.filter((row) => now - (row.queued_at || 0) <= PUSH_CLICK_TTL_MS);
+    fresh.sort((a, b) => (a.queued_at || 0) - (b.queued_at || 0));
+    const keep = fresh.slice(-PUSH_CLICK_QUEUE_MAX);
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(PUSH_CLICK_STORE, "readwrite");
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("idb"));
+      tx.onabort = () => reject(tx.error || new Error("idb"));
+      const store = tx.objectStore(PUSH_CLICK_STORE);
+      store.clear();
+      for (const row of keep) store.put(row);
+    });
+  } finally {
+    db.close();
+  }
+}
 
 /** Normalize a deep-link to a same-origin path starting with "/". */
 function normalizeAppPath(raw) {
@@ -489,7 +634,18 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   if (req.headers.has("range")) return;
 
-  const url = new URL(req.url);
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch {
+    return;
+  }
+
+  // Face photos are short-lived signed URLs. Bypass the worker entirely for
+  // `/uploads/` (same-origin rewrite or the API host). cache-first plus
+  // ignoreSearch would keep an expired signature forever.
+  if (url.pathname.startsWith("/uploads/")) return;
+
   if (url.origin !== self.location.origin && !isAllowedCrossOrigin(url)) return;
   if (url.protocol === "chrome-extension:") return;
 
@@ -532,6 +688,8 @@ function isAllowedCrossOrigin(url) {
 }
 
 function isStaticAsset(url) {
+  // Defense in depth: never treat user uploads as immutable static files.
+  if (url.pathname.startsWith("/uploads/")) return false;
   if (url.pathname.startsWith("/_next/static/")) return true;
   if (url.pathname.startsWith("/icons/")) return true;
   return /\.(?:js|css|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|webp|avif|svg|ico)$/i.test(

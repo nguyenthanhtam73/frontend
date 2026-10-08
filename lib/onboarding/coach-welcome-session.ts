@@ -4,7 +4,11 @@ import {
   persistGuestRoutine,
   readPersistedGuestRoutine,
 } from "@/lib/onboarding/guest-routine-persist";
-import { mergeReviewPhotoUrls, normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
+import {
+  mergeReviewPhotoUrls,
+  normalizeReviewPhotoUrls,
+  photoUrlsForSessionStorage,
+} from "@/lib/onboarding/photo-session-urls";
 import {
   COACH_WELCOME_SESSION_EVENT,
   COACH_WELCOME_STORAGE_KEY,
@@ -24,8 +28,25 @@ function readSessionOnly(): CoachWelcomePayload | null {
   }
 }
 
+/** Signed photo URLs expire; don't write them into sessionStorage. */
+export function sessionPayloadWithoutSignedPhotos(
+  payload: CoachWelcomePayload,
+): CoachWelcomePayload {
+  if (!payload.reviewSummary?.photo_urls?.length) return payload;
+  return {
+    ...payload,
+    reviewSummary: {
+      ...payload.reviewSummary,
+      photo_urls: photoUrlsForSessionStorage(payload.reviewSummary.photo_urls),
+    },
+  };
+}
+
 function writeSessionOnly(payload: CoachWelcomePayload): void {
-  sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(payload));
+  sessionStorage.setItem(
+    COACH_WELCOME_STORAGE_KEY,
+    JSON.stringify(sessionPayloadWithoutSignedPhotos(payload)),
+  );
 }
 
 /** Write session + durable guest backup (survives tab close). */
@@ -140,8 +161,9 @@ export function patchCoachWelcomeSession(
       ...patch,
       reviewSummary: mergedReviewSummary,
     };
-    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(merged));
-    persistGuestRoutine(merged);
+    const stored = sessionPayloadWithoutSignedPhotos(merged);
+    sessionStorage.setItem(COACH_WELCOME_STORAGE_KEY, JSON.stringify(stored));
+    persistGuestRoutine(stored);
     window.dispatchEvent(new CustomEvent(COACH_WELCOME_SESSION_EVENT, { detail: patch }));
   } catch {
     /* storage full or private mode */

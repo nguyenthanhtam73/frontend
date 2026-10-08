@@ -175,7 +175,7 @@ describe("reportPaywallView", () => {
     } as Storage;
     const originalFetch = globalThis.fetch;
     const urls: string[] = [];
-    g.window = { dataLayer: [], __dadiaryFunnel: [] };
+    g.window = { dataLayer: [], __dadiaryFunnel: [] } as unknown as typeof g.window;
     g.sessionStorage = store;
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       urls.push(String(input));
@@ -201,8 +201,8 @@ describe("reportPaywallView", () => {
       assert.equal(urls.length, 1);
     } finally {
       globalThis.fetch = originalFetch;
-      delete g.window;
-      delete g.sessionStorage;
+      delete (g as { window?: unknown }).window;
+      delete (g as { sessionStorage?: unknown }).sessionStorage;
     }
   });
 });
