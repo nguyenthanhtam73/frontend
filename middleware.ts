@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing";
 export default createMiddleware(routing);
 
 export const config = {
-  // `landing` is a self-contained Vietnamese marketing page that lives outside
-  // the [locale] tree, so it must bypass the i18n middleware rewrite.
-  matcher: ["/((?!api|_next|_vercel|landing|.*\\..*).*)"],
+  // `landing` lives outside the [locale] tree. `.well-known` (assetlinks.json)
+  // must stay a static 200: no locale rewrite and no redirect.
+  matcher: ["/((?!api|_next|_vercel|landing|\\.well-known|.*\\..*).*)"],
 };

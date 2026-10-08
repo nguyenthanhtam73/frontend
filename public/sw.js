@@ -20,7 +20,7 @@
  * is best-effort (expired endpoints are cleaned up server-side).
  */
 
-const CACHE_VERSION = "v18";
+const CACHE_VERSION = "v19";
 const STATIC_CACHE = `dadiary-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `dadiary-runtime-${CACHE_VERSION}`;
 const HTML_CACHE = `dadiary-html-${CACHE_VERSION}`;
@@ -652,6 +652,10 @@ self.addEventListener("fetch", (event) => {
   // Never cache Next.js dev/HMR endpoints — they must always go to the network.
   if (url.pathname.startsWith("/_next/webpack-hmr")) return;
   if (url.pathname.startsWith("/_next/static/development")) return;
+
+  // Android App Links fetches /.well-known/assetlinks.json directly. Do not
+  // cache or substitute that response from the service worker.
+  if (url.pathname.startsWith("/.well-known/")) return;
 
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirst(req, STATIC_CACHE));

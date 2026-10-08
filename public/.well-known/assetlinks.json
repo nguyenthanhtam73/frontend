@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "vn.dadiary.app",
+      "sha256_cert_fingerprints": [
+        "BC:60:FE:4B:D0:70:6E:8F:C8:B4:9F:EB:14:43:0E:F6:71:7A:6A:62:95:8A:44:47:DB:23:02:FA:32:F8:57:7A"
+      ]
+    }
+  }
+]
