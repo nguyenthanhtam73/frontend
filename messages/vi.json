@@ -376,7 +376,7 @@
       },
       "cabinet": {
         "title": "Tủ đồ chăm da",
-        "desc": "Free xem và thêm tới 3 sản phẩm; sửa/xóa trên Premium. AI tránh gợi ý trùng thành phần và nhắc kem chống nắng, patch test."
+        "desc": "Free xem và thêm tới 10 sản phẩm; sửa/xóa trên Premium. AI tránh gợi ý trùng thành phần và nhắc kem chống nắng, patch test."
       },
       "beforeAfter": {
         "title": "So sánh trước–sau",
@@ -477,7 +477,7 @@
     },
     "q2": {
       "question": "Free trong Beta dùng được những gì?",
-      "answer": "Check-in ảnh, giữ streak, tick routine và nhận AI Coach sau mỗi lần ghi. Gợi ý routine AI: 3 lần/tháng (UTC). Chỉnh tay routine: 5 lần/tháng (UTC). Tủ đồ: xem và thêm tối đa 3 sản phẩm; sửa/xóa cần Premium. Progress: khoảng 3 tháng gần nhất."
+      "answer": "Check-in ảnh, giữ streak, tick routine và nhận AI Coach sau mỗi lần ghi. Gợi ý routine AI: 3 lần/tháng (UTC). Chỉnh tay routine: 5 lần/tháng (UTC). Tủ đồ: xem và thêm tối đa 10 sản phẩm; sửa/xóa cần Premium. Progress: khoảng 3 tháng gần nhất."
     },
     "q3": {
       "question": "AI Coach có thay thế bác sĩ da liễu không?",
@@ -1035,7 +1035,7 @@
     "quotaEditTitle": "Đã hết lượt chỉnh tay tháng này",
     "quotaEditBody": "Bạn đã dùng hết {limit} lần chỉnh tay tháng này — vẫn tick hoàn thành được. Premium cho phép chỉnh sửa không giới hạn.",
     "wardrobeTitle": "Đã hết suất tủ đồ Free",
-    "wardrobeBody": "Free thêm tới 3 sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
+    "wardrobeBody": "Free thêm tới {n} sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
     "progressTitle": "Muốn xem lịch sử dài hơn?",
     "progressBody": "Free xem 3 tháng gần nhất. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn.",
     "advancedTitle": "Phân tích da nâng cao",
@@ -1066,7 +1066,7 @@
       "generic": "Bạn đang xem bảng giá vì vừa chạm hạn Free. Premium mở phần bị giới hạn — check-in và tick routine vẫn dùng bình thường.",
       "ai_routine_suggestion": "Bạn hết gợi ý AI tháng này. Premium mở gợi ý không giới hạn — check-in vẫn miễn phí.",
       "edit_routine": "Bạn hết lượt chỉnh routine tháng này. Premium mở chỉnh không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
-      "wardrobe_full": "Tủ đồ Free đã đủ 3 món. Premium mở thêm không giới hạn. Sửa và xóa vẫn mở trên Free.",
+      "wardrobe_full": "Tủ đồ Free đã đủ 10 món. Premium mở thêm không giới hạn. Sửa và xóa vẫn mở trên Free.",
       "progress_full_history": "Free xem 3 tháng. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn. Check-in mỗi ngày vẫn miễn phí.",
       "advanced_skin_analysis": "Phân tích nhiều góc chỉ có trên Premium+ (không nằm trong Premium). Check-in 1 ảnh vẫn dùng được trên Free."
     },
@@ -1150,7 +1150,7 @@
           "f1": "Check-in da + coach AI sau mỗi lần ghi",
           "f2": "3 gợi ý routine AI / tháng",
           "f3": "5 lần chỉnh tay routine / tháng",
-          "f4": "Tối đa 3 sản phẩm tủ đồ & Progress 3 tháng gần nhất"
+          "f4": "Tối đa 10 sản phẩm tủ đồ & Progress 3 tháng gần nhất"
         }
       },
       "premium": {
@@ -1204,7 +1204,7 @@
         "quota5": "5 / tháng",
         "unlimited": "Không giới hạn",
         "viewOnly": "Chỉ xem",
-        "shelf3": "Tối đa 3 sản phẩm",
+        "shelf": "Tối đa {n} sản phẩm",
         "full": "Không giới hạn + sửa/xóa",
         "months3": "3 tháng",
         "months12": "12 tháng",
@@ -1219,7 +1219,7 @@
       "subtitle": "Ngắn gọn — để bạn chọn gói mà không bị rối.",
       "q1": {
         "question": "Free trong Beta dùng được gì?",
-        "answer": "Check-in ảnh, giữ streak, tick routine, thêm tới 3 sản phẩm vào tủ đồ và nhận AI Coach sau mỗi lần ghi. Free có hạn mức gợi ý/chỉnh routine mỗi tháng; Premium mở không giới hạn khi bạn cần."
+        "answer": "Check-in ảnh, giữ streak, tick routine, thêm tới 10 sản phẩm vào tủ đồ và nhận AI Coach sau mỗi lần ghi. Free có hạn mức gợi ý/chỉnh routine mỗi tháng; Premium mở không giới hạn khi bạn cần."
       },
       "q2": {
         "question": "Thanh toán năm tiết kiệm bao nhiêu?",
@@ -1263,7 +1263,7 @@
   "cabinet": {
     "sectionLabel": "Tủ đồ chăm da",
     "title": "Sản phẩm bạn đang dùng",
-    "sub": "Ghi lại tủ đồ thật của bạn — bạn đồng hành AI sẽ bỏ qua món đã có khi gợi ý mua thêm. Free thêm tới 3 sản phẩm (được sửa/xóa); Premium không giới hạn số món.",
+    "sub": "Ghi lại tủ đồ thật của bạn — bạn đồng hành AI sẽ bỏ qua món đã có khi gợi ý mua thêm. Free thêm tới 10 sản phẩm (được sửa/xóa); Premium không giới hạn số món.",
     "settingsLink": "Cài đặt & quyền riêng tư",
     "listTitle": "Đang dùng",
     "listCount": "{n} món",
@@ -1359,7 +1359,7 @@
     "retry": "Thử lại",
     "dismissToast": "Đóng",
     "starterTitle": "Chăm da khởi đầu (từ phần làm quen với da)",
-    "starterAddHint": "Thêm từng bước vào tủ đồ thật (bấm Thêm từng món). Free tính vào hạn mức 3 suất.",
+    "starterAddHint": "Thêm từng bước vào tủ đồ thật (bấm Thêm từng món). Free tính vào hạn mức {n} suất.",
     "starterSlotsHint": "Free còn {remaining}/{n} suất thêm. Mỗi lần Thêm tốn 1 suất.",
     "starterSlotsFull": "Đã đủ {n} suất Free — xóa món trên kệ hoặc nâng cấp để thêm từ gói khởi đầu.",
     "starterAddCta": "Thêm vào tủ",
@@ -1374,7 +1374,7 @@
     "noStarterTitle": "Tủ đồ đang chờ bạn",
     "setupLink": "tạo trong khoảng 2 phút",
     "premiumWardrobeTitle": "Đã hết suất tủ đồ Free",
-    "premiumWardrobeBody": "Free thêm tới 3 sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
+    "premiumWardrobeBody": "Free thêm tới {n} sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
     "premiumWardrobeCta": "Nâng cấp Premium ngay",
     "insight": {
       "regionLabel": "Gợi ý cho món này",

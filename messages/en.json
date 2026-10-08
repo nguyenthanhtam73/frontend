@@ -376,7 +376,7 @@
       },
       "cabinet": {
         "title": "Skincare shelf",
-        "desc": "Free: view and add up to 3 products; edit/delete on Premium. AI avoids duplicate ingredients and reminds SPF and patch tests."
+        "desc": "Free: view and add up to 10 products; edit/delete on Premium. AI avoids duplicate ingredients and reminds SPF and patch tests."
       },
       "beforeAfter": {
         "title": "Before/after compare",
@@ -477,7 +477,7 @@
     },
     "q2": {
       "question": "What does Free include in Beta?",
-      "answer": "Photo check-ins, streaks, routine ticks, and AI Coach notes after each log. AI routine suggestions: 3/month (UTC). Manual routine edits: 5/month (UTC). Shelf: view and add up to 3 products; edit/delete needs Premium. Progress: about the last 3 months."
+      "answer": "Photo check-ins, streaks, routine ticks, and AI Coach notes after each log. AI routine suggestions: 3/month (UTC). Manual routine edits: 5/month (UTC). Shelf: view and add up to 10 products; edit/delete needs Premium. Progress: about the last 3 months."
     },
     "q3": {
       "question": "Does the AI Coach replace a dermatologist?",
@@ -1035,7 +1035,7 @@
     "quotaEditTitle": "Out of manual edits this month",
     "quotaEditBody": "You've used all {limit} manual edits this month — ticking completion still works. Premium allows unlimited edits.",
     "wardrobeTitle": "Free shelf limit reached",
-    "wardrobeBody": "Free can add up to 3 products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
+    "wardrobeBody": "Free can add up to {n} products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
     "progressTitle": "Want a longer history?",
     "progressBody": "Free: last 3 months. Premium unlocks 12 months. Premium+ only adds unlimited history.",
     "advancedTitle": "Advanced skin analysis",
@@ -1066,7 +1066,7 @@
       "generic": "You're on pricing because you hit a Free cap. Premium unlocks what was limited — check-in and ticking routines still work.",
       "ai_routine_suggestion": "You're out of AI suggestions this month. Premium unlocks unlimited suggestions — check-in stays free.",
       "edit_routine": "You're out of routine edits this month. Premium unlocks unlimited edits. Ticking completion still works on Free.",
-      "wardrobe_full": "The Free shelf is full (3 items). Premium unlocks unlimited add. Edit and delete stay open on Free.",
+      "wardrobe_full": "The Free shelf is full (10 items). Premium unlocks unlimited add. Edit and delete stay open on Free.",
       "progress_full_history": "Free shows 3 months. Premium unlocks 12 months. Premium+ only adds unlimited history. Daily check-in stays free.",
       "advanced_skin_analysis": "Analysis from more than one photo angle is only on Premium+ (not included in Premium). A single check-in photo still works on Free."
     },
@@ -1150,7 +1150,7 @@
           "f1": "Skin check-ins + AI coach after each entry",
           "f2": "3 AI routine suggestions / month",
           "f3": "5 manual routine edits / month",
-          "f4": "Up to 3 shelf products & last 3 months of Progress"
+          "f4": "Up to 10 shelf products & last 3 months of Progress"
         }
       },
       "premium": {
@@ -1204,7 +1204,7 @@
         "quota5": "5 / month",
         "unlimited": "Unlimited",
         "viewOnly": "View only",
-        "shelf3": "Up to 3 products",
+        "shelf": "Up to {n} products",
         "full": "Unlimited + edit/delete",
         "months3": "3 months",
         "months12": "12 months",
@@ -1219,7 +1219,7 @@
       "subtitle": "Short answers so choosing a plan stays simple.",
       "q1": {
         "question": "What does Free include in Beta?",
-        "answer": "Photo check-ins, streaks, routine ticks, up to 3 shelf products, and AI Coach notes after each log. Free has monthly caps on AI suggestions and routine edits; Premium unlocks unlimited when you need it."
+        "answer": "Photo check-ins, streaks, routine ticks, up to 10 shelf products, and AI Coach notes after each log. Free has monthly caps on AI suggestions and routine edits; Premium unlocks unlimited when you need it."
       },
       "q2": {
         "question": "How much do I save on yearly billing?",
@@ -1263,7 +1263,7 @@
   "cabinet": {
     "sectionLabel": "Skincare shelf",
     "title": "Products you're using",
-    "sub": "Log your real shelf — your AI buddy skips items you already own when suggesting something new to buy. Free can add up to 3 products (edit/delete included); Premium is unlimited.",
+    "sub": "Log your real shelf — your AI buddy skips items you already own when suggesting something new to buy. Free can add up to 10 products (edit/delete included); Premium is unlimited.",
     "settingsLink": "Settings & privacy",
     "listTitle": "In your shelf",
     "listCount": "{n} items",
@@ -1359,7 +1359,7 @@
     "retry": "Retry",
     "dismissToast": "Dismiss",
     "starterTitle": "Starter routine (from getting to know your skin)",
-    "starterAddHint": "Add steps one at a time to your real shelf. Free counts toward your 3-product limit.",
+    "starterAddHint": "Add steps one at a time to your real shelf. Free counts toward your {n}-product limit.",
     "starterSlotsHint": "Free: {remaining} of {n} add slots left. Each Add uses one slot.",
     "starterSlotsFull": "Free {n}-product limit reached — delete a shelf item or upgrade to add from the starter pack.",
     "starterAddCta": "Add to shelf",
@@ -1374,7 +1374,7 @@
     "noStarterTitle": "Your shelf is waiting",
     "setupLink": "set up in ~2 minutes",
     "premiumWardrobeTitle": "Free shelf limit reached",
-    "premiumWardrobeBody": "Free can add up to 3 products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
+    "premiumWardrobeBody": "Free can add up to {n} products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
     "premiumWardrobeCta": "Upgrade to Premium now",
     "insight": {
       "regionLabel": "Suggestion for this product",

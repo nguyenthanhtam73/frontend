@@ -4,7 +4,8 @@ import type { FeatureAccess } from "@/lib/premium/types";
 /**
  * GET /api/v1/me/usage contract the activation/paywall UI depends on.
  *
- * Required for live used/remaining chips (frontend will not invent 3/5/3):
+ * Required for live used/remaining chips (frontend will not invent
+ * AI suggestions 3/month, manual edits 5/month, or a shelf of 10):
  * - routine_suggest / routine_manual_edit: { used, limit, remaining, unlimited? }
  * - wardrobe: { used, limit, remaining, unlimited?, can_write, can_manage? }
  * Optional richer catalog: features.ai_routine_suggestion | edit_routine |
