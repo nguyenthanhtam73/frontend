@@ -34,10 +34,7 @@ describe("checkout-intent", () => {
       plan: "premium",
       interval: "monthly",
     });
-    assert.deepEqual(parseCheckoutIntent("premium_plus", ""), {
-      plan: "premium_plus",
-      interval: "yearly",
-    });
+    assert.equal(parseCheckoutIntent("premium_plus", ""), null);
     assert.equal(parseCheckoutIntent("free", "yearly"), null);
     assert.equal(parseCheckoutIntent("nope", "monthly"), null);
   });
@@ -54,10 +51,10 @@ describe("checkout-intent", () => {
   it("keeps plan + next together on auth hrefs", () => {
     assert.equal(
       buildAuthHref("/login", {
-        intent: { plan: "premium_plus", interval: "monthly" },
+        intent: { plan: "premium", interval: "monthly" },
         next: "/onboarding/coach-welcome",
       }),
-      "/login?plan=premium_plus&interval=monthly&next=%2Fonboarding%2Fcoach-welcome",
+      "/login?plan=premium&interval=monthly&next=%2Fonboarding%2Fcoach-welcome",
     );
     assert.equal(buildAuthHref("/register", { next: "https://evil.test" }), "/register");
     assert.equal(
@@ -80,12 +77,16 @@ describe("checkout-intent", () => {
   it("prefers URL intent and writes it to storage", () => {
     const store = memoryStore();
     persistCheckoutIntent({ plan: "premium", interval: "monthly" }, store);
-    const resolved = resolveCheckoutIntent("plan=premium_plus&interval=yearly", store);
-    assert.deepEqual(resolved, { plan: "premium_plus", interval: "yearly" });
+    const resolved = resolveCheckoutIntent("plan=premium&interval=yearly", store);
+    assert.deepEqual(resolved, { plan: "premium", interval: "yearly" });
     assert.deepEqual(readPersistedCheckoutIntent(store), {
-      plan: "premium_plus",
+      plan: "premium",
       interval: "yearly",
     });
+    assert.equal(
+      resolveCheckoutIntent("plan=premium_plus&interval=yearly", memoryStore()),
+      null,
+    );
   });
 
   it("falls back to persisted intent when URL has none", () => {

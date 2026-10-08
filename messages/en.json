@@ -89,7 +89,7 @@
     },
     "pricingPage": {
       "title": "Pricing · DaDiary",
-      "description": "Compare Free, Premium, and Premium+ — unlock AI Coach, your skincare shelf, and full progress history."
+      "description": "Compare Free and Premium — unlock AI Coach, your skincare shelf, and progress history."
     },
     "privacyPage": {
       "title": "Privacy · DaDiary",
@@ -346,13 +346,6 @@
     },
     "mockupAlt": "DaDiary screen: today's check-in, an AI Coach note, and 7-day progress."
   },
-  "progressPreview": {
-    "sectionTitle": "Progress preview",
-    "heading": "Your skin diary looks like this",
-    "sub": "Each check-in saves photos, how skin felt, and a coach note — enough to look back a week and see if you're on track.",
-    "cta": "Take a photo, get a routine",
-    "cardPhotoAlt": "Skin diary preview for {name}"
-  },
   "features": {
     "sectionTitle": "Key features",
     "heading": "Everything you need for structured skincare",
@@ -368,7 +361,7 @@
       },
       "progress": {
         "title": "Progress & streaks",
-        "desc": "Trend charts, check-in streaks, and a timeline so you see week-by-week change — Free covers about the last 3 months; Premium 12 months; Premium+ all time."
+        "desc": "Trend charts, check-in streaks, and a timeline so you see week-by-week change — Free covers about the last 3 months; Premium 12 months."
       },
       "routine": {
         "title": "AM/PM routine suggestions",
@@ -430,32 +423,6 @@
       }
     }
   },
-  "testimonials": {
-    "sectionTitle": "What users say",
-    "heading": "More consistent care — because progress is visible",
-    "sub": "Illustrative Beta-style stories (ages 20–35): photo check-ins, streaks, and a gentle coach each day. Not independently verified reviews.",
-    "collecting": "Illustrative · Beta",
-    "earlyBeta": "Illustrative",
-    "starRatingAria": "Illustrative 5-star styling — not a verified review score",
-    "footnote": "Illustrative / Beta stories — not independently verified reviews, and not medical outcome promises. Everyone's skin is different.",
-    "items": {
-      "t1": {
-        "name": "Ngọc Anh",
-        "role": "28 · Oily, midday shine · Ho Chi Minh City",
-        "quote": "I used to skip skincare on deadline nights. Now one evening photo + routine ticks — 12-day streak. Coach nudged less BHA when I was dry, so I guess less."
-      },
-      "t2": {
-        "name": "Phương Linh",
-        "role": "24 · Mild acne, easy PIH · Hanoi",
-        "quote": "I don't need an app to “cure acne” — I need last week's truth. Same-angle photos showed my chin calmer; the shelf stopped me buying another toner I already own."
-      },
-      "t3": {
-        "name": "Khánh Vy",
-        "role": "31 · Combination, humid heat · Da Nang",
-        "quote": "My skin shifts with coastal weather. Free is enough to diary and get coach notes after each check-in. I'll think about Premium only if I want freer routine edits — no pressure."
-      }
-    }
-  },
   "cta": {
     "eyebrow": "Get started",
     "heading": "Ready to see what AI reads on your skin?",
@@ -486,10 +453,6 @@
     "q4": {
       "question": "How do I start?",
       "answer": "Take a photo (no account yet) → see a starter routine → try a check-in on this device. Sign up to keep your journal & long-term skin tracking. Pricing is always open."
-    },
-    "q5": {
-      "question": "What's the difference between Premium and Premium+?",
-      "answer": "Premium unlocks Free caps: unlimited AI, a full shelf, 12 months of Progress, export, and no ads. Premium+ keeps all of Premium and only adds analysis from more than one photo angle and unlimited history. Most people don't need Plus."
     }
   },
   "betaSignup": {
@@ -578,7 +541,7 @@
     "sectionEyebrow": "Skin check-in",
     "pageTitle": "How is your skin today?",
     "pageSub": "Add photos (same angle/light when you can) and tell us how your skin feels. DaDiary replies in the mode you pick (Beginner / Mid / Advanced) — supportive and explainable, not a replacement for medical advice.",
-    "d0PageSub": "One face photo is enough for your first check-in. No second angle and no Premium+ needed.",
+    "d0PageSub": "One face photo is enough for your first check-in.",
     "heroStepPhoto": "Take / pick photos",
     "heroStepPhotoDesc": "1–2 photos (straight + slight angle) help the AI read and compare your skin.",
     "d0HeroStepPhotoDesc": "One face photo is enough — a second angle is optional after your first check-in.",
@@ -640,9 +603,7 @@
     "photoRetrySlot": "Try again",
     "photoReplaceHint": "Drop to replace",
     "photoDropTooMany": "Max 2 photos — remove a file or replace one slot at a time.",
-    "photoAngleLockedCta": "Unlock angle photo",
-    "photoAngleLockedHint": "Multi-angle analysis (2 photos) is available on Premium+.",
-    "photoAnglePlanLoading": "Checking your plan…",
+    "photoAngleLockedHint": "One photo is enough. A second angle isn't included on this plan.",
     "modeTogglePhoto": "Take photos",
     "modeToggleSkip": "Skip photos",
     "skipModeActiveTitle": "No-photo mode",
@@ -1037,15 +998,15 @@
     "wardrobeTitle": "Free shelf limit reached",
     "wardrobeBody": "Free can add up to 3 products. Upgrade to Premium for unlimited add. Edit and delete stay available on Free.",
     "progressTitle": "Want a longer history?",
-    "progressBody": "Free: last 3 months. Premium unlocks 12 months. Premium+ only adds unlimited history.",
+    "progressBody": "Free: last 3 months. Premium unlocks 12 months.",
     "advancedTitle": "Advanced skin analysis",
-    "advancedBody": "Analysis from more than one photo angle (2 photos) is only on Premium+ — not included in Premium.",
+    "advancedBody": "A single check-in photo still works. Premium unlocks Free caps.",
     "exportTitle": "Export your data",
     "exportBody": "Data and report exports are available on Premium.",
     "milestoneTitle": "Full milestones",
     "milestoneBody": "The full milestone catalog is available on Premium.",
     "genericTitle": "Upgrade to open this feature",
-    "genericBody": "Premium unlocks unlimited AI, a full shelf, and 12 months of history. Premium+ only adds analysis from more than one photo angle and unlimited history. Check-in stays free.",
+    "genericBody": "Premium unlocks unlimited AI, a full shelf, and 12 months of history. Check-in stays free.",
     "quotaEditBodyUnknown": "You're out of manual edits this month — ticking completion still works. Premium allows unlimited edits.",
     "usageUsed": "Used {used}/{limit} this month",
     "usageRemaining": "{remaining} left",
@@ -1053,11 +1014,11 @@
     "benefitSuggest": "Premium: unlimited AI suggestions. Check-in, streak, and ticking routines stay free.",
     "benefitEdit": "Premium: unlimited routine edits. Ticking completion still works on Free.",
     "benefitWardrobe": "Premium: add products without a cap. Edit and delete stay open on Free.",
-    "benefitProgress": "Premium unlocks 12 months of history. Premium+ only adds all-time history. Daily check-in stays free.",
-    "benefitAdvanced": "Premium+ (not Premium) unlocks analysis from more than one photo angle. A single check-in photo still works on Free.",
+    "benefitProgress": "Premium unlocks 12 months of history. Daily check-in stays free.",
+    "benefitAdvanced": "A single check-in photo still works on Free.",
     "benefitExport": "Premium exports your log and reports when you need to take data with you.",
     "benefitMilestone": "Premium opens the full milestone list — streaks still count on Free.",
-    "benefitGeneric": "Most people only need Premium after a Free cap. Premium+ is an add-on for more than one photo angle / longer history. Check-in stays open."
+    "benefitGeneric": "Premium unlocks Free limits. Check-in stays open."
   },
   "pricing": {
     "heroTitle": "Unlock your full",
@@ -1067,17 +1028,14 @@
       "ai_routine_suggestion": "You're out of AI suggestions this month. Premium unlocks unlimited suggestions — check-in stays free.",
       "edit_routine": "You're out of routine edits this month. Premium unlocks unlimited edits. Ticking completion still works on Free.",
       "wardrobe_full": "The Free shelf is full (3 items). Premium unlocks unlimited add. Edit and delete stay open on Free.",
-      "progress_full_history": "Free shows 3 months. Premium unlocks 12 months. Premium+ only adds unlimited history. Daily check-in stays free.",
-      "advanced_skin_analysis": "Analysis from more than one photo angle is only on Premium+ (not included in Premium). A single check-in photo still works on Free."
+      "progress_full_history": "Free shows 3 months. Premium unlocks 12 months. Daily check-in stays free.",
+      "advanced_skin_analysis": "A single check-in photo still works. Premium unlocks Free caps: AI, the shelf, and 12 months of history."
     },
-    "heroSub": "Free already covers check-ins, streaks, and coach notes after each log. Premium (most popular) unlocks unlimited AI, a full shelf, and 12 months of history. Premium+ only adds analysis from more than one photo angle and unlimited history.",
+    "heroSub": "Free already covers check-ins, streaks, and coach notes after each log. Premium unlocks unlimited AI, a full shelf, and 12 months of history.",
     "heroSubBeta": "Beta is open: Free covers the core. Premium (unlimited AI, full shelf, longer history) comes from the team if you're invited — you can't pay on this page yet.",
     "betaInviteBanner": "Payments are not open on this page during Beta. Want Premium? Send a note or contact the team for an invite.",
     "betaInviteCta": "Premium — invite in Beta",
-    "betaInviteCtaPlus": "Premium+ — invite in Beta",
     "mostPopular": "Most popular",
-    "plusBadge": "Add-on",
-    "plusNote": "Not sure? Pick Premium. Premium+ doesn't replace Premium — it only adds analysis from more than one photo angle and all-time history.",
     "upgradeCta": "Upgrade now",
     "currentPlanBadge": "Current plan",
     "currentPlanCta": "Your current plan",
@@ -1167,24 +1125,14 @@
         }
       },
       "premium_plus": {
-        "name": "Premium+",
-        "tagline": "Add advanced analysis",
-        "blurb": "Keeps everything in Premium. Only adds analysis from more than one photo angle, unlimited Progress history, and new features sooner.",
-        "bestFor": "Only if you need 2-photo analysis or history longer than 12 months.",
-        "features": {
-          "f1": "Everything in Premium",
-          "f2": "Deeper skin analysis (more than one angle) — not in Premium",
-          "f3": "A coach that remembers your context longer",
-          "f4": "Unlimited Progress history (Premium: 12 months)",
-          "f5": "Try new features sooner"
-        }
+        "name": "Premium+"
       }
     },
     "compare": {
       "title": "Compare plans",
-      "subtitle": "Most people pick Premium after a Free cap. Premium+ only differs on analysis from more than one photo angle and unlimited history.",
-      "caption": "Feature comparison for Free, Premium, and Premium+",
-      "scrollHint": "Swipe sideways to see all 3 plans",
+      "subtitle": "Free and Premium — upgrade when you hit a Free cap.",
+      "caption": "Feature comparison for Free and Premium",
+      "scrollHint": "Swipe if the table is cut off",
       "scrollLeft": "Scroll comparison table left",
       "scrollRight": "Scroll comparison table right",
       "popularCol": "Popular",
@@ -1196,8 +1144,7 @@
         "progress": "Progress history",
         "milestones": "Milestones",
         "export": "Data export",
-        "noAds": "No ads",
-        "advanced": "Advanced skin analysis"
+        "noAds": "No ads"
       },
       "values": {
         "quota3": "3 / month",
@@ -1208,7 +1155,6 @@
         "full": "Unlimited + edit/delete",
         "months3": "3 months",
         "months12": "12 months",
-        "allTime": "All time",
         "basic": "Basic",
         "yes": "Yes",
         "no": "No"
@@ -1224,10 +1170,6 @@
       "q2": {
         "question": "How much do I save on yearly billing?",
         "answer": "About 28% versus paying month to month. We still show the monthly equivalent so comparison stays easy."
-      },
-      "q3": {
-        "question": "What's the difference between Premium and Premium+?",
-        "answer": "Premium unlocks Free caps: unlimited AI, a full shelf, 12 months of Progress, export, and no ads. Premium+ keeps all of Premium and only adds analysis from more than one photo angle, unlimited history, a coach that remembers you longer, and new features sooner. Most people don't need Plus."
       },
       "q4": {
         "question": "Can I change or cancel later?",
@@ -1730,11 +1672,6 @@
       "waitElapsedMinSec": "{m} min {s} sec",
       "waitElapsedSec": "{s} sec"
     }
-  },
-  "skinCard": {
-    "checkInBadge": "Check-in",
-    "coachPrefix": "Buddy tip:",
-    "gapPrefix": "Could add:"
   },
   "onboarding": {
     "sectionLabel": "Get to know your skin",

@@ -11,9 +11,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { GuidesTeaser } from "@/components/landing/guides-teaser";
 import { LANDING_FAQ_KEYS, LandingFaq } from "@/components/landing/landing-faq";
 import { Problem } from "@/components/landing/problem";
-import { ProgressPreview } from "@/components/landing/progress-preview";
 import { Solution } from "@/components/landing/solution";
-import { Testimonials } from "@/components/landing/testimonials";
 import { absoluteUrl, ORGANIZATION_SAME_AS, pageSocialMetadata, siteOrigin } from "@/lib/seo";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -105,9 +103,7 @@ export default async function HomePage({ params }: Props) {
       <Problem />
       <Solution />
       <Features />
-      <ProgressPreview />
       <HowItWorks />
-      <Testimonials />
       <LandingFaq />
       <GuidesTeaser />
       <BetaSignup />

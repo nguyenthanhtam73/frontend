@@ -89,7 +89,7 @@
     },
     "pricingPage": {
       "title": "Bảng giá · DaDiary",
-      "description": "So sánh Free, Premium và Premium+ — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình đầy đủ."
+      "description": "So sánh Free và Premium — mở khóa AI Coach, tủ đồ chăm da và lịch sử tiến trình."
     },
     "privacyPage": {
       "title": "Quyền riêng tư · DaDiary",
@@ -346,13 +346,6 @@
     },
     "mockupAlt": "Màn hình DaDiary: check-in hôm nay, gợi ý AI Coach và tiến trình 7 ngày."
   },
-  "progressPreview": {
-    "sectionTitle": "Xem trước Progress",
-    "heading": "Nhật ký da trông như thế này",
-    "sub": "Mỗi check-in lưu ảnh, cảm nhận và gợi ý coach — đủ để bạn nhìn lại tuần trước và biết mình đang đi đúng hướng.",
-    "cta": "Chụp ảnh nhận routine",
-    "cardPhotoAlt": "Xem trước nhật ký da của {name}"
-  },
   "features": {
     "sectionTitle": "Tính năng nổi bật",
     "heading": "Mọi thứ bạn cần để chăm da có hệ thống",
@@ -368,7 +361,7 @@
       },
       "progress": {
         "title": "Theo dõi tiến trình & streak",
-        "desc": "Biểu đồ xu hướng, streak check-in và dòng thời gian — Free xem khoảng 3 tháng gần nhất; Premium 12 tháng; Premium+ toàn bộ."
+        "desc": "Biểu đồ xu hướng, streak check-in và dòng thời gian — Free xem khoảng 3 tháng gần nhất; Premium 12 tháng."
       },
       "routine": {
         "title": "Gợi ý routine sáng–tối",
@@ -430,32 +423,6 @@
       }
     }
   },
-  "testimonials": {
-    "sectionTitle": "Người dùng nói gì",
-    "heading": "Chăm da đều hơn — vì thấy mình đang tiến",
-    "sub": "Câu chuyện minh họa phong cách người dùng Beta 20–35: check-in ảnh, streak và coach nhẹ mỗi ngày. Không phải review độc lập đã xác minh.",
-    "collecting": "Minh họa · Beta",
-    "earlyBeta": "Minh họa",
-    "starRatingAria": "Minh họa 5 sao — không phải điểm review đã xác minh",
-    "footnote": "Trải nghiệm minh họa / Beta — không phải đánh giá độc lập đã xác minh, không cam kết kết quả y tế. Da mỗi người khác nhau.",
-    "items": {
-      "t1": {
-        "name": "Ngọc Anh",
-        "role": "28 · Da dầu, hay bóng trưa · TP.HCM",
-        "quote": "Trước mình hay quên skincare lúc deadline. Giờ check-in 1 ảnh buổi tối + tick routine — streak 12 ngày rồi. Coach nhắc giảm BHA khi da khô, mình thấy đỡ đoán mò hơn."
-      },
-      "t2": {
-        "name": "Phương Linh",
-        "role": "24 · Da mụn nhẹ, dễ thâm · Hà Nội",
-        "quote": "Mình không cần app “chữa mụn”, chỉ cần nhìn lại tuần trước. So ảnh cùng góc thấy cằm dịu hơn; tủ đồ giúp mình không mua thêm toner trùng loại đang dùng."
-      },
-      "t3": {
-        "name": "Khánh Vy",
-        "role": "31 · Da hỗn hợp, nóng ẩm · Đà Nẵng",
-        "quote": "Da mình đổi theo thời tiết biển. Free đủ để ghi nhật ký và nhận coach sau mỗi lần check-in. Khi muốn chỉnh routine thoải mái hơn mình mới nghĩ tới Premium — không bị ép."
-      }
-    }
-  },
   "cta": {
     "eyebrow": "Bắt đầu ngay",
     "heading": "Sẵn sàng xem AI đọc da bạn?",
@@ -486,10 +453,6 @@
     "q4": {
       "question": "Bắt đầu thế nào?",
       "answer": "Chụp ảnh (chưa cần tài khoản) → xem routine khởi đầu → check-in thử trên máy này. Đăng ký để lưu nhật ký & soi da dài hạn. Bảng giá xem bất cứ lúc nào."
-    },
-    "q5": {
-      "question": "Premium và Premium+ khác nhau chỗ nào?",
-      "answer": "Premium mở hết hạn Free: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo. Premium+ giữ toàn bộ Premium và chỉ thêm phân tích đa góc cùng lịch sử không giới hạn. Hầu hết không cần Plus."
     }
   },
   "betaSignup": {
@@ -578,7 +541,7 @@
     "sectionEyebrow": "Ghi nhật ký da",
     "pageTitle": "Hôm nay da bạn thế nào?",
     "pageSub": "Thêm ảnh (cùng góc / ánh sáng nếu được) và chọn cảm nhận. DaDiary trả lời theo chế độ bạn chọn (Người mới / Trung bình / Nâng cao) — khích lệ, có lý do, không thay thế tư vấn y tế.",
-    "d0PageSub": "Một tấm ảnh mặt là đủ cho lần check-in đầu. Không cần góc nghiêng hay Premium+.",
+    "d0PageSub": "Một tấm ảnh mặt là đủ cho lần check-in đầu.",
     "heroStepPhoto": "Chụp / chọn ảnh",
     "heroStepPhotoDesc": "1–2 tấm (thẳng mặt + nửa nghiêng) giúp AI đọc và so sánh dễ hơn.",
     "d0HeroStepPhotoDesc": "Một tấm ảnh mặt là đủ — ảnh nửa nghiêng chỉ sau lần check-in đầu.",
@@ -640,9 +603,7 @@
     "photoRetrySlot": "Thử lại",
     "photoReplaceHint": "Thả để thay ảnh",
     "photoDropTooMany": "Chỉ tối đa 2 ảnh — bỏ bớt file hoặc thay từng ô.",
-    "photoAngleLockedCta": "Mở khóa ảnh nửa nghiêng",
-    "photoAngleLockedHint": "Phân tích đa góc (2 ảnh) chỉ có trên Premium+.",
-    "photoAnglePlanLoading": "Đang kiểm tra gói…",
+    "photoAngleLockedHint": "Một ảnh là đủ. Ảnh góc thứ hai chưa mở trên gói này.",
     "modeTogglePhoto": "Chụp ảnh",
     "modeToggleSkip": "Bỏ chụp ảnh",
     "skipModeActiveTitle": "Chế độ không chụp ảnh",
@@ -1037,15 +998,15 @@
     "wardrobeTitle": "Đã hết suất tủ đồ Free",
     "wardrobeBody": "Free thêm tới 3 sản phẩm. Nâng cấp Premium để thêm không giới hạn. Sửa và xóa vẫn dùng được trên Free.",
     "progressTitle": "Muốn xem lịch sử dài hơn?",
-    "progressBody": "Free xem 3 tháng gần nhất. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn.",
+    "progressBody": "Free xem 3 tháng gần nhất. Premium mở 12 tháng.",
     "advancedTitle": "Phân tích da nâng cao",
-    "advancedBody": "Phân tích nhiều góc (2 ảnh) chỉ có trên Premium+ — không nằm trong Premium.",
+    "advancedBody": "Một ảnh check-in vẫn dùng được. Premium mở các hạn mức Free.",
     "exportTitle": "Xuất dữ liệu",
     "exportBody": "Xuất dữ liệu và báo cáo dành cho Premium.",
     "milestoneTitle": "Cột mốc đầy đủ",
     "milestoneBody": "Cột mốc đầy đủ dành cho Premium.",
     "genericTitle": "Nâng cấp để mở tính năng này",
-    "genericBody": "Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Premium+ chỉ thêm phân tích đa góc và lịch sử không giới hạn. Check-in vẫn miễn phí.",
+    "genericBody": "Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Check-in vẫn miễn phí.",
     "quotaEditBodyUnknown": "Bạn đã hết lượt chỉnh tay tháng này — vẫn tick hoàn thành được. Premium cho phép chỉnh sửa không giới hạn.",
     "usageUsed": "Đã dùng {used}/{limit} tháng này",
     "usageRemaining": "Còn {remaining} lượt",
@@ -1053,11 +1014,11 @@
     "benefitSuggest": "Premium: gợi ý AI không giới hạn. Check-in, streak và tick routine vẫn miễn phí.",
     "benefitEdit": "Premium: chỉnh routine không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
     "benefitWardrobe": "Premium: thêm sản phẩm không giới hạn. Sửa và xóa vẫn mở trên Free.",
-    "benefitProgress": "Premium mở 12 tháng lịch sử. Premium+ chỉ thêm toàn bộ lịch sử. Check-in mỗi ngày vẫn miễn phí.",
-    "benefitAdvanced": "Premium+ (không phải Premium) mở phân tích nhiều góc. Check-in 1 ảnh vẫn dùng được trên Free.",
+    "benefitProgress": "Premium mở 12 tháng lịch sử. Check-in mỗi ngày vẫn miễn phí.",
+    "benefitAdvanced": "Check-in 1 ảnh vẫn dùng được trên Free.",
     "benefitExport": "Premium xuất nhật ký và báo cáo khi bạn cần mang dữ liệu đi.",
     "benefitMilestone": "Premium mở danh sách cột mốc đầy đủ — streak vẫn đếm trên Free.",
-    "benefitGeneric": "Hầu hết chỉ cần Premium khi hết hạn Free. Premium+ là gói bổ sung cho đa góc / lịch sử dài. Check-in không bị khóa."
+    "benefitGeneric": "Premium mở phần bị giới hạn khi hết hạn Free. Check-in không bị khóa."
   },
   "pricing": {
     "heroTitle": "Mở khóa toàn bộ",
@@ -1067,17 +1028,14 @@
       "ai_routine_suggestion": "Bạn hết gợi ý AI tháng này. Premium mở gợi ý không giới hạn — check-in vẫn miễn phí.",
       "edit_routine": "Bạn hết lượt chỉnh routine tháng này. Premium mở chỉnh không giới hạn. Tick hoàn thành vẫn dùng được trên Free.",
       "wardrobe_full": "Tủ đồ Free đã đủ 3 món. Premium mở thêm không giới hạn. Sửa và xóa vẫn mở trên Free.",
-      "progress_full_history": "Free xem 3 tháng. Premium mở 12 tháng. Premium+ chỉ thêm lịch sử không giới hạn. Check-in mỗi ngày vẫn miễn phí.",
-      "advanced_skin_analysis": "Phân tích nhiều góc chỉ có trên Premium+ (không nằm trong Premium). Check-in 1 ảnh vẫn dùng được trên Free."
+      "progress_full_history": "Free xem 3 tháng. Premium mở 12 tháng. Check-in mỗi ngày vẫn miễn phí.",
+      "advanced_skin_analysis": "Check-in 1 ảnh vẫn dùng được. Premium mở các hạn mức Free: AI, tủ đồ và lịch sử 12 tháng."
     },
-    "heroSub": "Free đủ check-in, streak và coach sau mỗi lần ghi. Premium (phổ biến nhất) mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng. Premium+ chỉ thêm phân tích nhiều góc và lịch sử không giới hạn.",
+    "heroSub": "Free đủ check-in, streak và coach sau mỗi lần ghi. Premium mở AI không giới hạn, tủ đồ đầy đủ và lịch sử 12 tháng.",
     "heroSubBeta": "Đang mở Beta: Free dùng đầy đủ. Premium (AI không giới hạn, tủ đồ, lịch sử dài) do team cấp khi bạn được mời — chưa mở thanh toán trên trang này.",
     "betaInviteBanner": "Trong Beta chưa mở thanh toán trên trang này. Muốn thử Premium? Gửi góp ý hoặc liên hệ team để được cấp gói.",
     "betaInviteCta": "Premium — cấp trong Beta",
-    "betaInviteCtaPlus": "Premium+ — cấp trong Beta",
     "mostPopular": "Phổ biến nhất",
-    "plusBadge": "Gói bổ sung",
-    "plusNote": "Không chắc? Chọn Premium. Premium+ không thay thế Premium — chỉ thêm phân tích đa góc và lịch sử đầy đủ.",
     "upgradeCta": "Nâng cấp ngay",
     "currentPlanBadge": "Gói hiện tại",
     "currentPlanCta": "Đang dùng gói này",
@@ -1167,24 +1125,14 @@
         }
       },
       "premium_plus": {
-        "name": "Premium+",
-        "tagline": "Thêm phân tích nâng cao",
-        "blurb": "Giữ toàn bộ Premium. Chỉ thêm phân tích nhiều góc, lịch sử Progress không giới hạn và dùng tính năng mới sớm.",
-        "bestFor": "Chỉ khi bạn cần phân tích 2 ảnh hoặc lịch sử dài hơn 12 tháng.",
-        "features": {
-          "f1": "Mọi quyền lợi Premium",
-          "f2": "Phân tích da nâng cao (nhiều góc) — không có trên Premium",
-          "f3": "Coach nhớ ngữ cảnh của bạn lâu hơn",
-          "f4": "Lịch sử Progress không giới hạn (Premium: 12 tháng)",
-          "f5": "Dùng tính năng mới sớm hơn"
-        }
+        "name": "Premium+"
       }
     },
     "compare": {
       "title": "So sánh chi tiết",
-      "subtitle": "Hầu hết chọn Premium khi hết hạn Free. Premium+ chỉ khác ở phân tích đa góc và lịch sử không giới hạn.",
-      "caption": "Bảng so sánh tính năng Free, Premium và Premium+",
-      "scrollHint": "Vuốt ngang để xem đủ 3 gói",
+      "subtitle": "Free và Premium — nâng cấp khi bạn chạm hạn Free.",
+      "caption": "Bảng so sánh tính năng Free và Premium",
+      "scrollHint": "Vuốt ngang nếu bảng chưa hiện hết",
       "scrollLeft": "Cuộn bảng sang trái",
       "scrollRight": "Cuộn bảng sang phải",
       "popularCol": "Phổ biến",
@@ -1196,8 +1144,7 @@
         "progress": "Lịch sử Progress",
         "milestones": "Cột mốc thành tích",
         "export": "Xuất dữ liệu",
-        "noAds": "Không quảng cáo",
-        "advanced": "Phân tích da nâng cao"
+        "noAds": "Không quảng cáo"
       },
       "values": {
         "quota3": "3 / tháng",
@@ -1208,7 +1155,6 @@
         "full": "Không giới hạn + sửa/xóa",
         "months3": "3 tháng",
         "months12": "12 tháng",
-        "allTime": "Toàn bộ",
         "basic": "Cơ bản",
         "yes": "Có",
         "no": "Không"
@@ -1224,10 +1170,6 @@
       "q2": {
         "question": "Thanh toán năm tiết kiệm bao nhiêu?",
         "answer": "Khoảng 28% so với trả tháng. Bạn vẫn thấy giá quy đổi theo tháng để dễ so sánh."
-      },
-      "q3": {
-        "question": "Premium và Premium+ khác nhau chỗ nào?",
-        "answer": "Premium mở hết hạn Free: AI không giới hạn, tủ đồ đầy đủ, Progress 12 tháng, xuất dữ liệu, không quảng cáo. Premium+ giữ toàn bộ Premium và chỉ thêm phân tích nhiều góc, lịch sử không giới hạn, coach nhớ bạn lâu hơn và dùng tính năng mới sớm. Hầu hết không cần Plus."
       },
       "q4": {
         "question": "Có thể đổi gói hoặc hủy sau không?",
@@ -1730,11 +1672,6 @@
       "waitElapsedMinSec": "{m} phút {s} giây",
       "waitElapsedSec": "{s} giây"
     }
-  },
-  "skinCard": {
-    "checkInBadge": "Nhật ký",
-    "coachPrefix": "Gợi ý của bạn đồng hành:",
-    "gapPrefix": "Có thể bổ sung:"
   },
   "onboarding": {
     "sectionLabel": "Làm quen với da bạn",
