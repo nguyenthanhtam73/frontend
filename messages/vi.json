@@ -3247,7 +3247,7 @@
       "intro": "DaDiary đang ở giai đoạn Beta. Trang này nói dễ hiểu: mình lấy dữ liệu gì, dùng để làm gì, ai xử lý, giữ bao lâu, và bạn xoá thế nào. Đây không phải chứng nhận pháp lý.",
       "collect": {
         "title": "Mình thu thập gì",
-        "body": "Email và mật khẩu để tạo tài khoản. Ảnh da bạn tự chụp hoặc tự tải lên. Ghi chú check-in (da hôm nay, tag, nhật ký). Tủ đồ chăm da: tên sản phẩm bạn đang dùng. Tên hiển thị nếu bạn nhập. Mình không bán email hay ảnh của bạn."
+        "body": "Email và mật khẩu để tạo tài khoản. Ảnh da bạn tự chụp hoặc tự tải lên. Ghi chú check-in (da hôm nay, tag, nhật ký). Tủ đồ chăm da: tên sản phẩm bạn đang dùng. Tên hiển thị nếu bạn nhập. Khi bạn bật thông báo, mình còn lưu token thông báo đẩy, giờ nhắc bạn chọn, và múi giờ của giờ đó. Mình không bán email, ảnh, token hay giờ nhắc."
       },
       "why": {
         "title": "Vì sao mình cần",
@@ -3263,11 +3263,15 @@
       },
       "storage": {
         "title": "Lưu ở đâu",
-        "body": "Tài khoản, ảnh da, ghi chú check-in và tủ đồ được lưu trên máy chủ DaDiary để bạn xem lại lịch sử. Trên máy bạn còn phiên đăng nhập và một số tuỳ chọn, cho tới khi bạn đăng xuất hoặc xoá."
+        "body": "Tài khoản, ảnh da, ghi chú check-in, tủ đồ, token thông báo đẩy, giờ nhắc và múi giờ được lưu trên máy chủ DaDiary. Ảnh và nhật ký để bạn xem lại lịch sử. Token và giờ nhắc để gửi được thông báo. Trên máy bạn còn phiên đăng nhập và một số tuỳ chọn, cho tới khi bạn đăng xuất hoặc xoá."
+      },
+      "reminders": {
+        "title": "Thông báo đẩy và giờ nhắc",
+        "body": "Khi bạn bật Thông báo đẩy, mình lưu trên máy chủ đăng ký thông báo của thiết bị đó: token (địa chỉ để gửi) và khoá đi kèm, để nhắc tới đúng máy. Nếu bạn chọn giờ trong mục Nhắc mình chụp da mỗi ngày, mình lưu giờ đó và múi giờ đi cùng (giờ Việt Nam, hoặc giờ trên máy bạn nếu khác). Chỉ để nhắc chụp da: nhiều nhất một lần mỗi ngày, và không nhắc ngày bạn đã check-in. Mình không bán token, giờ nhắc hay múi giờ. Trong Cài đặt, tắt Thông báo đẩy để xoá token trên máy chủ. Bấm Tắt nhắc để ngừng gửi theo giờ đã chọn; giờ và múi giờ vẫn được giữ cho tới khi bạn xoá tài khoản. Xoá tài khoản thì xoá luôn token, giờ nhắc và múi giờ."
       },
       "retention": {
         "title": "Giữ bao lâu",
-        "body": "Ảnh da, ghi chú check-in và sản phẩm trong tủ được giữ cho tới khi bạn xoá dữ liệu da hoặc xoá tài khoản. Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm. Số liệu thống kê không có tên, không có email, và không gắn với bạn, được giữ lâu dài."
+        "body": "Ảnh da, ghi chú check-in và sản phẩm trong tủ được giữ cho tới khi bạn xoá dữ liệu da hoặc xoá tài khoản. Token thông báo đẩy được giữ cho tới khi bạn tắt Thông báo đẩy trong Cài đặt, hoặc tới khi bạn xoá tài khoản. Giờ nhắc và múi giờ được giữ cho tới khi bạn xoá tài khoản. Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm. Số liệu thống kê không có tên, không có email, và không gắn với bạn, được giữ lâu dài."
       },
       "deletion": {
         "title": "Cách xoá",
@@ -3275,7 +3279,7 @@
       },
       "choices": {
         "title": "Lựa chọn khác",
-        "body": "Bạn có thể tắt chụp mặt, rút lại đồng ý ảnh, và tắt thông báo đẩy trong Cài đặt. Góp ý trong app chỉ dùng để cải thiện sản phẩm."
+        "body": "Bạn có thể tắt chụp mặt và rút lại đồng ý ảnh trong Cài đặt. Ở đó bạn cũng tắt Thông báo đẩy để xoá token, hoặc bấm Tắt nhắc để ngừng nhắc theo giờ đã chọn. Góp ý trong app chỉ dùng để cải thiện sản phẩm."
       },
       "contact": {
         "title": "Liên hệ",
