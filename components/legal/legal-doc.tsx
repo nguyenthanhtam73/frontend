@@ -13,6 +13,7 @@ const PRIVACY_SECTIONS = [
   "photos",
   "ai",
   "storage",
+  "reminders",
   "retention",
   "deletion",
   "choices",

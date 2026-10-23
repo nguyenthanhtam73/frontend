@@ -49,6 +49,10 @@ describe("privacy policy copy", () => {
       "OpenAI",
       "10 năm",
       "xoá",
+      "token thông báo đẩy",
+      "giờ nhắc",
+      "múi giờ",
+      "Tắt nhắc",
     ]) {
       assert.match(viText, new RegExp(phrase));
     }
@@ -61,6 +65,10 @@ describe("privacy policy copy", () => {
       "OpenAI",
       "10 years",
       "delete",
+      "push token",
+      "reminder time",
+      "time zone",
+      "Reminders off",
     ]) {
       assert.match(enText, new RegExp(phrase, "i"));
     }

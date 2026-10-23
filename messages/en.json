@@ -3247,7 +3247,7 @@
       "intro": "DaDiary is in Beta. This page says, in plain language, what we collect, why, who processes it, how long we keep it, and how you can delete it. It is not a legal certification.",
       "collect": {
         "title": "What we collect",
-        "body": "Your email and password, to create an account. Skin photos you take or upload yourself. Check-in notes (how your skin feels, tags, and your diary). Your skincare shelf: the products you say you use. A display name, if you type one. We do not sell your email or your photos."
+        "body": "Your email and password, to create an account. Skin photos you take or upload yourself. Check-in notes (how your skin feels, tags, and your diary). Your skincare shelf: the products you say you use. A display name, if you type one. If you turn on notifications, we also store the push token, the reminder time you pick, and that time’s time zone. We do not sell your email, photos, token, or reminder time."
       },
       "why": {
         "title": "Why we need it",
@@ -3263,11 +3263,15 @@
       },
       "storage": {
         "title": "Where it is stored",
-        "body": "Your account, skin photos, check-in notes, and skincare shelf are stored on DaDiary servers so you can look back at your history. This device also keeps your sign-in session and some settings until you sign out or delete them."
+        "body": "Your account, skin photos, check-in notes, skincare shelf, push token, reminder time, and time zone are stored on DaDiary servers. Photos and the diary are there so you can look back. The token and reminder time are there so we can send the notification. This device also keeps your sign-in session and some settings until you sign out or delete them."
+      },
+      "reminders": {
+        "title": "Push notifications and reminder time",
+        "body": "If you turn on Push notifications, we store that device’s push subscription on our servers: the token (the address we send to) and the keys that come with it, so the reminder reaches that device. If you pick a time under Remind me to take a skin photo each day, we store that time and the time zone that goes with it (Vietnam time, or your device’s time zone if it is different). We use this only to remind you to take a skin photo: at most once a day, and not on a day you already checked in. We do not sell the token, the reminder time, or the time zone. In Settings, turn off Push notifications to delete the token from our servers. Choose Reminders off to stop sending at the saved time; the time and time zone stay until you delete your account. Deleting your account also deletes the token, the reminder time, and the time zone."
       },
       "retention": {
         "title": "How long we keep it",
-        "body": "Skin photos, check-in notes, and shelf products stay until you delete your skin data or delete your account. Payment records (amount, date, and status; no name or email) are kept as accounting law requires, for up to 10 years. Anonymous statistics with no name, no email, and not linked to you are kept long-term."
+        "body": "Skin photos, check-in notes, and shelf products stay until you delete your skin data or delete your account. The push token stays until you turn off Push notifications in Settings, or until you delete your account. The reminder time and time zone stay until you delete your account. Payment records (amount, date, and status; no name or email) are kept as accounting law requires, for up to 10 years. Anonymous statistics with no name, no email, and not linked to you are kept long-term."
       },
       "deletion": {
         "title": "How to delete",
@@ -3275,7 +3279,7 @@
       },
       "choices": {
         "title": "Your other choices",
-        "body": "You can turn off face photos, withdraw photo consent, and turn off push notifications in Settings. Feedback you send in the app is used only to improve the product."
+        "body": "You can turn off face photos and withdraw photo consent in Settings. There you can also turn off Push notifications to delete the token, or choose Reminders off to stop reminders at the saved time. Feedback you send in the app is used only to improve the product."
       },
       "contact": {
         "title": "Contact",
