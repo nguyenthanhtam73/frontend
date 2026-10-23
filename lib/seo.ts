@@ -214,6 +214,7 @@ export const SITEMAP_PUBLIC_PATHS = [
   ...guidePublicPaths(),
   "/privacy",
   "/terms",
+  "/delete-account",
 ] as const;
 
 function sitemapPriority(path: string, locale: string): number {

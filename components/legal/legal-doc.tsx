@@ -1,13 +1,27 @@
 import { getTranslations } from "next-intl/server";
 
 import { Link } from "@/i18n/navigation";
+import { SUPPORT_EMAIL } from "@/lib/config";
 
 type LegalDocProps = {
   kind: "privacy" | "terms";
 };
 
-const PRIVACY_SECTIONS = ["collect", "photos", "retention", "choices", "medical"] as const;
+const PRIVACY_SECTIONS = [
+  "collect",
+  "why",
+  "photos",
+  "ai",
+  "storage",
+  "retention",
+  "deletion",
+  "choices",
+  "contact",
+  "medical",
+] as const;
 const TERMS_SECTIONS = ["product", "account", "payments", "medical", "changes"] as const;
+
+const linkClass = "font-medium text-primary underline underline-offset-4";
 
 /** Minimal, honest legal pages — no invented certifications or retention promises. */
 export async function LegalDoc({ kind }: LegalDocProps) {
@@ -37,6 +51,17 @@ export async function LegalDoc({ kind }: LegalDocProps) {
             <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
               {t(`${key}.body`)}
             </p>
+            {kind === "privacy" && key === "contact" ? (
+              <p className="text-sm text-muted-foreground">
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  className={linkClass}
+                  data-testid="privacy-support-email"
+                >
+                  {SUPPORT_EMAIL}
+                </a>
+              </p>
+            ) : null}
           </section>
         ))}
       </div>
@@ -45,17 +70,22 @@ export async function LegalDoc({ kind }: LegalDocProps) {
         {t("disclaimer")}
       </p>
 
+      {kind === "privacy" ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          <Link href="/delete-account" className={linkClass}>
+            {t("deleteAccountLink")}
+          </Link>
+        </p>
+      ) : null}
+
       <p className="mt-6 text-sm text-muted-foreground">
-        <Link
-          href={otherHref}
-          className="font-medium text-primary underline underline-offset-4"
-        >
+        <Link href={otherHref} className={linkClass}>
           {otherLabel}
         </Link>
         <span aria-hidden className="px-1.5">
           ·
         </span>
-        <Link href="/" className="font-medium text-primary underline underline-offset-4">
+        <Link href="/" className={linkClass}>
           {t("homeLink")}
         </Link>
       </p>

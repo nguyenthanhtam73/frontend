@@ -27,7 +27,7 @@ export async function clearAppCaches(): Promise<void> {
     );
   }
 
-  if ("serviceWorker" in navigator) {
+  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
     const message = { type: CLEAR_APP_CACHES_MESSAGE };
     navigator.serviceWorker.controller?.postMessage(message);
     tasks.push(

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  isOnboardingGateExemptPath,
   isOnboardingGatedPath,
   postRegisterDestination,
   resolveAuthReturnDestination,
@@ -16,6 +17,14 @@ describe("isOnboardingGatedPath", () => {
     assert.equal(isOnboardingGatedPath("/cabinet"), true);
     assert.equal(isOnboardingGatedPath("/wardrobe"), true);
     assert.equal(isOnboardingGatedPath("/"), false);
+  });
+});
+
+describe("isOnboardingGateExemptPath", () => {
+  it("leaves the public privacy and delete-account pages alone", () => {
+    assert.equal(isOnboardingGateExemptPath("/privacy"), true);
+    assert.equal(isOnboardingGateExemptPath("/delete-account"), true);
+    assert.equal(isOnboardingGateExemptPath("/delete-account/"), true);
   });
 });
 
