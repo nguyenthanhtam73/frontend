@@ -70,6 +70,7 @@ export function isMarketingPath(pathname: string) {
     p === "/register" ||
     p === "/privacy" ||
     p === "/terms" ||
+    p === "/delete-account" ||
     p.startsWith("/payment") ||
     p.startsWith("/share")
   );

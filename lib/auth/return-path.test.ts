@@ -13,6 +13,7 @@ describe("auth return-path", () => {
     assert.equal(sanitizeAuthReturnPath("/check-in?x=1"), "/check-in?x=1");
     assert.equal(sanitizeAuthReturnPath("/privacy"), "/privacy");
     assert.equal(sanitizeAuthReturnPath("/terms"), "/terms");
+    assert.equal(sanitizeAuthReturnPath("/delete-account"), "/delete-account");
     assert.equal(sanitizeAuthReturnPath("https://evil.com/check-in"), null);
     assert.equal(sanitizeAuthReturnPath("//evil.com"), null);
     assert.equal(sanitizeAuthReturnPath("/admin"), null);

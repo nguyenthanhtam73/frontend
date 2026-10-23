@@ -293,9 +293,16 @@ export async function apiFetch<T = unknown>(
 
       const apiErr = err instanceof ApiError ? err : new ApiError("unknown", { cause: err });
 
+      // DELETE /api/v1/me returns 401 + invalid_password for a wrong password.
+      // That is not an expired session: refreshing would send the password
+      // again and count as another try toward the rate limit.
+      const wrongPassword =
+        apiErr.kind === "unauthorized" && apiErr.code === "invalid_password";
+
       // One silent refresh+retry on 401 when we still have a refresh token.
       if (
         apiErr.kind === "unauthorized" &&
+        !wrongPassword &&
         opts.auth !== false &&
         !didRefreshRetry &&
         getRefreshToken() &&

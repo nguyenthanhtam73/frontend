@@ -7,6 +7,7 @@ import { getRedirectStatus } from "next/dist/lib/redirect-status.js";
 import { tryToParsePath } from "next/dist/lib/try-to-parse-path.js";
 
 import nextConfig from "../next.config";
+import { dashboardToCheckInRedirects } from "./dashboard-redirect";
 import { APEX_ORIGIN, WWW_HOST, wwwToApexRedirects } from "./www-redirect";
 
 const ASSETLINKS = `[
@@ -66,6 +67,23 @@ describe("Android asset links", () => {
   });
 });
 
+describe("dashboard redirect", () => {
+  it("permanently sends /dashboard to the check-in home in both locales", () => {
+    const rules = dashboardToCheckInRedirects();
+    assert.deepEqual(
+      rules.map((rule) => [rule.source, rule.destination, rule.permanent]),
+      [
+        ["/dashboard", "/check-in", true],
+        ["/en/dashboard", "/en/check-in", true],
+      ],
+    );
+    for (const rule of rules) {
+      assert.equal(getRedirectStatus(rule), 308);
+      assert.equal(rule.has, undefined);
+    }
+  });
+});
+
 describe("www to apex redirect", () => {
   it("is a 308 host rule that keeps the path and ignores other hosts", () => {
     const rules = wwwToApexRedirects();
@@ -82,7 +100,10 @@ describe("www to apex redirect", () => {
   });
 
   it("is the redirect next.config installs, and rewrites stay on /uploads", async () => {
-    assert.deepEqual(await nextConfig.redirects!(), wwwToApexRedirects());
+    assert.deepEqual(await nextConfig.redirects!(), [
+      ...wwwToApexRedirects(),
+      ...dashboardToCheckInRedirects(),
+    ]);
     const rewrites = await nextConfig.rewrites!();
     assert.ok(Array.isArray(rewrites));
     assert.deepEqual(

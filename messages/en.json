@@ -93,7 +93,7 @@
     },
     "privacyPage": {
       "title": "Privacy · DaDiary",
-      "description": "How DaDiary uses your email, skin photos, and diary data — you can delete anytime."
+      "description": "Email, skin photos, check-in notes, and your skincare shelf. Third-party AI processes them. You can delete them."
     },
     "termsPage": {
       "title": "Terms of use · DaDiary",
@@ -113,11 +113,15 @@
     },
     "privacyPage": {
       "title": "Privacy · DaDiary",
-      "description": "How DaDiary uses your email, skin photos, and account data — and how you can delete them."
+      "description": "Email, skin photos, check-in notes, and your skincare shelf. Third-party AI processes them. You can delete them."
     },
     "termsPage": {
       "title": "Terms of use · DaDiary",
       "description": "Short Beta terms for DaDiary: skincare suggestions, accounts, and payments."
+    },
+    "deleteAccountPage": {
+      "title": "Delete your account · DaDiary",
+      "description": "How to delete your DaDiary account: the steps, what is removed, and what we keep."
     }
   },
   "auth": {
@@ -176,6 +180,7 @@
     "signIn": "Sign in",
     "register": "Sign up",
     "signOut": "Sign out",
+    "accountDeleted": "Your account has been deleted.",
     "nav": {
       "start": "Get started",
       "cabinet": "Skincare shelf",
@@ -206,6 +211,7 @@
       "navAria": "Footer links",
       "privacy": "Privacy",
       "terms": "Terms",
+      "deleteAccount": "Delete account",
       "social": {
         "navAria": "DaDiary social media",
         "follow": "Follow",
@@ -2581,6 +2587,20 @@
     "deleteAuth": "Session expired — sign in again if you still need to delete.",
     "deleteNetwork": "Couldn't delete on the server — check your connection and retry.",
     "deleteLastReset": "Last wipe: {when}.",
+    "deleteAccountRowTitle": "Delete account",
+    "deleteAccountRowSub": "Permanently removes your account, email, skin photos, diary, cabinet products, and reminders. This cannot be undone.",
+    "deleteAccountCta": "Delete account",
+    "deleteAccountConfirmTitle": "Delete this account?",
+    "deleteAccountConfirmBody": "Your account, email, skin photos, diary, cabinet products, and reminders will be removed. Every signed-in device is signed out. This cannot be undone. You can sign up again later with the same email.",
+    "deleteAccountPremium": "If you have a Premium plan, it ends when the account is deleted and is not refunded.",
+    "deleteAccountPasswordLabel": "Type your password again",
+    "deleteAccountConfirmCta": "Delete account",
+    "deleteAccountCancel": "Not now",
+    "deleteAccountCloseAria": "Close delete account dialog",
+    "deleteAccountWorking": "Deleting…",
+    "deleteAccountInvalidPassword": "That password isn’t right.",
+    "deleteAccountRateLimited": "Too many tries. Wait a moment, then try again.",
+    "deleteAccountFailed": "Couldn’t delete the account. Please try again in a moment.",
     "dismissToast": "Dismiss",
     "memoryLinkTitle": "What does the AI remember?",
     "memoryLinkSub": "See the memory block used in coaching — transparent and refreshable.",
@@ -3222,30 +3242,51 @@
   },
   "legal": {
     "privacy": {
-      "title": "Privacy",
-      "updated": "Updated: September 2026 · Beta",
-      "intro": "DaDiary is in Beta. This page describes how we use data you choose to share — not a certification, and not a promise beyond what the product actually does today.",
+      "title": "Privacy Policy",
+      "updated": "Updated: October 2026",
+      "intro": "DaDiary is in Beta. This page says, in plain language, what we collect, why, who processes it, how long we keep it, and how you can delete it. It is not a legal certification.",
       "collect": {
         "title": "What we collect",
-        "body": "Email and password to create an account; an optional display name; skin photos you choose to upload; check-in notes, routines, and Settings preferences. We do not sell your email list to third parties."
+        "body": "Your email and password, to create an account. Skin photos you take or upload yourself. Check-in notes (how your skin feels, tags, and your diary). Your skincare shelf: the products you say you use. A display name, if you type one. We do not sell your email or your photos."
+      },
+      "why": {
+        "title": "Why we need it",
+        "body": "Email lets you sign in, and lets us reply when you ask a question or ask us to delete your account. Skin photos and check-in notes are how we read your skin and suggest care. The shelf is so we remember products you already have and do not tell you to buy them again."
       },
       "photos": {
-        "title": "Face photos",
-        "body": "Photos are used to analyze your skin and suggest a routine. They are sent to our servers so the AI can process them. You can skip face photos and use tags + notes instead."
+        "title": "Skin photos",
+        "body": "Photos are used to look at your skin and suggest a routine. You can skip face photos and use tags and notes instead. Photos are not posted publicly."
+      },
+      "ai": {
+        "title": "Third-party AI",
+        "body": "To write skin feedback and care suggestions, DaDiary sends your skin photos, check-in notes, and skincare-shelf details to a third-party AI provider. Right now that provider is OpenAI. They process this data to produce the result you see."
+      },
+      "storage": {
+        "title": "Where it is stored",
+        "body": "Your account, skin photos, check-in notes, and skincare shelf are stored on DaDiary servers so you can look back at your history. This device also keeps your sign-in session and some settings until you sign out or delete them."
       },
       "retention": {
-        "title": "Storage and deletion",
-        "body": "Skin data and photos are stored on our servers so you can review history. In Settings you can delete all skin data (photos, diary, saved routines). Your login account stays if you only wipe skin data."
+        "title": "How long we keep it",
+        "body": "Skin photos, check-in notes, and shelf products stay until you delete your skin data or delete your account. Payment records (amount, date, and status; no name or email) are kept as accounting law requires, for up to 10 years. Anonymous statistics with no name, no email, and not linked to you are kept long-term."
+      },
+      "deletion": {
+        "title": "How to delete",
+        "body": "In Settings you can delete your skin data (photos, diary, saved routines) and keep the login. To delete the whole account — email, photos, diary, shelf, and reminders — follow the delete-account page: sign in, open Settings, tap Delete account, and type your password. If you cannot sign in, email us from the address you registered with. Some records stay, as described under How long we keep it."
       },
       "choices": {
-        "title": "Your choices",
-        "body": "You can turn off face capture, withdraw photo consent, disable push notifications, and delete data anytime in Settings. In-app feedback is used only to improve the product."
+        "title": "Your other choices",
+        "body": "You can turn off face photos, withdraw photo consent, and turn off push notifications in Settings. Feedback you send in the app is used only to improve the product."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Questions about your data, or a request to delete your account? Email us. If you are asking us to delete the account, send the message from the email you used to sign up."
       },
       "medical": {
         "title": "Not medical advice",
-        "body": "DaDiary suggestions are for reference from the photos and notes you provide — they do not replace a dermatologist. See a professional if your skin needs medical care."
+        "body": "DaDiary suggestions are for reference from the photos and notes you provide. They do not replace a dermatologist. See a professional if your skin needs medical care."
       },
-      "disclaimer": "Questions about your data? Send feedback in the app or reach DaDiary on our social channels. We’ll update this page if how we handle data changes.",
+      "disclaimer": "If how we handle data changes, we will update this page and change the date at the top.",
+      "deleteAccountLink": "How to delete your account",
       "homeLink": "Back to home"
     },
     "terms": {
@@ -3273,6 +3314,32 @@
         "body": "We may update this page as the product changes. The date is at the top. If you don’t agree, you can stop using DaDiary and delete your data in Settings."
       },
       "disclaimer": "Skincare suggestions are for reference only and do not replace professional medical advice.",
+      "homeLink": "Back to home"
+    },
+    "deleteAccount": {
+      "title": "Delete your DaDiary account",
+      "intro": "This page explains how to delete your DaDiary account for good. You can open it without signing in.",
+      "stepsTitle": "Steps",
+      "steps": {
+        "s1": "On the web or in the app, sign in.",
+        "s2": "Open Settings.",
+        "s3": "Tap “Delete account”.",
+        "s4": "Type your password again, then confirm."
+      },
+      "deletedTitle": "What gets deleted",
+      "deletedBody": "Your account, email, all skin photos and diary entries, cabinet products, and reminders. Every signed-in device is signed out.",
+      "premium": "If you have a Premium plan, it ends when the account is deleted and is not refunded.",
+      "settingsLink": "Settings",
+      "keptTitle": "What we keep",
+      "retention": {
+        "payments": "Payment records (the amount, date, and status; no name or email) are kept for as long as accounting law requires, up to 10 years.",
+        "stats": "Anonymous statistics (no name or email, and not linked to you) are kept long-term."
+      },
+      "undo": "This cannot be undone. You can sign up again later with the same email.",
+      "cantSignInTitle": "If you can’t sign in",
+      "cantSignInBody": "If you forgot your password or cannot sign in, email us from the address you signed up with and ask us to delete the account.",
+      "cantSignInAlso": "You can also message us on Facebook or TikTok.",
+      "privacyLink": "Privacy",
       "homeLink": "Back to home"
     }
   }

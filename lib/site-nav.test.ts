@@ -6,6 +6,7 @@ import {
   hidesFunnelMarketingNav,
   hidesPwaInstallBanner,
   isAuthEntryPath,
+  isMarketingPath,
   isOnboardingFunnelPath,
   normalizePath,
   revealScrollDelta,
@@ -71,6 +72,16 @@ describe("site-nav funnel helpers", () => {
     assert.equal(hidesPwaInstallBanner("/register"), true);
     assert.equal(hidesPwaInstallBanner("/check-in"), true);
     assert.equal(hidesPwaInstallBanner("/"), false);
+  });
+});
+
+describe("marketing paths", () => {
+  it("treats privacy, terms, and delete-account as public marketing pages", () => {
+    assert.equal(isMarketingPath("/privacy"), true);
+    assert.equal(isMarketingPath("/terms"), true);
+    assert.equal(isMarketingPath("/delete-account"), true);
+    assert.equal(isMarketingPath("/check-in"), false);
+    assert.equal(isMarketingPath("/dashboard"), false);
   });
 });
 

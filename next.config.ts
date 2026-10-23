@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
+import { dashboardToCheckInRedirects } from "./lib/dashboard-redirect";
 import { wwwToApexRedirects } from "./lib/www-redirect";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,7 +35,9 @@ const nextConfig: NextConfig = {
   // the condition, and the destination is the apex so the rule cannot loop.
   // Next.js forwards the query string when the destination does not set one.
   async redirects() {
-    return wwwToApexRedirects();
+    // www → apex first (host-only). Then the unused /dashboard URL, which
+    // has no page, permanently to the check-in home.
+    return [...wwwToApexRedirects(), ...dashboardToCheckInRedirects()];
   },
 };
 

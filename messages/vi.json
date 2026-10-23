@@ -93,7 +93,7 @@
     },
     "privacyPage": {
       "title": "Quyền riêng tư · DaDiary",
-      "description": "Cách DaDiary dùng email, ảnh da và dữ liệu nhật ký — bạn có thể xoá bất cứ lúc nào."
+      "description": "Cách DaDiary dùng email, ảnh da, ghi chú check-in và tủ đồ. AI bên thứ ba xử lý. Bạn xoá được."
     },
     "termsPage": {
       "title": "Điều khoản sử dụng · DaDiary",
@@ -113,11 +113,15 @@
     },
     "privacyPage": {
       "title": "Quyền riêng tư · DaDiary",
-      "description": "Cách DaDiary dùng email, ảnh da và dữ liệu tài khoản — và cách bạn xoá chúng."
+      "description": "Cách DaDiary dùng email, ảnh da, ghi chú check-in và tủ đồ. AI bên thứ ba xử lý. Bạn xoá được."
     },
     "termsPage": {
       "title": "Điều khoản sử dụng · DaDiary",
       "description": "Điều khoản ngắn cho Beta DaDiary: gợi ý chăm da, tài khoản và thanh toán."
+    },
+    "deleteAccountPage": {
+      "title": "Xoá tài khoản · DaDiary",
+      "description": "Cách xoá tài khoản DaDiary: các bước, những gì bị xoá và những gì còn giữ."
     }
   },
   "auth": {
@@ -176,6 +180,7 @@
     "signIn": "Đăng nhập",
     "register": "Đăng ký",
     "signOut": "Đăng xuất",
+    "accountDeleted": "Tài khoản đã được xoá.",
     "nav": {
       "start": "Bắt đầu",
       "cabinet": "Tủ đồ chăm da",
@@ -206,6 +211,7 @@
       "navAria": "Liên kết chân trang",
       "privacy": "Quyền riêng tư",
       "terms": "Điều khoản",
+      "deleteAccount": "Xoá tài khoản",
       "social": {
         "navAria": "Mạng xã hội DaDiary",
         "follow": "Theo dõi",
@@ -2581,6 +2587,20 @@
     "deleteAuth": "Phiên đăng nhập hết hạn — đăng nhập lại rồi thử xoá nếu cần.",
     "deleteNetwork": "Chưa xoá được trên máy chủ — kiểm tra mạng và thử lại.",
     "deleteLastReset": "Lần xoá gần nhất: {when}.",
+    "deleteAccountRowTitle": "Xoá tài khoản",
+    "deleteAccountRowSub": "Xoá hẳn tài khoản, email, ảnh da, nhật ký, sản phẩm trong tủ và nhắc nhở. Không lấy lại được.",
+    "deleteAccountCta": "Xoá tài khoản",
+    "deleteAccountConfirmTitle": "Xoá tài khoản này?",
+    "deleteAccountConfirmBody": "Tài khoản, email, ảnh da, nhật ký, sản phẩm trong tủ và nhắc nhở sẽ mất. Mọi nơi đang đăng nhập sẽ bị đăng xuất. Không lấy lại được. Bạn vẫn đăng ký lại bằng cùng email được.",
+    "deleteAccountPremium": "Gói Premium đang dùng (nếu có) sẽ mất khi xoá tài khoản và không được hoàn tiền.",
+    "deleteAccountPasswordLabel": "Nhập lại mật khẩu",
+    "deleteAccountConfirmCta": "Xoá tài khoản",
+    "deleteAccountCancel": "Để sau",
+    "deleteAccountCloseAria": "Đóng hộp thoại xoá tài khoản",
+    "deleteAccountWorking": "Đang xoá…",
+    "deleteAccountInvalidPassword": "Mật khẩu chưa đúng.",
+    "deleteAccountRateLimited": "Bạn thử nhiều lần quá, đợi một lúc rồi thử lại.",
+    "deleteAccountFailed": "Chưa xoá được tài khoản. Bạn thử lại sau nhé.",
     "dismissToast": "Đóng",
     "memoryLinkTitle": "AI đang nhớ gì về bạn?",
     "memoryLinkSub": "Xem khối trí nhớ dùng cho lời khuyên — minh bạch, có thể làm mới.",
@@ -3222,30 +3242,51 @@
   },
   "legal": {
     "privacy": {
-      "title": "Quyền riêng tư",
-      "updated": "Cập nhật: tháng 9/2026 · Beta",
-      "intro": "DaDiary đang ở giai đoạn Beta. Trang này mô tả cách mình dùng dữ liệu bạn chủ động cung cấp — không phải chứng nhận pháp lý hay cam kết ngoài những gì đang làm trên sản phẩm.",
+      "title": "Chính sách quyền riêng tư",
+      "updated": "Cập nhật: tháng 10/2026",
+      "intro": "DaDiary đang ở giai đoạn Beta. Trang này nói dễ hiểu: mình lấy dữ liệu gì, dùng để làm gì, ai xử lý, giữ bao lâu, và bạn xoá thế nào. Đây không phải chứng nhận pháp lý.",
       "collect": {
         "title": "Mình thu thập gì",
-        "body": "Email và mật khẩu để tạo tài khoản; tên hiển thị nếu bạn nhập; ảnh da bạn tự chọn tải lên; ghi chú check-in, routine và tuỳ chọn trong Cài đặt. Mình không bán danh sách email cho bên thứ ba."
+        "body": "Email và mật khẩu để tạo tài khoản. Ảnh da bạn tự chụp hoặc tự tải lên. Ghi chú check-in (da hôm nay, tag, nhật ký). Tủ đồ chăm da: tên sản phẩm bạn đang dùng. Tên hiển thị nếu bạn nhập. Mình không bán email hay ảnh của bạn."
+      },
+      "why": {
+        "title": "Vì sao mình cần",
+        "body": "Email để bạn đăng nhập, và để mình trả lời khi bạn hỏi hoặc nhờ xoá tài khoản. Ảnh da và ghi chú check-in để đọc da và gợi ý cách chăm. Tủ đồ để nhớ sản phẩm bạn đã có, khỏi bảo bạn mua lại."
       },
       "photos": {
-        "title": "Ảnh mặt",
-        "body": "Ảnh chỉ dùng để phân tích da và gợi ý routine. Ảnh được gửi lên máy chủ để AI xử lý. Bạn có thể bỏ qua chụp mặt và dùng tag + ghi chú."
+        "title": "Ảnh da",
+        "body": "Ảnh chỉ dùng để xem da và gợi ý routine. Bạn có thể bỏ qua chụp mặt, chỉ dùng tag và ghi chú. Ảnh không được đăng công khai."
+      },
+      "ai": {
+        "title": "AI của bên thứ ba",
+        "body": "Để viết nhận xét da và gợi ý chăm da, DaDiary gửi ảnh da, ghi chú check-in và thông tin tủ đồ tới nhà cung cấp AI bên thứ ba. Hiện mình dùng OpenAI. Họ xử lý dữ liệu này để tạo kết quả bạn thấy."
+      },
+      "storage": {
+        "title": "Lưu ở đâu",
+        "body": "Tài khoản, ảnh da, ghi chú check-in và tủ đồ được lưu trên máy chủ DaDiary để bạn xem lại lịch sử. Trên máy bạn còn phiên đăng nhập và một số tuỳ chọn, cho tới khi bạn đăng xuất hoặc xoá."
       },
       "retention": {
-        "title": "Lưu trữ và xoá",
-        "body": "Dữ liệu da và ảnh được lưu trên máy chủ để bạn xem lại lịch sử. Trong Cài đặt bạn có thể xoá toàn bộ dữ liệu da (ảnh, nhật ký, routine đã lưu). Tài khoản đăng nhập vẫn giữ nếu bạn chỉ xoá dữ liệu da."
+        "title": "Giữ bao lâu",
+        "body": "Ảnh da, ghi chú check-in và sản phẩm trong tủ được giữ cho tới khi bạn xoá dữ liệu da hoặc xoá tài khoản. Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm. Số liệu thống kê không có tên, không có email, và không gắn với bạn, được giữ lâu dài."
+      },
+      "deletion": {
+        "title": "Cách xoá",
+        "body": "Trong Cài đặt bạn có thể xoá dữ liệu da (ảnh, nhật ký, routine đã lưu) mà vẫn giữ tài khoản đăng nhập. Muốn xoá hẳn tài khoản — email, ảnh, nhật ký, tủ đồ và nhắc nhở — hãy làm theo trang xoá tài khoản: đăng nhập, mở Cài đặt, bấm Xoá tài khoản, rồi nhập mật khẩu. Nếu không đăng nhập được, gửi email từ đúng địa chỉ đã đăng ký. Một số dữ liệu vẫn được giữ, như mục Giữ bao lâu ở trên."
       },
       "choices": {
-        "title": "Lựa chọn của bạn",
-        "body": "Bạn có thể tắt chụp mặt, rút lại đồng ý ảnh, tắt thông báo đẩy, và xoá dữ liệu bất cứ lúc nào trong Cài đặt. Góp ý trong app chỉ dùng để cải thiện sản phẩm."
+        "title": "Lựa chọn khác",
+        "body": "Bạn có thể tắt chụp mặt, rút lại đồng ý ảnh, và tắt thông báo đẩy trong Cài đặt. Góp ý trong app chỉ dùng để cải thiện sản phẩm."
+      },
+      "contact": {
+        "title": "Liên hệ",
+        "body": "Bạn muốn hỏi về dữ liệu, hoặc nhờ xoá tài khoản? Gửi email cho mình. Khi nhờ xoá, hãy gửi từ đúng email bạn đã dùng để đăng ký."
       },
       "medical": {
         "title": "Không phải tư vấn y tế",
-        "body": "Gợi ý của DaDiary mang tính tham khảo từ ảnh và thông tin bạn cung cấp — không thay thế bác sĩ da liễu. Nếu da có vấn đề nghiêm trọng, hãy gặp chuyên gia."
+        "body": "Gợi ý của DaDiary mang tính tham khảo từ ảnh và ghi chú bạn cung cấp. Không thay thế bác sĩ da liễu. Nếu da có vấn đề nghiêm trọng, hãy gặp chuyên gia."
       },
-      "disclaimer": "Nếu có câu hỏi về dữ liệu, gửi góp ý trong app hoặc liên hệ qua các kênh mạng xã hội của DaDiary. Mình sẽ cập nhật trang này khi cách xử lý dữ liệu thay đổi.",
+      "disclaimer": "Nếu cách mình xử lý dữ liệu đổi, mình sẽ cập nhật trang này và sửa ngày ở trên.",
+      "deleteAccountLink": "Cách xoá tài khoản",
       "homeLink": "Về trang chủ"
     },
     "terms": {
@@ -3273,6 +3314,32 @@
         "body": "Mình có thể cập nhật trang này khi sản phẩm đổi. Ngày cập nhật nằm ở đầu trang. Nếu không đồng ý, bạn có thể ngừng dùng và xoá dữ liệu trong Cài đặt."
       },
       "disclaimer": "Gợi ý chăm da chỉ mang tính tham khảo, không thay thế tư vấn y tế chuyên môn.",
+      "homeLink": "Về trang chủ"
+    },
+    "deleteAccount": {
+      "title": "Xoá tài khoản DaDiary",
+      "intro": "Trang này nói cách xoá hẳn tài khoản DaDiary. Bạn mở được mà không cần đăng nhập.",
+      "stepsTitle": "Các bước",
+      "steps": {
+        "s1": "Trên web hoặc trong app, bạn đăng nhập.",
+        "s2": "Mở trang Cài đặt.",
+        "s3": "Bấm “Xoá tài khoản”.",
+        "s4": "Nhập lại mật khẩu, rồi xác nhận."
+      },
+      "deletedTitle": "Những gì bị xoá",
+      "deletedBody": "Tài khoản của bạn, email, toàn bộ ảnh da và nhật ký, sản phẩm trong tủ, và nhắc nhở. Mọi nơi đang đăng nhập sẽ bị đăng xuất.",
+      "premium": "Gói Premium đang dùng (nếu có) sẽ mất khi xoá tài khoản và không được hoàn tiền.",
+      "settingsLink": "Cài đặt",
+      "keptTitle": "Những gì còn giữ",
+      "retention": {
+        "payments": "Tiền bạn đã trả (số tiền, ngày, trạng thái; không có tên hay email) được giữ theo luật kế toán, lâu nhất là 10 năm.",
+        "stats": "Số liệu thống kê không có tên, không có email, và không gắn với bạn, được giữ lâu dài."
+      },
+      "undo": "Việc này không lấy lại được. Sau này bạn vẫn đăng ký lại bằng cùng email được.",
+      "cantSignInTitle": "Nếu bạn không đăng nhập được",
+      "cantSignInBody": "Nếu bạn quên mật khẩu hoặc không đăng nhập được, hãy gửi email xin xoá tài khoản từ đúng email bạn đã dùng để đăng ký.",
+      "cantSignInAlso": "Bạn cũng có thể nhắn trên Facebook hoặc TikTok.",
+      "privacyLink": "Quyền riêng tư",
       "homeLink": "Về trang chủ"
     }
   }
