@@ -944,7 +944,7 @@
       "moisturize": "Dưỡng ẩm",
       "moisturizeCalm": "Dưỡng / làm dịu",
       "spf": "Chống nắng",
-      "treat": "Điều trị",
+      "treat": "Serum hoạt chất",
       "soothe": "Làm dịu"
     }
   },
@@ -1331,7 +1331,7 @@
       "serum": "Serum",
       "moisturizer": "Kem dưỡng",
       "spf": "Kem chống nắng",
-      "treatment": "Điều trị",
+      "treatment": "Serum hoạt chất",
       "mask": "Mặt nạ",
       "other": "Khác"
     },
@@ -1836,7 +1836,7 @@
         "moisturize": "Dưỡng ẩm",
         "moisturizeCalm": "Dưỡng / làm dịu",
         "spf": "Chống nắng",
-        "treat": "Điều trị",
+        "treat": "Serum hoạt chất",
         "soothe": "Làm dịu"
       }
     },
@@ -2222,7 +2222,7 @@
       "skillAdvanced1": "So ảnh cùng ánh sáng/góc trước khi kết luận “tiến triển”.",
       "budgetEntry": "Ưu tiên drugstore đủ công thức: sữa rửa mặt pH ~5–6, ceramide, kem chống nắng bền hơn là serum đắt.",
       "budgetMid": "Đầu tư 1 serum đặc trị + 1 kem dưỡng/làm dịu tốt; phần còn lại giữ tối giản.",
-      "budgetFlexible": "Có thể dồn ngân sách vào điều trị/kem chống nắng chất lượng + dụng cụ tối giản."
+      "budgetFlexible": "Có thể dồn ngân sách vào serum/kem chống nắng chất lượng + dụng cụ tối giản."
     },
     "goalCoachLine": "Mục tiêu: {goal} — bạn đồng hành sẽ ưu tiên giải thích “vì sao” trước “dùng gì”.",
     "contextCoachLine": "Hoàn cảnh: {contexts} — gợi ý sẽ nhắc kem chống nắng/tẩy trang/phục hồi cho lịch của bạn.",
@@ -2336,7 +2336,7 @@
     "morningTitle": "Buổi sáng",
     "morningDesc": "Sạch dịu · cấp ẩm · kem chống nắng.",
     "eveningTitle": "Buổi tối",
-    "eveningDesc": "Tẩy trang · điều trị · phục hồi.",
+    "eveningDesc": "Tẩy trang · serum · dưỡng ẩm.",
     "stepPlaceholder": "Ví dụ: Sữa rửa mặt dịu",
     "stepAdd": "Thêm bước",
     "stepRemove": "Xoá bước",
@@ -2358,7 +2358,7 @@
       "cleanser": "Sữa rửa mặt",
       "toner": "Toner / Essence",
       "serum": "Serum (tinh chất)",
-      "treatment": "Đặc trị",
+      "treatment": "Serum hoạt chất",
       "moisturizer": "Kem dưỡng ẩm",
       "spf": "Kem chống nắng",
       "eye": "Kem mắt",
