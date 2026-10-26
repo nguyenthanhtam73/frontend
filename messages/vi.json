@@ -3255,11 +3255,11 @@
       },
       "photos": {
         "title": "Ảnh da",
-        "body": "Ảnh chỉ dùng để xem da và gợi ý routine. Bạn có thể bỏ qua chụp mặt, chỉ dùng tag và ghi chú. Ảnh không bao giờ công khai, trừ khi bạn chọn chia sẻ kết quả. Khi chia sẻ, chỉ bản ảnh đã làm mờ được xem qua link chia sẻ. Link xem ảnh gốc là riêng tư và hết hạn sau 1 giờ. Xoá tài khoản thì xoá hết ảnh đã lưu."
+        "body": "Ảnh chỉ dùng để xem da và gợi ý routine. Bạn có thể bỏ qua chụp mặt, chỉ dùng tag và ghi chú. Ảnh gốc được bảo vệ, chỉ mở bằng link riêng tư, và link đó hết hạn sau 1 giờ. Bản đã làm mờ chỉ công khai khi chính bạn bấm chia sẻ. Xoá tài khoản thì xoá hết ảnh đã lưu."
       },
       "ai": {
         "title": "AI của bên thứ ba",
-        "body": "Để xem da, DaDiary chỉ gửi ảnh da tới OpenAI. Phần chữ (ghi chú check-in, thông tin tủ đồ và nội dung chữ) do Claude của Anthropic viết trước. Nếu Claude không viết được, OpenAI viết thay. Họ xử lý dữ liệu này để tạo kết quả bạn thấy. Theo điều khoản dịch vụ trả phí của OpenAI và Anthropic, ảnh và dữ liệu này không được dùng để dạy AI của họ."
+        "body": "Để xem da, DaDiary chỉ gửi ảnh da tới OpenAI. Phần chữ (ghi chú check-in, thông tin tủ đồ và nội dung chữ) do Claude của Anthropic viết trước. Nếu Claude không viết được, OpenAI viết thay. Họ xử lý dữ liệu này để tạo kết quả bạn thấy."
       },
       "storage": {
         "title": "Lưu ở đâu",

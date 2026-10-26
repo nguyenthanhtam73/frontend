@@ -51,7 +51,8 @@ describe("privacy policy copy", () => {
       "Anthropic",
       "làm mờ",
       "1 giờ",
-      "không được dùng để dạy AI",
+      "link riêng tư",
+      "bấm chia sẻ",
       "10 năm",
       "xoá",
       "token thông báo đẩy",
@@ -72,7 +73,8 @@ describe("privacy policy copy", () => {
       "Anthropic",
       "blurred",
       "1 hour",
-      "not used to train",
+      "private links",
+      "tap share yourself",
       "10 years",
       "delete",
       "push token",
@@ -94,7 +96,9 @@ describe("privacy policy copy", () => {
     assert.match(enText, /Updated: October 2026/);
     assert.doesNotMatch(viText, /Ảnh không được đăng công khai/);
     assert.doesNotMatch(viText, /Hiện mình dùng OpenAI/);
+    assert.doesNotMatch(viText, /dạy AI|huấn luyện/);
     assert.doesNotMatch(enText, /Photos are not posted publicly/);
     assert.doesNotMatch(enText, /Right now that provider is OpenAI/);
+    assert.doesNotMatch(enText, /not used to train|train their AI/i);
   });
 });
