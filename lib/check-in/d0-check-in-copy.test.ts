@@ -44,15 +44,15 @@ describe("D0 never_checked_in check-in copy", () => {
     );
   });
 
-  it("register reassurance uses the same blurred-share line", () => {
+  it("register reassurance uses the short blurred-share line", () => {
     for (const [locale, expected] of [
       [
         "vi",
-        "Miễn phí · Ảnh gốc được giữ riêng tư. Chỉ bản làm mờ mới công khai khi bạn bấm chia sẻ.",
+        "Miễn phí · Ảnh gốc giữ riêng tư — chỉ bản làm mờ công khai khi bạn chia sẻ",
       ],
       [
         "en",
-        "Free · Original photos stay private. Only a blurred copy goes public when you tap share.",
+        "Free · Original photos stay private — only a blurred copy goes public when you share",
       ],
     ] as const) {
       const json = JSON.parse(
