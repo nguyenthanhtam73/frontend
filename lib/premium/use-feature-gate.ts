@@ -21,7 +21,8 @@ export type FeatureGateResult = {
   remaining: number;
   /**
    * True when GET /me/usage sent a real used/limit/remaining.
-   * UI must not invent Free catalog numbers (3/5/3) when this is false.
+   * UI must not invent Free catalog numbers (suggestions 3, edits 5, shelf 10)
+   * when this is false.
    */
   hasMeter: boolean;
   /** Progress lookback months (0 = all time). */

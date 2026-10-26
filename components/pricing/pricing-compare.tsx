@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { COMPARE_ROWS } from "@/lib/premium/pricing";
+import { FREE_WARDROBE_PRODUCT_LIMIT } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
 type CellValue =
@@ -12,7 +13,7 @@ type CellValue =
   | "quota5"
   | "unlimited"
   | "viewOnly"
-  | "shelf3"
+  | "shelf"
   | "full"
   | "months3"
   | "months12"
@@ -256,7 +257,7 @@ function CellLabel({
   t: ReturnType<typeof useTranslations>;
   emphasize?: boolean;
 }) {
-  const label = t(`values.${value}`);
+  const label = t(`values.${value}`, { n: FREE_WARDROBE_PRODUCT_LIMIT });
   const showIconOnly = value === "yes" || value === "no";
 
   return (

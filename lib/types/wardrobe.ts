@@ -39,7 +39,17 @@ export type UpdateWardrobeProductInput = {
 };
 
 /** Free shelf create cap — must match backend usage.FreeWardrobeProductLimit. */
-export const FREE_WARDROBE_PRODUCT_LIMIT = 3;
+export const FREE_WARDROBE_PRODUCT_LIMIT = 10;
+
+/**
+ * Shelf cap for copy. Prefer GET /me/usage `wardrobe.limit` when the API sent
+ * a positive number; otherwise the Free catalog constant above.
+ */
+export function wardrobeProductLimit(limit: number | null | undefined): number {
+  return typeof limit === "number" && Number.isFinite(limit) && limit > 0
+    ? limit
+    : FREE_WARDROBE_PRODUCT_LIMIT;
+}
 
 /** POST /api/v1/wardrobe/products/scan — AI suggestion only (not persisted). */
 export type WardrobeLabelScanDTO = {

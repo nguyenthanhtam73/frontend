@@ -21,7 +21,7 @@ import { clampOpenedDate, vietnamDateKey } from "@/lib/cabinet/local-date";
 import { compressOnboardingPhoto, isLikelyImageFile } from "@/lib/onboarding/compress-photo";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
-import { FREE_WARDROBE_PRODUCT_LIMIT } from "@/lib/types/wardrobe";
+import { wardrobeProductLimit } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
 type AiFilled = Partial<Record<"name" | "brand" | "category" | "notes", boolean>>;
@@ -71,6 +71,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
   }, []);
   const paoLabel = usePaoHintLabel(openedAt, category);
 
+  const slotLimit = wardrobeProductLimit(wardrobeGate.limit);
   const freeSlotsRemaining =
     !wardrobeGate.isPremium && !wardrobeGate.unlimited && wardrobeGate.hasMeter
       ? wardrobeGate.remaining
@@ -159,7 +160,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
       return;
     }
     if (wardrobeGate.locked) {
-      setFormError(t("premiumWardrobeBody"));
+      setFormError(t("premiumWardrobeBody", { n: slotLimit }));
       return;
     }
     if (!name.trim()) {
@@ -185,7 +186,7 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
         err instanceof Error &&
         (err.message === "premium_required" || err.message === "quota_exceeded")
       ) {
-        setFormError(t("premiumWardrobeBody"));
+        setFormError(t("premiumWardrobeBody", { n: slotLimit }));
         return;
       }
       toast.error(t("addError"));
@@ -224,13 +225,13 @@ export function WardrobeProductForm({ formId = "wardrobe-add-form" }: { formId?:
           <p className="text-sm text-muted-foreground">{t("addSub")}</p>
           {wardrobeGate.locked ? (
             <p className="text-sm text-muted-foreground">
-              {t("freeLimitHint", { n: FREE_WARDROBE_PRODUCT_LIMIT })}
+              {t("freeLimitHint", { n: slotLimit })}
             </p>
           ) : freeSlotsRemaining != null ? (
             <p className="text-xs text-muted-foreground">
               {t("freeSlotsRemaining", {
                 remaining: freeSlotsRemaining,
-                n: wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT,
+                n: slotLimit,
               })}
             </p>
           ) : wardrobeGate.isPremium || wardrobeGate.unlimited ? (
