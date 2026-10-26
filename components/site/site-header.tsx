@@ -36,6 +36,46 @@ function isNavLinkActive(pathname: string, hash: string, href: string) {
   return p.startsWith(`${routePath}/`);
 }
 
+/**
+ * Collapses the mobile nav row while the user scrolls down and brings it back
+ * on any upward scroll or near the top, so the sticky header costs one row
+ * (not two) of a phone screen while reading.
+ */
+function useCollapseOnScrollDown() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const TOP_ZONE_PX = 64;
+    const MIN_DELTA_PX = 8;
+    let lastY = window.scrollY;
+    let frame = 0;
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        const delta = y - lastY;
+        if (y < TOP_ZONE_PX) {
+          setCollapsed(false);
+          lastY = y;
+        } else if (Math.abs(delta) >= MIN_DELTA_PX) {
+          setCollapsed(delta > 0);
+          lastY = y;
+        }
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return [collapsed, setCollapsed] as const;
+}
+
 function AuthSkeleton() {
   return (
     <div
@@ -280,6 +320,21 @@ export function SiteHeader() {
   const hideFunnelNav = hidesFunnelMarketingNav(pathname, hasSession);
   const navLinks = showGuestNav ? guestNavLinks : signedInNavLinks;
   const mobileNavScrollerRef = useRef<HTMLDivElement>(null);
+  const [mobileNavCollapsed, setMobileNavCollapsed] = useCollapseOnScrollDown();
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const [mobileNavHeight, setMobileNavHeight] = useState<number | null>(null);
+
+  // The spacer's CSS height matches the nav's usual size (no layout shift on
+  // load); this corrects it if fonts or wrapping make the nav taller.
+  useEffect(() => {
+    const nav = mobileNavRef.current;
+    if (!nav || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      setMobileNavHeight(nav.offsetHeight || null);
+    });
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [hideFunnelNav]);
 
   useLayoutEffect(() => {
     const scroller = mobileNavScrollerRef.current;
@@ -346,6 +401,7 @@ export function SiteHeader() {
   );
 
   return (
+    <>
     <header
       className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 overflow-x-clip border-b border-border/50 bg-background/80 backdrop-blur-xl"
       data-funnel-chrome={hideFunnelNav ? "compact" : "full"}
@@ -386,10 +442,21 @@ export function SiteHeader() {
       </div>
 
       {!hideFunnelNav ? (
+        // Overlays the page below the sticky row (the spacer after </header>
+        // reserves its height), so collapsing it never shifts layout —
+        // iOS Safari has no scroll anchoring to hide such a jump.
         <nav
-          className="min-w-0 max-w-full border-t border-border/40 py-1 lg:hidden"
+          ref={mobileNavRef}
+          className={cn(
+            "absolute inset-x-0 top-full min-w-0 max-w-full border-b border-border/50 bg-background/80 py-1 backdrop-blur-xl transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none lg:hidden",
+            mobileNavCollapsed
+              ? "pointer-events-none -translate-y-full opacity-0"
+              : "translate-y-0 opacity-100",
+          )}
           aria-label={t("mainNavAria")}
           data-testid="site-header-nav-mobile"
+          data-collapsed={mobileNavCollapsed || undefined}
+          onFocusCapture={() => setMobileNavCollapsed(false)}
         >
           <div
             ref={mobileNavScrollerRef}
@@ -400,5 +467,13 @@ export function SiteHeader() {
         </nav>
       ) : null}
     </header>
+    {!hideFunnelNav ? (
+      <div
+        aria-hidden
+        className="h-[calc(3.25rem+1px)] sm:h-[calc(2.875rem+1px)] lg:hidden"
+        style={mobileNavHeight ? { height: mobileNavHeight } : undefined}
+      />
+    ) : null}
+    </>
   );
 }
