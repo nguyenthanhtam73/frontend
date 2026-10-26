@@ -47,6 +47,11 @@ describe("privacy policy copy", () => {
       "Tủ đồ",
       "bên thứ ba",
       "OpenAI",
+      "Claude",
+      "Anthropic",
+      "làm mờ",
+      "1 giờ",
+      "không được dùng để dạy AI",
       "10 năm",
       "xoá",
       "token thông báo đẩy",
@@ -63,6 +68,11 @@ describe("privacy policy copy", () => {
       "skincare shelf",
       "third-party",
       "OpenAI",
+      "Claude",
+      "Anthropic",
+      "blurred",
+      "1 hour",
+      "not used to train",
       "10 years",
       "delete",
       "push token",
@@ -79,5 +89,12 @@ describe("privacy policy copy", () => {
     assert.equal(typeof enFooter.privacy, "string");
     assert.equal(viFooter.deleteAccount, "Xoá tài khoản");
     assert.equal(enFooter.deleteAccount, "Delete account");
+
+    assert.match(viText, /Cập nhật: tháng 10\/2026/);
+    assert.match(enText, /Updated: October 2026/);
+    assert.doesNotMatch(viText, /Ảnh không được đăng công khai/);
+    assert.doesNotMatch(viText, /Hiện mình dùng OpenAI/);
+    assert.doesNotMatch(enText, /Photos are not posted publicly/);
+    assert.doesNotMatch(enText, /Right now that provider is OpenAI/);
   });
 });

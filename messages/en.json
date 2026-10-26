@@ -3255,11 +3255,11 @@
       },
       "photos": {
         "title": "Skin photos",
-        "body": "Photos are used to look at your skin and suggest a routine. You can skip face photos and use tags and notes instead. Photos are not posted publicly."
+        "body": "Photos are used to look at your skin and suggest a routine. You can skip face photos and use tags and notes instead. Photos are never public unless you choose to share a result. When you share, only a blurred copy is shown through the share link. Links to the original photo are private and expire after 1 hour. Deleting your account deletes every stored photo."
       },
       "ai": {
         "title": "Third-party AI",
-        "body": "To write skin feedback and care suggestions, DaDiary sends your skin photos, check-in notes, and skincare-shelf details to a third-party AI provider. Right now that provider is OpenAI. They process this data to produce the result you see."
+        "body": "To look at your skin, DaDiary sends skin photos only to OpenAI. The written part (check-in notes, skincare-shelf details, and other text) is written by Claude from Anthropic first. If Claude cannot write it, OpenAI writes it instead. They process this data to produce the result you see. Under OpenAI’s and Anthropic’s terms for the paid service, your photos and data are not used to train their AI."
       },
       "storage": {
         "title": "Where it is stored",
