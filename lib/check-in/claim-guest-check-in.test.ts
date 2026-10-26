@@ -41,7 +41,7 @@ function installWindow() {
       mem.delete(k);
     },
   };
-  const g = globalThis as typeof globalThis & {
+  const g = globalThis as unknown as {
     window?: {
       localStorage: typeof localStorage;
       __dadiaryFunnel?: { name: string; params?: Record<string, unknown> }[];

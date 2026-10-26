@@ -148,7 +148,7 @@ describe("reportPaywallView", () => {
   });
 
   it("posts ingest only the first time a scope is claimed", async () => {
-    const g = globalThis as typeof globalThis & {
+    const g = globalThis as unknown as {
       window?: { dataLayer?: Record<string, unknown>[]; __dadiaryFunnel?: unknown[] };
       sessionStorage?: Storage;
     };
