@@ -39,14 +39,13 @@ export function formatVnd(amount: number, locale: string): string {
 
 /** Feature rows for the comparison table — keys map to `pricing.compare.*` i18n. */
 export const COMPARE_ROWS = [
-  { key: "aiSuggest", free: "quota3", premium: "unlimited", plus: "unlimited" },
-  { key: "editRoutine", free: "quota5", premium: "unlimited", plus: "unlimited" },
-  { key: "wardrobe", free: "shelf3", premium: "full", plus: "full" },
-  { key: "progress", free: "months3", premium: "months12", plus: "allTime" },
-  { key: "milestones", free: "basic", premium: "full", plus: "full" },
-  { key: "export", free: "no", premium: "yes", plus: "yes" },
-  { key: "noAds", free: "no", premium: "yes", plus: "yes" },
-  { key: "advanced", free: "no", premium: "no", plus: "yes" },
+  { key: "aiSuggest", free: "quota3", premium: "unlimited" },
+  { key: "editRoutine", free: "quota5", premium: "unlimited" },
+  { key: "wardrobe", free: "shelf3", premium: "full" },
+  { key: "progress", free: "months3", premium: "months12" },
+  { key: "milestones", free: "basic", premium: "full" },
+  { key: "export", free: "no", premium: "yes" },
+  { key: "noAds", free: "no", premium: "yes" },
 ] as const;
 
 export type CompareRowKey = (typeof COMPARE_ROWS)[number]["key"];

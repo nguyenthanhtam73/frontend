@@ -26,14 +26,14 @@ describe("buildUpsellPricingHref", () => {
     );
   });
 
-  it("routes advanced analysis to Premium+", () => {
+  it("routes every upsell, including advanced analysis, to Premium", () => {
     assert.equal(
       recommendedPlanForFeature(Feature.AdvancedSkinAnalysis),
-      "premium_plus",
+      "premium",
     );
     assert.equal(
       buildUpsellPricingHref(Feature.AdvancedSkinAnalysis),
-      "/pricing?plan=premium_plus&interval=yearly&from=advanced_skin_analysis",
+      "/pricing?plan=premium&interval=yearly&from=advanced_skin_analysis",
     );
   });
 

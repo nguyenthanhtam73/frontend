@@ -6,7 +6,8 @@ export type CheckoutIntent = {
   interval: BillingInterval;
 };
 
-const PRICED_PLANS = new Set<PricedPlan>(["premium", "premium_plus"]);
+/** Only Premium is offered. `premium_plus` stays a backend tier, not a checkout choice. */
+const PRICED_PLANS = new Set<PricedPlan>(["premium"]);
 const INTERVALS = new Set<BillingInterval>(["monthly", "yearly"]);
 
 /** Session backup so plan/interval survive login↔register hops and header CTAs. */

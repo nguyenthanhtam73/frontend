@@ -16,7 +16,6 @@ type CellValue =
   | "full"
   | "months3"
   | "months12"
-  | "allTime"
   | "basic"
   | "yes"
   | "no";
@@ -31,7 +30,7 @@ function CellIcon({ value }: { value: CellValue }) {
   return <Check className="mx-auto size-4 text-primary" strokeWidth={2.5} aria-hidden />;
 }
 
-/** Feature matrix — Free | Premium | Premium+. Smooth H-scroll on mobile. */
+/** Feature matrix — Free | Premium. */
 export function PricingCompare({ className }: { className?: string }) {
   const t = useTranslations("pricing.compare");
   const tPlans = useTranslations("pricing.plans");
@@ -85,11 +84,13 @@ export function PricingCompare({ className }: { className?: string }) {
         <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">
           {t("subtitle")}
         </p>
-        <p className="flex items-center justify-center gap-1.5 pt-1 text-xs font-medium text-muted-foreground sm:hidden">
-          <ChevronLeft className="size-3.5 opacity-70" aria-hidden />
-          {t("scrollHint")}
-          <ChevronRight className="size-3.5 opacity-70" aria-hidden />
-        </p>
+        {canScrollLeft || canScrollRight ? (
+          <p className="flex items-center justify-center gap-1.5 pt-1 text-xs font-medium text-muted-foreground sm:hidden">
+            <ChevronLeft className="size-3.5 opacity-70" aria-hidden />
+            {t("scrollHint")}
+            <ChevronRight className="size-3.5 opacity-70" aria-hidden />
+          </p>
+        ) : null}
       </div>
 
       <div className="relative">
@@ -139,7 +140,7 @@ export function PricingCompare({ className }: { className?: string }) {
             "[scrollbar-width:thin] [scrollbar-color:color-mix(in_oklab,var(--primary)_35%,transparent)_transparent]",
           )}
         >
-          <table className="w-full min-w-[36rem] border-collapse text-sm">
+          <table className="w-full border-collapse text-sm">
             <caption className="sr-only">{t("caption")}</caption>
             <thead>
               <tr className="border-b border-border/60 bg-muted/40">
@@ -171,12 +172,6 @@ export function PricingCompare({ className }: { className?: string }) {
                     </span>
                   </span>
                 </th>
-                <th
-                  scope="col"
-                  className="min-w-[7rem] px-3 py-3.5 text-center font-semibold sm:min-w-[8rem] sm:px-4"
-                >
-                  {tPlans("premium_plus.name")}
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -202,9 +197,6 @@ export function PricingCompare({ className }: { className?: string }) {
                   </td>
                   <td className="bg-primary/[0.05] px-3 py-3.5 text-center sm:px-4">
                     <CellLabel value={row.premium as CellValue} t={t} emphasize />
-                  </td>
-                  <td className="px-3 py-3.5 text-center sm:px-4">
-                    <CellLabel value={row.plus as CellValue} t={t} />
                   </td>
                 </tr>
               ))}
