@@ -31,7 +31,7 @@ type UpsellBannerProps = {
 
 /**
  * Plan upsell surface. Prefer passing `feature` so copy stays consistent
- * with Free / Premium / Premium+ gates.
+ * with Free and Premium gates.
  *
  * Wraps the existing PremiumUpsellBanner visual — do not duplicate styling.
  * Usage chips only render when GET /me/usage sent a live meter.

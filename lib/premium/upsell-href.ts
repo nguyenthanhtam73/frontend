@@ -15,7 +15,7 @@ const FEATURE_PLAN: Record<FeatureId, PricedPlan> = {
   [Feature.MilestoneFull]: "premium",
   [Feature.ExportData]: "premium",
   [Feature.NoAds]: "premium",
-  [Feature.AdvancedSkinAnalysis]: "premium_plus",
+  [Feature.AdvancedSkinAnalysis]: "premium",
 };
 
 const KNOWN_FEATURES = new Set<string>(Object.values(Feature));

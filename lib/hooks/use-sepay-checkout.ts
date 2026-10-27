@@ -52,6 +52,8 @@ export function useSePayCheckout(): UseSePayCheckoutResult {
   const startCheckout = useCallback(
     async (plan: PricedPlan, interval: BillingInterval) => {
       if (inflight.current) return;
+      // Public checkout only sells Premium. Plus stays a backend tier.
+      if (plan !== "premium") return;
       if (!isSePayCheckoutEnabled()) {
         toastError({
           title: t("errorTitle"),

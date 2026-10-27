@@ -85,7 +85,6 @@ export function PricingPlanCard({
     tCommon,
   });
 
-  const isPlus = plan === "premium_plus";
   // Highlighted Premium gets the strong lift — muted when it's also the current plan.
   const showPopularLift = highlighted && !isCurrent;
 
@@ -105,17 +104,10 @@ export function PricingPlanCard({
               "motion-safe:hover:shadow-[0_16px_48px_-12px_color-mix(in_oklab,var(--primary)_55%,transparent)]",
               "motion-safe:hover:ring-primary/45",
             ]
-          : isPlus
-            ? [
-                "border-accent-foreground/25",
-                "bg-gradient-to-b from-accent/55 via-card/90 to-card",
-                "shadow-sm shadow-accent-foreground/10",
-                "hover:border-accent-foreground/40 hover:shadow-md",
-              ]
-            : [
-                "border-border/70 shadow-sm",
-                "hover:border-primary/30 hover:shadow-md",
-              ],
+          : [
+              "border-border/70 shadow-sm",
+              "hover:border-primary/30 hover:shadow-md",
+            ],
         // Current plan: calm ring, no popular scale/shadow competition
         isCurrent && "z-[1] border-primary/40 ring-2 ring-primary/30 shadow-sm",
         className,
@@ -135,13 +127,6 @@ export function PricingPlanCard({
         >
           <Sparkles className="size-3.5 shrink-0" aria-hidden />
           {tCommon("mostPopular")}
-        </Badge>
-      ) : isPlus ? (
-        <Badge
-          variant="outline"
-          className="absolute -top-3 left-1/2 z-[2] -translate-x-1/2 rounded-full border-border/80 bg-background px-3 py-1 text-[11px] font-semibold text-muted-foreground"
-        >
-          {tCommon("plusBadge")}
         </Badge>
       ) : null}
 
@@ -189,9 +174,7 @@ export function PricingPlanCard({
                 "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full transition-colors duration-200",
                 showPopularLift || isCurrent
                   ? "bg-primary/15 text-primary"
-                  : isPlus
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-muted text-muted-foreground",
+                  : "bg-muted text-muted-foreground",
               )}
               aria-hidden
             >
@@ -312,10 +295,7 @@ function resolveCta({
   if (!checkoutEnabled) {
     return {
       kind: "disabled",
-      label:
-        plan === "premium_plus"
-          ? tCommon("betaInviteCtaPlus")
-          : tCommon("betaInviteCta"),
+      label: tCommon("betaInviteCta"),
     };
   }
   // Paid tiers — logged-in users go to SePay; guests register first (keep interval).
