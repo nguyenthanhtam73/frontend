@@ -19,8 +19,8 @@ export const SHELL_MESSAGE_NAMESPACES = [
   "activation",
 ] as const;
 
-/** Home client islands (beta form + progress preview cards). */
-export const HOME_MESSAGE_NAMESPACES = ["betaSignup", "skinCard"] as const;
+/** Home client islands (beta signup form). */
+export const HOME_MESSAGE_NAMESPACES = ["betaSignup"] as const;
 
 export const PRICING_MESSAGE_NAMESPACES = ["pricing", "payment"] as const;
 
