@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist_Mono, Nunito_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
@@ -107,6 +108,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             <PwaRegister />
           </AppProviders>
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );
