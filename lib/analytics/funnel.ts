@@ -24,6 +24,8 @@
  * | guest_checkin_claim_fail | guest_checkin_claim_fail { reason } — POST was sent and failed |
  * | checkin_form_view  | checkin_form_view { never_checked_in, skip_mode, signed_in } |
  * | checkin_photo_staged | checkin_photo_staged { slot, count }             |
+ * | checkin_photo_blur_shown | checkin_photo_blur_shown { slot, score }   |
+ * | checkin_photo_blur_choice | checkin_photo_blur_choice { slot, score, choice, via } |
  * | checkin_skip_selected | checkin_skip_selected { source }                |
  * | checkin_submit_attempt | checkin_submit_attempt { skip_mode, signed_in, photo_count } |
  * | checkin_submit_fail | checkin_submit_fail { reason }                    |
@@ -53,6 +55,8 @@ export const FUNNEL_EVENTS = {
   guestCheckInClaimFail: "guest_checkin_claim_fail",
   checkInFormView: "checkin_form_view",
   checkInPhotoStaged: "checkin_photo_staged",
+  checkInPhotoBlurShown: "checkin_photo_blur_shown",
+  checkInPhotoBlurChoice: "checkin_photo_blur_choice",
   checkInSkipSelected: "checkin_skip_selected",
   checkInSubmitAttempt: "checkin_submit_attempt",
   checkInSubmitFail: "checkin_submit_fail",
@@ -107,8 +111,9 @@ const STANDARD_BY_CUSTOM: Partial<
   // checkoutConfirm is custom-only — SePay start already fires InitiateCheckout.
   // paid is custom-only — trackPaidOnce also fires Meta Purchase once.
   // guestCheckInSave / guestCheckInClaim / guestCheckInClaimFail / firstCheckIn are custom-only (no standard map).
-  // checkInFormView / photoStaged / skipSelected / submitAttempt / submitFail
-  // are custom-only — same as guest check-in events (no Meta standard map).
+  // checkInFormView / photoStaged / blur shown+choice / skipSelected /
+  // submitAttempt / submitFail are custom-only — same as guest check-in events
+  // (no Meta standard map).
 };
 
 /**
@@ -146,7 +151,7 @@ export const TIKTOK_STANDARD_BY_CUSTOM: Partial<
     extra: { content_name: "checkin", content_category: "checkin" },
     once: false,
   },
-  // firstCheckIn / d1 / form view / photo / skip / submit fail / guest claim:
+  // firstCheckIn / d1 / form view / photo / blur shown+choice / skip / submit fail / guest claim:
   // custom name only (ttq.track of the funnel event).
   // registerSuccess: custom only — register page fires CompleteRegistration.
   // checkoutConfirm: custom only — SePay start fires InitiateCheckout.

@@ -17,6 +17,7 @@ import {
   UploadPhotos,
   compactPhotoSlots,
   itemsToSlots,
+  type PhotoBlurGate,
   type PhotoSlots,
 } from "@/components/check-in/upload-photos";
 import { useRouter } from "@/i18n/navigation";
@@ -153,6 +154,7 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
   const [guestSaving, setGuestSaving] = useState(false);
   const formViewedRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const photoBlurGateRef = useRef<PhotoBlurGate | null>(null);
   const openActionsRef = useRef<HTMLDivElement>(null);
   const [pinSubmitBar, setPinSubmitBar] = useState(false);
   const pendingD0StickySkipSubmitRef = useRef(false);
@@ -536,6 +538,10 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
           return;
         }
 
+        if (!skipFaceCapture) {
+          photoBlurGateRef.current?.acknowledgeSendAnyway();
+        }
+
         const auth = getAccessToken() || getRefreshToken();
         if (!auth) {
           const waitForAi = shouldGuestAiWait({
@@ -731,6 +737,7 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
                 onSkipPhotos={() => enterSkipMode("panel")}
                 hideAngleSlot={neverCheckedIn}
                 funnelContext={funnelContextRef.current}
+                blurGateRef={photoBlurGateRef}
               />
             ) : (
               <SkipModePanel

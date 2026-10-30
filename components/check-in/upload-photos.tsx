@@ -13,9 +13,10 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { PhotoPrivacyNote } from "@/components/legal/photo-privacy-note";
+import { PhotoBlurNotice } from "@/components/check-in/photo-blur-notice";
 import { UpsellBanner } from "@/components/premium/upsell-banner";
 import { Button } from "@/components/ui/button";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
@@ -24,6 +25,20 @@ import {
   sendFunnelEvent,
   type CheckInFunnelContext,
 } from "@/lib/analytics/funnel-events";
+import {
+  reportPhotoBlurChoice,
+  reportPhotoBlurShown,
+} from "@/lib/check-in/photo-blur-analytics";
+import { measurePhotoBlur } from "@/lib/check-in/measure-photo-blur";
+import {
+  acknowledgeBlurSend,
+  applyBlurSample,
+  chooseBlurSlot,
+  clearBlurSlot,
+  isBlurWarningVisible,
+  type BlurSlotList,
+  type PhotoBlurChoice,
+} from "@/lib/check-in/photo-blur-warning";
 import { prepareCheckInPhoto } from "@/lib/check-in/prepare-check-in-photo";
 import {
   CHECKIN_PHOTO_ACCEPT,
@@ -48,6 +63,13 @@ export type PhotoSlots = [UploadItem | null, UploadItem | null];
 
 export type SlotErrors = [string | null, string | null];
 
+/** Form submit calls this so an open blur warning counts as “send anyway”. */
+export type PhotoBlurGate = {
+  acknowledgeSendAnyway: () => void;
+};
+
+export type PhotoBlurGateRef = { current: PhotoBlurGate | null };
+
 export function compactPhotoSlots(slots: PhotoSlots): UploadItem[] {
   const out: UploadItem[] = [];
   if (slots[0]) out.push(slots[0]);
@@ -71,6 +93,7 @@ export function UploadPhotos({
   onSkipPhotos,
   hideAngleSlot = false,
   funnelContext,
+  blurGateRef,
 }: {
   slots: PhotoSlots;
   onSlotsChange: (slots: PhotoSlots) => void;
@@ -80,6 +103,8 @@ export function UploadPhotos({
   hideAngleSlot?: boolean;
   /** First-party check-in props sent with `checkin_photo_staged`. */
   funnelContext?: CheckInFunnelContext;
+  /** Lets the form record send-anyway when a blur warning is still open. */
+  blurGateRef?: PhotoBlurGateRef;
 }) {
   const t = useTranslations("checkIn");
   const advancedGate = useFeatureGate(Feature.AdvancedSkinAnalysis);
@@ -92,7 +117,100 @@ export function UploadPhotos({
   const [showAdvancedUpsell, setShowAdvancedUpsell] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const preparingRef = useRef(false);
+  const [blurSlots, setBlurSlots] = useState<BlurSlotList>([null, null]);
+  const blurSlotsRef = useRef<BlurSlotList>(blurSlots);
+  blurSlotsRef.current = blurSlots;
+  const slotsRef = useRef(slots);
+  slotsRef.current = slots;
+  const funnelContextRef = useRef(funnelContext);
+  funnelContextRef.current = funnelContext;
+  const blurGenerationRef = useRef<[number, number]>([0, 0]);
+  const ignoreInFlightRef = useRef(false);
+  const mountedRef = useRef(true);
   const filledCount = (slots[0] ? 1 : 0) + (slots[1] ? 1 : 0);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const commitBlurSlots = useCallback((next: BlurSlotList) => {
+    blurSlotsRef.current = next;
+    setBlurSlots(next);
+  }, []);
+
+  const watchPhotoBlur = useCallback(
+    (index: PhotoSlotIndex, file: File, url: string) => {
+      ignoreInFlightRef.current = false;
+      const generation = blurGenerationRef.current[index] + 1;
+      blurGenerationRef.current[index] = generation;
+      // Let the preview paint before the decode. The check is not awaited.
+      window.setTimeout(() => {
+        void (async () => {
+          if (!mountedRef.current) return;
+          if (blurGenerationRef.current[index] !== generation) return;
+          let result: Awaited<ReturnType<typeof measurePhotoBlur>> = null;
+          try {
+            result = await measurePhotoBlur(file);
+          } catch {
+            result = null;
+          }
+          if (!mountedRef.current || ignoreInFlightRef.current) return;
+          if (blurGenerationRef.current[index] !== generation) return;
+          if (slotsRef.current[index]?.url !== url) return;
+          const applied = applyBlurSample(blurSlotsRef.current, index, url, result);
+          commitBlurSlots(applied.slots);
+          if (applied.reveal && result) {
+            reportPhotoBlurShown(index, result.score, funnelContextRef.current);
+          }
+        })();
+      }, 0);
+    },
+    [commitBlurSlots],
+  );
+
+  const recordBlurChoice = useCallback(
+    (index: PhotoSlotIndex, choice: PhotoBlurChoice, via: "button" | "submit") => {
+      const url = slotsRef.current[index]?.url;
+      if (!url) return;
+      const applied = chooseBlurSlot(blurSlotsRef.current, index, url, choice);
+      commitBlurSlots(applied.slots);
+      if (!applied.track) return;
+      reportPhotoBlurChoice(
+        { slot: index, choice, via, score: applied.score },
+        funnelContextRef.current,
+      );
+    },
+    [commitBlurSlots],
+  );
+
+  const acknowledgeSendAnyway = useCallback(() => {
+    ignoreInFlightRef.current = true;
+    const applied = acknowledgeBlurSend(blurSlotsRef.current);
+    commitBlurSlots(applied.slots);
+    for (const track of applied.tracks) {
+      reportPhotoBlurChoice(
+        {
+          slot: track.slot,
+          choice: "send_anyway",
+          via: "submit",
+          score: track.score,
+        },
+        funnelContextRef.current,
+      );
+    }
+  }, [commitBlurSlots]);
+
+  useEffect(() => {
+    if (!blurGateRef) return;
+    const gate: PhotoBlurGate = { acknowledgeSendAnyway };
+    blurGateRef.current = gate;
+    return () => {
+      if (blurGateRef.current === gate) blurGateRef.current = null;
+    };
+  }, [acknowledgeSendAnyway, blurGateRef]);
 
   const requestAdvancedUpsell = useCallback(() => {
     setShowAdvancedUpsell(true);
@@ -156,8 +274,10 @@ export function UploadPhotos({
       next[index] = item;
       onSlotsChange(next);
       if (item) clearSlotError(index);
+      blurGenerationRef.current[index] += 1;
+      commitBlurSlots(clearBlurSlot(blurSlotsRef.current, index));
     },
-    [clearSlotError, onSlotsChange, slots],
+    [clearSlotError, commitBlurSlots, onSlotsChange, slots],
   );
 
   /** Assign one or more files starting at `targetIndex` (replace target, then fill empties). */
@@ -195,8 +315,11 @@ export function UploadPhotos({
         }
         const prev = next[index];
         if (prev) URL.revokeObjectURL(prev.url);
-        next[index] = fileToItem(prepared.file);
+        const item = fileToItem(prepared.file);
+        next[index] = item;
         errors[index] = null;
+        commitBlurSlots(clearBlurSlot(blurSlotsRef.current, index));
+        watchPhotoBlur(index, prepared.file, item.url);
         const staged = {
           slot: index,
           count: (next[0] ? 1 : 0) + (next[1] ? 1 : 0),
@@ -255,6 +378,7 @@ export function UploadPhotos({
       }
     },
     [
+      commitBlurSlots,
       errorMessage,
       funnelContext,
       multiPhotoDisabled,
@@ -263,6 +387,7 @@ export function UploadPhotos({
       requestAdvancedUpsell,
       slots,
       t,
+      watchPhotoBlur,
     ],
   );
 
@@ -371,8 +496,26 @@ export function UploadPhotos({
               onPickFront={() => openPicker(slotIndex, "user")}
               onPickLibrary={() => openPicker(slotIndex)}
               onRemove={() => assignSlot(slotIndex, null)}
-              onRetake={() =>
-                openPicker(slotIndex, slotIndex === 0 ? "user" : "environment")
+              onRetake={() => {
+                recordBlurChoice(slotIndex, "retake", "button");
+                openPicker(slotIndex, slotIndex === 0 ? "user" : "environment");
+              }}
+              blurNotice={
+                isBlurWarningVisible(blurSlots[slotIndex], slots[slotIndex]?.url) ? (
+                  <PhotoBlurNotice
+                    slot={slotIndex}
+                    message={t("photoBlurWarning")}
+                    retakeLabel={t("photoBlurRetake")}
+                    sendAnywayLabel={t("photoBlurSendAnyway")}
+                    onRetake={() => {
+                      recordBlurChoice(slotIndex, "retake", "button");
+                      openPicker(slotIndex, slotIndex === 0 ? "user" : "environment");
+                    }}
+                    onSendAnyway={() =>
+                      recordBlurChoice(slotIndex, "send_anyway", "button")
+                    }
+                  />
+                ) : null
               }
               onRetry={() => openPicker(slotIndex)}
               onFilesDrop={(files) => {
@@ -487,6 +630,7 @@ function PhotoSlotCard({
   onPickLibrary,
   onRemove,
   onRetake,
+  blurNotice,
   onRetry,
   onFilesDrop,
   fileInputRef,
@@ -512,6 +656,8 @@ function PhotoSlotCard({
   onPickLibrary: () => void;
   onRemove: () => void;
   onRetake: () => void;
+  /** Shown under the preview when this slot's photo looks blurry. */
+  blurNotice?: ReactNode;
   onRetry: () => void;
   onFilesDrop: (files: FileList | null) => void;
   fileInputRef: (el: HTMLInputElement | null) => void;
@@ -732,6 +878,7 @@ function PhotoSlotCard({
           </div>
         </div>
       </div>
+      {blurNotice}
       <div className="grid grid-cols-2 gap-2">
         <Button
           type="button"

@@ -16,6 +16,8 @@ export const FIRST_PARTY_FUNNEL_EVENTS = {
   checkInPageView: "checkin_page_view",
   checkInFormView: "checkin_form_view",
   checkInPhotoStaged: "checkin_photo_staged",
+  checkInPhotoBlurShown: "checkin_photo_blur_shown",
+  checkInPhotoBlurChoice: "checkin_photo_blur_choice",
   checkInSkipSelected: "checkin_skip_selected",
   checkInSubmitClicked: "checkin_submit_clicked",
   checkInSubmitSuccess: "checkin_submit_success",
