@@ -31,6 +31,8 @@ describe("funnel analytics", () => {
     assert.equal(FUNNEL_EVENTS.guestCheckInClaimFail, "guest_checkin_claim_fail");
     assert.equal(FUNNEL_EVENTS.checkInFormView, "checkin_form_view");
     assert.equal(FUNNEL_EVENTS.checkInPhotoStaged, "checkin_photo_staged");
+    assert.equal(FUNNEL_EVENTS.checkInPhotoBlurShown, "checkin_photo_blur_shown");
+    assert.equal(FUNNEL_EVENTS.checkInPhotoBlurChoice, "checkin_photo_blur_choice");
     assert.equal(FUNNEL_EVENTS.checkInSkipSelected, "checkin_skip_selected");
     assert.equal(FUNNEL_EVENTS.checkInSubmitAttempt, "checkin_submit_attempt");
     assert.equal(FUNNEL_EVENTS.checkInSubmitFail, "checkin_submit_fail");
@@ -51,6 +53,8 @@ describe("funnel analytics", () => {
     assert.equal(isFunnelEventName("guest_checkin_claim_fail"), true);
     assert.equal(isFunnelEventName("checkin_form_view"), true);
     assert.equal(isFunnelEventName("checkin_photo_staged"), true);
+    assert.equal(isFunnelEventName("checkin_photo_blur_shown"), true);
+    assert.equal(isFunnelEventName("checkin_photo_blur_choice"), true);
     assert.equal(isFunnelEventName("checkin_skip_selected"), true);
     assert.equal(isFunnelEventName("checkin_submit_attempt"), true);
     assert.equal(isFunnelEventName("checkin_submit_fail"), true);
@@ -66,6 +70,8 @@ describe("funnel analytics", () => {
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.firstCheckIn], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInFormView], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInPhotoStaged], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInPhotoBlurShown], undefined);
+    assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInPhotoBlurChoice], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInSkipSelected], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.checkInSubmitFail], undefined);
     assert.equal(TIKTOK_STANDARD_BY_CUSTOM[FUNNEL_EVENTS.guestCheckInClaim], undefined);
