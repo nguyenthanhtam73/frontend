@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,22 +17,48 @@ import {
   resolvePaywallViews7d,
 } from "@/lib/admin/funnel-stats";
 import {
+  defaultRegistrationsSince,
+  isIsoDate,
+  REGISTRATION_STATS_TZ,
+  registrationDaysNewestFirst,
+  registrationDayTotal,
+  vietnamCivilNoon,
+} from "@/lib/admin/registrations-by-source";
+import type { AdminRegistrationSourceDay } from "@/lib/types/admin-registrations";
+import {
   adminFunnelStatsQueryKey,
   fetchAdminFunnelStats,
 } from "@/lib/api/admin-funnel";
+import {
+  adminRegistrationsBySourceQueryKey,
+  fetchAdminRegistrationsBySource,
+} from "@/lib/api/admin-registrations";
+import { vietnamDateKey } from "@/lib/cabinet/local-date";
 import { useAdminGate } from "@/lib/hooks/use-admin-gate";
 import { cn } from "@/lib/utils";
+
+const dateInputClass =
+  "min-h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export function FunnelAdminView() {
   const t = useTranslations("adminFunnel");
   const tUsers = useTranslations("adminUsers");
   const formatter = useFormatter();
   const { hasAuth, isAdmin, authPending } = useAdminGate();
+  const [since, setSince] = useState(() => defaultRegistrationsSince());
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: adminFunnelStatsQueryKey(),
     queryFn: () => fetchAdminFunnelStats(),
     enabled: !authPending && hasAuth && isAdmin,
+    retry: false,
+    refetchInterval: 60_000,
+  });
+
+  const sources = useQuery({
+    queryKey: adminRegistrationsBySourceQueryKey(since),
+    queryFn: () => fetchAdminRegistrationsBySource(since),
+    enabled: !authPending && hasAuth && isAdmin && isIsoDate(since),
     retry: false,
     refetchInterval: 60_000,
   });
@@ -196,6 +223,18 @@ export function FunnelAdminView() {
         </div>
       </section>
 
+      <RegistrationsBySourceSection
+        since={since}
+        today={vietnamDateKey()}
+        onSinceChange={setSince}
+        loading={sources.isPending && sources.data == null}
+        fetching={sources.isFetching}
+        error={sources.error}
+        isError={sources.isError}
+        days={sources.data?.days ?? []}
+        formatDate={(iso) => formatVietnamCivilDate(iso, formatter)}
+      />
+
       <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         {data?.as_of
           ? t("asOf", {
@@ -212,6 +251,123 @@ export function FunnelAdminView() {
       <p className="text-xs text-muted-foreground">{t("calendarNote")}</p>
     </div>
   );
+}
+
+function RegistrationsBySourceSection({
+  since,
+  today,
+  onSinceChange,
+  loading,
+  fetching,
+  error,
+  isError,
+  days,
+  formatDate,
+}: {
+  since: string;
+  today: string;
+  onSinceChange: (value: string) => void;
+  loading: boolean;
+  fetching: boolean;
+  error: unknown;
+  isError: boolean;
+  days: AdminRegistrationSourceDay[];
+  formatDate: (iso: string) => string;
+}) {
+  const t = useTranslations("adminFunnel");
+  const tUsers = useTranslations("adminUsers");
+  const rows = registrationDaysNewestFirst(days);
+  const kind = isError ? adminFunnelLoadError(error) : null;
+
+  return (
+    <section className="space-y-3" aria-labelledby="registrations-by-source-title">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h2 id="registrations-by-source-title" className="text-lg font-semibold tracking-tight">
+            {t("sources.title")}
+          </h2>
+          <p className="text-xs text-muted-foreground">{t("sources.hint")}</p>
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <span>{t("sources.since")}</span>
+          <input
+            type="date"
+            className={dateInputClass}
+            value={since}
+            max={today}
+            onChange={(event) => {
+              const next = event.target.value;
+              if (!isIsoDate(next)) return;
+              onSinceChange(next > today ? today : next);
+            }}
+          />
+        </label>
+      </div>
+      <Card className="border-border/70">
+        <CardContent className="space-y-3">
+          {fetching && !loading ? (
+            <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden />
+          ) : null}
+          {kind === "auth" ? (
+            <p className="text-sm text-muted-foreground">{tUsers("needAuth")}</p>
+          ) : kind === "forbidden" ? (
+            <p role="alert" className="text-sm">
+              {tUsers("forbidden")}
+            </p>
+          ) : kind ? (
+            <p role="alert" className="text-sm text-destructive">
+              {t("sources.loadError")}
+            </p>
+          ) : loading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("sources.empty")}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-2 py-2 font-medium">{t("sources.colDate")}</th>
+                    <th className="px-2 py-2 text-right font-medium">{t("sources.colTiktok")}</th>
+                    <th className="px-2 py-2 text-right font-medium">{t("sources.colFacebook")}</th>
+                    <th className="px-2 py-2 text-right font-medium">{t("sources.colOther")}</th>
+                    <th className="px-2 py-2 text-right font-medium">{t("sources.colNone")}</th>
+                    <th className="px-2 py-2 text-right font-medium">{t("sources.colTotal")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.date} className="border-b border-border/50">
+                      <td className="px-2 py-2.5">{formatDate(row.date)}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums">{row.tiktok}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums">{row.facebook}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums">{row.other}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums">{row.none}</td>
+                      <td className="px-2 py-2.5 text-right font-medium tabular-nums">
+                        {registrationDayTotal(row)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
+function formatVietnamCivilDate(
+  iso: string,
+  formatter: ReturnType<typeof useFormatter>,
+): string {
+  return formatter.dateTime(vietnamCivilNoon(iso), {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: REGISTRATION_STATS_TZ,
+  });
 }
 
 function SectionHeading({ title }: { title: string }) {
