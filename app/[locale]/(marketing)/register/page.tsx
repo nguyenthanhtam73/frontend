@@ -33,6 +33,10 @@ import {
   isRegisterSubmitHeld,
   stashLoginPrefillEmail,
 } from "@/lib/auth/register-email-taken";
+import {
+  buildRegisterAttribution,
+  readStoredAdAttribution,
+} from "@/lib/analytics/ad-attribution";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import {
   claimLocalGuestCheckInIfNeeded,
@@ -233,6 +237,8 @@ function RegisterPageInner() {
                   password,
                   display_name: displayName.trim() || undefined,
                 };
+                const attribution = buildRegisterAttribution(readStoredAdAttribution());
+                if (attribution) body.attribution = attribution;
                 if (captchaEnabled && turnstileToken) {
                   body.turnstile_token = turnstileToken;
                 }
@@ -286,6 +292,9 @@ function RegisterPageInner() {
                 trackMetaEvent("CompleteRegistration", { status: true });
                 trackTikTokEvent("CompleteRegistration", {
                   status: true,
+                  content_name: "register",
+                });
+                trackTikTokEvent("SubmitForm", {
                   content_name: "register",
                 });
                 let claimed = false;
