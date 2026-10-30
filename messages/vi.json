@@ -2815,6 +2815,19 @@
       "sameDay": "Check-in theo ngày đăng ký",
       "paid": "Thanh toán"
     },
+    "sources": {
+      "title": "Đăng ký theo nguồn",
+      "since": "Từ ngày",
+      "hint": "Số người đăng ký mỗi ngày theo lịch Việt Nam. Ngày không có đăng ký không hiện.",
+      "empty": "Không có đăng ký từ ngày này.",
+      "loadError": "Không tải được số đăng ký theo nguồn.",
+      "colDate": "Ngày",
+      "colTiktok": "TikTok",
+      "colFacebook": "Facebook",
+      "colOther": "Nguồn khác",
+      "colNone": "Không rõ",
+      "colTotal": "Tổng"
+    },
     "cards": {
       "signedUp1d": "Người đăng ký",
       "signedUp1dHint": "24 giờ vừa qua",

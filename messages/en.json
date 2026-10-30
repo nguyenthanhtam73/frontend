@@ -2815,6 +2815,19 @@
       "sameDay": "Check-in on signup day",
       "paid": "Payments"
     },
+    "sources": {
+      "title": "Sign-ups by source",
+      "since": "Since",
+      "hint": "Sign-up counts per Vietnam day. Days with no sign-ups are hidden.",
+      "empty": "No sign-ups since this date.",
+      "loadError": "Could not load sign-ups by source.",
+      "colDate": "Date",
+      "colTiktok": "TikTok",
+      "colFacebook": "Facebook",
+      "colOther": "Other source",
+      "colNone": "Unknown",
+      "colTotal": "Total"
+    },
     "cards": {
       "signedUp1d": "Sign-ups",
       "signedUp1dHint": "Last 24 hours",
