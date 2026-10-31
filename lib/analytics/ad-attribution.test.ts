@@ -259,17 +259,15 @@ describe("register page wiring", () => {
     "utf8",
   );
 
-  it("fires SubmitForm beside CompleteRegistration without changing that call", () => {
-    const complete = pageSrc.indexOf('trackTikTokEvent("CompleteRegistration"');
-    const submit = pageSrc.indexOf('trackTikTokEvent("SubmitForm"');
-    assert.ok(complete > 0);
-    assert.ok(submit > complete);
-    const completeCall = pageSrc.slice(complete, submit);
-    assert.match(completeCall, /status:\s*true/);
-    assert.match(completeCall, /content_name:\s*"register"/);
-    assert.equal(completeCall.match(/trackTikTokEvent/g)?.length, 1);
-    const submitCall = pageSrc.slice(submit, submit + 180);
-    assert.match(submitCall, /content_name:\s*"register"/);
+  it("sends register pixels once through the shared helper, without the email", () => {
+    const calls = pageSrc.match(/trackRegisterConversion\(/g) ?? [];
+    assert.equal(calls.length, 1);
+    assert.match(pageSrc, /trackRegisterConversion\(json\.data\?\.user\?\.id\)/);
+    const callAt = pageSrc.indexOf("trackRegisterConversion(");
+    assert.equal(pageSrc.slice(callAt, callAt + 80).includes("email"), false);
+    assert.equal(pageSrc.includes('trackTikTokEvent("CompleteRegistration"'), false);
+    assert.equal(pageSrc.includes('trackTikTokEvent("SubmitForm"'), false);
+    assert.equal(pageSrc.includes('trackMetaEvent("CompleteRegistration"'), false);
   });
 
   it("adds the stored attribution object to the register request body", () => {

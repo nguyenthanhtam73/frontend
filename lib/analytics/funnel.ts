@@ -8,8 +8,9 @@
  * TikTok: every funnel name is `ttq.track(name)`. Where TikTok has a standard
  * event, `TIKTOK_STANDARD_BY_CUSTOM` fires that too. `ttq.page()` is the
  * PageView equivalent (see `components/site/tiktok-pixel.tsx`).
- * Direct standards that are not funnel names: CompleteRegistration (register),
- * InitiateCheckout (SePay), CompletePayment (Meta Purchase), SubmitForm (beta Lead).
+ * Direct standards that are not funnel names: CompleteRegistration + SubmitForm
+ * on register (`trackRegisterConversion`), InitiateCheckout (SePay),
+ * CompletePayment (Meta Purchase), SubmitForm (beta Lead).
  *
  * Naming: snake_case custom events, prefixed by surface.
  *
@@ -352,6 +353,123 @@ export function paywallViewParams(input: {
   };
   if (input.recommendedPlan) params.recommended_plan = input.recommendedPlan;
   return params;
+}
+
+const REGISTER_PIXEL_PREFIX = "dadiary_register_pixel_";
+const REGISTER_PIXEL_SESSION_KEY = `${REGISTER_PIXEL_PREFIX}session`;
+const REGISTER_PIXEL_EVENT_ID_KEY = `${REGISTER_PIXEL_PREFIX}event_id`;
+
+type BrowserStore = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+};
+
+function browserStores(): BrowserStore[] {
+  const stores: BrowserStore[] = [];
+  try {
+    if (typeof localStorage !== "undefined" && localStorage) stores.push(localStorage);
+  } catch {
+    /* private mode */
+  }
+  try {
+    if (
+      typeof sessionStorage !== "undefined" &&
+      sessionStorage &&
+      !stores.includes(sessionStorage)
+    ) {
+      stores.push(sessionStorage);
+    }
+  } catch {
+    /* private mode */
+  }
+  return stores;
+}
+
+function storeHas(store: BrowserStore, key: string): boolean {
+  try {
+    return store.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** First caller wins. The flag is written to both localStorage and sessionStorage. */
+function claimBrowserOnce(key: string): boolean {
+  const stores = browserStores();
+  if (stores.some((store) => storeHas(store, key))) return false;
+  for (const store of stores) {
+    try {
+      store.setItem(key, "1");
+    } catch {
+      /* one store is enough; a stable event id still dedupes if both fail */
+    }
+  }
+  return true;
+}
+
+function readStoredRegisterEventId(): string | null {
+  for (const store of browserStores()) {
+    try {
+      const value = store.getItem(REGISTER_PIXEL_EVENT_ID_KEY)?.trim();
+      if (value && /^register_s_[A-Za-z0-9]+$/.test(value)) return value;
+    } catch {
+      /* try the other store */
+    }
+  }
+  return null;
+}
+
+function rememberRegisterEventId(eventId: string): void {
+  for (const store of browserStores()) {
+    try {
+      store.setItem(REGISTER_PIXEL_EVENT_ID_KEY, eventId);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** `register_<userId>`. Null when the id is missing or contains an email. */
+function registerEventIdForUser(userId: string | null | undefined): string | null {
+  const raw = (userId ?? "").trim();
+  if (!raw || raw.includes("@")) return null;
+  const safe = raw.replace(/[^A-Za-z0-9_-]/g, "");
+  if (!safe) return null;
+  return `register_${safe}`;
+}
+
+function anonymousRegisterEventId(): string {
+  const existing = readStoredRegisterEventId();
+  if (existing) return existing;
+  const created = `register_s_${Math.random().toString(36).slice(2, 12)}`;
+  rememberRegisterEventId(created);
+  return created;
+}
+
+/**
+ * TikTok CompleteRegistration + SubmitForm, and Meta CompleteRegistration,
+ * once per user after register success.
+ *
+ * The shared id is `register_<userId>` (no email): TikTok `event_id` and Meta
+ * `eventID`. A later copy from a pixel replay, another page, or a session
+ * refresh dedupes. The storage flag stops this helper from calling twice.
+ */
+export function trackRegisterConversion(userId?: string | null): boolean {
+  if (typeof window === "undefined") return false;
+  const fromUser = registerEventIdForUser(userId);
+  const eventId = fromUser ?? anonymousRegisterEventId();
+  const onceKey = fromUser
+    ? `${REGISTER_PIXEL_PREFIX}${fromUser.slice("register_".length)}`
+    : REGISTER_PIXEL_SESSION_KEY;
+  if (!claimBrowserOnce(onceKey)) return false;
+  trackMetaEvent("CompleteRegistration", { status: true }, eventId);
+  trackTikTokEvent(
+    "CompleteRegistration",
+    { status: true, content_name: "register" },
+    { event_id: eventId },
+  );
+  trackTikTokEvent("SubmitForm", { content_name: "register" }, { event_id: eventId });
+  return true;
 }
 
 /** Custom `paid` + Meta Purchase, both once-per-invoice (Purchase helper dedupes). */
