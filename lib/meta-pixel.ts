@@ -31,13 +31,22 @@ export function isMetaPixelAdminPath(pathname: string | null | undefined): boole
   return /(?:^|\/)admin(?:\/|$)/.test(pathname);
 }
 
-/** Fire a standard or custom Meta Pixel event (no-op if Pixel not loaded). */
+/**
+ * Fire a standard or custom Meta Pixel event (no-op if Pixel not loaded).
+ * `eventId` is sent as Meta's `eventID` (same role as TikTok `event_id`).
+ */
 export function trackMetaEvent(
   event: string,
   params?: Record<string, unknown>,
+  eventId?: string,
 ): void {
   if (typeof window === "undefined") return;
   if (!shouldLoadMetaPixel()) return;
+  const id = eventId?.trim();
+  if (id) {
+    window.fbq?.("track", event, params ?? {}, { eventID: id });
+    return;
+  }
   if (params) {
     window.fbq?.("track", event, params);
     return;

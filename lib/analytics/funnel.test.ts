@@ -11,6 +11,7 @@ import {
   paywallViewParams,
   reportPaywallView,
   resolveCheckInFunnelKinds,
+  trackRegisterConversion,
 } from "./funnel";
 
 describe("funnel analytics", () => {
@@ -209,6 +210,222 @@ describe("reportPaywallView", () => {
       globalThis.fetch = originalFetch;
       delete (g as { window?: unknown }).window;
       delete (g as { sessionStorage?: unknown }).sessionStorage;
+    }
+  });
+});
+
+describe("trackRegisterConversion", () => {
+  type Mem = Map<string, string>;
+
+  function memoryStorage(initial?: Record<string, string>): { store: Storage; mem: Mem } {
+    const mem: Mem = new Map(Object.entries(initial ?? {}));
+    const store = {
+      get length() {
+        return mem.size;
+      },
+      clear() {
+        mem.clear();
+      },
+      getItem(key: string) {
+        return mem.has(key) ? mem.get(key)! : null;
+      },
+      key(index: number) {
+        return [...mem.keys()][index] ?? null;
+      },
+      removeItem(key: string) {
+        mem.delete(key);
+      },
+      setItem(key: string, value: string) {
+        mem.set(key, value);
+      },
+    } as Storage;
+    return { store, mem };
+  }
+
+  function withPixels(
+    run: (spies: { ttq: unknown[][]; fbq: unknown[][]; local: Mem; session: Mem }) => void,
+    seed?: { local?: Record<string, string>; session?: Record<string, string> },
+  ) {
+    const prevEnv = process.env.NODE_ENV;
+    const g = globalThis as typeof globalThis & {
+      window?: unknown;
+      localStorage?: Storage;
+      sessionStorage?: Storage;
+    };
+    const prevWindow = g.window;
+    const prevLocal = g.localStorage;
+    const prevSession = g.sessionStorage;
+    const local = memoryStorage(seed?.local);
+    const session = memoryStorage(seed?.session);
+    const ttq: unknown[][] = [];
+    const fbq: unknown[][] = [];
+    process.env.NODE_ENV = "production";
+    g.localStorage = local.store;
+    g.sessionStorage = session.store;
+    g.window = {
+      location: { hostname: "dadiary.vn", pathname: "/register" },
+      localStorage: local.store,
+      sessionStorage: session.store,
+      ttq: {
+        track: (...args: unknown[]) => {
+          ttq.push(args);
+        },
+      },
+      fbq: (...args: unknown[]) => {
+        fbq.push(args);
+      },
+    };
+    try {
+      run({ ttq, fbq, local: local.mem, session: session.mem });
+    } finally {
+      process.env.NODE_ENV = prevEnv;
+      g.window = prevWindow;
+      g.localStorage = prevLocal;
+      g.sessionStorage = prevSession;
+    }
+  }
+
+  it("does nothing on the server", () => {
+    assert.equal(typeof window, "undefined");
+    assert.equal(trackRegisterConversion("user_ssr"), false);
+  });
+
+  it("fires both TikTok events and Meta once, with one register_<userId>", () => {
+    withPixels(({ ttq, fbq, local, session }) => {
+      assert.equal(trackRegisterConversion("user_123"), true);
+      assert.deepEqual(ttq, [
+        [
+          "CompleteRegistration",
+          { status: true, content_name: "register" },
+          { event_id: "register_user_123" },
+        ],
+        ["SubmitForm", { content_name: "register" }, { event_id: "register_user_123" }],
+      ]);
+      assert.deepEqual(fbq, [
+        [
+          "track",
+          "CompleteRegistration",
+          { status: true },
+          { eventID: "register_user_123" },
+        ],
+      ]);
+      assert.equal(local.get("dadiary_register_pixel_user_123"), "1");
+      assert.equal(session.get("dadiary_register_pixel_user_123"), "1");
+      const dumped = JSON.stringify({ ttq, fbq, local: [...local], session: [...session] });
+      assert.equal(dumped.includes("@"), false);
+      assert.equal(dumped.includes("email"), false);
+
+      assert.equal(trackRegisterConversion("user_123"), false);
+      assert.equal(ttq.length, 2);
+      assert.equal(fbq.length, 1);
+    });
+  });
+
+  it("keeps hyphens in a user id and still fires for a different user", () => {
+    withPixels(({ ttq, fbq }) => {
+      const id = "550e8400-e29b-41d4-a716-446655440000";
+      assert.equal(trackRegisterConversion(id), true);
+      assert.equal(
+        (ttq[0]?.[2] as { event_id: string }).event_id,
+        `register_${id}`,
+      );
+      assert.equal((fbq[0]?.[3] as { eventID: string }).eventID, `register_${id}`);
+      assert.equal(trackRegisterConversion("user_other"), true);
+      assert.equal(ttq.length, 4);
+      assert.equal(
+        (ttq[2]?.[2] as { event_id: string }).event_id,
+        "register_user_other",
+      );
+    });
+  });
+
+  it("skips when either storage already recorded this user", () => {
+    withPixels(
+      ({ ttq, fbq }) => {
+        assert.equal(trackRegisterConversion("user_local"), false);
+        assert.equal(ttq.length, 0);
+        assert.equal(fbq.length, 0);
+      },
+      { local: { dadiary_register_pixel_user_local: "1" } },
+    );
+    withPixels(
+      ({ ttq }) => {
+        assert.equal(trackRegisterConversion("user_session"), false);
+        assert.equal(ttq.length, 0);
+      },
+      { session: { dadiary_register_pixel_user_session: "1" } },
+    );
+  });
+
+  it("does not put an email in the id, and only fires that anonymous id once", () => {
+    withPixels(({ ttq, fbq, local, session }) => {
+      assert.equal(trackRegisterConversion("person@example.com"), true);
+      assert.equal(trackRegisterConversion(undefined), false);
+      assert.equal(ttq.length, 2);
+      assert.equal(fbq.length, 1);
+      const eventId = (ttq[0]?.[2] as { event_id: string }).event_id;
+      assert.match(eventId, /^register_s_[a-z0-9]+$/);
+      assert.equal((ttq[1]?.[2] as { event_id: string }).event_id, eventId);
+      assert.equal((fbq[0]?.[3] as { eventID: string }).eventID, eventId);
+      const dumped = JSON.stringify({
+        ttq,
+        fbq,
+        local: [...local],
+        session: [...session],
+      });
+      assert.equal(dumped.includes("person@example.com"), false);
+      assert.equal(dumped.includes("@"), false);
+    });
+  });
+
+  it("still sends a stable id when storage is blocked", () => {
+    const prevEnv = process.env.NODE_ENV;
+    const g = globalThis as typeof globalThis & {
+      window?: unknown;
+      localStorage?: Storage;
+      sessionStorage?: Storage;
+    };
+    const prevWindow = g.window;
+    const prevLocal = g.localStorage;
+    const prevSession = g.sessionStorage;
+    const throwing = {
+      getItem() {
+        throw new Error("blocked");
+      },
+      setItem() {
+        throw new Error("blocked");
+      },
+    } as unknown as Storage;
+    const ttq: unknown[][] = [];
+    process.env.NODE_ENV = "production";
+    g.localStorage = throwing;
+    g.sessionStorage = throwing;
+    g.window = {
+      location: { hostname: "dadiary.vn" },
+      ttq: {
+        track: (...args: unknown[]) => {
+          ttq.push(args);
+        },
+      },
+      fbq: () => {},
+    };
+    try {
+      assert.equal(trackRegisterConversion("user_blocked"), true);
+      assert.equal(trackRegisterConversion("user_blocked"), true);
+      assert.equal(ttq.length, 4);
+      assert.equal(
+        (ttq[0]?.[2] as { event_id: string }).event_id,
+        "register_user_blocked",
+      );
+      assert.equal(
+        (ttq[2]?.[2] as { event_id: string }).event_id,
+        "register_user_blocked",
+      );
+    } finally {
+      process.env.NODE_ENV = prevEnv;
+      g.window = prevWindow;
+      g.localStorage = prevLocal;
+      g.sessionStorage = prevSession;
     }
   });
 });

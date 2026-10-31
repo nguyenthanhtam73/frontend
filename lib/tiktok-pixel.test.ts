@@ -70,6 +70,35 @@ describe("tiktok pixel id", () => {
     const queued = JSON.parse(JSON.stringify(Array.from({ length: ttq.length }, (_, i) => ttq[i])));
     assert.deepEqual(queued, [["page"]]);
   });
+
+  it("does not insert a second pixel or replay the queue", () => {
+    const scripts: { src?: string }[] = [];
+    const sandbox = {
+      window: {} as {
+        __dadiaryTikTokPixel?: string;
+        ttq?: { length: number; [index: number]: unknown };
+      },
+      document: {
+        createElement() {
+          const el: { src?: string; async?: boolean; type?: string } = {};
+          scripts.push(el);
+          return el;
+        },
+        getElementsByTagName() {
+          return [{ parentNode: { insertBefore(node: unknown) { return node; } } }];
+        },
+      },
+    };
+    const snippet = tikTokPixelBootstrap("DAPQVHBC77U5PB605QBG");
+    vm.runInNewContext(snippet, sandbox);
+    vm.runInNewContext(snippet, sandbox);
+    assert.equal(scripts.length, 1);
+    assert.equal(sandbox.window.__dadiaryTikTokPixel, "DAPQVHBC77U5PB605QBG");
+    const ttq = sandbox.window.ttq;
+    assert.ok(ttq);
+    const queued = JSON.parse(JSON.stringify(Array.from({ length: ttq.length }, (_, i) => ttq[i])));
+    assert.deepEqual(queued, [["page"]]);
+  });
 });
 
 describe("tiktok pixel gate", () => {
@@ -85,5 +114,42 @@ describe("tiktok pixel gate", () => {
     assert.equal(typeof window, "undefined");
     trackTikTokEvent("CompleteRegistration", { status: true });
     trackTikTokPage();
+  });
+
+  it("passes event_id as the third ttq.track argument", () => {
+    const prevEnv = process.env.NODE_ENV;
+    const g = globalThis as typeof globalThis & { window?: unknown };
+    const prevWindow = g.window;
+    const calls: unknown[][] = [];
+    process.env.NODE_ENV = "production";
+    g.window = {
+      location: { hostname: "dadiary.vn" },
+      ttq: {
+        track: (...args: unknown[]) => {
+          calls.push(args);
+        },
+      },
+    };
+    try {
+      trackTikTokEvent(
+        "CompleteRegistration",
+        { status: true, content_name: "register" },
+        { event_id: "register_user_1" },
+      );
+      trackTikTokEvent("SubmitForm", { content_name: "register" }, { event_id: "  " });
+      trackTikTokEvent("PageView");
+      assert.deepEqual(calls, [
+        [
+          "CompleteRegistration",
+          { status: true, content_name: "register" },
+          { event_id: "register_user_1" },
+        ],
+        ["SubmitForm", { content_name: "register" }],
+        ["PageView"],
+      ]);
+    } finally {
+      process.env.NODE_ENV = prevEnv;
+      g.window = prevWindow;
+    }
   });
 });

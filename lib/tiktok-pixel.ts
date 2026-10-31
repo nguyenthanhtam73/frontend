@@ -47,6 +47,10 @@ export function isTikTokPixelId(value: string): boolean {
 /**
  * Official base code: loads `events.js` via `ttq.load`, then `ttq.page()`.
  * Pixel id is restricted to alphanumeric so it cannot break out of the snippet.
+ *
+ * A second run calls `ttq.load` again, inserts another events.js, and can
+ * replay queued `ttq.track` calls. Skip when this document already started
+ * the pixel.
  */
 export function tikTokPixelBootstrap(pixelId: string = TIKTOK_PIXEL_ID): string {
   if (!isTikTokPixelId(pixelId)) {
@@ -54,7 +58,7 @@ export function tikTokPixelBootstrap(pixelId: string = TIKTOK_PIXEL_ID): string 
   }
   return `
 !function (w, d, t) {
-  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];if(w.__dadiaryTikTokPixel==='${pixelId}')return;w.__dadiaryTikTokPixel='${pixelId}';ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
 var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
 ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
   ttq.load('${pixelId}');
@@ -63,13 +67,27 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   `.trim();
 }
 
-/** Fire a TikTok standard or custom event (no-op if Pixel not loaded). */
+export type TikTokTrackOptions = {
+  /** Stable id so TikTok can drop a later copy of the same event. */
+  event_id?: string;
+};
+
+/**
+ * Fire a TikTok standard or custom event (no-op if Pixel not loaded).
+ * `event_id` is the third `ttq.track` argument, not a property.
+ */
 export function trackTikTokEvent(
   event: string,
   params?: Record<string, unknown>,
+  options?: TikTokTrackOptions,
 ): void {
   if (typeof window === "undefined") return;
   if (!shouldLoadTikTokPixel()) return;
+  const eventId = options?.event_id?.trim();
+  if (eventId) {
+    window.ttq?.track?.(event, params ?? {}, { event_id: eventId });
+    return;
+  }
   if (params) {
     window.ttq?.track?.(event, params);
     return;

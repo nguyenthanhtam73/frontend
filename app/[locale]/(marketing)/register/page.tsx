@@ -37,7 +37,11 @@ import {
   buildRegisterAttribution,
   readStoredAdAttribution,
 } from "@/lib/analytics/ad-attribution";
-import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
+import {
+  FUNNEL_EVENTS,
+  trackFunnelEvent,
+  trackRegisterConversion,
+} from "@/lib/analytics/funnel";
 import {
   claimLocalGuestCheckInIfNeeded,
   isGuestCheckInClaimFailure,
@@ -50,8 +54,6 @@ import {
   isGuestRoutineSaveReturn,
 } from "@/lib/onboarding/claim-guest-coach-welcome";
 import { readClaimableGuestSession } from "@/lib/onboarding/coach-welcome-session";
-import { trackMetaEvent } from "@/lib/meta-pixel";
-import { trackTikTokEvent } from "@/lib/tiktok-pixel";
 import { markAwaitingFirstCheckIn } from "@/lib/activation/first-check-in";
 import { postRegisterDestination } from "@/lib/onboarding/post-auth-destination";
 import { useAuthStore, type AuthUser } from "@/lib/stores/auth-store";
@@ -289,14 +291,8 @@ function RegisterPageInner() {
                 } else {
                   void useAuthStore.getState().refresh();
                 }
-                trackMetaEvent("CompleteRegistration", { status: true });
-                trackTikTokEvent("CompleteRegistration", {
-                  status: true,
-                  content_name: "register",
-                });
-                trackTikTokEvent("SubmitForm", {
-                  content_name: "register",
-                });
+                // Once per user. Event id is register_<userId>.
+                trackRegisterConversion(json.data?.user?.id);
                 let claimed = false;
                 const alreadyDone =
                   json.data?.user?.onboarding_completed === true;
