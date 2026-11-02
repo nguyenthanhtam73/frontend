@@ -17,7 +17,7 @@ import { buildStarterShelfCandidates } from "@/lib/cabinet/starter-shelf";
 import { Feature } from "@/lib/premium/features";
 import { useFeatureGate } from "@/lib/premium/use-feature-gate";
 import { useOnboardingStore } from "@/lib/stores/onboarding-store";
-import { FREE_WARDROBE_PRODUCT_LIMIT } from "@/lib/types/wardrobe";
+import { wardrobeProductLimit } from "@/lib/types/wardrobe";
 import { cn } from "@/lib/utils";
 
 export function CabinetStarterPack() {
@@ -80,13 +80,14 @@ export function CabinetStarterPack() {
 
   const canWrite = hasAuth && wardrobeGate.allowed && !wardrobeGate.locked;
   const showUpsell = hasAuth && wardrobeGate.locked;
+  const slotLimit = wardrobeProductLimit(wardrobeGate.limit);
+  // Remaining comes only from GET /me/usage. A missing meter is 0, not "full".
   const freeRemaining =
-    hasAuth && !wardrobeGate.isPremium && !wardrobeGate.unlimited
-      ? (wardrobeGate.remaining ??
-          Math.max(
-            0,
-            (wardrobeGate.limit || FREE_WARDROBE_PRODUCT_LIMIT) - wardrobeGate.used,
-          ))
+    hasAuth &&
+    !wardrobeGate.isPremium &&
+    !wardrobeGate.unlimited &&
+    wardrobeGate.hasMeter
+      ? wardrobeGate.remaining
       : null;
 
   async function handleAdd(candidateId: string) {
@@ -110,7 +111,7 @@ export function CabinetStarterPack() {
         err instanceof Error &&
         (err.message === "premium_required" || err.message === "quota_exceeded")
       ) {
-        toast.error(t("premiumWardrobeBody"));
+        toast.error(t("premiumWardrobeBody", { n: slotLimit }));
         return;
       }
       toast.error(t("starterAddError"));
@@ -127,15 +128,17 @@ export function CabinetStarterPack() {
             <Sparkles className="size-4 text-primary" aria-hidden />
             {t("starterTitle")}
           </div>
-          <p className="text-xs text-muted-foreground">{t("starterAddHint")}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("starterAddHint", { n: slotLimit })}
+          </p>
           {freeRemaining != null ? (
             <p className="text-xs text-muted-foreground">
               {freeRemaining > 0
                 ? t("starterSlotsHint", {
                     remaining: freeRemaining,
-                    n: FREE_WARDROBE_PRODUCT_LIMIT,
+                    n: slotLimit,
                   })
-                : t("starterSlotsFull", { n: FREE_WARDROBE_PRODUCT_LIMIT })}
+                : t("starterSlotsFull", { n: slotLimit })}
             </p>
           ) : null}
         </div>
