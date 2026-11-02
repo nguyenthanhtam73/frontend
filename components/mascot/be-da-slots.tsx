@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-import { useAdminGate } from "@/lib/hooks/use-admin-gate";
+import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
 
 const BeDaRoutineBanner = dynamic(
   () => import("@/components/mascot/be-da-routine-banner").then((mod) => mod.BeDaRoutineBanner),
@@ -15,17 +15,17 @@ const BeDaHomeLink = dynamic(
 );
 
 /**
- * Admin-only. The mascot chunk stays unloaded until `is_admin` is true,
- * so everyone else keeps the current page with no extra bundle.
+ * Feature-gated. The mascot chunk stays unloaded unless GET /me says
+ * `features.mascot`. A later 404 from /me/mascot hides the loaded UI.
  */
 export function BeDaRoutineSlot() {
-  const { isAdmin, authPending } = useAdminGate();
-  if (authPending || !isAdmin) return null;
+  const { enabled, pending } = useMascotFeature();
+  if (pending || !enabled) return null;
   return <BeDaRoutineBanner />;
 }
 
 export function BeDaHomeSlot() {
-  const { isAdmin, authPending } = useAdminGate();
-  if (authPending || !isAdmin) return null;
+  const { enabled, pending } = useMascotFeature();
+  if (pending || !enabled) return null;
   return <BeDaHomeLink />;
 }

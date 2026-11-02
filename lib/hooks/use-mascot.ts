@@ -11,12 +11,18 @@ import {
   resolveMissedDays,
   type BeDaView,
 } from "@/lib/mascot/model";
+import { mascotQueryHidesUI } from "@/lib/mascot/feature";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { streakDateKey } from "@/lib/streak/history";
 
-export function useBeDaView(): { view: BeDaView; stepPose: ReturnType<typeof useBeDaPoseStore.getState>["stepPose"] } {
+export function useBeDaView(): {
+  view: BeDaView;
+  stepPose: ReturnType<typeof useBeDaPoseStore.getState>["stepPose"];
+  /** True while loading, on error, and when GET /me/mascot is 404. */
+  hidden: boolean;
+} {
   const locale = useLocale();
   const user = useAuthStore((s) => s.user);
   const hasAuth = !!user || !!getAccessToken();
@@ -39,5 +45,9 @@ export function useBeDaView(): { view: BeDaView; stepPose: ReturnType<typeof use
     sessionHappy,
     locale,
   });
-  return { view, stepPose: sessionHappy ? null : stepPose };
+  return {
+    view,
+    stepPose: sessionHappy ? null : stepPose,
+    hidden: mascotQueryHidesUI(query),
+  };
 }

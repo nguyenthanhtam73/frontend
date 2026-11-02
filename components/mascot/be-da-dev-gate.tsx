@@ -2,16 +2,16 @@
 
 import dynamic from "next/dynamic";
 
-import { useAdminGate } from "@/lib/hooks/use-admin-gate";
+import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
 
 const BeDaSheet = dynamic(
-  () => import("@/components/mascot/be-da-sheet").then((mod) => mod.BeDaSheet),
+  () => import("@/components/mascot/be-da-dev-sheet").then((mod) => mod.BeDaDevSheet),
   { ssr: false },
 );
 
-/** Review sheet. Same admin gate as the product surfaces. */
+/** Review sheet. Same feature gate as the product surfaces. */
 export function BeDaDevGate() {
-  const { isAdmin, authPending } = useAdminGate();
-  if (authPending || !isAdmin) return null;
+  const { enabled, pending } = useMascotFeature();
+  if (pending || !enabled) return null;
   return <BeDaSheet />;
 }

@@ -13,7 +13,7 @@ const SEEN_KEY = "be-da-expired-items";
 export function BeDaRoutineBanner() {
   const t = useTranslations("mascot");
   const locale = useLocale();
-  const { view, stepPose } = useBeDaView();
+  const { view, stepPose, hidden } = useBeDaView();
   const sessionHappy = useBeDaPoseStore((s) => s.sessionHappy);
   const [expiryLine, setExpiryLine] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
@@ -54,6 +54,8 @@ export function BeDaRoutineBanner() {
     if (!sessionHappy) wasHappy.current = false;
     return undefined;
   }, [sessionHappy, view.flies]);
+
+  if (hidden) return null;
 
   const line = expiryLine
     ? t("lines.itemExpired")

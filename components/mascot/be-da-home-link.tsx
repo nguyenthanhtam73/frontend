@@ -10,7 +10,8 @@ import { useBeDaView } from "@/lib/hooks/use-mascot";
 export function BeDaHomeLink() {
   const t = useTranslations("mascot");
   const locale = useLocale();
-  const { view, stepPose } = useBeDaView();
+  const { view, stepPose, hidden } = useBeDaView();
+  if (hidden) return null;
   return (
     <Link
       href="/routine"

@@ -4,8 +4,8 @@ import { parseMascot, type MascotSnapshot } from "@/lib/mascot/model";
 export { mascotQueryKey } from "@/lib/mascot/query-key";
 
 /**
- * GET /api/v1/me/mascot. A 404 means the backend has no mascot yet —
- * callers show the default happy Bé Da. Other errors throw.
+ * GET /api/v1/me/mascot. A 404 means there is no mascot to show —
+ * callers hide Bé Da. Other errors throw.
  */
 export async function fetchMascot(): Promise<MascotSnapshot | null> {
   try {

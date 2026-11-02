@@ -50,6 +50,10 @@ export type AuthUser = {
   /** True when user chose enter-app without finishing (from GET /me). */
   onboarding_skipped?: boolean;
   created_at?: string;
+  /** Server feature flags from GET /me. Missing flags are off. */
+  features?: {
+    mascot?: boolean;
+  } | null;
 };
 
 type AuthState = {
