@@ -31,6 +31,8 @@ export function RoutineStatusPanel({
   miniLabels,
   onSelectDay,
   onOpenHistory,
+  todayDot = false,
+  streakBonus = 0,
 }: {
   sourceInfo: RoutineSourceInfo;
   sourceLabels: RoutineSourceLabels;
@@ -44,9 +46,11 @@ export function RoutineStatusPanel({
   miniLabels: MiniLabels;
   onSelectDay?: (date: string) => void;
   onOpenHistory?: () => void;
+  todayDot?: boolean;
+  streakBonus?: number;
 }) {
   const showMini =
-    (history?.entries?.length ?? 0) > 0 || (history?.streak_days ?? 0) > 0;
+    (history?.entries?.length ?? 0) > 0 || (history?.streak_days ?? 0) > 0 || todayDot;
 
   return (
     <>
@@ -70,6 +74,8 @@ export function RoutineStatusPanel({
               onSelectDay={onSelectDay}
               onOpenHistory={onOpenHistory}
               embedded
+              todayDot={todayDot}
+              streakBonus={streakBonus}
             />
           ) : null}
         </div>
@@ -91,6 +97,8 @@ export function RoutineStatusPanel({
           labels={miniLabels}
           onSelectDay={onSelectDay}
           onOpenHistory={onOpenHistory}
+          todayDot={todayDot}
+          streakBonus={streakBonus}
         />
       </div>
     </>

@@ -21,6 +21,7 @@ import {
   type PhotoSlots,
 } from "@/components/check-in/upload-photos";
 import { useRouter } from "@/i18n/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
@@ -37,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { useToast } from "@/hooks/use-toast";
+import { mascotQueryKey } from "@/lib/mascot/query-key";
 import { Link } from "@/i18n/navigation";
 import { resolveCheckInReminderKind, signupDayKey } from "@/lib/activation/check-in-reminder";
 import { clearAwaitingFirstCheckIn, hasNeverCheckedIn } from "@/lib/activation/first-check-in";
@@ -133,6 +135,7 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
   const tCoach = useTranslations("checkIn.coach");
   const tRoutine = useTranslations("routine");
   const toast = useToast();
+  const queryClient = useQueryClient();
   const locale = useLocale();
   const [photoSlots, setPhotoSlots] = useState<PhotoSlots>([null, null]);
   const [title, setTitle] = useState("");
@@ -143,6 +146,12 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
   const router = useRouter();
   const feedback = useCheckInFeedback();
   const onSubmitSuccess = feedback.onSubmitSuccess;
+  useEffect(() => {
+    if (feedback.phase !== "completed") return;
+    const urls = feedback.payload?.image_urls;
+    if (!urls?.length) return;
+    void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+  }, [feedback.phase, feedback.payload, queryClient]);
   const user = useAuthStore((s) => s.user);
   const streakQuery = useStreak();
   const checkInFunnelKindsRef = useRef<CheckInFunnelKind[]>([]);
@@ -644,6 +653,9 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
             clearAwaitingFirstCheckIn(user?.id);
           }
           setCompletedThisSession(true);
+          if (items.length > 0) {
+            void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+          }
           feedback.onSubmitSuccess(data);
           scrollToFeedback();
         } catch (err) {

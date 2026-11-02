@@ -10,6 +10,7 @@ import { CheckInFirstVisit } from "@/components/activation/check-in-first-visit"
 import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
 import { CheckInPageHero } from "@/components/check-in/check-in-page-hero";
 import { CheckInPageView } from "@/components/check-in/check-in-page-view";
+import { BeDaHomeSlot } from "@/components/mascot/be-da-slots";
 import { OfflineNotice } from "@/components/site/offline-notice";
 
 const CheckInForm = dynamic(
@@ -40,7 +41,12 @@ export default async function CheckInPage({ params }: Props) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pt-3 pb-28 sm:px-6 sm:py-10 sm:pb-10 lg:pb-14">
       <CheckInPageView />
-      <CheckInPageHero part="title" />
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <CheckInPageHero part="title" />
+        </div>
+        <BeDaHomeSlot />
+      </div>
 
       <CheckInForm>
         {/* Context stays on the page, under the photo / skip actions, so

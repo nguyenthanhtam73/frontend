@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { pageLocaleMetadata } from "@/lib/seo";
 
+import { BeDaRoutineSlot } from "@/components/mascot/be-da-slots";
 import { RoutineEditor } from "@/components/routine/routine-editor";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -28,6 +29,7 @@ export default async function RoutinePage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-10">
+      <BeDaRoutineSlot />
       <header className="mb-4 max-w-2xl space-y-1 sm:mb-6 sm:space-y-2">
         <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           <span className="inline-block size-1.5 rounded-full bg-primary" aria-hidden />

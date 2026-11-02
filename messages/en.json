@@ -3324,5 +3324,46 @@
       "privacyLink": "Privacy",
       "homeLink": "Back to home"
     }
+  },
+  "mascot": {
+    "name": "Bé Da",
+    "homeAria": "Bé Da — open routine",
+    "tap": "Bé Da reacts",
+    "levelsLabel": "Skin levels",
+    "improved": "Better",
+    "concerns": {
+      "acne": "Bumps",
+      "oily": "Oil",
+      "dark_spot": "Spots",
+      "dry": "Dry",
+      "red": "Red"
+    },
+    "props": {
+      "note": "I'm mad now!",
+      "signComeBack": "Come take care of me 🥺",
+      "signAbandoned": "I was abandoned here"
+    },
+    "lines": {
+      "happy": "Skin's happy today~",
+      "sparkle": "Pretty nose is back",
+      "sleepy": "Yawn… so sleepy",
+      "acne": "Wait, whose bump is this?",
+      "oily": "Just a little shine~",
+      "dry": "So thirsty over here",
+      "red": "A tiny bit flushed",
+      "dark_spot": "Spots, go play somewhere else",
+      "normal": "Skin's okay, keep going",
+      "reminder": "Forgot skincare yesterday",
+      "sad_pillow": "Hugging my pillow, waiting",
+      "pouty_arms_crossed": "Hmph, it's been too long",
+      "back_turned": "Not looking at you",
+      "note_on_mirror": "I'm mad now!",
+      "pot_on_head_corner": "Hiding in the corner",
+      "suitcase_leaving": "Packing my suitcase",
+      "waiting_door_sign": "Come take care of me",
+      "waiting_door_abandoned": "I was abandoned here",
+      "hug_return": "You're back! Hug first~",
+      "itemExpired": "Keep caring for your skin to get it back"
+    }
   }
 }

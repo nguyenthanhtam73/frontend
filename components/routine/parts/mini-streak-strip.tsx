@@ -27,6 +27,8 @@ export function MiniStreakStrip({
   onSelectDay,
   onOpenHistory,
   embedded = false,
+  todayDot = false,
+  streakBonus = 0,
 }: {
   history: RoutineHistoryDTO | null;
   todayISO: string;
@@ -35,10 +37,12 @@ export function MiniStreakStrip({
   onOpenHistory?: () => void;
   /** Inside RoutineStatusPanel — skip outer card chrome. */
   embedded?: boolean;
+  todayDot?: boolean;
+  streakBonus?: number;
 }) {
-  const streak = history?.streak_days ?? 0;
+  const streak = (history?.streak_days ?? 0) + streakBonus;
   const entries = history?.entries ?? [];
-  if (entries.length === 0 && streak === 0) return null;
+  if (entries.length === 0 && streak === 0 && !todayDot) return null;
 
   const byDate = new Map(entries.map((e) => [e.routine_date, e]));
   const dates: string[] = [];
@@ -78,6 +82,7 @@ export function MiniStreakStrip({
             entry={byDate.get(date)}
             labels={labels}
             onClick={() => onSelectDay?.(date)}
+            forceDot={todayDot && date === todayISO}
           />
         ))}
       </ol>
@@ -91,17 +96,19 @@ function MiniDayPill({
   entry,
   labels,
   onClick,
+  forceDot = false,
 }: {
   date: string;
   todayISO: string;
   entry?: RoutineDTO;
   labels: Pick<Labels, "today" | "yesterday">;
   onClick?: () => void;
+  forceDot?: boolean;
 }) {
   const isToday = date === todayISO;
   const label = humanize(date, todayISO, labels.today, labels.yesterday);
   const pct = entry ? entryCompletionPct(entry) : null;
-  const ticked = entry ? hasAnyCompleted(entry) : false;
+  const ticked = forceDot || (entry ? hasAnyCompleted(entry) : false);
 
   return (
     <li className="shrink-0">

@@ -43,6 +43,9 @@ import { useRoutineSuggest, type SuggestError } from "./use-routine-suggest";
 import { useDirtyBeforeUnload } from "./hooks/use-dirty-beforeunload";
 import { useNavigationBlock } from "@/lib/hooks/use-navigation-block";
 import { streakDateKey } from "@/lib/streak/history";
+import { isSessionComplete, poseForStep, streakDotBonus } from "@/lib/mascot/pose";
+import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
+import { hasAnyCompleted } from "./parts/history-stats";
 
 /**
  * Routine Management — main client component.
@@ -365,6 +368,30 @@ export function RoutineEditor() {
 
   // Today (Vietnam calendar) — recompute each render so midnight VN stays correct.
   const todayISO = streakDateKey();
+  const sessionHappy =
+    isSessionComplete(r.routine.morning) || isSessionComplete(r.routine.evening);
+  useEffect(() => {
+    useBeDaPoseStore.getState().setSessionHappy(sessionHappy);
+  }, [sessionHappy]);
+  const todayEntry = r.history?.entries?.find((entry) => entry.routine_date === todayISO);
+  const streakBonus = streakDotBonus(sessionHappy, todayEntry ? hasAnyCompleted(todayEntry) : false);
+
+  function onRoutineToggle(section: "morning" | "evening", id: string) {
+    const steps = r.routine[section];
+    const step = steps.find((item) => item.id === id);
+    if (!step) return;
+    const turningOn = !step.completed;
+    const next = steps.map((item) =>
+      item.id === id ? { ...item, completed: !item.completed } : item,
+    );
+    r.toggleComplete(section, id);
+    if (turningOn && isSessionComplete(next)) {
+      useBeDaPoseStore.getState().clearStepPose();
+      useBeDaPoseStore.getState().setSessionHappy(true);
+      return;
+    }
+    if (turningOn) useBeDaPoseStore.getState().showStepPose(poseForStep(step));
+  }
 
   const hasEditorContent = useMemo(
     () =>
@@ -453,6 +480,8 @@ export function RoutineEditor() {
           onOpenHistory={() =>
             historySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
           }
+          todayDot={sessionHappy}
+          streakBonus={streakBonus}
         />
       ) : null}
 
@@ -575,7 +604,7 @@ export function RoutineEditor() {
             engageValidation();
             r.updateStep("morning", id, patch);
           }}
-          onToggle={(id) => r.toggleComplete("morning", id)}
+          onToggle={(id) => onRoutineToggle("morning", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
           onEditLockedAttempt={engageEditQuota}
@@ -613,7 +642,7 @@ export function RoutineEditor() {
             engageValidation();
             r.updateStep("evening", id, patch);
           }}
-          onToggle={(id) => r.toggleComplete("evening", id)}
+          onToggle={(id) => onRoutineToggle("evening", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
           onEditLockedAttempt={engageEditQuota}

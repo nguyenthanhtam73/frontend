@@ -430,7 +430,131 @@
 
 @media (prefers-reduced-motion: reduce) {
   .streak-confetti,
-  .streak-flame-pulse {
+  .streak-flame-pulse,
+  .be-da-fly,
+  .be-da-flies-exit .be-da-fly,
+.be-da-flies-exit,
+.be-da-blink,
+.be-da-breathe,
+.be-da-yawn,
+.be-da-jump,
+.be-da-tidy {
     animation: none !important;
   }
+
+  .be-da-flies-exit {
+    opacity: 0 !important;
+  }
+}
+
+@keyframes be-da-buzz {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-8deg);
+  }
+  50% {
+    transform: translate(4px, -5px) rotate(8deg);
+  }
+}
+
+@keyframes be-da-fly-away {
+  to {
+    transform: translate(36px, -42px);
+    opacity: 0;
+  }
+}
+
+.be-da-fly {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: be-da-buzz 1.5s ease-in-out infinite;
+}
+
+.be-da-fly-2 {
+  animation-duration: 1.8s;
+  animation-delay: 0.2s;
+}
+
+.be-da-fly-3 {
+  animation-duration: 1.25s;
+  animation-delay: 0.4s;
+}
+
+.be-da-flies-exit .be-da-fly,
+img.be-da-flies-exit {
+  animation: be-da-fly-away 0.7s ease-in forwards;
+}
+
+@keyframes be-da-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015, 1.028);
+  }
+}
+
+.be-da-breathe {
+  transform-origin: 50% 88%;
+  animation: be-da-breathe 3.6s ease-in-out infinite;
+}
+
+@keyframes be-da-blink {
+  0%,
+  88%,
+  100% {
+    transform: scaleY(0.04);
+  }
+  93%,
+  96% {
+    transform: scaleY(1);
+  }
+}
+
+.be-da-blink {
+  transform-origin: 50% 41%;
+  animation: be-da-blink 7s linear infinite;
+}
+
+@keyframes be-da-yawn {
+  0%,
+  72%,
+  100% {
+    opacity: 0;
+  }
+  80%,
+  90% {
+    opacity: 1;
+  }
+}
+
+.be-da-yawn {
+  animation: be-da-yawn 11s ease-in-out infinite;
+}
+
+@keyframes be-da-jump {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-16px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.be-da-jump {
+  animation: be-da-jump 0.7s ease-in-out;
+}
+
+@keyframes be-da-tidy {
+  to {
+    opacity: 0;
+  }
+}
+
+.be-da-tidy {
+  animation: be-da-tidy 0.7s ease forwards;
 }
