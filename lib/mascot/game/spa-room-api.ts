@@ -1,0 +1,76 @@
+import { ApiError, apiGet, apiPost } from "@/lib/api-client";
+import { normalizeRoomCode, spaRoomProblem, type SpaNotice } from "@/lib/mascot/game/spa-room";
+
+/** REST room. The socket does not create or look up rooms. */
+const ROOMS = "/api/v1/mascot/rooms";
+
+/**
+ * Bearer token, same as the other API calls, and cookies included.
+ * dadiary.vn answers that pair. A preview host still sends the bearer;
+ * `include` is what the production page needs for the credential CORS path.
+ */
+const roomCall = { toastOnError: false, credentials: "include" as const };
+
+export type SpaRoomRecord = {
+  code: string;
+  cap: number;
+  memberCount: number;
+  joined: boolean;
+  owner: boolean;
+  inviteUrl: string;
+};
+
+/** `{ success, data: { code, cap, member_count, joined, owner, invite_url } }`. */
+export function readSpaRoom(data: unknown): SpaRoomRecord | null {
+  if (!data || typeof data !== "object") return null;
+  const row = data as Record<string, unknown>;
+  const code = typeof row.code === "string" ? normalizeRoomCode(row.code) : null;
+  if (!code) return null;
+  const cap = typeof row.cap === "number" && Number.isFinite(row.cap) ? row.cap : 8;
+  const memberCount =
+    typeof row.member_count === "number" && Number.isFinite(row.member_count) ? row.member_count : 0;
+  return {
+    code,
+    cap,
+    memberCount,
+    joined: row.joined === true,
+    owner: row.owner === true,
+    inviteUrl: typeof row.invite_url === "string" ? row.invite_url : "",
+  };
+}
+
+export function spaProblemFromError(err: unknown): Exclude<SpaNotice, null> {
+  if (err instanceof ApiError) {
+    return spaRoomProblem(err.status, err.code ?? null) ?? "offline";
+  }
+  return "offline";
+}
+
+/** POST /api/v1/mascot/rooms. The server picks the 6-letter code. */
+export async function createSpaRoom(): Promise<SpaRoomRecord> {
+  const data = await apiPost<unknown>(ROOMS, undefined, roomCall);
+  const room = readSpaRoom(data);
+  if (!room) throw new ApiError("api", { status: 502, code: "bad_message" });
+  return room;
+}
+
+/** GET /api/v1/mascot/rooms/:code. Shows x/8 before the socket hello. */
+export async function getSpaRoom(code: string): Promise<SpaRoomRecord> {
+  const data = await apiGet<unknown>(`${ROOMS}/${encodeURIComponent(code)}`, roomCall);
+  const room = readSpaRoom(data);
+  if (!room) throw new ApiError("api", { status: 502, code: "bad_message" });
+  return room;
+}
+
+/** POST /api/v1/mascot/rooms/:code/join. Required before the socket join. */
+export async function joinSpaRoom(code: string): Promise<SpaRoomRecord> {
+  const data = await apiPost<unknown>(`${ROOMS}/${encodeURIComponent(code)}/join`, undefined, roomCall);
+  const room = readSpaRoom(data);
+  if (!room) throw new ApiError("api", { status: 502, code: "bad_message" });
+  return room;
+}
+
+/** POST /api/v1/mascot/rooms/:code/leave. The last member closes the room. */
+export async function leaveSpaRoom(code: string): Promise<void> {
+  await apiPost(`${ROOMS}/${encodeURIComponent(code)}/leave`, undefined, roomCall);
+}

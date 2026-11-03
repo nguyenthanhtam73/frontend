@@ -17,9 +17,12 @@ import {
   roomInviteUrl,
   sampleSpaGuests,
   seatGuests,
+  shouldRetryRoomJoin,
   spaHeadCount,
+  spaRoomProblem,
   zaloShareUrl,
 } from "@/lib/mascot/game/spa-room";
+import { readSpaRoom } from "@/lib/mascot/game/spa-room-api";
 
 const SELF = "k3m8p2q9w4xn";
 const OTHER = "a9b8c7d6e5f4";
@@ -37,6 +40,40 @@ function person(id: string, nickname: string): WirePerson {
     action: "idle",
   };
 }
+
+describe("spa room HTTP errors", () => {
+  it("maps the live room codes and statuses", () => {
+    assert.equal(spaRoomProblem(409, "room_full"), "full");
+    assert.equal(spaRoomProblem(409, "too_many_rooms"), "too-many");
+    assert.equal(spaRoomProblem(429, "rate_limited"), "rate");
+    assert.equal(spaRoomProblem(404, "room_not_found"), "missing");
+    assert.equal(spaRoomProblem(404, null), "missing");
+    assert.equal(spaRoomProblem(400, "bad_code"), "bad-code");
+    assert.equal(spaRoomProblem(null, "not_a_member"), "member");
+    assert.equal(spaRoomProblem(null, "not_joined"), "member");
+    assert.equal(spaRoomProblem(null, "not_available"), null);
+    assert.equal(shouldRetryRoomJoin("not_a_member", false), true);
+    assert.equal(shouldRetryRoomJoin("not_joined", false), true);
+    assert.equal(shouldRetryRoomJoin("not_a_member", true), false);
+    assert.equal(shouldRetryRoomJoin("room_full", false), false);
+  });
+
+  it("reads the room JSON the handler returns", () => {
+    const room = readSpaRoom({
+      code: "da7k2m",
+      cap: 8,
+      member_count: 3,
+      joined: true,
+      owner: false,
+      invite_url: "https://dadiary.vn/be-da/phong/DA7K2M",
+    });
+    assert.equal(room?.code, "DA7K2M");
+    assert.equal(room?.memberCount, 3);
+    assert.equal(room?.joined, true);
+    assert.equal(room?.cap, 8);
+    assert.equal(readSpaRoom({ member_count: 1 }), null);
+  });
+});
 
 describe("spa room code", () => {
   it("keeps a 6-letter code and the dadiary invite link", () => {
@@ -90,17 +127,6 @@ describe("spa room protocol", () => {
   it("speaks channel room with only fields the hub already accepts", () => {
     const frames = [
       encodeRoomFrame({
-        op: "create",
-        code: "DA7K2M",
-        nickname: "Bé Da 4821",
-        outfit: "outfit_pajamas",
-        hair: "hair_sleep_buns",
-        accessory: "",
-        facing: "right",
-        action: "idle",
-      }),
-      encodeRoomFrame({ op: "get", code: "DA7K2M" }),
-      encodeRoomFrame({
         op: "join",
         code: "DA7K2M",
         nickname: "Bé Da 4821",
@@ -119,10 +145,15 @@ describe("spa room protocol", () => {
       assert.equal(roomFrameAllowed(frame), true);
       assert.equal(frame.includes("access_token"), false);
       assert.equal(frame.includes("email"), false);
-      const json = JSON.parse(frame) as { channel: string };
+      const json = JSON.parse(frame) as { channel: string; op: string };
       assert.equal(json.channel, "room");
+      assert.equal(json.op === "create" || json.op === "get", false);
     }
-    const hide = JSON.parse(frames[5] ?? "{}") as { hide: string[] };
+    const join = JSON.parse(frames[0] ?? "{}") as { op: string; code: string; channel: string };
+    assert.equal(join.op, "join");
+    assert.equal(join.channel, "room");
+    assert.equal(join.code, "DA7K2M");
+    const hide = JSON.parse(frames[3] ?? "{}") as { hide: string[] };
     assert.deepEqual(hide.hide, [OTHER]);
   });
 
@@ -182,11 +213,12 @@ describe("spa room protocol", () => {
       clearTimer: clock.clearTimer,
       onMessage: () => undefined,
       onStatus: (status) => statuses.push(status),
+      random: () => 0,
     });
-    conn.start("get", (op) => (op === "get" ? "{\"op\":\"get\"}" : "{\"op\":\"join\"}"));
+    conn.start(() => "{\"v\":1,\"channel\":\"room\",\"op\":\"join\",\"code\":\"DA7K2M\"}");
     sockets[0]!.readyState = 1;
     sockets[0]!.onopen?.();
-    assert.equal(sockets[0]!.sent[0], "{\"op\":\"get\"}");
+    assert.equal(sockets[0]!.sent[0], "{\"v\":1,\"channel\":\"room\",\"op\":\"join\",\"code\":\"DA7K2M\"}");
     sockets[0]!.onmessage?.({
       data: JSON.stringify({ v: 1, channel: "room", op: "error", code: "not_available" }),
     });
@@ -206,9 +238,10 @@ describe("spa room protocol", () => {
       clearTimer: clock.clearTimer,
       onMessage: () => undefined,
       onStatus: () => undefined,
+      random: () => 0,
     });
     const before = sockets.length;
-    again.start("create", () => "{\"op\":\"create\"}");
+    again.start(() => "{\"op\":\"join\"}");
     sockets[before]!.onclose?.();
     clock.advance(999);
     assert.equal(sockets.length, before + 1);

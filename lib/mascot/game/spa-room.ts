@@ -7,20 +7,24 @@ import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type W
  * Same WebSocket as the lobby: `/api/v1/mascot/lobby/ws`.
  * Frames use `channel: "room"` and only fields the hub already accepts
  * (`v`, `channel`, `op`, `code`, `nickname`, `outfit`, `hair`, `accessory`,
- * `facing`, `action`, `target`, `hide`). Today the hub answers every room
- * frame with `not_available`. This client then keeps a local sample room.
+ * `facing`, `action`, `target`, `hide`). A socket `join` works only after
+ * REST membership. `not_available` still falls back to the sample room.
  *
- * When the API is ready the ops are:
- * - `create` — open a room for `code` (6 letters) and sit down
- * - `get` — look up `code` without sitting (`count` / `cap` / `people`)
- * - `join` — sit down in `code`
- * - `leave`, `wave`, `heart`, `compliment`, `hide` — same ideas as the lobby
+ * Membership is REST, not a socket op:
+ * - POST /api/v1/mascot/rooms creates a room and returns `code`
+ * - GET  /api/v1/mascot/rooms/:code reads member_count before sitting
+ * - POST /api/v1/mascot/rooms/:code/join sits down (a second join is a no-op)
+ * - POST /api/v1/mascot/rooms/:code/leave stands up
+ *
+ * The socket only accepts channel "room" op `join` after that membership.
+ * `not_a_member` means the REST join has not landed yet. There is no
+ * socket `create` or `get`.
  *
  * Server replies use `channel: "room"`:
  * - `hello` — you are in. `session_id`, `code`, `count`, `cap`, `people`
- * - `room` — answer to `get` (same fields, no session yet)
  * - `tick` — `upserts`, `left`, `events`, `count`, `cap`
- * - `error` — `not_available`, `room_full`, `bad_code`, `nickname_rejected`
+ * - `error` — `not_a_member`, `not_joined`, `room_full`, `room_not_found`,
+ *   `rate_limited`, `not_available`
  *
  * Invite links are always `https://dadiary.vn/be-da/phong/<CODE>`.
  * No level, points, email, or chat goes on the wire.
@@ -31,7 +35,6 @@ export const SPA_ROOM_CODE_LENGTH = 6;
 /** No 0/O or 1/I, so a code read aloud is hard to mix up. */
 export const SPA_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const SPA_INVITE_ORIGIN = "https://dadiary.vn";
-export const SPA_CREATE_KEY = "beda-spa-create";
 export const SPA_TAB_KEY = "beda-spa-tab";
 export const SPA_HIDE_KEY = "beda-spa-hide";
 
@@ -105,11 +108,20 @@ export type SpaGuest = {
   sample: boolean;
 };
 
-export type SpaNotice = "full" | "missing" | "bad-code" | "name" | null;
+export type SpaNotice =
+  | "full"
+  | "missing"
+  | "bad-code"
+  | "name"
+  | "rate"
+  | "too-many"
+  | "member"
+  | "offline"
+  | null;
 
 export type RoomClientFrame =
   | {
-      op: "create" | "join";
+      op: "join";
       code: string;
       nickname: string;
       outfit: string;
@@ -118,7 +130,6 @@ export type RoomClientFrame =
       facing: LobbyFacing;
       action: "idle";
     }
-  | { op: "get"; code: string }
   | { op: "leave" }
   | { op: "wave" | "heart"; target?: string }
   | { op: "compliment"; target: string }
@@ -241,17 +252,52 @@ export function spaHeadCount(input: {
   notice: SpaNotice;
   serverCount: number;
   visibleGuests: number;
+  /** Member count from GET or POST join, before the socket hello. */
+  previewCount?: number | null;
 }): number {
   if (input.notice === "full") return SPA_ROOM_CAP;
   if (input.live) return Math.min(SPA_ROOM_CAP, Math.max(0, Math.round(input.serverCount)));
+  if (input.previewCount != null && input.notice == null) {
+    return Math.min(SPA_ROOM_CAP, Math.max(0, Math.round(input.previewCount)));
+  }
   if (input.notice != null) return 1;
   return Math.min(SPA_ROOM_CAP, input.visibleGuests + 1);
+}
+
+/**
+ * Map a room HTTP status or a socket error code onto a short notice.
+ * `not_available` stays null so the sample spa can remain.
+ * 409 is `room_full` or `too_many_rooms` by code. 404 is a missing room.
+ * 429 is `rate_limited`.
+ */
+export function spaRoomProblem(status: number | null, code: string | null): Exclude<SpaNotice, null> | null {
+  const name = code ?? "";
+  if (name === "room_full" || name === "full") return "full";
+  if (name === "too_many_rooms") return "too-many";
+  if (name === "rate_limited") return "rate";
+  if (name === "room_not_found" || name === "not_found" || name === "unknown_room") return "missing";
+  if (name === "bad_code") return "bad-code";
+  if (name === "not_a_member" || name === "not_joined") return "member";
+  if (name === "nickname_rejected") return "name";
+  if (name === "not_available") return null;
+  if (status === 404) return "missing";
+  if (status === 400) return "bad-code";
+  if (status === 429) return "rate";
+  if (status === 409) return "too-many";
+  if (status != null && status >= 500) return "offline";
+  if (status == null && (name === "" || name === "bad_message" || name === "unavailable")) return "offline";
+  return null;
+}
+
+/** One REST join, then one more socket join. A second `not_a_member` stops. */
+export function shouldRetryRoomJoin(code: string, alreadyRetried: boolean): boolean {
+  if (alreadyRetried) return false;
+  return code === "not_a_member" || code === "not_joined";
 }
 
 export function encodeRoomFrame(frame: RoomClientFrame): string {
   const base: Record<string, unknown> = { v: 1, channel: "room", op: frame.op };
   switch (frame.op) {
-    case "create":
     case "join":
       base.code = frame.code;
       base.nickname = frame.nickname;
@@ -260,9 +306,6 @@ export function encodeRoomFrame(frame: RoomClientFrame): string {
       base.accessory = frame.accessory;
       base.facing = frame.facing;
       base.action = frame.action;
-      break;
-    case "get":
-      base.code = frame.code;
       break;
     case "wave":
     case "heart":

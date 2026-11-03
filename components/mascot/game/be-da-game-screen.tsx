@@ -33,12 +33,12 @@ import {
 } from "@/lib/mascot/game/look";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
+import { createSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
 import {
-  SPA_CREATE_KEY,
   SPA_TAB_KEY,
-  makeRoomCode,
   normalizeRoomCode,
   roomInvitePath,
+  type SpaNotice,
 } from "@/lib/mascot/game/spa-room";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -82,6 +82,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [ready, setReady] = useState(false);
   const [chestDismissed, setChestDismissed] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState("keo-deo");
+  const [createProblem, setCreateProblem] = useState<SpaNotice>(null);
+  const [creatingRoom, setCreatingRoom] = useState(false);
   const [toast, setToast] = useState<GameToast>(null);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [burst, setBurst] = useState(0);
@@ -205,14 +207,23 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     router.push("/be-da");
   }
 
-  function createRoom() {
-    const next = makeRoomCode();
+  async function createRoom() {
+    if (creatingRoom) return;
+    setCreatingRoom(true);
+    setCreateProblem(null);
     try {
-      sessionStorage.setItem(SPA_CREATE_KEY, next);
-    } catch {
-      /* the page still opens on this code */
+      const created = await createSpaRoom();
+      const next = normalizeRoomCode(created.code);
+      if (!next) {
+        setCreateProblem("offline");
+        return;
+      }
+      router.push(roomInvitePath(next));
+    } catch (err) {
+      setCreateProblem(spaProblemFromError(err));
+    } finally {
+      setCreatingRoom(false);
     }
-    router.push(roomInvitePath(next));
   }
 
   function onFriendAction(kind: "wave" | "heart" | "outfit") {
@@ -339,7 +350,9 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
           : null
       }
       youPose={spaRoom.youPose}
-      onCreateRoom={createRoom}
+      onCreateRoom={() => void createRoom()}
+      creatingRoom={creatingRoom}
+      createProblem={createProblem}
       onJoinRoom={(next) => router.push(roomInvitePath(next))}
       onLeaveSpa={() => leaveSpa("care")}
       onSpaLobby={() => leaveSpa("lobby")}

@@ -11,22 +11,21 @@ export { lobbySocketUrl };
 const OPEN = 1;
 
 /**
- * One room socket on the lobby URL. `not_available` stops reconnects and the
- * caller keeps the sample spa. A drop before that waits with the lobby backoff.
- * `leave` and `replaced` do not reconnect.
+ * One room socket on the lobby URL. The only opener is `join` with
+ * channel "room" and the code. Membership is already done over REST.
+ * `not_available` or `fail()` stops reconnects. `leave` and `replaced` do not
+ * reconnect. A drop before that waits with the lobby backoff.
  */
 export class RoomConnection {
   private ws: LobbySocketLike | null = null;
   private intentional = false;
   private replaced = false;
   private unavailable = false;
-  private seenHello = false;
   private attempt = 0;
   private timer: number | null = null;
   private pumpTimer: number | null = null;
   private readonly outbox = new LobbyOutbox();
-  private first: "create" | "get" = "get";
-  private frame: (op: "create" | "get" | "join") => string = () => "";
+  private joinBody: () => string = () => "";
 
   constructor(
     private readonly deps: {
@@ -37,18 +36,33 @@ export class RoomConnection {
       clearTimer: (id: number) => void;
       onMessage: (message: RoomServerMessage) => void;
       onStatus: (status: "sample" | "live") => void;
+      /** [0, 1). Defaults to Math.random. Tests pass a fixed roll. */
+      random?: () => number;
     },
   ) {}
 
-  start(first: "create" | "get", frame: (op: "create" | "get" | "join") => string): void {
-    this.first = first;
-    this.frame = frame;
+  start(joinBody: () => string): void {
+    this.joinBody = joinBody;
     this.intentional = false;
     this.replaced = false;
     this.unavailable = false;
-    this.seenHello = false;
     this.attempt = 0;
     this.open();
+  }
+
+  /** Stop reconnecting without telling the server we left. */
+  fail(): void {
+    this.unavailable = true;
+    this.clearTimers();
+    const ws = this.ws;
+    this.ws = null;
+    try {
+      ws?.close();
+    } catch {
+      /* already closed */
+    }
+    this.outbox.clear();
+    this.deps.onStatus("sample");
   }
 
   send(body: string, kind: string): void {
@@ -104,8 +118,7 @@ export class RoomConnection {
     this.ws = ws;
     ws.onopen = () => {
       if (this.ws !== ws || ws.readyState !== OPEN) return;
-      const op = this.seenHello ? "join" : this.first;
-      this.outbox.enqueue(op, this.frame(op));
+      this.outbox.enqueue("join", this.joinBody());
       this.pump();
     };
     ws.onmessage = (event) => {
@@ -124,10 +137,7 @@ export class RoomConnection {
         }
         return;
       }
-      if (message.op === "hello") {
-        this.seenHello = true;
-        this.attempt = 0;
-      }
+      if (message.op === "hello") this.attempt = 0;
       if (message.op === "replaced") {
         this.replaced = true;
         this.clearTimers();
@@ -149,7 +159,7 @@ export class RoomConnection {
 
   private scheduleReconnect(): void {
     if (this.intentional || this.replaced || this.unavailable || this.timer != null) return;
-    const delay = reconnectDelayMs(this.attempt);
+    const delay = reconnectDelayMs(this.attempt, this.deps.random ?? Math.random);
     this.attempt += 1;
     this.timer = this.deps.setTimer(() => {
       this.timer = null;

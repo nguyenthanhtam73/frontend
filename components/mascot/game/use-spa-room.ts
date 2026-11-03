@@ -18,19 +18,19 @@ import {
   type LobbyCookiePlan,
 } from "@/lib/mascot/game/lobby-live";
 import type { LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
+import { getSpaRoom, joinSpaRoom, leaveSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
 import { RoomConnection } from "@/lib/mascot/game/spa-room-socket";
 import {
-  SPA_CREATE_KEY,
   SPA_HIDE_KEY,
   SPA_ROOM_CAP,
   applyRoomMessage,
   emptyRoom,
   encodeRoomFrame,
-  isRoomFull,
-  isRoomMissing,
   sampleSpaGuests,
   seatGuests,
+  shouldRetryRoomJoin,
   spaHeadCount,
+  spaRoomProblem,
   type RoomClientFrame,
   type RoomServerMessage,
   type RoomSnapshot,
@@ -41,8 +41,9 @@ import {
 export type SpaEmoteKind = "wave" | "heart" | "outfit";
 
 /**
- * Sample spa until channel "room" answers. `not_available`, a missing cookie,
- * or a socket that never opens keeps the sample friends. The token is never
+ * REST join first, then one socket `join` on channel "room".
+ * Sample friends stay only when the room channel says `not_available`
+ * or the socket never opens before we know the room. The token is never
  * put on the URL.
  */
 export function useSpaRoom(options: {
@@ -56,6 +57,7 @@ export function useSpaRoom(options: {
   const [notice, setNotice] = useState<SpaNotice>(null);
   const [room, setRoom] = useState<RoomSnapshot>(() => emptyRoom(code ?? ""));
   const [serverCode, setServerCode] = useState<string | null>(null);
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
   const [youPose, setYouPose] = useState<GamePose | null>(null);
@@ -68,7 +70,8 @@ export function useSpaRoom(options: {
   const liveRef = useRef(live);
   const remoteRef = useRef(onRemoteEmote);
   const connRef = useRef<RoomConnection | null>(null);
-  const phaseRef = useRef<"create" | "get" | "join" | "in">("get");
+  const joinedRef = useRef(false);
+  const retriedRef = useRef(false);
   const timers = useRef<number[]>([]);
   lookRef.current = look;
   nickRef.current = nickname;
@@ -102,19 +105,20 @@ export function useSpaRoom(options: {
       setLive(false);
       return;
     }
-    const plan = readCookiePlan();
-    if (!plan?.ok) return;
 
     let cancelled = false;
+    joinedRef.current = false;
+    retriedRef.current = false;
     setLive(false);
     setNotice(null);
     setServerCode(null);
+    setPreviewCount(null);
     setRoom(emptyRoom(code));
 
-    const memberFrame = (op: "create" | "join"): RoomClientFrame => {
+    const joinFrame = (): RoomClientFrame => {
       const worn = lookRef.current;
       return {
-        op,
+        op: "join",
         code,
         nickname: nickRef.current,
         outfit: worn.outfit,
@@ -125,58 +129,57 @@ export function useSpaRoom(options: {
       };
     };
 
+    const stopSocket = () => {
+      connRef.current?.fail();
+    };
+
     const handle = (message: RoomServerMessage) => {
       if (message.op === "error") {
-        if (message.code === "not_available" || message.code === "bad_message") {
-          if (message.code === "bad_message" && phaseRef.current === "get") {
-            phaseRef.current = "join";
-            connRef.current?.send(encodeRoomFrame(memberFrame("join")), "join");
-            return;
-          }
+        if (message.code === "not_available") {
           setNotice(null);
           setLive(false);
           return;
         }
-        if (isRoomFull(message.code)) {
-          setNotice("full");
-          setLive(false);
+        if (shouldRetryRoomJoin(message.code, retriedRef.current)) {
+          retriedRef.current = true;
+          void joinSpaRoom(code)
+            .then((room) => {
+              if (cancelled) return;
+              joinedRef.current = true;
+              setPreviewCount(room.memberCount);
+              connRef.current?.send(encodeRoomFrame(joinFrame()), "join");
+            })
+            .catch((err: unknown) => {
+              if (cancelled) return;
+              setNotice(spaProblemFromError(err));
+              setLive(false);
+              stopSocket();
+            });
           return;
         }
-        if (isRoomMissing(message.code)) {
-          setNotice("missing");
-          setLive(false);
+        const problem = spaRoomProblem(null, message.code);
+        if (problem === "rate" && liveRef.current) {
+          setNotice("rate");
           return;
         }
-        if (message.code === "nickname_rejected") {
-          setNotice("name");
+        if (problem) {
+          setNotice(problem);
           setLive(false);
-        }
-        return;
-      }
-      if (message.op === "room") {
-        setRoom((prev) => applyRoomMessage(prev, message));
-        const cap = message.cap || SPA_ROOM_CAP;
-        if (message.count >= cap) {
-          setNotice("full");
-          setLive(true);
+          if (problem !== "rate") stopSocket();
           return;
         }
-        phaseRef.current = "join";
-        connRef.current?.send(encodeRoomFrame(memberFrame("join")), "join");
+        setNotice("offline");
+        setLive(false);
+        stopSocket();
         return;
       }
       if (message.op === "hello") {
-        phaseRef.current = "in";
         setNotice(null);
         setLive(true);
         const nextCode = message.code || code;
         setServerCode(nextCode);
+        setPreviewCount(message.count);
         setRoom((prev) => applyRoomMessage(prev, message));
-        try {
-          if (sessionStorage.getItem(SPA_CREATE_KEY) === nextCode) sessionStorage.removeItem(SPA_CREATE_KEY);
-        } catch {
-          /* ignore */
-        }
         return;
       }
       if (message.op === "tick") {
@@ -193,6 +196,7 @@ export function useSpaRoom(options: {
           });
         }
         setRoom((prev) => applyRoomMessage(prev, message));
+        if (message.count > 0) setPreviewCount(message.count);
         return;
       }
       if (message.op === "bye" || message.op === "replaced") {
@@ -201,43 +205,74 @@ export function useSpaRoom(options: {
       }
     };
 
+    const openSocket = (plan: NonNullable<ReturnType<typeof readCookiePlan>>) => {
+      void (async () => {
+        const token = (await ensureFreshAccessToken(apiBaseUrl)) ?? getAccessToken();
+        if (cancelled || !token || !plan.ok) return;
+        document.cookie = lobbyAccessCookie(token, plan, lobbyCookieMaxAge(token, Date.now()));
+        const connection = new RoomConnection({
+          url: lobbySocketUrl(apiBaseUrl),
+          now: () => Date.now(),
+          connect: (url) => new WebSocket(url) as unknown as LobbySocketLike,
+          setTimer: (fn, ms) => window.setTimeout(fn, ms),
+          clearTimer: (id) => window.clearTimeout(id),
+          onMessage: (message) => {
+            if (!cancelled) handle(message);
+          },
+          onStatus: (status) => {
+            if (!cancelled) setLive(status === "live");
+          },
+        });
+        if (cancelled) return;
+        connRef.current = connection;
+        connection.start(() => encodeRoomFrame(joinFrame()));
+      })();
+    };
+
     void (async () => {
-      const token = (await ensureFreshAccessToken(apiBaseUrl)) ?? getAccessToken();
-      if (cancelled || !token) return;
-      document.cookie = lobbyAccessCookie(token, plan, lobbyCookieMaxAge(token, Date.now()));
-      let creating = false;
       try {
-        creating = sessionStorage.getItem(SPA_CREATE_KEY) === code;
-      } catch {
-        creating = false;
+        const preview = await getSpaRoom(code);
+        if (cancelled) return;
+        setPreviewCount(preview.memberCount);
+        setRoom((prev) => ({ ...prev, code: preview.code, cap: preview.cap, count: preview.memberCount }));
+        if (preview.memberCount >= preview.cap && !preview.joined) {
+          setNotice("full");
+          return;
+        }
+      } catch (err) {
+        const problem = spaProblemFromError(err);
+        if (problem === "missing" || problem === "bad-code" || problem === "full") {
+          if (!cancelled) setNotice(problem);
+          return;
+        }
       }
-      phaseRef.current = creating ? "create" : "get";
-      const connection = new RoomConnection({
-        url: lobbySocketUrl(apiBaseUrl),
-        now: () => Date.now(),
-        connect: (url) => new WebSocket(url) as unknown as LobbySocketLike,
-        setTimer: (fn, ms) => window.setTimeout(fn, ms),
-        clearTimer: (id) => window.clearTimeout(id),
-        onMessage: (message) => {
-          if (!cancelled) handle(message);
-        },
-        onStatus: (status) => {
-          if (!cancelled) setLive(status === "live");
-        },
-      });
-      if (cancelled) return;
-      connRef.current = connection;
-      connection.start(creating ? "create" : "get", (op) => {
-        if (op === "get") return encodeRoomFrame({ op: "get", code });
-        return encodeRoomFrame(memberFrame(op));
-      });
+      try {
+        const joined = await joinSpaRoom(code);
+        if (cancelled) {
+          void leaveSpaRoom(code).catch(() => undefined);
+          return;
+        }
+        joinedRef.current = true;
+        setPreviewCount(joined.memberCount);
+        setRoom((prev) => ({ ...prev, code: joined.code, cap: joined.cap, count: joined.memberCount }));
+      } catch (err) {
+        if (!cancelled) setNotice(spaProblemFromError(err));
+        return;
+      }
+      const plan = readCookiePlan();
+      if (!plan?.ok || cancelled) return;
+      openSocket(plan);
     })();
 
     return () => {
       cancelled = true;
+      const joined = joinedRef.current;
+      joinedRef.current = false;
       connRef.current?.stop();
       connRef.current = null;
-      document.cookie = clearLobbyAccessCookie(plan);
+      if (joined) void leaveSpaRoom(code).catch(() => undefined);
+      const plan = readCookiePlan();
+      if (plan?.ok) document.cookie = clearLobbyAccessCookie(plan);
       setLive(false);
     };
   }, [active, code]);
@@ -253,15 +288,16 @@ export function useSpaRoom(options: {
   const guests = useMemo(() => {
     if (notice === "full") return seatGuests(room.people, null, hidden, poses);
     if (live) return seatGuests(room.people, room.sessionId, hidden, poses);
-    if (notice != null) return [];
+    if (notice != null || previewCount != null) return [];
     return sampleSpaGuests(hidden, poses);
-  }, [notice, live, room.people, room.sessionId, hidden, poses]);
+  }, [notice, live, previewCount, room.people, room.sessionId, hidden, poses]);
 
   const count = spaHeadCount({
     live: live && notice !== "full",
     notice,
     serverCount: room.count,
     visibleGuests: guests.length,
+    previewCount,
   });
 
   function emote(guest: Pick<SpaGuest, "id" | "sample">, kind: SpaEmoteKind) {
