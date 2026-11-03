@@ -14,7 +14,18 @@ import {
   writeGameLook,
   type GameLook,
 } from "./look";
-import { SAMPLE_LOBBY_FRIENDS, lobbyHeadCount, sampleFriendView } from "./lobby";
+import {
+  LOBBY_PLAYER_SPOT,
+  LOBBY_WALK_Y_MAX,
+  SAMPLE_LOBBY_FRIENDS,
+  lobbyHeadCount,
+  lobbyNavReservePx,
+  lobbyStackZ,
+  lobbyTagNudgePx,
+  lobbyWalkY,
+  placeFriendCard,
+  sampleFriendView,
+} from "./lobby";
 import { isBeDaGamePath, localePath } from "./path";
 import {
   GAME_CHEST_KEY,
@@ -258,6 +269,121 @@ describe("game path", () => {
   });
 });
 
+describe("lobby walk band", () => {
+  const spots = [
+    ...SAMPLE_LOBBY_FRIENDS.map((friend) => ({ id: friend.id, x: friend.x, y: friend.y })),
+    { id: "you", x: LOBBY_PLAYER_SPOT.x, y: LOBBY_PLAYER_SPOT.y },
+  ];
+
+  it("keeps every sample Bé Da inside the band above the nav from 360 to 1366", () => {
+    const sizes = [360, 390, 640, 706, 768, 844, 1024, 1366];
+    for (const width of sizes) {
+      for (const height of sizes) {
+        for (const safe of [0, 34]) {
+          const nav = lobbyNavReservePx(width, safe);
+          const walk = height - nav - 8;
+          assert.ok(walk > 64, `walk ${walk}px at ${width}x${height} safe ${safe}`);
+          for (const spot of spots) {
+            assert.ok(spot.y > 0 && spot.y <= LOBBY_WALK_Y_MAX);
+            const tagBottom = lobbyWalkY(spot.y) * walk;
+            assert.ok(tagBottom + 6 <= walk + 8, `${spot.id} tag enters the nav at ${width}x${height}`);
+          }
+        }
+      }
+    }
+  });
+
+  it("stacks by y and nudges tags away from the Bé Da in front", () => {
+    const ordered = [...spots].sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ordered.length; i++) {
+      const prev = ordered[i - 1]!;
+      const next = ordered[i]!;
+      if (next.y === prev.y) assert.equal(lobbyStackZ(next.y), lobbyStackZ(prev.y));
+      else assert.ok(lobbyStackZ(next.y) > lobbyStackZ(prev.y));
+    }
+    const byDepth = [...spots].sort((a, b) => a.y - b.y);
+    let mapped = 0;
+    for (const spot of byDepth) {
+      const next = lobbyWalkY(spot.y);
+      assert.ok(next >= mapped - 0.0001);
+      assert.ok(next <= 0.97);
+      mapped = next;
+    }
+    const keo = spots.find((spot) => spot.id === "keo-deo")!;
+    assert.ok(lobbyTagNudgePx(keo, spots) > 0);
+    const mit = spots.find((spot) => spot.id === "be-mit")!;
+    assert.equal(lobbyTagNudgePx(mit, spots), 24);
+    const dau = spots.find((spot) => spot.id === "dau-tay")!;
+    assert.equal(lobbyTagNudgePx(dau, spots), -24);
+  });
+
+  it("clamps the friend card above the round nav", () => {
+    const mid = placeFriendCard({
+      frameWidth: 706,
+      frameHeight: 1024,
+      friendTop: 520,
+      friendLeft: 300,
+      friendWidth: 140,
+      friendHeight: 180,
+      cardWidth: 160,
+      cardHeight: 108,
+      navTop: 900,
+    });
+    assert.equal(mid.flipped, false);
+    assert.equal(mid.top, 520 - 108 - 8);
+    assert.ok(mid.top + 108 <= 520);
+    assert.ok(mid.top + 108 <= 900 - 8);
+    assert.ok(mid.left >= 8 && mid.left + 160 <= 706 - 8);
+
+    const high = placeFriendCard({
+      frameWidth: 844,
+      frameHeight: 390,
+      friendTop: 12,
+      friendLeft: 400,
+      friendWidth: 100,
+      friendHeight: 130,
+      cardWidth: 150,
+      cardHeight: 100,
+      navTop: 280,
+    });
+    assert.equal(high.flipped, true);
+    assert.ok(high.top >= 12 + 130);
+    assert.ok(high.top + 100 <= 280 - 8);
+
+    const tight = placeFriendCard({
+      frameWidth: 844,
+      frameHeight: 390,
+      friendTop: 20,
+      friendLeft: 360,
+      friendWidth: 140,
+      friendHeight: 200,
+      cardWidth: 150,
+      cardHeight: 90,
+      navTop: 260,
+    });
+    assert.equal(tight.flipped, true);
+    assert.ok(tight.top + 90 <= 260 - 8);
+    assert.ok(tight.top >= 20);
+    assert.ok(tight.left >= 360 + 140 || tight.left + 150 <= 360);
+
+    const edge = placeFriendCard({
+      frameWidth: 360,
+      frameHeight: 700,
+      friendTop: 300,
+      friendLeft: 300,
+      friendWidth: 80,
+      friendHeight: 100,
+      cardWidth: 180,
+      cardHeight: 90,
+      navTop: 580,
+    });
+    assert.equal(edge.flipped, false);
+    assert.ok(edge.left >= 8);
+    assert.ok(edge.left + 180 <= 360 - 8);
+    assert.ok(edge.top + 90 <= 580 - 8);
+  });
+});
+
 describe("game layout", () => {
   it("keeps Bé Da centered and large on a tablet, and the lobby wider than the screen", () => {
     const css = fs.readFileSync(
@@ -268,6 +394,11 @@ describe("game layout", () => {
     assert.match(css, /\.beda-hero-wrap\s*\{[^}]*transform:\s*translateX\(-50%\)/);
     assert.match(css, /min-width:\s*768px[\s\S]*\.beda-hero-wrap\s*\{[^}]*clamp\(340px,\s*48vmin,\s*520px\)/);
     assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*260%/);
+    assert.match(css, /\.beda-lobby-world\s*\{[^}]*var\(--beda-nav-reserve/);
+    assert.match(css, /\.beda-actions\s*\{[^}]*width:\s*max-content/);
+    assert.equal(/\.beda-actions\s*\{[^}]*\bright:\s*12px/.test(css), false);
+    assert.match(css, /\.beda-hero-wrap\s*\{[^}]*var\(--beda-nav-reserve\)/);
+    assert.match(css, /\.beda-sheet\s*\{[^}]*var\(--beda-nav-reserve\)/);
     assert.match(css, /prefers-reduced-motion:\s*reduce/);
     assert.equal(css.includes("w-[148px]"), false);
   });

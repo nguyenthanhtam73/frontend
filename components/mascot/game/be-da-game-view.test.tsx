@@ -173,6 +173,19 @@ describe("Bé Da game screen", () => {
     assert.match(html, /Vẫy tay/);
     assert.match(html, /Thả tim/);
     assert.match(html, /Khen đồ/);
+    assert.match(html, /data-testid="beda-actions"/);
+    assert.match(html, /translate\(-50%, -100%\)/);
+    assert.match(html, /translateX\(/);
+    assert.equal(html.includes("left:12px"), false);
+    assert.equal(html.includes("right:12px"), false);
+    assertNoScores(html);
+  });
+
+  it("hides the friend card when the lobby selection is cleared", () => {
+    const html = renderGame({ tab: "lobby", selectedFriendId: "" });
+    assert.match(html, /data-testid="beda-lobby"/);
+    assert.equal(html.includes('data-testid="beda-actions"'), false);
+    assert.match(html, /Kẹo Dẻo/);
     assertNoScores(html);
   });
 
