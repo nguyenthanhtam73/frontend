@@ -434,8 +434,8 @@
   .be-da-fly,
   .be-da-flies-exit .be-da-fly,
 .be-da-flies-exit,
-.be-da-blink,
-.be-da-breathe,
+.bd-breathe,
+.bd-lids,
 .be-da-yawn,
 .be-da-jump,
 .be-da-tidy,
@@ -490,36 +490,52 @@ img.be-da-flies-exit {
   animation: be-da-fly-away 0.7s ease-in forwards;
 }
 
-@keyframes be-da-breathe {
+/* Idle breathe + blink. Levels 1–2 are sleepy. Fly, yawn, tidy, and the routine jump stay. */
+.bd-figure {
+  --bd-breath: 3.8s;
+  --bd-blink: 120ms;
+}
+
+.bd-figure[data-level="1"],
+.bd-figure[data-level="2"] {
+  --bd-breath: 4.8s;
+  --bd-blink: 260ms;
+}
+
+@keyframes bd-breathe {
   0%,
   100% {
-    transform: scale(1);
+    transform: translateY(0) scale(1);
   }
   50% {
-    transform: scale(1.015, 1.028);
+    transform: translateY(-0.5%) scale(1.012);
   }
 }
 
-.be-da-breathe {
-  transform-origin: 50% 88%;
-  animation: be-da-breathe 3.6s ease-in-out infinite;
+.bd-breathe {
+  transform-origin: 50% 91.2%;
+  animation: bd-breathe var(--bd-breath) cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-@keyframes be-da-blink {
-  0%,
-  88%,
+.bd-lids {
+  opacity: 0;
+}
+
+@keyframes bd-blink {
+  0% {
+    opacity: 0;
+  }
+  18%,
+  72% {
+    opacity: 1;
+  }
   100% {
-    transform: scaleY(0.04);
-  }
-  93%,
-  96% {
-    transform: scaleY(1);
+    opacity: 0;
   }
 }
 
-.be-da-blink {
-  transform-origin: 50% 41%;
-  animation: be-da-blink 7s linear infinite;
+.bd-lids.bd-blink-run {
+  animation: bd-blink var(--bd-blink) ease-in-out 1;
 }
 
 @keyframes be-da-yawn {
@@ -551,6 +567,11 @@ img.be-da-flies-exit {
 }
 
 .be-da-jump {
+  animation: be-da-jump 0.7s ease-in-out;
+}
+
+/* The tick jump replaces the idle breathe until the class drops. */
+.bd-breathe.be-da-jump {
   animation: be-da-jump 0.7s ease-in-out;
 }
 

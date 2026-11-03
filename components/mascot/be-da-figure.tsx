@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
-import { mascotStack, type StackLayer } from "@/lib/mascot/layers";
+import { mascotStack } from "@/lib/mascot/layers";
+import { startBeDaBlinkLoop } from "@/lib/mascot/idle";
 import type { BeDaView, StepPose } from "@/lib/mascot/model";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,12 @@ export function BeDaFigure({
 
   const layers = mascotStack(view, { reaction, stepPose, locale });
   const showExitFlies = fliesExit && !view.flies;
+  const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
+  const rootRef = useRef<HTMLElement | null>(null);
+  const setRoot = useCallback((node: HTMLElement | null) => {
+    rootRef.current = node;
+  }, []);
+  useBeDaIdleBlink(rootRef, view.glowLevel, hasLids, interactive);
 
   function tap() {
     if (!interactive) return;
@@ -51,9 +58,15 @@ export function BeDaFigure({
   }
 
   const art = (
-    <span className={cn("be-da-breathe absolute inset-0", celebrate && "be-da-jump")}>
+    <span className={cn("bd-breathe absolute inset-0", celebrate && "be-da-jump")}>
       {layers.map((layer) => (
-        <LayerImage key={`${layer.slot}:${layer.src}`} layer={layer} tidy={tidy} />
+        <LayerImage
+          key={`${layer.slot}:${layer.src}`}
+          src={layer.src}
+          slot={layer.slot}
+          opacity={layer.opacity}
+          tidy={layer.slot === "messy" && tidy}
+        />
       ))}
       {showExitFlies ? (
         <img src="/mascot/fx/flies/flies.svg" alt="" className="be-da-flies-exit absolute inset-0 h-full w-full" />
@@ -64,7 +77,14 @@ export function BeDaFigure({
 
   if (!interactive) {
     return (
-      <span className={cn("relative block aspect-[220/250]", className)} data-testid="be-da-figure" data-mood={view.mood} data-glow-level={view.glowLevel}>
+      <span
+        ref={setRoot}
+        className={cn("bd-figure relative block aspect-[220/250]", className)}
+        data-testid="be-da-figure"
+        data-mood={view.mood}
+        data-glow-level={view.glowLevel}
+        data-level={view.glowLevel}
+      >
         {art}
       </span>
     );
@@ -75,10 +95,12 @@ export function BeDaFigure({
       type="button"
       onClick={tap}
       aria-label={tapLabel}
-      className={cn("relative block aspect-[220/250] cursor-pointer", className)}
+      ref={setRoot}
+      className={cn("bd-figure relative block aspect-[220/250] cursor-pointer", className)}
       data-testid="be-da-figure"
       data-mood={view.mood}
       data-glow-level={view.glowLevel}
+      data-level={view.glowLevel}
       data-reaction={reaction ?? ""}
     >
       {art}
@@ -86,35 +108,85 @@ export function BeDaFigure({
   );
 }
 
-function LayerImage({ layer, tidy }: { layer: StackLayer; tidy: boolean }) {
-  const tidyHair = tidy && layer.slot === "messy";
-  const glow = layer.slot === "glow" || layer.slot === "glow-back" || layer.slot === "glow-front";
+/** Random eyelid fades. Levels 1–2 use the sleepy interval. Reduced motion schedules nothing. */
+function useBeDaIdleBlink(
+  rootRef: { readonly current: HTMLElement | null },
+  level: number,
+  enabled: boolean,
+  interactive: boolean,
+) {
+  useEffect(() => {
+    // `interactive` swaps the host between span and button, so the loop rebinds.
+    if (!enabled) return;
+    const root = rootRef.current;
+    if (!root) return;
+    const media = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    let stop = () => {};
+    const sync = () => {
+      stop();
+      stop = startBeDaBlinkLoop({
+        level,
+        reducedMotion: media?.matches === true,
+        blink() {
+          const lids = root.querySelector<HTMLElement>(".bd-lids");
+          if (!lids) return;
+          lids.classList.remove("bd-blink-run");
+          // A reflow is required or the browser will not restart the opacity fade.
+          void lids.offsetWidth;
+          lids.classList.add("bd-blink-run");
+        },
+      });
+    };
+    sync();
+    media?.addEventListener("change", sync);
+    return () => {
+      media?.removeEventListener("change", sync);
+      stop();
+      root.querySelector(".bd-lids")?.classList.remove("bd-blink-run");
+    };
+  }, [enabled, interactive, level, rootRef]);
+}
+
+const LayerImage = memo(function LayerImage({
+  src,
+  slot,
+  opacity,
+  tidy,
+}: {
+  src: string;
+  slot: string;
+  opacity: number;
+  tidy: boolean;
+}) {
+  const tidyHair = tidy && slot === "messy";
+  const glow = slot === "glow" || slot === "glow-back" || slot === "glow-front";
+  const lids = slot === "fx-eyelids";
   const [missing, setMissing] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
   useEffect(() => {
     if (!glow) return;
     const img = ref.current;
     if (img?.complete && img.naturalWidth === 0) setMissing(true);
-  }, [glow, layer.src]);
+  }, [glow, src]);
   if (missing) return null;
   return (
     <img
       ref={ref}
-      src={layer.src}
+      src={src}
       alt=""
-      data-slot={layer.slot}
+      data-slot={slot}
       onError={glow ? () => setMissing(true) : undefined}
       className={cn(
         "pointer-events-none absolute inset-0 h-full w-full",
-        layer.slot === "fx-eyelids" && "be-da-blink",
-        layer.slot === "fx-yawn" && "be-da-yawn",
-        layer.slot === "fx-flies" && "be-da-fly",
+        lids && "bd-lids",
+        slot === "fx-yawn" && "be-da-yawn",
+        slot === "fx-flies" && "be-da-fly",
         tidyHair && "be-da-tidy",
       )}
-      style={tidyHair ? undefined : { opacity: layer.opacity }}
+      style={tidyHair || lids ? undefined : { opacity }}
     />
   );
-}
+});
 
 /** Fixed burst so the celebration does not jump between renders. */
 const GLOW_BITS = [
