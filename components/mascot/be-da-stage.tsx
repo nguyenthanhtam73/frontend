@@ -3,12 +3,14 @@
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { BeDaGlowNote } from "@/components/mascot/be-da-glow-note";
 import {
   markOpacity,
   type BeDaView,
   type SkinConcern,
   type StepPose,
 } from "@/lib/mascot/model";
+import { cn } from "@/lib/utils";
 
 const FILL: Record<SkinConcern, string> = {
   acne: "#F07184",
@@ -26,6 +28,7 @@ export function BeDaStage({
   tidy = false,
   fliesExit = false,
   celebrate = false,
+  glowCelebrate = false,
   interactive = false,
   tapLabel,
   figureClassName = "h-auto w-[148px] shrink-0",
@@ -37,6 +40,7 @@ export function BeDaStage({
   tidy?: boolean;
   fliesExit?: boolean;
   celebrate?: boolean;
+  glowCelebrate?: boolean;
   interactive?: boolean;
   tapLabel?: string;
   figureClassName?: string;
@@ -44,17 +48,21 @@ export function BeDaStage({
   const t = useTranslations("mascot");
   return (
     <div className="flex items-start gap-2" data-testid="be-da-stage" data-mood={view.mood}>
-      <BeDaFigure
-        className={figureClassName}
-        view={view}
-        stepPose={stepPose}
-        locale={locale}
-        tidy={tidy}
-        fliesExit={fliesExit}
-        celebrate={celebrate}
-        interactive={interactive}
-        tapLabel={tapLabel}
-      />
+      <div className={cn("flex shrink-0 flex-col items-center", figureClassName)}>
+        <BeDaFigure
+          className="w-full"
+          view={view}
+          stepPose={stepPose}
+          locale={locale}
+          tidy={tidy}
+          fliesExit={fliesExit}
+          celebrate={celebrate}
+          glowCelebrate={glowCelebrate}
+          interactive={interactive}
+          tapLabel={tapLabel}
+        />
+        <BeDaGlowNote view={view} celebrate={glowCelebrate} />
+      </div>
       <div className="min-w-0 flex-1 space-y-2 pt-1">
         <p className="rounded-2xl bg-white/85 px-3 py-2 text-sm leading-snug text-foreground shadow-sm">
           {line}

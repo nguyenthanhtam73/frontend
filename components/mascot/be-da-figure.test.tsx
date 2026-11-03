@@ -45,12 +45,10 @@ describe("Bé Da backend payload", () => {
     assert.match(html, /src="\/mascot\/body\/body_chibi\.svg"/);
     assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg"/);
     assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg"/);
-    assert.match(html, /src="\/mascot\/accessory\/accessory_pink_headband\.svg"/);
-    assert.match(html, /src="\/mascot\/accessory\/accessory_star_clip\.svg"/);
-    const hairAt = html.indexOf("/mascot/hair/hair_sleep_buns.svg");
-    const bandAt = html.indexOf("/mascot/accessory/accessory_pink_headband.svg");
-    const clipAt = html.indexOf("/mascot/accessory/accessory_star_clip.svg");
-    assert.ok(hairAt >= 0 && bandAt > hairAt && clipAt > bandAt);
+    assert.match(html, /src="\/mascot\/glow\/level_1\.svg"/);
+    assert.match(html, /data-glow-level="1"/);
+    assert.equal(html.includes("accessory_pink_headband"), false);
+    assert.equal(html.includes("accessory_star_clip"), false);
     assert.equal(MASCOT_CATALOG.some((item) => item.id === "accessory_pink_headband"), true);
     assert.equal(MASCOT_CATALOG.some((item) => item.id === "room_moon"), true);
   });
@@ -65,6 +63,8 @@ describe("Bé Da backend payload", () => {
         accessory: "accessory_pink_headband",
         room_items: ["room_moon", "room_not_real"],
       },
+      glow_level: 3,
+      glow_progress: 0.4,
     });
     assert.match(html, /src="\/mascot\/body\/body_chibi\.svg"/);
     assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg"/);
