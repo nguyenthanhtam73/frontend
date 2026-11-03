@@ -54,6 +54,129 @@ export function lobbyHeadCount(): number {
 /** Where the player's Bé Da stands in the wide world. */
 export const LOBBY_PLAYER_SPOT = { x: 0.46, y: 0.78 };
 
+/**
+ * Sample visitors stay at or above this fraction of the walk band.
+ * The band itself ends above the round nav, so a tag anchored at y never
+ * enters that strip.
+ */
+export const LOBBY_WALK_Y_MAX = 0.9;
+
+export type LobbySpot = { id: string; x: number; y: number };
+
+/** Gap between the floating action card and the friend's head or the nav. */
+export const FRIEND_CARD_GAP = 8;
+
+const TAG_NUDGE_PX = 48;
+
+/**
+ * Map an authored lobby depth onto the walk band.
+ * Foreground visitors land just above the nav instead of leaving a vacant strip.
+ */
+export function lobbyWalkY(y: number): number {
+  const t = Math.min(1, Math.max(0, (y - 0.46) / 0.42));
+  return 0.48 + t * 0.49;
+}
+
+/** Round-nav block. Mirrors `--beda-nav-reserve` in be-da-game.css, before measurement. */
+export function lobbyNavReservePx(viewportWidth: number, safeAreaBottom = 0): number {
+  const padTop = 10;
+  const gap = 4;
+  const padBottom = 18 + safeAreaBottom;
+  if (viewportWidth >= 768) return padTop + 80 + gap + 20 + padBottom;
+  const orb = Math.min(72, Math.max(58, viewportWidth * 0.16));
+  return padTop + orb + gap + 18 + padBottom;
+}
+
+/**
+ * Shift a name tag off the face of the nearest Bé Da standing in front.
+ * Negative is left. Tags with nobody close still step aside so shadows
+ * don't stack on a neighbor.
+ */
+export function lobbyTagNudgePx(spot: LobbySpot, spots: readonly LobbySpot[]): number {
+  let nearest: LobbySpot | null = null;
+  let nearestDy = Infinity;
+  let nearestDx = Infinity;
+  for (const other of spots) {
+    if (other.id === spot.id) continue;
+    const dy = other.y - spot.y;
+    if (dy <= 0.012) continue;
+    const dx = Math.abs(other.x - spot.x);
+    if (dx > 0.14) continue;
+    if (dy < nearestDy - 0.001 || (Math.abs(dy - nearestDy) <= 0.001 && dx < nearestDx)) {
+      nearest = other;
+      nearestDy = dy;
+      nearestDx = dx;
+    }
+  }
+  if (!nearest) return spot.x < 0.5 ? -TAG_NUDGE_PX / 2 : TAG_NUDGE_PX / 2;
+  return nearest.x >= spot.x ? -TAG_NUDGE_PX : TAG_NUDGE_PX;
+}
+
+/** Lower on the screen (larger y) paints in front. */
+export function lobbyStackZ(y: number): number {
+  return 20 + Math.round(y * 1000);
+}
+
+export type FriendCardPlacement = {
+  top: number;
+  left: number;
+  /** Card sits under the friend when there is no room above the head. */
+  flipped: boolean;
+};
+
+/**
+ * Small card above the friend's head. Flips below the tag when the top of the
+ * frame can't hold it, then clamps so the card never crosses the round nav.
+ */
+export function placeFriendCard(input: {
+  frameWidth: number;
+  frameHeight: number;
+  friendTop: number;
+  friendLeft: number;
+  friendWidth: number;
+  friendHeight: number;
+  cardWidth: number;
+  cardHeight: number;
+  navTop: number;
+  gap?: number;
+  margin?: number;
+}): FriendCardPlacement {
+  const gap = input.gap ?? FRIEND_CARD_GAP;
+  const margin = input.margin ?? 8;
+  let left = input.friendLeft + input.friendWidth / 2 - input.cardWidth / 2;
+  const maxLeft = input.frameWidth - input.cardWidth - margin;
+  if (input.cardWidth + margin * 2 <= input.frameWidth) {
+    left = Math.min(Math.max(margin, left), maxLeft);
+  } else {
+    left = Math.max(0, (input.frameWidth - input.cardWidth) / 2);
+  }
+
+  const above = input.friendTop - input.cardHeight - gap;
+  const below = input.friendTop + input.friendHeight + gap;
+  const maxTop = input.navTop - gap - input.cardHeight;
+  let top = above;
+  let flipped = false;
+  if (above < margin) {
+    top = below;
+    flipped = true;
+  }
+  if (top > maxTop) top = maxTop;
+  if (top + input.cardHeight > input.navTop - gap) {
+    top = input.navTop - gap - input.cardHeight;
+  }
+  const overlapsFriend =
+    top < input.friendTop + input.friendHeight && top + input.cardHeight > input.friendTop;
+  if (overlapsFriend && input.friendTop + input.cardHeight <= maxTop) {
+    top = input.friendTop;
+    flipped = true;
+    const right = input.friendLeft + input.friendWidth + gap;
+    const leftSide = input.friendLeft - input.cardWidth - gap;
+    if (right + input.cardWidth <= input.frameWidth - margin) left = right;
+    else if (leftSide >= margin) left = leftSide;
+  }
+  return { top, left, flipped };
+}
+
 const sampleViews = new Map<string, BeDaView>();
 
 /** Art for a sample visitor. Missed days stay 0 so the chosen face is kept. */

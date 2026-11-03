@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
@@ -101,14 +102,37 @@ export function BeDaGameView({
   onLook: (look: GameLook) => void;
 }) {
   const t = useTranslations("mascot");
+  const rootRef = useRef<HTMLDivElement>(null);
   const showLobby = tab === "lobby" && !chestOpen;
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const nav = root.querySelector<HTMLElement>(".beda-nav");
+    if (!nav) return;
+    const apply = () => {
+      const height = Math.ceil(nav.offsetHeight);
+      if (height > 0) root.style.setProperty("--beda-nav-reserve", `${height}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(nav);
+    window.addEventListener("resize", apply);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", apply);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", apply);
+      viewport?.removeEventListener("resize", apply);
+    };
+  }, [tab, chestOpen]);
   const friendCountLabel = t("game.friends", { count: friendCount });
   const doorCountLabel = t("game.doorCount", { count: friendCount });
   const openQuests = quests.filter((quest) => !quest.done).length;
   const activeNav: GameTab = chestOpen ? "quests" : tab;
 
   return (
-    <div className="beda-game" data-testid="beda-game" data-tab={activeNav} data-sky={sky}>
+    <div ref={rootRef} className="beda-game" data-testid="beda-game" data-tab={activeNav} data-sky={sky}>
       <h1 className="sr-only">{t("name")}</h1>
       {showLobby ? (
         <BeDaLobby

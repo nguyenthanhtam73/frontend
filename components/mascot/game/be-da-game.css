@@ -1,6 +1,8 @@
 /* Trial Bé Da room. Colors are the scene's own — not the app theme — so dark mode stays readable. */
 
 .beda-game {
+  --beda-nav-reserve: calc(10px + clamp(58px, 16vw, 72px) + 4px + 18px + 18px + env(safe-area-inset-bottom, 0px));
+  --beda-sheet-max: min(46vh, 300px, max(88px, calc(100dvh - var(--beda-nav-reserve) - 220px)));
   position: fixed;
   top: 0;
   left: 0;
@@ -247,7 +249,7 @@
 .beda-hero-wrap {
   position: absolute;
   left: 50%;
-  bottom: calc(126px + env(safe-area-inset-bottom));
+  bottom: calc(var(--beda-nav-reserve) + 10px);
   z-index: 5;
   display: flex;
   width: clamp(210px, 62vw, 300px);
@@ -579,6 +581,7 @@
   overflow: hidden;
   touch-action: none;
   outline: none;
+  background: var(--beda-ground-end, #9fd48e);
 }
 
 .beda-lobby-world {
@@ -586,7 +589,7 @@
   top: 0;
   left: 0;
   width: 260%;
-  height: 100%;
+  height: calc(100% - var(--beda-nav-reserve, 120px) - 8px);
   will-change: transform;
 }
 
@@ -769,7 +772,20 @@
   background: transparent;
   padding: 0;
   color: inherit;
-  transform: translate(-50%, -88%);
+  transform: translate(-50%, -100%);
+}
+
+.beda-friend-hit {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
 }
 
 .beda-friend-art {
@@ -795,7 +811,6 @@
 
 .beda-tag {
   position: relative;
-  z-index: 3;
   margin-top: -8px;
   border-radius: 999px;
   background: #fff;
@@ -919,19 +934,43 @@
 
 .beda-actions {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: calc(118px + env(safe-area-inset-bottom));
+  z-index: 2;
+  left: 50%;
+  bottom: calc(100% + 8px);
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 16px));
+  flex-direction: row;
+  align-items: stretch;
+  gap: 4px;
+  padding: 5px;
+  pointer-events: auto;
+  transform: translate(calc(-50% + var(--beda-card-dx, 0px)), var(--beda-card-dy, 0px));
 }
 
-.beda-actions strong {
-  padding-left: 6px;
-  font-size: 14px;
+.beda-actions .beda-action {
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  width: max-content;
+  border-width: 2px;
+  border-radius: 12px;
+  padding: 4px 7px;
+  font-size: 11px;
+  line-height: 1.1;
   white-space: nowrap;
+  box-shadow: 0 3px 0 #c2456d;
+}
+
+.beda-actions .beda-action.is-wave {
+  box-shadow: 0 3px 0 #2b8c86;
+}
+
+.beda-actions .beda-ico {
+  width: 16px;
+  height: 16px;
 }
 
 .beda-action {
@@ -1162,9 +1201,9 @@
   position: absolute;
   z-index: 7;
   left: 50%;
-  bottom: calc(124px + env(safe-area-inset-bottom));
+  bottom: calc(var(--beda-nav-reserve) + 10px);
   width: min(440px, calc(100% - 24px));
-  max-height: min(48vh, 390px);
+  max-height: var(--beda-sheet-max);
   overflow: auto;
   padding: 14px;
   transform: translateX(-50%);
@@ -1268,8 +1307,8 @@
 }
 
 .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
-  bottom: calc(400px + env(safe-area-inset-bottom));
-  width: clamp(140px, 40vw, 190px);
+  bottom: calc(var(--beda-nav-reserve) + var(--beda-sheet-max) + 22px);
+  width: clamp(96px, 22vh, 156px);
 }
 
 .beda-note {
@@ -1358,8 +1397,13 @@
 }
 
 @media (min-width: 768px) {
+  .beda-game {
+    --beda-nav-reserve: calc(10px + 80px + 4px + 20px + 18px + env(safe-area-inset-bottom, 0px));
+    --beda-sheet-max: min(300px, max(88px, calc(100dvh - var(--beda-nav-reserve) - 220px)));
+  }
+
   .beda-hero-wrap {
-    bottom: calc(158px + env(safe-area-inset-bottom));
+    bottom: calc(var(--beda-nav-reserve) + 28px);
     width: clamp(340px, 48vmin, 520px);
   }
 
@@ -1416,13 +1460,8 @@
     height: 80px;
   }
 
-  .beda-sheet {
-    max-height: 300px;
-  }
-
   .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
-    bottom: calc(440px + env(safe-area-inset-bottom));
-    width: 200px;
+    width: min(200px, 24vh);
   }
 
   .beda-chest-art {
