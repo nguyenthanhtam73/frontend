@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
+import type { SpaNotice } from "@/lib/mascot/game/spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
 import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
 import {
@@ -95,6 +96,8 @@ export function BeDaGameView({
   onJoinRoom,
   onLeaveSpa,
   onSpaLobby,
+  creatingRoom = false,
+  createProblem = null,
 }: {
   locale: string;
   tab: GameTab;
@@ -151,6 +154,8 @@ export function BeDaGameView({
   onJoinRoom?: (code: string) => void;
   onLeaveSpa?: () => void;
   onSpaLobby?: () => void;
+  creatingRoom?: boolean;
+  createProblem?: SpaNotice;
 }) {
   const t = useTranslations("mascot");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -240,6 +245,8 @@ export function BeDaGameView({
           onSwitchHall={onSwitchHall}
           onCreateRoom={onCreateRoom}
           onJoinRoom={onJoinRoom}
+          creatingRoom={creatingRoom}
+          createProblem={createProblem}
         />
       ) : (
         <Room

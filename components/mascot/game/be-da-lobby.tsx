@@ -5,6 +5,7 @@ import type { KeyboardEvent, PointerEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { SpaProblemLine } from "@/components/mascot/game/be-da-spa-room";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook } from "@/lib/mascot/game/look";
 import {
@@ -20,7 +21,7 @@ import {
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
 import { sampleWander, type LobbyActor } from "@/lib/mascot/game/lobby-live";
-import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode } from "@/lib/mascot/game/spa-room";
+import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode, type SpaNotice } from "@/lib/mascot/game/spa-room";
 import type { GamePose } from "@/lib/mascot/game/look";
 import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
@@ -66,6 +67,8 @@ export function BeDaLobby({
   onSwitchHall,
   onCreateRoom,
   onJoinRoom,
+  creatingRoom = false,
+  createProblem = null,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -88,6 +91,8 @@ export function BeDaLobby({
   onSwitchHall: (lobby: number) => void;
   onCreateRoom?: () => void;
   onJoinRoom?: (code: string) => void;
+  creatingRoom?: boolean;
+  createProblem?: SpaNotice;
 }) {
   const tLobby = useTranslations("mascot");
   const frameRef = useRef<HTMLDivElement>(null);
@@ -434,7 +439,12 @@ export function BeDaLobby({
       </div>
       <div className="beda-lobby-chrome">
         <div className="beda-spa-entry" data-testid="beda-spa-entry">
-          <button type="button" data-testid="beda-create-room" onClick={() => onCreateRoom?.()}>
+          <button
+            type="button"
+            data-testid="beda-create-room"
+            disabled={creatingRoom}
+            onClick={() => onCreateRoom?.()}
+          >
             {tLobby("game.spaCreate")}
           </button>
           {entering ? (
@@ -480,6 +490,7 @@ export function BeDaLobby({
             </button>
           )}
           {roomError ? <p role="alert">{tLobby("game.spaCodeBad")}</p> : null}
+          {createProblem ? <SpaProblemLine notice={createProblem} /> : null}
         </div>
         {hallFull && nextHall != null ? (
           <div className="beda-switch" data-testid="beda-hall-switch">

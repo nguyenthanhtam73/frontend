@@ -90,6 +90,12 @@ export type ApiRequestOptions = {
   clearTokenOn401?: boolean;
   /** Return the full envelope instead of unwrapping `.data`. Default false. */
   raw?: boolean;
+  /**
+   * Fetch credentials. Room calls on dadiary.vn use `include` so the
+   * credential CORS path can see the cookie as well as the bearer token.
+   * Omitted keeps the default (`same-origin`) used by the rest of the app.
+   */
+  credentials?: RequestCredentials;
 };
 
 const DEFAULT_TIMEOUT_MS = 20_000;
@@ -140,6 +146,7 @@ async function requestOnce<T>(url: string, opts: ApiRequestOptions): Promise<T> 
     signal,
     clearTokenOn401 = true,
     raw = false,
+    credentials,
   } = opts;
 
   // Proactively renew expired access before the request when possible.
@@ -191,6 +198,7 @@ async function requestOnce<T>(url: string, opts: ApiRequestOptions): Promise<T> 
       headers: finalHeaders,
       body: payload,
       signal: controller.signal,
+      ...(credentials ? { credentials } : {}),
     });
   } catch (err) {
     if (timedOut) throw new ApiError("timeout", { cause: err });

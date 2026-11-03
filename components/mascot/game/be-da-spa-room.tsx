@@ -27,6 +27,34 @@ export type SpaRoomState = {
   notice: SpaNotice;
 };
 
+export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
+  const t = useTranslations("mascot");
+  const text =
+    notice === "full"
+      ? t("game.spaFull")
+      : notice === "missing"
+        ? t("game.spaMissing")
+        : notice === "bad-code"
+          ? t("game.spaCodeBad")
+          : notice === "name"
+            ? t("game.nicknameRejected")
+            : notice === "rate"
+              ? t("game.spaRate")
+              : notice === "too-many"
+                ? t("game.spaTooMany")
+                : notice === "member"
+                  ? t("game.spaMember")
+                  : notice === "offline"
+                    ? t("game.spaOffline")
+                    : null;
+  if (!text) return null;
+  return (
+    <p role="alert" data-testid="beda-room-problem">
+      {text}
+    </p>
+  );
+}
+
 export function BeDaSpaRoom({
   locale,
   player,
@@ -72,7 +100,15 @@ export function BeDaSpaRoom({
           ? t("game.spaCodeBad")
           : room.notice === "name"
             ? t("game.nicknameRejected")
-            : null;
+            : room.notice === "rate"
+              ? t("game.spaRate")
+              : room.notice === "too-many"
+                ? t("game.spaTooMany")
+                : room.notice === "member"
+                  ? t("game.spaMember")
+                  : room.notice === "offline"
+                    ? t("game.spaOffline")
+                    : null;
 
   useEffect(() => {
     if (!copied) return;
