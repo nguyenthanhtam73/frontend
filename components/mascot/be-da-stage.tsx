@@ -46,6 +46,8 @@ export function BeDaStage({
   figureClassName?: string;
 }) {
   const t = useTranslations("mascot");
+  // Bubble fill stays white. Theme foreground is near-white in dark mode, so the line vanished.
+  const spoken = line.trim() || t("lines.normal").trim();
   return (
     <div className="flex items-start gap-2" data-testid="be-da-stage" data-mood={view.mood}>
       <div className={cn("flex shrink-0 flex-col items-center", figureClassName)}>
@@ -64,9 +66,14 @@ export function BeDaStage({
         <BeDaGlowNote view={view} celebrate={glowCelebrate} />
       </div>
       <div className="min-w-0 flex-1 space-y-2 pt-1">
-        <p className="rounded-2xl bg-white/85 px-3 py-2 text-sm leading-snug text-foreground shadow-sm">
-          {line}
-        </p>
+        {spoken ? (
+          <p
+            className="rounded-2xl bg-white/85 px-3 py-2 text-sm leading-snug text-rose-950 shadow-sm"
+            data-testid="be-da-line"
+          >
+            {spoken}
+          </p>
+        ) : null}
         {view.bars.length > 0 ? (
           <ul className="space-y-1" aria-label={t("levelsLabel")}>
             {view.bars.map((bar) => (
