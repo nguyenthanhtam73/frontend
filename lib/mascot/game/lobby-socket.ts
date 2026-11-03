@@ -23,7 +23,8 @@ const OPEN = 1;
 /**
  * One lobby socket. Sends are capped at 2 per rolling second (`leave` is not
  * capped). A dropped socket reconnects with exponential backoff, unless this
- * tab sent `leave` or the server said `replaced`.
+ * tab sent `leave` or the server said `replaced`. The wait grows from 1s
+ * to 30s, plus a random 0–100% so a crowd does not reconnect together.
  */
 export class LobbyConnection {
   private ws: LobbySocketLike | null = null;
@@ -44,6 +45,8 @@ export class LobbyConnection {
       clearTimer: (id: number) => void;
       onMessage: (message: LobbyServerMessage) => void;
       onStatus: (status: "sample" | "live") => void;
+      /** [0, 1). Defaults to Math.random. Tests pass a fixed roll. */
+      random?: () => number;
     },
   ) {}
 
@@ -146,7 +149,7 @@ export class LobbyConnection {
 
   private scheduleReconnect(): void {
     if (this.intentional || this.replaced || this.timer != null) return;
-    const delay = reconnectDelayMs(this.attempt);
+    const delay = reconnectDelayMs(this.attempt, this.deps.random ?? Math.random);
     this.attempt += 1;
     this.timer = this.deps.setTimer(() => {
       this.timer = null;
