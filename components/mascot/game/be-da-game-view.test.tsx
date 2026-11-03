@@ -165,7 +165,15 @@ describe("Bé Da game screen", () => {
     assert.match(visibleText(html), /Bạn/);
     assert.equal((html.match(/data-sample="true"/g) ?? []).length, 17);
     assert.equal(html.includes("@"), false);
-    assert.match(html, /18 bạn đang dạo chơi/);
+    assert.match(html, /Sảnh 1 · 18\/28 người/);
+    assert.match(html, /data-testid="beda-hall"/);
+    assert.match(html, /data-lobby-mode="sample"/);
+    assert.match(html, /Ẩn bạn này/);
+    assert.match(html, /Bạn sẽ không thấy bạn này nữa/);
+    assert.match(html, /Bé Da/);
+    assert.equal(html.includes("access_token"), false);
+    assert.equal(html.includes('data-testid="beda-coins"'), false);
+    assert.equal(html.includes('data-testid="beda-streak"'), false);
     assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);
     assert.equal(html.includes("/mascot/props/wardrobe"), false);
@@ -182,6 +190,22 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("left:12px"), false);
     assert.equal(html.includes("right:12px"), false);
     assertNoScores(html);
+  });
+
+  it("offers the next hall when this one is full", () => {
+    const html = renderGame({
+      tab: "lobby",
+      hall: 1,
+      hallCount: 28,
+      hallCap: 28,
+      hallFull: true,
+      nextHall: 2,
+    });
+    assert.match(html, /Sảnh 1 · 28\/28 người/);
+    assert.match(html, /Sảnh 1 đầy\?/);
+    assert.match(html, /Sang Sảnh 2/);
+    assert.match(html, /data-testid="beda-hall-switch"/);
+    assert.equal(html.includes("access_token"), false);
   });
 
   it("hides the friend card when the lobby selection is cleared", () => {
