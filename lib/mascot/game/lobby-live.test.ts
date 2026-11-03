@@ -308,11 +308,21 @@ describe("lobby send cap", () => {
     assert.deepEqual(box.take(2_010), ["{\"op\":\"heart\"}"]);
   });
 
-  it("backs off and stops after leave or replaced", () => {
-    assert.equal(reconnectDelayMs(0), 1000);
-    assert.equal(reconnectDelayMs(1), 2000);
-    assert.equal(reconnectDelayMs(2), 4000);
-    assert.equal(reconnectDelayMs(8), 30_000);
+  it("backs off with jitter and stops after leave or replaced", () => {
+    const still = () => 0;
+    assert.equal(reconnectDelayMs(0, still), 1000);
+    assert.equal(reconnectDelayMs(1, still), 2000);
+    assert.equal(reconnectDelayMs(2, still), 4000);
+    assert.equal(reconnectDelayMs(8, still), 30_000);
+    assert.equal(reconnectDelayMs(-1, still), 1000);
+    assert.equal(reconnectDelayMs(0, () => 1), 2000);
+    assert.equal(reconnectDelayMs(1, () => 0.5), 3000);
+    assert.equal(reconnectDelayMs(2, () => 0.25), 5000);
+    assert.equal(reconnectDelayMs(8, () => 1), 60_000);
+    const low = reconnectDelayMs(3, () => 0);
+    const high = reconnectDelayMs(3, () => 0.9);
+    assert.ok(high > low);
+    assert.ok(high <= low * 2);
 
     const clock = fakeClock();
     const sockets: FakeSocket[] = [];
@@ -330,6 +340,7 @@ describe("lobby send cap", () => {
       clearTimer: clock.clearTimer,
       onMessage: () => undefined,
       onStatus: (status) => statuses.push(status),
+      random: () => 0,
     });
     conn.start(() => encodeLobbyFrame({
       op: "join",
@@ -367,6 +378,32 @@ describe("lobby send cap", () => {
 
     conn.stop();
     assert.equal(sockets.at(-1)?.sent.at(-1)?.includes("\"leave\""), true);
+  });
+
+  it("waits out the extra jitter before opening the next socket", () => {
+    const clock = fakeClock();
+    const sockets: FakeSocket[] = [];
+    const conn = new LobbyConnection({
+      url: "wss://api.dadiary.vn/api/v1/mascot/lobby/ws",
+      now: () => clock.now,
+      connect: (url) => {
+        const socket = new FakeSocket(url);
+        sockets.push(socket);
+        return socket;
+      },
+      setTimer: clock.setTimer,
+      clearTimer: clock.clearTimer,
+      onMessage: () => undefined,
+      onStatus: () => undefined,
+      random: () => 0.5,
+    });
+    conn.start(() => "{\"op\":\"join\"}");
+    sockets[0]!.onclose?.();
+    clock.advance(1499);
+    assert.equal(sockets.length, 1);
+    clock.advance(1);
+    assert.equal(sockets.length, 2);
+    conn.stop();
   });
 });
 

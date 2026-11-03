@@ -590,7 +590,18 @@ export class LobbyOutbox {
   }
 }
 
-export function reconnectDelayMs(attempt: number): number {
-  if (attempt < 0) return 1000;
-  return Math.min(30_000, 1000 * 2 ** attempt);
+/**
+ * Reconnect wait. The base doubles from 1s and stops growing at 30s.
+ * A random 0–100% of that base is added on top, so many phones that drop
+ * at the same moment do not dial back in together.
+ * `random` returns a value in [0, 1). Values outside that range are clamped.
+ */
+export function reconnectDelayMs(attempt: number, random: () => number = Math.random): number {
+  const base =
+    attempt < 0 || !Number.isFinite(attempt)
+      ? 1000
+      : Math.min(30_000, 1000 * 2 ** Math.min(15, Math.floor(attempt)));
+  const roll = random();
+  const fraction = Number.isFinite(roll) ? Math.min(1, Math.max(0, roll)) : 0;
+  return Math.round(base * (1 + fraction));
 }
