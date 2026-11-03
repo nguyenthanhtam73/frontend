@@ -164,6 +164,7 @@ export function BeDaGameView({
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
           onOpenLobby={() => onTab("lobby")}
+          onOpenWardrobe={() => onTab("wardrobe")}
         />
       )}
 
@@ -263,6 +264,7 @@ function Room({
   hideCards,
   showHero,
   onOpenLobby,
+  onOpenWardrobe,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -278,6 +280,7 @@ function Room({
   hideCards: boolean;
   showHero: boolean;
   onOpenLobby: () => void;
+  onOpenWardrobe: () => void;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
@@ -313,6 +316,17 @@ function Room({
         <i className="beda-plant-leaf" style={{ left: 28, top: 14, transform: "rotate(36deg)" }} />
         <i className="beda-plant-pot" />
       </div>
+      {!hideCards ? (
+        <button
+          type="button"
+          className="beda-cabinet"
+          data-testid="beda-cabinet"
+          aria-label={t("game.wardrobe")}
+          onClick={onOpenWardrobe}
+        >
+          <img src="/mascot/props/wardrobe.svg" alt="" decoding="async" />
+        </button>
+      ) : null}
 
       {!hideCards ? (
         <>
@@ -345,7 +359,7 @@ function Room({
       {showHero ? (
       <div className="beda-hero-wrap" data-testid="beda-hero">
         <Bubble kind={bubbleKind} />
-        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} omitSceneProps className="w-full" />
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
           {showPrettyLine ? t("glowNear") : t("game.atHome")}
@@ -472,7 +486,7 @@ function Chest({
         </i>
         <img src="/mascot/icons/chest_open.svg" alt="" className="beda-chest-art" decoding="async" />
         <div className="beda-chest-hero">
-          <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} className="w-full" />
+          <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} omitSceneProps className="w-full" />
         </div>
       </div>
       <div className="beda-card beda-rewards">

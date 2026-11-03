@@ -22,6 +22,7 @@ export function BeDaFigure({
   interactive = false,
   tapLabel,
   dress = null,
+  omitSceneProps = false,
   imageLoading = "eager",
   className,
 }: {
@@ -37,6 +38,8 @@ export function BeDaFigure({
   tapLabel?: string;
   /** Game closet outfit, hair, and clip. Home Bé Da leaves this unset. */
   dress?: GameDress | null;
+  /** Game room. Mood scene props stay off the figure; she stands. */
+  omitSceneProps?: boolean;
   /** Lobby visitors off the screen can wait. The room figure stays eager. */
   imageLoading?: "eager" | "lazy";
   className?: string;
@@ -47,7 +50,7 @@ export function BeDaFigure({
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
-  const layers = mascotStack(view, { reaction, stepPose, locale, dress });
+  const layers = mascotStack(view, { reaction, stepPose, locale, dress, omitSceneProps });
   const showExitFlies = fliesExit && !view.flies;
   const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
   const floorSrc = view.glowLevel >= 5 ? `/mascot/glow/level_${view.glowLevel}_floor.svg` : null;

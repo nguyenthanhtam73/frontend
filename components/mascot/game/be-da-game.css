@@ -237,6 +237,40 @@
   background: #6fbf7a;
 }
 
+/* Left back wall, under the window and left of the centered figure. */
+.beda-cabinet {
+  position: absolute;
+  z-index: 3;
+  left: 8px;
+  top: calc(16% + min(36vw, 168px) + 14px);
+  width: 64px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 7px 0 rgba(185, 130, 106, 0.22));
+}
+
+.beda-cabinet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.beda-cabinet:focus-visible {
+  outline: 3px solid #2b8c86;
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
+@media (min-width: 600px) {
+  .beda-cabinet {
+    left: 16px;
+    width: 96px;
+  }
+}
+
 .beda-rug {
   width: 130%;
   height: 54px;
@@ -260,7 +294,8 @@
 
 .beda-bubble {
   position: relative;
-  width: min(280px, 92vw);
+  box-sizing: border-box;
+  width: min(280px, 100%);
   margin-bottom: 10px;
   border-radius: 20px;
   background: #fff;
@@ -326,7 +361,9 @@
   z-index: 6;
   top: calc(86px + env(safe-area-inset-top));
   left: 12px;
-  width: min(236px, calc(100vw - 156px));
+  box-sizing: border-box;
+  width: min(236px, calc(100vw - 154px));
+  min-width: 0;
   padding: 12px 12px 10px;
 }
 
@@ -1408,7 +1445,7 @@
   }
 
   .beda-bubble {
-    width: min(440px, 70%);
+    width: min(440px, 100%);
     font-size: 20px;
   }
 
@@ -1425,6 +1462,12 @@
   .beda-door {
     right: 28px;
     top: calc(108px + env(safe-area-inset-top));
+  }
+
+  .beda-cabinet {
+    left: 24px;
+    top: calc(14% + min(24vw, 260px) + 18px);
+    width: 108px;
   }
 
   .beda-window {

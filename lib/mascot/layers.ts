@@ -110,6 +110,11 @@ export function mascotStack(
      * Order matches public/mascot/LAYERS-NEW.md.
      */
     dress?: GameDress | null;
+    /**
+     * Game room. She stands. Mood scene props and room stickers stay off
+     * the figure. Face, hair, and fx stay.
+     */
+    omitSceneProps?: boolean;
   } = {},
 ): StackLayer[] {
   const now = options.now ?? Date.now();
@@ -126,15 +131,20 @@ export function mascotStack(
   // Halo sits behind the room and the body. Back view keeps this layer.
   push("glow-back", glowLayerSrc(level, "back"));
 
-  for (const room of view.loadout.roomItems) {
-    if (!isKnownMascotItem(room.id, "room")) continue;
-    const opacity = optionalOpacity(room, now);
-    if (opacity == null) continue;
-    push("props-room", `/mascot/props/${room.id}.svg`, opacity);
+  // The game room draws its own walls and furniture. Mood props and the
+  // little room stickers stay off this figure so they cannot cover her.
+  if (!options.omitSceneProps) {
+    for (const room of view.loadout.roomItems) {
+      if (!isKnownMascotItem(room.id, "room")) continue;
+      const opacity = optionalOpacity(room, now);
+      if (opacity == null) continue;
+      push("props-room", `/mascot/props/${room.id}.svg`, opacity);
+    }
   }
 
   const body = equipped(view.loadout.body, "body", DEFAULT_MASCOT_IDS.body, now);
-  const bodyFile = mood === "back_turned" ? "body_back" : SIT.has(mood) ? "body_sit" : body.id;
+  const sitting = !options.omitSceneProps && SIT.has(mood);
+  const bodyFile = mood === "back_turned" ? "body_back" : sitting ? "body_sit" : body.id;
   push("body", `/mascot/body/${bodyFile}.svg`, bodyFile === body.id ? body.opacity : 1);
 
   const outfit = equipped(view.loadout.outfit, "outfit", DEFAULT_MASCOT_IDS.outfit, now);
@@ -200,8 +210,10 @@ export function mascotStack(
   // Sparkles sit over the mouth and clips, under foreground props and blink/yawn.
   push("glow-front", glowLayerSrc(level, "front"));
 
-  for (const prop of frontProps(view, options.locale ?? "vi")) {
-    push("props-front", prop, 1);
+  if (!options.omitSceneProps) {
+    for (const prop of frontProps(view, options.locale ?? "vi")) {
+      push("props-front", prop, 1);
+    }
   }
   if (options.stepPose) push("props-front", poseSrc(options.stepPose), 1);
 

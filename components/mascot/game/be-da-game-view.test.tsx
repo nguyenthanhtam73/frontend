@@ -189,6 +189,45 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
+  it("keeps a sad Bé Da standing, with no door or abandoned note over her", () => {
+    const html = renderGame({
+      player: resolveBeDaView({
+        snapshot: {
+          ...defaultSnapshot(),
+          isDefault: false,
+          mood: "waiting_door_sign",
+          missedDays: 21,
+          glowLevel: 2,
+          glowProgress: 0.2,
+          nearLevelUp: false,
+        },
+        missedDays: 21,
+        sessionHappy: false,
+        locale: "vi",
+      }),
+      showPrettyLine: false,
+      progress: 0.2,
+    });
+    assert.match(html, /\/mascot\/faces\/waiting_door_sign\/mouth\.svg/);
+    assert.match(html, /\/mascot\/messy\/4\.svg/);
+    assert.match(html, /\/mascot\/fx\/flies\/flies\.svg/);
+    assert.match(html, /\/mascot\/body\/body_chibi\.svg/);
+    assert.equal(html.includes("body_sit"), false);
+    assert.equal(html.includes("/mascot/props/door.svg"), false);
+    assert.equal(html.includes("sign_abandoned"), false);
+    assert.equal(html.includes("sign_come_back"), false);
+    assert.equal(html.includes("/mascot/props/pillow.svg"), false);
+    assert.equal(html.includes("/mascot/props/suitcase.svg"), false);
+    assert.equal(html.includes("/mascot/props/pot.svg"), false);
+    assert.equal(html.includes("/mascot/props/room_"), false);
+    assert.equal(html.includes("Tôi đã bị bỏ rơi ở đây"), false);
+    assert.match(html, /Ra Sảnh/);
+    assert.match(html, /data-testid="beda-cabinet"/);
+    assert.match(html, /aria-label="Tủ đồ"/);
+    assert.match(html, /\/mascot\/props\/wardrobe\.svg/);
+    assertNoScores(html);
+  });
+
   it("opens the gift chest without printing a level", () => {
     const html = renderGame({
       tab: "quests",
