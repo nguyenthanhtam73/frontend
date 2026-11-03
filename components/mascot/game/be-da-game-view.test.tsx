@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
 import { BeDaGameView, type GameTab } from "@/components/mascot/game/be-da-game-view";
+import { DEFAULT_GAME_LOOK, type GameLook } from "@/lib/mascot/game/look";
 import { defaultSnapshot, resolveBeDaView, type BeDaView } from "@/lib/mascot/model";
 import en from "../../../messages/en.json";
 import vi from "../../../messages/vi.json";
@@ -49,7 +50,7 @@ function renderGame(
     selectedFriendId: "keo-deo",
     toast: null,
     wavingId: null,
-    outfitHue: 0,
+    look: DEFAULT_GAME_LOOK,
     wornIds: ["outfit_cozy_pajamas", "hair_sleep_buns"],
     hearts: 1,
     streakKept: true,
@@ -63,7 +64,7 @@ function renderGame(
     onSelectFriend: () => undefined,
     onFriendAction: () => undefined,
     onClaim: () => undefined,
-    onHue: () => undefined,
+    onLook: () => undefined,
     ...extra,
   };
   return renderToStaticMarkup(
@@ -102,6 +103,12 @@ describe("Bé Da game screen", () => {
     assert.match(html, /beda-hero-wrap/);
     assert.match(html, /bd-breathe/);
     assert.match(html, /bd-lids/);
+    assert.match(html, /\/mascot\/outfits\/outfit_pajamas\.svg/);
+    assert.match(html, /\/mascot\/icons\/xu_coin\.svg/);
+    assert.match(html, /\/mascot\/icons\/streak_flame\.svg/);
+    assert.match(html, /\/mascot\/icons\/nav_cham_da\.svg/);
+    assert.match(html, /\/mascot\/icons\/nav_tu_do\.svg/);
+    assert.equal(html.includes("hue-rotate"), false);
     assert.match(html, /Mình rửa mặt rồi nè!/);
     assert.match(html, /Thoa kem chống nắng nha\?/);
     const bubble = html.match(/<p\b[^>]*data-testid="beda-bubble"[^>]*>/)?.[0] ?? "";
@@ -124,11 +131,26 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
-  it("recolours only the outfit when a swatch is on", () => {
-    const html = renderGame({ outfitHue: 40, tab: "wardrobe" satisfies GameTab });
-    assert.match(html, /hue-rotate\(40deg\)/);
+  it("wears a real outfit, hair, and clip from the closet", () => {
+    const look: GameLook = {
+      outfit: "outfit_ao_dai",
+      hair: "hair_twin_tails",
+      clip: "accessory_flower_clip",
+    };
+    const html = renderGame({ look, tab: "wardrobe" satisfies GameTab });
     assert.match(html, /data-testid="beda-wardrobe"/);
+    assert.match(html, /\/mascot\/outfits\/outfit_ao_dai\.svg/);
+    assert.match(html, /\/mascot\/hair\/hair_twin_tails\.svg/);
+    assert.match(html, /\/mascot\/accessory\/accessory_flower_clip\.svg/);
+    assert.match(html, /Áo dài/);
+    assert.match(html, /Váy hoa/);
+    assert.match(html, /Kẹp hoa/);
     assert.match(html, /Không mua|không mua/);
+    assert.equal(html.includes("hue-rotate"), false);
+    assert.match(html, /aria-label="Áo dài"[^>]*aria-pressed="true"/);
+    assert.match(html, /aria-label="Tóc hai bên"[^>]*aria-pressed="true"/);
+    assert.match(html, /aria-label="Kẹp hoa"[^>]*aria-pressed="true"/);
+    assert.match(html, /aria-label="Hoodie"[^>]*aria-pressed="false"/);
     assertNoScores(html);
   });
 
@@ -143,6 +165,11 @@ describe("Bé Da game screen", () => {
     assert.equal((html.match(/data-sample="true"/g) ?? []).length, 17);
     assert.equal(html.includes("@"), false);
     assert.match(html, /18 bạn đang dạo chơi/);
+    assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
+    assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);
+    assert.match(html, /\/mascot\/icons\/minimap_pin\.svg/);
+    assert.match(html, /\/mascot\/icons\/wave\.svg/);
+    assert.equal(html.includes("hue-rotate"), false);
     assert.match(html, /Vẫy tay/);
     assert.match(html, /Thả tim/);
     assert.match(html, /Khen đồ/);

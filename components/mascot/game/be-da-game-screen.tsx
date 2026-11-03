@@ -23,6 +23,12 @@ import {
 } from "@/lib/mascot/game/prefs";
 import { chestHearts, chestReady, checkedInOnDay, gameBubbleKind, gameQuests } from "@/lib/mascot/game/quests";
 import { skyPeriod } from "@/lib/mascot/game/sky";
+import {
+  DEFAULT_GAME_LOOK,
+  readGameLook,
+  writeGameLook,
+  type GameLook,
+} from "@/lib/mascot/game/look";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
@@ -64,7 +70,7 @@ export function BeDaGameScreen() {
   const [selectedFriendId, setSelectedFriendId] = useState("keo-deo");
   const [toast, setToast] = useState<GameToast>(null);
   const [wavingId, setWavingId] = useState<string | null>(null);
-  const [outfitHue, setOutfitHue] = useState(0);
+  const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [burst, setBurst] = useState(0);
   const soundRef = useRef(true);
   const autoChest = useRef(false);
@@ -72,6 +78,8 @@ export function BeDaGameScreen() {
 
   useEffect(() => {
     setSoundOn(readSoundEnabled(localStorage));
+    const savedLook = readGameLook(localStorage);
+    if (savedLook) setLook(savedLook);
     setWaved(readDayFlag(localStorage, GAME_WAVE_KEY, today));
     setClaimed(readDayFlag(localStorage, GAME_CHEST_KEY, today));
     setReady(true);
@@ -205,7 +213,7 @@ export function BeDaGameScreen() {
       selectedFriendId={selectedFriendId}
       toast={toast}
       wavingId={wavingId}
-      outfitHue={outfitHue}
+      look={look}
       wornIds={wornIds}
       hearts={chestHearts(quests)}
       streakKept={(streak.data?.current_streak ?? 0) > 0 || checkedIn}
@@ -219,9 +227,10 @@ export function BeDaGameScreen() {
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}
-      onHue={(hue) => {
+      onLook={(next) => {
         feedback();
-        setOutfitHue(hue);
+        setLook(next);
+        writeGameLook(localStorage, next);
       }}
     />
   );

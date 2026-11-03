@@ -46,6 +46,7 @@ describe("Bé Da backend payload", () => {
     assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg"/);
     assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg"/);
     assert.match(html, /src="\/mascot\/glow\/level_1\.svg"/);
+    assert.equal(html.includes("_floor.svg"), false);
     assert.match(html, /data-glow-level="1"/);
     assert.match(html, /data-level="1"/);
     assert.match(html, /bd-figure/);
@@ -100,5 +101,8 @@ describe("Bé Da backend payload", () => {
     assert.match(html, /data-level="5"/);
     assert.match(html, /bd-breathe/);
     assert.match(html, /be-da-jump/);
+    const floor = html.indexOf("/mascot/glow/level_5_floor.svg");
+    const breathe = html.indexOf("bd-breathe");
+    assert.ok(floor >= 0 && floor < breathe);
   });
 });

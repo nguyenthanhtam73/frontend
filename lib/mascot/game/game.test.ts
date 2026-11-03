@@ -5,6 +5,15 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { formatGameCoins, gameCoinCount, countRoutineTicks } from "./coins";
+import { mascotStack } from "@/lib/mascot/layers";
+import {
+  DEFAULT_GAME_LOOK,
+  GAME_LOOK_KEY,
+  GAME_OUTFITS,
+  readGameLook,
+  writeGameLook,
+  type GameLook,
+} from "./look";
 import { SAMPLE_LOBBY_FRIENDS, lobbyHeadCount, sampleFriendView } from "./lobby";
 import { isBeDaGamePath, localePath } from "./path";
 import {
@@ -184,7 +193,57 @@ describe("sample lobby", () => {
       const view = sampleFriendView(friend);
       assert.equal(view.marks.length, 0);
       assert.equal(view.glowProgress, null);
+      assert.equal(GAME_OUTFITS.includes(friend.outfit), true);
     }
+    assert.equal(new Set(SAMPLE_LOBBY_FRIENDS.map((friend) => friend.outfit)).size, GAME_OUTFITS.length);
+  });
+
+  it("draws closet clothes in the layer order from LAYERS-NEW", () => {
+    const friend = SAMPLE_LOBBY_FRIENDS[0]!;
+    const stack = mascotStack(sampleFriendView(friend), {
+      dress: {
+        outfitId: "outfit_ao_dai",
+        hairId: "hair_high_pony",
+        clipId: "accessory_ribbon_bow",
+        pose: "cheer",
+      },
+    });
+    const at = (slot: string) => stack.findIndex((layer) => layer.slot === slot);
+    assert.ok(at("outfit") < at("arms"));
+    assert.ok(at("arms") < at("hair"));
+    assert.ok(at("hair") < at("accessory-clip"));
+    assert.ok(at("accessory-clip") < at("face-cheeks"));
+    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_dai.svg");
+    assert.equal(stack.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_dai.svg");
+    assert.equal(stack.find((layer) => layer.slot === "hair")?.src, "/mascot/hair/hair_high_pony.svg");
+    assert.equal(
+      stack.find((layer) => layer.slot === "accessory-clip")?.src,
+      "/mascot/accessory/accessory_ribbon_bow.svg",
+    );
+    const plain = mascotStack(sampleFriendView(friend));
+    assert.equal(plain.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfit/outfit_cozy_pajamas.svg");
+    assert.equal(plain.some((layer) => layer.slot === "arms"), false);
+  });
+});
+
+describe("game closet", () => {
+  it("remembers a valid look and drops a broken one", () => {
+    const store = memory();
+    assert.equal(readGameLook(store), null);
+    const look: GameLook = {
+      outfit: "outfit_hoodie",
+      hair: "hair_short_bob",
+      clip: "accessory_flower_clip",
+    };
+    writeGameLook(store, look);
+    assert.equal(store.getItem(GAME_LOOK_KEY)?.includes("outfit_hoodie"), true);
+    assert.deepEqual(readGameLook(store), look);
+    writeGameLook(store, { ...DEFAULT_GAME_LOOK, clip: null });
+    assert.equal(readGameLook(store)?.clip, null);
+    store.setItem(GAME_LOOK_KEY, "{");
+    assert.equal(readGameLook(store), null);
+    store.setItem(GAME_LOOK_KEY, JSON.stringify({ outfit: "outfit_nope", hair: "hair_sleep_buns", clip: null }));
+    assert.equal(readGameLook(store), null);
   });
 });
 

@@ -5,7 +5,8 @@ import type { KeyboardEvent, PointerEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
-import { IconHand, IconHeart, IconDress, IconStar } from "@/components/mascot/game/icons";
+import { GameIcon } from "@/components/mascot/game/icons";
+import { gameDress, type GameLook } from "@/lib/mascot/game/look";
 import {
   LOBBY_PLAYER_SPOT,
   SAMPLE_LOBBY_FRIENDS,
@@ -37,7 +38,7 @@ export function BeDaLobby({
   sky,
   player,
   locale,
-  outfitHue,
+  look,
   youLabel,
   friendCountLabel,
   dragLabel,
@@ -49,7 +50,7 @@ export function BeDaLobby({
   sky: SkyPeriod;
   player: BeDaView;
   locale: string;
-  outfitHue: number;
+  look: GameLook;
   youLabel: string;
   friendCountLabel: string;
   dragLabel: string;
@@ -229,10 +230,10 @@ export function BeDaLobby({
         >
           <span className="beda-friend-art">
             <span className="beda-ring" />
-            <BeDaFigure view={player} locale={locale} outfitHue={outfitHue} className="w-full" />
+            <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
           </span>
           <span className="beda-tag beda-tag-me">
-            <IconStar className="beda-ico-sm" /> {youLabel}
+            <GameIcon name="pin" className="beda-ico-sm" /> {youLabel}
           </span>
         </button>
       </div>
@@ -250,8 +251,11 @@ export function BeDaLobby({
               style={{ left: `${friend.x * 100}%`, top: `${28 + friend.y * 55}%` }}
             />
           ))}
-          <i
-            className="beda-mini-dot is-you"
+          <img
+            src="/mascot/icons/minimap_pin.svg"
+            alt=""
+            className="beda-mini-pin"
+            decoding="async"
             style={{ left: `${LOBBY_PLAYER_SPOT.x * 100}%`, top: `${28 + LOBBY_PLAYER_SPOT.y * 55}%` }}
           />
           <div className="beda-mini-view" />
@@ -261,15 +265,15 @@ export function BeDaLobby({
           <div className="beda-actions beda-card" data-testid="beda-actions">
             <strong>{selected.nickname}</strong>
             <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
-              <IconHand />
+              <GameIcon name="wave" />
               {t("game.wave")}
             </button>
             <button type="button" className="beda-action" onClick={() => onAction("heart")}>
-              <IconHeart />
+              <GameIcon name="heart" />
               {t("game.heart")}
             </button>
             <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
-              <IconDress />
+              <GameIcon name="outfit" />
               {t("game.outfit")}
             </button>
           </div>
@@ -293,6 +297,10 @@ function FriendButton({
   onSelect: (id: string) => void;
 }) {
   const view = sampleFriendView(friend);
+  const dress = gameDress(
+    { outfit: friend.outfit, hair: friend.hair, clip: friend.clip },
+    waving ? "wave" : null,
+  );
   return (
     <button
       type="button"
@@ -309,10 +317,8 @@ function FriendButton({
     >
       <span
         className="beda-friend-art"
-        style={friend.hue ? { filter: `hue-rotate(${friend.hue}deg) saturate(1.08)` } : undefined}
       >
-        <BeDaFigure view={view} locale={locale} className="w-full" />
-        {waving ? <IconHand className="beda-hand" /> : null}
+        <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" className="w-full" />
       </span>
       <span className="beda-ring" />
       <span className="beda-tag">{friend.nickname}</span>

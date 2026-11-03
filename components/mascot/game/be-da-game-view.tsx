@@ -4,20 +4,14 @@ import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
+import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
 import {
-  IconBack,
-  IconBottle,
-  IconCheck,
-  IconCoin,
-  IconDoor,
-  IconDress,
-  IconFlame,
-  IconHand,
-  IconHeart,
-  IconScroll,
-  IconSound,
-  IconTree,
-} from "@/components/mascot/game/icons";
+  GAME_CLIPS,
+  GAME_HAIRS,
+  GAME_OUTFITS,
+  gameDress,
+  type GameLook,
+} from "@/lib/mascot/game/look";
 import type { GameBubbleKind, GameQuest, GameQuestId } from "@/lib/mascot/game/quests";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
@@ -26,28 +20,14 @@ export type GameTab = "care" | "wardrobe" | "quests" | "lobby";
 
 export type GameToast = { name: string; kind: "wave" | "heart" | "outfit" } | null;
 
-const NAV: { id: GameTab; icon: typeof IconBottle; label: "care" | "wardrobe" | "quests" | "lobby" }[] = [
-  { id: "care", icon: IconBottle, label: "care" },
-  { id: "wardrobe", icon: IconDress, label: "wardrobe" },
-  { id: "quests", icon: IconScroll, label: "quests" },
-  { id: "lobby", icon: IconTree, label: "lobby" },
+const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "quests" | "lobby" }[] = [
+  { id: "care", icon: "care", label: "care" },
+  { id: "wardrobe", icon: "wardrobe", label: "wardrobe" },
+  { id: "quests", icon: "quests", label: "quests" },
+  { id: "lobby", icon: "lobby", label: "lobby" },
 ];
 
-const SWATCHES = [
-  { id: "pink", hue: 0, color: "#f59ab8" },
-  { id: "peach", hue: 32, color: "#ffb085" },
-  { id: "sun", hue: 70, color: "#ffe08a" },
-  { id: "leaf", hue: 140, color: "#8fd4a2" },
-  { id: "sky", hue: 200, color: "#8fd0e6" },
-  { id: "lilac", hue: 270, color: "#c9b8f2" },
-] as const;
-
-const WEAR: Record<string, "pajamas" | "buns" | "headband" | "clip"> = {
-  outfit_cozy_pajamas: "pajamas",
-  hair_sleep_buns: "buns",
-  accessory_pink_headband: "headband",
-  accessory_star_clip: "clip",
-};
+const WORN_EXTRAS = ["accessory_pink_headband", "accessory_star_clip"] as const;
 
 const BURST = [
   { dx: "-28px", dy: "-36px", color: "#ffe08a" },
@@ -73,7 +53,7 @@ export function BeDaGameView({
   selectedFriendId,
   toast,
   wavingId,
-  outfitHue,
+  look,
   wornIds,
   hearts,
   streakKept,
@@ -87,7 +67,7 @@ export function BeDaGameView({
   onSelectFriend,
   onFriendAction,
   onClaim,
-  onHue,
+  onLook,
 }: {
   locale: string;
   tab: GameTab;
@@ -104,7 +84,7 @@ export function BeDaGameView({
   selectedFriendId: string;
   toast: GameToast;
   wavingId: string | null;
-  outfitHue: number;
+  look: GameLook;
   wornIds: string[];
   hearts: number;
   streakKept: boolean;
@@ -118,7 +98,7 @@ export function BeDaGameView({
   onSelectFriend: (id: string) => void;
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
-  onHue: (hue: number) => void;
+  onLook: (look: GameLook) => void;
 }) {
   const t = useTranslations("mascot");
   const showLobby = tab === "lobby" && !chestOpen;
@@ -135,7 +115,7 @@ export function BeDaGameView({
           sky={sky}
           player={player}
           locale={locale}
-          outfitHue={outfitHue}
+          look={look}
           youLabel={t("game.you")}
           friendCountLabel={friendCountLabel}
           dragLabel={t("game.drag")}
@@ -149,7 +129,7 @@ export function BeDaGameView({
           sky={sky}
           player={player}
           locale={locale}
-          outfitHue={outfitHue}
+          look={look}
           bubbleKind={bubbleKind}
           progress={progress}
           showPrettyLine={showPrettyLine}
@@ -170,13 +150,13 @@ export function BeDaGameView({
           streakKept={streakKept}
           player={player}
           locale={locale}
-          outfitHue={outfitHue}
+          look={look}
           onClaim={onClaim}
         />
       ) : null}
 
       {tab === "wardrobe" && !chestOpen ? (
-        <Wardrobe wornIds={wornIds} outfitHue={outfitHue} onHue={onHue} />
+        <Wardrobe wornIds={wornIds} look={look} onLook={onLook} />
       ) : null}
 
       {toast ? <Toast toast={toast} /> : null}
@@ -197,13 +177,13 @@ export function BeDaGameView({
         </a>
         <div className="beda-chip" data-testid="beda-coins">
           <span className="beda-chip-icon coin">
-            <IconCoin />
+            <GameIcon name="coin" className="beda-ico-sm" />
           </span>
           {coinsLabel} <small>{t("game.coinsUnit")}</small>
         </div>
         <div className="beda-chip" data-testid="beda-streak">
           <span className="beda-chip-icon flame">
-            <IconFlame />
+            <GameIcon name="flame" className="beda-ico-sm" />
           </span>
           {streakLabel} <small>{t("game.streakUnit")}</small>
         </div>
@@ -215,13 +195,12 @@ export function BeDaGameView({
           aria-label={soundOn ? t("game.soundOn") : t("game.soundOff")}
           onClick={onToggleSound}
         >
-          <IconSound muted={!soundOn} />
+          <GameIcon name={soundOn ? "soundOn" : "soundOff"} className="beda-ico-sm" />
         </button>
       </div>
 
       <nav className="beda-nav" aria-label={t("name")}>
         {NAV.map((item) => {
-          const Icon = item.icon;
           const on = activeNav === item.id;
           return (
             <button
@@ -233,7 +212,7 @@ export function BeDaGameView({
               onClick={() => onTab(item.id)}
             >
               <span className={burst > 0 && on ? "beda-nav-orb beda-pop" : "beda-nav-orb"}>
-                <Icon />
+                <GameIcon name={item.icon} />
               </span>
               {item.id === "quests" && openQuests > 0 ? <span className="beda-badge">{openQuests}</span> : null}
               {t(`game.${item.label}`)}
@@ -249,7 +228,7 @@ function Room({
   sky,
   player,
   locale,
-  outfitHue,
+  look,
   bubbleKind,
   progress,
   showPrettyLine,
@@ -264,7 +243,7 @@ function Room({
   sky: SkyPeriod;
   player: BeDaView;
   locale: string;
-  outfitHue: number;
+  look: GameLook;
   bubbleKind: GameBubbleKind;
   progress: number | null;
   showPrettyLine: boolean;
@@ -315,9 +294,12 @@ function Room({
         <>
           <section className="beda-card beda-quest" data-testid="beda-quest" aria-label={t("game.questTitle")}>
             <h2>
-              <IconScroll className="beda-ico-sm" />
+              <GameIcon name="quests" className="beda-ico-sm" />
               {t("game.questTitle")}
-              <span className="beda-gift-pill">{giftTaken ? t("game.giftTaken") : t("game.gift")}</span>
+              <span className="beda-gift-pill">
+                <GameIcon name={giftTaken ? "chestOpen" : "chestClosed"} className="beda-gift-ico" />
+                {giftTaken ? t("game.giftTaken") : t("game.gift")}
+              </span>
             </h2>
             {quests.map((quest) => (
               <QuestRow key={quest.id} quest={quest} routineHref={routineHref} onOpenLobby={onOpenLobby} />
@@ -327,7 +309,7 @@ function Room({
             </a>
           </section>
           <button type="button" className="beda-card beda-door" onClick={onOpenLobby}>
-            <IconDoor />
+            <GameIcon name="door" />
             <span>
               <strong>{t("game.door")}</strong>
               <span className="beda-door-count">{doorCountLabel}</span>
@@ -339,7 +321,7 @@ function Room({
       {showHero ? (
       <div className="beda-hero-wrap" data-testid="beda-hero">
         <Bubble kind={bubbleKind} />
-        <BeDaFigure view={player} locale={locale} outfitHue={outfitHue} className="w-full" />
+        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
           {showPrettyLine ? t("glowNear") : t("game.atHome")}
@@ -401,7 +383,7 @@ function QuestRow({
   const label = t(`game.tasks.${quest.id}`);
   const body = (
     <>
-      <span className="beda-check">{quest.done ? <IconCheck /> : null}</span>
+      <span className="beda-check">{quest.done ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
       {label}
     </>
   );
@@ -432,7 +414,7 @@ function Chest({
   streakKept,
   player,
   locale,
-  outfitHue,
+  look,
   onClaim,
 }: {
   coinsLabel: string;
@@ -440,7 +422,7 @@ function Chest({
   streakKept: boolean;
   player: BeDaView;
   locale: string;
-  outfitHue: number;
+  look: GameLook;
   onClaim: () => void;
 }) {
   const t = useTranslations("mascot");
@@ -452,19 +434,21 @@ function Chest({
         <p>{t("game.chestSub")}</p>
       </div>
       <div className="beda-chest-stage" aria-hidden>
-        <i className="beda-coin-float" style={{ left: "8%", top: "18%" }} />
-        <i className="beda-coin-float" style={{ left: "28%", top: "6%", animationDelay: "0.3s" }} />
-        <i className="beda-coin-float" style={{ left: "46%", top: "0", animationDelay: "0.6s" }} />
-        <i className="beda-coin-float" style={{ right: "28%", top: "8%", animationDelay: "0.2s" }} />
-        <i className="beda-spark" style={{ left: "18%", top: "40%" }} />
-        <i className="beda-spark" style={{ right: "22%", top: "30%" }} />
-        <div className="beda-chest-lid" />
-        <div className="beda-chest-box">
-          <div className="beda-chest-band" />
-          <div className="beda-chest-lock" />
-        </div>
+        <i className="beda-coin-float" style={{ left: "8%", top: "18%" }}>
+          <GameIcon name="coin" />
+        </i>
+        <i className="beda-coin-float" style={{ left: "28%", top: "6%", animationDelay: "0.3s" }}>
+          <GameIcon name="coin" />
+        </i>
+        <i className="beda-coin-float" style={{ left: "46%", top: "0", animationDelay: "0.6s" }}>
+          <GameIcon name="coin" />
+        </i>
+        <i className="beda-coin-float" style={{ right: "28%", top: "8%", animationDelay: "0.2s" }}>
+          <GameIcon name="coin" />
+        </i>
+        <img src="/mascot/icons/chest_open.svg" alt="" className="beda-chest-art" decoding="async" />
         <div className="beda-chest-hero">
-          <BeDaFigure view={player} locale={locale} outfitHue={outfitHue} className="w-full" />
+          <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} className="w-full" />
         </div>
       </div>
       <div className="beda-card beda-rewards">
@@ -474,13 +458,13 @@ function Chest({
         </div>
         <div>
           <strong>
-            <IconFlame className="beda-ico-sm" />
+            <GameIcon name="flame" className="beda-ico-sm" />
           </strong>
           {streakKept ? t("game.chestStreak") : t("game.chestStreakWait")}
         </div>
         <div>
           <strong>
-            <IconHeart className="beda-ico-sm" />
+            <GameIcon name="heart" className="beda-ico-sm" />
           </strong>
           {t("game.chestHearts", { count: hearts })}
         </div>
@@ -494,36 +478,89 @@ function Chest({
 
 function Wardrobe({
   wornIds,
-  outfitHue,
-  onHue,
+  look,
+  onLook,
 }: {
   wornIds: string[];
-  outfitHue: number;
-  onHue: (hue: number) => void;
+  look: GameLook;
+  onLook: (look: GameLook) => void;
 }) {
   const t = useTranslations("mascot");
-  const labels = wornIds.map((id) => WEAR[id]).filter((key): key is NonNullable<typeof key> => !!key);
+  const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
   return (
     <section className="beda-card beda-sheet" data-testid="beda-wardrobe" aria-label={t("game.wardrobe")}>
       <h2>{t("game.wardrobe")}</h2>
       <p>{t("game.wearing")}</p>
       <ul className="beda-worn">
-        {labels.map((key) => (
-          <li key={key}>{t(`game.wear.${key}`)}</li>
+        <li>{t(`game.look.${look.outfit}`)}</li>
+        <li>{t(`game.look.${look.hair}`)}</li>
+        {look.clip ? <li>{t(`game.look.${look.clip}`)}</li> : null}
+        {extras.map((id) => (
+          <li key={id}>{t(`game.look.${id}`)}</li>
         ))}
       </ul>
-      <p>{t("game.tryColor")}</p>
-      <div className="beda-swatches">
-        {SWATCHES.map((swatch) => (
+      <p>{t("game.pickOutfit")}</p>
+      <div className="beda-picks">
+        {GAME_OUTFITS.map((id) => (
           <button
-            key={swatch.id}
+            key={id}
             type="button"
-            className={swatch.hue === outfitHue ? "beda-swatch is-on" : "beda-swatch"}
-            style={{ background: swatch.color }}
-            aria-label={t(`game.swatch.${swatch.id}`)}
-            aria-pressed={swatch.hue === outfitHue}
-            onClick={() => onHue(swatch.hue)}
-          />
+            className={look.outfit === id ? "beda-pick is-on" : "beda-pick"}
+            aria-label={t(`game.look.${id}`)}
+            aria-pressed={look.outfit === id}
+            onClick={() => onLook({ ...look, outfit: id })}
+          >
+            <span className="beda-pick-art is-outfit">
+              <img src={`/mascot/outfits/${id}.svg`} alt="" loading="lazy" decoding="async" />
+            </span>
+            {t(`game.look.${id}`)}
+          </button>
+        ))}
+      </div>
+      <p>{t("game.pickHair")}</p>
+      <div className="beda-picks">
+        {GAME_HAIRS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={look.hair === id ? "beda-pick is-on" : "beda-pick"}
+            aria-label={t(`game.look.${id}`)}
+            aria-pressed={look.hair === id}
+            onClick={() => onLook({ ...look, hair: id })}
+          >
+            <span className="beda-pick-art is-hair">
+              <img src={`/mascot/hair/${id}.svg`} alt="" loading="lazy" decoding="async" />
+            </span>
+            {t(`game.look.${id}`)}
+          </button>
+        ))}
+      </div>
+      <p>{t("game.pickClip")}</p>
+      <div className="beda-picks">
+        <button
+          type="button"
+          className={look.clip == null ? "beda-pick is-on" : "beda-pick"}
+          aria-label={t("game.look.clip_none")}
+          aria-pressed={look.clip == null}
+          onClick={() => onLook({ ...look, clip: null })}
+        >
+          <span className="beda-pick-art is-clip is-empty" />
+          {t("game.look.clip_none")}
+        </button>
+        {GAME_CLIPS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={look.clip === id ? "beda-pick is-on" : "beda-pick"}
+            aria-label={t(`game.look.${id}`)}
+            aria-pressed={look.clip === id}
+            onClick={() => onLook({ ...look, clip: id })}
+          >
+            <span className="beda-pick-art is-clip">
+              <img src={`/mascot/accessory/${id}.svg`} alt="" loading="lazy" decoding="async" />
+            </span>
+            {t(`game.look.${id}`)}
+          </button>
         ))}
       </div>
       <p className="beda-note">{t("game.tryNote")}</p>
@@ -533,11 +570,11 @@ function Wardrobe({
 
 function Toast({ toast }: { toast: { name: string; kind: "wave" | "heart" | "outfit" } }) {
   const t = useTranslations("mascot");
-  const Icon = toast.kind === "heart" ? IconHeart : toast.kind === "outfit" ? IconDress : IconHand;
+  const icon = toast.kind === "heart" ? "heart" : toast.kind === "outfit" ? "outfit" : "wave";
   return (
     <div className="beda-toast" role="status" data-testid="beda-toast">
       <i>
-        <Icon className="beda-ico-sm" />
+        <GameIcon name={icon} className="beda-ico-sm" />
       </i>
       {t(`game.toast.${toast.kind}`, { name: toast.name })}
     </div>

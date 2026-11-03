@@ -338,6 +338,9 @@
 }
 
 .beda-gift-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
   border-radius: 99px;
   background: #ffe9a8;
@@ -345,6 +348,11 @@
   color: #8a5a00;
   font-size: 12px;
   font-weight: 800;
+}
+
+.beda-gift-ico {
+  width: 16px;
+  height: 16px;
 }
 
 .beda-quest-row {
@@ -383,8 +391,8 @@
 }
 
 .beda-quest-row.is-done .beda-check {
-  border-color: #45bdb4;
-  background: #45bdb4;
+  border-color: transparent;
+  background: transparent;
 }
 
 .beda-quest-link {
@@ -481,12 +489,9 @@
   border-radius: 50%;
 }
 
-.beda-chip-icon.coin {
-  background: radial-gradient(circle at 35% 30%, #fff3b0, #ffc83d 55%, #e09a12);
-}
-
+.beda-chip-icon.coin,
 .beda-chip-icon.flame {
-  background: radial-gradient(circle at 35% 30%, #ffd1a8, #ff8a5b 60%, #e0573a);
+  background: transparent;
 }
 
 .beda-mute {
@@ -556,6 +561,11 @@
 .beda-ico {
   width: 28px;
   height: 28px;
+}
+
+.beda-nav-orb .beda-ico {
+  width: 40px;
+  height: 40px;
 }
 
 .beda-ico-sm {
@@ -878,11 +888,11 @@
   background: #fff;
 }
 
-.beda-mini-dot.is-you {
-  width: 7px;
-  height: 7px;
-  background: #ffd94a;
-  box-shadow: 0 0 0 2px #2b8c86;
+.beda-mini-pin {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -80%);
 }
 
 .beda-mini-view {
@@ -1083,13 +1093,25 @@
 .beda-coin-float {
   position: absolute;
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff3b0, #ffc83d 55%, #e09a12);
-  box-shadow: inset 0 -3px 0 #c27c00;
   animation: beda-float 3s ease-in-out infinite;
+}
+
+.beda-coin-float img {
+  width: 36px;
+  height: 36px;
+}
+
+.beda-chest-art {
+  position: absolute;
+  left: 42%;
+  bottom: 8%;
+  width: min(210px, 50vw);
+  height: auto;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 12px 0 rgba(158, 63, 99, 0.28));
 }
 
 .beda-rewards {
@@ -1142,6 +1164,8 @@
   left: 50%;
   bottom: calc(124px + env(safe-area-inset-bottom));
   width: min(440px, calc(100% - 24px));
+  max-height: min(48vh, 390px);
+  overflow: auto;
   padding: 14px;
   transform: translateX(-50%);
 }
@@ -1173,21 +1197,79 @@
   font-weight: 700;
 }
 
-.beda-swatches {
+.beda-picks {
   display: flex;
   gap: 8px;
+  margin: 0 0 10px;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
 }
 
-.beda-swatch {
-  width: 36px;
-  height: 36px;
+.beda-pick {
+  display: flex;
+  width: 76px;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   border: 3px solid #fff;
-  border-radius: 50%;
+  border-radius: 16px;
+  background: #fff6ef;
+  padding: 4px 4px 6px;
+  color: #3c2a30;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
   box-shadow: 0 3px 0 #e7cfc6;
 }
 
-.beda-swatch.is-on {
+.beda-pick.is-on {
   outline: 3px solid #2b8c86;
+}
+
+.beda-pick-art {
+  width: 64px;
+  height: 52px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #ffe9f1;
+}
+
+.beda-pick-art img {
+  width: 148px;
+  max-width: none;
+  height: auto;
+}
+
+.beda-pick-art.is-outfit img {
+  margin-top: -78px;
+  margin-left: -42px;
+}
+
+.beda-pick-art.is-hair img {
+  margin-top: -6px;
+  margin-left: -42px;
+}
+
+.beda-pick-art.is-clip img {
+  width: 180px;
+  margin-top: -28px;
+  margin-left: -36px;
+}
+
+.beda-pick-art.is-empty {
+  background:
+    linear-gradient(#e7cfc6, #e7cfc6) center / 18px 2px no-repeat,
+    #ffe9f1;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-bubble {
+  display: none;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-hero-wrap {
+  bottom: calc(400px + env(safe-area-inset-bottom));
+  width: clamp(140px, 40vw, 190px);
 }
 
 .beda-note {
@@ -1332,6 +1414,19 @@
   .beda-nav-orb {
     width: 80px;
     height: 80px;
+  }
+
+  .beda-sheet {
+    max-height: 300px;
+  }
+
+  .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
+    bottom: calc(440px + env(safe-area-inset-bottom));
+    width: 200px;
+  }
+
+  .beda-chest-art {
+    width: min(280px, 28vw);
   }
 }
 

@@ -49,3 +49,7 @@ Face parts for one expression are `eyes`, `brows`, `mouth`, and `cheeks`. A phot
 ## Shop expiry
 
 Items may set `expires_at` (`null` = permanent). In the last 24 hours draw that layer at opacity 0.5. After expiry, omit it. Body, hair, and outfit fall back to the default file so the character stays dressed. The web shows `Chăm da tiếp để lấy lại nha` once per expired item.
+
+## Game closet
+
+`LAYERS-NEW.md` is the order for the trial closet. Real clothes live in `outfits/` (six outfits, plus matching sleeves). Extra hair and the flower clip and ribbon bow use the same hair and accessory slots. `anchors.json` is unchanged. `glow/level_5_floor.svg` and `glow/level_6_floor.svg` stay on the floor, outside the idle breathe. Icons for the trial screen are in `icons/`.
