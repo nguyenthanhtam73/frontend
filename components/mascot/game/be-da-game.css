@@ -180,39 +180,86 @@
 
 .beda-bed {
   position: absolute;
-  left: -18px;
-  top: 50%;
-  width: min(42vw, 180px);
-  height: 96px;
-  border-radius: 26px;
-  background: #fff;
-  box-shadow: 0 8px 0 #e7cfc6;
+  z-index: 1;
+  left: 8px;
+  bottom: 41.6%;
+  width: clamp(74px, 16vw, 148px);
+  height: 118px;
 }
 
-.beda-bed-cover {
+.beda-bed-leg {
   position: absolute;
-  left: 28px;
-  right: 0;
   bottom: 0;
-  height: 54px;
-  border-radius: 22px;
-  background: linear-gradient(#bfe8e3, #9fd8d2);
+  width: 9px;
+  height: 16px;
+  border-radius: 3px;
+  background: #e7b7a8;
+}
+
+.beda-bed-leg.is-back-left { left: 18px; height: 14px; }
+.beda-bed-leg.is-back-right { right: 14px; height: 14px; }
+.beda-bed-leg.is-front-left { left: 10px; }
+.beda-bed-leg.is-front-right { right: 8px; }
+
+.beda-bed-head {
+  position: absolute;
+  left: 2px;
+  bottom: 28px;
+  width: 26px;
+  height: 72px;
+  border-radius: 12px 12px 6px 6px;
+  background: linear-gradient(#f8d5e0, #f2b8c8);
+  border: 2px solid #e7b7c4;
+  box-shadow: 3px 4px 0 #e7cfc6;
+}
+
+.beda-bed-mattress {
+  position: absolute;
+  left: 20px;
+  right: 4px;
+  bottom: 14px;
+  height: 34px;
+  border-radius: 8px 16px 8px 6px;
+  background: #fff8f3;
+  border: 2px solid #f0c9d3;
 }
 
 .beda-bed-pillow {
   position: absolute;
-  left: 64px;
-  top: 10px;
-  width: 68px;
-  height: 30px;
-  border-radius: 16px;
+  left: 26px;
+  bottom: 36px;
+  width: 34px;
+  height: 22px;
+  border-radius: 12px;
   background: #ffe3ea;
+  border: 2px solid #f3c6d4;
+}
+
+.beda-bed-cover {
+  position: absolute;
+  left: 52px;
+  right: 2px;
+  bottom: 16px;
+  height: 30px;
+  border-radius: 8px 14px 10px 6px;
+  background: linear-gradient(#c9efe8, #9fd8d2);
+  border: 2px solid #8ecfc8;
+}
+
+.beda-sink {
+  position: absolute;
+  z-index: 2;
+  right: 5%;
+  bottom: 41.6%;
+  width: min(18vw, 86px);
+  height: auto;
+  pointer-events: none;
 }
 
 .beda-plant {
   position: absolute;
-  right: 4%;
-  top: 49%;
+  right: 27%;
+  bottom: 42%;
   width: 54px;
   height: 64px;
   transform-origin: 50% 100%;
@@ -237,14 +284,14 @@
   background: #6fbf7a;
 }
 
-/* Private room only. On the floor, just right of the bed (v2: left 28%, width 8.6%).
+/* Private room only. About 1.4× the v2 closet, on the floor just right of the bed.
    Under Bé Da and her rug, over the wall. */
 .beda-cabinet {
   position: absolute;
   z-index: 2;
-  left: 28%;
+  left: 22.5%;
   bottom: 41.6%;
-  width: 8.6%;
+  width: 12%;
   aspect-ratio: 120 / 170;
   padding: 0;
   border: 0;

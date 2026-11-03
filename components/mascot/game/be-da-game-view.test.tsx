@@ -169,6 +169,7 @@ describe("Bé Da game screen", () => {
     assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);
     assert.equal(html.includes("/mascot/props/wardrobe"), false);
+    assert.equal(html.includes("/mascot/props/sink.svg"), false);
     assert.match(html, /\/mascot\/icons\/minimap_pin\.svg/);
     assert.match(html, /\/mascot\/icons\/wave\.svg/);
     assert.equal(html.includes("hue-rotate"), false);
@@ -230,6 +231,9 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-cabinet"/);
     assert.match(html, /aria-label="Tủ đồ"/);
     assert.match(html, /\/mascot\/props\/wardrobe\.svg/);
+    assert.match(html, /\/mascot\/props\/sink\.svg/);
+    assert.match(html, /beda-bed-head/);
+    assert.match(html, /beda-bed-mattress/);
     assertNoScores(html);
   });
 

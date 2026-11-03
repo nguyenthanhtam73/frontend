@@ -319,9 +319,16 @@ function Room({
         <i className="beda-bottle" style={{ left: "76%", height: 34, background: "#c9b8f2", animationDelay: "1.1s" }} />
       </div>
       <div className="beda-mirror" aria-hidden />
+      <img className="beda-sink" src="/mascot/props/sink.svg" alt="" decoding="async" />
       <div className="beda-bed" aria-hidden>
-        <div className="beda-bed-cover" />
+        <i className="beda-bed-leg is-back-left" />
+        <i className="beda-bed-leg is-back-right" />
+        <i className="beda-bed-leg is-front-left" />
+        <i className="beda-bed-leg is-front-right" />
+        <div className="beda-bed-head" />
+        <div className="beda-bed-mattress" />
         <div className="beda-bed-pillow" />
+        <div className="beda-bed-cover" />
       </div>
       <div className="beda-plant" aria-hidden>
         <i className="beda-plant-leaf" style={{ left: 4, top: 8, transform: "rotate(-24deg)" }} />
