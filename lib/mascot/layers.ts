@@ -3,6 +3,8 @@ import {
   isKnownMascotItem,
   type MascotItemLayer,
 } from "@/lib/mascot/catalog";
+import type { GameDress } from "@/lib/mascot/game/look";
+import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import {
   itemLook,
@@ -97,7 +99,18 @@ function optionalOpacity(item: WornItem, now: number): number | null {
 
 export function mascotStack(
   view: BeDaView,
-  options: { reaction?: string | null; stepPose?: string | null; locale?: string; now?: number } = {},
+  options: {
+    reaction?: string | null;
+    stepPose?: string | null;
+    locale?: string;
+    now?: number;
+    /**
+     * Game closet only. Swaps the outfit and hair files and inserts sleeves
+     * and a left clip. Home Bé Da leaves this unset.
+     * Order matches public/mascot/LAYERS-NEW.md.
+     */
+    dress?: GameDress | null;
+  } = {},
 ): StackLayer[] {
   const now = options.now ?? Date.now();
   const mood = moodLayer(view.mood);
@@ -198,7 +211,43 @@ export function mascotStack(
   }
   if (view.flies) push("fx-flies", "/mascot/fx/flies/flies.svg", 1);
 
-  return layers;
+  return options.dress ? applyGameDress(layers, options.dress) : layers;
+}
+
+/**
+ * Closet art sits in the same slots as the shop outfit and hair.
+ * Sleeves come right after the outfit. A flower or ribbon sits after the
+ * headband and before the cheeks. The star clip stays on the right.
+ */
+export function applyGameDress(layers: StackLayer[], dress: GameDress): StackLayer[] {
+  if (!isGameOutfit(dress.outfitId) || !isGameHair(dress.hairId)) return layers;
+  const next = layers.map((layer) => {
+    if (layer.slot === "outfit") return { ...layer, src: `/mascot/outfits/${dress.outfitId}.svg` };
+    if (layer.slot === "hair") return { ...layer, src: `/mascot/hair/${dress.hairId}.svg` };
+    return layer;
+  });
+  const outfitAt = next.findIndex((layer) => layer.slot === "outfit");
+  if (outfitAt >= 0 && (dress.pose === "wave" || dress.pose === "cheer")) {
+    const arm = dress.pose === "wave" ? "arm_wave_right" : "arms_up";
+    const sleeve = dress.outfitId.replace(/^outfit_/, "");
+    next.splice(outfitAt + 1, 0, {
+      slot: "arms",
+      src: `/mascot/outfits/${arm}__${sleeve}.svg`,
+      opacity: 1,
+    });
+  }
+  if (dress.clipId && isGameClip(dress.clipId)) {
+    let at = next.findIndex((layer) => layer.slot === "accessory-headband");
+    if (at < 0) at = next.findIndex((layer) => layer.slot === "hair");
+    if (at >= 0) {
+      next.splice(at + 1, 0, {
+        slot: "accessory-clip",
+        src: `/mascot/accessory/${dress.clipId}.svg`,
+        opacity: 1,
+      });
+    }
+  }
+  return next;
 }
 
 export function glowLayerSrc(level: number, part: "back" | "mid" | "front"): string {

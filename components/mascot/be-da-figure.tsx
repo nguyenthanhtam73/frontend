@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import { mascotStack } from "@/lib/mascot/layers";
+import type { GameDress } from "@/lib/mascot/game/look";
 import { startBeDaBlinkLoop } from "@/lib/mascot/idle";
 import type { BeDaView, StepPose } from "@/lib/mascot/model";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,8 @@ export function BeDaFigure({
   glowCelebrate = false,
   interactive = false,
   tapLabel,
-  outfitHue = 0,
+  dress = null,
+  imageLoading = "eager",
   className,
 }: {
   view: BeDaView;
@@ -33,8 +35,10 @@ export function BeDaFigure({
   glowCelebrate?: boolean;
   interactive?: boolean;
   tapLabel?: string;
-  /** Temporary outfit recolor. 0 leaves the art as drawn. Not a purchase. */
-  outfitHue?: number;
+  /** Game closet outfit, hair, and clip. Home Bé Da leaves this unset. */
+  dress?: GameDress | null;
+  /** Lobby visitors off the screen can wait. The room figure stays eager. */
+  imageLoading?: "eager" | "lazy";
   className?: string;
 }) {
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -43,9 +47,10 @@ export function BeDaFigure({
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
-  const layers = mascotStack(view, { reaction, stepPose, locale });
+  const layers = mascotStack(view, { reaction, stepPose, locale, dress });
   const showExitFlies = fliesExit && !view.flies;
   const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
+  const floorSrc = view.glowLevel >= 5 ? `/mascot/glow/level_${view.glowLevel}_floor.svg` : null;
   const rootRef = useRef<HTMLElement | null>(null);
   const setRoot = useCallback((node: HTMLElement | null) => {
     rootRef.current = node;
@@ -61,26 +66,37 @@ export function BeDaFigure({
   }
 
   const art = (
-    <span className={cn("bd-breathe absolute inset-0", celebrate && "be-da-jump")}>
-      {layers.map((layer) => (
-        <LayerImage
-          key={`${layer.slot}:${layer.src}`}
-          src={layer.src}
-          slot={layer.slot}
-          opacity={layer.opacity}
-          tidy={layer.slot === "messy" && tidy}
-          filter={
-            layer.slot === "outfit" && outfitHue
-              ? `hue-rotate(${outfitHue}deg) saturate(1.15)`
-              : undefined
-          }
+    <>
+      {floorSrc ? (
+        <img
+          src={floorSrc}
+          alt=""
+          data-slot="glow-floor"
+          loading={imageLoading}
+          decoding="async"
+          className="pointer-events-none absolute inset-0 h-full w-full"
         />
-      ))}
-      {showExitFlies ? (
-        <img src="/mascot/fx/flies/flies.svg" alt="" className="be-da-flies-exit absolute inset-0 h-full w-full" />
       ) : null}
-      {glowCelebrate ? <GlowBurst /> : null}
-    </span>
+      <span className={cn("bd-breathe absolute inset-0", celebrate && "be-da-jump")}>
+        {layers.map((layer) => (
+          <LayerImage
+            key={`${layer.slot}:${layer.src}`}
+            src={layer.src}
+            slot={layer.slot}
+            opacity={layer.opacity}
+            tidy={layer.slot === "messy" && tidy}
+            loading={imageLoading}
+          />
+        ))}
+        {showExitFlies ? (
+          <img src="/mascot/fx/flies/flies.svg" alt="" decoding="async" className="be-da-flies-exit absolute inset-0 h-full w-full" />
+        ) : null}
+        {glowCelebrate && view.glowLevel >= 6 ? (
+          <img src="/mascot/fx/hearts.svg" alt="" decoding="async" className="pointer-events-none absolute inset-0 h-full w-full" data-testid="be-da-hearts" />
+        ) : null}
+        {glowCelebrate ? <GlowBurst /> : null}
+      </span>
+    </>
   );
 
   if (!interactive) {
@@ -160,13 +176,13 @@ const LayerImage = memo(function LayerImage({
   slot,
   opacity,
   tidy,
-  filter,
+  loading,
 }: {
   src: string;
   slot: string;
   opacity: number;
   tidy: boolean;
-  filter?: string;
+  loading: "eager" | "lazy";
 }) {
   const tidyHair = tidy && slot === "messy";
   const glow = slot === "glow" || slot === "glow-back" || slot === "glow-front";
@@ -185,6 +201,8 @@ const LayerImage = memo(function LayerImage({
       src={src}
       alt=""
       data-slot={slot}
+      loading={loading}
+      decoding="async"
       onError={glow ? () => setMissing(true) : undefined}
       className={cn(
         "pointer-events-none absolute inset-0 h-full w-full",
@@ -193,15 +211,7 @@ const LayerImage = memo(function LayerImage({
         slot === "fx-flies" && "be-da-fly",
         tidyHair && "be-da-tidy",
       )}
-      style={
-        tidyHair || lids
-          ? filter
-            ? { filter }
-            : undefined
-          : filter
-            ? { opacity, filter }
-            : { opacity }
-      }
+      style={tidyHair || lids ? undefined : { opacity }}
     />
   );
 });

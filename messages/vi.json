@@ -3413,21 +3413,26 @@
       "chestHearts": "+{count} tim",
       "claim": "Nhận quà",
       "wearing": "Đang mặc",
-      "tryColor": "Thử màu",
-      "tryNote": "Màu này chỉ để xem thử, không mua.",
-      "wear": {
-        "pajamas": "Pijama ấm",
-        "buns": "Tóc búi",
-        "headband": "Băng đô hồng",
-        "clip": "Kẹp sao"
-      },
-      "swatch": {
-        "pink": "Hồng",
-        "peach": "Đào",
-        "sun": "Vàng",
-        "leaf": "Lá",
-        "sky": "Xanh trời",
-        "lilac": "Tím nhạt"
+      "pickOutfit": "Đồ",
+      "pickHair": "Tóc",
+      "pickClip": "Kẹp tóc",
+      "tryNote": "Lưu trên máy này, không mua.",
+      "look": {
+        "outfit_pajamas": "Đồ ngủ",
+        "outfit_ao_dai": "Áo dài",
+        "outfit_hoodie": "Hoodie",
+        "outfit_vay_hoa": "Váy hoa",
+        "outfit_ao_thun_yem": "Áo thun yếm",
+        "outfit_ao_len": "Áo len",
+        "hair_sleep_buns": "Tóc búi ngủ",
+        "hair_twin_tails": "Tóc hai bên",
+        "hair_short_bob": "Tóc bob",
+        "hair_high_pony": "Tóc đuôi cao",
+        "accessory_flower_clip": "Kẹp hoa",
+        "accessory_ribbon_bow": "Nơ",
+        "clip_none": "Không kẹp",
+        "accessory_pink_headband": "Băng đô hồng",
+        "accessory_star_clip": "Kẹp sao"
       },
       "toast": {
         "wave": "{name} vẫy tay với bạn",

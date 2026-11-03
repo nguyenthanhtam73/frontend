@@ -34,6 +34,19 @@ const nextConfig: NextConfig = {
   // 308 only when the Host is www.dadiary.vn. Preview *.vercel.app hosts miss
   // the condition, and the destination is the apex so the rule cannot loop.
   // Next.js forwards the query string when the destination does not set one.
+  async headers() {
+    return [
+      {
+        source: "/mascot/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     // www → apex first (host-only). Then the unused /dashboard URL, which
     // has no page, permanently to the check-in home.

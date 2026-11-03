@@ -3413,21 +3413,26 @@
       "chestHearts": "+{count} hearts",
       "claim": "Take gift",
       "wearing": "Wearing now",
-      "tryColor": "Try a colour",
-      "tryNote": "Just a preview. Nothing to buy.",
-      "wear": {
-        "pajamas": "Cozy pajamas",
-        "buns": "Sleep buns",
-        "headband": "Pink headband",
-        "clip": "Star clip"
-      },
-      "swatch": {
-        "pink": "Pink",
-        "peach": "Peach",
-        "sun": "Yellow",
-        "leaf": "Leaf",
-        "sky": "Sky",
-        "lilac": "Lilac"
+      "pickOutfit": "Clothes",
+      "pickHair": "Hair",
+      "pickClip": "Hair clips",
+      "tryNote": "Saved on this device. Nothing to buy.",
+      "look": {
+        "outfit_pajamas": "Pyjamas",
+        "outfit_ao_dai": "Áo dài",
+        "outfit_hoodie": "Hoodie",
+        "outfit_vay_hoa": "Floral dress",
+        "outfit_ao_thun_yem": "Pinafore tee",
+        "outfit_ao_len": "Sweater",
+        "hair_sleep_buns": "Sleep buns",
+        "hair_twin_tails": "Twin tails",
+        "hair_short_bob": "Short bob",
+        "hair_high_pony": "High ponytail",
+        "accessory_flower_clip": "Flower clip",
+        "accessory_ribbon_bow": "Ribbon bow",
+        "clip_none": "No clip",
+        "accessory_pink_headband": "Pink headband",
+        "accessory_star_clip": "Star clip"
       },
       "toast": {
         "wave": "{name} waved at you",
