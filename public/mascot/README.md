@@ -2,7 +2,7 @@
 
 Every file uses **viewBox `0 0 220 250`** and the anchors in `anchors.json` (same numbers as `lib/mascot/layers.ts`). Stack the files in the order below. Do not rescale a single layer on its own — scale the whole stack.
 
-A later paid feature can drop a photo-generated **face** and **hair** in place of the defaults. Those replacements must use this viewBox and these anchors. Outfits and accessories are independent: an outfit stays on the torso (top edge at y=146) and a clip stays on `accessoryClip`, so bought items still fit a new face or hair.
+Shop item ids live in `lib/mascot/catalog.ts` (`MASCOT_CATALOG`). The backend free grants must use those strings. Those replacements must use this viewBox and these anchors. Outfits and accessories are independent: an outfit stays on the torso (top edge at y=146) and a clip stays on `accessoryClip`, so bought items still fit a new face or hair.
 
 Hair art must leave the eye, brow, mouth, cheek, and accessory-clip anchors clear (no opaque pixels on them).
 
@@ -34,7 +34,9 @@ Hair art must leave the eye, brow, mouth, cheek, and accessory-clip anchors clea
 8. `faces/<mood>/brows.svg`
 9. `faces/<mood>/eyes.svg`
 10. `faces/<mood>/mouth.svg`
-11. `accessory/<id>` — fixed clip anchor
+11. `accessory/accessory_pink_headband.svg` — on the hair, above the eyes. Separate from the star clip
+12. `accessory/<other>` — star clip and later shop clips, after the face
+13. Foreground props (`pillow`, `mirror`, `suitcase`, `pot`, `door`, `sign_*`, `zzz`, `sparkles`, `pose_*`)
 12. Foreground props (`pillow`, `mirror`, `suitcase`, `pot`, `door`, `sign_*`, `zzz`, `sparkles`, `pose_*`)
 13. `fx/eyelids.svg` — blink
 14. `fx/yawn.svg` — idle yawn

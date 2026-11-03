@@ -45,6 +45,7 @@ import { useNavigationBlock } from "@/lib/hooks/use-navigation-block";
 import { streakDateKey } from "@/lib/streak/history";
 import { isSessionComplete, poseForStep, streakDotBonus } from "@/lib/mascot/pose";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
+import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
 import { hasAnyCompleted } from "./parts/history-stats";
 
 /**
@@ -368,15 +369,23 @@ export function RoutineEditor() {
 
   // Today (Vietnam calendar) — recompute each render so midnight VN stays correct.
   const todayISO = streakDateKey();
-  const sessionHappy =
-    isSessionComplete(r.routine.morning) || isSessionComplete(r.routine.evening);
+  const { enabled: mascotOn } = useMascotFeature();
+  const morningDone = isSessionComplete(r.routine.morning);
+  const eveningDone = isSessionComplete(r.routine.evening);
   useEffect(() => {
-    useBeDaPoseStore.getState().setSessionHappy(sessionHappy);
-  }, [sessionHappy]);
+    if (!mascotOn) return;
+    useBeDaPoseStore.getState().setSessionHappy(morningDone || eveningDone);
+  }, [mascotOn, morningDone, eveningDone]);
   const todayEntry = r.history?.entries?.find((entry) => entry.routine_date === todayISO);
-  const streakBonus = streakDotBonus(sessionHappy, todayEntry ? hasAnyCompleted(todayEntry) : false);
+  const streakBonus = mascotOn
+    ? streakDotBonus(morningDone || eveningDone, todayEntry ? hasAnyCompleted(todayEntry) : false)
+    : 0;
 
   function onRoutineToggle(section: "morning" | "evening", id: string) {
+    if (!mascotOn) {
+      r.toggleComplete(section, id);
+      return;
+    }
     const steps = r.routine[section];
     const step = steps.find((item) => item.id === id);
     if (!step) return;
@@ -480,8 +489,9 @@ export function RoutineEditor() {
           onOpenHistory={() =>
             historySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
           }
-          todayDot={sessionHappy}
-          streakBonus={streakBonus}
+          {...(mascotOn
+            ? { todayDot: morningDone || eveningDone, streakBonus }
+            : {})}
         />
       ) : null}
 

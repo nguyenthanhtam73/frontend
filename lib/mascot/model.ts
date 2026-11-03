@@ -14,6 +14,8 @@
  *   Day 18 (suitcase) stays at L2. hug_return clears the overlay.
  */
 
+import { DEFAULT_ACCESSORY_IDS, DEFAULT_MASCOT_IDS } from "@/lib/mascot/catalog";
+
 export const SKIN_CONCERNS = ["acne", "oily", "dark_spot", "dry", "red"] as const;
 export type SkinConcern = (typeof SKIN_CONCERNS)[number];
 export type SkinLevel = "light" | "medium" | "heavy";
@@ -36,7 +38,12 @@ export type MascotLoadout = {
   /** Null uses the mood's eyes / brows / mouth / cheeks. A photo face id swaps those four layers. */
   face: WornItem | null;
   outfit: WornItem;
-  accessory: WornItem | null;
+  /**
+   * Worn together. The API may only send one `accessory` string;
+   * the pink headband stays on unless that string is the headband itself
+   * or `accessories` lists the slots explicitly.
+   */
+  accessories: WornItem[];
   roomItems: WornItem[];
 };
 
@@ -88,11 +95,11 @@ export { poseForStep, isSessionComplete, streakDotBonus, POSE_HOLD_MS, STEP_POSE
 export type { StepPose } from "@/lib/mascot/pose";
 
 export const DEFAULT_LOADOUT: MascotLoadout = {
-  body: permanentItem("body_chibi"),
-  hair: permanentItem("hair_sleep_buns"),
+  body: permanentItem(DEFAULT_MASCOT_IDS.body),
+  hair: permanentItem(DEFAULT_MASCOT_IDS.hair),
   face: null,
-  outfit: permanentItem("outfit_cozy_pajamas"),
-  accessory: permanentItem("accessory_star_clip"),
+  outfit: permanentItem(DEFAULT_MASCOT_IDS.outfit),
+  accessories: DEFAULT_ACCESSORY_IDS.map((id) => permanentItem(id)),
   roomItems: [
     permanentItem("room_moon"),
     permanentItem("room_plant"),
@@ -286,7 +293,7 @@ export function concernBars(current: SkinMark[], prev: SkinMark[]): ConcernBar[]
 
 export function defaultSnapshot(): MascotSnapshot {
   return {
-    loadout: { ...DEFAULT_LOADOUT, roomItems: [...DEFAULT_LOADOUT.roomItems] },
+    loadout: cloneLoadout(DEFAULT_LOADOUT),
     mood: "happy",
     skinMarks: [],
     skinMarksPrev: [],
@@ -370,11 +377,55 @@ function parseWorn(value: unknown, fallback: string | null): WornItem | null {
   return { id, expiresAt };
 }
 
+function dedupeWorn(items: WornItem[]): WornItem[] {
+  const seen = new Set<string>();
+  const out: WornItem[] = [];
+  for (const item of items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    out.push(item);
+  }
+  return out;
+}
+
+/**
+ * The API accessory field is a single id. The default look still wears the
+ * pink headband and the star clip together. An explicit `accessories` array
+ * is used as-is so a later payload can name every slot.
+ */
+function parseAccessories(row: Record<string, unknown>): WornItem[] {
+  const headband = permanentItem(DEFAULT_MASCOT_IDS.headband);
+  const clip = permanentItem(DEFAULT_MASCOT_IDS.accessory);
+  if (Array.isArray(row.accessories)) {
+    return dedupeWorn(
+      row.accessories
+        .map((item) => parseWorn(item, null))
+        .filter((item): item is WornItem => !!item),
+    );
+  }
+  const raw = row.accessory;
+  if (Array.isArray(raw)) {
+    return dedupeWorn(
+      raw.map((item) => parseWorn(item, null)).filter((item): item is WornItem => !!item),
+    );
+  }
+  const single = parseWorn(raw, null);
+  if (!single) return [headband, clip];
+  if (single.id === headband.id) return [single];
+  return [headband, single];
+}
+
+function cloneLoadout(loadout: MascotLoadout): MascotLoadout {
+  return {
+    ...loadout,
+    accessories: loadout.accessories.map((item) => ({ ...item })),
+    roomItems: loadout.roomItems.map((item) => ({ ...item })),
+  };
+}
+
 function parseLoadout(value: unknown): MascotLoadout {
   const row = asRecord(value);
-  if (!row) {
-    return { ...DEFAULT_LOADOUT, roomItems: DEFAULT_LOADOUT.roomItems.map((item) => ({ ...item })) };
-  }
+  if (!row) return cloneLoadout(DEFAULT_LOADOUT);
   const room = Array.isArray(row.room_items)
     ? row.room_items
         .map((item) => parseWorn(item, null))
@@ -385,13 +436,20 @@ function parseLoadout(value: unknown): MascotLoadout {
     hair: parseWorn(row.hair, DEFAULT_LOADOUT.hair.id)!,
     face: parseWorn(row.face, null),
     outfit: parseWorn(row.outfit, DEFAULT_LOADOUT.outfit.id)!,
-    accessory: parseWorn(row.accessory, null),
+    accessories: parseAccessories(row),
     roomItems: room,
   };
 }
 
 export function expiredItemKeys(loadout: MascotLoadout, now = Date.now()): string[] {
-  const items = [loadout.body, loadout.hair, loadout.face, loadout.outfit, loadout.accessory, ...loadout.roomItems];
+  const items = [
+    loadout.body,
+    loadout.hair,
+    loadout.face,
+    loadout.outfit,
+    ...loadout.accessories,
+    ...loadout.roomItems,
+  ];
   return items
     .filter((item): item is WornItem => !!item && itemLook(item.expiresAt, now) === "hidden")
     .map((item) => `${item.id}@${item.expiresAt}`)

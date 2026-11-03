@@ -189,7 +189,10 @@ describe("skin marks", () => {
       ["acne", "oily", "dark_spot"],
     );
     assert.equal(snap.skinMarks[1]?.level, "light");
-    assert.equal(snap.loadout.accessory, null);
+    assert.deepEqual(
+      snap.loadout.accessories.map((item) => item.id),
+      ["accessory_pink_headband", "accessory_star_clip"],
+    );
     assert.equal(snap.loadout.face, null);
     assert.deepEqual(snap.loadout.roomItems, [{ id: "room_moon", expiresAt: null }]);
     assert.equal(snap.routineToday.amDone, 1);
@@ -235,7 +238,7 @@ describe("shop expiry and swappable face", () => {
   it("drops an expired accessory and names it once", () => {
     const snap = parseMascot({
       loadout: {
-        hair: { id: "hair_photo", expires_at: "2026-11-03T00:00:00Z" },
+        hair: { id: "hair_sleep_buns", expires_at: "2026-11-03T00:00:00Z" },
         face: { id: "face_photo", expires_at: null },
         accessory: { id: "accessory_star_clip", expires_at: "2026-11-01T00:00:00Z" },
       },
@@ -252,9 +255,11 @@ describe("shop expiry and swappable face", () => {
     const stack = mascotStack(view, { now });
     const hair = stack.find((layer) => layer.slot === "hair");
     const accessory = stack.find((layer) => layer.slot === "accessory");
-    assert.equal(hair?.src, "/mascot/hair/hair_photo.svg");
+    const headband = stack.find((layer) => layer.slot === "accessory-headband");
+    assert.equal(hair?.src, "/mascot/hair/hair_sleep_buns.svg");
     assert.equal(hair?.opacity, 0.5);
     assert.equal(accessory, undefined);
+    assert.match(headband?.src ?? "", /accessory_pink_headband/);
     assert.equal(facePartSrc("happy", "eyes", "face_photo"), "/mascot/faces/items/face_photo/eyes.svg");
     assert.equal(
       stack.find((layer) => layer.slot === "face-eyes")?.src,

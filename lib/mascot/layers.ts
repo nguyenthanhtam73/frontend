@@ -1,5 +1,9 @@
 import {
-  DEFAULT_LOADOUT,
+  DEFAULT_MASCOT_IDS,
+  isKnownMascotItem,
+  type MascotItemLayer,
+} from "@/lib/mascot/catalog";
+import {
   itemLook,
   itemOpacity,
   markOpacity,
@@ -44,6 +48,7 @@ export const LAYER_ORDER = [
   "body",
   "outfit",
   "hair",
+  "accessory-headband",
   "face-cheeks",
   "skin-marks",
   "messy",
@@ -68,16 +73,22 @@ const NO_FACE = new Set(["back_turned"]);
 
 const REACTIONS = new Set(["laugh", "startled", "pouty"]);
 
-function wornOpacity(item: WornItem, now: number): number | null {
+function equipped(
+  item: WornItem,
+  layer: MascotItemLayer,
+  fallback: string,
+  now: number,
+): { id: string; opacity: number } {
+  const known = isKnownMascotItem(item.id, layer);
+  const look = itemLook(item.expiresAt, now);
+  if (!known || look === "hidden") return { id: fallback, opacity: 1 };
+  return { id: item.id, opacity: itemOpacity(look) };
+}
+
+function optionalOpacity(item: WornItem, now: number): number | null {
   const look = itemLook(item.expiresAt, now);
   if (look === "hidden") return null;
   return itemOpacity(look);
-}
-
-function corePiece(item: WornItem, fallbackId: string, now: number): { id: string; opacity: number } {
-  const opacity = wornOpacity(item, now);
-  if (opacity == null) return { id: fallbackId, opacity: 1 };
-  return { id: item.id, opacity };
 }
 
 export function mascotStack(
@@ -93,23 +104,30 @@ export function mascotStack(
   };
 
   for (const room of view.loadout.roomItems) {
-    const opacity = wornOpacity(room, now);
+    if (!isKnownMascotItem(room.id, "room")) continue;
+    const opacity = optionalOpacity(room, now);
     if (opacity == null) continue;
     push("props-room", `/mascot/props/${room.id}.svg`, opacity);
   }
 
-  const body = corePiece(view.loadout.body, DEFAULT_LOADOUT.body.id, now);
+  const body = equipped(view.loadout.body, "body", DEFAULT_MASCOT_IDS.body, now);
   const bodyFile = mood === "back_turned" ? "body_back" : SIT.has(mood) ? "body_sit" : body.id;
   push("body", `/mascot/body/${bodyFile}.svg`, bodyFile === body.id ? body.opacity : 1);
 
-  const outfit = corePiece(view.loadout.outfit, DEFAULT_LOADOUT.outfit.id, now);
+  const outfit = equipped(view.loadout.outfit, "outfit", DEFAULT_MASCOT_IDS.outfit, now);
   push("outfit", `/mascot/outfit/${outfit.id}.svg`, outfit.opacity);
 
-  const hair = corePiece(view.loadout.hair, DEFAULT_LOADOUT.hair.id, now);
+  const hair = equipped(view.loadout.hair, "hair", DEFAULT_MASCOT_IDS.hair, now);
   push("hair", `/mascot/hair/${hair.id}.svg`, hair.opacity);
+  for (const band of view.loadout.accessories) {
+    if (band.id !== DEFAULT_MASCOT_IDS.headband) continue;
+    const opacity = optionalOpacity(band, now);
+    if (opacity == null || !isKnownMascotItem(band.id, "accessory")) continue;
+    push("accessory-headband", `/mascot/accessory/${band.id}.svg`, opacity);
+  }
 
   const customFace = view.loadout.face;
-  const faceOpacity = customFace ? wornOpacity(customFace, now) : null;
+  const faceOpacity = customFace ? optionalOpacity(customFace, now) : null;
   const faceId = customFace && faceOpacity != null ? customFace.id : null;
   const expression =
     options.reaction && REACTIONS.has(options.reaction) ? options.reaction : mood;
@@ -139,9 +157,16 @@ export function mascotStack(
     }
   }
 
-  if (view.loadout.accessory) {
-    const opacity = wornOpacity(view.loadout.accessory, now);
-    if (opacity != null) push("accessory", `/mascot/accessory/${view.loadout.accessory.id}.svg`, opacity);
+  for (const accessory of view.loadout.accessories) {
+    if (accessory.id === DEFAULT_MASCOT_IDS.headband) continue;
+    const look = itemLook(accessory.expiresAt, now);
+    if (look === "hidden") continue;
+    const known = isKnownMascotItem(accessory.id, "accessory");
+    push(
+      "accessory",
+      `/mascot/accessory/${known ? accessory.id : DEFAULT_MASCOT_IDS.accessory}.svg`,
+      known ? itemOpacity(look) : 1,
+    );
   }
 
   for (const prop of frontProps(view, options.locale ?? "vi")) {
