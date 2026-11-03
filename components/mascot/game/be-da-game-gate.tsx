@@ -12,7 +12,7 @@ const BeDaGameScreen = dynamic(
 );
 
 /** Full-screen trial. The chunk stays unloaded unless GET /me says features.mascot. */
-export function BeDaGameGate() {
+export function BeDaGameGate({ roomCode = null }: { roomCode?: string | null }) {
   const { enabled, pending } = useMascotFeature();
   const router = useRouter();
 
@@ -22,5 +22,5 @@ export function BeDaGameGate() {
   }, [enabled, pending, router]);
 
   if (pending || !enabled) return null;
-  return <BeDaGameScreen />;
+  return <BeDaGameScreen roomCode={roomCode} />;
 }

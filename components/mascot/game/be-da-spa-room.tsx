@@ -1,0 +1,411 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { MouseEvent } from "react";
+import { useTranslations } from "next-intl";
+
+import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { GameIcon } from "@/components/mascot/game/icons";
+import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
+import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
+import {
+  SPA_ROOM_CAP,
+  SPA_SEATS,
+  SPA_YOU,
+  roomInviteUrl,
+  zaloShareUrl,
+  type SpaGuest,
+  type SpaNotice,
+} from "@/lib/mascot/game/spa-room";
+import type { BeDaView } from "@/lib/mascot/model";
+
+export type SpaRoomState = {
+  code: string;
+  count: number;
+  cap: number;
+  guests: readonly SpaGuest[];
+  notice: SpaNotice;
+};
+
+export function BeDaSpaRoom({
+  locale,
+  player,
+  look,
+  soundOn,
+  selectedId,
+  youPose,
+  room,
+  onSelect,
+  onAction,
+  onHide,
+  onLeave,
+  onLobby,
+  onToggleSound,
+}: {
+  locale: string;
+  player: BeDaView;
+  look: GameLook;
+  soundOn: boolean;
+  selectedId: string;
+  youPose: GamePose | null;
+  room: SpaRoomState;
+  onSelect: (id: string) => void;
+  onAction: (kind: "wave" | "heart" | "outfit") => void;
+  onHide: (id: string) => void;
+  onLeave: () => void;
+  onLobby: () => void;
+  onToggleSound: () => void;
+}) {
+  const t = useTranslations("mascot");
+  const [copied, setCopied] = useState(false);
+  const cap = room.cap || SPA_ROOM_CAP;
+  const count = Math.min(cap, Math.max(0, room.count));
+  const left = Math.max(0, cap - count);
+  const showYou = room.notice !== "full";
+  const bySeat = new Map(room.guests.map((guest) => [guest.seat, guest]));
+  const notice =
+    room.notice === "full"
+      ? t("game.spaFull")
+      : room.notice === "missing"
+        ? t("game.spaMissing")
+        : room.notice === "bad-code"
+          ? t("game.spaCodeBad")
+          : room.notice === "name"
+            ? t("game.nicknameRejected")
+            : null;
+
+  useEffect(() => {
+    if (!copied) return;
+    const id = window.setTimeout(() => setCopied(false), 1600);
+    return () => window.clearTimeout(id);
+  }, [copied]);
+
+  function onBackground(event: MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    if (target.closest("button, a, input, .beda-actions, .beda-spa-invite")) return;
+    onSelect("");
+  }
+
+  async function onCopy() {
+    if (room.code.length !== 6) return;
+    const ok = await copyText(room.code);
+    if (ok) setCopied(true);
+  }
+
+  return (
+    <div className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
+      <div className="beda-spa-wall" />
+      <div className="beda-spa-stripes" />
+      <div className="beda-spa-wood" />
+      <div className="beda-spa-planks" />
+      <div className="beda-spa-glow" aria-hidden />
+      <div className="beda-spa-lamp" aria-hidden>
+        <i />
+        <b />
+      </div>
+      <div className="beda-spa-shelf" aria-hidden>
+        <i className="beda-spa-jar" style={{ background: "#8fd9cf" }} />
+        <i className="beda-spa-jar is-short" style={{ background: "#f7b7c9" }} />
+        <i className="beda-spa-jar" style={{ background: "#fff1c9" }} />
+        <i className="beda-spa-jar is-tall" style={{ background: "#f3c4ae" }} />
+      </div>
+      <div className="beda-spa-candles" aria-hidden>
+        <i />
+        <i />
+      </div>
+      <Plant className="is-left" />
+      <Plant className="is-right" />
+
+      <div className="beda-spa-stage">
+        <div className="beda-spa-mat" aria-hidden>
+          <i className="beda-spa-cucumber" />
+        </div>
+        {SPA_SEATS.map((seat) => {
+          const guest = bySeat.get(seat.id) ?? null;
+          if (!guest) {
+            return (
+              <i
+                key={seat.id}
+                className={seat.id === "back" ? "beda-spa-open is-far" : "beda-spa-open"}
+                data-testid={`beda-spa-open-${seat.id}`}
+                style={{ left: `${seat.x}%`, top: `${seat.y}%` }}
+              />
+            );
+          }
+          return (
+            <SpaPerson
+              key={guest.id}
+              guest={guest}
+              locale={locale}
+              selected={guest.id === selectedId}
+              seatX={seat.x}
+              seatY={seat.y}
+              scale={seat.scale}
+              onSelect={onSelect}
+              onAction={onAction}
+              onHide={onHide}
+            />
+          );
+        })}
+        {showYou ? (
+          <div
+            className="beda-spa-person is-you"
+            data-testid="beda-spa-you"
+            style={{
+              left: `${SPA_YOU.x}%`,
+              top: `${SPA_YOU.y}%`,
+              zIndex: 40,
+              ["--scale" as string]: String(SPA_YOU.scale),
+            }}
+          >
+            <span className="beda-spa-art">
+              <Cheeks />
+              <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} className="w-full" />
+            </span>
+            <span className="beda-tag beda-tag-me">
+              <Star /> {t("game.you")}
+            </span>
+          </div>
+        ) : null}
+      </div>
+
+      <header className="beda-spa-head">
+        <button type="button" className="beda-spa-iconbtn" data-testid="beda-spa-leave" aria-label={t("game.spaLeave")} onClick={onLeave}>
+          <LeaveArrow />
+        </button>
+        <div className="beda-spa-title" data-testid="beda-spa-title">
+          <House />
+          {t("game.spaTitle", { count, cap })}
+        </div>
+        <button
+          type="button"
+          className="beda-spa-iconbtn"
+          data-testid="beda-mute"
+          aria-pressed={soundOn}
+          aria-label={soundOn ? t("game.soundOn") : t("game.soundOff")}
+          onClick={onToggleSound}
+        >
+          <GameIcon name={soundOn ? "soundOn" : "soundOff"} className="beda-ico-sm" />
+        </button>
+        <div className="beda-spa-seatbar" data-testid="beda-spa-seats">
+          <span>{left === 0 ? t("game.spaSeatsFull", { cap }) : t("game.spaSeats", { cap, left })}</span>
+          <span className="beda-spa-dots" aria-hidden>
+            {Array.from({ length: cap }, (_, index) => (
+              <i key={index} className={index < count ? "beda-spa-dot is-on" : "beda-spa-dot"} />
+            ))}
+          </span>
+        </div>
+      </header>
+
+      <button type="button" className="beda-spa-lobby" data-testid="beda-spa-lobby" onClick={onLobby}>
+        <PersonMark />
+        {t("game.spaToLobby")}
+      </button>
+
+      <section className="beda-spa-invite" data-testid="beda-spa-invite" aria-label={t("game.spaInvite")}>
+        <h2>{t("game.spaInvite")}</h2>
+        <div className="beda-spa-code" data-testid="beda-spa-code">
+          {Array.from({ length: 6 }, (_, index) => (
+            <b key={index}>{room.code[index] ?? ""}</b>
+          ))}
+        </div>
+        {notice ? (
+          <p className="beda-spa-notice" role="status">
+            {notice}
+          </p>
+        ) : null}
+        {copied ? (
+          <p className="beda-spa-copied" role="status">
+            {t("game.spaCopied")}
+          </p>
+        ) : null}
+        <div className="beda-spa-share">
+          <button type="button" className="beda-spa-copy" data-testid="beda-spa-copy" onClick={() => void onCopy()}>
+            <Clipboard />
+            {t("game.spaCopy")}
+          </button>
+          {room.code.length === 6 ? (
+            <a
+              className="beda-spa-zalo"
+              data-testid="beda-spa-zalo"
+              href={zaloShareUrl(roomInviteUrl(room.code))}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ShareArrow />
+              {t("game.spaZalo")}
+            </a>
+          ) : (
+            <span className="beda-spa-zalo is-off">{t("game.spaZalo")}</span>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SpaPerson({
+  guest,
+  locale,
+  selected,
+  seatX,
+  seatY,
+  scale,
+  onSelect,
+  onAction,
+  onHide,
+}: {
+  guest: SpaGuest;
+  locale: string;
+  selected: boolean;
+  seatX: number;
+  seatY: number;
+  scale: number;
+  onSelect: (id: string) => void;
+  onAction: (kind: "wave" | "heart" | "outfit") => void;
+  onHide: (id: string) => void;
+}) {
+  const t = useTranslations("mascot");
+  const sample = guest.sample ? SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === guest.id) : undefined;
+  const view = sample ? sampleFriendView(sample) : lobbyNeutralView();
+  const dress = gameDress({ outfit: guest.outfit, hair: guest.hair, clip: guest.clip }, guest.pose);
+  return (
+    <div
+      className={selected ? "beda-spa-person is-selected" : "beda-spa-person"}
+      data-sample={guest.sample ? "true" : "false"}
+      data-friend-id={guest.id}
+      data-testid={`beda-spa-guest-${guest.id}`}
+      style={{
+        left: `${seatX}%`,
+        top: `${seatY}%`,
+        zIndex: 10 + Math.round(seatY),
+        ["--scale" as string]: String(scale),
+      }}
+    >
+      {selected ? (
+        <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={guest.nickname}>
+          <p className="beda-card-name">{guest.nickname}</p>
+          <button type="button" className="beda-hide" data-testid="beda-hide-friend" onClick={() => onHide(guest.id)}>
+            {t("game.hideFriend")}
+          </button>
+          <p className="beda-hide-note">{t("game.hideFriendNote")}</p>
+          <div className="beda-action-row">
+            <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
+              <GameIcon name="wave" />
+              {t("game.wave")}
+            </button>
+            <button type="button" className="beda-action" onClick={() => onAction("heart")}>
+              <GameIcon name="heart" />
+              {t("game.heart")}
+            </button>
+            <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
+              <GameIcon name="outfit" />
+              {t("game.outfit")}
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <button type="button" className="beda-spa-hit" onClick={() => onSelect(guest.id)}>
+        <span className="beda-spa-art">
+          <Cheeks />
+          <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" className="w-full" />
+        </span>
+        <span className="beda-tag">{guest.nickname}</span>
+      </button>
+    </div>
+  );
+}
+
+function Cheeks() {
+  return (
+    <span className="beda-cheeks" aria-hidden>
+      <i className="beda-cuke is-left" />
+      <i className="beda-cuke is-right" />
+    </span>
+  );
+}
+
+function Plant({ className }: { className: string }) {
+  return (
+    <div className={`beda-spa-plant ${className}`} aria-hidden>
+      <i />
+      <i />
+      <i />
+      <b />
+    </div>
+  );
+}
+
+function House() {
+  return (
+    <svg className="beda-spa-house" viewBox="0 0 32 32" aria-hidden>
+      <path d="M6 15 16 7l10 8v10a2 2 0 0 1-2 2h-5v-7h-6v7H8a2 2 0 0 1-2-2Z" fill="#fff" />
+    </svg>
+  );
+}
+
+function Star() {
+  return (
+    <svg className="beda-spa-star" viewBox="0 0 32 32" aria-hidden>
+      <path d="m16 4 3.2 7.4 8 .8-6 5.2 1.8 7.8L16 21.2 9 25.2 10.8 17.4 4.8 12.2l8-.8Z" fill="#ffd15c" />
+    </svg>
+  );
+}
+
+function LeaveArrow() {
+  return (
+    <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
+      <path d="M16 8a8 8 0 1 0 6.8 3.8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M16 4.5V9h4.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PersonMark() {
+  return (
+    <svg className="beda-spa-personmark" viewBox="0 0 32 32" aria-hidden>
+      <circle cx="16" cy="11" r="5" fill="#2f9e96" />
+      <path d="M7 26c1.4-5 4.6-7.5 9-7.5S23.6 21 25 26" fill="#2f9e96" />
+    </svg>
+  );
+}
+
+function Clipboard() {
+  return (
+    <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
+      <rect x="8" y="7" width="16" height="20" rx="3" fill="none" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M12 7.5h8v3H12z" fill="currentColor" />
+      <path d="M12 16h8M12 20h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ShareArrow() {
+  return (
+    <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
+      <path d="M8 16h12M16 10l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+async function copyText(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    try {
+      const input = document.createElement("textarea");
+      input.value = value;
+      input.setAttribute("readonly", "");
+      input.style.position = "fixed";
+      input.style.left = "-999px";
+      document.body.appendChild(input);
+      input.select();
+      const ok = document.execCommand("copy");
+      input.remove();
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}

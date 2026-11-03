@@ -20,6 +20,7 @@ import {
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
 import { sampleWander, type LobbyActor } from "@/lib/mascot/game/lobby-live";
+import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode } from "@/lib/mascot/game/spa-room";
 import type { GamePose } from "@/lib/mascot/game/look";
 import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
@@ -63,6 +64,8 @@ export function BeDaLobby({
   onHide,
   onNickname,
   onSwitchHall,
+  onCreateRoom,
+  onJoinRoom,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -83,6 +86,8 @@ export function BeDaLobby({
   onHide: (id: string) => void;
   onNickname: (value: string) => boolean;
   onSwitchHall: (lobby: number) => void;
+  onCreateRoom?: () => void;
+  onJoinRoom?: (code: string) => void;
 }) {
   const tLobby = useTranslations("mascot");
   const frameRef = useRef<HTMLDivElement>(null);
@@ -96,6 +101,9 @@ export function BeDaLobby({
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(you.nickname);
+  const [entering, setEntering] = useState(false);
+  const [roomDraft, setRoomDraft] = useState("");
+  const [roomError, setRoomError] = useState(false);
   const night = sky === "night" || sky === "evening";
   const placed = actors.map((actor) => {
     if (!actor.sample || tick === 0) return actor;
@@ -425,6 +433,54 @@ export function BeDaLobby({
         </div>
       </div>
       <div className="beda-lobby-chrome">
+        <div className="beda-spa-entry" data-testid="beda-spa-entry">
+          <button type="button" data-testid="beda-create-room" onClick={() => onCreateRoom?.()}>
+            {tLobby("game.spaCreate")}
+          </button>
+          {entering ? (
+            <form
+              data-testid="beda-room-code-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const next = normalizeRoomCode(roomDraft);
+                if (!next) {
+                  setRoomError(true);
+                  return;
+                }
+                setRoomError(false);
+                onJoinRoom?.(next);
+              }}
+            >
+              <input
+                data-testid="beda-room-code"
+                aria-label={tLobby("game.spaCodeLabel")}
+                value={roomDraft}
+                maxLength={SPA_ROOM_CODE_LENGTH}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => {
+                  const next = event.target.value
+                    .toUpperCase()
+                    .split("")
+                    .filter((char) => SPA_CODE_ALPHABET.includes(char))
+                    .join("")
+                    .slice(0, SPA_ROOM_CODE_LENGTH);
+                  setRoomDraft(next);
+                  setRoomError(false);
+                }}
+              />
+              <button type="submit" data-testid="beda-join-room">
+                {tLobby("game.spaJoin")}
+              </button>
+            </form>
+          ) : (
+            <button type="button" data-testid="beda-enter-code" onClick={() => setEntering(true)}>
+              {tLobby("game.spaEnter")}
+            </button>
+          )}
+          {roomError ? <p role="alert">{tLobby("game.spaCodeBad")}</p> : null}
+        </div>
         {hallFull && nextHall != null ? (
           <div className="beda-switch" data-testid="beda-hall-switch">
             <span>{tLobby("game.hallFullAsk", { lobby: hall })}</span>

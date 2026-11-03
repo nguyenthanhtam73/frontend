@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { BeDaGameView, type GameTab, type GameToast } from "@/components/mascot/game/be-da-game-view";
+import { useRouter } from "@/i18n/navigation";
 import { apiGet } from "@/lib/api-client";
 import { fetchMascot, mascotQueryKey } from "@/lib/api/mascot";
 import { getAccessToken } from "@/lib/auth-token";
@@ -12,6 +13,7 @@ import { useBeDaView } from "@/lib/hooks/use-mascot";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
 import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
+import { useSpaRoom } from "@/components/mascot/game/use-spa-room";
 import { localePath } from "@/lib/mascot/game/path";
 import {
   GAME_CHEST_KEY,
@@ -31,6 +33,13 @@ import {
 } from "@/lib/mascot/game/look";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
+import {
+  SPA_CREATE_KEY,
+  SPA_TAB_KEY,
+  makeRoomCode,
+  normalizeRoomCode,
+  roomInvitePath,
+} from "@/lib/mascot/game/spa-room";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { streakDateKey } from "@/lib/streak/history";
@@ -38,8 +47,11 @@ import type { RoutineDTO } from "@/lib/types/routine";
 
 import "@/components/mascot/game/be-da-game.css";
 
-export function BeDaGameScreen() {
+export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }) {
   const locale = useLocale();
+  const router = useRouter();
+  const code = roomCode ? normalizeRoomCode(roomCode) : null;
+  const inSpa = roomCode != null;
   const today = streakDateKey();
   const user = useAuthStore((s) => s.user);
   const hasAuth = !!user || !!getAccessToken();
@@ -104,10 +116,30 @@ export function BeDaGameScreen() {
   const canChest = chestReady(quests, claimed);
 
   useEffect(() => {
-    if (!ready || autoChest.current || !canChest) return;
+    if (roomCode) return;
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage.getItem(SPA_TAB_KEY);
+    } catch {
+      return;
+    }
+    if (saved !== "lobby" && saved !== "care" && saved !== "wardrobe" && saved !== "quests") return;
+    setTab(saved);
+    const id = window.setTimeout(() => {
+      try {
+        sessionStorage.removeItem(SPA_TAB_KEY);
+      } catch {
+        /* ignore */
+      }
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [roomCode]);
+
+  useEffect(() => {
+    if (!ready || autoChest.current || !canChest || roomCode) return;
     autoChest.current = true;
     setTab("quests");
-  }, [ready, canChest]);
+  }, [ready, canChest, roomCode]);
 
   useEffect(() => {
     if (!toast) return;
@@ -116,7 +148,7 @@ export function BeDaGameScreen() {
   }, [toast]);
 
   const presence = useLobbyPresence({
-    active: tab === "lobby",
+    active: tab === "lobby" && !inSpa,
     look,
     onRemoteEmote: (event) => {
       setToast(event);
@@ -124,6 +156,21 @@ export function BeDaGameScreen() {
       playGameTing(soundRef.current);
     },
   });
+  const spaRoom = useSpaRoom({
+    active: code != null,
+    code,
+    look,
+    onRemoteEmote: (event) => {
+      setToast(event);
+      setBurst((n) => n + 1);
+      playGameTing(soundRef.current);
+    },
+  });
+
+  useEffect(() => {
+    if (!code || !spaRoom.serverCode || spaRoom.serverCode === code) return;
+    router.replace(roomInvitePath(spaRoom.serverCode));
+  }, [code, router, spaRoom.serverCode]);
 
   function feedback() {
     setBurst((n) => n + 1);
@@ -149,7 +196,34 @@ export function BeDaGameScreen() {
     if (next) playGameTing(true);
   }
 
+  function leaveSpa(next: GameTab) {
+    try {
+      sessionStorage.setItem(SPA_TAB_KEY, next);
+    } catch {
+      /* the route change still leaves the room */
+    }
+    router.push("/be-da");
+  }
+
+  function createRoom() {
+    const next = makeRoomCode();
+    try {
+      sessionStorage.setItem(SPA_CREATE_KEY, next);
+    } catch {
+      /* the page still opens on this code */
+    }
+    router.push(roomInvitePath(next));
+  }
+
   function onFriendAction(kind: "wave" | "heart" | "outfit") {
+    if (inSpa) {
+      const guest = spaRoom.guests.find((item) => item.id === selectedFriendId);
+      if (!guest) return;
+      feedback();
+      setToast({ name: guest.nickname, kind });
+      spaRoom.emote(guest, kind);
+      return;
+    }
     const friend = presence.actors.find((item) => item.id === selectedFriendId);
     if (!friend) return;
     feedback();
@@ -199,7 +273,8 @@ export function BeDaGameScreen() {
     return ids;
   }, [view]);
 
-  const chestOpen = ready && canChest && !chestDismissed && tab !== "lobby" && tab !== "wardrobe";
+  const chestOpen =
+    ready && canChest && !chestDismissed && !inSpa && tab !== "lobby" && tab !== "wardrobe";
 
   return (
     <BeDaGameView
@@ -228,7 +303,8 @@ export function BeDaGameScreen() {
       lobbyLive={presence.live}
       nicknameError={presence.nicknameError}
       onHide={(id) => {
-        presence.hide(id);
+        if (inSpa) spaRoom.hide(id);
+        else presence.hide(id);
         if (id === selectedFriendId) setSelectedFriendId("");
       }}
       onWalk={presence.walkTo}
@@ -243,8 +319,30 @@ export function BeDaGameScreen() {
       burst={burst}
       homeHref={localePath(locale, "/check-in")}
       routineHref={localePath(locale, "/routine")}
-      onTab={onTab}
+      onTab={(next) => {
+        if (inSpa) {
+          leaveSpa(next);
+          return;
+        }
+        onTab(next);
+      }}
       onToggleSound={onToggleSound}
+      spa={
+        inSpa
+          ? {
+              code: code ?? "",
+              count: code ? spaRoom.count : 1,
+              cap: spaRoom.cap,
+              guests: code ? spaRoom.guests : [],
+              notice: code ? spaRoom.notice : "bad-code",
+            }
+          : null
+      }
+      youPose={spaRoom.youPose}
+      onCreateRoom={createRoom}
+      onJoinRoom={(next) => router.push(roomInvitePath(next))}
+      onLeaveSpa={() => leaveSpa("care")}
+      onSpaLobby={() => leaveSpa("lobby")}
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}

@@ -6,7 +6,8 @@ export function localePath(locale: string, path: string): string {
   return locale.toLowerCase().startsWith("en") ? `/en${bare}` : bare;
 }
 
-/** True for `/be-da` and `/en/be-da`. */
+/** True for `/be-da`, `/en/be-da`, and an invite `/be-da/phong/<code>`. */
 export function isBeDaGamePath(pathname: string): boolean {
-  return appPathKey(pathname) === "/be-da";
+  const key = appPathKey(pathname);
+  return key === "/be-da" || key.startsWith("/be-da/phong/");
 }

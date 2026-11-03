@@ -265,6 +265,8 @@ describe("game path", () => {
     assert.equal(isBeDaGamePath("/be-da"), true);
     assert.equal(isBeDaGamePath("/en/be-da"), true);
     assert.equal(isBeDaGamePath("/be-da/"), true);
+    assert.equal(isBeDaGamePath("/be-da/phong/DA7K2M"), true);
+    assert.equal(isBeDaGamePath("/en/be-da/phong/DA7K2M"), true);
     assert.equal(isBeDaGamePath("/routine"), false);
     assert.equal(localePath("vi", "/routine"), "/routine");
     assert.equal(localePath("en", "/check-in"), "/en/check-in");
