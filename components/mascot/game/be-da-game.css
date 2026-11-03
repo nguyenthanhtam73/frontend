@@ -237,25 +237,40 @@
   background: #6fbf7a;
 }
 
-/* Left back wall, under the window and left of the centered figure. */
+/* Private room only. Left of the spec (24%) so the right edge clears her hair.
+   Feet sit on the wall–floor line. Under Bé Da and her rug, over the wall. */
 .beda-cabinet {
   position: absolute;
-  z-index: 3;
-  left: 8px;
-  top: calc(16% + min(36vw, 168px) + 14px);
-  width: 64px;
+  z-index: 2;
+  left: 10%;
+  bottom: 43.5%;
+  width: 14.5%;
+  aspect-ratio: 120 / 170;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
-  filter: drop-shadow(0 7px 0 rgba(185, 130, 106, 0.22));
+  transform-origin: 50% 100%;
+  transition: transform 120ms ease;
 }
 
 .beda-cabinet img {
-  display: block;
-  width: 100%;
-  height: auto;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  transform: translateX(-50%);
   pointer-events: none;
+}
+
+.beda-cabinet.is-open img {
+  /* Open doors are wider (136 vs 120) at the same height, still centered. */
+  height: 100%;
+}
+
+.beda-cabinet:active {
+  transform: translateY(3px) scale(0.97);
 }
 
 .beda-cabinet:focus-visible {
@@ -264,10 +279,9 @@
   border-radius: 14px;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 700px) {
   .beda-cabinet {
-    left: 16px;
-    width: 96px;
+    left: 18%;
   }
 }
 
@@ -1462,12 +1476,6 @@
   .beda-door {
     right: 28px;
     top: calc(108px + env(safe-area-inset-top));
-  }
-
-  .beda-cabinet {
-    left: 24px;
-    top: calc(14% + min(24vw, 260px) + 18px);
-    width: 108px;
   }
 
   .beda-window {

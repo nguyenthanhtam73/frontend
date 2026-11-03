@@ -168,6 +168,7 @@ describe("Bé Da game screen", () => {
     assert.match(html, /18 bạn đang dạo chơi/);
     assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);
+    assert.equal(html.includes("/mascot/props/wardrobe"), false);
     assert.match(html, /\/mascot\/icons\/minimap_pin\.svg/);
     assert.match(html, /\/mascot\/icons\/wave\.svg/);
     assert.equal(html.includes("hue-rotate"), false);

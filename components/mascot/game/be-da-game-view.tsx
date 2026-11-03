@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
@@ -284,6 +284,19 @@ function Room({
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
+  const [cabinetOpen, setCabinetOpen] = useState(false);
+  const cabinetTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (cabinetTimer.current != null) window.clearTimeout(cabinetTimer.current);
+  }, []);
+  function openCabinet() {
+    if (cabinetTimer.current != null) return;
+    setCabinetOpen(true);
+    cabinetTimer.current = window.setTimeout(() => {
+      cabinetTimer.current = null;
+      onOpenWardrobe();
+    }, 300);
+  }
   return (
     <div className="beda-scene" data-testid="beda-room">
       <div className="beda-room-wall" />
@@ -319,12 +332,16 @@ function Room({
       {!hideCards ? (
         <button
           type="button"
-          className="beda-cabinet"
+          className={cabinetOpen ? "beda-cabinet is-open" : "beda-cabinet"}
           data-testid="beda-cabinet"
           aria-label={t("game.wardrobe")}
-          onClick={onOpenWardrobe}
+          onClick={openCabinet}
         >
-          <img src="/mascot/props/wardrobe.svg" alt="" decoding="async" />
+          <img
+            src={cabinetOpen ? "/mascot/props/wardrobe_open.svg" : "/mascot/props/wardrobe.svg"}
+            alt=""
+            decoding="async"
+          />
         </button>
       ) : null}
 
