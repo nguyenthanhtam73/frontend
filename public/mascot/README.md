@@ -11,10 +11,10 @@ Hair art must leave the eye, brow, mouth, cheek, and accessory-clip anchors clea
 | Name | Point |
 | --- | --- |
 | headCenter | 110, 104 (radius 42) |
-| eyeLeft / eyeRight | 94, 102 / 126, 102 |
-| browLeft / browRight | 94, 90 / 126, 90 |
-| mouth | 110, 122 |
-| cheekLeft / cheekRight | 80, 116 / 140, 116 |
+| eyeLeft / eyeRight | 94, 111 / 126, 111 |
+| browLeft / browRight | 94, 99 / 126, 99 |
+| mouth | 110, 130 |
+| cheekLeft / cheekRight | 84, 123 / 136, 123 |
 | hairCrown | 110, 58 |
 | hairBunLeft / hairBunRight | 64, 86 / 156, 86 |
 | accessoryClip | 156, 62 |
