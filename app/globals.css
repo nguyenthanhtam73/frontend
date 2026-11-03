@@ -606,3 +606,23 @@ img.be-da-flies-exit {
   border-radius: 999px;
   animation: be-da-spark-pop 0.95s ease-out forwards;
 }
+
+/* The trial room covers the diary chrome while it is open. */
+body[data-beda-game="on"],
+html:has(body[data-beda-game="on"]) {
+  overflow: hidden !important;
+  scrollbar-width: none;
+}
+
+html:has(body[data-beda-game="on"])::-webkit-scrollbar,
+body[data-beda-game="on"]::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+body[data-beda-game="on"] [data-site-header],
+body[data-beda-game="on"] [data-site-footer],
+body[data-beda-game="on"] [data-activation-banner] {
+  display: none !important;
+}

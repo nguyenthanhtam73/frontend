@@ -20,6 +20,7 @@ export function BeDaFigure({
   glowCelebrate = false,
   interactive = false,
   tapLabel,
+  outfitHue = 0,
   className,
 }: {
   view: BeDaView;
@@ -32,6 +33,8 @@ export function BeDaFigure({
   glowCelebrate?: boolean;
   interactive?: boolean;
   tapLabel?: string;
+  /** Temporary outfit recolor. 0 leaves the art as drawn. Not a purchase. */
+  outfitHue?: number;
   className?: string;
 }) {
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -66,6 +69,11 @@ export function BeDaFigure({
           slot={layer.slot}
           opacity={layer.opacity}
           tidy={layer.slot === "messy" && tidy}
+          filter={
+            layer.slot === "outfit" && outfitHue
+              ? `hue-rotate(${outfitHue}deg) saturate(1.15)`
+              : undefined
+          }
         />
       ))}
       {showExitFlies ? (
@@ -152,11 +160,13 @@ const LayerImage = memo(function LayerImage({
   slot,
   opacity,
   tidy,
+  filter,
 }: {
   src: string;
   slot: string;
   opacity: number;
   tidy: boolean;
+  filter?: string;
 }) {
   const tidyHair = tidy && slot === "messy";
   const glow = slot === "glow" || slot === "glow-back" || slot === "glow-front";
@@ -183,7 +193,15 @@ const LayerImage = memo(function LayerImage({
         slot === "fx-flies" && "be-da-fly",
         tidyHair && "be-da-tidy",
       )}
-      style={tidyHair || lids ? undefined : { opacity }}
+      style={
+        tidyHair || lids
+          ? filter
+            ? { filter }
+            : undefined
+          : filter
+            ? { opacity, filter }
+            : { opacity }
+      }
     />
   );
 });

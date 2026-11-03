@@ -55,6 +55,10 @@
       "title": "Morning & evening skincare · DaDiary",
       "description": "Build your morning & evening skincare — edit, reorder, and tick steps daily."
     },
+    "beDa": {
+      "title": "Bé Da's room · DaDiary",
+      "description": "Bé Da's room — today's tasks, the closet, and the shared lobby. Opens only when Bé Da is on."
+    },
     "feedbackPage": {
       "title": "Send feedback · DaDiary",
       "description": "Share opinions, report bugs, or suggest features during Beta."
@@ -3327,7 +3331,7 @@
   },
   "mascot": {
     "name": "Bé Da",
-    "homeAria": "Bé Da — open routine",
+    "homeAria": "Bé Da — open her room",
     "tap": "Bé Da reacts",
     "levelsLabel": "Skin levels",
     "improved": "Better",
@@ -3367,6 +3371,69 @@
       "waiting_door_abandoned": "I was abandoned here",
       "hug_return": "You're back! Hug first~",
       "itemExpired": "Keep caring for your skin to get it back"
+    },
+    "game": {
+      "back": "Back home",
+      "coinsUnit": "coins",
+      "streakUnit": "day streak",
+      "soundOn": "Sound on",
+      "soundOff": "Sound off",
+      "care": "Skin care",
+      "wardrobe": "Closet",
+      "quests": "Tasks",
+      "lobby": "Lobby",
+      "you": "You",
+      "friends": "{count} friends out walking",
+      "door": "To the lobby",
+      "doorCount": "{count} friends",
+      "drag": "Drag to walk around",
+      "wave": "Wave",
+      "heart": "Send a heart",
+      "outfit": "Nice outfit",
+      "questTitle": "Today's tasks",
+      "gift": "A gift",
+      "giftTaken": "Taken",
+      "routineLink": "Tick this in your routine",
+      "tasks": {
+        "wash": "Wash your face this morning",
+        "spf": "Put on sunscreen",
+        "wave": "Wave in the lobby"
+      },
+      "bubbleWash": "Wash your face this morning?",
+      "bubbleWashed": "I washed my face!",
+      "bubbleSpf": "Sunscreen next?",
+      "bubbleScreened": "Sunscreen is on!",
+      "bubbleWave": "Come wave in the lobby?",
+      "bubbleDone": "Today's tasks are all done!",
+      "atHome": "Bé Da is home",
+      "chestTitle": "Open the gift!",
+      "chestSub": "You finished today's tasks",
+      "chestStreak": "Streak kept",
+      "chestStreakWait": "Check in to keep the streak",
+      "chestHearts": "+{count} hearts",
+      "claim": "Take gift",
+      "wearing": "Wearing now",
+      "tryColor": "Try a colour",
+      "tryNote": "Just a preview. Nothing to buy.",
+      "wear": {
+        "pajamas": "Cozy pajamas",
+        "buns": "Sleep buns",
+        "headband": "Pink headband",
+        "clip": "Star clip"
+      },
+      "swatch": {
+        "pink": "Pink",
+        "peach": "Peach",
+        "sun": "Yellow",
+        "leaf": "Leaf",
+        "sky": "Sky",
+        "lilac": "Lilac"
+      },
+      "toast": {
+        "wave": "{name} waved at you",
+        "heart": "Heart sent to {name}",
+        "outfit": "{name}'s outfit looks lovely"
+      }
     }
   }
 }

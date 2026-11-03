@@ -179,6 +179,7 @@ export function ActivationCheckInBanner() {
     <div
       className="border-b border-primary/20 bg-primary/[0.06]"
       data-testid="activation-check-in-banner"
+      data-activation-banner
       data-reminder-kind={displayKind}
     >
       <div className="mx-auto flex w-full max-w-5xl items-start gap-3 px-4 py-3 sm:items-center sm:px-6">
