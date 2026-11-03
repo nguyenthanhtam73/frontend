@@ -55,6 +55,10 @@
       "title": "Chăm da sáng tối · DaDiary",
       "description": "Soạn các bước chăm da sáng/tối — chỉnh sửa, kéo thả, tick hoàn thành mỗi ngày."
     },
+    "beDa": {
+      "title": "Phòng Bé Da · DaDiary",
+      "description": "Phòng của Bé Da — nhiệm vụ hôm nay, tủ đồ, và Sảnh chung. Chỉ mở khi Bé Da được bật."
+    },
     "feedbackPage": {
       "title": "Gửi góp ý · DaDiary",
       "description": "Chia sẻ ý kiến, báo lỗi hoặc đề xuất tính năng — giúp DaDiary tốt hơn trong giai đoạn Beta."
@@ -3327,7 +3331,7 @@
   },
   "mascot": {
     "name": "Bé Da",
-    "homeAria": "Bé Da — mở routine",
+    "homeAria": "Bé Da — vào phòng",
     "tap": "Bé Da phản ứng",
     "levelsLabel": "Mức da",
     "improved": "Đỡ rồi",
@@ -3367,6 +3371,69 @@
       "waiting_door_abandoned": "Tôi đã bị bỏ rơi ở đây",
       "hug_return": "Về rồi! Ôm cái đã~",
       "itemExpired": "Chăm da tiếp để lấy lại nha"
+    },
+    "game": {
+      "back": "Về nhà",
+      "coinsUnit": "xu",
+      "streakUnit": "chuỗi ngày",
+      "soundOn": "Đang bật tiếng",
+      "soundOff": "Đang tắt tiếng",
+      "care": "Chăm da",
+      "wardrobe": "Tủ đồ",
+      "quests": "Nhiệm vụ",
+      "lobby": "Sảnh chung",
+      "you": "Bạn",
+      "friends": "{count} bạn đang dạo chơi",
+      "door": "Ra Sảnh",
+      "doorCount": "{count} bạn",
+      "drag": "Kéo để đi dạo",
+      "wave": "Vẫy tay",
+      "heart": "Thả tim",
+      "outfit": "Khen đồ",
+      "questTitle": "Nhiệm vụ hôm nay",
+      "gift": "Có quà",
+      "giftTaken": "Đã nhận",
+      "routineLink": "Đánh dấu trong routine",
+      "tasks": {
+        "wash": "Rửa mặt buổi sáng",
+        "spf": "Thoa kem chống nắng",
+        "wave": "Ghé Sảnh chung vẫy tay"
+      },
+      "bubbleWash": "Rửa mặt buổi sáng nha?",
+      "bubbleWashed": "Mình rửa mặt rồi nè!",
+      "bubbleSpf": "Thoa kem chống nắng nha?",
+      "bubbleScreened": "Kem chống nắng xong rồi!",
+      "bubbleWave": "Ra Sảnh vẫy tay một cái nha?",
+      "bubbleDone": "Xong hết nhiệm vụ hôm nay rồi!",
+      "atHome": "Bé Da đang ở nhà nè",
+      "chestTitle": "Mở rương quà!",
+      "chestSub": "Bạn xong hết nhiệm vụ hôm nay rồi",
+      "chestStreak": "Giữ chuỗi",
+      "chestStreakWait": "Ghi da để giữ chuỗi",
+      "chestHearts": "+{count} tim",
+      "claim": "Nhận quà",
+      "wearing": "Đang mặc",
+      "tryColor": "Thử màu",
+      "tryNote": "Màu này chỉ để xem thử, không mua.",
+      "wear": {
+        "pajamas": "Pijama ấm",
+        "buns": "Tóc búi",
+        "headband": "Băng đô hồng",
+        "clip": "Kẹp sao"
+      },
+      "swatch": {
+        "pink": "Hồng",
+        "peach": "Đào",
+        "sun": "Vàng",
+        "leaf": "Lá",
+        "sky": "Xanh trời",
+        "lilac": "Tím nhạt"
+      },
+      "toast": {
+        "wave": "{name} vẫy tay với bạn",
+        "heart": "Đã thả tim cho {name}",
+        "outfit": "Đồ của {name} xinh quá"
+      }
     }
   }
 }

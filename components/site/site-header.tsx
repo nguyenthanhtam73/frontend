@@ -347,6 +347,7 @@ export function SiteHeader() {
 
   return (
     <header
+      data-site-header
       className="theme-toggle-mobile-bar sticky top-0 z-30 min-w-0 overflow-x-clip border-b border-border/50 bg-background/80 backdrop-blur-xl"
       data-funnel-chrome={hideFunnelNav ? "compact" : "full"}
     >
