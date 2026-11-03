@@ -359,7 +359,7 @@ function Room({
       {showHero ? (
       <div className="beda-hero-wrap" data-testid="beda-hero">
         <Bubble kind={bubbleKind} />
-        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} omitSceneProps className="w-full" />
+        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
           {showPrettyLine ? t("glowNear") : t("game.atHome")}
@@ -486,7 +486,7 @@ function Chest({
         </i>
         <img src="/mascot/icons/chest_open.svg" alt="" className="beda-chest-art" decoding="async" />
         <div className="beda-chest-hero">
-          <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} omitSceneProps className="w-full" />
+          <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} className="w-full" />
         </div>
       </div>
       <div className="beda-card beda-rewards">

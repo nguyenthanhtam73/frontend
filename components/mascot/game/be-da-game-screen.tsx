@@ -30,6 +30,7 @@ import {
   type GameLook,
 } from "@/lib/mascot/game/look";
 import { playGameTing } from "@/lib/mascot/game/sound";
+import { gameRoomView } from "@/lib/mascot/game/room-view";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { streakDateKey } from "@/lib/streak/history";
@@ -42,7 +43,8 @@ export function BeDaGameScreen() {
   const today = streakDateKey();
   const user = useAuthStore((s) => s.user);
   const hasAuth = !!user || !!getAccessToken();
-  const { view } = useBeDaView();
+  const { view: homeView } = useBeDaView();
+  const view = useMemo(() => gameRoomView(homeView), [homeView]);
   const streak = useStreak();
   const mascotQuery = useQuery({
     queryKey: mascotQueryKey,

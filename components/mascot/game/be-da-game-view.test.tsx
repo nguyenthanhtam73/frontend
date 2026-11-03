@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 
 import { BeDaGameView, type GameTab } from "@/components/mascot/game/be-da-game-view";
 import { DEFAULT_GAME_LOOK, type GameLook } from "@/lib/mascot/game/look";
+import { gameRoomView } from "@/lib/mascot/game/room-view";
 import { defaultSnapshot, resolveBeDaView, type BeDaView } from "@/lib/mascot/model";
 import en from "../../../messages/en.json";
 import vi from "../../../messages/vi.json";
@@ -189,33 +190,36 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
-  it("keeps a sad Bé Da standing, with no door or abandoned note over her", () => {
+  it("shows a neglected Bé Da as sleepy with zzz, centred, and no abandoned note", () => {
     const html = renderGame({
-      player: resolveBeDaView({
-        snapshot: {
-          ...defaultSnapshot(),
-          isDefault: false,
-          mood: "waiting_door_sign",
+      player: gameRoomView(
+        resolveBeDaView({
+          snapshot: {
+            ...defaultSnapshot(),
+            isDefault: false,
+            mood: "waiting_door_sign",
+            missedDays: 21,
+            glowLevel: 2,
+            glowProgress: 0.2,
+            nearLevelUp: false,
+          },
           missedDays: 21,
-          glowLevel: 2,
-          glowProgress: 0.2,
-          nearLevelUp: false,
-        },
-        missedDays: 21,
-        sessionHappy: false,
-        locale: "vi",
-      }),
+          sessionHappy: false,
+          locale: "vi",
+        }),
+      ),
       showPrettyLine: false,
       progress: 0.2,
     });
-    assert.match(html, /\/mascot\/faces\/waiting_door_sign\/mouth\.svg/);
-    assert.match(html, /\/mascot\/messy\/4\.svg/);
-    assert.match(html, /\/mascot\/fx\/flies\/flies\.svg/);
+    assert.match(html, /\/mascot\/faces\/sleepy\/mouth\.svg/);
+    assert.match(html, /\/mascot\/props\/zzz\.svg/);
+    assert.match(html, /\/mascot\/messy\/1\.svg/);
     assert.match(html, /\/mascot\/body\/body_chibi\.svg/);
+    assert.equal(html.includes("waiting_door"), false);
+    assert.equal(html.includes("flies"), false);
     assert.equal(html.includes("body_sit"), false);
     assert.equal(html.includes("/mascot/props/door.svg"), false);
-    assert.equal(html.includes("sign_abandoned"), false);
-    assert.equal(html.includes("sign_come_back"), false);
+    assert.equal(html.includes("sign_"), false);
     assert.equal(html.includes("/mascot/props/pillow.svg"), false);
     assert.equal(html.includes("/mascot/props/suitcase.svg"), false);
     assert.equal(html.includes("/mascot/props/pot.svg"), false);
