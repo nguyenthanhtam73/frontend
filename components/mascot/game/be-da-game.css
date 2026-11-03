@@ -237,14 +237,14 @@
   background: #6fbf7a;
 }
 
-/* Private room only. Left of the spec (24%) so the right edge clears her hair.
-   Feet sit on the wall–floor line. Under Bé Da and her rug, over the wall. */
+/* Private room only. On the floor, just right of the bed (v2: left 28%, width 8.6%).
+   Under Bé Da and her rug, over the wall. */
 .beda-cabinet {
   position: absolute;
   z-index: 2;
-  left: 10%;
-  bottom: 43.5%;
-  width: 14.5%;
+  left: 28%;
+  bottom: 41.6%;
+  width: 8.6%;
   aspect-ratio: 120 / 170;
   padding: 0;
   border: 0;
@@ -277,12 +277,6 @@
   outline: 3px solid #2b8c86;
   outline-offset: 4px;
   border-radius: 14px;
-}
-
-@media (min-width: 700px) {
-  .beda-cabinet {
-    left: 18%;
-  }
 }
 
 .beda-rug {
