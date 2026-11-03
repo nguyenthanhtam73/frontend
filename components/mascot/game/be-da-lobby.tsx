@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 import { useTranslations } from "next-intl";
 
@@ -9,16 +9,19 @@ import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook } from "@/lib/mascot/game/look";
 import {
   FRIEND_CARD_GAP,
-  LOBBY_PLAYER_SPOT,
   SAMPLE_LOBBY_FRIENDS,
+  lobbyDepthY,
+  lobbyNeutralView,
   lobbyStackZ,
   lobbyTagNudgePx,
   lobbyWalkY,
   placeFriendCard,
   sampleFriendView,
   type LobbySpot,
-  type SampleLobbyFriend,
 } from "@/lib/mascot/game/lobby";
+import { sampleWander, type LobbyActor } from "@/lib/mascot/game/lobby-live";
+import type { GamePose } from "@/lib/mascot/game/look";
+import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
@@ -40,36 +43,48 @@ const FLOWERS = [
   { x: 80, y: 94 },
 ];
 
-const LOBBY_SPOTS: readonly LobbySpot[] = [
-  ...SAMPLE_LOBBY_FRIENDS.map((friend) => ({ id: friend.id, x: friend.x, y: friend.y })),
-  { id: "you", x: LOBBY_PLAYER_SPOT.x, y: LOBBY_PLAYER_SPOT.y },
-];
-
 export function BeDaLobby({
   sky,
   player,
   locale,
   look,
-  youLabel,
-  friendCountLabel,
   dragLabel,
   selectedId,
-  wavingId,
+  actors,
+  you,
+  live,
+  hall,
+  hallFull,
+  nextHall,
+  nicknameError,
   onSelect,
   onAction,
+  onWalk,
+  onHide,
+  onNickname,
+  onSwitchHall,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
   locale: string;
   look: GameLook;
-  youLabel: string;
-  friendCountLabel: string;
   dragLabel: string;
   selectedId: string;
-  wavingId: string | null;
+  actors: readonly LobbyActor[];
+  you: LobbyYou;
+  live: boolean;
+  hall: number;
+  hallFull: boolean;
+  nextHall: number | null;
+  nicknameError: boolean;
   onSelect: (id: string) => void;
   onAction: (kind: "wave" | "heart" | "outfit") => void;
+  onWalk: (x: number, y: number) => void;
+  onHide: (id: string) => void;
+  onNickname: (value: string) => boolean;
+  onSwitchHall: (lobby: number) => void;
 }) {
+  const tLobby = useTranslations("mascot");
   const frameRef = useRef<HTMLDivElement>(null);
   const worldRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef(0);
@@ -77,8 +92,35 @@ export function BeDaLobby({
   const seenSelect = useRef<string | null>(null);
   const dragRef = useRef<{ id: number; x: number; origin: number; moved: boolean } | null>(null);
   const [showHint, setShowHint] = useState(true);
+  const [moving, setMoving] = useState(false);
+  const [tick, setTick] = useState(0);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(you.nickname);
   const night = sky === "night" || sky === "evening";
-  const selected = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === selectedId) ?? null;
+  const placed = actors.map((actor) => {
+    if (!actor.sample || tick === 0) return actor;
+    const wandered = sampleWander(actor.id, tick * 250, actor.x, actor.y);
+    return { ...actor, x: wandered.x, y: wandered.y, facing: wandered.facing, walking: true };
+  });
+  const spots: LobbySpot[] = [
+    ...placed.map((actor) => ({ id: actor.id, x: actor.x, y: actor.y })),
+    { id: "you", x: you.x, y: you.y },
+  ];
+  const selected = placed.find((actor) => actor.id === selectedId) ?? null;
+
+  useEffect(() => {
+    setMoving(true);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    const id = window.setInterval(() => setTick((value) => value + 1), 250);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!nicknameError) return;
+    setDraft(you.nickname);
+    setEditing(true);
+  }, [nicknameError, you.nickname]);
 
   const paint = (offset: number) => {
     const frame = frameRef.current;
@@ -205,7 +247,7 @@ export function BeDaLobby({
 
   function onPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
-    if ((event.target as HTMLElement).closest("button, a, .beda-actions")) return;
+    if ((event.target as HTMLElement).closest("button, a, .beda-actions, .beda-nick, .beda-switch")) return;
     dragRef.current = {
       id: event.pointerId,
       x: event.clientX,
@@ -234,7 +276,16 @@ export function BeDaLobby({
       placeCardRef.current();
       return;
     }
-    if ((event.target as HTMLElement).closest("button, a, .beda-actions")) return;
+    if ((event.target as HTMLElement).closest("button, a, .beda-actions, .beda-nick, .beda-switch")) return;
+    const world = worldRef.current;
+    if (world) {
+      const box = world.getBoundingClientRect();
+      const width = box.width || 1;
+      const height = box.height || 1;
+      const x = (event.clientX - box.left) / width;
+      const depth = lobbyDepthY((event.clientY - box.top) / height);
+      if (depth != null && x >= 0 && x <= 1) onWalk(Math.min(0.96, Math.max(0.04, x)), depth);
+    }
     onSelect("");
   }
 
@@ -250,8 +301,9 @@ export function BeDaLobby({
   return (
     <div
       ref={frameRef}
-      className="beda-lobby"
+      className={moving ? "beda-lobby is-moving" : "beda-lobby"}
       data-testid="beda-lobby"
+      data-lobby-mode={live ? "live" : "sample"}
       data-sky={sky}
       tabIndex={0}
       aria-label={dragLabel}
@@ -324,16 +376,16 @@ export function BeDaLobby({
         <i className="beda-butterfly" style={{ left: "24%", top: "30%" }} />
         <i className="beda-butterfly" style={{ left: "58%", top: "26%", animationDelay: "0.8s" }} />
         <i className="beda-butterfly" style={{ left: "80%", top: "32%", animationDelay: "1.4s" }} />
-        {SAMPLE_LOBBY_FRIENDS.map((friend) => (
+        {placed.map((actor) => (
           <FriendButton
-            key={friend.id}
-            friend={friend}
+            key={actor.id}
+            actor={actor}
             locale={locale}
-            selected={friend.id === selectedId}
-            waving={friend.id === wavingId}
-            nudge={lobbyTagNudgePx(friend, LOBBY_SPOTS)}
+            selected={actor.id === selectedId}
+            nudge={lobbyTagNudgePx(actor, spots)}
             onSelect={onSelect}
             onAction={onAction}
+            onHide={onHide}
           />
         ))}
         <div
@@ -342,44 +394,80 @@ export function BeDaLobby({
           data-friend-id="you"
           data-testid="beda-lobby-you"
           style={{
-            left: `${LOBBY_PLAYER_SPOT.x * 100}%`,
-            top: `${lobbyWalkY(LOBBY_PLAYER_SPOT.y) * 100}%`,
+            left: `${you.x * 100}%`,
+            top: `${lobbyWalkY(you.y) * 100}%`,
             width: "calc(var(--beda-friend, 120px) * 1.2)",
-            zIndex: lobbyStackZ(LOBBY_PLAYER_SPOT.y),
+            zIndex: lobbyStackZ(you.y),
             transform: "translate(-50%, -100%)",
           }}
         >
-          <button type="button" className="beda-friend-hit" onClick={() => onSelect("you")}>
-            <span className="beda-friend-art">
+          <button
+            type="button"
+            className="beda-friend-hit"
+            onClick={() => {
+              setDraft(you.nickname);
+              setEditing(true);
+            }}
+          >
+            <span className="beda-friend-art" style={you.facing === "left" ? { transform: "scaleX(-1)" } : undefined}>
               <span className="beda-ring" />
-              <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+              <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} className="w-full" />
             </span>
             <span
               className="beda-tag beda-tag-me"
               style={{
-                transform: `translateX(${lobbyTagNudgePx(
-                  { id: "you", x: LOBBY_PLAYER_SPOT.x, y: LOBBY_PLAYER_SPOT.y },
-                  LOBBY_SPOTS,
-                )}px)`,
+                transform: `translateX(${lobbyTagNudgePx({ id: "you", x: you.x, y: you.y }, spots)}px)`,
               }}
             >
-              <GameIcon name="pin" className="beda-ico-sm" /> {youLabel}
+              <GameIcon name="pin" className="beda-ico-sm" /> {you.nickname}
             </span>
           </button>
         </div>
       </div>
       <div className="beda-lobby-chrome">
-        <div className="beda-count">
-          <i className="beda-dot" />
-          {friendCountLabel}
-        </div>
+        {hallFull && nextHall != null ? (
+          <div className="beda-switch" data-testid="beda-hall-switch">
+            <span>{tLobby("game.hallFullAsk", { lobby: hall })}</span>
+            <button type="button" onClick={() => onSwitchHall(nextHall)}>
+              {tLobby("game.hallNext", { lobby: nextHall })}
+            </button>
+          </div>
+        ) : hallFull ? (
+          <div className="beda-switch" data-testid="beda-hall-switch">
+            {tLobby("game.hallsFull")}
+          </div>
+        ) : null}
+        {editing ? (
+          <form
+            className="beda-nick beda-card"
+            data-testid="beda-nickname"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const ok = onNickname(draft);
+              if (ok) setEditing(false);
+            }}
+          >
+            <label htmlFor="beda-nick-input">{tLobby("game.nickname")}</label>
+            <input
+              id="beda-nick-input"
+              value={draft}
+              maxLength={24}
+              autoComplete="off"
+              onChange={(event) => setDraft(event.target.value)}
+            />
+            {nicknameError ? (
+              <p role="alert">{tLobby("game.nicknameRejected")}</p>
+            ) : null}
+            <button type="submit">{tLobby("game.nicknameSave")}</button>
+          </form>
+        ) : null}
         <div className="beda-mini" aria-hidden>
           <div className="beda-mini-oval" />
-          {SAMPLE_LOBBY_FRIENDS.map((friend) => (
+          {placed.map((actor) => (
             <i
-              key={friend.id}
+              key={actor.id}
               className="beda-mini-dot"
-              style={{ left: `${friend.x * 100}%`, top: `${28 + lobbyWalkY(friend.y) * 55}%` }}
+              style={{ left: `${actor.x * 100}%`, top: `${28 + lobbyWalkY(actor.y) * 55}%` }}
             />
           ))}
           <img
@@ -387,76 +475,90 @@ export function BeDaLobby({
             alt=""
             className="beda-mini-pin"
             decoding="async"
-            style={{ left: `${LOBBY_PLAYER_SPOT.x * 100}%`, top: `${28 + lobbyWalkY(LOBBY_PLAYER_SPOT.y) * 55}%` }}
+            style={{ left: `${you.x * 100}%`, top: `${28 + lobbyWalkY(you.y) * 55}%` }}
           />
           <div className="beda-mini-view" />
         </div>
-        {showHint ? <div className="beda-drag-hint">{dragLabel}</div> : null}
+        {showHint && !editing ? <div className="beda-drag-hint">{dragLabel}</div> : null}
       </div>
     </div>
   );
 }
 
 function FriendButton({
-  friend,
+  actor,
   locale,
   selected,
-  waving,
   nudge,
   onSelect,
   onAction,
+  onHide,
 }: {
-  friend: SampleLobbyFriend;
+  actor: LobbyActor;
   locale: string;
   selected: boolean;
-  waving: boolean;
   nudge: number;
   onSelect: (id: string) => void;
   onAction: (kind: "wave" | "heart" | "outfit") => void;
+  onHide: (id: string) => void;
 }) {
   const t = useTranslations("mascot");
-  const view = sampleFriendView(friend);
-  const dress = gameDress(
-    { outfit: friend.outfit, hair: friend.hair, clip: friend.clip },
-    waving ? "wave" : null,
-  );
+  const sample = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id);
+  const view = actor.sample && sample ? sampleFriendView(sample) : lobbyNeutralView();
+  const pose: GamePose | null = actor.pose;
+  const dress = gameDress(actor.look, pose);
   return (
     <div
       className={selected ? "beda-friend is-selected" : "beda-friend"}
-      data-sample="true"
-      data-friend-id={friend.id}
-      data-testid={`beda-friend-${friend.id}`}
+      data-sample={actor.sample ? "true" : "false"}
+      data-friend-id={actor.id}
+      data-testid={`beda-friend-${actor.id}`}
       style={{
-        left: `${friend.x * 100}%`,
-        top: `${lobbyWalkY(friend.y) * 100}%`,
-        width: `calc(var(--beda-friend, 110px) * ${0.78 + friend.y * 0.4})`,
-        zIndex: lobbyStackZ(friend.y),
+        left: `${actor.x * 100}%`,
+        top: `${lobbyWalkY(actor.y) * 100}%`,
+        width: `calc(var(--beda-friend, 110px) * ${0.78 + actor.y * 0.4})`,
+        zIndex: lobbyStackZ(actor.y),
         transform: "translate(-50%, -100%)",
       }}
     >
       {selected ? (
-        <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={friend.nickname}>
-          <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
-            <GameIcon name="wave" />
-            {t("game.wave")}
+        <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={actor.nickname}>
+          <p className="beda-card-name">{actor.nickname}</p>
+          <button
+            type="button"
+            className="beda-hide"
+            data-testid="beda-hide-friend"
+            onClick={() => onHide(actor.id)}
+          >
+            {t("game.hideFriend")}
           </button>
-          <button type="button" className="beda-action" onClick={() => onAction("heart")}>
-            <GameIcon name="heart" />
-            {t("game.heart")}
-          </button>
-          <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
-            <GameIcon name="outfit" />
-            {t("game.outfit")}
-          </button>
+          <p className="beda-hide-note">{t("game.hideFriendNote")}</p>
+          <div className="beda-action-row">
+            <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
+              <GameIcon name="wave" />
+              {t("game.wave")}
+            </button>
+            <button type="button" className="beda-action" onClick={() => onAction("heart")}>
+              <GameIcon name="heart" />
+              {t("game.heart")}
+            </button>
+            <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
+              <GameIcon name="outfit" />
+              {t("game.outfit")}
+            </button>
+          </div>
         </div>
       ) : null}
-      <button type="button" className="beda-friend-hit" onClick={() => onSelect(friend.id)}>
-        <span className="beda-friend-art">
+      <button type="button" className="beda-friend-hit" onClick={() => onSelect(actor.id)}>
+        <span
+          className="beda-friend-art"
+          style={actor.facing === "left" ? { transform: "scaleX(-1)" } : undefined}
+        >
           <span className="beda-ring" />
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" className="w-full" />
         </span>
         <span className="beda-tag" style={{ transform: `translateX(${nudge}px)` }}>
-          {friend.nickname}
+          {actor.nickname}
         </span>
       </button>
     </div>

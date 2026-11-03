@@ -11,7 +11,7 @@ import { getAccessToken } from "@/lib/auth-token";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
-import { lobbyHeadCount, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
+import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
 import { localePath } from "@/lib/mascot/game/path";
 import {
   GAME_CHEST_KEY,
@@ -71,7 +71,6 @@ export function BeDaGameScreen() {
   const [chestDismissed, setChestDismissed] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState("keo-deo");
   const [toast, setToast] = useState<GameToast>(null);
-  const [wavingId, setWavingId] = useState<string | null>(null);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [burst, setBurst] = useState(0);
   const soundRef = useRef(true);
@@ -116,11 +115,15 @@ export function BeDaGameScreen() {
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  useEffect(() => {
-    if (!wavingId) return;
-    const id = window.setTimeout(() => setWavingId(null), 1400);
-    return () => window.clearTimeout(id);
-  }, [wavingId]);
+  const presence = useLobbyPresence({
+    active: tab === "lobby",
+    look,
+    onRemoteEmote: (event) => {
+      setToast(event);
+      setBurst((n) => n + 1);
+      playGameTing(soundRef.current);
+    },
+  });
 
   function feedback() {
     setBurst((n) => n + 1);
@@ -147,12 +150,12 @@ export function BeDaGameScreen() {
   }
 
   function onFriendAction(kind: "wave" | "heart" | "outfit") {
-    const friend = SAMPLE_LOBBY_FRIENDS.find((item) => item.id === selectedFriendId);
+    const friend = presence.actors.find((item) => item.id === selectedFriendId);
     if (!friend) return;
     feedback();
     setToast({ name: friend.nickname, kind });
+    presence.emote(friend, kind);
     if (kind !== "wave") return;
-    setWavingId(friend.id);
     if (waved) return;
     writeDayFlag(localStorage, GAME_WAVE_KEY, today);
     setWaved(true);
@@ -211,10 +214,26 @@ export function BeDaGameScreen() {
       progress={view.glowProgress}
       showPrettyLine={view.glowProgress != null || view.nearLevelUp}
       chestOpen={chestOpen}
-      friendCount={lobbyHeadCount()}
+      friendCount={presence.count}
       selectedFriendId={selectedFriendId}
       toast={toast}
-      wavingId={wavingId}
+      wavingId={null}
+      actors={presence.actors}
+      you={presence.you}
+      hall={presence.hall}
+      hallCount={presence.count}
+      hallCap={presence.cap}
+      hallFull={presence.full}
+      nextHall={presence.nextHall}
+      lobbyLive={presence.live}
+      nicknameError={presence.nicknameError}
+      onHide={(id) => {
+        presence.hide(id);
+        if (id === selectedFriendId) setSelectedFriendId("");
+      }}
+      onWalk={presence.walkTo}
+      onNickname={presence.setNickname}
+      onSwitchHall={presence.switchHall}
       look={look}
       wornIds={wornIds}
       hearts={chestHearts(quests)}

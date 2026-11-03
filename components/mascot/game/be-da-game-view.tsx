@@ -6,12 +6,19 @@ import { useTranslations } from "next-intl";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
+import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
+import {
+  defaultLobbyNickname,
+  lobbyActors,
+  type LobbyActor,
+} from "@/lib/mascot/game/lobby-live";
 import {
   GAME_CLIPS,
   GAME_HAIRS,
   GAME_OUTFITS,
   gameDress,
   type GameLook,
+  type GamePose,
 } from "@/lib/mascot/game/look";
 import type { GameBubbleKind, GameQuest, GameQuestId } from "@/lib/mascot/game/quests";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
@@ -53,7 +60,6 @@ export function BeDaGameView({
   friendCount,
   selectedFriendId,
   toast,
-  wavingId,
   look,
   wornIds,
   hearts,
@@ -69,6 +75,19 @@ export function BeDaGameView({
   onFriendAction,
   onClaim,
   onLook,
+  actors,
+  you,
+  hall = 1,
+  hallCount,
+  hallCap = 28,
+  hallFull = false,
+  nextHall = null,
+  lobbyLive = false,
+  nicknameError = false,
+  onHide = () => undefined,
+  onWalk = () => undefined,
+  onNickname = () => false,
+  onSwitchHall = () => undefined,
 }: {
   locale: string;
   tab: GameTab;
@@ -100,6 +119,25 @@ export function BeDaGameView({
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
   onLook: (look: GameLook) => void;
+  actors?: readonly LobbyActor[];
+  you?: {
+    x: number;
+    y: number;
+    facing: "left" | "right";
+    pose: GamePose | null;
+    nickname: string;
+  };
+  hall?: number;
+  hallCount?: number;
+  hallCap?: number;
+  hallFull?: boolean;
+  nextHall?: number | null;
+  lobbyLive?: boolean;
+  nicknameError?: boolean;
+  onHide?: (id: string) => void;
+  onWalk?: (x: number, y: number) => void;
+  onNickname?: (value: string) => boolean;
+  onSwitchHall?: (lobby: number) => void;
 }) {
   const t = useTranslations("mascot");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -126,7 +164,16 @@ export function BeDaGameView({
       viewport?.removeEventListener("resize", apply);
     };
   }, [tab, chestOpen]);
-  const friendCountLabel = t("game.friends", { count: friendCount });
+  const lobbyPeople =
+    actors ?? lobbyActors({ live: false, people: [], selfId: null, hidden: new Set(), poses: {} });
+  const youSpot = you ?? {
+    x: LOBBY_PLAYER_SPOT.x,
+    y: LOBBY_PLAYER_SPOT.y,
+    facing: "right" as const,
+    pose: null,
+    nickname: defaultLobbyNickname(() => 0.48211),
+  };
+  const shownHallCount = hallCount ?? lobbyPeople.length + 1;
   const doorCountLabel = t("game.doorCount", { count: friendCount });
   const openQuests = quests.filter((quest) => !quest.done).length;
   const activeNav: GameTab = chestOpen ? "quests" : tab;
@@ -140,13 +187,21 @@ export function BeDaGameView({
           player={player}
           locale={locale}
           look={look}
-          youLabel={t("game.you")}
-          friendCountLabel={friendCountLabel}
           dragLabel={t("game.drag")}
           selectedId={selectedFriendId}
-          wavingId={wavingId}
+          actors={lobbyPeople}
+          you={youSpot}
+          live={lobbyLive}
+          hall={hall}
+          hallFull={hallFull}
+          nextHall={nextHall}
+          nicknameError={nicknameError}
           onSelect={onSelectFriend}
           onAction={onFriendAction}
+          onWalk={onWalk}
+          onHide={onHide}
+          onNickname={onNickname}
+          onSwitchHall={onSwitchHall}
         />
       ) : (
         <Room
@@ -196,22 +251,31 @@ export function BeDaGameView({
         </span>
       ) : null}
 
-      <div className="beda-hud">
+      <div className={showLobby ? "beda-hud is-lobby" : "beda-hud"}>
         <a className="beda-back" href={homeHref} aria-label={t("game.back")}>
           <IconBack />
         </a>
-        <div className="beda-chip" data-testid="beda-coins">
-          <span className="beda-chip-icon coin">
-            <GameIcon name="coin" className="beda-ico-sm" />
-          </span>
-          {coinsLabel} <small>{t("game.coinsUnit")}</small>
-        </div>
-        <div className="beda-chip" data-testid="beda-streak">
-          <span className="beda-chip-icon flame">
-            <GameIcon name="flame" className="beda-ico-sm" />
-          </span>
-          {streakLabel} <small>{t("game.streakUnit")}</small>
-        </div>
+        {showLobby ? (
+          <div className="beda-hall" data-testid="beda-hall">
+            <PersonIcon />
+            {t("game.hall", { lobby: hall, count: shownHallCount, cap: hallCap })}
+          </div>
+        ) : (
+          <>
+            <div className="beda-chip" data-testid="beda-coins">
+              <span className="beda-chip-icon coin">
+                <GameIcon name="coin" className="beda-ico-sm" />
+              </span>
+              {coinsLabel} <small>{t("game.coinsUnit")}</small>
+            </div>
+            <div className="beda-chip" data-testid="beda-streak">
+              <span className="beda-chip-icon flame">
+                <GameIcon name="flame" className="beda-ico-sm" />
+              </span>
+              {streakLabel} <small>{t("game.streakUnit")}</small>
+            </div>
+          </>
+        )}
         <button
           type="button"
           className="beda-mute"
@@ -627,6 +691,15 @@ function Wardrobe({
       </div>
       <p className="beda-note">{t("game.tryNote")}</p>
     </section>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
+      <circle cx="16" cy="11" r="5" fill="#8fe6df" />
+      <path d="M7 26c1.4-5 4.6-7.5 9-7.5S23.6 21 25 26" fill="#8fe6df" />
+    </svg>
   );
 }
 

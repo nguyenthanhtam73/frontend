@@ -77,6 +77,16 @@ export function lobbyWalkY(y: number): number {
   return 0.48 + t * 0.49;
 }
 
+/**
+ * Inverse of `lobbyWalkY` for a tap on the plaza.
+ * Returns null when the tap is in the sky, above the walk band.
+ */
+export function lobbyDepthY(visualY: number): number | null {
+  if (visualY < 0.45 || visualY > 0.98) return null;
+  const t = Math.min(1, Math.max(0, (visualY - 0.48) / 0.49));
+  return Math.min(LOBBY_WALK_Y_MAX, Math.max(0.46, 0.46 + t * 0.42));
+}
+
 /** Round-nav block. Mirrors `--beda-nav-reserve` in be-da-game.css, before measurement. */
 export function lobbyNavReservePx(viewportWidth: number, safeAreaBottom = 0): number {
   const padTop = 10;
@@ -202,4 +212,29 @@ export function sampleFriendView(friend: SampleLobbyFriend): BeDaView {
   });
   sampleViews.set(friend.id, view);
   return view;
+}
+
+let neutralView: BeDaView | null = null;
+
+/** Face for a real person. No level, points, marks, or glow — outfit comes from the wire. */
+export function lobbyNeutralView(): BeDaView {
+  if (neutralView) return neutralView;
+  neutralView = resolveBeDaView({
+    snapshot: {
+      ...defaultSnapshot(),
+      isDefault: false,
+      mood: "happy",
+      missedDays: 0,
+      glowLevel: 1,
+      glowProgress: null,
+      nearLevelUp: false,
+      levelUp: false,
+      skinMarks: [],
+      skinMarksPrev: [],
+    },
+    missedDays: 0,
+    sessionHappy: false,
+    locale: "vi",
+  });
+  return neutralView;
 }

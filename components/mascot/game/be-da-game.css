@@ -592,6 +592,23 @@
   margin-left: auto;
 }
 
+.beda-hall {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: rgba(22, 48, 54, 0.92);
+  padding: 8px 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 0 #0c1d21;
+  white-space: nowrap;
+}
+
 .beda-nav {
   position: absolute;
   z-index: 8;
@@ -1012,6 +1029,78 @@
   left: calc(var(--beda-pan, 0.4) * 62%);
 }
 
+.beda-switch {
+  position: absolute;
+  top: calc(62px + env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: #163036;
+  padding: 4px 4px 4px 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 0 #0c1d21;
+}
+
+.beda-switch button {
+  border: 0;
+  border-radius: 999px;
+  background: #2f9e96;
+  padding: 8px 12px;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.beda-nick {
+  position: absolute;
+  top: calc(108px + env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  width: min(260px, calc(100% - 24px));
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  transform: translateX(-50%);
+}
+
+.beda-nick label,
+.beda-nick p {
+  margin: 0;
+  color: #3c2a30;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.beda-nick p {
+  color: #c2456d;
+  font-weight: 700;
+}
+
+.beda-nick input {
+  border: 2px solid #f0c9d4;
+  border-radius: 12px;
+  padding: 8px 10px;
+  color: #3c2a30;
+  font: inherit;
+  font-weight: 700;
+}
+
+.beda-nick button {
+  border: 0;
+  border-radius: 999px;
+  background: #2f9e96;
+  padding: 8px 12px;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+}
+
 .beda-drag-hint {
   position: absolute;
   top: calc(124px + env(safe-area-inset-top));
@@ -1024,6 +1113,14 @@
   font-weight: 800;
 }
 
+.beda-lobby.is-moving .beda-friend {
+  transition: left 240ms linear, top 240ms linear;
+}
+
+.beda-lobby.is-moving .beda-friend[data-lobby-you] {
+  transition: left 800ms ease-out, top 800ms ease-out;
+}
+
 .beda-actions {
   position: absolute;
   z-index: 2;
@@ -1031,13 +1128,45 @@
   bottom: calc(100% + 8px);
   display: flex;
   width: max-content;
-  max-width: min(280px, calc(100vw - 16px));
-  flex-direction: row;
+  max-width: min(220px, calc(100vw - 16px));
+  flex-direction: column;
   align-items: stretch;
   gap: 4px;
-  padding: 5px;
+  padding: 10px 10px 6px;
   pointer-events: auto;
+  text-align: center;
   transform: translate(calc(-50% + var(--beda-card-dx, 0px)), var(--beda-card-dy, 0px));
+}
+
+.beda-card-name {
+  margin: 0;
+  color: #3c2a30;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.beda-hide {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #e25b86;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.beda-hide-note {
+  margin: 0 0 4px;
+  color: #8a6570;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.beda-action-row {
+  display: flex;
+  gap: 4px;
 }
 
 .beda-actions .beda-action {
