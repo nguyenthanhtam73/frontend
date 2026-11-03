@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
 import { BeDaGameView, type GameTab } from "@/components/mascot/game/be-da-game-view";
+import { sampleSpaGuests } from "@/lib/mascot/game/spa-room";
 import { DEFAULT_GAME_LOOK, type GameLook } from "@/lib/mascot/game/look";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import { defaultSnapshot, resolveBeDaView, type BeDaView } from "@/lib/mascot/model";
@@ -185,10 +186,54 @@ describe("Bé Da game screen", () => {
     assert.match(html, /Thả tim/);
     assert.match(html, /Khen đồ/);
     assert.match(html, /data-testid="beda-actions"/);
+    assert.match(html, /Tạo phòng/);
+    assert.match(html, /Nhập mã/);
+    assert.match(html, /data-testid="beda-create-room"/);
     assert.match(html, /translate\(-50%, -100%\)/);
     assert.match(html, /translateX\(/);
     assert.equal(html.includes("left:12px"), false);
     assert.equal(html.includes("right:12px"), false);
+    assertNoScores(html);
+  });
+
+  it("draws the 8-person spa room with an invite code and no chat", () => {
+    const html = renderGame({
+      selectedFriendId: "tra-sua",
+      spa: {
+        code: "DA7K2M",
+        count: 5,
+        cap: 8,
+        guests: sampleSpaGuests(new Set()),
+        notice: null,
+      },
+    });
+    const text = visibleText(html);
+    assert.match(html, /data-testid="beda-spa"/);
+    assert.match(text, /Phòng nhóm · 5\/8/);
+    assert.match(text, /8 chỗ · còn 3/);
+    assert.match(text, /Mã mời vào phòng/);
+    assert.match(text, /Sao chép mã/);
+    assert.match(text, /Gửi qua Zalo/);
+    assert.match(text, /Ra sảnh/);
+    assert.match(text, /Trà Sữa/);
+    assert.match(text, /Mây Hồng/);
+    assert.match(text, /Ốc Quế/);
+    assert.match(text, /Bánh Flan/);
+    assert.match(html, /data-testid="beda-spa-you"/);
+    assert.equal((html.match(/class="beda-cuke /g) ?? []).length, 10);
+    assert.match(html, /beda-spa-cucumber/);
+    assert.match(html, /beda-spa-mat/);
+    assert.equal((html.match(/class="beda-spa-dot is-on"/g) ?? []).length, 5);
+    assert.equal((html.match(/class="beda-spa-dot"/g) ?? []).length, 3);
+    assert.match(html, /Ẩn bạn này/);
+    assert.match(html, /Vẫy tay/);
+    assert.match(html, /Thả tim/);
+    assert.match(html, /Khen đồ/);
+    assert.match(html, /https:\/\/zalo\.me\/share\?url=https%3A%2F%2Fdadiary\.vn%2Fbe-da%2Fphong%2FDA7K2M/);
+    assert.equal(html.includes("textarea"), false);
+    assert.equal(html.includes('data-testid="beda-coins"'), false);
+    assert.equal(html.includes('data-testid="beda-streak"'), false);
+    assert.equal(html.includes("ấm trà"), false);
     assertNoScores(html);
   });
 

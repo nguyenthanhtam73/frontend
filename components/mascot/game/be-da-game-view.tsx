@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
+import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
 import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
 import {
@@ -88,6 +89,12 @@ export function BeDaGameView({
   onWalk = () => undefined,
   onNickname = () => false,
   onSwitchHall = () => undefined,
+  spa = null,
+  youPose = null,
+  onCreateRoom,
+  onJoinRoom,
+  onLeaveSpa,
+  onSpaLobby,
 }: {
   locale: string;
   tab: GameTab;
@@ -138,10 +145,17 @@ export function BeDaGameView({
   onWalk?: (x: number, y: number) => void;
   onNickname?: (value: string) => boolean;
   onSwitchHall?: (lobby: number) => void;
+  spa?: SpaRoomState | null;
+  youPose?: GamePose | null;
+  onCreateRoom?: () => void;
+  onJoinRoom?: (code: string) => void;
+  onLeaveSpa?: () => void;
+  onSpaLobby?: () => void;
 }) {
   const t = useTranslations("mascot");
   const rootRef = useRef<HTMLDivElement>(null);
-  const showLobby = tab === "lobby" && !chestOpen;
+  const spaOpen = spa != null;
+  const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -176,12 +190,34 @@ export function BeDaGameView({
   const shownHallCount = hallCount ?? lobbyPeople.length + 1;
   const doorCountLabel = t("game.doorCount", { count: friendCount });
   const openQuests = quests.filter((quest) => !quest.done).length;
-  const activeNav: GameTab = chestOpen ? "quests" : tab;
+  const activeNav: GameTab | null = spaOpen ? null : chestOpen ? "quests" : tab;
 
   return (
-    <div ref={rootRef} className="beda-game" data-testid="beda-game" data-tab={activeNav} data-sky={sky}>
+    <div
+      ref={rootRef}
+      className={spaOpen ? "beda-game is-spa" : "beda-game"}
+      data-testid="beda-game"
+      data-tab={activeNav ?? "spa"}
+      data-sky={sky}
+    >
       <h1 className="sr-only">{t("name")}</h1>
-      {showLobby ? (
+      {spa ? (
+        <BeDaSpaRoom
+          locale={locale}
+          player={player}
+          look={look}
+          soundOn={soundOn}
+          selectedId={selectedFriendId}
+          youPose={youPose}
+          room={spa}
+          onSelect={onSelectFriend}
+          onAction={onFriendAction}
+          onHide={onHide}
+          onLeave={onLeaveSpa ?? (() => undefined)}
+          onLobby={onSpaLobby ?? (() => undefined)}
+          onToggleSound={onToggleSound}
+        />
+      ) : showLobby ? (
         <BeDaLobby
           sky={sky}
           player={player}
@@ -202,6 +238,8 @@ export function BeDaGameView({
           onHide={onHide}
           onNickname={onNickname}
           onSwitchHall={onSwitchHall}
+          onCreateRoom={onCreateRoom}
+          onJoinRoom={onJoinRoom}
         />
       ) : (
         <Room
@@ -251,6 +289,7 @@ export function BeDaGameView({
         </span>
       ) : null}
 
+      {spa ? null : (
       <div className={showLobby ? "beda-hud is-lobby" : "beda-hud"}>
         <a className="beda-back" href={homeHref} aria-label={t("game.back")}>
           <IconBack />
@@ -287,6 +326,7 @@ export function BeDaGameView({
           <GameIcon name={soundOn ? "soundOn" : "soundOff"} className="beda-ico-sm" />
         </button>
       </div>
+      )}
 
       <nav className="beda-nav" aria-label={t("name")}>
         {NAV.map((item) => {
