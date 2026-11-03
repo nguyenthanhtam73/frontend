@@ -170,7 +170,7 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-lobby-mode="sample"/);
     assert.match(html, /Ẩn bạn này/);
     assert.match(html, /Bạn sẽ không thấy bạn này nữa/);
-    assert.match(html, /Bé Da/);
+    assert.match(html, /Bé Da 4821/);
     assert.equal(html.includes("access_token"), false);
     assert.equal(html.includes('data-testid="beda-coins"'), false);
     assert.equal(html.includes('data-testid="beda-streak"'), false);

@@ -8,7 +8,7 @@ import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
 import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
 import {
-  DEFAULT_LOBBY_NICKNAME,
+  defaultLobbyNickname,
   lobbyActors,
   type LobbyActor,
 } from "@/lib/mascot/game/lobby-live";
@@ -171,7 +171,7 @@ export function BeDaGameView({
     y: LOBBY_PLAYER_SPOT.y,
     facing: "right" as const,
     pose: null,
-    nickname: DEFAULT_LOBBY_NICKNAME,
+    nickname: defaultLobbyNickname(() => 0.48211),
   };
   const shownHallCount = hallCount ?? lobbyPeople.length + 1;
   const doorCountLabel = t("game.doorCount", { count: friendCount });

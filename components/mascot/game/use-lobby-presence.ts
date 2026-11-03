@@ -7,7 +7,6 @@ import { ensureFreshAccessToken, getAccessToken } from "@/lib/auth-token";
 import { LOBBY_PLAYER_SPOT, LOBBY_WALK_Y_MAX } from "@/lib/mascot/game/lobby";
 import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import {
-  DEFAULT_LOBBY_NICKNAME,
   LOBBY_NICKNAME_KEY,
   applyLobbyMessage,
   clearLobbyAccessCookie,
@@ -20,6 +19,8 @@ import {
   lobbyActors,
   lobbyCookieMaxAge,
   lobbyCookiePlan,
+  defaultLobbyNickname,
+  loadLobbyNickname,
   lobbyCoord,
   lobbyPose,
   lobbySocketUrl,
@@ -57,7 +58,7 @@ export function useLobbyPresence(options: {
   const { active, look, onRemoteEmote } = options;
   const [hall, setHall] = useState<HallSnapshot>(emptyHall);
   const [live, setLive] = useState(false);
-  const [nickname, setNicknameState] = useState(DEFAULT_LOBBY_NICKNAME);
+  const [nickname, setNicknameState] = useState(readDeviceNickname);
   const [nicknameError, setNicknameError] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
@@ -66,7 +67,7 @@ export function useLobbyPresence(options: {
     y: LOBBY_PLAYER_SPOT.y,
     facing: "right",
     pose: null,
-    nickname: DEFAULT_LOBBY_NICKNAME,
+    nickname,
   });
 
   const lookRef = useRef(look);
@@ -109,17 +110,6 @@ export function useLobbyPresence(options: {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(LOBBY_NICKNAME_KEY);
-      const next = saved ? normalizeNickname(saved) : null;
-      if (next) {
-        nickRef.current = next;
-        setNicknameState(next);
-        setYou((prev) => {
-          const updated = { ...prev, nickname: next };
-          youRef.current = updated;
-          return updated;
-        });
-      }
       const raw = sessionStorage.getItem(HIDE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw) as unknown;
@@ -330,6 +320,19 @@ export function useLobbyPresence(options: {
     hide,
     switchHall,
   };
+}
+
+/** Generated once and stored on the device. Not the profile display name. */
+let storageFallback: string | null = null;
+
+function readDeviceNickname(): string {
+  if (typeof window === "undefined") return defaultLobbyNickname(() => 0.48211);
+  try {
+    return loadLobbyNickname(localStorage);
+  } catch {
+    storageFallback ??= defaultLobbyNickname();
+    return storageFallback;
+  }
 }
 
 function readCookiePlan() {

@@ -26,7 +26,8 @@ export const LOBBY_ACCESS_COOKIE = "dadiary_access_token";
 export const LOBBY_SITE = "dadiary.vn";
 export const LOBBY_CAP = 28;
 export const LOBBY_NICKNAME_KEY = "beda-lobby-nickname";
-export const DEFAULT_LOBBY_NICKNAME = "Bé Da";
+/** Prefix only. A device nickname is this plus four digits, never a profile name. */
+export const LOBBY_NICKNAME_PREFIX = "Bé Da";
 
 export const LOBBY_COOKIE_NOT_SENT =
   "dadiary_access_token is not sent on this WebSocket. SameSite=Lax covers same-site requests from dadiary.vn to api.dadiary.vn only when the cookie uses Domain=dadiary.vn. This page cannot set that domain, and the client does not put the token in the query string.";
@@ -212,6 +213,33 @@ export function normalizeNickname(raw: string): string | null {
   if (trimmed.length < 1 || trimmed.length > 24) return null;
   if (/[^\p{L}\p{N} '.\-]/u.test(trimmed)) return null;
   return trimmed;
+}
+
+/** Four digits, 0000–9999. `random` returns a value in [0, 1). */
+export function lobbyNicknameDigits(random: () => number = Math.random): string {
+  const n = Math.min(9999, Math.max(0, Math.floor(random() * 10000)));
+  return String(n).padStart(4, "0");
+}
+
+/** `Bé Da 4821`. Does not read a profile display name. */
+export function defaultLobbyNickname(random: () => number = Math.random): string {
+  return `${LOBBY_NICKNAME_PREFIX} ${lobbyNicknameDigits(random)}`;
+}
+
+/**
+ * The nickname saved on this device. Generated once. A later rename replaces it.
+ * Storage is only `beda-lobby-nickname` — never a profile display name.
+ */
+export function loadLobbyNickname(
+  storage: Pick<Storage, "getItem" | "setItem">,
+  random: () => number = Math.random,
+): string {
+  const saved = storage.getItem(LOBBY_NICKNAME_KEY);
+  const existing = saved ? normalizeNickname(saved) : null;
+  if (existing) return existing;
+  const next = defaultLobbyNickname(random);
+  storage.setItem(LOBBY_NICKNAME_KEY, next);
+  return next;
 }
 
 export function encodeLobbyFrame(frame: LobbyClientFrame): string {

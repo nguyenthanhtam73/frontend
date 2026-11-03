@@ -20,6 +20,8 @@ import {
   lobbyLook,
   lobbySocketUrl,
   nextOpenHall,
+  defaultLobbyNickname,
+  loadLobbyNickname,
   normalizeNickname,
   parseLobbyMessage,
   reconnectDelayMs,
@@ -99,11 +101,34 @@ describe("lobby socket url and cookie", () => {
 describe("lobby nickname", () => {
   it("trims, collapses spaces, and rejects junk", () => {
     assert.equal(normalizeNickname("  Mây   Hồng "), "Mây Hồng");
-    assert.equal(normalizeNickname("Bé Da"), "Bé Da");
+    assert.equal(normalizeNickname("Bé Da 4821"), "Bé Da 4821");
     assert.equal(normalizeNickname(""), null);
     assert.equal(normalizeNickname("a".repeat(25)), null);
     assert.equal(normalizeNickname("hello@mail"), null);
     assert.equal(normalizeNickname("a_b"), null);
+  });
+
+  it("makes Bé Da plus four digits once and keeps a rename", () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        store.set(key, value);
+      },
+    };
+    const profileName = "Nguyễn An";
+    store.set("display_name", profileName);
+    const at = (n: number) => () => (n + 0.1) / 10000;
+    const first = loadLobbyNickname(storage, at(4821));
+    assert.equal(first, "Bé Da 4821");
+    assert.equal(store.get("beda-lobby-nickname"), "Bé Da 4821");
+    assert.equal(first.includes(profileName), false);
+    assert.equal(defaultLobbyNickname(at(0)), "Bé Da 0000");
+    assert.equal(defaultLobbyNickname(at(9999)), "Bé Da 9999");
+    const again = loadLobbyNickname(storage, () => 0.1111);
+    assert.equal(again, "Bé Da 4821");
+    store.set("beda-lobby-nickname", "Mây Hồng");
+    assert.equal(loadLobbyNickname(storage, () => 0.2222), "Mây Hồng");
   });
 });
 
