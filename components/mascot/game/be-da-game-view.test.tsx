@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 
 import { BeDaGameView, type GameTab } from "@/components/mascot/game/be-da-game-view";
 import { DEFAULT_GAME_LOOK, type GameLook } from "@/lib/mascot/game/look";
+import { gameRoomView } from "@/lib/mascot/game/room-view";
 import { defaultSnapshot, resolveBeDaView, type BeDaView } from "@/lib/mascot/model";
 import en from "../../../messages/en.json";
 import vi from "../../../messages/vi.json";
@@ -167,6 +168,8 @@ describe("Bé Da game screen", () => {
     assert.match(html, /18 bạn đang dạo chơi/);
     assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);
+    assert.equal(html.includes("/mascot/props/wardrobe"), false);
+    assert.equal(html.includes("/mascot/props/sink.svg"), false);
     assert.match(html, /\/mascot\/icons\/minimap_pin\.svg/);
     assert.match(html, /\/mascot\/icons\/wave\.svg/);
     assert.equal(html.includes("hue-rotate"), false);
@@ -186,6 +189,51 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-lobby"/);
     assert.equal(html.includes('data-testid="beda-actions"'), false);
     assert.match(html, /Kẹo Dẻo/);
+    assertNoScores(html);
+  });
+
+  it("shows a neglected Bé Da as sleepy with zzz, centred, and no abandoned note", () => {
+    const html = renderGame({
+      player: gameRoomView(
+        resolveBeDaView({
+          snapshot: {
+            ...defaultSnapshot(),
+            isDefault: false,
+            mood: "waiting_door_sign",
+            missedDays: 21,
+            glowLevel: 2,
+            glowProgress: 0.2,
+            nearLevelUp: false,
+          },
+          missedDays: 21,
+          sessionHappy: false,
+          locale: "vi",
+        }),
+      ),
+      showPrettyLine: false,
+      progress: 0.2,
+    });
+    assert.match(html, /\/mascot\/faces\/sleepy\/mouth\.svg/);
+    assert.match(html, /\/mascot\/props\/zzz\.svg/);
+    assert.match(html, /\/mascot\/messy\/1\.svg/);
+    assert.match(html, /\/mascot\/body\/body_chibi\.svg/);
+    assert.equal(html.includes("waiting_door"), false);
+    assert.equal(html.includes("flies"), false);
+    assert.equal(html.includes("body_sit"), false);
+    assert.equal(html.includes("/mascot/props/door.svg"), false);
+    assert.equal(html.includes("sign_"), false);
+    assert.equal(html.includes("/mascot/props/pillow.svg"), false);
+    assert.equal(html.includes("/mascot/props/suitcase.svg"), false);
+    assert.equal(html.includes("/mascot/props/pot.svg"), false);
+    assert.equal(html.includes("/mascot/props/room_"), false);
+    assert.equal(html.includes("Tôi đã bị bỏ rơi ở đây"), false);
+    assert.match(html, /Ra Sảnh/);
+    assert.match(html, /data-testid="beda-cabinet"/);
+    assert.match(html, /aria-label="Tủ đồ"/);
+    assert.match(html, /\/mascot\/props\/wardrobe\.svg/);
+    assert.match(html, /\/mascot\/props\/sink\.svg/);
+    assert.match(html, /beda-bed-head/);
+    assert.match(html, /beda-bed-mattress/);
     assertNoScores(html);
   });
 

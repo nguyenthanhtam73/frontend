@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
@@ -164,6 +164,7 @@ export function BeDaGameView({
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
           onOpenLobby={() => onTab("lobby")}
+          onOpenWardrobe={() => onTab("wardrobe")}
         />
       )}
 
@@ -263,6 +264,7 @@ function Room({
   hideCards,
   showHero,
   onOpenLobby,
+  onOpenWardrobe,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -278,9 +280,23 @@ function Room({
   hideCards: boolean;
   showHero: boolean;
   onOpenLobby: () => void;
+  onOpenWardrobe: () => void;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
+  const [cabinetOpen, setCabinetOpen] = useState(false);
+  const cabinetTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (cabinetTimer.current != null) window.clearTimeout(cabinetTimer.current);
+  }, []);
+  function openCabinet() {
+    if (cabinetTimer.current != null) return;
+    setCabinetOpen(true);
+    cabinetTimer.current = window.setTimeout(() => {
+      cabinetTimer.current = null;
+      onOpenWardrobe();
+    }, 300);
+  }
   return (
     <div className="beda-scene" data-testid="beda-room">
       <div className="beda-room-wall" />
@@ -303,9 +319,16 @@ function Room({
         <i className="beda-bottle" style={{ left: "76%", height: 34, background: "#c9b8f2", animationDelay: "1.1s" }} />
       </div>
       <div className="beda-mirror" aria-hidden />
+      <img className="beda-sink" src="/mascot/props/sink.svg" alt="" decoding="async" />
       <div className="beda-bed" aria-hidden>
-        <div className="beda-bed-cover" />
+        <i className="beda-bed-leg is-back-left" />
+        <i className="beda-bed-leg is-back-right" />
+        <i className="beda-bed-leg is-front-left" />
+        <i className="beda-bed-leg is-front-right" />
+        <div className="beda-bed-head" />
+        <div className="beda-bed-mattress" />
         <div className="beda-bed-pillow" />
+        <div className="beda-bed-cover" />
       </div>
       <div className="beda-plant" aria-hidden>
         <i className="beda-plant-leaf" style={{ left: 4, top: 8, transform: "rotate(-24deg)" }} />
@@ -313,6 +336,21 @@ function Room({
         <i className="beda-plant-leaf" style={{ left: 28, top: 14, transform: "rotate(36deg)" }} />
         <i className="beda-plant-pot" />
       </div>
+      {!hideCards ? (
+        <button
+          type="button"
+          className={cabinetOpen ? "beda-cabinet is-open" : "beda-cabinet"}
+          data-testid="beda-cabinet"
+          aria-label={t("game.wardrobe")}
+          onClick={openCabinet}
+        >
+          <img
+            src={cabinetOpen ? "/mascot/props/wardrobe_open.svg" : "/mascot/props/wardrobe.svg"}
+            alt=""
+            decoding="async"
+          />
+        </button>
+      ) : null}
 
       {!hideCards ? (
         <>
