@@ -1,0 +1,63 @@
+{
+  "viewBox": "0 0 220 250",
+  "anchors": {
+    "headCenter": [
+      110,
+      104
+    ],
+    "faceRadius": 42,
+    "eyeLeft": [
+      94,
+      102
+    ],
+    "eyeRight": [
+      126,
+      102
+    ],
+    "browLeft": [
+      94,
+      90
+    ],
+    "browRight": [
+      126,
+      90
+    ],
+    "mouth": [
+      110,
+      122
+    ],
+    "cheekLeft": [
+      80,
+      116
+    ],
+    "cheekRight": [
+      140,
+      116
+    ],
+    "hairCrown": [
+      110,
+      58
+    ],
+    "hairBunLeft": [
+      64,
+      86
+    ],
+    "hairBunRight": [
+      156,
+      86
+    ],
+    "accessoryClip": [
+      156,
+      62
+    ],
+    "torsoCenter": [
+      110,
+      168
+    ],
+    "outfitTop": 146,
+    "ground": [
+      110,
+      228
+    ]
+  }
+}

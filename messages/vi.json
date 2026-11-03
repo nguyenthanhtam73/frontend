@@ -3324,5 +3324,46 @@
       "privacyLink": "Quyền riêng tư",
       "homeLink": "Về trang chủ"
     }
+  },
+  "mascot": {
+    "name": "Bé Da",
+    "homeAria": "Bé Da — mở routine",
+    "tap": "Bé Da phản ứng",
+    "levelsLabel": "Mức da",
+    "improved": "Đỡ rồi",
+    "concerns": {
+      "acne": "Mụn",
+      "oily": "Dầu",
+      "dark_spot": "Thâm",
+      "dry": "Khô",
+      "red": "Đỏ"
+    },
+    "props": {
+      "note": "Giận rồi đó!",
+      "signComeBack": "Về chăm da đi mà 🥺",
+      "signAbandoned": "Tôi đã bị bỏ rơi ở đây"
+    },
+    "lines": {
+      "happy": "Da vui rồi nè~",
+      "sparkle": "Mũi xinh trở lại",
+      "sleepy": "Ngáp… buồn ngủ quá nè",
+      "acne": "Ủa, mụn ai đây?",
+      "oily": "Bóng nhẹ thôi mà~",
+      "dry": "Khát nước quá nè",
+      "red": "Hơi ửng một xíu",
+      "dark_spot": "Thâm ơi đi chỗ khác chơi",
+      "normal": "Da ổn mà, chăm tiếp nha",
+      "reminder": "Hôm qua quên chăm da rồi nè",
+      "sad_pillow": "Ôm gối chờ mình nè",
+      "pouty_arms_crossed": "Hứ, lâu quá không chăm",
+      "back_turned": "Không thèm nhìn đâu",
+      "note_on_mirror": "Giận rồi đó!",
+      "pot_on_head_corner": "Trốn trong góc đây nè",
+      "suitcase_leaving": "Vali xách đi đây",
+      "waiting_door_sign": "Về chăm da đi mà",
+      "waiting_door_abandoned": "Tôi đã bị bỏ rơi ở đây",
+      "hug_return": "Về rồi! Ôm cái đã~",
+      "itemExpired": "Chăm da tiếp để lấy lại nha"
+    }
   }
 }

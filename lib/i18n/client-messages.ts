@@ -47,6 +47,7 @@ export const APP_CLIENT_MESSAGE_NAMESPACES = [
   "cabinet",
   "progress",
   "routine",
+  "mascot",
   "privacy",
   "meMemory",
   "appFeedback",

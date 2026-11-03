@@ -2,9 +2,12 @@
 
 import { Camera, ShieldCheck, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 import { isNeverCheckedInCheckIn } from "@/lib/check-in/d0-form";
+import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
 import { useStreak } from "@/lib/hooks/use-streak";
+import { BeDaHomeSlot } from "@/components/mascot/be-da-slots";
 
 /**
  * Page hero — D0 / never_checked_in copy says one face photo is enough.
@@ -59,13 +62,24 @@ export function CheckInPageHero({
     </div>
   );
 
-  if (part === "title") return title;
+  if (part === "title") return <CheckInTitle title={title} />;
   if (part === "details") return details;
   return (
     <>
-      {title}
+      <CheckInTitle title={title} />
       {details}
     </>
+  );
+}
+
+function CheckInTitle({ title }: { title: ReactNode }) {
+  const { enabled, pending } = useMascotFeature();
+  if (pending || !enabled) return title;
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1">{title}</div>
+      <BeDaHomeSlot />
+    </div>
   );
 }
 
