@@ -8,31 +8,31 @@
     "faceRadius": 42,
     "eyeLeft": [
       94,
-      102
+      111
     ],
     "eyeRight": [
       126,
-      102
+      111
     ],
     "browLeft": [
       94,
-      90
+      99
     ],
     "browRight": [
       126,
-      90
+      99
     ],
     "mouth": [
       110,
-      122
+      130
     ],
     "cheekLeft": [
-      80,
-      116
+      84,
+      123
     ],
     "cheekRight": [
-      140,
-      116
+      136,
+      123
     ],
     "hairCrown": [
       110,
