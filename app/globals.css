@@ -438,8 +438,13 @@
 .be-da-breathe,
 .be-da-yawn,
 .be-da-jump,
-.be-da-tidy {
+.be-da-tidy,
+.be-da-spark {
     animation: none !important;
+  }
+
+  .be-da-spark {
+    opacity: 0 !important;
   }
 
   .be-da-flies-exit {
@@ -557,4 +562,26 @@ img.be-da-flies-exit {
 
 .be-da-tidy {
   animation: be-da-tidy 0.7s ease forwards;
+}
+
+@keyframes be-da-spark-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--be-da-dx, 0px)), calc(-50% + var(--be-da-dy, -24px))) scale(1);
+    opacity: 0;
+  }
+}
+
+.be-da-spark {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  border-radius: 999px;
+  animation: be-da-spark-pop 0.95s ease-out forwards;
 }

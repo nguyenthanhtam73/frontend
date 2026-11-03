@@ -242,6 +242,8 @@ describe("shop expiry and swappable face", () => {
         face: { id: "face_photo", expires_at: null },
         accessory: { id: "accessory_star_clip", expires_at: "2026-11-01T00:00:00Z" },
       },
+      glow_level: 4,
+      glow_progress: 0.4,
     });
     assert.equal(snap.loadout.hair.expiresAt, "2026-11-03T00:00:00Z");
     assert.equal(snap.loadout.face?.id, "face_photo");

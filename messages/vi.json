@@ -3331,6 +3331,9 @@
     "tap": "Bé Da phản ứng",
     "levelsLabel": "Mức da",
     "improved": "Đỡ rồi",
+    "glowProgress": "Bé Da đang xinh dần",
+    "glowNear": "Bé Da sắp xinh lên rồi đó!",
+    "glowLevelUp": "Bé Da xinh lên rồi nè!",
     "concerns": {
       "acne": "Mụn",
       "oily": "Dầu",

@@ -3,6 +3,7 @@ import {
   isKnownMascotItem,
   type MascotItemLayer,
 } from "@/lib/mascot/catalog";
+import { accessoryUnlocked } from "@/lib/mascot/glow";
 import {
   itemLook,
   itemOpacity,
@@ -42,20 +43,23 @@ export const MASCOT_ANCHORS = {
 export const FACE_PARTS = ["cheeks", "brows", "eyes", "mouth"] as const;
 export type FacePart = (typeof FACE_PARTS)[number];
 
-/** Bottom → top. Outfits stay under hair and face parts. */
+/** Bottom → top. Outfits stay under hair and face parts. Glow wraps the body. */
 export const LAYER_ORDER = [
+  "glow-back",
   "props-room",
   "body",
   "outfit",
   "hair",
   "accessory-headband",
   "face-cheeks",
+  "glow",
   "skin-marks",
   "messy",
   "face-brows",
   "face-eyes",
   "face-mouth",
   "accessory",
+  "glow-front",
   "props-front",
   "fx-eyelids",
   "fx-yawn",
@@ -102,6 +106,12 @@ export function mascotStack(
     if (opacity <= 0) return;
     layers.push({ slot, src, opacity });
   };
+  const level = view.glowLevel;
+  const showAccessory = (item: WornItem) =>
+    accessoryUnlocked(item.id, level, item.source === "shop" || view.shopItemIds.includes(item.id));
+
+  // Halo sits behind the room and the body. Back view keeps this layer.
+  push("glow-back", glowLayerSrc(level, "back"));
 
   for (const room of view.loadout.roomItems) {
     if (!isKnownMascotItem(room.id, "room")) continue;
@@ -121,6 +131,7 @@ export function mascotStack(
   push("hair", `/mascot/hair/${hair.id}.svg`, hair.opacity);
   for (const band of view.loadout.accessories) {
     if (band.id !== DEFAULT_MASCOT_IDS.headband) continue;
+    if (!showAccessory(band)) continue;
     const opacity = optionalOpacity(band, now);
     if (opacity == null || !isKnownMascotItem(band.id, "accessory")) continue;
     push("accessory-headband", `/mascot/accessory/${band.id}.svg`, opacity);
@@ -135,6 +146,9 @@ export function mascotStack(
 
   if (showFace) {
     push("face-cheeks", facePartSrc(expression, "cheeks", faceId), faceOpacity ?? 1);
+    // Face plate stays under the latest check-in marks so glow never covers them.
+    // Back view skips this layer. The front sparkle file is a later slot.
+    push("glow", glowLayerSrc(level, "mid"));
   }
 
   if (showFace) {
@@ -159,6 +173,7 @@ export function mascotStack(
 
   for (const accessory of view.loadout.accessories) {
     if (accessory.id === DEFAULT_MASCOT_IDS.headband) continue;
+    if (!showAccessory(accessory)) continue;
     const look = itemLook(accessory.expiresAt, now);
     if (look === "hidden") continue;
     const known = isKnownMascotItem(accessory.id, "accessory");
@@ -168,6 +183,9 @@ export function mascotStack(
       known ? itemOpacity(look) : 1,
     );
   }
+
+  // Sparkles sit over the mouth and clips, under foreground props and blink/yawn.
+  push("glow-front", glowLayerSrc(level, "front"));
 
   for (const prop of frontProps(view, options.locale ?? "vi")) {
     push("props-front", prop, 1);
@@ -181,6 +199,11 @@ export function mascotStack(
   if (view.flies) push("fx-flies", "/mascot/fx/flies/flies.svg", 1);
 
   return layers;
+}
+
+export function glowLayerSrc(level: number, part: "back" | "mid" | "front"): string {
+  if (part === "mid") return `/mascot/glow/level_${level}.svg`;
+  return `/mascot/glow/level_${level}_${part}.svg`;
 }
 
 export function facePartSrc(expression: string, part: FacePart, faceItemId: string | null): string {

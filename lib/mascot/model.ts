@@ -15,6 +15,14 @@
  */
 
 import { DEFAULT_ACCESSORY_IDS, DEFAULT_MASCOT_IDS } from "@/lib/mascot/catalog";
+import {
+  accessoryUnlocked,
+  clampGlowLevel,
+  isShopSource,
+  parseGlowPoints,
+  parseGlowProgress,
+  parseLevelUp,
+} from "@/lib/mascot/glow";
 
 export const SKIN_CONCERNS = ["acne", "oily", "dark_spot", "dry", "red"] as const;
 export type SkinConcern = (typeof SKIN_CONCERNS)[number];
@@ -26,10 +34,11 @@ export type SkinMark = {
   level: SkinLevel;
 };
 
-/** Equipped shop item. `expiresAt` null means it does not expire. */
+/** Equipped shop item. `expiresAt` null means it does not expire. `source` is set when the API sent one. */
 export type WornItem = {
   id: string;
   expiresAt: string | null;
+  source?: string;
 };
 
 export type MascotLoadout = {
@@ -89,6 +98,18 @@ export type MascotSnapshot = {
   routineToday: RoutineToday;
   lastStepDone: string | null;
   isDefault: boolean;
+  /** 1 when the payload omits `glow_level`. */
+  glowLevel: number;
+  /** Not drawn. The bar uses `glow_progress` so point totals stay off the screen. */
+  glowPoints: number | null;
+  /** Null at the last level. Not drawn. */
+  nextLevelPoints: number | null;
+  /** 0–1 fill from `glow_progress`. Null hides the bar. 1 at the last level. */
+  glowProgress: number | null;
+  nearLevelUp: boolean;
+  levelUp: boolean;
+  /** Item ids whose grant source is `shop`. */
+  shopItemIds: string[];
 };
 
 export { poseForStep, isSessionComplete, streakDotBonus, POSE_HOLD_MS, STEP_POSES } from "@/lib/mascot/pose";
@@ -189,6 +210,11 @@ export type BeDaView = {
   sign: "comeBack" | "abandoned";
   missedDays: number;
   bars: ConcernBar[];
+  glowLevel: number;
+  glowProgress: number | null;
+  nearLevelUp: boolean;
+  levelUp: boolean;
+  shopItemIds: string[];
 };
 
 const LEVEL_RANK: Record<SkinLevel, number> = { light: 1, medium: 2, heavy: 3 };
@@ -304,6 +330,13 @@ export function defaultSnapshot(): MascotSnapshot {
     routineToday: { ...EMPTY_ROUTINE },
     lastStepDone: null,
     isDefault: true,
+    glowLevel: 1,
+    glowPoints: null,
+    nextLevelPoints: null,
+    glowProgress: null,
+    nearLevelUp: false,
+    levelUp: false,
+    shopItemIds: [],
   };
 }
 
@@ -370,11 +403,12 @@ function parseWorn(value: unknown, fallback: string | null): WornItem | null {
   }
   const row = asRecord(value);
   if (!row) return fallback ? permanentItem(fallback) : null;
-  const id = asString(row.id);
+  const id = asString(row.id ?? row.item_id);
   if (!id) return fallback ? permanentItem(fallback) : null;
   const raw = row.expires_at;
   const expiresAt = raw == null || raw === "" ? null : asString(raw) || null;
-  return { id, expiresAt };
+  const source = asString(row.source).toLowerCase();
+  return source ? { id, expiresAt, source } : { id, expiresAt };
 }
 
 function dedupeWorn(items: WornItem[]): WornItem[] {
@@ -471,8 +505,9 @@ function parseRoutineToday(value: unknown): RoutineToday {
 export function parseMascot(value: unknown): MascotSnapshot {
   const row = asRecord(value) ?? {};
   const missed = asInt(row.missed_days);
+  const loadout = parseLoadout(row.loadout);
   return {
-    loadout: parseLoadout(row.loadout),
+    loadout,
     mood: asString(row.mood) || "happy",
     skinMarks: parseMarks(row.skin_marks),
     skinMarksPrev: parseMarks(row.skin_marks_prev),
@@ -483,7 +518,90 @@ export function parseMascot(value: unknown): MascotSnapshot {
     routineToday: parseRoutineToday(row.routine_today),
     lastStepDone: asString(row.last_step_done) || null,
     isDefault: false,
+    ...parseGlow(row, loadout),
   };
+}
+
+const SHOP_LIST_KEYS = ["owned_items", "owned", "grants", "shop_items"] as const;
+
+function parseGlow(row: Record<string, unknown>, loadout: MascotLoadout): Pick<
+  MascotSnapshot,
+  | "glowLevel"
+  | "glowPoints"
+  | "nextLevelPoints"
+  | "glowProgress"
+  | "nearLevelUp"
+  | "levelUp"
+  | "shopItemIds"
+> {
+  return {
+    glowLevel: clampGlowLevel(row.glow_level),
+    glowPoints: parseGlowPoints(row.glow_points),
+    nextLevelPoints: parseGlowPoints(row.next_level_points),
+    glowProgress: parseGlowProgress(row.glow_progress),
+    nearLevelUp: parseLevelUp(row.near_level_up),
+    levelUp: parseLevelUp(row.level_up),
+    shopItemIds: shopItemIds(row, loadout),
+  };
+}
+
+function shopItemIds(row: Record<string, unknown>, loadout: MascotLoadout): string[] {
+  const ids = new Set<string>();
+  const addGrant = (value: unknown, bareStringIsShop: boolean) => {
+    if (typeof value === "string") {
+      const id = value.trim();
+      if (bareStringIsShop && id) ids.add(id);
+      return;
+    }
+    const rec = asRecord(value);
+    if (!rec) return;
+    const id = asString(rec.id ?? rec.item_id);
+    if (id && isShopSource(asString(rec.source))) ids.add(id);
+  };
+  for (const key of SHOP_LIST_KEYS) {
+    const list = row[key];
+    if (!Array.isArray(list)) continue;
+    for (const item of list) addGrant(item, key === "shop_items");
+  }
+  const worn = [
+    loadout.body,
+    loadout.hair,
+    loadout.outfit,
+    loadout.face,
+    ...loadout.accessories,
+    ...loadout.roomItems,
+  ];
+  for (const item of worn) {
+    if (item && isShopSource(item.source)) ids.add(item.id);
+  }
+  // A bare id below the unlock is a shop grant: the glow API omits locked free pieces.
+  // An object with source "free" stays locked. Payloads with no glow_level do not infer this.
+  const glowExplicit = row.glow_level != null && row.glow_level !== "";
+  if (glowExplicit) {
+    const level = clampGlowLevel(row.glow_level);
+    for (const item of explicitAccessoryValues(row.loadout)) {
+      if (typeof item === "string") {
+        const id = item.trim();
+        if (id && !accessoryUnlocked(id, level, false)) ids.add(id);
+        continue;
+      }
+      const rec = asRecord(item);
+      if (!rec) continue;
+      const id = asString(rec.id ?? rec.item_id);
+      if (!id || asString(rec.source)) continue;
+      if (!accessoryUnlocked(id, level, false)) ids.add(id);
+    }
+  }
+  return [...ids];
+}
+
+function explicitAccessoryValues(loadoutValue: unknown): unknown[] {
+  const row = asRecord(loadoutValue);
+  if (!row) return [];
+  if (Array.isArray(row.accessories)) return row.accessories;
+  if (Array.isArray(row.accessory)) return row.accessory;
+  if (row.accessory != null) return [row.accessory];
+  return [];
 }
 
 export function daysBetween(fromISO: string, toISO: string): number | null {
@@ -568,6 +686,11 @@ export function resolveBeDaView(input: {
     sign: missed >= 21 && mood === "waiting_door_sign" ? "abandoned" : "comeBack",
     missedDays: missed,
     bars: concernBars(snap.skinMarks, snap.skinMarksPrev),
+    glowLevel: snap.glowLevel,
+    glowProgress: snap.glowProgress,
+    nearLevelUp: snap.nearLevelUp,
+    levelUp: snap.levelUp,
+    shopItemIds: snap.shopItemIds,
   };
 }
 
