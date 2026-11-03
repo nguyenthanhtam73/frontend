@@ -47,6 +47,15 @@ describe("Bé Da backend payload", () => {
     assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg"/);
     assert.match(html, /src="\/mascot\/glow\/level_1\.svg"/);
     assert.match(html, /data-glow-level="1"/);
+    assert.match(html, /data-level="1"/);
+    assert.match(html, /bd-figure/);
+    assert.match(html, /bd-breathe/);
+    assert.equal(html.includes("be-da-breathe"), false);
+    assert.equal(html.includes("be-da-blink"), false);
+    const lids = html.match(/<img[^>]*\/mascot\/fx\/eyelids\.svg[^>]*>/)?.[0] ?? "";
+    assert.match(lids, /bd-lids/);
+    assert.equal(lids.includes("opacity"), false);
+    assert.match(html, /be-da-yawn/);
     assert.equal(html.includes("accessory_pink_headband"), false);
     assert.equal(html.includes("accessory_star_clip"), false);
     assert.equal(MASCOT_CATALOG.some((item) => item.id === "accessory_pink_headband"), true);
@@ -71,9 +80,25 @@ describe("Bé Da backend payload", () => {
     assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg"/);
     assert.match(html, /src="\/mascot\/accessory\/accessory_pink_headband\.svg"/);
     assert.match(html, /src="\/mascot\/props\/room_moon\.svg"/);
+    assert.match(html, /data-level="3"/);
+    assert.match(html, /bd-breathe/);
     assert.equal(html.includes("body_default"), false);
     assert.equal(html.includes("hair_unknown"), false);
     assert.equal(html.includes("outfit_nope"), false);
     assert.equal(html.includes("room_not_real"), false);
+  });
+
+  it("keeps the routine-tick jump on the breathing figure", () => {
+    const snapshot = parseMascot({ ...backendMascot, glow_level: 5 });
+    const view = resolveBeDaView({
+      snapshot,
+      missedDays: snapshot.missedDays,
+      sessionHappy: false,
+      locale: "vi",
+    });
+    const html = renderToStaticMarkup(<BeDaFigure view={view} locale="vi" celebrate />);
+    assert.match(html, /data-level="5"/);
+    assert.match(html, /bd-breathe/);
+    assert.match(html, /be-da-jump/);
   });
 });
