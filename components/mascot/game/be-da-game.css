@@ -1893,6 +1893,21 @@
   bottom: calc(var(--beda-nav-reserve) + 188px);
 }
 
+/* Room box for feet: full bleed, from just under the seat bar to the background bottom. */
+.beda-spa-floor {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: calc(96px + env(safe-area-inset-top));
+  pointer-events: none;
+}
+
+.beda-spa-floor .beda-spa-person {
+  pointer-events: auto;
+}
+
 .beda-spa-mat {
   position: absolute;
   left: 8%;

@@ -406,7 +406,7 @@ export function useSpaMotion(input: {
     let follow = true;
     let pull = false;
     let reduced = reducedMotion();
-    const start = youProp.current ?? { x: 0.5, y: 0.92 };
+    const start = youProp.current ?? { x: 0.5, y: SPA_BOUNDS.maxY };
     const walker = createWalker(start);
     let last = performance.now();
     let frameId = 0;

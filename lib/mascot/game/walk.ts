@@ -35,10 +35,14 @@ export const LOBBY_BOUNDS: Bounds = { minX: 0.08, maxX: 0.92, minY: 0.5, maxY: 0
 /** Fountain basin in the same space as lobby taps (authored depth, not pixels). */
 export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.56, rx: 0.1, ry: 0.062 };
 
-/** Spa floor. The mat is the obstacle, like the lobby fountain. */
-export const SPA_BOUNDS: Bounds = { minX: 0.1, maxX: 0.9, minY: 0.22, maxY: 0.9 };
+/**
+ * Walkable spa floor in the room box below the top bar.
+ * Same range Android uses: x 0.08–0.92, y 0.46–0.70.
+ */
+export const SPA_BOUNDS: Bounds = { minX: 0.08, maxX: 0.92, minY: 0.46, maxY: 0.7 };
 
-export const SPA_MAT: Obstacle = { x: 0.5, y: 0.48, rx: 0.36, ry: 0.22 };
+/** Fallback mat in that same room box. The spa hook measures the real mat. */
+export const SPA_MAT: Obstacle = { x: 0.5, y: 0.3, rx: 0.42, ry: 0.15 };
 
 const MAX_SPEED = 0.45;
 const ACCEL = 2.4;
