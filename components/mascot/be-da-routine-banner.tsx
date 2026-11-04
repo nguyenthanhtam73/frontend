@@ -1,89 +1,117 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { BeDaStage } from "@/components/mascot/be-da-stage";
+import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { useRouter } from "@/i18n/navigation";
+import { gameRoomView } from "@/lib/mascot/game/room-view";
+import {
+  DEFAULT_GAME_LOOK,
+  GAME_LOOK_KEY,
+  gameDress,
+  readGameLook,
+  type GameLook,
+} from "@/lib/mascot/game/look";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
-import { expiredItemKeys } from "@/lib/mascot/model";
-import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 
-const SEEN_KEY = "be-da-expired-items";
+const TAP_MS = 480;
 
+function storedLook(): GameLook {
+  if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
+  return readGameLook(localStorage) ?? DEFAULT_GAME_LOOK;
+}
+
+/** Small corner Bé Da on /routine. Same room view and closet as Góc bình yên. */
 export function BeDaRoutineBanner() {
   const t = useTranslations("mascot");
   const locale = useLocale();
-  const { view, stepPose, hidden, glowCelebrate } = useBeDaView();
-  const sessionHappy = useBeDaPoseStore((s) => s.sessionHappy);
-  const [expiryLine, setExpiryLine] = useState(false);
-  const [celebrate, setCelebrate] = useState(false);
-  const [fliesExit, setFliesExit] = useState(false);
-  const hadFlies = useRef(false);
-  const wasHappy = useRef(false);
-
-  const expired = expiredItemKeys(view.loadout).join("|");
-  useEffect(() => {
-    if (!expired || typeof window === "undefined") return;
-    const keys = expired.split("|");
-    let seen: string[] = [];
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(SEEN_KEY) || "[]");
-      if (Array.isArray(parsed)) seen = parsed.filter((item) => typeof item === "string");
-    } catch {
-      seen = [];
-    }
-    const fresh = keys.filter((key) => !seen.includes(key));
-    if (fresh.length === 0) return;
-    window.localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...fresh]));
-    setExpiryLine(true);
-  }, [expired]);
+  const router = useRouter();
+  const { view, hidden } = useBeDaView();
+  const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
+  const [tapped, setTapped] = useState(false);
+  const room = gameRoomView(view);
+  const dozing = room.mood === "sleepy";
 
   useEffect(() => {
-    if (view.flies) hadFlies.current = true;
-    if (!wasHappy.current && sessionHappy) {
-      setCelebrate(true);
-      if (hadFlies.current) setFliesExit(true);
-      const timer = window.setTimeout(() => {
-        setCelebrate(false);
-        setFliesExit(false);
-        hadFlies.current = false;
-      }, 800);
-      wasHappy.current = true;
-      return () => window.clearTimeout(timer);
-    }
-    if (!sessionHappy) wasHappy.current = false;
-    return undefined;
-  }, [sessionHappy, view.flies]);
+    const read = () => setLook(storedLook());
+    read();
+    const onShow = () => {
+      if (document.visibilityState === "hidden") return;
+      read();
+    };
+    const onStore = (event: StorageEvent) => {
+      if (event.key != null && event.key !== GAME_LOOK_KEY) return;
+      read();
+    };
+    window.addEventListener("focus", read);
+    document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("storage", onStore);
+    return () => {
+      window.removeEventListener("focus", read);
+      document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("storage", onStore);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (hidden) return;
+    const page = document.querySelector("[data-routine-page]");
+    if (!page) return;
+    page.setAttribute("data-be-da", "on");
+    return () => page.removeAttribute("data-be-da");
+  }, [hidden]);
 
   if (hidden) return null;
 
-  const line = expiryLine
-    ? t("lines.itemExpired")
-    : view.useServerLine
-      ? view.serverLine
-      : t(`lines.${view.lineKey}`);
+  function openRoom() {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || tapped) {
+      router.push("/be-da");
+      return;
+    }
+    setTapped(true);
+    window.setTimeout(() => router.push("/be-da"), TAP_MS);
+  }
 
   return (
-    <section
-      className="mb-3 rounded-2xl border border-rose-200/80 bg-rose-50/80 px-3 py-3"
+    <button
+      type="button"
       data-testid="be-da-routine"
-      aria-label={t("name")}
+      data-dozing={dozing ? "true" : "false"}
+      data-outfit={look.outfit}
+      aria-label={dozing ? t("routineDozingAria") : t("routinePlayAria")}
+      onClick={openRoom}
+      className={
+        tapped
+          ? "be-da-routine-chip is-tapped absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
+          : dozing
+            ? "be-da-routine-chip is-dozing absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
+            : "be-da-routine-chip absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
+      }
     >
-      <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-900/70">
-        {t("name")}
-      </p>
-      <BeDaStage
-        view={view}
-        stepPose={stepPose}
-        line={line}
-        locale={locale}
-        tidy={sessionHappy}
-        fliesExit={fliesExit}
-        celebrate={celebrate}
-        glowCelebrate={glowCelebrate}
-        interactive
-        tapLabel={t("tap")}
-      />
-    </section>
+      {dozing ? (
+        <span className="be-da-chip-zzz" aria-hidden>
+          <i>z</i>
+          <i>z</i>
+          <i>Z</i>
+        </span>
+      ) : (
+        <span className="be-da-chip-bubbles">
+          <span>{t("routineBubble1")}</span>
+          <span>{t("routineBubble2")}</span>
+        </span>
+      )}
+      <span className="be-da-chip-sparks" aria-hidden>
+        <i />
+        <i />
+        <i />
+      </span>
+      <span className="be-da-chip-wave block w-20">
+        <span className="be-da-chip-bob block">
+          <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
+        </span>
+      </span>
+    </button>
   );
 }

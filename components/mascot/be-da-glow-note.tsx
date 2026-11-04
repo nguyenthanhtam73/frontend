@@ -23,7 +23,7 @@ export function BeDaGlowNote({
     <div className={cn("mt-1 w-full space-y-1", className)}>
       {celebrate ? (
         <p
-          className="text-balance text-center text-[11px] font-semibold leading-tight text-rose-900"
+          className="text-balance text-center text-[11px] font-semibold leading-tight text-rose-900 dark:text-rose-100"
           role="status"
           data-testid="be-da-glow-level-up"
         >
@@ -32,7 +32,7 @@ export function BeDaGlowNote({
       ) : null}
       {progress != null ? (
         <div
-          className="h-1.5 overflow-hidden rounded-full bg-rose-100"
+          className="h-1.5 overflow-hidden rounded-full bg-rose-100 dark:bg-rose-900"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -44,7 +44,7 @@ export function BeDaGlowNote({
         </div>
       ) : null}
       {view.nearLevelUp ? (
-        <p className="text-balance text-center text-[10px] leading-tight text-rose-900/80" data-testid="be-da-glow-near">
+        <p className="text-balance text-center text-[10px] leading-tight text-rose-900/80 dark:text-rose-100/80" data-testid="be-da-glow-near">
           {t("glowNear")}
         </p>
       ) : null}

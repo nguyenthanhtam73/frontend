@@ -16,8 +16,13 @@ const NEGLECT = new Set([
   "waiting_door_sign",
 ]);
 
+/** Home moods that used to show the door, notes, and other sad props. */
+export function roomNeglect(view: BeDaView): boolean {
+  return NEGLECT.has(moodLayer(view.mood));
+}
+
 export function gameRoomView(view: BeDaView): BeDaView {
-  const neglect = NEGLECT.has(moodLayer(view.mood));
+  const neglect = roomNeglect(view);
   return {
     ...view,
     mood: neglect ? "sleepy" : view.mood,
