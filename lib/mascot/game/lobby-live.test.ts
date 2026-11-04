@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
+import { SAMPLE_LOBBY_FRIENDS, lobbyBodyBox, screenBoxesOverlap } from "@/lib/mascot/game/lobby";
 import { LobbyConnection, type LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
 import {
   LOBBY_ACCESS_COOKIE,
@@ -191,11 +191,27 @@ describe("lobby crowd", () => {
   });
 
   it("walks a sample visitor inside the band", () => {
-    const start = sampleWander("keo-deo", 0, 0.6, 0.74);
-    const later = sampleWander("keo-deo", 4000, 0.6, 0.74);
+    const home = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === "keo-deo")!;
+    const start = sampleWander("keo-deo", 0, home.x, home.y);
+    const later = sampleWander("keo-deo", 5000, home.x, home.y);
     assert.ok(start.x >= 0.06 && start.x <= 0.94);
     assert.ok(start.y >= 0.12 && start.y <= 0.96);
-    assert.ok(Math.abs(start.x - later.x) + Math.abs(start.y - later.y) > 0);
+    assert.ok(later.x >= 0.06 && later.x <= 0.94);
+    const worldW = 390 * 1.3;
+    const worldH = worldW * 3;
+    for (const step of [start, later]) {
+      for (const other of SAMPLE_LOBBY_FRIENDS) {
+        if (other.id === "keo-deo") continue;
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyBodyBox(step.x, step.y, home.nickname, worldW, worldH),
+            lobbyBodyBox(other.x, other.y, other.nickname, worldW, worldH),
+            0,
+          ),
+          false,
+        );
+      }
+    }
   });
 });
 

@@ -2,7 +2,14 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-import { LOBBY_WORLD, lobbyStackZ, tagEdgeDelta } from "@/lib/mascot/game/lobby";
+import {
+  LOBBY_WORLD,
+  SAMPLE_LOBBY_FRIENDS,
+  lobbyChromePad,
+  lobbyExclusionZones,
+  lobbyStackZ,
+  tagEdgeDelta,
+} from "@/lib/mascot/game/lobby";
 import { spaFootScale } from "@/lib/mascot/game/spa-room";
 import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
@@ -44,16 +51,67 @@ function liteMotion(): boolean {
   return (typeof cores === "number" && cores > 0 && cores <= 4) || (typeof memory === "number" && memory > 0 && memory <= 2);
 }
 
-/** Pull every name tag inside the lobby frame, keeping the shift as small as possible. */
-function clampLobbyTags(frame: HTMLElement, zoom: number) {
+/** Pull every name tag inside the viewport using its measured screen box. */
+function clampLobbyTags(frame: HTMLElement) {
   const view = frame.getBoundingClientRect();
-  const scale = zoom > 0 ? zoom : 1;
   for (const tag of frame.querySelectorAll<HTMLElement>(".beda-tag")) {
-    const box = tag.getBoundingClientRect();
-    const dx = tagEdgeDelta(box, view);
-    if (Math.abs(dx) < 0.5) continue;
-    const prev = Number.parseFloat(tag.style.getPropertyValue("--edge") || "0") || 0;
-    tag.style.setProperty("--edge", `${prev + dx / scale}px`);
+    for (let pass = 0; pass < 3; pass += 1) {
+      const before = tag.getBoundingClientRect();
+      const dx = tagEdgeDelta(before, view);
+      if (Math.abs(dx) < 0.5) break;
+      const prev = Number.parseFloat(tag.style.getPropertyValue("--edge") || "0") || 0;
+      tag.style.setProperty("--edge", `${prev + dx}px`);
+      const after = tag.getBoundingClientRect();
+      const gained = after.left - before.left;
+      if (Math.abs(gained) < 0.25) break;
+      if (Math.abs(gained - dx) > 0.75) {
+        tag.style.setProperty("--edge", `${prev + (dx * dx) / gained}px`);
+      }
+    }
+  }
+}
+
+/** Slide sample visitors until their figure and name clear the real control boxes. */
+function nudgeSamplesOffChrome(frame: HTMLElement) {
+  const root = frame.closest(".beda-game") ?? document;
+  const zones = [".beda-back", ".beda-zoom", ".beda-nav"]
+    .map((selector) => root.querySelector<HTMLElement>(selector))
+    .filter((el): el is HTMLElement => el != null);
+  const view = frame.getBoundingClientRect();
+  for (const el of frame.querySelectorAll<HTMLElement>('[data-sample="true"].beda-pose')) {
+    for (let pass = 0; pass < 10; pass += 1) {
+      const art = el.querySelector(".beda-friend-art")?.getBoundingClientRect();
+      const tag = el.querySelector(".beda-tag")?.getBoundingClientRect();
+      if (!art || !tag) break;
+      const box = {
+        left: Math.min(art.left, tag.left),
+        top: Math.min(art.top, tag.top),
+        right: Math.max(art.right, tag.right),
+        bottom: Math.max(art.bottom, tag.bottom),
+      };
+      let dx = 0;
+      let dy = 0;
+      for (const zoneEl of zones) {
+        const zone = zoneEl.getBoundingClientRect();
+        const ix = Math.min(box.right, zone.right) - Math.max(box.left, zone.left);
+        const iy = Math.min(box.bottom, zone.bottom) - Math.max(box.top, zone.top);
+        if (ix <= 2 || iy <= 2) continue;
+        const viewMid = view.left + view.width / 2;
+        if (zone.top > view.top + view.height * 0.55) dy -= iy + 8;
+        else if (zone.left > viewMid) dx -= ix + 8;
+        else dx += ix + 8;
+      }
+      if (dx === 0 && dy === 0) break;
+      const mx = Number.parseFloat(el.style.getPropertyValue("--mx") || "0") || 0;
+      const my = Number.parseFloat(el.style.getPropertyValue("--my") || "0") || 0;
+      const homeMx = Number(el.dataset.homeMx ?? mx);
+      const homeMy = Number(el.dataset.homeMy ?? my);
+      const nextMx = Math.min(homeMx + 48, Math.max(homeMx - 48, mx + dx));
+      const nextMy = Math.min(homeMy + 48, Math.max(homeMy - 48, my + dy));
+      if (nextMx === mx && nextMy === my) break;
+      el.style.setProperty("--mx", `${nextMx}px`);
+      el.style.setProperty("--my", `${nextMy}px`);
+    }
   }
 }
 
@@ -88,6 +146,8 @@ function placeLobby(
   size: number,
   squash: number,
 ) {
+  el.dataset.homeMx = String(x * worldW);
+  el.dataset.homeMy = String(y * worldH);
   el.style.setProperty("--mx", `${x * worldW}px`);
   el.style.setProperty("--my", `${y * worldH}px`);
   el.style.setProperty("--ms", String(size));
@@ -209,14 +269,29 @@ export function useLobbyMotion(input: {
       worldH: world.offsetHeight || 1,
     });
 
+    const chromePad = () => {
+      const { w, h } = viewSize();
+      return lobbyChromePad(w, h);
+    };
+
     const applyCamera = () => {
       const { w, h, worldW, worldH } = viewSize();
-      cam = clampCamera(cam, w, h, worldW, worldH);
+      cam = clampCamera(cam, w, h, worldW, worldH, chromePad());
       world.style.transform = `translate3d(${cam.x}px, ${cam.y}px, 0) scale(${cam.scale})`;
       frame.style.setProperty("--beda-zoom", String(cam.scale));
     };
 
+    const tapBlocked = (clientX: number, clientY: number) => {
+      const box = frame.getBoundingClientRect();
+      const sx = clientX - box.left;
+      const sy = clientY - box.top;
+      return lobbyExclusionZones(box.width, box.height).some(
+        (zone) => sx >= zone.left && sx <= zone.right && sy >= zone.top && sy <= zone.bottom,
+      );
+    };
+
     const toLobby = (clientX: number, clientY: number) => {
+      if (tapBlocked(clientX, clientY)) return null;
       const box = frame.getBoundingClientRect();
       const worldPt = screenToWorld(clientX - box.left, clientY - box.top, cam);
       const { worldW, worldH } = viewSize();
@@ -263,16 +338,18 @@ export function useLobbyMotion(input: {
     };
 
     const { w, h, worldW, worldH } = viewSize();
+    const bootPad = lobbyChromePad(w, h);
     cam = clampCamera(
       {
-        x: w / 2 - youProp.current.x * worldW,
-        y: h * 0.42 - youProp.current.y * worldH,
+        x: bootPad.left + (w - bootPad.left - bootPad.right) * 0.5 - youProp.current.x * worldW,
+        y: bootPad.top + (h - bootPad.top - bootPad.bottom) * 0.46 - youProp.current.y * worldH,
         scale: 1,
       },
       w,
       h,
       worldW,
       worldH,
+      bootPad,
     );
     applyCamera();
 
@@ -320,11 +397,13 @@ export function useLobbyMotion(input: {
           size.worldH,
           reduced ? 1 : dt,
           true,
+          chromePad(),
         );
         pull = false;
       } else if (pull && !reduced) {
-        const tx = size.w * 0.5 - walker.x * size.worldW * cam.scale;
-        const ty = size.h * 0.46 - walker.y * size.worldH * cam.scale;
+        const pad = chromePad();
+        const tx = pad.left + (size.w - pad.left - pad.right) * 0.5 - walker.x * size.worldW * cam.scale;
+        const ty = pad.top + (size.h - pad.top - pad.bottom) * 0.46 - walker.y * size.worldH * cam.scale;
         const k = 1 - Math.exp(-3.2 * dt);
         cam = { ...cam, x: cam.x + (tx - cam.x) * k, y: cam.y + (ty - cam.y) * k };
         if (Math.hypot(tx - cam.x, ty - cam.y) < 2) pull = false;
@@ -346,14 +425,18 @@ export function useLobbyMotion(input: {
         });
       }
 
+      const drawn: { x: number; y: number; nickname: string }[] = [];
       for (const actor of actorsProp.current) {
         const pose = world.querySelector<HTMLElement>(`[data-friend-id="${actor.id}"].beda-pose`);
         if (!pose) continue;
         let x = actor.x;
         let y = actor.y;
         let face = actor.facing === "left" ? -1 : 1;
-        if (actor.sample && !reduced) {
-          const wandered = sampleWander(actor.id, now, actor.x, actor.y);
+        const sampleName = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id)?.nickname ?? actor.id;
+        if (actor.sample) {
+          const wandered = reduced
+            ? { x: actor.x, y: actor.y, facing: actor.facing }
+            : sampleWander(actor.id, now, actor.x, actor.y);
           x = wandered.x;
           y = wandered.y;
           face = wandered.facing === "left" ? -1 : 1;
@@ -376,8 +459,10 @@ export function useLobbyMotion(input: {
         const elapsed = prev ? (now - prev.t) / 1000 : 0;
         const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
         setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
+        drawn.push({ x, y, nickname: sampleName });
       }
-      clampLobbyTags(frame, cam.scale);
+      nudgeSamplesOffChrome(frame);
+      clampLobbyTags(frame);
       fadeCoveredControls(frame);
       frameId = window.requestAnimationFrame(tick);
     };

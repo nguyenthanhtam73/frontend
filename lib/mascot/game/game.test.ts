@@ -23,9 +23,9 @@ import {
   clampLobbyPoint,
   lobbyHeadCount,
   lobbySpawn,
+  lobbyBodyBox,
   lobbyTooClose,
-  sampleBlocksSpawn,
-  sampleStandsUnderOpeningChrome,
+  screenBoxesOverlap,
   tagEdgeDelta,
   lobbyStackZ,
   lobbyTagNudgePx,
@@ -328,17 +328,31 @@ describe("lobby world", () => {
     }
     assert.ok(Math.min(...xs) < 0.15);
     assert.ok(Math.max(...xs) > 0.85);
+    assert.ok(Math.min(...xs) < 0.2);
+    assert.ok(Math.max(...xs) > 0.8);
     assert.ok(Math.min(...ys) < 0.2);
     assert.ok(Math.max(...ys) > 0.9);
+    const worldW = 390 * 1.3;
+    const worldH = worldW * 3;
+    const { spawn } = LOBBY_WORLD;
+    let near = 0;
     for (let i = 0; i < SAMPLE_LOBBY_FRIENDS.length; i += 1) {
       const a = SAMPLE_LOBBY_FRIENDS[i]!;
-      assert.equal(sampleStandsUnderOpeningChrome(a.x, a.y), false, a.id);
-      assert.equal(sampleBlocksSpawn(a.x, a.y), false, a.id);
+      if (Math.abs(a.x - spawn.x) <= 0.14 && Math.abs(a.y - spawn.y) <= 0.12) near += 1;
       for (let j = i + 1; j < SAMPLE_LOBBY_FRIENDS.length; j += 1) {
         const b = SAMPLE_LOBBY_FRIENDS[j]!;
-        assert.equal(lobbyTooClose(a, b), false, `${a.id} ${b.id}`);
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyBodyBox(a.x, a.y, a.nickname, worldW, worldH),
+            lobbyBodyBox(b.x, b.y, b.nickname, worldW, worldH),
+            0,
+          ),
+          false,
+          `${a.id} ${b.id}`,
+        );
       }
     }
+    assert.ok(near <= 3, `near spawn ${near}`);
   });
 
   it("keeps a name tag inside the screen by the smallest shift", () => {

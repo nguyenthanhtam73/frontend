@@ -994,6 +994,15 @@
   transform: translate(-50%, -100%);
 }
 
+.beda-lobby .beda-friend.beda-pose {
+  width: calc(84px * var(--ms, 1));
+}
+
+.beda-lobby .beda-tag {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
 .beda-friend.beda-pose {
   left: 0;
   top: 0;
@@ -1009,6 +1018,7 @@
   width: 100%;
   flex-direction: column;
   align-items: center;
+  overflow: visible;
   border: 0;
   background: transparent;
   padding: 0;
@@ -1093,7 +1103,11 @@
 
 .beda-tag {
   position: relative;
+  width: max-content;
+  max-width: none;
+  flex: none;
   margin-top: -8px;
+  overflow: visible;
   border-radius: 999px;
   background: #fff;
   padding: 3px 10px;
@@ -1101,6 +1115,7 @@
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
+  text-overflow: clip;
   box-shadow: 0 3px 0 #e2bcc6;
   transform: translateX(calc(var(--nudge, 0px) + var(--edge, 0px))) scale(calc(1 / var(--beda-zoom, 1)));
   transform-origin: center top;

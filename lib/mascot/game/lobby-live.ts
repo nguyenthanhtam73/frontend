@@ -2,10 +2,9 @@ import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
 import {
   clampLobbyPoint,
+  lobbyBodyBox,
   lobbySpawnForId,
-  lobbyTooClose,
-  sampleBlocksSpawn,
-  sampleStandsUnderOpeningChrome,
+  screenBoxesOverlap,
   SAMPLE_LOBBY_FRIENDS,
   type SampleLobbyFriend,
 } from "@/lib/mascot/game/lobby";
@@ -560,8 +559,18 @@ function hashPhase(id: string): number {
 }
 
 function strollBlocked(x: number, y: number, selfId: string): boolean {
-  if (sampleStandsUnderOpeningChrome(x, y) || sampleBlocksSpawn(x, y)) return true;
-  return SAMPLE_LOBBY_FRIENDS.some((friend) => friend.id !== selfId && lobbyTooClose({ x, y }, friend));
+  const self = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === selfId);
+  const worldW = 390 * 1.3;
+  const worldH = worldW * 3;
+  return SAMPLE_LOBBY_FRIENDS.some(
+    (friend) =>
+      friend.id !== selfId &&
+      screenBoxesOverlap(
+        lobbyBodyBox(x, y, self?.nickname ?? friend.nickname, worldW, worldH),
+        lobbyBodyBox(friend.x, friend.y, friend.nickname, worldW, worldH),
+        0,
+      ),
+  );
 }
 
 /** A small stroll around a sample visitor's authored spot. Stays inside the walk band. */
