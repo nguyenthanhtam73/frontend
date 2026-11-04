@@ -3332,8 +3332,10 @@
   "mascot": {
     "name": "Bé Da",
     "homeAria": "Bé Da — vào phòng",
-    "routinePlay": "Chạm để chơi với Bé Da",
-    "routinePlayAria": "Chạm để chơi với Bé Da",
+    "routineBubble1": "Chạm mình nè ✨",
+    "routineBubble2": "Hôm nay da sao rồi?",
+    "routinePlayAria": "Chạm để vào phòng Bé Da",
+    "routineDozingAria": "Bé Da đang ngủ. Chạm để vào phòng",
     "tap": "Bé Da phản ứng",
     "levelsLabel": "Mức da",
     "improved": "Đỡ rồi",
