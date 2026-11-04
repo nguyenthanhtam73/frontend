@@ -1535,9 +1535,43 @@
   display: none;
 }
 
+/* Preview stays in the top 40%. The sheet scrolls underneath it, so it no longer covers her. */
 .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
-  bottom: calc(var(--beda-nav-reserve) + var(--beda-sheet-max) + 22px);
-  width: clamp(96px, 22vh, 156px);
+  top: calc(58px + env(safe-area-inset-top));
+  bottom: auto;
+  height: 40vh;
+  width: min(200px, 58vw);
+  z-index: 4;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-hero-wrap .bd-figure {
+  width: 150px;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-rug {
+  display: none;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-sheet {
+  top: calc(40vh + 66px + env(safe-area-inset-top));
+  right: 12px;
+  bottom: calc(var(--beda-nav-reserve) + 8px);
+  left: 12px;
+  width: auto;
+  max-height: none;
+  transform: none;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  overflow: visible;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-pick {
+  width: auto;
 }
 
 .beda-note {
@@ -1690,7 +1724,24 @@
   }
 
   .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
-    width: min(200px, 24vh);
+    top: calc(72px + env(safe-area-inset-top));
+    bottom: calc(var(--beda-nav-reserve) + 16px);
+    left: 28px;
+    height: auto;
+    width: min(320px, 36vw);
+    transform: none;
+    justify-content: center;
+  }
+
+  .beda-game[data-tab="wardrobe"] .beda-sheet {
+    top: calc(72px + env(safe-area-inset-top));
+    right: 24px;
+    bottom: calc(var(--beda-nav-reserve) + 12px);
+    left: calc(min(320px, 36vw) + 52px);
+  }
+
+  .beda-game[data-tab="wardrobe"] .beda-hero-wrap .bd-figure {
+    width: min(260px, 30vw);
   }
 
   .beda-chest-art {

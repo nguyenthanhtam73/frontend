@@ -690,7 +690,7 @@ function Wardrobe({
             onClick={() => onLook({ ...look, outfit: id })}
           >
             <span className="beda-pick-art is-outfit">
-              <img src={`/mascot/outfits/${id}.svg`} alt="" loading="lazy" decoding="async" />
+              <img src={`/mascot/outfits/${id}.svg`} alt="" loading="eager" decoding="async" />
             </span>
             {t(`game.look.${id}`)}
           </button>
@@ -708,7 +708,7 @@ function Wardrobe({
             onClick={() => onLook({ ...look, hair: id })}
           >
             <span className="beda-pick-art is-hair">
-              <img src={`/mascot/hair/${id}.svg`} alt="" loading="lazy" decoding="async" />
+              <img src={`/mascot/hair/${id}.svg`} alt="" loading="eager" decoding="async" />
             </span>
             {t(`game.look.${id}`)}
           </button>
@@ -736,7 +736,7 @@ function Wardrobe({
             onClick={() => onLook({ ...look, clip: id })}
           >
             <span className="beda-pick-art is-clip">
-              <img src={`/mascot/accessory/${id}.svg`} alt="" loading="lazy" decoding="async" />
+              <img src={`/mascot/accessory/${id}.svg`} alt="" loading="eager" decoding="async" />
             </span>
             {t(`game.look.${id}`)}
           </button>
