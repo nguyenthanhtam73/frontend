@@ -1,5 +1,5 @@
 import { ApiError, apiGet, apiPost } from "@/lib/api-client";
-import { normalizeRoomCode, spaRoomProblem, type SpaNotice } from "@/lib/mascot/game/spa-room";
+import { normalizeRoomCode, readSpaBoard, spaRoomProblem, type SpaBoardRow, type SpaNotice } from "@/lib/mascot/game/spa-room";
 
 /** REST room. The socket does not create or look up rooms. */
 const ROOMS = "/api/v1/mascot/rooms";
@@ -73,4 +73,15 @@ export async function joinSpaRoom(code: string): Promise<SpaRoomRecord> {
 /** POST /api/v1/mascot/rooms/:code/leave. The last member closes the room. */
 export async function leaveSpaRoom(code: string): Promise<void> {
   await apiPost(`${ROOMS}/${encodeURIComponent(code)}/leave`, undefined, roomCall);
+}
+
+/**
+ * GET /api/v1/mascot/rooms/:code/board.
+ * Members sorted by care_streak. Missing until the backend ships — callers fall back.
+ */
+export async function getSpaBoard(code: string): Promise<SpaBoardRow[]> {
+  const data = await apiGet<unknown>(`${ROOMS}/${encodeURIComponent(code)}/board`, roomCall);
+  const rows = readSpaBoard(data);
+  if (!rows) throw new ApiError("api", { status: 502, code: "bad_message" });
+  return rows;
 }

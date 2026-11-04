@@ -19,7 +19,7 @@ import {
   type LobbyFacing,
 } from "@/lib/mascot/game/lobby-live";
 import type { LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
-import { getSpaRoom, joinSpaRoom, leaveSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
+import { getSpaBoard, getSpaRoom, joinSpaRoom, leaveSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
 import { RoomConnection } from "@/lib/mascot/game/spa-room-socket";
 import {
   SPA_HIDE_KEY,
@@ -27,6 +27,7 @@ import {
   applyRoomMessage,
   emptyRoom,
   encodeRoomFrame,
+  rankCareStreaks,
   sampleSpaGuests,
   seatGuests,
   shouldRetryRoomJoin,
@@ -298,6 +299,10 @@ export function useSpaRoom(options: {
     if (!self?.placed) return null;
     return { x: self.x, y: self.y };
   }, [room.people, room.sessionId]);
+  const youStreak = useMemo(() => {
+    const self = room.people.find((person) => person.id === room.sessionId);
+    return self?.careStreak ?? 0;
+  }, [room.people, room.sessionId]);
   const sent = useRef<{ x: number; y: number; facing: LobbyFacing }>({ x: you?.x ?? 0.5, y: you?.y ?? 0.7, facing: "right" });
 
   const count = spaHeadCount({
@@ -307,6 +312,25 @@ export function useSpaRoom(options: {
     visibleGuests: guests.length,
     previewCount,
   });
+
+  async function loadBoard() {
+    const roomCode = serverCode ?? code ?? "";
+    if (roomCode) {
+      try {
+        return await getSpaBoard(roomCode);
+      } catch {
+        /* The board route is optional until the backend ships. */
+      }
+    }
+    const rows = roomRef.current.people.map((person) => ({
+      nickname: person.nickname,
+      careStreak: person.careStreak ?? 0,
+    }));
+    if (rows.length === 0) {
+      return rankCareStreaks(guests.map((guest) => ({ nickname: guest.nickname, careStreak: guest.careStreak ?? 0 })));
+    }
+    return rankCareStreaks(rows);
+  }
 
   function walkTo(x: number, y: number, pace: "walk" | "idle" = "walk") {
     if (!liveRef.current) return;
@@ -363,6 +387,8 @@ export function useSpaRoom(options: {
     serverCode,
     youPose,
     you,
+    youStreak,
+    loadBoard,
     emote,
     hide,
     walkTo,

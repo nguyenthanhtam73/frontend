@@ -97,6 +97,7 @@ export function BeDaGameView({
   onLeaveSpa,
   onSpaLobby,
   onSpaWalk,
+  onSpaBoard,
   creatingRoom = false,
   createProblem = null,
 }: {
@@ -156,6 +157,7 @@ export function BeDaGameView({
   onLeaveSpa?: () => void;
   onSpaLobby?: () => void;
   onSpaWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
+  onSpaBoard?: () => Promise<readonly { nickname: string; careStreak: number }[]>;
   creatingRoom?: boolean;
   createProblem?: SpaNotice;
 }) {
@@ -224,6 +226,7 @@ export function BeDaGameView({
           onLobby={onSpaLobby ?? (() => undefined)}
           onToggleSound={onToggleSound}
           onWalk={onSpaWalk}
+          onLoadBoard={onSpaBoard}
         />
       ) : showLobby ? (
         <BeDaLobby
