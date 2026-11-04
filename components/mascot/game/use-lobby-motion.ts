@@ -8,6 +8,7 @@ import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
+  LOBBY_WALK_SPEED,
   SPA_BOUNDS,
   SPA_MAT,
   clampCamera,
@@ -19,6 +20,7 @@ import {
   sampleGlide,
   screenToWorld,
   stepWalker,
+  walkPose,
   zoomAt,
   type Camera,
   type Glide,
@@ -50,13 +52,50 @@ function placeLobby(
   el.style.zIndex = String(lobbyStackZ(y));
 }
 
-function setFacing(root: HTMLElement, face: number) {
+function setFacing(
+  root: HTMLElement,
+  face: number,
+  phase = 0,
+  moving = false,
+  reduced = false,
+) {
   const art = root.querySelector<HTMLElement>(".beda-friend-art, .beda-spa-art");
   if (!art) return;
-  const sign = face < 0 ? "-1" : "1";
-  if (art.dataset.face === sign) return;
-  art.dataset.face = sign;
-  art.style.transform = face < 0 ? "scaleX(-1)" : "scaleX(1)";
+  const pose = reduced ? walkPose(0, false) : walkPose(phase, moving);
+  const sign = face < 0 ? -1 : 1;
+  const planted = pose.plant >= 0 ? "r" : "l";
+  const next = `scaleX(${sign}) translateY(${pose.bob}px) rotate(${pose.tilt}deg)`;
+  if (art.dataset.pose !== next) {
+    art.dataset.pose = next;
+    art.dataset.plant = planted;
+    art.style.transform = next;
+    art.style.transformOrigin = planted === "r" ? "58% 100%" : "42% 100%";
+  }
+  const shadow = root.querySelector<HTMLElement>(".beda-ground-shadow");
+  if (shadow) {
+    const squash = `scale(${pose.shadowX}, ${pose.shadowY})`;
+    if (shadow.dataset.squash !== squash) {
+      shadow.dataset.squash = squash;
+      shadow.style.transform = squash;
+    }
+  }
+  if (!moving || reduced) return;
+  const prev = art.dataset.step ?? "";
+  if (prev === planted) return;
+  art.dataset.step = planted;
+  const host = root.querySelector<HTMLElement>(".beda-puffs");
+  if (!host || host.childElementCount > 3) {
+    host?.firstElementChild?.remove();
+  }
+  if (!host) return;
+  const puff = document.createElement("i");
+  puff.className = "beda-puff";
+  puff.style.background = planted === "r" ? "#BDEBDD" : "#FFE7A3";
+  const back = sign > 0 ? -14 : 14;
+  const foot = planted === "r" ? 8 : -8;
+  puff.style.left = `calc(50% + ${back + foot}px)`;
+  host.appendChild(puff);
+  puff.addEventListener("animationend", () => puff.remove(), { once: true });
 }
 
 /**
@@ -104,6 +143,7 @@ export function useLobbyMotion(input: {
     const walker = createWalker(youProp.current);
     const glides = new Map<string, Glide>();
     const glideTargets = new Map<string, { x: number; y: number }>();
+    const seen = new Map<string, { x: number; y: number; t: number }>();
     let lastSend = 0;
     let sentMoving = false;
     let echoed = { x: youProp.current.x, y: youProp.current.y };
@@ -192,7 +232,7 @@ export function useLobbyMotion(input: {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, reduced);
+      const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, reduced, LOBBY_WALK_SPEED);
       Object.assign(walker, stepped);
       const server = youProp.current;
       if (!walker.goal && Math.hypot(server.x - echoed.x, server.y - echoed.y) > 0.02) {
@@ -237,9 +277,10 @@ export function useLobbyMotion(input: {
       applyCamera();
 
       const youEl = world.querySelector<HTMLElement>("[data-lobby-you].beda-pose");
+      const youMoving = Math.hypot(walker.vx, walker.vy) > 0.02;
       if (youEl) {
         placeLobby(youEl, walker.x, walker.y, size.worldW, size.worldH, 1.2, walker.squash);
-        setFacing(youEl, walker.face);
+        setFacing(youEl, walker.face, walker.phase, youMoving, reduced);
       }
 
       for (const actor of actorsProp.current) {
@@ -267,7 +308,11 @@ export function useLobbyMotion(input: {
           face = moving ? glide!.face : face;
         }
         placeLobby(pose, x, y, size.worldW, size.worldH, 0.78 + y * 0.4, 1);
-        setFacing(pose, face);
+        const prev = seen.get(actor.id);
+        seen.set(actor.id, { x, y, t: now });
+        const elapsed = prev ? (now - prev.t) / 1000 : 0;
+        const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
+        setFacing(pose, face, actorMoving ? now / 230 : 0, actorMoving, reduced);
       }
       frameId = window.requestAnimationFrame(tick);
     };

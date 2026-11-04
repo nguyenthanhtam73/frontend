@@ -1019,7 +1019,52 @@
 .beda-friend-art {
   position: relative;
   width: 100%;
-  transition: transform 180ms ease;
+}
+
+.beda-ground-shadow {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: 1%;
+  z-index: 0;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(70, 110, 90, 0.28);
+  pointer-events: none;
+  transform: scale(1, 0.85);
+  transform-origin: center;
+}
+
+.beda-puffs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  height: 18px;
+  pointer-events: none;
+}
+
+.beda-puff {
+  position: absolute;
+  bottom: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: beda-puff 500ms ease-out forwards;
+}
+
+@keyframes beda-puff {
+  from {
+    transform: translateY(0) scale(0.55);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(8px) scale(1.35);
+    opacity: 0;
+  }
 }
 
 .beda-ring {
@@ -2136,6 +2181,11 @@
   .beda-friend-art,
   .beda-spa-art {
     transition: none;
+  }
+
+  .beda-puff {
+    animation: none;
+    display: none;
   }
 }
 

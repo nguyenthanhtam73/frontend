@@ -14,7 +14,9 @@ import {
   screenToWorld,
   segmentHits,
   steerGoal,
+  LOBBY_WALK_SPEED,
   stepWalker,
+  walkPose,
   zoomAt,
 } from "./walk";
 
@@ -39,6 +41,22 @@ describe("lobby walk", () => {
     assert.equal(ellipseContains(via, LOBBY_FOUNTAIN), false);
     assert.equal(segmentHits(from, via, LOBBY_FOUNTAIN), false);
     assert.equal(segmentHits(via, { x: 0.85, y: 0.56 }, LOBBY_FOUNTAIN), false);
+  });
+
+  it("strolls the lobby slower and bobs a few pixels per step", () => {
+    let fast = { ...createWalker({ x: 0.2, y: 0.6 }), goal: { x: 0.7, y: 0.6 } };
+    let slow = { ...createWalker({ x: 0.2, y: 0.6 }), goal: { x: 0.7, y: 0.6 } };
+    for (let i = 0; i < 40; i += 1) {
+      fast = stepWalker(fast, 1 / 60, null, LOBBY_BOUNDS, false);
+      slow = stepWalker(slow, 1 / 60, null, LOBBY_BOUNDS, false, LOBBY_WALK_SPEED);
+    }
+    assert.ok(fast.x - 0.2 > (slow.x - 0.2) * 1.8);
+    const lifted = walkPose(Math.PI / 2, true);
+    assert.ok(lifted.bob <= -3 && lifted.bob >= -4);
+    const planted = walkPose(0, true);
+    assert.ok(planted.shadowY < lifted.shadowY);
+    assert.equal(walkPose(1, false).bob, 0);
+    assert.equal(walkPose(1, false).tilt, 0);
   });
 
   it("snaps when motion is reduced", () => {

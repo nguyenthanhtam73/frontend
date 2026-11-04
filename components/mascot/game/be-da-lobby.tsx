@@ -350,6 +350,8 @@ export function BeDaLobby({
             }}
           >
             <span className="beda-friend-art">
+              <span className="beda-ground-shadow" aria-hidden />
+              <span className="beda-puffs" aria-hidden />
               <span className="beda-ring" />
               <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
             </span>
@@ -529,6 +531,8 @@ function FriendButton({
       ) : null}
       <button type="button" className="beda-friend-hit" onClick={() => onSelect(actor.id)}>
         <span className="beda-friend-art">
+          <span className="beda-ground-shadow" aria-hidden />
+          <span className="beda-puffs" aria-hidden />
           <span className="beda-ring" />
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>

@@ -48,6 +48,8 @@ export const SPA_MAT: Obstacle = { x: 0.5, y: 0.3, rx: 0.42, ry: 0.15 };
 
 const MAX_SPEED = 0.45;
 const ACCEL = 2.4;
+/** Lobby stroll. About 40% of `MAX_SPEED`, with a softer start and stop. */
+export const LOBBY_WALK_SPEED = 0.18;
 
 export function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
@@ -129,11 +131,13 @@ export function stepWalker(
   obstacle: Obstacle | null,
   bounds: Bounds,
   reduced: boolean,
+  speed = MAX_SPEED,
 ): Walker {
   const safeDt = Math.min(0.05, Math.max(0, dt));
   if (!walker.goal) {
     return { ...walker, vx: 0, vy: 0, squash: approach(walker.squash, 1, safeDt, 10) };
   }
+  const lobbyPace = speed < MAX_SPEED - 0.001;
   const goal = obstacle
     ? steerGoal(walker, walker.goal, obstacle, bounds)
     : clampPoint(walker.goal, bounds);
@@ -155,11 +159,11 @@ export function stepWalker(
       goal: arrived ? null : walker.goal,
     };
   }
-  const arrive = Math.min(1, dist / 0.18);
-  const speed = MAX_SPEED * Math.max(0.22, arrive);
-  const blend = 1 - Math.exp(-ACCEL * safeDt);
-  let vx = walker.vx + ((dx / dist) * speed - walker.vx) * blend;
-  let vy = walker.vy + ((dy / dist) * speed - walker.vy) * blend;
+  const arrive = Math.min(1, dist / (lobbyPace ? 0.28 : 0.18));
+  const pace = speed * Math.max(lobbyPace ? 0.1 : 0.22, arrive);
+  const blend = 1 - Math.exp(-(lobbyPace ? 1.15 : ACCEL) * safeDt);
+  let vx = walker.vx + ((dx / dist) * pace - walker.vx) * blend;
+  let vy = walker.vy + ((dy / dist) * pace - walker.vy) * blend;
   let nx = walker.x + vx * safeDt;
   let ny = walker.y + vy * safeDt;
   if (vx * (goal.x - nx) + vy * (goal.y - ny) < 0) {
@@ -178,8 +182,8 @@ export function stepWalker(
     vy *= 0.35;
   }
   const placed = clampPoint({ x: nx, y: ny }, bounds);
-  const moving = Math.hypot(vx, vy) > 0.025;
-  const phase = walker.phase + (moving ? safeDt * 11 : 0);
+  const moving = Math.hypot(vx, vy) > 0.02;
+  const phase = walker.phase + (moving ? safeDt * 11 * (speed / MAX_SPEED) : 0);
   const squash = reduced
     ? 1
     : approach(walker.squash, moving ? 1 + Math.sin(phase) * 0.04 : 1, safeDt, moving ? 16 : 10);
@@ -207,6 +211,26 @@ export type Glide = {
   dur: number;
   face: number;
 };
+
+/** Bob, sway, and shadow squash for one step. Idle values are a resting pose. */
+export function walkPose(phase: number, moving: boolean): {
+  bob: number;
+  tilt: number;
+  shadowX: number;
+  shadowY: number;
+  plant: number;
+} {
+  if (!moving) return { bob: 0, tilt: 0, shadowX: 1, shadowY: 0.85, plant: 0 };
+  const step = Math.sin(phase);
+  const plant = Math.abs(Math.cos(phase));
+  return {
+    bob: -Math.abs(step) * 3.6,
+    tilt: step * 2.4,
+    shadowX: 0.82 + plant * 0.34,
+    shadowY: 0.42 + (1 - plant) * 0.7,
+    plant: step >= 0 ? 1 : -1,
+  };
+}
 
 export function smoothstep(t: number): number {
   const x = clamp(t, 0, 1);
