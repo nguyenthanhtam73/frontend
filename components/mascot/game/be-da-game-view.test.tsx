@@ -60,7 +60,6 @@ function renderGame(
     player: player(),
     burst: 0,
     homeHref: "/check-in",
-    routineHref: "/routine",
     onTab: () => undefined,
     onToggleSound: () => undefined,
     onSelectFriend: () => undefined,

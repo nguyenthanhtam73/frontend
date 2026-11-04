@@ -27,23 +27,23 @@ export type SampleLobbyFriend = {
 };
 
 export const SAMPLE_LOBBY_FRIENDS: readonly SampleLobbyFriend[] = [
-  { id: "nang-som", nickname: "Nắng Sớm", x: 0.06, y: 0.5, mood: "normal", glow: 1, outfit: "outfit_ao_dai", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
-  { id: "suong-mai", nickname: "Sương Mai", x: 0.14, y: 0.58, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
-  { id: "tra-sua", nickname: "Trà Sữa", x: 0.22, y: 0.48, mood: "sparkle", glow: 3, outfit: "outfit_hoodie", hair: "hair_short_bob", clip: null, sample: true },
-  { id: "may-hong", nickname: "Mây Hồng", x: 0.72, y: 0.48, mood: "happy", glow: 4, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
-  { id: "chanh-leo", nickname: "Chanh Leo", x: 0.82, y: 0.56, mood: "normal", glow: 2, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
-  { id: "oc-que", nickname: "Ốc Quế", x: 0.91, y: 0.62, mood: "happy", glow: 4, outfit: "outfit_pajamas", hair: "hair_high_pony", clip: null, sample: true },
-  { id: "meo-may", nickname: "Mèo Máy", x: 0.12, y: 0.7, mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_ribbon_bow", sample: true },
-  { id: "banh-flan", nickname: "Bánh Flan", x: 0.28, y: 0.66, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
-  { id: "keo-deo", nickname: "Kẹo Dẻo", x: 0.6, y: 0.74, mood: "sleepy", glow: 4, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: null, sample: true },
-  { id: "cun-con", nickname: "Cún Con", x: 0.78, y: 0.68, mood: "normal", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_flower_clip", sample: true },
-  { id: "hat-de", nickname: "Hạt Dẻ", x: 0.88, y: 0.76, mood: "happy", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_sleep_buns", clip: "accessory_ribbon_bow", sample: true },
-  { id: "gau-mo", nickname: "Gấu Mơ", x: 0.04, y: 0.82, mood: "normal", glow: 2, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
-  { id: "dau-tay", nickname: "Dâu Tây", x: 0.18, y: 0.84, mood: "sparkle", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: null, sample: true },
-  { id: "bo-xanh", nickname: "Bơ Xanh", x: 0.34, y: 0.8, mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+  { id: "nang-som", nickname: "Nắng Sớm", x: 0.06, y: 0.27, mood: "normal", glow: 1, outfit: "outfit_ao_dai", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
+  { id: "suong-mai", nickname: "Sương Mai", x: 0.14, y: 0.4, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+  { id: "tra-sua", nickname: "Trà Sữa", x: 0.22, y: 0.24, mood: "sparkle", glow: 3, outfit: "outfit_hoodie", hair: "hair_short_bob", clip: null, sample: true },
+  { id: "may-hong", nickname: "Mây Hồng", x: 0.72, y: 0.24, mood: "happy", glow: 4, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
+  { id: "chanh-leo", nickname: "Chanh Leo", x: 0.82, y: 0.37, mood: "normal", glow: 2, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "oc-que", nickname: "Ốc Quế", x: 0.91, y: 0.47, mood: "happy", glow: 4, outfit: "outfit_pajamas", hair: "hair_high_pony", clip: null, sample: true },
+  { id: "meo-may", nickname: "Mèo Máy", x: 0.12, y: 0.6, mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_ribbon_bow", sample: true },
+  { id: "banh-flan", nickname: "Bánh Flan", x: 0.28, y: 0.53, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
+  { id: "keo-deo", nickname: "Kẹo Dẻo", x: 0.6, y: 0.66, mood: "sleepy", glow: 4, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: null, sample: true },
+  { id: "cun-con", nickname: "Cún Con", x: 0.78, y: 0.57, mood: "normal", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_flower_clip", sample: true },
+  { id: "hat-de", nickname: "Hạt Dẻ", x: 0.88, y: 0.7, mood: "happy", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_sleep_buns", clip: "accessory_ribbon_bow", sample: true },
+  { id: "gau-mo", nickname: "Gấu Mơ", x: 0.04, y: 0.8, mood: "normal", glow: 2, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
+  { id: "dau-tay", nickname: "Dâu Tây", x: 0.18, y: 0.83, mood: "sparkle", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: null, sample: true },
+  { id: "bo-xanh", nickname: "Bơ Xanh", x: 0.34, y: 0.76, mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
   { id: "be-mit", nickname: "Bé Mít", x: 0.54, y: 0.86, mood: "sleepy", glow: 1, outfit: "outfit_hoodie", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
-  { id: "su-kem", nickname: "Su Kem", x: 0.7, y: 0.84, mood: "sparkle", glow: 5, outfit: "outfit_ao_len", hair: "hair_short_bob", clip: null, sample: true },
-  { id: "bong-gon", nickname: "Bông Gòn", x: 0.94, y: 0.8, mood: "happy", glow: 4, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "su-kem", nickname: "Su Kem", x: 0.82, y: 0.83, mood: "sparkle", glow: 5, outfit: "outfit_ao_len", hair: "hair_short_bob", clip: null, sample: true },
+  { id: "bong-gon", nickname: "Bông Gòn", x: 0.94, y: 0.76, mood: "happy", glow: 4, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
 ];
 
 /** Sample visitors plus the player's own Bé Da. */
@@ -51,8 +51,8 @@ export function lobbyHeadCount(): number {
   return SAMPLE_LOBBY_FRIENDS.length + 1;
 }
 
-/** Where the player's Bé Da stands in the wide world. */
-export const LOBBY_PLAYER_SPOT = { x: 0.46, y: 0.78 };
+/** Where the player's Bé Da stands when the hall opens, mid-world. */
+export const LOBBY_PLAYER_SPOT = { x: 0.46, y: 0.55 };
 
 /**
  * Sample visitors stay at or above this fraction of the walk band.
@@ -73,8 +73,8 @@ const TAG_NUDGE_PX = 48;
  * Foreground visitors land just above the nav instead of leaving a vacant strip.
  */
 export function lobbyWalkY(y: number): number {
-  const t = Math.min(1, Math.max(0, (y - 0.46) / 0.42));
-  return 0.48 + t * 0.49;
+  const t = Math.min(1, Math.max(0, (y - 0.18) / 0.72));
+  return 0.2 + t * 0.7;
 }
 
 /**
@@ -82,9 +82,9 @@ export function lobbyWalkY(y: number): number {
  * Returns null when the tap is in the sky, above the walk band.
  */
 export function lobbyDepthY(visualY: number): number | null {
-  if (visualY < 0.45 || visualY > 0.98) return null;
-  const t = Math.min(1, Math.max(0, (visualY - 0.48) / 0.49));
-  return Math.min(LOBBY_WALK_Y_MAX, Math.max(0.46, 0.46 + t * 0.42));
+  if (visualY < 0.16 || visualY > 0.94) return null;
+  const t = Math.min(1, Math.max(0, (visualY - 0.2) / 0.7));
+  return Math.min(LOBBY_WALK_Y_MAX, Math.max(0.18, 0.18 + t * 0.72));
 }
 
 /** Round-nav block. Mirrors `--beda-nav-reserve` in be-da-game.css, before measurement. */

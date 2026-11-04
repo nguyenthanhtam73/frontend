@@ -29,11 +29,11 @@ export type Walker = {
   face: number;
 };
 
-/** Plaza the feet may use. Keeps Bé Da off the sky and the screen edge. */
-export const LOBBY_BOUNDS: Bounds = { minX: 0.08, maxX: 0.92, minY: 0.5, maxY: 0.86 };
+/** Plaza the feet may use. Normalized 0–1, same space the server stores. */
+export const LOBBY_BOUNDS: Bounds = { minX: 0.06, maxX: 0.94, minY: 0.18, maxY: 0.88 };
 
 /** Fountain basin in the same space as lobby taps (authored depth, not pixels). */
-export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.56, rx: 0.1, ry: 0.062 };
+export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.44, rx: 0.08, ry: 0.045 };
 
 /**
  * Walkable spa floor in the room box below the top bar.
@@ -263,7 +263,7 @@ export function screenToWorld(screenX: number, screenY: number, camera: Camera):
   return { x: (screenX - camera.x) / camera.scale, y: (screenY - camera.y) / camera.scale };
 }
 
-/** Ease the camera toward Bé Da while zoomed in. Panning turns this off. */
+/** Ease the camera toward Bé Da. Panning turns this off until the next walk. */
 export function followCamera(
   camera: Camera,
   playerX: number,
@@ -275,7 +275,7 @@ export function followCamera(
   dt: number,
   follow: boolean,
 ): Camera {
-  if (!follow || camera.scale <= 1.05) return camera;
+  if (!follow) return camera;
   const tx = viewW * 0.5 - playerX * worldW * camera.scale;
   const ty = viewH * 0.46 - playerY * worldH * camera.scale;
   const k = 1 - Math.exp(-3.2 * Math.min(0.05, Math.max(0, dt)));

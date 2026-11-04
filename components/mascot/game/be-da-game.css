@@ -449,6 +449,11 @@
   height: 16px;
 }
 
+.beda-quest-steps {
+  max-height: min(46vh, 320px);
+  overflow: auto;
+}
+
 .beda-quest-row {
   display: flex;
   width: 100%;
@@ -465,6 +470,31 @@
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+}
+
+.beda-step {
+  min-height: 44px;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.beda-step-all {
+  min-height: 44px;
+  width: 100%;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 14px;
+  background: #2b8c86;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.beda-step-all:disabled {
+  background: #d7efe9;
+  color: #2b8c86;
 }
 
 .beda-quest-row.is-done {
@@ -697,8 +727,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 260%;
-  height: calc(100% - var(--beda-nav-reserve, 120px) - 8px);
+  width: 180%;
+  height: 230%;
   transform-origin: 0 0;
   will-change: transform;
 }
@@ -708,13 +738,13 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 42%;
+  height: 16%;
 }
 
 .beda-hill {
   position: absolute;
-  top: 30%;
-  height: 22%;
+  top: 10%;
+  height: 10%;
   border-radius: 50%;
 }
 
@@ -722,16 +752,16 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 40%;
+  top: 14%;
   bottom: 0;
 }
 
 .beda-plaza {
   position: absolute;
-  left: 8%;
-  top: 46%;
-  width: 84%;
-  height: 34%;
+  left: 18%;
+  top: 34%;
+  width: 64%;
+  height: 16%;
   border-radius: 50%;
   background: #f6e3cf;
   box-shadow: inset 0 0 0 10px #ecd2b8;
@@ -739,10 +769,10 @@
 
 .beda-plaza-inner {
   position: absolute;
-  left: 30%;
-  top: 54%;
-  width: 40%;
-  height: 16%;
+  left: 34%;
+  top: 38%;
+  width: 32%;
+  height: 8%;
   border-radius: 50%;
   background: #f1d6be;
 }
@@ -776,10 +806,10 @@
 .beda-fountain {
   position: absolute;
   left: 50%;
-  top: 48%;
+  top: 42%;
   width: 220px;
   height: 150px;
-  transform: translate(-50%, -20%);
+  transform: translate(-50%, -78%);
 }
 
 .beda-fountain-basin {

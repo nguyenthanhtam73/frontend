@@ -557,7 +557,7 @@ export function sampleWander(
   const dx = Math.sin(tMs / 4800 + phase) * 0.03;
   const dy = Math.cos(tMs / 6200 + phase) * 0.015;
   const x = Math.min(0.96, Math.max(0.04, baseX + dx));
-  const y = Math.min(0.88, Math.max(0.48, baseY + dy));
+  const y = Math.min(0.88, Math.max(0.2, baseY + dy));
   const facing: LobbyFacing = Math.cos(tMs / 4800 + phase) > 0 ? "right" : "left";
   return { x, y, facing };
 }

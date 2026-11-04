@@ -8,6 +8,7 @@ import { ApiError, apiGet, apiPost } from "@/lib/api-client";
 import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { redirectToLoginWithNext } from "@/lib/auth/redirect-to-login";
 import { usageQueryKey } from "@/lib/api/usage";
+import { routineTodayQueryKey } from "@/lib/routine/today-query";
 import { streakDateKey } from "@/lib/streak/history";
 import type {
   RoutineDTO,
@@ -128,6 +129,7 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
         }).catch(() => null),
       ]);
       if (routine) {
+        queryClient.setQueryData(routineTodayQueryKey, routine);
         const next = toLocal(routine);
         setRoutine(next);
         setDirty(false);
@@ -151,7 +153,7 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
       clearPersistBaseline();
       setStatus("error");
     }
-  }, [msg.loadError, rememberPersisted, handleUnauthorized, clearPersistBaseline]);
+  }, [msg.loadError, rememberPersisted, handleUnauthorized, clearPersistBaseline, queryClient]);
 
   useEffect(() => {
     void reload();
@@ -276,9 +278,11 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
           toastOnError: false,
         });
         if (saved) {
+          queryClient.setQueryData(routineTodayQueryKey, saved);
           const next = toLocal(saved);
           rememberPersisted(next);
           void queryClient.invalidateQueries({ queryKey: usageQueryKey });
+          void queryClient.invalidateQueries({ queryKey: routineTodayQueryKey });
           if (tickOnly) {
             void refreshHistorySilent();
           }

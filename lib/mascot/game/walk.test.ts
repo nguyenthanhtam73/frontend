@@ -102,10 +102,13 @@ describe("lobby camera", () => {
     assert.equal(wide.x, 300 - 800);
   });
 
-  it("follows Bé Da only while zoomed in", () => {
+  it("follows Bé Da across a world larger than the screen", () => {
     const zoomed = followCamera({ x: 0, y: 0, scale: 2 }, 0.8, 0.6, 400, 600, 1000, 800, 1, true);
     assert.ok(zoomed.x < 0);
-    const wide = followCamera({ x: 10, y: 4, scale: 1, }, 0.8, 0.6, 400, 600, 1000, 800, 1, true);
-    assert.equal(wide.x, 10);
+    const tall = followCamera({ x: 0, y: 0, scale: 1 }, 0.5, 0.8, 400, 600, 720, 1400, 1, true);
+    assert.ok(tall.y < 0);
+    const stopped = followCamera({ x: 10, y: 4, scale: 1 }, 0.8, 0.6, 400, 600, 1000, 800, 1, false);
+    assert.equal(stopped.x, 10);
+    assert.equal(stopped.y, 4);
   });
 });

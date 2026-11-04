@@ -194,7 +194,7 @@ describe("lobby crowd", () => {
     const start = sampleWander("keo-deo", 0, 0.6, 0.74);
     const later = sampleWander("keo-deo", 4000, 0.6, 0.74);
     assert.ok(start.x >= 0.04 && start.x <= 0.96);
-    assert.ok(start.y >= 0.48 && start.y <= 0.88);
+    assert.ok(start.y >= 0.2 && start.y <= 0.88);
     assert.ok(Math.abs(start.x - later.x) + Math.abs(start.y - later.y) > 0);
   });
 });

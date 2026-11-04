@@ -28,6 +28,13 @@ import type { BeDaView } from "@/lib/mascot/model";
 
 export type GameTab = "care" | "wardrobe" | "quests" | "lobby";
 
+export type CareStep = {
+  id: string;
+  section: "morning" | "evening";
+  title: string;
+  completed?: boolean;
+};
+
 export type GameToast = { name: string; kind: "wave" | "heart" | "outfit" } | null;
 
 const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "quests" | "lobby" }[] = [
@@ -55,6 +62,9 @@ export function BeDaGameView({
   streakLabel,
   soundOn,
   quests,
+  careSteps,
+  onToggleCareStep,
+  onFinishCareSteps,
   bubbleKind,
   progress,
   showPrettyLine,
@@ -70,7 +80,6 @@ export function BeDaGameView({
   player,
   burst,
   homeHref,
-  routineHref,
   onTab,
   onToggleSound,
   onSelectFriend,
@@ -108,6 +117,9 @@ export function BeDaGameView({
   streakLabel: string;
   soundOn: boolean;
   quests: GameQuest[];
+  careSteps?: readonly CareStep[];
+  onToggleCareStep?: (step: CareStep) => void;
+  onFinishCareSteps?: () => void;
   bubbleKind: GameBubbleKind;
   progress: number | null;
   showPrettyLine: boolean;
@@ -124,7 +136,6 @@ export function BeDaGameView({
   player: BeDaView;
   burst: number;
   homeHref: string;
-  routineHref: string;
   onTab: (tab: GameTab) => void;
   onToggleSound: () => void;
   onSelectFriend: (id: string) => void;
@@ -264,8 +275,10 @@ export function BeDaGameView({
           progress={progress}
           showPrettyLine={showPrettyLine}
           quests={quests}
+          careSteps={careSteps}
+          onToggleCareStep={onToggleCareStep}
+          onFinishCareSteps={onFinishCareSteps}
           giftTaken={giftTaken}
-          routineHref={routineHref}
           doorCountLabel={doorCountLabel}
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
@@ -375,8 +388,10 @@ function Room({
   progress,
   showPrettyLine,
   quests,
+  careSteps,
+  onToggleCareStep,
+  onFinishCareSteps,
   giftTaken,
-  routineHref,
   doorCountLabel,
   hideCards,
   showHero,
@@ -391,8 +406,10 @@ function Room({
   progress: number | null;
   showPrettyLine: boolean;
   quests: GameQuest[];
+  careSteps?: readonly CareStep[];
+  onToggleCareStep?: (step: CareStep) => void;
+  onFinishCareSteps?: () => void;
   giftTaken: boolean;
-  routineHref: string;
   doorCountLabel: string;
   hideCards: boolean;
   showHero: boolean;
@@ -480,12 +497,44 @@ function Room({
                 {giftTaken ? t("game.giftTaken") : t("game.gift")}
               </span>
             </h2>
-            {quests.map((quest) => (
-              <QuestRow key={quest.id} quest={quest} routineHref={routineHref} onOpenLobby={onOpenLobby} />
-            ))}
-            <a className="beda-quest-link" href={routineHref}>
-              {t("game.routineLink")}
-            </a>
+            {careSteps ? (
+              <div className="beda-quest-steps">
+                {careSteps.length === 0 ? <p className="beda-step-empty">{t("game.stepsEmpty")}</p> : null}
+                {careSteps.map((step) => (
+                  <button
+                    key={`${step.section}-${step.id}`}
+                    type="button"
+                    className={step.completed ? "beda-quest-row beda-step is-done" : "beda-quest-row beda-step"}
+                    data-testid="beda-routine-step"
+                    data-done={step.completed ? "true" : "false"}
+                    onClick={() => onToggleCareStep?.(step)}
+                  >
+                    <span className="beda-check">{step.completed ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
+                    {step.title}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="beda-step-all"
+                  data-testid="beda-routine-finish"
+                  disabled={careSteps.length > 0 && careSteps.every((step) => step.completed)}
+                  onClick={() => onFinishCareSteps?.()}
+                >
+                  {t("game.allDone")}
+                </button>
+              </div>
+            ) : (
+              quests
+                .filter((quest) => quest.id !== "wave")
+                .map((quest) => (
+                  <QuestRow key={quest.id} quest={quest} onOpenLobby={onOpenLobby} />
+                ))
+            )}
+            {quests
+              .filter((quest) => quest.id === "wave")
+              .map((quest) => (
+                <QuestRow key={quest.id} quest={quest} onOpenLobby={onOpenLobby} />
+              ))}
           </section>
           <button type="button" className="beda-card beda-door" onClick={onOpenLobby}>
             <GameIcon name="door" />
@@ -551,11 +600,9 @@ function Bubble({ kind }: { kind: GameBubbleKind }) {
 
 function QuestRow({
   quest,
-  routineHref,
   onOpenLobby,
 }: {
   quest: GameQuest;
-  routineHref: string;
   onOpenLobby: () => void;
 }) {
   const t = useTranslations("mascot");
@@ -581,9 +628,9 @@ function QuestRow({
     );
   }
   return (
-    <a className="beda-quest-row" data-quest={quest.id as GameQuestId} href={routineHref}>
+    <button type="button" className="beda-quest-row" data-quest={quest.id as GameQuestId}>
       {body}
-    </a>
+    </button>
   );
 }
 

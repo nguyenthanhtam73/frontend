@@ -152,6 +152,7 @@ export function useLobbyMotion(input: {
     const aim = (clientX: number, clientY: number) => {
       const point = toLobby(clientX, clientY);
       if (!point) return;
+      follow = true;
       walker.goal = point;
     };
 
@@ -214,8 +215,18 @@ export function useLobbyMotion(input: {
         sentMoving = false;
         lastSend = now;
       }
-      if (!reduced && follow && cam.scale > 1.05) {
-        cam = followCamera(cam, walker.x, lobbyWalkY(walker.y), size.w, size.h, size.worldW, size.worldH, dt, true);
+      if (follow) {
+        cam = followCamera(
+          cam,
+          walker.x,
+          lobbyWalkY(walker.y),
+          size.w,
+          size.h,
+          size.worldW,
+          size.worldH,
+          reduced ? 1 : dt,
+          true,
+        );
         pull = false;
       } else if (pull && !reduced) {
         const tx = size.w * 0.5 - walker.x * size.worldW * cam.scale;
