@@ -46,6 +46,13 @@ const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "ques
 
 const WORN_EXTRAS = ["accessory_pink_headband", "accessory_star_clip"] as const;
 
+/** Every closet thumbnail. Preloaded when the wardrobe opens so tiles are not waiting on a tap. */
+const WARDROBE_ITEM_SRCS = [
+  ...GAME_OUTFITS.map((id) => `/mascot/outfits/${id}.svg`),
+  ...GAME_HAIRS.map((id) => `/mascot/hair/${id}.svg`),
+  ...GAME_CLIPS.map((id) => `/mascot/accessory/${id}.svg`),
+];
+
 const BURST = [
   { dx: "-28px", dy: "-36px", color: "#ffe08a" },
   { dx: "26px", dy: "-30px", color: "#fff" },
@@ -177,6 +184,23 @@ export function BeDaGameView({
   const [careSheet, setCareSheet] = useState(false);
   const spaOpen = spa != null;
   const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
+  const wardrobeOpen = tab === "wardrobe" && !chestOpen && !spaOpen;
+  const [draft, setDraft] = useState(look);
+  const [tryFlash, setTryFlash] = useState(0);
+  const shownLook = wardrobeOpen ? draft : look;
+
+  useEffect(() => {
+    setDraft(look);
+  }, [look, wardrobeOpen]);
+
+  useEffect(() => {
+    if (!wardrobeOpen) return;
+    for (const src of WARDROBE_ITEM_SRCS) {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = src;
+    }
+  }, [wardrobeOpen]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -271,7 +295,8 @@ export function BeDaGameView({
           sky={sky}
           player={player}
           locale={locale}
-          look={look}
+          look={shownLook}
+          tryFlash={tryFlash}
           bubbleKind={bubbleKind}
           progress={progress}
           showPrettyLine={showPrettyLine}
@@ -297,8 +322,16 @@ export function BeDaGameView({
         />
       ) : null}
 
-      {tab === "wardrobe" && !chestOpen ? (
-        <Wardrobe wornIds={wornIds} look={look} onLook={onLook} />
+      {wardrobeOpen ? (
+        <Wardrobe
+          wornIds={wornIds}
+          preview={draft}
+          onTry={(next) => {
+            setDraft(next);
+            setTryFlash((n) => n + 1);
+          }}
+          onWear={() => onLook(draft)}
+        />
       ) : null}
 
       {toast ? <Toast toast={toast} /> : null}
@@ -436,6 +469,7 @@ function Room({
   player,
   locale,
   look,
+  tryFlash = 0,
   bubbleKind,
   progress,
   showPrettyLine,
@@ -451,6 +485,7 @@ function Room({
   player: BeDaView;
   locale: string;
   look: GameLook;
+  tryFlash?: number;
   bubbleKind: GameBubbleKind;
   progress: number | null;
   showPrettyLine: boolean;
@@ -561,6 +596,7 @@ function Room({
       <div className="beda-hero-wrap" data-testid="beda-hero">
         <Bubble kind={bubbleKind} />
         <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+        {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
           {showPrettyLine ? t("glowNear") : t("game.atHome")}
@@ -715,12 +751,14 @@ function Chest({
 
 function Wardrobe({
   wornIds,
-  look,
-  onLook,
+  preview,
+  onTry,
+  onWear,
 }: {
   wornIds: string[];
-  look: GameLook;
-  onLook: (look: GameLook) => void;
+  preview: GameLook;
+  onTry: (look: GameLook) => void;
+  onWear: () => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
@@ -729,9 +767,9 @@ function Wardrobe({
       <h2>{t("game.wardrobe")}</h2>
       <p>{t("game.wearing")}</p>
       <ul className="beda-worn">
-        <li>{t(`game.look.${look.outfit}`)}</li>
-        <li>{t(`game.look.${look.hair}`)}</li>
-        {look.clip ? <li>{t(`game.look.${look.clip}`)}</li> : null}
+        <li>{t(`game.look.${preview.outfit}`)}</li>
+        <li>{t(`game.look.${preview.hair}`)}</li>
+        {preview.clip ? <li>{t(`game.look.${preview.clip}`)}</li> : null}
         {extras.map((id) => (
           <li key={id}>{t(`game.look.${id}`)}</li>
         ))}
@@ -742,14 +780,12 @@ function Wardrobe({
           <button
             key={id}
             type="button"
-            className={look.outfit === id ? "beda-pick is-on" : "beda-pick"}
+            className={preview.outfit === id ? "beda-pick is-on" : "beda-pick"}
             aria-label={t(`game.look.${id}`)}
-            aria-pressed={look.outfit === id}
-            onClick={() => onLook({ ...look, outfit: id })}
+            aria-pressed={preview.outfit === id}
+            onClick={() => onTry({ ...preview, outfit: id })}
           >
-            <span className="beda-pick-art is-outfit">
-              <img src={`/mascot/outfits/${id}.svg`} alt="" loading="lazy" decoding="async" />
-            </span>
+            <WardrobeThumb src={`/mascot/outfits/${id}.svg`} crop="is-outfit" />
             {t(`game.look.${id}`)}
           </button>
         ))}
@@ -760,14 +796,12 @@ function Wardrobe({
           <button
             key={id}
             type="button"
-            className={look.hair === id ? "beda-pick is-on" : "beda-pick"}
+            className={preview.hair === id ? "beda-pick is-on" : "beda-pick"}
             aria-label={t(`game.look.${id}`)}
-            aria-pressed={look.hair === id}
-            onClick={() => onLook({ ...look, hair: id })}
+            aria-pressed={preview.hair === id}
+            onClick={() => onTry({ ...preview, hair: id })}
           >
-            <span className="beda-pick-art is-hair">
-              <img src={`/mascot/hair/${id}.svg`} alt="" loading="lazy" decoding="async" />
-            </span>
+            <WardrobeThumb src={`/mascot/hair/${id}.svg`} crop="is-hair" />
             {t(`game.look.${id}`)}
           </button>
         ))}
@@ -776,10 +810,10 @@ function Wardrobe({
       <div className="beda-picks">
         <button
           type="button"
-          className={look.clip == null ? "beda-pick is-on" : "beda-pick"}
+          className={preview.clip == null ? "beda-pick is-on" : "beda-pick"}
           aria-label={t("game.look.clip_none")}
-          aria-pressed={look.clip == null}
-          onClick={() => onLook({ ...look, clip: null })}
+          aria-pressed={preview.clip == null}
+          onClick={() => onTry({ ...preview, clip: null })}
         >
           <span className="beda-pick-art is-clip is-empty" />
           {t("game.look.clip_none")}
@@ -788,20 +822,48 @@ function Wardrobe({
           <button
             key={id}
             type="button"
-            className={look.clip === id ? "beda-pick is-on" : "beda-pick"}
+            className={preview.clip === id ? "beda-pick is-on" : "beda-pick"}
             aria-label={t(`game.look.${id}`)}
-            aria-pressed={look.clip === id}
-            onClick={() => onLook({ ...look, clip: id })}
+            aria-pressed={preview.clip === id}
+            onClick={() => onTry({ ...preview, clip: id })}
           >
-            <span className="beda-pick-art is-clip">
-              <img src={`/mascot/accessory/${id}.svg`} alt="" loading="lazy" decoding="async" />
-            </span>
+            <WardrobeThumb src={`/mascot/accessory/${id}.svg`} crop="is-clip" />
             {t(`game.look.${id}`)}
           </button>
         ))}
       </div>
       <p className="beda-note">{t("game.tryNote")}</p>
+      <div className="beda-wear-bar">
+        <button type="button" className="beda-wear" data-testid="beda-wear" onClick={onWear}>
+          {t("game.wear")}
+        </button>
+      </div>
     </section>
+  );
+}
+
+function WardrobeThumb({ src, crop }: { src: string; crop: "is-outfit" | "is-hair" | "is-clip" }) {
+  const ref = useRef<HTMLImageElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const img = ref.current;
+    if (img?.complete && img.naturalWidth > 0) setReady(true);
+  }, [src]);
+
+  return (
+    <span className={ready ? `beda-pick-art ${crop}` : `beda-pick-art ${crop} is-loading`}>
+      <span className="beda-pick-skel" aria-hidden />
+      <img
+        ref={ref}
+        src={src}
+        alt=""
+        loading="eager"
+        decoding="async"
+        onLoad={() => setReady(true)}
+        onError={() => setReady(true)}
+      />
+    </span>
   );
 }
 

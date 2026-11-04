@@ -3461,7 +3461,8 @@
       "pickOutfit": "Clothes",
       "pickHair": "Hair",
       "pickClip": "Hair clips",
-      "tryNote": "Saved on this device. Nothing to buy.",
+      "wear": "Wear",
+      "tryNote": "Tap to try. Wear saves it on this device. Nothing to buy.",
       "look": {
         "outfit_pajamas": "Pyjamas",
         "outfit_ao_dai": "Áo dài",
