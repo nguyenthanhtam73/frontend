@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
+  SPA_BOUNDS,
   clampCamera,
   createWalker,
   ellipseContains,
@@ -62,6 +63,20 @@ describe("lobby walk", () => {
     const end = sampleGlide(next, 1000 + 400);
     assert.equal(end.x, 0.5);
     assert.equal(end.y, 0.7);
+  });
+});
+
+describe("spa floor", () => {
+  it("matches the Android room box walk range", () => {
+    assert.deepEqual(SPA_BOUNDS, { minX: 0.08, maxX: 0.92, minY: 0.46, maxY: 0.7 });
+  });
+
+  it("clamps a walk into that floor", () => {
+    let walker = { ...createWalker({ x: 0.5, y: 0.6 }), goal: { x: 0.01, y: 0.95 } };
+    for (let i = 0; i < 240; i += 1) walker = stepWalker(walker, 1 / 60, null, SPA_BOUNDS, false);
+    assert.ok(walker.x >= SPA_BOUNDS.minX - 0.001 && walker.x <= SPA_BOUNDS.maxX + 0.001);
+    assert.ok(walker.y >= SPA_BOUNDS.minY - 0.001 && walker.y <= SPA_BOUNDS.maxY + 0.001);
+    assert.equal(walker.goal, null);
   });
 });
 

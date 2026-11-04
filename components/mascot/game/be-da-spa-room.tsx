@@ -173,7 +173,7 @@ export function BeDaSpaRoom({
       <Plant className="is-left" />
       <Plant className="is-right" />
 
-      <div ref={stageRef} className="beda-spa-stage">
+      <div className="beda-spa-stage">
         <div className="beda-spa-mat" aria-hidden>
           <i className="beda-spa-cucumber" />
         </div>
@@ -188,23 +188,42 @@ export function BeDaSpaRoom({
           ),
         )}
         {room.guests.map((guest) => {
-          const seat = SPA_SEATS.find((item) => item.id === guest.seat) ?? null;
           const x = guest.x;
           const y = guest.y;
-          const place =
-            x != null && y != null
-              ? { seatX: x * 100, seatY: y * 100, scale: spaFootScale(y), standing: true }
-              : { seatX: seat?.x ?? 50, seatY: seat?.y ?? 70, scale: seat?.scale ?? 1, standing: false };
+          if (x != null && y != null) return null;
+          const seat = SPA_SEATS.find((item) => item.id === guest.seat) ?? null;
           return (
             <SpaPerson
               key={guest.id}
               guest={guest}
               locale={locale}
               selected={guest.id === selectedId}
-              seatX={place.seatX}
-              seatY={place.seatY}
-              scale={place.scale}
-              standing={place.standing}
+              seatX={seat?.x ?? 50}
+              seatY={seat?.y ?? 70}
+              scale={seat?.scale ?? 1}
+              standing={false}
+              onSelect={onSelect}
+              onAction={onAction}
+              onHide={onHide}
+            />
+          );
+        })}
+      </div>
+      <div ref={stageRef} className="beda-spa-floor" data-testid="beda-spa-floor">
+        {room.guests.map((guest) => {
+          const x = guest.x;
+          const y = guest.y;
+          if (x == null || y == null) return null;
+          return (
+            <SpaPerson
+              key={guest.id}
+              guest={guest}
+              locale={locale}
+              selected={guest.id === selectedId}
+              seatX={x * 100}
+              seatY={y * 100}
+              scale={spaFootScale(y)}
+              standing
               onSelect={onSelect}
               onAction={onAction}
               onHide={onHide}

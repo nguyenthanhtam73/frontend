@@ -298,7 +298,7 @@ export function useSpaRoom(options: {
     if (!self?.placed) return null;
     return { x: self.x, y: self.y };
   }, [room.people, room.sessionId]);
-  const sent = useRef<{ x: number; y: number; facing: LobbyFacing }>({ x: you?.x ?? 0.5, y: you?.y ?? 0.92, facing: "right" });
+  const sent = useRef<{ x: number; y: number; facing: LobbyFacing }>({ x: you?.x ?? 0.5, y: you?.y ?? 0.7, facing: "right" });
 
   const count = spaHeadCount({
     live: live && notice !== "full",
