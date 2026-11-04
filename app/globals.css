@@ -512,6 +512,9 @@ img.be-da-flies-exit {
 }
 
 .be-da-routine-chip {
+  /* The page padding box is the viewport edge. Keep the frame, and any zzz
+     that sticks out of it, at least 12px inside the screen. */
+  right: max(12px, env(safe-area-inset-right));
   width: 5.5rem;
   border-radius: 1.35rem;
   border: 1px solid #f6b8c8;
@@ -631,12 +634,13 @@ img.be-da-flies-exit {
 .be-da-chip-zzz {
   position: absolute;
   top: 2px;
-  right: 6px;
+  right: 10px;
   color: #cfc6f2;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.08em;
   pointer-events: none;
+  white-space: nowrap;
 }
 
 .be-da-chip-zzz i {

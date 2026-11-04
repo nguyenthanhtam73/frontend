@@ -84,10 +84,10 @@ export function BeDaRoutineBanner() {
       onClick={openRoom}
       className={
         tapped
-          ? "be-da-routine-chip is-tapped absolute right-0 top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
+          ? "be-da-routine-chip is-tapped absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
           : dozing
-            ? "be-da-routine-chip is-dozing absolute right-0 top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
-            : "be-da-routine-chip absolute right-0 top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
+            ? "be-da-routine-chip is-dozing absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
+            : "be-da-routine-chip absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
       }
     >
       {dozing ? (
