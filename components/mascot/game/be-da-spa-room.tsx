@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { useSpaMotion } from "@/components/mascot/game/use-lobby-motion";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
@@ -86,6 +87,10 @@ export function BeDaSpaRoom({
 }) {
   const t = useTranslations("mascot");
   const [copied, setCopied] = useState(false);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const motion = useSpaMotion({ frameRef, viewRef, stageRef });
   const cap = room.cap || SPA_ROOM_CAP;
   const count = Math.min(cap, Math.max(0, room.count));
   const left = Math.max(0, cap - count);
@@ -129,7 +134,8 @@ export function BeDaSpaRoom({
   }
 
   return (
-    <div className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
+    <div ref={frameRef} className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
+      <div ref={viewRef} className="beda-spa-view">
       <div className="beda-spa-wall" />
       <div className="beda-spa-stripes" />
       <div className="beda-spa-wood" />
@@ -152,7 +158,7 @@ export function BeDaSpaRoom({
       <Plant className="is-left" />
       <Plant className="is-right" />
 
-      <div className="beda-spa-stage">
+      <div ref={stageRef} className="beda-spa-stage">
         <div className="beda-spa-mat" aria-hidden>
           <i className="beda-spa-cucumber" />
         </div>
@@ -185,14 +191,10 @@ export function BeDaSpaRoom({
         })}
         {showYou ? (
           <div
-            className="beda-spa-person is-you"
+            className="beda-spa-person is-you beda-pose"
+            data-spa-you=""
             data-testid="beda-spa-you"
-            style={{
-              left: `${SPA_YOU.x}%`,
-              top: `${SPA_YOU.y}%`,
-              zIndex: 40,
-              ["--scale" as string]: String(SPA_YOU.scale),
-            }}
+            style={{ zIndex: 40, ["--scale" as string]: String(SPA_YOU.scale) }}
           >
             <span className="beda-spa-art">
               <Cheeks />
@@ -203,6 +205,19 @@ export function BeDaSpaRoom({
             </span>
           </div>
         ) : null}
+      </div>
+      </div>
+
+      <div className="beda-zoom" data-testid="beda-zoom">
+        <button type="button" aria-label={t("game.zoomIn")} onClick={() => motion.current.zoomBy(1.2)}>
+          +
+        </button>
+        <button type="button" aria-label={t("game.zoomOut")} onClick={() => motion.current.zoomBy(1 / 1.2)}>
+          −
+        </button>
+        <button type="button" data-testid="beda-recenter" onClick={() => motion.current.recenter()}>
+          {t("game.backToMe")}
+        </button>
       </div>
 
       <header className="beda-spa-head">

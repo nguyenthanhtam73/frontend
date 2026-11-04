@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
@@ -11,16 +11,14 @@ import { gameDress, type GameLook } from "@/lib/mascot/game/look";
 import {
   FRIEND_CARD_GAP,
   SAMPLE_LOBBY_FRIENDS,
-  lobbyDepthY,
   lobbyNeutralView,
-  lobbyStackZ,
   lobbyTagNudgePx,
-  lobbyWalkY,
   placeFriendCard,
   sampleFriendView,
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
-import { sampleWander, type LobbyActor } from "@/lib/mascot/game/lobby-live";
+import { type LobbyActor } from "@/lib/mascot/game/lobby-live";
+import { useLobbyMotion } from "@/components/mascot/game/use-lobby-motion";
 import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode, type SpaNotice } from "@/lib/mascot/game/spa-room";
 import type { GamePose } from "@/lib/mascot/game/look";
 import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
@@ -100,34 +98,29 @@ export function BeDaLobby({
   const offsetRef = useRef(0);
   const liftRef = useRef(0);
   const seenSelect = useRef<string | null>(null);
-  const dragRef = useRef<{ id: number; x: number; origin: number; moved: boolean } | null>(null);
   const [showHint, setShowHint] = useState(true);
-  const [moving, setMoving] = useState(false);
-  const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(you.nickname);
   const [entering, setEntering] = useState(false);
   const [roomDraft, setRoomDraft] = useState("");
   const [roomError, setRoomError] = useState(false);
   const night = sky === "night" || sky === "evening";
-  const placed = actors.map((actor) => {
-    if (!actor.sample || tick === 0) return actor;
-    const wandered = sampleWander(actor.id, tick * 250, actor.x, actor.y);
-    return { ...actor, x: wandered.x, y: wandered.y, facing: wandered.facing, walking: true };
-  });
   const spots: LobbySpot[] = [
-    ...placed.map((actor) => ({ id: actor.id, x: actor.x, y: actor.y })),
+    ...actors.map((actor) => ({ id: actor.id, x: actor.x, y: actor.y })),
     { id: "you", x: you.x, y: you.y },
   ];
-  const selected = placed.find((actor) => actor.id === selectedId) ?? null;
-
-  useEffect(() => {
-    setMoving(true);
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
-    const id = window.setInterval(() => setTick((value) => value + 1), 250);
-    return () => window.clearInterval(id);
-  }, []);
+  const selected = actors.find((actor) => actor.id === selectedId) ?? null;
+  const motion = useLobbyMotion({
+    frameRef,
+    worldRef,
+    you,
+    actors,
+    onWalk,
+    onEmptyTap: () => {
+      setShowHint(false);
+      onSelect("");
+    },
+  });
 
   useEffect(() => {
     if (!nicknameError) return;
@@ -141,10 +134,9 @@ export function BeDaLobby({
     if (!frame || !world) return;
     const max = Math.max(0, world.offsetWidth - frame.clientWidth);
     const next = Math.min(max, Math.max(0, offset));
+    const dx = next - offsetRef.current;
     offsetRef.current = next;
-    const lift = liftRef.current;
-    world.style.transform = `translate3d(${-next}px, ${-lift}px, 0)`;
-    frame.style.setProperty("--beda-pan", max === 0 ? "0" : String(next / max));
+    motion.current.panBy(-dx, 0);
   };
 
   const revealSelected = () => {
@@ -180,7 +172,7 @@ export function BeDaLobby({
     next = Math.min(next, Math.round(frame.clientHeight * 0.45));
     if (next === current) return;
     liftRef.current = next;
-    paint(offsetRef.current);
+    motion.current.panBy(0, -(next - current), false);
   };
 
   const placeCard = () => {
@@ -229,17 +221,6 @@ export function BeDaLobby({
   useLayoutEffect(() => {
     const frame = frameRef.current;
     const world = worldRef.current;
-    const you = world?.querySelector<HTMLElement>("[data-lobby-you]");
-    if (!frame || !world || !you) return;
-    const frameBox = frame.getBoundingClientRect();
-    const box = you.getBoundingClientRect();
-    const dx = box.left + box.width / 2 - (frameBox.left + frameBox.width / 2);
-    paint(offsetRef.current + dx);
-  }, []);
-
-  useLayoutEffect(() => {
-    const frame = frameRef.current;
-    const world = worldRef.current;
     if (!frame || !world) return;
     const run = () => syncRef.current();
     run();
@@ -258,50 +239,6 @@ export function BeDaLobby({
     };
   }, [selectedId]);
 
-  function onPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (event.button !== 0) return;
-    if ((event.target as HTMLElement).closest("button, a, .beda-actions, .beda-nick, .beda-switch")) return;
-    dragRef.current = {
-      id: event.pointerId,
-      x: event.clientX,
-      origin: offsetRef.current,
-      moved: false,
-    };
-    frameRef.current?.setPointerCapture(event.pointerId);
-  }
-
-  function onPointerMove(event: PointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.id !== event.pointerId) return;
-    const dx = event.clientX - drag.x;
-    if (Math.abs(dx) > 8) drag.moved = true;
-    paint(drag.origin - dx);
-    placeCardRef.current();
-  }
-
-  function onPointerUp(event: PointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.id !== event.pointerId) return;
-    const moved = drag.moved;
-    dragRef.current = null;
-    if (moved) {
-      setShowHint(false);
-      placeCardRef.current();
-      return;
-    }
-    if ((event.target as HTMLElement).closest("button, a, .beda-actions, .beda-nick, .beda-switch")) return;
-    const world = worldRef.current;
-    if (world) {
-      const box = world.getBoundingClientRect();
-      const width = box.width || 1;
-      const height = box.height || 1;
-      const x = (event.clientX - box.left) / width;
-      const depth = lobbyDepthY((event.clientY - box.top) / height);
-      if (depth != null && x >= 0 && x <= 1) onWalk(Math.min(0.96, Math.max(0.04, x)), depth);
-    }
-    onSelect("");
-  }
-
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if ((event.target as HTMLElement).closest("button, a")) return;
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -314,17 +251,13 @@ export function BeDaLobby({
   return (
     <div
       ref={frameRef}
-      className={moving ? "beda-lobby is-moving" : "beda-lobby"}
+      className="beda-lobby"
       data-testid="beda-lobby"
       data-lobby-mode={live ? "live" : "sample"}
       data-sky={sky}
       tabIndex={0}
       aria-label={dragLabel}
       style={{ ["--beda-ground-end" as string]: night ? "#6f9474" : "#9fd48e" }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
       onKeyDown={onKeyDown}
     >
       <div ref={worldRef} className="beda-lobby-world">
@@ -389,7 +322,7 @@ export function BeDaLobby({
         <i className="beda-butterfly" style={{ left: "24%", top: "30%" }} />
         <i className="beda-butterfly" style={{ left: "58%", top: "26%", animationDelay: "0.8s" }} />
         <i className="beda-butterfly" style={{ left: "80%", top: "32%", animationDelay: "1.4s" }} />
-        {placed.map((actor) => (
+        {actors.map((actor) => (
           <FriendButton
             key={actor.id}
             actor={actor}
@@ -402,17 +335,11 @@ export function BeDaLobby({
           />
         ))}
         <div
-          className="beda-friend"
+          className="beda-friend beda-pose"
           data-lobby-you=""
           data-friend-id="you"
           data-testid="beda-lobby-you"
-          style={{
-            left: `${you.x * 100}%`,
-            top: `${lobbyWalkY(you.y) * 100}%`,
-            width: "calc(var(--beda-friend, 120px) * 1.2)",
-            zIndex: lobbyStackZ(you.y),
-            transform: "translate(-50%, -100%)",
-          }}
+          style={{ ["--ms" as string]: "1.2" }}
         >
           <button
             type="button"
@@ -422,15 +349,13 @@ export function BeDaLobby({
               setEditing(true);
             }}
           >
-            <span className="beda-friend-art" style={you.facing === "left" ? { transform: "scaleX(-1)" } : undefined}>
+            <span className="beda-friend-art">
               <span className="beda-ring" />
               <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
             </span>
             <span
               className="beda-tag beda-tag-me"
-              style={{
-                transform: `translateX(${lobbyTagNudgePx({ id: "you", x: you.x, y: you.y }, spots)}px)`,
-              }}
+              style={{ ["--nudge" as string]: `${lobbyTagNudgePx({ id: "you", x: you.x, y: you.y }, spots)}px` }}
             >
               <GameIcon name="pin" className="beda-ico-sm" /> {you.nickname}
             </span>
@@ -528,23 +453,16 @@ export function BeDaLobby({
             <button type="submit">{tLobby("game.nicknameSave")}</button>
           </form>
         ) : null}
-        <div className="beda-mini" aria-hidden>
-          <div className="beda-mini-oval" />
-          {placed.map((actor) => (
-            <i
-              key={actor.id}
-              className="beda-mini-dot"
-              style={{ left: `${actor.x * 100}%`, top: `${28 + lobbyWalkY(actor.y) * 55}%` }}
-            />
-          ))}
-          <img
-            src="/mascot/icons/minimap_pin.svg"
-            alt=""
-            className="beda-mini-pin"
-            decoding="async"
-            style={{ left: `${you.x * 100}%`, top: `${28 + lobbyWalkY(you.y) * 55}%` }}
-          />
-          <div className="beda-mini-view" />
+        <div className="beda-zoom" data-testid="beda-zoom">
+          <button type="button" aria-label={tLobby("game.zoomIn")} onClick={() => motion.current.zoomBy(1.2)}>
+            +
+          </button>
+          <button type="button" aria-label={tLobby("game.zoomOut")} onClick={() => motion.current.zoomBy(1 / 1.2)}>
+            −
+          </button>
+          <button type="button" data-testid="beda-recenter" onClick={() => motion.current.recenter()}>
+            {tLobby("game.backToMe")}
+          </button>
         </div>
         {showHint && !editing ? <div className="beda-drag-hint">{dragLabel}</div> : null}
       </div>
@@ -576,17 +494,10 @@ function FriendButton({
   const dress = gameDress(actor.look, pose);
   return (
     <div
-      className={selected ? "beda-friend is-selected" : "beda-friend"}
+      className={selected ? "beda-friend beda-pose is-selected" : "beda-friend beda-pose"}
       data-sample={actor.sample ? "true" : "false"}
       data-friend-id={actor.id}
       data-testid={`beda-friend-${actor.id}`}
-      style={{
-        left: `${actor.x * 100}%`,
-        top: `${lobbyWalkY(actor.y) * 100}%`,
-        width: `calc(var(--beda-friend, 110px) * ${0.78 + actor.y * 0.4})`,
-        zIndex: lobbyStackZ(actor.y),
-        transform: "translate(-50%, -100%)",
-      }}
     >
       {selected ? (
         <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={actor.nickname}>
@@ -617,14 +528,11 @@ function FriendButton({
         </div>
       ) : null}
       <button type="button" className="beda-friend-hit" onClick={() => onSelect(actor.id)}>
-        <span
-          className="beda-friend-art"
-          style={actor.facing === "left" ? { transform: "scaleX(-1)" } : undefined}
-        >
+        <span className="beda-friend-art">
           <span className="beda-ring" />
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>
-        <span className="beda-tag" style={{ transform: `translateX(${nudge}px)` }}>
+        <span className="beda-tag" style={{ ["--nudge" as string]: `${nudge}px` }}>
           {actor.nickname}
         </span>
       </button>

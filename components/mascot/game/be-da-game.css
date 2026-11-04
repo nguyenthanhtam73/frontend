@@ -699,6 +699,7 @@
   left: 0;
   width: 260%;
   height: calc(100% - var(--beda-nav-reserve, 120px) - 8px);
+  transform-origin: 0 0;
   will-change: transform;
 }
 
@@ -884,6 +885,15 @@
   transform: translate(-50%, -100%);
 }
 
+.beda-friend.beda-pose {
+  left: 0;
+  top: 0;
+  width: calc(var(--beda-friend, 110px) * var(--ms, 1));
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0) translate(-50%, -100%) scaleY(var(--sy, 1));
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
 .beda-friend-hit {
   position: relative;
   display: flex;
@@ -900,6 +910,7 @@
 .beda-friend-art {
   position: relative;
   width: 100%;
+  transition: transform 180ms ease;
 }
 
 .beda-ring {
@@ -929,6 +940,8 @@
   font-weight: 800;
   white-space: nowrap;
   box-shadow: 0 3px 0 #e2bcc6;
+  transform: translateX(var(--nudge, 0px)) scale(calc(1 / var(--beda-zoom, 1)));
+  transform-origin: center top;
 }
 
 .beda-tag-me {
@@ -981,52 +994,35 @@
   box-shadow: 0 0 0 3px rgba(95, 227, 161, 0.28);
 }
 
-.beda-mini {
+.beda-zoom {
   position: absolute;
   top: calc(74px + env(safe-area-inset-top));
   right: 12px;
-  width: 112px;
-  height: 56px;
-  overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.28);
-  border-radius: 14px;
-  background: rgba(22, 48, 54, 0.85);
-  box-shadow: 0 4px 0 #0c1d21;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
-.beda-mini-oval {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 32%;
-  bottom: 14%;
-  border-radius: 50%;
-  background: rgba(159, 212, 142, 0.55);
+.beda-spa .beda-zoom {
+  top: auto;
+  right: 12px;
+  bottom: calc(var(--beda-nav-reserve, 120px) + 188px);
 }
 
-.beda-mini-dot {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.beda-mini-pin {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  transform: translate(-50%, -80%);
-}
-
-.beda-mini-view {
-  position: absolute;
-  top: 8%;
-  bottom: 8%;
-  width: 38%;
-  border: 2px solid #fff;
-  border-radius: 6px;
-  left: calc(var(--beda-pan, 0.4) * 62%);
+.beda-zoom button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(22, 48, 54, 0.88);
+  padding: 6px 12px;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 3px 0 #0c1d21;
 }
 
 .beda-switch {
@@ -1113,14 +1109,6 @@
   font-weight: 800;
 }
 
-.beda-lobby.is-moving .beda-friend {
-  transition: left 240ms linear, top 240ms linear;
-}
-
-.beda-lobby.is-moving .beda-friend[data-lobby-you] {
-  transition: left 800ms ease-out, top 800ms ease-out;
-}
-
 .beda-actions {
   position: absolute;
   z-index: 2;
@@ -1135,7 +1123,8 @@
   padding: 10px 10px 6px;
   pointer-events: auto;
   text-align: center;
-  transform: translate(calc(-50% + var(--beda-card-dx, 0px)), var(--beda-card-dy, 0px));
+  transform: translate(calc(-50% + var(--beda-card-dx, 0px)), var(--beda-card-dy, 0px)) scale(calc(1 / var(--beda-zoom, 1)));
+  transform-origin: center bottom;
 }
 
 .beda-card-name {
@@ -1699,6 +1688,14 @@
   overflow: hidden;
   background: #e7f7f3;
   color: #3c2a30;
+  touch-action: none;
+}
+
+.beda-spa-view {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .beda-spa-wall {
@@ -1966,6 +1963,14 @@
   z-index: 36;
 }
 
+.beda-spa-person.is-you.beda-pose {
+  left: 0;
+  top: 0;
+  transform: translate3d(var(--mx, 50%), var(--my, 80%), 0) translate(-50%, -100%) scaleY(var(--sy, 1));
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
 .beda-spa-hit {
   display: flex;
   width: 100%;
@@ -1980,6 +1985,14 @@
 .beda-spa-art {
   position: relative;
   width: 100%;
+  transition: transform 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beda-friend-art,
+  .beda-spa-art {
+    transition: none;
+  }
 }
 
 .beda-spa-art::after {
@@ -2306,6 +2319,11 @@
   .beda-spa-lobby {
     top: 18%;
     right: 28px;
+  }
+
+  .beda-spa .beda-zoom {
+    right: 28px;
+    bottom: calc(var(--beda-nav-reserve, 120px) + 220px);
   }
 }
 
