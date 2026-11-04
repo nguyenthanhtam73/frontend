@@ -358,8 +358,11 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
           cur.map((s) => (s.id === id ? { ...s, completed: !s.completed } : s)),
         false,
       );
-      if (!lastPersistedRef.current?.saved) return;
       if (!getAccessToken() && !getRefreshToken()) return;
+      if (!lastPersistedRef.current?.saved) {
+        void persist({ silent: true, saveKind: "manual_edit" });
+        return;
+      }
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       const generation = persistGenerationRef.current;
       autoSaveTimer.current = setTimeout(() => {

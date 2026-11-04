@@ -497,6 +497,70 @@
   color: #2b8c86;
 }
 
+.beda-care-sheet {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.beda-care-back {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(23, 40, 44, 0.35);
+}
+
+.beda-care-card {
+  position: relative;
+  z-index: 1;
+  width: min(440px, calc(100% - 16px));
+  max-height: min(68vh, 560px);
+  margin-bottom: calc(var(--beda-nav-reserve) + 8px);
+  overflow: auto;
+  border-radius: 24px;
+  background: #fffaf6;
+  padding: 16px 16px 12px;
+  color: #3c2a30;
+  box-shadow: 0 16px 40px rgba(40, 30, 20, 0.18);
+}
+
+.beda-care-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.beda-care-head h2,
+.beda-care-card h3 {
+  margin: 0;
+}
+
+.beda-care-card h3 {
+  margin-top: 14px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.beda-care-head button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: #8a4b3a;
+  font: inherit;
+  font-weight: 800;
+}
+
+.beda-step-empty {
+  margin: 8px 0 0;
+  color: #8a6a62;
+  font-size: 14px;
+}
+
 .beda-quest-row.is-done {
   color: #9a8a8f;
   text-decoration: line-through;
@@ -721,6 +785,19 @@
   touch-action: none;
   outline: none;
   background: var(--beda-ground-end, #9fd48e);
+}
+
+.beda-lobby::after {
+  content: "";
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 28px 0 46px rgba(36, 64, 48, 0.28),
+    inset -28px 0 46px rgba(36, 64, 48, 0.28),
+    inset 0 22px 40px rgba(36, 64, 48, 0.18),
+    inset 0 -34px 48px rgba(36, 64, 48, 0.3);
 }
 
 .beda-lobby-world {

@@ -114,7 +114,6 @@ export function useLobbyMotion(input: {
     let downPoint = { x: 0, y: 0 };
     let gesture: "pending" | "pan" | "follow" = "pending";
     let pinch: { dist: number; x: number; y: number } | null = null;
-    let holdTimer = 0;
 
     const viewSize = () => ({
       w: frame.clientWidth,
@@ -296,7 +295,6 @@ export function useLobbyMotion(input: {
       downPoint = { x: event.clientX, y: event.clientY };
       frame.setPointerCapture(event.pointerId);
       if (pointers.size === 2) {
-        window.clearTimeout(holdTimer);
         gesture = "pan";
         follow = false;
         const [a, b] = [...pointers.values()];
@@ -308,13 +306,6 @@ export function useLobbyMotion(input: {
         return;
       }
       gesture = "pending";
-      const origin = { x: event.clientX, y: event.clientY };
-      window.clearTimeout(holdTimer);
-      holdTimer = window.setTimeout(() => {
-        if (gesture !== "pending") return;
-        gesture = "follow";
-        aim(origin.x, origin.y);
-      }, HOLD_MS);
     };
     const move = (event: PointerEvent) => {
       const prev = pointers.get(event.pointerId);
@@ -334,32 +325,18 @@ export function useLobbyMotion(input: {
         applyCamera();
         return;
       }
-      const dx = event.clientX - prev.x;
-      const dy = event.clientY - prev.y;
       if (gesture === "pending" && Math.hypot(event.clientX - downPoint.x, event.clientY - downPoint.y) > PAN_PX) {
-        gesture = "pan";
-        follow = false;
-        pull = false;
-        window.clearTimeout(holdTimer);
-      }
-      if (gesture === "pan") {
-        cam = { ...cam, x: cam.x + dx, y: cam.y + dy };
-        applyCamera();
-        return;
+        gesture = "follow";
       }
       if (gesture === "follow") aim(event.clientX, event.clientY);
     };
     const up = (event: PointerEvent) => {
       const start = pointers.get(event.pointerId);
       pointers.delete(event.pointerId);
-      window.clearTimeout(holdTimer);
       pinch = null;
-      if (gesture === "pending" && start) {
-        const moved = Math.hypot(event.clientX - start.x, event.clientY - start.y);
-        if (moved <= PAN_PX) {
-          aim(event.clientX, event.clientY);
-          onEmptyTap.current?.();
-        }
+      if ((gesture === "pending" || gesture === "follow") && start && pointers.size === 0) {
+        aim(event.clientX, event.clientY);
+        if (gesture === "pending") onEmptyTap.current?.();
       }
       gesture = "pending";
     };
@@ -370,7 +347,6 @@ export function useLobbyMotion(input: {
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.clearTimeout(holdTimer);
       frame.removeEventListener("wheel", onWheel);
       frame.removeEventListener("pointerdown", down);
       frame.removeEventListener("pointermove", move);

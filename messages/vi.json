@@ -3436,6 +3436,9 @@
       "routineLink": "Đánh dấu trong routine",
       "allDone": "Xong hết rồi",
       "stepsEmpty": "Chưa có bước chăm da",
+      "careMorning": "Buổi sáng",
+      "careEvening": "Buổi tối",
+      "careClose": "Đóng",
       "tasks": {
         "wash": "Rửa mặt buổi sáng",
         "spf": "Thoa kem chống nắng",

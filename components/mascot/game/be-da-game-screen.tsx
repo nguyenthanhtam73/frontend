@@ -42,6 +42,8 @@ import {
 } from "@/lib/mascot/game/spa-room";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { isSessionComplete } from "@/lib/mascot/pose";
+import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query";
 import { streakDateKey } from "@/lib/streak/history";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
@@ -130,7 +132,15 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       queryClient.setQueryData(routineTodayQueryKey, next);
       try {
         const saved = await apiPost<RoutineDTO>("/api/v1/routines", routineTickBody(next), { toastOnError: false });
+        const stored = saved ?? next;
         if (saved) queryClient.setQueryData(routineTodayQueryKey, saved);
+        const woke =
+          isSessionComplete(stored.morning) ||
+          isSessionComplete(stored.evening) ||
+          (stored.morning.length + stored.evening.length > 0 &&
+            stored.morning.every((step) => step.completed) &&
+            stored.evening.every((step) => step.completed));
+        if (woke) useBeDaPoseStore.getState().setSessionHappy(true);
         await queryClient.invalidateQueries({ queryKey: routineTodayQueryKey });
         await queryClient.invalidateQueries({ queryKey: mascotQueryKey });
       } catch {

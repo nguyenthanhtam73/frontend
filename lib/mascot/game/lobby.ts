@@ -44,6 +44,16 @@ export const SAMPLE_LOBBY_FRIENDS: readonly SampleLobbyFriend[] = [
   { id: "be-mit", nickname: "Bé Mít", x: 0.54, y: 0.86, mood: "sleepy", glow: 1, outfit: "outfit_hoodie", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
   { id: "su-kem", nickname: "Su Kem", x: 0.82, y: 0.83, mood: "sparkle", glow: 5, outfit: "outfit_ao_len", hair: "hair_short_bob", clip: null, sample: true },
   { id: "bong-gon", nickname: "Bông Gòn", x: 0.94, y: 0.76, mood: "happy", glow: 4, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "gio-mat", nickname: "Gió Mát", x: 0.4, y: 0.22, mood: "normal", glow: 2, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: null, sample: true },
+  { id: "mua-nho", nickname: "Mưa Nhỏ", x: 0.56, y: 0.3, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
+  { id: "sao-dem", nickname: "Sao Đêm", x: 0.33, y: 0.34, mood: "sparkle", glow: 4, outfit: "outfit_hoodie", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+  { id: "com-nguoi", nickname: "Cơm Nguội", x: 0.48, y: 0.42, mood: "normal", glow: 1, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: null, sample: true },
+  { id: "tra-dao", nickname: "Trà Đào", x: 0.66, y: 0.36, mood: "happy", glow: 5, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
+  { id: "sen-hong", nickname: "Sen Hồng", x: 0.08, y: 0.5, mood: "sparkle", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_high_pony", clip: null, sample: true },
+  { id: "lac-rang", nickname: "Lắc Răng", x: 0.42, y: 0.48, mood: "happy", glow: 2, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "mo-uoc", nickname: "Mơ Ước", x: 0.5, y: 0.58, mood: "normal", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: null, sample: true },
+  { id: "ca-phe", nickname: "Cà Phê", x: 0.26, y: 0.62, mood: "happy", glow: 1, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
+  { id: "yen-nhe", nickname: "Yên Nhẹ", x: 0.36, y: 0.44, mood: "sleepy", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
 ];
 
 /** Sample visitors plus the player's own Bé Da. */

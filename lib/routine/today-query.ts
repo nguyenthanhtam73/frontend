@@ -27,7 +27,7 @@ export function routineTickBody(routine: RoutineDTO) {
     notes: routine.notes ?? "",
     source: routine.source === "ai_suggested" ? "ai_suggested" : "manual",
     skill_mode: routine.skill_mode ?? "",
-    save_kind: "tick_only" as const,
+    save_kind: (routine.saved ? "tick_only" : "manual_edit") as "tick_only" | "manual_edit",
     ...(routine.routine_date ? { routine_date: routine.routine_date } : {}),
   };
 }

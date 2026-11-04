@@ -190,9 +190,9 @@ describe("game sound and day flags", () => {
 });
 
 describe("sample lobby", () => {
-  it("is nicknames only, marked sample, and counts the player toward 18", () => {
-    assert.equal(SAMPLE_LOBBY_FRIENDS.length, 17);
-    assert.equal(lobbyHeadCount(), 18);
+  it("is nicknames only, marked sample, and fills the hall of 28 with the player", () => {
+    assert.equal(SAMPLE_LOBBY_FRIENDS.length, 27);
+    assert.equal(lobbyHeadCount(), 28);
     const ids = new Set<string>();
     for (const friend of SAMPLE_LOBBY_FRIENDS) {
       assert.equal(friend.sample, true);

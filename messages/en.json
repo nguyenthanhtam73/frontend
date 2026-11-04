@@ -3436,6 +3436,9 @@
       "routineLink": "Tick this in your routine",
       "allDone": "All done now",
       "stepsEmpty": "No care steps yet",
+      "careMorning": "Morning",
+      "careEvening": "Evening",
+      "careClose": "Close",
       "tasks": {
         "wash": "Wash your face this morning",
         "spf": "Put on sunscreen",
