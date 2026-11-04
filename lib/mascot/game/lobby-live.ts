@@ -3,6 +3,9 @@ import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
 import {
   clampLobbyPoint,
   lobbySpawnForId,
+  lobbyTooClose,
+  sampleBlocksSpawn,
+  sampleStandsUnderOpeningChrome,
   SAMPLE_LOBBY_FRIENDS,
   type SampleLobbyFriend,
 } from "@/lib/mascot/game/lobby";
@@ -556,6 +559,11 @@ function hashPhase(id: string): number {
   return (hash / 4294967296) * Math.PI * 2;
 }
 
+function strollBlocked(x: number, y: number, selfId: string): boolean {
+  if (sampleStandsUnderOpeningChrome(x, y) || sampleBlocksSpawn(x, y)) return true;
+  return SAMPLE_LOBBY_FRIENDS.some((friend) => friend.id !== selfId && lobbyTooClose({ x, y }, friend));
+}
+
 /** A small stroll around a sample visitor's authored spot. Stays inside the walk band. */
 export function sampleWander(
   id: string,
@@ -566,11 +574,10 @@ export function sampleWander(
   const phase = hashPhase(id);
   const dx = Math.sin(tMs / 4800 + phase) * 0.03;
   const dy = Math.cos(tMs / 6200 + phase) * 0.015;
-  const feet = clampLobbyPoint(baseX + dx, baseY + dy);
-  const x = feet.x;
-  const y = feet.y;
+  let feet = clampLobbyPoint(baseX + dx, baseY + dy);
+  if (strollBlocked(feet.x, feet.y, id)) feet = clampLobbyPoint(baseX, baseY);
   const facing: LobbyFacing = Math.cos(tMs / 4800 + phase) > 0 ? "right" : "left";
-  return { x, y, facing };
+  return { x: feet.x, y: feet.y, facing };
 }
 
 /** At most 2 frames per rolling second. A later move-to replaces one still waiting. */

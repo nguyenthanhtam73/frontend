@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-import { LOBBY_WORLD, lobbyStackZ } from "@/lib/mascot/game/lobby";
+import { LOBBY_WORLD, lobbyStackZ, tagEdgeDelta } from "@/lib/mascot/game/lobby";
 import { spaFootScale } from "@/lib/mascot/game/spa-room";
 import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
@@ -42,6 +42,41 @@ function liteMotion(): boolean {
   const cores = navigator.hardwareConcurrency;
   const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   return (typeof cores === "number" && cores > 0 && cores <= 4) || (typeof memory === "number" && memory > 0 && memory <= 2);
+}
+
+/** Pull every name tag inside the lobby frame, keeping the shift as small as possible. */
+function clampLobbyTags(frame: HTMLElement, zoom: number) {
+  const view = frame.getBoundingClientRect();
+  const scale = zoom > 0 ? zoom : 1;
+  for (const tag of frame.querySelectorAll<HTMLElement>(".beda-tag")) {
+    const box = tag.getBoundingClientRect();
+    const dx = tagEdgeDelta(box, view);
+    if (Math.abs(dx) < 0.5) continue;
+    const prev = Number.parseFloat(tag.style.getPropertyValue("--edge") || "0") || 0;
+    tag.style.setProperty("--edge", `${prev + dx / scale}px`);
+  }
+}
+
+/** Live figures keep their synced spot. The controls fade instead of shoving them. */
+function fadeCoveredControls(frame: HTMLElement) {
+  const root = frame.closest(".beda-game") ?? frame;
+  const figures = frame.querySelectorAll<HTMLElement>(".beda-friend");
+  const mark = (selector: string) => {
+    const el = root.querySelector<HTMLElement>(selector);
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    let covered = false;
+    for (const fig of figures) {
+      const body = fig.getBoundingClientRect();
+      if (box.left < body.right - 6 && box.right > body.left + 6 && box.top < body.bottom - 6 && box.bottom > body.top + 6) {
+        covered = true;
+        break;
+      }
+    }
+    el.classList.toggle("is-clear", covered);
+  };
+  mark(".beda-zoom");
+  mark(".beda-hud");
 }
 
 function placeLobby(
@@ -342,6 +377,8 @@ export function useLobbyMotion(input: {
         const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
         setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
       }
+      clampLobbyTags(frame, cam.scale);
+      fadeCoveredControls(frame);
       frameId = window.requestAnimationFrame(tick);
     };
     tick(last);

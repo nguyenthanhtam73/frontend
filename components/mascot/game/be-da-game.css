@@ -1102,7 +1102,7 @@
   font-weight: 800;
   white-space: nowrap;
   box-shadow: 0 3px 0 #e2bcc6;
-  transform: translateX(var(--nudge, 0px)) scale(calc(1 / var(--beda-zoom, 1)));
+  transform: translateX(calc(var(--nudge, 0px) + var(--edge, 0px))) scale(calc(1 / var(--beda-zoom, 1)));
   transform-origin: center top;
 }
 
@@ -1186,6 +1186,22 @@
   gap: 6px;
 }
 
+.beda-lobby .beda-zoom {
+  top: calc(62px + env(safe-area-inset-top));
+  right: 8px;
+  gap: 4px;
+  transition: opacity 160ms linear;
+}
+
+.beda-hud {
+  transition: opacity 160ms linear;
+}
+
+.beda-zoom.is-clear,
+.beda-hud.is-clear {
+  opacity: 0.4;
+}
+
 .beda-spa .beda-zoom {
   top: auto;
   right: 12px;
@@ -1204,6 +1220,13 @@
   font-size: 14px;
   font-weight: 800;
   box-shadow: 0 3px 0 #0c1d21;
+}
+
+.beda-lobby .beda-zoom button {
+  min-width: 36px;
+  min-height: 30px;
+  padding: 3px 8px;
+  font-size: 13px;
 }
 
 .beda-switch {

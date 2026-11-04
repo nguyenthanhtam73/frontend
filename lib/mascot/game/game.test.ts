@@ -23,6 +23,10 @@ import {
   clampLobbyPoint,
   lobbyHeadCount,
   lobbySpawn,
+  lobbyTooClose,
+  sampleBlocksSpawn,
+  sampleStandsUnderOpeningChrome,
+  tagEdgeDelta,
   lobbyStackZ,
   lobbyTagNudgePx,
   placeFriendCard,
@@ -326,6 +330,33 @@ describe("lobby world", () => {
     assert.ok(Math.max(...xs) > 0.85);
     assert.ok(Math.min(...ys) < 0.2);
     assert.ok(Math.max(...ys) > 0.9);
+    for (let i = 0; i < SAMPLE_LOBBY_FRIENDS.length; i += 1) {
+      const a = SAMPLE_LOBBY_FRIENDS[i]!;
+      assert.equal(sampleStandsUnderOpeningChrome(a.x, a.y), false, a.id);
+      assert.equal(sampleBlocksSpawn(a.x, a.y), false, a.id);
+      for (let j = i + 1; j < SAMPLE_LOBBY_FRIENDS.length; j += 1) {
+        const b = SAMPLE_LOBBY_FRIENDS[j]!;
+        assert.equal(lobbyTooClose(a, b), false, `${a.id} ${b.id}`);
+      }
+    }
+  });
+
+  it("keeps a name tag inside the screen by the smallest shift", () => {
+    assert.equal(tagEdgeDelta({ left: 20, right: 90 }, { left: 0, right: 390 }), 0);
+    assert.equal(tagEdgeDelta({ left: 340, right: 410 }, { left: 0, right: 390 }), -28);
+    assert.equal(tagEdgeDelta({ left: -12, right: 70 }, { left: 0, right: 390 }), 20);
+    const wide = tagEdgeDelta({ left: -30, right: 420 }, { left: 0, right: 390 });
+    assert.equal(-30 + wide, 8);
+  });
+
+  it("spawns away from someone already standing in the arrival box", () => {
+    const taken = { x: 0.42, y: 0.6 };
+    const rolls = [0, 1, 0.5, 0.5];
+    let i = 0;
+    const spot = lobbySpawn(() => rolls[i++] ?? 0.5, [taken]);
+    assert.equal(lobbyTooClose(spot, taken), false);
+    assert.ok(spot.x >= 0.5 - 0.08 && spot.x <= 0.5 + 0.08);
+    assert.ok(spot.y >= 0.55 - 0.05 && spot.y <= 0.55 + 0.05);
   });
 
   it("stacks by y and nudges tags away from the Bé Da in front", () => {
