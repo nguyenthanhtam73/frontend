@@ -23,6 +23,7 @@ export function BeDaFigure({
   tapLabel,
   dress = null,
   imageLoading = "eager",
+  crowd = false,
   className,
 }: {
   view: BeDaView;
@@ -39,6 +40,8 @@ export function BeDaFigure({
   dress?: GameDress | null;
   /** Lobby visitors off the screen can wait. The room figure stays eager. */
   imageLoading?: "eager" | "lazy";
+  /** Shared lobby and spa. Happy open eyes, shadow, and name tag only. */
+  crowd?: boolean;
   className?: string;
 }) {
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -47,10 +50,10 @@ export function BeDaFigure({
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
-  const layers = mascotStack(view, { reaction, stepPose, locale, dress });
-  const showExitFlies = fliesExit && !view.flies;
+  const layers = mascotStack(view, { reaction, stepPose, locale, dress, crowd });
+  const showExitFlies = fliesExit && !view.flies && !crowd;
   const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
-  const floorSrc = view.glowLevel >= 5 ? `/mascot/glow/level_${view.glowLevel}_floor.svg` : null;
+  const floorSrc = !crowd && view.glowLevel >= 5 ? `/mascot/glow/level_${view.glowLevel}_floor.svg` : null;
   const rootRef = useRef<HTMLElement | null>(null);
   const setRoot = useCallback((node: HTMLElement | null) => {
     rootRef.current = node;

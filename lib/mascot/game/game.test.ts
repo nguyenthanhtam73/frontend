@@ -237,6 +237,25 @@ describe("sample lobby", () => {
     assert.equal(plain.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfit/outfit_cozy_pajamas.svg");
     assert.equal(plain.some((layer) => layer.slot === "arms"), false);
   });
+
+  it("keeps lobby visitors happy, with a shadow and no stickers", () => {
+    const sleepy = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.mood === "sleepy");
+    assert.ok(sleepy);
+    const stack = mascotStack(sampleFriendView(sleepy), { crowd: true, locale: "vi" });
+    const srcs = stack.map((layer) => layer.src).join(" ");
+    assert.match(srcs, /\/mascot\/faces\/happy\/eyes\.svg/);
+    assert.match(srcs, /\/mascot\/faces\/happy\/mouth\.svg/);
+    assert.match(srcs, /\/mascot\/body\/body_chibi\.svg/);
+    assert.equal(srcs.includes("faces/sleepy"), false);
+    assert.equal(srcs.includes("zzz"), false);
+    assert.equal(srcs.includes("sparkles"), false);
+    assert.equal(srcs.includes("room_"), false);
+    assert.equal(srcs.includes("accessory_star_clip"), false);
+    assert.equal(srcs.includes("/mascot/glow/"), false);
+    assert.equal(stack.some((layer) => layer.slot === "fx-eyelids"), false);
+    const home = mascotStack(sampleFriendView(sleepy), { locale: "vi" });
+    assert.equal(home.some((layer) => layer.src.includes("zzz")), true);
+  });
 });
 
 describe("game closet", () => {

@@ -175,6 +175,14 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("access_token"), false);
     assert.equal(html.includes('data-testid="beda-coins"'), false);
     assert.equal(html.includes('data-testid="beda-streak"'), false);
+    assert.equal(html.includes("room_pillow"), false);
+    assert.equal(html.includes("room_plant"), false);
+    assert.equal(html.includes("room_moon"), false);
+    assert.equal(html.includes("zzz.svg"), false);
+    assert.equal(html.includes("sparkles.svg"), false);
+    assert.equal(html.includes("accessory_star_clip"), false);
+    assert.equal(html.includes("faces/sleepy"), false);
+    assert.match(html, /\/mascot\/faces\/happy\/eyes\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);
     assert.equal(html.includes("/mascot/props/wardrobe"), false);
@@ -220,6 +228,12 @@ describe("Bé Da game screen", () => {
     assert.match(text, /Ốc Quế/);
     assert.match(text, /Bánh Flan/);
     assert.match(html, /data-testid="beda-spa-you"/);
+    assert.equal(html.includes("room_pillow"), false);
+    assert.equal(html.includes("room_plant"), false);
+    assert.equal(html.includes("zzz.svg"), false);
+    assert.equal(html.includes("sparkles.svg"), false);
+    assert.equal(html.includes("faces/sleepy"), false);
+    assert.match(html, /\/mascot\/faces\/happy\/eyes\.svg/);
     assert.equal((html.match(/class="beda-cuke /g) ?? []).length, 10);
     assert.match(html, /beda-spa-cucumber/);
     assert.match(html, /beda-spa-mat/);

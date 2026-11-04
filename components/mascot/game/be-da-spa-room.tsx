@@ -196,7 +196,7 @@ export function BeDaSpaRoom({
           >
             <span className="beda-spa-art">
               <Cheeks />
-              <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} className="w-full" />
+              <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd className="w-full" />
             </span>
             <span className="beda-tag beda-tag-me">
               <Star /> {t("game.you")}
@@ -344,7 +344,7 @@ function SpaPerson({
       <button type="button" className="beda-spa-hit" onClick={() => onSelect(guest.id)}>
         <span className="beda-spa-art">
           <Cheeks />
-          <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" className="w-full" />
+          <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>
         <span className="beda-tag">{guest.nickname}</span>
       </button>
