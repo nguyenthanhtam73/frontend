@@ -38,6 +38,8 @@ export function useBeDaView(): {
     enabled: hasAuth,
     staleTime: 30_000,
     retry: 1,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 
   const snapshot = query.data === undefined ? null : query.data ?? defaultSnapshot();

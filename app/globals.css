@@ -587,16 +587,17 @@ img.be-da-flies-exit {
   position: absolute;
   right: 0;
   top: 4.85rem;
-  width: max-content;
-  max-width: 11rem;
-  height: 1.7rem;
+  width: 8.5rem;
+  max-width: 8.5rem;
+  height: 2.6rem;
 }
 
 .be-da-chip-bubbles span {
   position: absolute;
   right: 0;
   bottom: 0;
-  max-width: 11rem;
+  width: 8.5rem;
+  max-width: 8.5rem;
   border-radius: 999px;
   border: 1px solid #f6b8c8;
   background: #fff8f3;
@@ -605,7 +606,6 @@ img.be-da-flies-exit {
   font-size: 12px;
   font-weight: 700;
   line-height: 1.3;
-  white-space: nowrap;
   opacity: 0;
   animation: be-da-chip-bubble 9s ease-in-out infinite;
 }

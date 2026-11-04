@@ -1,39 +1,58 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { useRouter } from "@/i18n/navigation";
-import { gameRoomView, roomNeglect } from "@/lib/mascot/game/room-view";
+import { gameRoomView } from "@/lib/mascot/game/room-view";
+import {
+  DEFAULT_GAME_LOOK,
+  GAME_LOOK_KEY,
+  gameDress,
+  readGameLook,
+  type GameLook,
+} from "@/lib/mascot/game/look";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
-import type { BeDaView } from "@/lib/mascot/model";
 
 const TAP_MS = 480;
 
-/** Awake chip stays happy. Neglect uses the room's sleepy face, without sad props. */
-function chipView(view: BeDaView, dozing: boolean): BeDaView {
-  if (dozing) return gameRoomView(view);
-  return {
-    ...view,
-    mood: "happy",
-    lineKey: "happy",
-    useServerLine: false,
-    flies: false,
-    sign: "comeBack",
-    disheveled: 0,
-    loadout: { ...view.loadout, roomItems: [] },
-  };
+function storedLook(): GameLook {
+  if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
+  return readGameLook(localStorage) ?? DEFAULT_GAME_LOOK;
 }
 
-/** Small corner Bé Da on /routine. Tap opens the room. */
+/** Small corner Bé Da on /routine. Same room view and closet as Góc bình yên. */
 export function BeDaRoutineBanner() {
   const t = useTranslations("mascot");
   const locale = useLocale();
   const router = useRouter();
   const { view, hidden } = useBeDaView();
+  const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [tapped, setTapped] = useState(false);
-  const dozing = roomNeglect(view);
+  const room = gameRoomView(view);
+  const dozing = room.mood === "sleepy";
+
+  useEffect(() => {
+    const read = () => setLook(storedLook());
+    read();
+    const onShow = () => {
+      if (document.visibilityState === "hidden") return;
+      read();
+    };
+    const onStore = (event: StorageEvent) => {
+      if (event.key != null && event.key !== GAME_LOOK_KEY) return;
+      read();
+    };
+    window.addEventListener("focus", read);
+    document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("storage", onStore);
+    return () => {
+      window.removeEventListener("focus", read);
+      document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("storage", onStore);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (hidden) return;
@@ -60,6 +79,7 @@ export function BeDaRoutineBanner() {
       type="button"
       data-testid="be-da-routine"
       data-dozing={dozing ? "true" : "false"}
+      data-outfit={look.outfit}
       aria-label={dozing ? t("routineDozingAria") : t("routinePlayAria")}
       onClick={openRoom}
       className={
@@ -89,7 +109,7 @@ export function BeDaRoutineBanner() {
       </span>
       <span className="be-da-chip-wave block w-20">
         <span className="be-da-chip-bob block">
-          <BeDaFigure view={chipView(view, dozing)} locale={locale} className="w-full" />
+          <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
         </span>
       </span>
     </button>
