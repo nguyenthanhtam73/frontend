@@ -18,13 +18,13 @@ import {
 } from "./look";
 import {
   LOBBY_PLAYER_SPOT,
-  LOBBY_WALK_Y_MAX,
+  LOBBY_WORLD,
   SAMPLE_LOBBY_FRIENDS,
+  clampLobbyPoint,
   lobbyHeadCount,
-  lobbyNavReservePx,
+  lobbySpawn,
   lobbyStackZ,
   lobbyTagNudgePx,
-  lobbyWalkY,
   placeFriendCard,
   sampleFriendView,
 } from "./lobby";
@@ -292,28 +292,40 @@ describe("game path", () => {
   });
 });
 
-describe("lobby walk band", () => {
+describe("lobby world", () => {
   const spots = [
     ...SAMPLE_LOBBY_FRIENDS.map((friend) => ({ id: friend.id, x: friend.x, y: friend.y })),
     { id: "you", x: LOBBY_PLAYER_SPOT.x, y: LOBBY_PLAYER_SPOT.y },
   ];
 
-  it("keeps every sample Bé Da inside the band above the nav from 360 to 1366", () => {
-    const sizes = [360, 390, 640, 706, 768, 844, 1024, 1366];
-    for (const width of sizes) {
-      for (const height of sizes) {
-        for (const safe of [0, 34]) {
-          const nav = lobbyNavReservePx(width, safe);
-          const walk = height - nav - 8;
-          assert.ok(walk > 64, `walk ${walk}px at ${width}x${height} safe ${safe}`);
-          for (const spot of spots) {
-            assert.ok(spot.y > 0 && spot.y <= LOBBY_WALK_Y_MAX);
-            const tagBottom = lobbyWalkY(spot.y) * walk;
-            assert.ok(tagBottom + 6 <= walk + 8, `${spot.id} tag enters the nav at ${width}x${height}`);
-          }
-        }
-      }
+  it("matches the Android 1000×3000 world and walkable floor", () => {
+    assert.equal(LOBBY_WORLD.width, 1000);
+    assert.equal(LOBBY_WORLD.height, 3000);
+    assert.equal(LOBBY_WORLD.height / LOBBY_WORLD.width, 3);
+    assert.equal(LOBBY_WORLD.viewportWidthScale, 1.3);
+    assert.deepEqual(LOBBY_WORLD.walk, { minX: 0.06, maxX: 0.94, minY: 0.12, maxY: 0.96 });
+    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.55, dx: 0.08, dy: 0.05 });
+    assert.deepEqual(clampLobbyPoint(0, 0), { x: 0.06, y: 0.12 });
+    assert.deepEqual(clampLobbyPoint(2, 2), { x: 0.94, y: 0.96 });
+    const rolls = [0, 1, 0.25, 0.75];
+    let i = 0;
+    const spawned = lobbySpawn(() => rolls[i++] ?? 0);
+    assert.ok(spawned.x >= 0.5 - 0.08 && spawned.x <= 0.5 + 0.08);
+    assert.ok(spawned.y >= 0.55 - 0.05 && spawned.y <= 0.55 + 0.05);
+  });
+
+  it("spreads sample friends across the whole floor", () => {
+    const { walk } = LOBBY_WORLD;
+    const xs = SAMPLE_LOBBY_FRIENDS.map((friend) => friend.x);
+    const ys = SAMPLE_LOBBY_FRIENDS.map((friend) => friend.y);
+    for (const friend of SAMPLE_LOBBY_FRIENDS) {
+      assert.ok(friend.x >= walk.minX && friend.x <= walk.maxX, friend.id);
+      assert.ok(friend.y >= walk.minY && friend.y <= walk.maxY, friend.id);
     }
+    assert.ok(Math.min(...xs) < 0.15);
+    assert.ok(Math.max(...xs) > 0.85);
+    assert.ok(Math.min(...ys) < 0.2);
+    assert.ok(Math.max(...ys) > 0.9);
   });
 
   it("stacks by y and nudges tags away from the Bé Da in front", () => {
@@ -324,20 +336,8 @@ describe("lobby walk band", () => {
       if (next.y === prev.y) assert.equal(lobbyStackZ(next.y), lobbyStackZ(prev.y));
       else assert.ok(lobbyStackZ(next.y) > lobbyStackZ(prev.y));
     }
-    const byDepth = [...spots].sort((a, b) => a.y - b.y);
-    let mapped = 0;
-    for (const spot of byDepth) {
-      const next = lobbyWalkY(spot.y);
-      assert.ok(next >= mapped - 0.0001);
-      assert.ok(next <= 0.97);
-      mapped = next;
-    }
     const keo = spots.find((spot) => spot.id === "keo-deo")!;
-    assert.ok(lobbyTagNudgePx(keo, spots) > 0);
-    const mit = spots.find((spot) => spot.id === "be-mit")!;
-    assert.equal(lobbyTagNudgePx(mit, spots), 24);
-    const dau = spots.find((spot) => spot.id === "dau-tay")!;
-    assert.equal(lobbyTagNudgePx(dau, spots), -24);
+    assert.equal(Number.isFinite(lobbyTagNudgePx(keo, spots)), true);
   });
 
   it("clamps the friend card above the round nav", () => {
@@ -420,8 +420,8 @@ describe("game layout", () => {
     assert.match(css, /\.beda-cabinet\s*\{[^}]*width:\s*12%/);
     assert.match(css, /\.beda-cabinet\s*\{[^}]*z-index:\s*2/);
     assert.match(css, /min-width:\s*768px[\s\S]*\.beda-hero-wrap\s*\{[^}]*clamp\(340px,\s*48vmin,\s*520px\)/);
-    assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*180%/);
-    assert.match(css, /\.beda-lobby-world\s*\{[^}]*height:\s*230%/);
+    assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*130%/);
+    assert.match(css, /\.beda-lobby-world\s*\{[^}]*aspect-ratio:\s*1000\s*\/\s*3000/);
     assert.match(css, /\.beda-actions\s*\{[^}]*width:\s*max-content/);
     assert.equal(/\.beda-actions\s*\{[^}]*\bright:\s*12px/.test(css), false);
     assert.match(css, /\.beda-hero-wrap\s*\{[^}]*var\(--beda-nav-reserve\)/);

@@ -4,6 +4,8 @@
  * Server messages are unchanged; callers still send at the existing cap.
  */
 
+import { LOBBY_WORLD } from "@/lib/mascot/game/lobby";
+
 export const ZOOM_MIN = 0.6;
 export const ZOOM_MAX = 2.5;
 /** Glide remote players across the gap between 4 Hz ticks. */
@@ -29,8 +31,8 @@ export type Walker = {
   face: number;
 };
 
-/** Plaza the feet may use. Normalized 0–1, same space the server stores. */
-export const LOBBY_BOUNDS: Bounds = { minX: 0.06, maxX: 0.94, minY: 0.18, maxY: 0.88 };
+/** Plaza the feet may use. Same rectangle as `LOBBY_WORLD.walk`. */
+export const LOBBY_BOUNDS: Bounds = LOBBY_WORLD.walk;
 
 /** Fountain basin in the same space as lobby taps (authored depth, not pixels). */
 export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.44, rx: 0.08, ry: 0.045 };

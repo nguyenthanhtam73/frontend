@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-import { lobbyDepthY, lobbyStackZ, lobbyWalkY } from "@/lib/mascot/game/lobby";
+import { LOBBY_WORLD, lobbyStackZ } from "@/lib/mascot/game/lobby";
 import { spaFootScale } from "@/lib/mascot/game/spa-room";
 import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
@@ -44,7 +44,7 @@ function placeLobby(
   squash: number,
 ) {
   el.style.setProperty("--mx", `${x * worldW}px`);
-  el.style.setProperty("--my", `${lobbyWalkY(y) * worldH}px`);
+  el.style.setProperty("--my", `${y * worldH}px`);
   el.style.setProperty("--ms", String(size));
   el.style.setProperty("--sy", String(squash));
   el.style.zIndex = String(lobbyStackZ(y));
@@ -133,8 +133,8 @@ export function useLobbyMotion(input: {
       const box = frame.getBoundingClientRect();
       const worldPt = screenToWorld(clientX - box.left, clientY - box.top, cam);
       const { worldW, worldH } = viewSize();
-      const depth = lobbyDepthY(worldPt.y / worldH);
-      if (depth == null) return null;
+      const depth = worldPt.y / worldH;
+      if (depth < LOBBY_WORLD.walk.minY) return null;
       const point = clampPoint({ x: worldPt.x / worldW, y: depth }, LOBBY_BOUNDS);
       if (ellipseContains(point, LOBBY_FOUNTAIN)) {
         return clampPoint(
@@ -179,7 +179,7 @@ export function useLobbyMotion(input: {
     cam = clampCamera(
       {
         x: w / 2 - youProp.current.x * worldW,
-        y: h * 0.42 - lobbyWalkY(youProp.current.y) * worldH,
+        y: h * 0.42 - youProp.current.y * worldH,
         scale: 1,
       },
       w,
@@ -218,7 +218,7 @@ export function useLobbyMotion(input: {
         cam = followCamera(
           cam,
           walker.x,
-          lobbyWalkY(walker.y),
+          walker.y,
           size.w,
           size.h,
           size.worldW,
@@ -229,7 +229,7 @@ export function useLobbyMotion(input: {
         pull = false;
       } else if (pull && !reduced) {
         const tx = size.w * 0.5 - walker.x * size.worldW * cam.scale;
-        const ty = size.h * 0.46 - lobbyWalkY(walker.y) * size.worldH * cam.scale;
+        const ty = size.h * 0.46 - walker.y * size.worldH * cam.scale;
         const k = 1 - Math.exp(-3.2 * dt);
         cam = { ...cam, x: cam.x + (tx - cam.x) * k, y: cam.y + (ty - cam.y) * k };
         if (Math.hypot(tx - cam.x, ty - cam.y) < 2) pull = false;

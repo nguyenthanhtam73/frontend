@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiBaseUrl } from "@/lib/api";
 import { ensureFreshAccessToken, getAccessToken } from "@/lib/auth-token";
-import { LOBBY_PLAYER_SPOT, LOBBY_WALK_Y_MAX } from "@/lib/mascot/game/lobby";
+import { clampLobbyPoint, lobbySpawn } from "@/lib/mascot/game/lobby";
 import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import {
   LOBBY_NICKNAME_KEY,
@@ -62,12 +62,9 @@ export function useLobbyPresence(options: {
   const [nicknameError, setNicknameError] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
-  const [you, setYou] = useState<LobbyYou>({
-    x: LOBBY_PLAYER_SPOT.x,
-    y: LOBBY_PLAYER_SPOT.y,
-    facing: "right",
-    pose: null,
-    nickname,
+  const [you, setYou] = useState<LobbyYou>(() => {
+    const spot = lobbySpawn();
+    return { x: spot.x, y: spot.y, facing: "right", pose: null, nickname };
   });
 
   const lookRef = useRef(look);
@@ -254,8 +251,9 @@ export function useLobbyPresence(options: {
 
   function walkTo(x: number, y: number, pace: "walk" | "idle" = "walk") {
     const prev = youRef.current;
-    const nx = lobbyCoord(x);
-    const ny = lobbyCoord(Math.min(LOBBY_WALK_Y_MAX, y));
+    const feet = clampLobbyPoint(x, y);
+    const nx = lobbyCoord(feet.x);
+    const ny = lobbyCoord(feet.y);
     const facing: LobbyFacing = nx < prev.x - 0.004 ? "left" : nx > prev.x + 0.004 ? "right" : prev.facing;
     const next = { ...prev, x: nx, y: ny, facing };
     youRef.current = next;
