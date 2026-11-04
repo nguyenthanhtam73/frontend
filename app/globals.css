@@ -435,6 +435,8 @@
   .be-da-flies-exit .be-da-fly,
 .be-da-flies-exit,
 .bd-breathe,
+.be-da-chip-bob,
+.be-da-chip-spark,
 .bd-lids,
 .be-da-yawn,
 .be-da-jump,
@@ -500,6 +502,48 @@ img.be-da-flies-exit {
 .bd-figure[data-level="2"] {
   --bd-breath: 4.8s;
   --bd-blink: 260ms;
+}
+
+@keyframes be-da-chip-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.be-da-chip-bob {
+  animation: be-da-chip-bob 3.2s ease-in-out infinite;
+}
+
+.be-da-chip-spark {
+  animation: be-da-chip-spark 2.4s ease-in-out infinite;
+}
+
+@keyframes be-da-chip-spark {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+[data-routine-page][data-be-da="on"] .routine-head {
+  min-height: 8.75rem;
+  padding-right: 8.5rem;
+}
+
+@media (min-width: 1024px) {
+  [data-routine-page][data-be-da="on"] .routine-head {
+    min-height: 0;
+    padding-right: 0;
+  }
 }
 
 @keyframes bd-breathe {

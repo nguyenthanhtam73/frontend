@@ -3332,6 +3332,8 @@
   "mascot": {
     "name": "Bé Da",
     "homeAria": "Bé Da — open her room",
+    "routinePlay": "Tap to play with Bé Da",
+    "routinePlayAria": "Tap to play with Bé Da",
     "tap": "Bé Da reacts",
     "levelsLabel": "Skin levels",
     "improved": "Better",
