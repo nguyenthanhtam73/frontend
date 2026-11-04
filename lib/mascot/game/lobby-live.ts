@@ -53,6 +53,8 @@ export type WirePerson = {
    * the last spot or a seat. Lobby people always have a position.
    */
   placed?: boolean;
+  /** Room only. Missing until the server sends `care_streak`. */
+  careStreak?: number;
 };
 
 export type LobbyCount = { lobby: number; count: number; cap: number };

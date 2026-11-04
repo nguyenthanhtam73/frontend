@@ -114,7 +114,56 @@ export type SpaGuest = {
   clip: GameClipId | null;
   pose: GamePose | null;
   sample: boolean;
+  /** Omitted or 0 means no flame. */
+  careStreak?: number;
 };
+
+export type SpaBoardRow = { nickname: string; careStreak: number };
+
+/** Highest streak above zero. Ties share it. Zero never wins a crown. */
+export function topCareStreak(values: readonly (number | undefined)[]): number {
+  let top = 0;
+  for (const value of values) {
+    if (value != null && value > top) top = value;
+  }
+  return top;
+}
+
+export function careStreakOf(value: number | undefined): number {
+  if (value == null || !Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(9999, Math.floor(value));
+}
+
+/** Board order: higher streak first, then nickname. */
+export function rankCareStreaks(rows: readonly SpaBoardRow[]): SpaBoardRow[] {
+  return [...rows]
+    .map((row) => ({ nickname: row.nickname.trim(), careStreak: careStreakOf(row.careStreak) }))
+    .filter((row) => row.nickname.length > 0)
+    .sort((a, b) => b.careStreak - a.careStreak || a.nickname.localeCompare(b.nickname, "vi"));
+}
+
+/** Accepts `{ members | people | board: [{ nickname, care_streak }] }` or a bare list. */
+export function readSpaBoard(data: unknown): SpaBoardRow[] | null {
+  const record = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+  const list = Array.isArray(data)
+    ? data
+    : record
+      ? record.members ?? record.people ?? record.board
+      : null;
+  if (!Array.isArray(list)) return null;
+  const rows: SpaBoardRow[] = [];
+  for (const item of list) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Record<string, unknown>;
+    const nickname = typeof row.nickname === "string" ? row.nickname.trim() : "";
+    if (!nickname) continue;
+    const raw = row.care_streak;
+    const careStreak =
+      typeof raw === "number" && Number.isFinite(raw) && raw > 0 ? Math.min(9999, Math.floor(raw)) : 0;
+    rows.push({ nickname, careStreak });
+  }
+  return rankCareStreaks(rows);
+}
 
 /** Nearer feet (larger y) draw a little bigger. y is 0..1 on the stage. */
 export function spaFootScale(y: number): number {
@@ -266,6 +315,7 @@ export function seatGuests(
       clip: look.clip,
       pose: poses[person.id] ?? lobbyPose(person.action),
       sample: false,
+      careStreak: person.careStreak,
     });
   }
   return guests;
@@ -376,7 +426,7 @@ function readPerson(value: unknown): WirePerson | null {
   const x = num(row.x);
   const y = num(row.y);
   const placed = x != null && y != null;
-  return {
+  const person: WirePerson = {
     id: row.id,
     nickname: row.nickname,
     outfit: typeof row.outfit === "string" ? row.outfit : "",
@@ -388,6 +438,14 @@ function readPerson(value: unknown): WirePerson | null {
     action: typeof row.action === "string" ? row.action : "idle",
     placed,
   };
+  const careStreak = readCareStreak(row.care_streak);
+  if (careStreak != null) person.careStreak = careStreak;
+  return person;
+}
+
+function readCareStreak(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) return undefined;
+  return Math.min(9999, Math.floor(value));
 }
 
 function readPeople(value: unknown): WirePerson[] {
@@ -487,10 +545,12 @@ export function applyRoomMessage(state: RoomSnapshot, message: RoomServerMessage
     for (const id of message.left) byId.delete(id);
     for (const person of message.upserts) {
       const prev = byId.get(person.id);
+      const kept = person.careStreak == null && prev?.careStreak != null ? prev.careStreak : person.careStreak;
+      const next = { ...person, ...(kept != null ? { careStreak: kept } : {}) };
       if (person.placed === false && prev?.placed) {
-        byId.set(person.id, { ...person, x: prev.x, y: prev.y, facing: prev.facing, placed: true });
+        byId.set(person.id, { ...next, x: prev.x, y: prev.y, facing: prev.facing, placed: true });
       } else {
-        byId.set(person.id, person);
+        byId.set(person.id, next);
       }
     }
     const people = [...byId.values()];

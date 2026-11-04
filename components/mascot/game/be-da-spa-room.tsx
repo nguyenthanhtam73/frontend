@@ -13,8 +13,11 @@ import {
   SPA_ROOM_CAP,
   SPA_SEATS,
   SPA_YOU,
+  rankCareStreaks,
   roomInviteUrl,
   spaFootScale,
+  topCareStreak,
+  type SpaBoardRow,
   zaloShareUrl,
   type SpaGuest,
   type SpaNotice,
@@ -29,6 +32,7 @@ export type SpaRoomState = {
   notice: SpaNotice;
   /** My last server position, when the room has sent one. */
   you?: { x: number; y: number } | null;
+  youStreak?: number;
 };
 
 export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
@@ -74,6 +78,7 @@ export function BeDaSpaRoom({
   onLobby,
   onToggleSound,
   onWalk,
+  onLoadBoard,
 }: {
   locale: string;
   player: BeDaView;
@@ -89,9 +94,12 @@ export function BeDaSpaRoom({
   onLobby: () => void;
   onToggleSound: () => void;
   onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
+  onLoadBoard?: () => Promise<readonly SpaBoardRow[]>;
 }) {
   const t = useTranslations("mascot");
   const [copied, setCopied] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>([]);
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -110,6 +118,9 @@ export function BeDaSpaRoom({
   const count = Math.min(cap, Math.max(0, room.count));
   const left = Math.max(0, cap - count);
   const showYou = room.notice !== "full";
+  const youStreak = room.youStreak ?? 0;
+  const topStreak = topCareStreak([youStreak, ...room.guests.map((guest) => guest.careStreak)]);
+  const crowned = (streak: number | undefined) => topStreak > 0 && (streak ?? 0) === topStreak;
   const takenSeats = new Set(room.guests.map((guest) => guest.seat).filter((seat) => seat != null));
   const notice =
     room.notice === "full"
@@ -140,6 +151,24 @@ export function BeDaSpaRoom({
     const target = event.target as HTMLElement;
     if (target.closest("button, a, input, .beda-actions, .beda-spa-invite")) return;
     onSelect("");
+  }
+
+  async function openBoard() {
+    setBoardOpen(true);
+    if (onLoadBoard) {
+      try {
+        setBoardRows(await onLoadBoard());
+        return;
+      } catch {
+        /* Fall back to whoever is already in the room. */
+      }
+    }
+    setBoardRows(
+      rankCareStreaks([
+        { nickname: t("game.you"), careStreak: youStreak },
+        ...room.guests.map((guest) => ({ nickname: guest.nickname, careStreak: guest.careStreak ?? 0 })),
+      ]),
+    );
   }
 
   async function onCopy() {
@@ -202,6 +231,7 @@ export function BeDaSpaRoom({
               seatY={seat?.y ?? 70}
               scale={seat?.scale ?? 1}
               standing={false}
+              crown={crowned(guest.careStreak)}
               onSelect={onSelect}
               onAction={onAction}
               onHide={onHide}
@@ -224,6 +254,7 @@ export function BeDaSpaRoom({
               seatY={y * 100}
               scale={spaFootScale(y)}
               standing
+              crown={crowned(guest.careStreak)}
               onSelect={onSelect}
               onAction={onAction}
               onHide={onHide}
@@ -241,8 +272,12 @@ export function BeDaSpaRoom({
               <Cheeks />
               <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd className="w-full" />
             </span>
-            <span className="beda-tag beda-tag-me">
-              <Star /> {t("game.you")}
+            <span className="beda-name">
+              <span className="beda-tag beda-tag-me">
+                {crowned(youStreak) ? <span aria-hidden>👑 </span> : null}
+                <Star /> {t("game.you")}
+              </span>
+              <StreakFlame streak={youStreak} label={t("game.spaStreak", { count: youStreak })} />
             </span>
           </div>
         ) : null}
@@ -260,6 +295,10 @@ export function BeDaSpaRoom({
           {t("game.backToMe")}
         </button>
       </div>
+
+      <button type="button" className="beda-spa-board" data-testid="beda-streak-board" onClick={() => void openBoard()}>
+        {t("game.spaBoard")}
+      </button>
 
       <header className="beda-spa-head">
         <button type="button" className="beda-spa-iconbtn" data-testid="beda-spa-leave" aria-label={t("game.spaLeave")} onClick={onLeave}>
@@ -332,6 +371,36 @@ export function BeDaSpaRoom({
           )}
         </div>
       </section>
+      {boardOpen ? (
+        <div className="beda-board-sheet" role="dialog" aria-modal="true" aria-label={t("game.spaBoard")} data-testid="beda-streak-sheet">
+          <button type="button" className="beda-board-back" aria-label={t("game.spaBoardClose")} onClick={() => setBoardOpen(false)} />
+          <div className="beda-board-card">
+            <div className="beda-board-head">
+              <h2>{t("game.spaBoard")}</h2>
+              <button type="button" onClick={() => setBoardOpen(false)}>
+                {t("game.spaBoardClose")}
+              </button>
+            </div>
+            {boardRows.length === 0 ? (
+              <p className="beda-board-empty">{t("game.spaBoardEmpty")}</p>
+            ) : (
+              <ol>
+                {boardRows.map((row, index) => (
+                  <li key={`${row.nickname}-${index}`}>
+                    <span>
+                      {topCareStreak(boardRows.map((item) => item.careStreak)) === row.careStreak && row.careStreak > 0
+                        ? "👑 "
+                        : null}
+                      {row.nickname}
+                    </span>
+                    {row.careStreak > 0 ? <b>🔥{row.careStreak}</b> : null}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -344,6 +413,7 @@ function SpaPerson({
   seatY,
   scale,
   standing,
+  crown,
   onSelect,
   onAction,
   onHide,
@@ -355,6 +425,7 @@ function SpaPerson({
   seatY: number;
   scale: number;
   standing: boolean;
+  crown: boolean;
   onSelect: (id: string) => void;
   onAction: (kind: "wave" | "heart" | "outfit") => void;
   onHide: (id: string) => void;
@@ -416,9 +487,24 @@ function SpaPerson({
           <Cheeks />
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>
-        <span className="beda-tag">{guest.nickname}</span>
+        <span className="beda-name">
+          <span className="beda-tag">
+            {crown ? <span aria-hidden>👑 </span> : null}
+            {guest.nickname}
+          </span>
+          <StreakFlame streak={guest.careStreak ?? 0} label={t("game.spaStreak", { count: guest.careStreak ?? 0 })} />
+        </span>
       </button>
     </div>
+  );
+}
+
+function StreakFlame({ streak, label }: { streak: number; label: string }) {
+  if (streak <= 0) return null;
+  return (
+    <span className="beda-fire" data-testid="beda-streak" aria-label={label}>
+      🔥{streak}
+    </span>
   );
 }
 

@@ -7,6 +7,9 @@ import { RoomConnection } from "@/lib/mascot/game/spa-room-socket";
 import {
   applyRoomMessage,
   emptyRoom,
+  rankCareStreaks,
+  readSpaBoard,
+  topCareStreak,
   encodeRoomFrame,
   isRoomFull,
   isRoomMissing,
@@ -311,6 +314,61 @@ describe("spa room protocol", () => {
     const afterStop = sockets.length;
     clock.advance(30_000);
     assert.equal(sockets.length, afterStop);
+  });
+
+  it("treats care_streak as optional and ranks ties by name", () => {
+    const helloMsg = parseRoomMessage(
+      JSON.stringify({
+        v: 1,
+        channel: "room",
+        op: "hello",
+        session_id: SELF,
+        code: "SPA001",
+        count: 2,
+        cap: 8,
+        people: [
+          { id: SELF, nickname: "Bạn", x: 0.5, y: 0.5, facing: "right", action: "idle", outfit: {} },
+          { id: OTHER, nickname: "Mây", x: 0.4, y: 0.5, facing: "right", action: "idle", outfit: {}, care_streak: 5 },
+        ],
+      }),
+    );
+    assert.equal(helloMsg.op, "hello");
+    if (helloMsg.op !== "hello") return;
+    assert.equal(helloMsg.people.find((person) => person.id === SELF)?.careStreak, undefined);
+    assert.equal(helloMsg.people.find((person) => person.id === OTHER)?.careStreak, 5);
+    const hello = applyRoomMessage(emptyRoom(), helloMsg);
+
+    const tick = parseRoomMessage(
+      JSON.stringify({
+        v: 1,
+        channel: "room",
+        op: "tick",
+        count: 2,
+        cap: 8,
+        upserts: [{ id: OTHER, nickname: "Mây", x: 0.41, y: 0.5, facing: "right", action: "walk", outfit: {} }],
+        left: [],
+        events: [],
+      }),
+    );
+    assert.equal(tick.op, "tick");
+    if (tick.op !== "tick") return;
+    const next = applyRoomMessage(hello, tick);
+    assert.equal(next.people.find((person) => person.id === OTHER)?.careStreak, 5);
+
+    const ranked = rankCareStreaks([
+      { nickname: "Lan", careStreak: 2 },
+      { nickname: "Mây", careStreak: 5 },
+      { nickname: "An", careStreak: 5 },
+    ]);
+    assert.deepEqual(
+      ranked.map((row) => row.nickname),
+      ["An", "Mây", "Lan"],
+    );
+    assert.equal(topCareStreak([0, 5, 5]), 5);
+    assert.equal(topCareStreak([0, 0]), 0);
+    const board = readSpaBoard({ members: [{ nickname: "An", care_streak: 5 }, { nickname: "Lan" }] });
+    assert.equal(board?.[1]?.careStreak, 0);
+    assert.equal(readSpaBoard({ nope: true }), null);
   });
 });
 
