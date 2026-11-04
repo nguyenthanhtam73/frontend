@@ -1035,35 +1035,43 @@
   transform-origin: center;
 }
 
-.beda-puffs {
+.beda-foot {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  height: 18px;
-  pointer-events: none;
-}
-
-.beda-puff {
-  position: absolute;
-  bottom: 2px;
+  z-index: 2;
   width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  opacity: 0.9;
+  height: 11px;
+  margin: -11px 0 0 -4px;
+  border-radius: 45% 45% 40% 40%;
+  background: #f6b8c8;
   pointer-events: none;
-  animation: beda-puff 500ms ease-out forwards;
+  animation: beda-foot 0.6s ease-out forwards;
 }
 
-@keyframes beda-puff {
-  from {
-    transform: translateY(0) scale(0.55);
-    opacity: 0.9;
-  }
+@keyframes beda-foot {
   to {
-    transform: translateY(8px) scale(1.35);
     opacity: 0;
+    transform: scale(0.75);
+  }
+}
+
+.beda-tap-ring {
+  position: absolute;
+  z-index: 4;
+  width: 36px;
+  height: 16px;
+  margin: -8px 0 0 -18px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(246, 184, 200, 0.35);
+  box-shadow: 0 0 0 6px rgba(246, 184, 200, 0.28), 0 0 16px #f6b8c8;
+  pointer-events: none;
+  animation: beda-tap-ring 0.9s ease-out infinite;
+}
+
+@keyframes beda-tap-ring {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
   }
 }
 
@@ -2183,8 +2191,12 @@
     transition: none;
   }
 
-  .beda-puff {
+  .beda-foot,
+  .beda-tap-ring {
     animation: none;
+  }
+
+  .beda-foot {
     display: none;
   }
 }
