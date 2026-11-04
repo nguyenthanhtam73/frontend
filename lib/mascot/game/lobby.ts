@@ -48,7 +48,7 @@ export const LOBBY_PLAYER_SPOT = { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.
 export type ScreenBox = { left: number; top: number; right: number; bottom: number };
 
 /** Back button, zoom cluster, and the bottom menu, in screen pixels. */
-export function lobbyChromePad(viewW: number, viewH: number): { top: number; right: number; bottom: number; left: number } {
+export function lobbyChromePad(viewW: number, _viewH: number): { top: number; right: number; bottom: number; left: number } {
   const nav = lobbyNavReservePx(viewW);
   return { top: 176, right: 148, bottom: nav, left: 68 };
 }
