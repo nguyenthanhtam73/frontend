@@ -26,21 +26,21 @@ import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
 const TREES = [
-  { x: 4, y: 44, s: 0.8 },
-  { x: 16, y: 38, s: 0.7 },
-  { x: 30, y: 40, s: 0.85 },
-  { x: 70, y: 38, s: 0.9 },
-  { x: 84, y: 42, s: 0.75 },
-  { x: 96, y: 48, s: 1 },
-  { x: 8, y: 88, s: 1.1 },
-  { x: 98, y: 86, s: 1.05 },
+  { x: 4, y: 20, s: 0.8 },
+  { x: 16, y: 26, s: 0.7 },
+  { x: 30, y: 22, s: 0.85 },
+  { x: 70, y: 24, s: 0.9 },
+  { x: 84, y: 32, s: 0.75 },
+  { x: 96, y: 28, s: 1 },
+  { x: 8, y: 78, s: 1.1 },
+  { x: 98, y: 82, s: 1.05 },
 ];
 
 const FLOWERS = [
-  { x: 12, y: 90 },
-  { x: 26, y: 93 },
-  { x: 64, y: 91 },
-  { x: 80, y: 94 },
+  { x: 12, y: 70 },
+  { x: 26, y: 88 },
+  { x: 64, y: 74 },
+  { x: 80, y: 90 },
 ];
 
 export function BeDaLobby({
@@ -350,6 +350,7 @@ export function BeDaLobby({
             }}
           >
             <span className="beda-friend-art">
+              <span className="beda-ground-shadow" aria-hidden />
               <span className="beda-ring" />
               <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
             </span>
@@ -529,6 +530,7 @@ function FriendButton({
       ) : null}
       <button type="button" className="beda-friend-hit" onClick={() => onSelect(actor.id)}>
         <span className="beda-friend-art">
+          <span className="beda-ground-shadow" aria-hidden />
           <span className="beda-ring" />
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>

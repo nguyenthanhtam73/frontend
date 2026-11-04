@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-import { lobbyDepthY, lobbyStackZ, lobbyWalkY } from "@/lib/mascot/game/lobby";
+import { LOBBY_WORLD, lobbyStackZ } from "@/lib/mascot/game/lobby";
 import { spaFootScale } from "@/lib/mascot/game/spa-room";
 import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
@@ -16,9 +16,11 @@ import {
   ellipseContains,
   followCamera,
   pushGlide,
+  lobbyWorldSpeed,
   sampleGlide,
   screenToWorld,
   stepWalker,
+  walkPose,
   zoomAt,
   type Camera,
   type Glide,
@@ -34,6 +36,14 @@ function reducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** Footprints stay off when motion is reduced or the device is small. Bob still plays. */
+function liteMotion(): boolean {
+  if (reducedMotion()) return true;
+  const cores = navigator.hardwareConcurrency;
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  return (typeof cores === "number" && cores > 0 && cores <= 4) || (typeof memory === "number" && memory > 0 && memory <= 2);
+}
+
 function placeLobby(
   el: HTMLElement,
   x: number,
@@ -44,19 +54,53 @@ function placeLobby(
   squash: number,
 ) {
   el.style.setProperty("--mx", `${x * worldW}px`);
-  el.style.setProperty("--my", `${lobbyWalkY(y) * worldH}px`);
+  el.style.setProperty("--my", `${y * worldH}px`);
   el.style.setProperty("--ms", String(size));
   el.style.setProperty("--sy", String(squash));
   el.style.zIndex = String(lobbyStackZ(y));
 }
 
-function setFacing(root: HTMLElement, face: number) {
+function setFacing(
+  root: HTMLElement,
+  face: number,
+  phase = 0,
+  moving = false,
+  lite = false,
+  bounce = 0,
+  ground?: { world: HTMLElement; x: number; y: number },
+) {
   const art = root.querySelector<HTMLElement>(".beda-friend-art, .beda-spa-art");
   if (!art) return;
-  const sign = face < 0 ? "-1" : "1";
-  if (art.dataset.face === sign) return;
-  art.dataset.face = sign;
-  art.style.transform = face < 0 ? "scaleX(-1)" : "scaleX(1)";
+  const pose = walkPose(phase, moving, lite);
+  const sign = face < 0 ? -1 : 1;
+  const planted = pose.plant >= 0 ? "r" : "l";
+  const next = `scaleX(${sign}) translateY(${pose.bob + bounce}px) rotate(${pose.tilt}deg)`;
+  if (art.dataset.pose !== next) {
+    art.dataset.pose = next;
+    art.dataset.plant = planted;
+    art.style.transform = next;
+    art.style.transformOrigin = planted === "r" ? "58% 100%" : "42% 100%";
+  }
+  const shadow = root.querySelector<HTMLElement>(".beda-ground-shadow");
+  if (shadow) {
+    const squash = `scale(${pose.shadowX}, ${pose.shadowY})`;
+    if (shadow.dataset.squash !== squash) {
+      shadow.dataset.squash = squash;
+      shadow.style.transform = squash;
+    }
+  }
+  if (!moving || lite || pose.plant === 0 || !ground) return;
+  const prev = art.dataset.step ?? "";
+  if (prev === planted) return;
+  art.dataset.step = planted;
+  const foot = document.createElement("i");
+  foot.className = "beda-foot";
+  const back = sign > 0 ? -0.012 : 0.012;
+  const side = planted === "r" ? 0.01 : -0.01;
+  foot.style.left = `${(ground.x + back + side) * 100}%`;
+  foot.style.top = `${ground.y * 100}%`;
+  ground.world.appendChild(foot);
+  foot.addEventListener("animationend", () => foot.remove(), { once: true });
 }
 
 /**
@@ -101,9 +145,17 @@ export function useLobbyMotion(input: {
     let follow = true;
     let pull = false;
     let reduced = reducedMotion();
+    let lite = liteMotion();
     const walker = createWalker(youProp.current);
     const glides = new Map<string, Glide>();
     const glideTargets = new Map<string, { x: number; y: number }>();
+    const seen = new Map<string, { x: number; y: number; t: number }>();
+    let wasMoving = false;
+    let bounceUntil = 0;
+    const ring = document.createElement("i");
+    ring.className = "beda-tap-ring";
+    ring.hidden = true;
+    world.appendChild(ring);
     let lastSend = 0;
     let sentMoving = false;
     let echoed = { x: youProp.current.x, y: youProp.current.y };
@@ -114,7 +166,6 @@ export function useLobbyMotion(input: {
     let downPoint = { x: 0, y: 0 };
     let gesture: "pending" | "pan" | "follow" = "pending";
     let pinch: { dist: number; x: number; y: number } | null = null;
-    let holdTimer = 0;
 
     const viewSize = () => ({
       w: frame.clientWidth,
@@ -134,8 +185,8 @@ export function useLobbyMotion(input: {
       const box = frame.getBoundingClientRect();
       const worldPt = screenToWorld(clientX - box.left, clientY - box.top, cam);
       const { worldW, worldH } = viewSize();
-      const depth = lobbyDepthY(worldPt.y / worldH);
-      if (depth == null) return null;
+      const depth = worldPt.y / worldH;
+      if (depth < LOBBY_WORLD.walk.minY) return null;
       const point = clampPoint({ x: worldPt.x / worldW, y: depth }, LOBBY_BOUNDS);
       if (ellipseContains(point, LOBBY_FOUNTAIN)) {
         return clampPoint(
@@ -152,6 +203,7 @@ export function useLobbyMotion(input: {
     const aim = (clientX: number, clientY: number) => {
       const point = toLobby(clientX, clientY);
       if (!point) return;
+      follow = true;
       walker.goal = point;
     };
 
@@ -179,7 +231,7 @@ export function useLobbyMotion(input: {
     cam = clampCamera(
       {
         x: w / 2 - youProp.current.x * worldW,
-        y: h * 0.42 - lobbyWalkY(youProp.current.y) * worldH,
+        y: h * 0.42 - youProp.current.y * worldH,
         scale: 1,
       },
       w,
@@ -192,7 +244,9 @@ export function useLobbyMotion(input: {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, reduced);
+      const size = viewSize();
+      const speed = lobbyWorldSpeed(size.worldW || 1, cam.scale);
+      const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, false, speed, true);
       Object.assign(walker, stepped);
       const server = youProp.current;
       if (!walker.goal && Math.hypot(server.x - echoed.x, server.y - echoed.y) > 0.02) {
@@ -200,7 +254,13 @@ export function useLobbyMotion(input: {
         walker.y = server.y;
         echoed = { x: server.x, y: server.y };
       }
-      const size = viewSize();
+      if (walker.goal) {
+        ring.hidden = false;
+        ring.style.left = `${walker.goal.x * 100}%`;
+        ring.style.top = `${walker.goal.y * 100}%`;
+      } else {
+        ring.hidden = true;
+      }
       if (walker.goal) {
         if (now - lastSend > 480) {
           onWalk.current(walker.x, walker.y, "walk");
@@ -214,12 +274,22 @@ export function useLobbyMotion(input: {
         sentMoving = false;
         lastSend = now;
       }
-      if (!reduced && follow && cam.scale > 1.05) {
-        cam = followCamera(cam, walker.x, lobbyWalkY(walker.y), size.w, size.h, size.worldW, size.worldH, dt, true);
+      if (follow) {
+        cam = followCamera(
+          cam,
+          walker.x,
+          walker.y,
+          size.w,
+          size.h,
+          size.worldW,
+          size.worldH,
+          reduced ? 1 : dt,
+          true,
+        );
         pull = false;
       } else if (pull && !reduced) {
         const tx = size.w * 0.5 - walker.x * size.worldW * cam.scale;
-        const ty = size.h * 0.46 - lobbyWalkY(walker.y) * size.worldH * cam.scale;
+        const ty = size.h * 0.46 - walker.y * size.worldH * cam.scale;
         const k = 1 - Math.exp(-3.2 * dt);
         cam = { ...cam, x: cam.x + (tx - cam.x) * k, y: cam.y + (ty - cam.y) * k };
         if (Math.hypot(tx - cam.x, ty - cam.y) < 2) pull = false;
@@ -227,9 +297,18 @@ export function useLobbyMotion(input: {
       applyCamera();
 
       const youEl = world.querySelector<HTMLElement>("[data-lobby-you].beda-pose");
+      const youMoving = Math.hypot(walker.vx, walker.vy) > 0.02;
+      if (wasMoving && !youMoving && !lite) bounceUntil = now + 320;
+      wasMoving = youMoving;
+      const bounceT = bounceUntil > now ? (bounceUntil - now) / 320 : 0;
+      const bounce = bounceT > 0 ? Math.sin((1 - bounceT) * Math.PI) * -7 : 0;
       if (youEl) {
         placeLobby(youEl, walker.x, walker.y, size.worldW, size.worldH, 1.2, walker.squash);
-        setFacing(youEl, walker.face);
+        setFacing(youEl, walker.face, walker.phase, youMoving, lite, bounce, {
+          world,
+          x: walker.x,
+          y: walker.y,
+        });
       }
 
       for (const actor of actorsProp.current) {
@@ -257,7 +336,11 @@ export function useLobbyMotion(input: {
           face = moving ? glide!.face : face;
         }
         placeLobby(pose, x, y, size.worldW, size.worldH, 0.78 + y * 0.4, 1);
-        setFacing(pose, face);
+        const prev = seen.get(actor.id);
+        seen.set(actor.id, { x, y, t: now });
+        const elapsed = prev ? (now - prev.t) / 1000 : 0;
+        const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
+        setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
       }
       frameId = window.requestAnimationFrame(tick);
     };
@@ -274,6 +357,7 @@ export function useLobbyMotion(input: {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onReduce = () => {
       reduced = media.matches;
+      lite = liteMotion();
     };
     media.addEventListener("change", onReduce);
 
@@ -285,7 +369,6 @@ export function useLobbyMotion(input: {
       downPoint = { x: event.clientX, y: event.clientY };
       frame.setPointerCapture(event.pointerId);
       if (pointers.size === 2) {
-        window.clearTimeout(holdTimer);
         gesture = "pan";
         follow = false;
         const [a, b] = [...pointers.values()];
@@ -297,13 +380,6 @@ export function useLobbyMotion(input: {
         return;
       }
       gesture = "pending";
-      const origin = { x: event.clientX, y: event.clientY };
-      window.clearTimeout(holdTimer);
-      holdTimer = window.setTimeout(() => {
-        if (gesture !== "pending") return;
-        gesture = "follow";
-        aim(origin.x, origin.y);
-      }, HOLD_MS);
     };
     const move = (event: PointerEvent) => {
       const prev = pointers.get(event.pointerId);
@@ -323,32 +399,18 @@ export function useLobbyMotion(input: {
         applyCamera();
         return;
       }
-      const dx = event.clientX - prev.x;
-      const dy = event.clientY - prev.y;
       if (gesture === "pending" && Math.hypot(event.clientX - downPoint.x, event.clientY - downPoint.y) > PAN_PX) {
-        gesture = "pan";
-        follow = false;
-        pull = false;
-        window.clearTimeout(holdTimer);
-      }
-      if (gesture === "pan") {
-        cam = { ...cam, x: cam.x + dx, y: cam.y + dy };
-        applyCamera();
-        return;
+        gesture = "follow";
       }
       if (gesture === "follow") aim(event.clientX, event.clientY);
     };
     const up = (event: PointerEvent) => {
       const start = pointers.get(event.pointerId);
       pointers.delete(event.pointerId);
-      window.clearTimeout(holdTimer);
       pinch = null;
-      if (gesture === "pending" && start) {
-        const moved = Math.hypot(event.clientX - start.x, event.clientY - start.y);
-        if (moved <= PAN_PX) {
-          aim(event.clientX, event.clientY);
-          onEmptyTap.current?.();
-        }
+      if ((gesture === "pending" || gesture === "follow") && start && pointers.size === 0) {
+        aim(event.clientX, event.clientY);
+        if (gesture === "pending") onEmptyTap.current?.();
       }
       gesture = "pending";
     };
@@ -359,7 +421,7 @@ export function useLobbyMotion(input: {
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.clearTimeout(holdTimer);
+      ring.remove();
       frame.removeEventListener("wheel", onWheel);
       frame.removeEventListener("pointerdown", down);
       frame.removeEventListener("pointermove", move);

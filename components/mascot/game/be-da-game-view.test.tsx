@@ -60,7 +60,6 @@ function renderGame(
     player: player(),
     burst: 0,
     homeHref: "/check-in",
-    routineHref: "/routine",
     onTab: () => undefined,
     onToggleSound: () => undefined,
     onSelectFriend: () => undefined,
@@ -157,16 +156,16 @@ describe("Bé Da game screen", () => {
   });
 
   it("draws the wide lobby with sample nicknames only", () => {
-    const html = renderGame({ tab: "lobby" });
+    const html = renderGame({ tab: "lobby", friendCount: 28 });
     assert.match(html, /data-testid="beda-lobby"/);
     assert.match(html, /beda-lobby-world/);
     assert.match(html, /Kẹo Dẻo/);
     assert.match(html, /Mèo Máy/);
     assert.match(html, /beda-tag-me/);
     assert.match(visibleText(html), /Bạn/);
-    assert.equal((html.match(/data-sample="true"/g) ?? []).length, 17);
+    assert.equal((html.match(/data-sample="true"/g) ?? []).length, 27);
     assert.equal(html.includes("@"), false);
-    assert.match(html, /Sảnh 1 · 18\/28 người/);
+    assert.match(html, /Sảnh 1 · 28\/28 người/);
     assert.match(html, /data-testid="beda-hall"/);
     assert.match(html, /data-lobby-mode="sample"/);
     assert.match(html, /Ẩn bạn này/);

@@ -4,6 +4,8 @@
  * Server messages are unchanged; callers still send at the existing cap.
  */
 
+import { LOBBY_WORLD } from "@/lib/mascot/game/lobby";
+
 export const ZOOM_MIN = 0.6;
 export const ZOOM_MAX = 2.5;
 /** Glide remote players across the gap between 4 Hz ticks. */
@@ -29,11 +31,11 @@ export type Walker = {
   face: number;
 };
 
-/** Plaza the feet may use. Keeps Bé Da off the sky and the screen edge. */
-export const LOBBY_BOUNDS: Bounds = { minX: 0.08, maxX: 0.92, minY: 0.5, maxY: 0.86 };
+/** Plaza the feet may use. Same rectangle as `LOBBY_WORLD.walk`. */
+export const LOBBY_BOUNDS: Bounds = LOBBY_WORLD.walk;
 
 /** Fountain basin in the same space as lobby taps (authored depth, not pixels). */
-export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.56, rx: 0.1, ry: 0.062 };
+export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.44, rx: 0.08, ry: 0.045 };
 
 /**
  * Walkable spa floor in the room box below the top bar.
@@ -46,6 +48,14 @@ export const SPA_MAT: Obstacle = { x: 0.5, y: 0.3, rx: 0.42, ry: 0.15 };
 
 const MAX_SPEED = 0.45;
 const ACCEL = 2.4;
+/** How fast lobby feet move across the screen. */
+export const LOBBY_SCREEN_PX_PER_SEC = 90;
+
+/** Normalized units per second so the feet cover `LOBBY_SCREEN_PX_PER_SEC` CSS pixels. */
+export function lobbyWorldSpeed(worldPx: number, scale = 1): number {
+  const span = Math.max(1, worldPx) * Math.max(0.05, scale);
+  return LOBBY_SCREEN_PX_PER_SEC / span;
+}
 
 export function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
@@ -127,11 +137,14 @@ export function stepWalker(
   obstacle: Obstacle | null,
   bounds: Bounds,
   reduced: boolean,
+  speed = MAX_SPEED,
+  ease = false,
 ): Walker {
   const safeDt = Math.min(0.05, Math.max(0, dt));
   if (!walker.goal) {
     return { ...walker, vx: 0, vy: 0, squash: approach(walker.squash, 1, safeDt, 10) };
   }
+  const lobbyPace = ease;
   const goal = obstacle
     ? steerGoal(walker, walker.goal, obstacle, bounds)
     : clampPoint(walker.goal, bounds);
@@ -153,11 +166,12 @@ export function stepWalker(
       goal: arrived ? null : walker.goal,
     };
   }
-  const arrive = Math.min(1, dist / 0.18);
-  const speed = MAX_SPEED * Math.max(0.22, arrive);
-  const blend = 1 - Math.exp(-ACCEL * safeDt);
-  let vx = walker.vx + ((dx / dist) * speed - walker.vx) * blend;
-  let vy = walker.vy + ((dy / dist) * speed - walker.vy) * blend;
+  const easeDist = lobbyPace ? Math.max(0.02, (72 * speed) / LOBBY_SCREEN_PX_PER_SEC) : 0.18;
+  const arrive = Math.min(1, dist / easeDist);
+  const pace = speed * Math.max(lobbyPace ? 0.1 : 0.22, arrive);
+  const blend = 1 - Math.exp(-(lobbyPace ? 1.15 : ACCEL) * safeDt);
+  let vx = walker.vx + ((dx / dist) * pace - walker.vx) * blend;
+  let vy = walker.vy + ((dy / dist) * pace - walker.vy) * blend;
   let nx = walker.x + vx * safeDt;
   let ny = walker.y + vy * safeDt;
   if (vx * (goal.x - nx) + vy * (goal.y - ny) < 0) {
@@ -176,8 +190,8 @@ export function stepWalker(
     vy *= 0.35;
   }
   const placed = clampPoint({ x: nx, y: ny }, bounds);
-  const moving = Math.hypot(vx, vy) > 0.025;
-  const phase = walker.phase + (moving ? safeDt * 11 : 0);
+  const moving = Math.hypot(vx, vy) > 0.02;
+  const phase = walker.phase + (moving ? safeDt * (ease ? Math.PI * 2 : 11 * (speed / MAX_SPEED)) : 0);
   const squash = reduced
     ? 1
     : approach(walker.squash, moving ? 1 + Math.sin(phase) * 0.04 : 1, safeDt, moving ? 16 : 10);
@@ -205,6 +219,27 @@ export type Glide = {
   dur: number;
   face: number;
 };
+
+/** Bob, sway, and shadow squash for one step. Idle values are a resting pose. */
+export function walkPose(phase: number, moving: boolean, lite = false): {
+  bob: number;
+  tilt: number;
+  shadowX: number;
+  shadowY: number;
+  plant: number;
+} {
+  if (!moving) return { bob: 0, tilt: 0, shadowX: 1, shadowY: 0.85, plant: 0 };
+  const step = Math.sin(phase);
+  if (lite) return { bob: -Math.abs(step) * 3.6, tilt: 0, shadowX: 1, shadowY: 0.85, plant: 0 };
+  const plant = Math.abs(Math.cos(phase));
+  return {
+    bob: -Math.abs(step) * 3.6,
+    tilt: step * 2.4,
+    shadowX: 0.82 + plant * 0.34,
+    shadowY: 0.42 + (1 - plant) * 0.7,
+    plant: step >= 0 ? 1 : -1,
+  };
+}
 
 export function smoothstep(t: number): number {
   const x = clamp(t, 0, 1);
@@ -263,7 +298,7 @@ export function screenToWorld(screenX: number, screenY: number, camera: Camera):
   return { x: (screenX - camera.x) / camera.scale, y: (screenY - camera.y) / camera.scale };
 }
 
-/** Ease the camera toward Bé Da while zoomed in. Panning turns this off. */
+/** Ease the camera toward Bé Da. Panning turns this off until the next walk. */
 export function followCamera(
   camera: Camera,
   playerX: number,
@@ -275,7 +310,7 @@ export function followCamera(
   dt: number,
   follow: boolean,
 ): Camera {
-  if (!follow || camera.scale <= 1.05) return camera;
+  if (!follow) return camera;
   const tx = viewW * 0.5 - playerX * worldW * camera.scale;
   const ty = viewH * 0.46 - playerY * worldH * camera.scale;
   const k = 1 - Math.exp(-3.2 * Math.min(0.05, Math.max(0, dt)));

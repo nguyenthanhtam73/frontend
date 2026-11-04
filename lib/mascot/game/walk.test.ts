@@ -14,7 +14,9 @@ import {
   screenToWorld,
   segmentHits,
   steerGoal,
+  lobbyWorldSpeed,
   stepWalker,
+  walkPose,
   zoomAt,
 } from "./walk";
 
@@ -39,6 +41,27 @@ describe("lobby walk", () => {
     assert.equal(ellipseContains(via, LOBBY_FOUNTAIN), false);
     assert.equal(segmentHits(from, via, LOBBY_FOUNTAIN), false);
     assert.equal(segmentHits(via, { x: 0.85, y: 0.56 }, LOBBY_FOUNTAIN), false);
+  });
+
+  it("covers about 90 screen pixels per second and eases in", () => {
+    const worldPx = 507;
+    const speed = lobbyWorldSpeed(worldPx, 1);
+    assert.ok(Math.abs(speed * worldPx - 90) < 0.5);
+    let early = { ...createWalker({ x: 0.1, y: 0.5 }), goal: { x: 0.9, y: 0.5 } };
+    for (let i = 0; i < 8; i += 1) early = stepWalker(early, 1 / 60, null, LOBBY_BOUNDS, false, speed, true);
+    const earlyRate = (early.x - 0.1) / (8 / 60);
+    let later = early;
+    for (let i = 0; i < 30; i += 1) later = stepWalker(later, 1 / 60, null, LOBBY_BOUNDS, false, speed, true);
+    const laterRate = (later.x - early.x) / (30 / 60);
+    assert.ok(earlyRate < laterRate);
+    const lifted = walkPose(Math.PI / 2, true);
+    assert.ok(lifted.bob <= -3 && lifted.bob >= -4);
+    const planted = walkPose(0, true);
+    assert.ok(planted.shadowY < lifted.shadowY);
+    const lite = walkPose(Math.PI / 2, true, true);
+    assert.ok(lite.bob <= -3 && lite.bob >= -4);
+    assert.equal(lite.tilt, 0);
+    assert.equal(walkPose(1, false).bob, 0);
   });
 
   it("snaps when motion is reduced", () => {
@@ -102,10 +125,13 @@ describe("lobby camera", () => {
     assert.equal(wide.x, 300 - 800);
   });
 
-  it("follows Bé Da only while zoomed in", () => {
+  it("follows Bé Da across a world larger than the screen", () => {
     const zoomed = followCamera({ x: 0, y: 0, scale: 2 }, 0.8, 0.6, 400, 600, 1000, 800, 1, true);
     assert.ok(zoomed.x < 0);
-    const wide = followCamera({ x: 10, y: 4, scale: 1, }, 0.8, 0.6, 400, 600, 1000, 800, 1, true);
-    assert.equal(wide.x, 10);
+    const tall = followCamera({ x: 0, y: 0, scale: 1 }, 0.5, 0.8, 400, 600, 720, 1400, 1, true);
+    assert.ok(tall.y < 0);
+    const stopped = followCamera({ x: 10, y: 4, scale: 1 }, 0.8, 0.6, 400, 600, 1000, 800, 1, false);
+    assert.equal(stopped.x, 10);
+    assert.equal(stopped.y, 4);
   });
 });

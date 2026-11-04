@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { BeDaGameView, type GameTab, type GameToast } from "@/components/mascot/game/be-da-game-view";
 import { useRouter } from "@/i18n/navigation";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { fetchMascot, mascotQueryKey } from "@/lib/api/mascot";
 import { getAccessToken } from "@/lib/auth-token";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
@@ -42,14 +42,18 @@ import {
 } from "@/lib/mascot/game/spa-room";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { isSessionComplete } from "@/lib/mascot/pose";
+import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
+import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query";
 import { streakDateKey } from "@/lib/streak/history";
-import type { RoutineDTO } from "@/lib/types/routine";
+import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 import "@/components/mascot/game/be-da-game.css";
 
 export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }) {
   const locale = useLocale();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const code = roomCode ? normalizeRoomCode(roomCode) : null;
   const inSpa = roomCode != null;
   const today = streakDateKey();
@@ -67,12 +71,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     refetchOnWindowFocus: false,
   });
   const routineQuery = useQuery({
-    queryKey: ["game-routine-today"],
+    queryKey: routineTodayQueryKey,
     queryFn: () => apiGet<RoutineDTO>("/api/v1/routines", { toastOnError: false }),
     enabled: hasAuth,
-    staleTime: 60_000,
+    staleTime: 0,
     retry: 1,
-    refetchOnWindowFocus: false,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: "always",
   });
 
   const [tab, setTab] = useState<GameTab>("care");
@@ -113,6 +118,57 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
 
   const morning = routineQuery.data?.morning ?? [];
   const evening = routineQuery.data?.evening ?? [];
+  const careSteps = useMemo(() => {
+    const am = routineQuery.data?.morning ?? [];
+    const pm = routineQuery.data?.evening ?? [];
+    return [
+      ...am.map((step) => ({ ...step, section: "morning" as const })),
+      ...pm.map((step) => ({ ...step, section: "evening" as const })),
+    ];
+  }, [routineQuery.data]);
+  const commitTicks = useCallback(
+    async (next: RoutineDTO) => {
+      const previous = queryClient.getQueryData<RoutineDTO>(routineTodayQueryKey);
+      queryClient.setQueryData(routineTodayQueryKey, next);
+      try {
+        const saved = await apiPost<RoutineDTO>("/api/v1/routines", routineTickBody(next), { toastOnError: false });
+        const stored = saved ?? next;
+        if (saved) queryClient.setQueryData(routineTodayQueryKey, saved);
+        const woke =
+          isSessionComplete(stored.morning) ||
+          isSessionComplete(stored.evening) ||
+          (stored.morning.length + stored.evening.length > 0 &&
+            stored.morning.every((step) => step.completed) &&
+            stored.evening.every((step) => step.completed));
+        if (woke) useBeDaPoseStore.getState().setSessionHappy(true);
+        await queryClient.invalidateQueries({ queryKey: routineTodayQueryKey });
+        await queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+      } catch {
+        queryClient.setQueryData(routineTodayQueryKey, previous);
+      }
+    },
+    [queryClient],
+  );
+  const toggleCareStep = useCallback(
+    (step: { id: string; section: "morning" | "evening" }) => {
+      const current = queryClient.getQueryData<RoutineDTO>(routineTodayQueryKey) ?? routineQuery.data;
+      if (!current) return;
+      const next: RoutineDTO = {
+        ...current,
+        [step.section]: current[step.section].map((item) =>
+          item.id === step.id ? { ...item, completed: !item.completed } : item,
+        ),
+      };
+      void commitTicks(next);
+    },
+    [commitTicks, queryClient, routineQuery.data],
+  );
+  const finishCareSteps = useCallback(() => {
+    const current = queryClient.getQueryData<RoutineDTO>(routineTodayQueryKey) ?? routineQuery.data;
+    if (!current) return;
+    const done = (steps: RoutineStepDTO[]) => steps.map((item) => ({ ...item, completed: true }));
+    void commitTicks({ ...current, morning: done(current.morning), evening: done(current.evening) });
+  }, [commitTicks, queryClient, routineQuery.data]);
   const routineToday = mascotQuery.data?.routineToday ?? null;
   const quests = gameQuests({ morning, routineToday, wavedToday: waved });
   const canChest = chestReady(quests, claimed);
@@ -296,6 +352,9 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       streakLabel={streakLabel}
       soundOn={soundOn}
       quests={quests}
+      careSteps={careSteps}
+      onToggleCareStep={toggleCareStep}
+      onFinishCareSteps={finishCareSteps}
       bubbleKind={gameBubbleKind(quests)}
       progress={view.glowProgress}
       showPrettyLine={view.glowProgress != null || view.nearLevelUp}
@@ -329,7 +388,6 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       player={view}
       burst={burst}
       homeHref={localePath(locale, "/check-in")}
-      routineHref={localePath(locale, "/routine")}
       onTab={(next) => {
         if (inSpa) {
           leaveSpa(next);

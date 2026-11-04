@@ -1,6 +1,11 @@
 import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
-import { LOBBY_WALK_Y_MAX, SAMPLE_LOBBY_FRIENDS, type SampleLobbyFriend } from "@/lib/mascot/game/lobby";
+import {
+  clampLobbyPoint,
+  lobbySpawnForId,
+  SAMPLE_LOBBY_FRIENDS,
+  type SampleLobbyFriend,
+} from "@/lib/mascot/game/lobby";
 
 /**
  * Bé Da shared lobby, client side.
@@ -252,24 +257,28 @@ export function loadLobbyNickname(
 export function encodeLobbyFrame(frame: LobbyClientFrame): string {
   const base: Record<string, unknown> = { v: 1, channel: "lobby", op: frame.op };
   switch (frame.op) {
-    case "join":
+    case "join": {
       base.nickname = frame.nickname;
       base.outfit = frame.outfit;
       base.hair = frame.hair;
       base.accessory = frame.accessory;
-      base.x = lobbyCoord(frame.x);
-      base.y = lobbyCoord(frame.y);
+      const joinFeet = clampLobbyPoint(frame.x, frame.y);
+      base.x = lobbyCoord(joinFeet.x);
+      base.y = lobbyCoord(joinFeet.y);
       base.facing = frame.facing;
       base.action = frame.action;
       if (frame.lobby != null) base.lobby = frame.lobby;
       if (frame.hide) base.hide = frame.hide.filter(isSessionId).slice(0, 64);
       break;
-    case "move-to":
-      base.x = lobbyCoord(frame.x);
-      base.y = lobbyCoord(frame.y);
+    }
+    case "move-to": {
+      const feet = clampLobbyPoint(frame.x, frame.y);
+      base.x = lobbyCoord(feet.x);
+      base.y = lobbyCoord(feet.y);
       if (frame.facing) base.facing = frame.facing;
       if (frame.action) base.action = frame.action;
       break;
+    }
     case "wave":
     case "heart":
       if (frame.target && isSessionId(frame.target)) base.target = frame.target;
@@ -300,9 +309,10 @@ function readPerson(value: unknown): WirePerson | null {
   const row = value as Record<string, unknown>;
   if (typeof row.id !== "string" || !isSessionId(row.id)) return null;
   if (typeof row.nickname !== "string" || row.nickname.length < 1 || row.nickname.length > 24) return null;
-  const x = num(row.x);
-  const y = num(row.y);
-  if (x == null || y == null) return null;
+  const rawX = num(row.x);
+  const rawY = num(row.y);
+  const spawned = rawX == null || rawY == null ? lobbySpawnForId(row.id) : null;
+  const feet = clampLobbyPoint(spawned?.x ?? lobbyCoord(rawX ?? 0), spawned?.y ?? lobbyCoord(rawY ?? 0));
   const facing = row.facing === "left" ? "left" : "right";
   return {
     id: row.id,
@@ -310,8 +320,8 @@ function readPerson(value: unknown): WirePerson | null {
     outfit: typeof row.outfit === "string" ? row.outfit : "",
     hair: typeof row.hair === "string" ? row.hair : "",
     accessory: typeof row.accessory === "string" ? row.accessory : "",
-    x: lobbyCoord(x),
-    y: lobbyCoord(y),
+    x: feet.x,
+    y: feet.y,
     facing,
     action: typeof row.action === "string" ? row.action : "idle",
   };
@@ -506,8 +516,8 @@ export function lobbyActors(input: {
       real.push({
         id: person.id,
         nickname: person.nickname,
-        x: person.x,
-        y: Math.min(LOBBY_WALK_Y_MAX, person.y),
+        x: clampLobbyPoint(person.x, person.y).x,
+        y: clampLobbyPoint(person.x, person.y).y,
         facing: person.facing,
         pose: input.poses[person.id] ?? lobbyPose(person.action),
         walking: person.action === "walk",
@@ -556,8 +566,9 @@ export function sampleWander(
   const phase = hashPhase(id);
   const dx = Math.sin(tMs / 4800 + phase) * 0.03;
   const dy = Math.cos(tMs / 6200 + phase) * 0.015;
-  const x = Math.min(0.96, Math.max(0.04, baseX + dx));
-  const y = Math.min(0.88, Math.max(0.48, baseY + dy));
+  const feet = clampLobbyPoint(baseX + dx, baseY + dy);
+  const x = feet.x;
+  const y = feet.y;
   const facing: LobbyFacing = Math.cos(tMs / 4800 + phase) > 0 ? "right" : "left";
   return { x, y, facing };
 }
