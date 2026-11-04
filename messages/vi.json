@@ -3456,7 +3456,8 @@
       "pickOutfit": "Đồ",
       "pickHair": "Tóc",
       "pickClip": "Kẹp tóc",
-      "tryNote": "Lưu trên máy này, không mua.",
+      "wear": "Mặc",
+      "tryNote": "Chạm để thử. «Mặc» mới lưu trên máy này, không mua.",
       "look": {
         "outfit_pajamas": "Đồ ngủ",
         "outfit_ao_dai": "Áo dài",

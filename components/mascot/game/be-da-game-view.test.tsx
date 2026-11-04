@@ -153,6 +153,11 @@ describe("Bé Da game screen", () => {
     assert.match(html, /aria-label="Tóc hai bên"[^>]*aria-pressed="true"/);
     assert.match(html, /aria-label="Kẹp hoa"[^>]*aria-pressed="true"/);
     assert.match(html, /aria-label="Hoodie"[^>]*aria-pressed="false"/);
+    assert.match(html, /data-testid="beda-wear"/);
+    assert.match(html, />Mặc</);
+    assert.match(html, /beda-pick-skel/);
+    assert.match(html, /is-loading/);
+    assert.equal(html.includes('loading="lazy"'), false);
     assertNoScores(html);
   });
 
