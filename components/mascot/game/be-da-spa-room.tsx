@@ -14,6 +14,7 @@ import {
   SPA_SEATS,
   SPA_YOU,
   roomInviteUrl,
+  spaFootScale,
   zaloShareUrl,
   type SpaGuest,
   type SpaNotice,
@@ -26,6 +27,8 @@ export type SpaRoomState = {
   cap: number;
   guests: readonly SpaGuest[];
   notice: SpaNotice;
+  /** My last server position, when the room has sent one. */
+  you?: { x: number; y: number } | null;
 };
 
 export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
@@ -70,6 +73,7 @@ export function BeDaSpaRoom({
   onLeave,
   onLobby,
   onToggleSound,
+  onWalk,
 }: {
   locale: string;
   player: BeDaView;
@@ -84,18 +88,29 @@ export function BeDaSpaRoom({
   onLeave: () => void;
   onLobby: () => void;
   onToggleSound: () => void;
+  onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
 }) {
   const t = useTranslations("mascot");
   const [copied, setCopied] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const motion = useSpaMotion({ frameRef, viewRef, stageRef });
+  const placed = room.guests.filter(
+    (guest): guest is SpaGuest & { x: number; y: number } => guest.x != null && guest.y != null,
+  );
+  const motion = useSpaMotion({
+    frameRef,
+    viewRef,
+    stageRef,
+    guests: placed.map((guest) => ({ id: guest.id, x: guest.x, y: guest.y, facing: guest.facing })),
+    you: room.you ?? null,
+    onWalk,
+  });
   const cap = room.cap || SPA_ROOM_CAP;
   const count = Math.min(cap, Math.max(0, room.count));
   const left = Math.max(0, cap - count);
   const showYou = room.notice !== "full";
-  const bySeat = new Map(room.guests.map((guest) => [guest.seat, guest]));
+  const takenSeats = new Set(room.guests.map((guest) => guest.seat).filter((seat) => seat != null));
   const notice =
     room.notice === "full"
       ? t("game.spaFull")
@@ -162,27 +177,34 @@ export function BeDaSpaRoom({
         <div className="beda-spa-mat" aria-hidden>
           <i className="beda-spa-cucumber" />
         </div>
-        {SPA_SEATS.map((seat) => {
-          const guest = bySeat.get(seat.id) ?? null;
-          if (!guest) {
-            return (
-              <i
-                key={seat.id}
-                className={seat.id === "back" ? "beda-spa-open is-far" : "beda-spa-open"}
-                data-testid={`beda-spa-open-${seat.id}`}
-                style={{ left: `${seat.x}%`, top: `${seat.y}%` }}
-              />
-            );
-          }
+        {SPA_SEATS.map((seat) =>
+          takenSeats.has(seat.id) ? null : (
+            <i
+              key={seat.id}
+              className={seat.id === "back" ? "beda-spa-open is-far" : "beda-spa-open"}
+              data-testid={`beda-spa-open-${seat.id}`}
+              style={{ left: `${seat.x}%`, top: `${seat.y}%` }}
+            />
+          ),
+        )}
+        {room.guests.map((guest) => {
+          const seat = SPA_SEATS.find((item) => item.id === guest.seat) ?? null;
+          const x = guest.x;
+          const y = guest.y;
+          const place =
+            x != null && y != null
+              ? { seatX: x * 100, seatY: y * 100, scale: spaFootScale(y), standing: true }
+              : { seatX: seat?.x ?? 50, seatY: seat?.y ?? 70, scale: seat?.scale ?? 1, standing: false };
           return (
             <SpaPerson
               key={guest.id}
               guest={guest}
               locale={locale}
               selected={guest.id === selectedId}
-              seatX={seat.x}
-              seatY={seat.y}
-              scale={seat.scale}
+              seatX={place.seatX}
+              seatY={place.seatY}
+              scale={place.scale}
+              standing={place.standing}
               onSelect={onSelect}
               onAction={onAction}
               onHide={onHide}
@@ -302,6 +324,7 @@ function SpaPerson({
   seatX,
   seatY,
   scale,
+  standing,
   onSelect,
   onAction,
   onHide,
@@ -312,6 +335,7 @@ function SpaPerson({
   seatX: number;
   seatY: number;
   scale: number;
+  standing: boolean;
   onSelect: (id: string) => void;
   onAction: (kind: "wave" | "heart" | "outfit") => void;
   onHide: (id: string) => void;
@@ -322,16 +346,28 @@ function SpaPerson({
   const dress = gameDress({ outfit: guest.outfit, hair: guest.hair, clip: guest.clip }, guest.pose);
   return (
     <div
-      className={selected ? "beda-spa-person is-selected" : "beda-spa-person"}
+      className={
+        standing
+          ? selected
+            ? "beda-spa-person beda-pose is-selected"
+            : "beda-spa-person beda-pose"
+          : selected
+            ? "beda-spa-person is-selected"
+            : "beda-spa-person"
+      }
       data-sample={guest.sample ? "true" : "false"}
       data-friend-id={guest.id}
       data-testid={`beda-spa-guest-${guest.id}`}
-      style={{
-        left: `${seatX}%`,
-        top: `${seatY}%`,
-        zIndex: 10 + Math.round(seatY),
-        ["--scale" as string]: String(scale),
-      }}
+      style={
+        standing
+          ? { ["--scale" as string]: String(scale) }
+          : {
+              left: `${seatX}%`,
+              top: `${seatY}%`,
+              zIndex: 10 + Math.round(seatY),
+              ["--scale" as string]: String(scale),
+            }
+      }
     >
       {selected ? (
         <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={guest.nickname}>

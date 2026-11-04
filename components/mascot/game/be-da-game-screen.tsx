@@ -346,6 +346,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
               cap: spaRoom.cap,
               guests: code ? spaRoom.guests : [],
               notice: code ? spaRoom.notice : "bad-code",
+              you: code ? spaRoom.you : null,
             }
           : null
       }
@@ -356,6 +357,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onJoinRoom={(next) => router.push(roomInvitePath(next))}
       onLeaveSpa={() => leaveSpa("care")}
       onSpaLobby={() => leaveSpa("lobby")}
+      onSpaWalk={spaRoom.walkTo}
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}

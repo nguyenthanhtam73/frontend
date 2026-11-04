@@ -16,6 +16,7 @@ import {
   lobbyPose,
   lobbySocketUrl,
   type LobbyCookiePlan,
+  type LobbyFacing,
 } from "@/lib/mascot/game/lobby-live";
 import type { LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
 import { getSpaRoom, joinSpaRoom, leaveSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
@@ -292,6 +293,13 @@ export function useSpaRoom(options: {
     return sampleSpaGuests(hidden, poses);
   }, [notice, live, previewCount, room.people, room.sessionId, hidden, poses]);
 
+  const you = useMemo(() => {
+    const self = room.people.find((person) => person.id === room.sessionId);
+    if (!self?.placed) return null;
+    return { x: self.x, y: self.y };
+  }, [room.people, room.sessionId]);
+  const sent = useRef<{ x: number; y: number; facing: LobbyFacing }>({ x: you?.x ?? 0.5, y: you?.y ?? 0.92, facing: "right" });
+
   const count = spaHeadCount({
     live: live && notice !== "full",
     notice,
@@ -299,6 +307,23 @@ export function useSpaRoom(options: {
     visibleGuests: guests.length,
     previewCount,
   });
+
+  function walkTo(x: number, y: number, pace: "walk" | "idle" = "walk") {
+    if (!liveRef.current) return;
+    const prev = sent.current;
+    const facing: LobbyFacing = x < prev.x - 0.004 ? "left" : x > prev.x + 0.004 ? "right" : prev.facing;
+    sent.current = { x, y, facing };
+    connRef.current?.send(
+      encodeRoomFrame({
+        op: "move-to",
+        x,
+        y,
+        facing,
+        action: pace === "idle" ? "idle" : "walk",
+      }),
+      "move-to",
+    );
+  }
 
   function emote(guest: Pick<SpaGuest, "id" | "sample">, kind: SpaEmoteKind) {
     const pose: GamePose = kind === "wave" ? "wave" : "cheer";
@@ -337,8 +362,10 @@ export function useSpaRoom(options: {
     code: serverCode ?? code ?? "",
     serverCode,
     youPose,
+    you,
     emote,
     hide,
+    walkTo,
   };
 }
 

@@ -7,7 +7,7 @@ import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type W
  * Same WebSocket as the lobby: `/api/v1/mascot/lobby/ws`.
  * Frames use `channel: "room"` and only fields the hub already accepts
  * (`v`, `channel`, `op`, `code`, `nickname`, `outfit`, `hair`, `accessory`,
- * `facing`, `action`, `target`, `hide`). A socket `join` works only after
+ * `x`, `y`, `facing`, `action`, `target`, `hide`). A socket `join` works only after
  * REST membership. `not_available` still falls back to the sample room.
  *
  * Membership is REST, not a socket op:
@@ -46,6 +46,8 @@ const WIRE_KEYS = new Set([
   "outfit",
   "hair",
   "accessory",
+  "x",
+  "y",
   "facing",
   "action",
   "target",
@@ -100,13 +102,25 @@ const SPA_SAMPLE: readonly {
 export type SpaGuest = {
   id: string;
   nickname: string;
-  seat: SpaSeatId;
+  /** Set only when this guest has no x/y yet and is sitting in a mockup seat. */
+  seat: SpaSeatId | null;
+  /** 0..1 across the stage. Null until the server sends a position. */
+  x: number | null;
+  /** 0..1 down the stage, at the feet. Null until the server sends a position. */
+  y: number | null;
+  facing: LobbyFacing;
   outfit: GameOutfitId;
   hair: GameHairId;
   clip: GameClipId | null;
   pose: GamePose | null;
   sample: boolean;
 };
+
+/** Nearer feet (larger y) draw a little bigger. y is 0..1 on the stage. */
+export function spaFootScale(y: number): number {
+  const t = Math.min(1, Math.max(0, y));
+  return 0.7 + t * 0.54;
+}
 
 export type SpaNotice =
   | "full"
@@ -133,7 +147,8 @@ export type RoomClientFrame =
   | { op: "leave" }
   | { op: "wave" | "heart"; target?: string }
   | { op: "compliment"; target: string }
-  | { op: "hide"; hide: string[] };
+  | { op: "hide"; hide: string[] }
+  | { op: "move-to"; x: number; y: number; facing?: LobbyFacing; action?: "idle" | "walk" };
 
 export type RoomEvent = {
   op: "join" | "leave" | "wave" | "heart" | "compliment";
@@ -209,6 +224,9 @@ export function sampleSpaGuests(
       id: friend.id,
       nickname: friend.nickname,
       seat: seat.id,
+      x: null,
+      y: null,
+      facing: "right",
       outfit: friend.outfit,
       hair: friend.hair,
       clip: friend.clip,
@@ -219,7 +237,7 @@ export function sampleSpaGuests(
   return guests;
 }
 
-/** Real people, oldest id first, skipping you and anyone you hid. At most 7. */
+/** Real people, skipping you and anyone you hid. A guest with x/y stands there. */
 export function seatGuests(
   people: readonly WirePerson[],
   selfId: string | null,
@@ -229,14 +247,20 @@ export function seatGuests(
   const others = people.filter((person) => person.id !== selfId && !hidden.has(person.id));
   others.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const guests: SpaGuest[] = [];
-  for (let index = 0; index < others.length && index < SPA_SEATS.length; index++) {
-    const person = others[index]!;
-    const seat = SPA_SEATS[index]!;
+  let seatIndex = 0;
+  for (const person of others) {
     const look = lobbyLook(person.outfit, person.hair, person.accessory);
+    const standing = person.placed !== false;
+    const seat = standing ? null : SPA_SEATS[seatIndex] ?? null;
+    if (!standing) seatIndex += 1;
+    if (!standing && !seat) continue;
     guests.push({
       id: person.id,
       nickname: person.nickname,
-      seat: seat.id,
+      seat: seat?.id ?? null,
+      x: standing ? person.x : null,
+      y: standing ? person.y : null,
+      facing: person.facing,
       outfit: look.outfit,
       hair: look.hair,
       clip: look.clip,
@@ -317,6 +341,12 @@ export function encodeRoomFrame(frame: RoomClientFrame): string {
     case "hide":
       base.hide = frame.hide.filter(isSessionId).slice(0, 64);
       break;
+    case "move-to":
+      base.x = lobbyCoord(frame.x);
+      base.y = lobbyCoord(frame.y);
+      if (frame.facing) base.facing = frame.facing;
+      if (frame.action) base.action = frame.action;
+      break;
     case "leave":
       break;
     default:
@@ -345,16 +375,18 @@ function readPerson(value: unknown): WirePerson | null {
   if (typeof row.nickname !== "string" || row.nickname.length < 1 || row.nickname.length > 24) return null;
   const x = num(row.x);
   const y = num(row.y);
+  const placed = x != null && y != null;
   return {
     id: row.id,
     nickname: row.nickname,
     outfit: typeof row.outfit === "string" ? row.outfit : "",
     hair: typeof row.hair === "string" ? row.hair : "",
     accessory: typeof row.accessory === "string" ? row.accessory : "",
-    x: lobbyCoord(x ?? 0.5),
-    y: lobbyCoord(y ?? 0.5),
+    x: placed ? lobbyCoord(x) : 0,
+    y: placed ? lobbyCoord(y) : 0,
     facing: row.facing === "left" ? "left" : "right",
     action: typeof row.action === "string" ? row.action : "idle",
+    placed,
   };
 }
 
@@ -453,7 +485,14 @@ export function applyRoomMessage(state: RoomSnapshot, message: RoomServerMessage
   if (message.op === "tick") {
     const byId = new Map(state.people.map((person) => [person.id, person]));
     for (const id of message.left) byId.delete(id);
-    for (const person of message.upserts) byId.set(person.id, person);
+    for (const person of message.upserts) {
+      const prev = byId.get(person.id);
+      if (person.placed === false && prev?.placed) {
+        byId.set(person.id, { ...person, x: prev.x, y: prev.y, facing: prev.facing, placed: true });
+      } else {
+        byId.set(person.id, person);
+      }
+    }
     const people = [...byId.values()];
     return {
       ...state,
