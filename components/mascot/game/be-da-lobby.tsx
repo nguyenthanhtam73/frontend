@@ -424,7 +424,7 @@ export function BeDaLobby({
           >
             <span className="beda-friend-art" style={you.facing === "left" ? { transform: "scaleX(-1)" } : undefined}>
               <span className="beda-ring" />
-              <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} className="w-full" />
+              <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
             </span>
             <span
               className="beda-tag beda-tag-me"
@@ -622,7 +622,7 @@ function FriendButton({
           style={actor.facing === "left" ? { transform: "scaleX(-1)" } : undefined}
         >
           <span className="beda-ring" />
-          <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" className="w-full" />
+          <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>
         <span className="beda-tag" style={{ transform: `translateX(${nudge}px)` }}>
           {actor.nickname}

@@ -110,10 +110,16 @@ export function mascotStack(
      * Order matches public/mascot/LAYERS-NEW.md.
      */
     dress?: GameDress | null;
+    /**
+     * Lobby and spa visitors. Happy open eyes, body shadow, hair, and clothes.
+     * No room stickers, glow sparkles, star clip, or sleepy props.
+     */
+    crowd?: boolean;
   } = {},
 ): StackLayer[] {
   const now = options.now ?? Date.now();
-  const mood = moodLayer(view.mood);
+  const crowd = options.crowd === true;
+  const mood = crowd ? "happy" : moodLayer(view.mood);
   const layers: StackLayer[] = [];
   const push = (slot: string, src: string, opacity = 1) => {
     if (opacity <= 0) return;
@@ -124,13 +130,16 @@ export function mascotStack(
     accessoryUnlocked(item.id, level, item.source === "shop" || view.shopItemIds.includes(item.id));
 
   // Halo sits behind the room and the body. Back view keeps this layer.
-  push("glow-back", glowLayerSrc(level, "back"));
+  // Crowd figures keep the body shadow only, so the glow plates stay off.
+  if (!crowd) push("glow-back", glowLayerSrc(level, "back"));
 
-  for (const room of view.loadout.roomItems) {
-    if (!isKnownMascotItem(room.id, "room")) continue;
-    const opacity = optionalOpacity(room, now);
-    if (opacity == null) continue;
-    push("props-room", `/mascot/props/${room.id}.svg`, opacity);
+  if (!crowd) {
+    for (const room of view.loadout.roomItems) {
+      if (!isKnownMascotItem(room.id, "room")) continue;
+      const opacity = optionalOpacity(room, now);
+      if (opacity == null) continue;
+      push("props-room", `/mascot/props/${room.id}.svg`, opacity);
+    }
   }
 
   const body = equipped(view.loadout.body, "body", DEFAULT_MASCOT_IDS.body, now);
@@ -161,10 +170,10 @@ export function mascotStack(
     push("face-cheeks", facePartSrc(expression, "cheeks", faceId), faceOpacity ?? 1);
     // Face plate stays under the latest check-in marks so glow never covers them.
     // Back view skips this layer. The front sparkle file is a later slot.
-    push("glow", glowLayerSrc(level, "mid"));
+    if (!crowd) push("glow", glowLayerSrc(level, "mid"));
   }
 
-  if (showFace) {
+  if (showFace && !crowd) {
     for (const mark of view.marks) {
       push(
         "skin-marks",
@@ -174,7 +183,7 @@ export function mascotStack(
     }
   }
 
-  if (view.disheveled > 0) {
+  if (!crowd && view.disheveled > 0) {
     push("messy", `/mascot/messy/${view.disheveled}.svg`, 1);
   }
 
@@ -186,6 +195,7 @@ export function mascotStack(
 
   for (const accessory of view.loadout.accessories) {
     if (accessory.id === DEFAULT_MASCOT_IDS.headband) continue;
+    if (crowd && accessory.id === "accessory_star_clip") continue;
     if (!showAccessory(accessory)) continue;
     const look = itemLook(accessory.expiresAt, now);
     if (look === "hidden") continue;
@@ -198,14 +208,16 @@ export function mascotStack(
   }
 
   // Sparkles sit over the mouth and clips, under foreground props and blink/yawn.
-  push("glow-front", glowLayerSrc(level, "front"));
+  if (!crowd) push("glow-front", glowLayerSrc(level, "front"));
 
-  for (const prop of frontProps(view, options.locale ?? "vi")) {
-    push("props-front", prop, 1);
+  if (!crowd) {
+    for (const prop of frontProps(view, options.locale ?? "vi")) {
+      push("props-front", prop, 1);
+    }
   }
   if (options.stepPose) push("props-front", poseSrc(options.stepPose), 1);
 
-  if (showFace) {
+  if (showFace && !crowd) {
     push("fx-eyelids", "/mascot/fx/eyelids.svg", 1);
     push("fx-yawn", "/mascot/fx/yawn.svg", 1);
   }
