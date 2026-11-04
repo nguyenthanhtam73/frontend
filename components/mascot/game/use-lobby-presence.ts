@@ -252,16 +252,22 @@ export function useLobbyPresence(options: {
     return true;
   }
 
-  function walkTo(x: number, y: number) {
+  function walkTo(x: number, y: number, pace: "walk" | "idle" = "walk") {
     const prev = youRef.current;
     const nx = lobbyCoord(x);
     const ny = lobbyCoord(Math.min(LOBBY_WALK_Y_MAX, y));
-    const facing: LobbyFacing = nx < prev.x - 0.005 ? "left" : nx > prev.x + 0.005 ? "right" : prev.facing;
-    const next = { ...prev, x: nx, y: ny, facing, pose: null };
+    const facing: LobbyFacing = nx < prev.x - 0.004 ? "left" : nx > prev.x + 0.004 ? "right" : prev.facing;
+    const next = { ...prev, x: nx, y: ny, facing };
     youRef.current = next;
     setYou(next);
     if (!liveRef.current) return;
-    connRef.current?.send({ op: "move-to", x: nx, y: ny, facing, action: "walk" });
+    connRef.current?.send({
+      op: "move-to",
+      x: nx,
+      y: ny,
+      facing,
+      action: pace === "idle" ? "idle" : "walk",
+    });
   }
 
   function emote(actor: { id: string; sample: boolean }, kind: LobbyEmoteKind) {

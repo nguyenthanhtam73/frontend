@@ -188,6 +188,9 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("/mascot/props/wardrobe"), false);
     assert.equal(html.includes("/mascot/props/sink.svg"), false);
     assert.match(html, /\/mascot\/icons\/minimap_pin\.svg/);
+    assert.equal(html.includes("beda-mini"), false);
+    assert.match(html, /data-testid="beda-zoom"/);
+    assert.match(html, /Về Bé Da/);
     assert.match(html, /\/mascot\/icons\/wave\.svg/);
     assert.equal(html.includes("hue-rotate"), false);
     assert.match(html, /Vẫy tay/);
@@ -198,7 +201,7 @@ describe("Bé Da game screen", () => {
     assert.match(html, /Nhập mã/);
     assert.match(html, /data-testid="beda-create-room"/);
     assert.match(html, /translate\(-50%, -100%\)/);
-    assert.match(html, /translateX\(/);
+    assert.match(html, /--nudge:-?\d+px/);
     assert.equal(html.includes("left:12px"), false);
     assert.equal(html.includes("right:12px"), false);
     assertNoScores(html);
