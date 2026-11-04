@@ -412,7 +412,6 @@ export function useSpaMotion(input: {
     let frameId = 0;
     let lastSend = 0;
     let sentMoving = false;
-    let echoed = { x: start.x, y: start.y };
     let seenServer = youProp.current ? { x: youProp.current.x, y: youProp.current.y } : null;
     const glides = new Map<string, Glide>();
     const glideTargets = new Map<string, { x: number; y: number }>();
@@ -495,20 +494,17 @@ export function useSpaMotion(input: {
         if (!walker.goal) {
           walker.x = server.x;
           walker.y = server.y;
-          echoed = { x: server.x, y: server.y };
         }
       }
       if (onWalk.current) {
         if (walker.goal) {
           if (now - lastSend > 480) {
             onWalk.current(walker.x, walker.y, "walk");
-            echoed = { x: walker.x, y: walker.y };
             lastSend = now;
             sentMoving = true;
           }
         } else if (sentMoving) {
           onWalk.current(walker.x, walker.y, "idle");
-          echoed = { x: walker.x, y: walker.y };
           sentMoving = false;
           lastSend = now;
         }

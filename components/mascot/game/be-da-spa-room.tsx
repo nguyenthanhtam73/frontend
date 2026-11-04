@@ -189,17 +189,22 @@ export function BeDaSpaRoom({
         )}
         {room.guests.map((guest) => {
           const seat = SPA_SEATS.find((item) => item.id === guest.seat) ?? null;
-          const standing = guest.x != null && guest.y != null;
+          const x = guest.x;
+          const y = guest.y;
+          const place =
+            x != null && y != null
+              ? { seatX: x * 100, seatY: y * 100, scale: spaFootScale(y), standing: true }
+              : { seatX: seat?.x ?? 50, seatY: seat?.y ?? 70, scale: seat?.scale ?? 1, standing: false };
           return (
             <SpaPerson
               key={guest.id}
               guest={guest}
               locale={locale}
               selected={guest.id === selectedId}
-              seatX={standing ? guest.x * 100 : seat?.x ?? 50}
-              seatY={standing ? guest.y * 100 : seat?.y ?? 70}
-              scale={standing ? spaFootScale(guest.y) : seat?.scale ?? 1}
-              standing={standing}
+              seatX={place.seatX}
+              seatY={place.seatY}
+              scale={place.scale}
+              standing={place.standing}
               onSelect={onSelect}
               onAction={onAction}
               onHide={onHide}
