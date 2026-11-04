@@ -48,6 +48,11 @@ export type WirePerson = {
   y: number;
   facing: LobbyFacing;
   action: string;
+  /**
+   * Room guests only. False when this update had no x/y, so the spa keeps
+   * the last spot or a seat. Lobby people always have a position.
+   */
+  placed?: boolean;
 };
 
 export type LobbyCount = { lobby: number; count: number; cap: number };

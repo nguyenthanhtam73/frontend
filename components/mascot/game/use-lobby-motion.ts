@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 
 import { lobbyDepthY, lobbyStackZ, lobbyWalkY } from "@/lib/mascot/game/lobby";
+import { spaFootScale } from "@/lib/mascot/game/spa-room";
 import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
   LOBBY_BOUNDS,
@@ -371,12 +372,24 @@ export function useLobbyMotion(input: {
   return api;
 }
 
+type SpaSpot = { id: string; x: number; y: number; facing: "left" | "right" };
+
 /** Spa floor uses the same camera and walk, with the mat instead of the fountain. */
 export function useSpaMotion(input: {
   frameRef: React.RefObject<HTMLDivElement | null>;
   viewRef: React.RefObject<HTMLDivElement | null>;
   stageRef: React.RefObject<HTMLDivElement | null>;
+  guests?: readonly SpaSpot[];
+  you?: { x: number; y: number } | null;
+  onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
 }) {
+  const guestsProp = useRef(input.guests ?? []);
+  const youProp = useRef(input.you ?? null);
+  const onWalk = useRef(input.onWalk);
+  guestsProp.current = input.guests ?? [];
+  youProp.current = input.you ?? null;
+  onWalk.current = input.onWalk;
+
   const api = useRef({
     zoomBy(factor: number) {
       void factor;
@@ -393,9 +406,16 @@ export function useSpaMotion(input: {
     let follow = true;
     let pull = false;
     let reduced = reducedMotion();
-    const walker = createWalker({ x: 0.5, y: 0.92 });
+    const start = youProp.current ?? { x: 0.5, y: 0.92 };
+    const walker = createWalker(start);
     let last = performance.now();
     let frameId = 0;
+    let lastSend = 0;
+    let sentMoving = false;
+    let echoed = { x: start.x, y: start.y };
+    let seenServer = youProp.current ? { x: youProp.current.x, y: youProp.current.y } : null;
+    const glides = new Map<string, Glide>();
+    const glideTargets = new Map<string, { x: number; y: number }>();
     const pointers = new Map<number, { x: number; y: number }>();
     let gesture: "pending" | "pan" | "follow" = "pending";
     let pinch: { dist: number; x: number; y: number } | null = null;
@@ -469,6 +489,30 @@ export function useSpaMotion(input: {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       Object.assign(walker, stepWalker(walker, dt, obstacle(), SPA_BOUNDS, reduced));
+      const server = youProp.current;
+      if (server && (!seenServer || Math.hypot(server.x - seenServer.x, server.y - seenServer.y) > 0.0008)) {
+        seenServer = { x: server.x, y: server.y };
+        if (!walker.goal) {
+          walker.x = server.x;
+          walker.y = server.y;
+          echoed = { x: server.x, y: server.y };
+        }
+      }
+      if (onWalk.current) {
+        if (walker.goal) {
+          if (now - lastSend > 480) {
+            onWalk.current(walker.x, walker.y, "walk");
+            echoed = { x: walker.x, y: walker.y };
+            lastSend = now;
+            sentMoving = true;
+          }
+        } else if (sentMoving) {
+          onWalk.current(walker.x, walker.y, "idle");
+          echoed = { x: walker.x, y: walker.y };
+          sentMoving = false;
+          lastSend = now;
+        }
+      }
       if (!reduced && follow && cam.scale > 1.05) {
         const px = (stage.offsetLeft + walker.x * stage.offsetWidth) / (view.offsetWidth || 1);
         const py = (stage.offsetTop + walker.y * stage.offsetHeight) / (view.offsetHeight || 1);
@@ -501,6 +545,23 @@ export function useSpaMotion(input: {
         pose.style.setProperty("--sy", String(walker.squash));
         pose.style.zIndex = String(20 + Math.round(walker.y * 20));
         setFacing(pose, walker.face);
+      }
+      for (const guest of guestsProp.current) {
+        const guestPose = stage.querySelector<HTMLElement>(`[data-friend-id="${guest.id}"].beda-pose`);
+        if (!guestPose) continue;
+        const known = glideTargets.get(guest.id);
+        if (!known || Math.hypot(known.x - guest.x, known.y - guest.y) > 0.0008) {
+          glides.set(guest.id, pushGlide(glides.get(guest.id) ?? null, guest.x, guest.y, now));
+          glideTargets.set(guest.id, { x: guest.x, y: guest.y });
+        }
+        const glide = glides.get(guest.id);
+        const drawn = glide && !reduced ? sampleGlide(glide, now) : { x: guest.x, y: guest.y };
+        const moving = glide ? Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 : false;
+        guestPose.style.setProperty("--mx", `${drawn.x * stage.offsetWidth}px`);
+        guestPose.style.setProperty("--my", `${drawn.y * stage.offsetHeight}px`);
+        guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
+        guestPose.style.zIndex = String(8 + Math.round(drawn.y * 24));
+        setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1);
       }
       frameId = window.requestAnimationFrame(tick);
     };

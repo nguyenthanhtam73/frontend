@@ -111,15 +111,27 @@ describe("spa room seats", () => {
     assert.equal(spaHeadCount({ live: true, notice: "full", serverCount: 8, visibleGuests: 7 }), 8);
   });
 
-  it("gives real people seats and skips you", () => {
+  it("stands guests on their x/y and seats only people who have none yet", () => {
     const seated = seatGuests(
-      [person(OTHER, "Mây Hồng"), person(SELF, "Bé Da 4821"), person("b7n6m5k4j3h2", "Ốc Quế")],
+      [
+        { ...person(OTHER, "Mây Hồng"), placed: false },
+        person(SELF, "Bé Da 4821"),
+        { ...person("b7n6m5k4j3h2", "Ốc Quế"), x: 0.22, y: 0.81, facing: "left", placed: true },
+      ],
       SELF,
       new Set(),
     );
     assert.equal(seated.some((guest) => guest.id === SELF), false);
     assert.equal(seated.length, 2);
-    assert.equal(seated[0]?.seat, "back-left");
+    const waiting = seated.find((guest) => guest.id === OTHER);
+    assert.equal(waiting?.seat, "back-left");
+    assert.equal(waiting?.x, null);
+    assert.equal(waiting?.y, null);
+    const walking = seated.find((guest) => guest.id === "b7n6m5k4j3h2");
+    assert.equal(walking?.seat, null);
+    assert.equal(walking?.x, 0.22);
+    assert.equal(walking?.y, 0.81);
+    assert.equal(walking?.facing, "left");
   });
 });
 
@@ -140,6 +152,7 @@ describe("spa room protocol", () => {
       encodeRoomFrame({ op: "compliment", target: OTHER }),
       encodeRoomFrame({ op: "hide", hide: [OTHER, "not-a-session"] }),
       encodeRoomFrame({ op: "leave" }),
+      encodeRoomFrame({ op: "move-to", x: 0.22, y: 0.81, facing: "left", action: "walk" }),
     ];
     for (const frame of frames) {
       assert.equal(roomFrameAllowed(frame), true);
@@ -155,6 +168,13 @@ describe("spa room protocol", () => {
     assert.equal(join.code, "DA7K2M");
     const hide = JSON.parse(frames[3] ?? "{}") as { hide: string[] };
     assert.deepEqual(hide.hide, [OTHER]);
+    const move = JSON.parse(frames[5] ?? "{}") as { op: string; channel: string; x: number; y: number; facing: string; action: string };
+    assert.equal(move.op, "move-to");
+    assert.equal(move.channel, "room");
+    assert.equal(move.x, 0.22);
+    assert.equal(move.y, 0.81);
+    assert.equal(move.facing, "left");
+    assert.equal(move.action, "walk");
   });
 
   it("reads hello and treats not_available as the offline room", () => {
@@ -174,9 +194,46 @@ describe("spa room protocol", () => {
     if (hello.op !== "hello") return;
     assert.equal(hello.code, "DA7K2M");
     assert.equal(hello.people.length, 2);
+    assert.equal(hello.people[1]?.placed, true);
+    assert.equal(hello.people[1]?.x, 0.5);
     const next = applyRoomMessage(emptyRoom(), hello);
     assert.equal(next.sessionId, SELF);
     assert.equal(next.count, 2);
+    const bare = parseRoomMessage(
+      JSON.stringify({
+        v: 1,
+        channel: "room",
+        op: "tick",
+        count: 2,
+        cap: 8,
+        upserts: [{ id: OTHER, nickname: "Mây Hồng" }],
+        left: [],
+        events: [],
+      }),
+    );
+    assert.equal(bare.op, "tick");
+    if (bare.op !== "tick") return;
+    assert.equal(bare.upserts[0]?.placed, false);
+    const kept = applyRoomMessage(next, bare);
+    assert.equal(kept.people.find((item) => item.id === OTHER)?.x, 0.5);
+    assert.equal(kept.people.find((item) => item.id === OTHER)?.placed, true);
+    const moved = applyRoomMessage(
+      kept,
+      parseRoomMessage(
+        JSON.stringify({
+          v: 1,
+          channel: "room",
+          op: "tick",
+          count: 2,
+          cap: 8,
+          upserts: [{ id: OTHER, nickname: "Mây Hồng", x: 0.2, y: 0.7, facing: "left" }],
+          left: [],
+          events: [],
+        }),
+      ),
+    );
+    assert.equal(moved.people.find((item) => item.id === OTHER)?.x, 0.2);
+    assert.equal(moved.people.find((item) => item.id === OTHER)?.y, 0.7);
 
     const offline = parseRoomMessage(
       JSON.stringify({
