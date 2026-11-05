@@ -532,7 +532,7 @@ img.be-da-flies-exit {
   box-shadow: 0 10px 28px rgba(246, 184, 200, 0.38);
 }
 
-/* Floating diary Bé Da. Fixed, so she follows the scroll and takes no layout. */
+/* Floating diary Bé Da. Fixed overlay: she follows the scroll and adds no page space. */
 .be-da-diary-chip {
   position: fixed;
   right: max(12px, env(safe-area-inset-right));
@@ -544,19 +544,19 @@ img.be-da-flies-exit {
   background: transparent;
   padding: 1.85rem 0 0;
   line-height: 0;
+  pointer-events: none;
   transform-origin: 100% 100%;
   transition: transform 320ms ease, opacity 320ms ease;
+}
+
+.be-da-diary-chip .bd-figure,
+.be-da-diary-chip .bd-figure img {
+  pointer-events: auto;
 }
 
 .be-da-diary-chip.is-scrolling {
   transform: scale(0.6);
   opacity: 0.6;
-}
-
-[data-diary-page]:has(.be-da-diary-chip) {
-  /* Leave a clear column for the fixed chip so buttons and ticks stay to her left. */
-  padding-right: calc(8.25rem + 28px);
-  padding-bottom: calc(15rem + 140px + env(safe-area-inset-bottom));
 }
 
 .be-da-diary-chip.is-quiet {
@@ -623,11 +623,6 @@ img.be-da-flies-exit {
 
   .be-da-diary-bubble {
     font-size: 14px;
-  }
-
-  [data-diary-page]:has(.be-da-diary-chip) {
-    padding-right: calc(9.75rem + 40px);
-    padding-bottom: calc(13rem + 140px + env(safe-area-inset-bottom));
   }
 }
 
