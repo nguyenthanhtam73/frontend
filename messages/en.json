@@ -3439,6 +3439,7 @@
       "careMorning": "Morning",
       "careEvening": "Evening",
       "careClose": "Close",
+      "productLink": "View product",
       "tasks": {
         "wash": "Wash your face this morning",
         "spf": "Put on sunscreen",

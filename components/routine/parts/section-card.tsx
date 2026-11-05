@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 
+import { useTranslations } from "next-intl";
+
+import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -499,7 +502,9 @@ function StepRow({
   locale: string;
   productLabel?: string;
 }) {
+  const tProduct = useTranslations("productSuggestions");
   const [showNotes, setShowNotes] = useState(!!step.notes);
+  const affiliateLink = routineAffiliateLink(step);
   const cat = useMemo(() => normalizeCategory(step.category), [step.category]);
   const locked = editLocked;
   const showReorder = !beginnerSimple && !locked;
@@ -568,6 +573,17 @@ function StepRow({
                 "border-amber-500/60 bg-amber-500/[0.04] ring-1 ring-amber-500/15 focus:border-amber-500/65 focus:ring-amber-500/20",
             )}
           />
+          {affiliateLink ? (
+            <a
+              href={affiliateLink}
+              target="_blank"
+              rel="sponsored noopener"
+              className="inline-block text-xs font-semibold text-primary underline"
+              data-testid="routine-aff-link"
+            >
+              {step.product_name?.trim() || tProduct("viewShopee")}
+            </a>
+          ) : null}
           {!beginnerSimple && !locked ? (
             <>
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1.5">

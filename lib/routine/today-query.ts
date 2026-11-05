@@ -1,3 +1,4 @@
+import { affiliatePayload } from "@/lib/routine/affiliate-link";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 /** Shared with /routine and the in-game care list. */
@@ -16,6 +17,7 @@ function strip(step: RoutineStepDTO) {
     ...(howTo ? { how_to: howTo } : {}),
     ...(dose ? { dose } : {}),
     ...(why ? { why } : {}),
+    ...affiliatePayload(step),
   };
 }
 

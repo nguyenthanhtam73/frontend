@@ -44,6 +44,7 @@ import { accessoryUnlocked } from "@/lib/mascot/glow";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { isSessionComplete } from "@/lib/mascot/pose";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
+import { keepAffiliate } from "@/lib/routine/affiliate-link";
 import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query";
 import { streakDateKey } from "@/lib/streak/history";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
@@ -132,8 +133,10 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       queryClient.setQueryData(routineTodayQueryKey, next);
       try {
         const saved = await apiPost<RoutineDTO>("/api/v1/routines", routineTickBody(next), { toastOnError: false });
-        const stored = saved ?? next;
-        if (saved) queryClient.setQueryData(routineTodayQueryKey, saved);
+        const stored = saved
+          ? { ...saved, morning: keepAffiliate(next.morning, saved.morning), evening: keepAffiliate(next.evening, saved.evening) }
+          : next;
+        queryClient.setQueryData(routineTodayQueryKey, stored);
         const woke =
           isSessionComplete(stored.morning) ||
           isSessionComplete(stored.evening) ||
@@ -238,7 +241,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   function onTab(next: GameTab) {
     feedback();
     if (next === "quests") {
-      setChestDismissed(false);
+      setChestDismissed(true);
       setTab("quests");
       return;
     }

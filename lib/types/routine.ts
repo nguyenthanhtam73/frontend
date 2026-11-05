@@ -17,6 +17,10 @@ export type RoutineStepDTO = {
   dose?: string;
   /** One easy sentence on the purpose of the step. Optional — FE seeds when omitted. */
   why?: string;
+  /** Present only when the API already stored a product link. Never invented here. */
+  affiliate_link?: string;
+  affiliate_product_id?: string;
+  product_name?: string;
 };
 
 /** Matches backend `dto.RoutineResponse`. */
