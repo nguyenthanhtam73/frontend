@@ -1,4 +1,4 @@
-import { STREAK_TZ } from "@/lib/streak/history";
+import { shiftDateKey, streakDateKey, STREAK_TZ } from "@/lib/streak/history";
 
 export type RoutineSession = "morning" | "evening";
 export type SessionPhase = "open" | "early" | "late";
@@ -49,6 +49,17 @@ export function sessionGate(section: RoutineSession, date: Date = new Date()): S
 
 export function sessionOpen(section: RoutineSession, date: Date = new Date()): boolean {
   return sessionGate(section, date).phase === "open";
+}
+
+/**
+ * Care day for ticks and chests.
+ * From 00:00 until 04:00 Vietnam time the open evening still belongs to the previous civil day.
+ * At 04:00 the day rolls to this morning.
+ */
+export function routineDayKey(date: Date = new Date()): string {
+  const key = streakDateKey(date);
+  if (vietnamMinutes(date) < MORNING_OPEN_MINUTES) return shiftDateKey(key, -1);
+  return key;
 }
 
 /** A finished session is at least one real step, every one ticked. */
