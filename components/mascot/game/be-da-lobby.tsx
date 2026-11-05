@@ -65,6 +65,7 @@ export function BeDaLobby({
   onSwitchHall,
   onCreateRoom,
   onJoinRoom,
+  myRooms = [],
   creatingRoom = false,
   createProblem = null,
 }: {
@@ -89,6 +90,7 @@ export function BeDaLobby({
   onSwitchHall: (lobby: number) => void;
   onCreateRoom?: () => void;
   onJoinRoom?: (code: string) => void;
+  myRooms?: readonly string[];
   creatingRoom?: boolean;
   createProblem?: SpaNotice;
 }) {
@@ -372,6 +374,17 @@ export function BeDaLobby({
       </div>
       <div className="beda-lobby-chrome">
         <div className="beda-spa-entry" data-testid="beda-spa-entry">
+          {myRooms.map((code) => (
+            <button
+              key={code}
+              type="button"
+              className="is-reenter"
+              data-testid="beda-reenter-room"
+              onClick={() => onJoinRoom?.(code)}
+            >
+              {tLobby("game.spaReenter", { code })}
+            </button>
+          ))}
           <button
             type="button"
             data-testid="beda-create-room"

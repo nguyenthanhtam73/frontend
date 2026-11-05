@@ -112,6 +112,7 @@ export function BeDaGameView({
   youPose = null,
   onCreateRoom,
   onJoinRoom,
+  myRooms = [],
   onLeaveSpa,
   onSpaLobby,
   onSpaWalk,
@@ -178,6 +179,7 @@ export function BeDaGameView({
   youPose?: GamePose | null;
   onCreateRoom?: () => void;
   onJoinRoom?: (code: string) => void;
+  myRooms?: readonly string[];
   onLeaveSpa?: () => void;
   onSpaLobby?: () => void;
   onSpaWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
@@ -297,6 +299,7 @@ export function BeDaGameView({
           onSwitchHall={onSwitchHall}
           onCreateRoom={onCreateRoom}
           onJoinRoom={onJoinRoom}
+          myRooms={myRooms}
           creatingRoom={creatingRoom}
           createProblem={createProblem}
         />

@@ -215,6 +215,7 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-actions"/);
     assert.match(html, /Tạo phòng/);
     assert.match(html, /Nhập mã/);
+    assert.equal(html.includes("Vào phòng"), false);
     assert.match(html, /data-testid="beda-create-room"/);
     assert.match(html, /translate\(-50%, -100%\)/);
     assert.match(html, /--nudge:-?\d+px/);
@@ -268,6 +269,13 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes('data-testid="beda-streak"'), false);
     assert.equal(html.includes("ấm trà"), false);
     assertNoScores(html);
+  });
+
+  it("offers Vào phòng for a room this account already has", () => {
+    const html = renderGame({ tab: "lobby", myRooms: ["DA7K2M"] });
+    assert.match(html, /data-testid="beda-reenter-room"/);
+    assert.match(html, /Vào phòng DA7K2M/);
+    assert.match(html, /Tạo phòng/);
   });
 
   it("offers the next hall when this one is full", () => {
