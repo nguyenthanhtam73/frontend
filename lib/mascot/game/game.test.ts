@@ -28,6 +28,7 @@ import {
   lobbyFigureBox,
   lobbyFigureHitsChrome,
   lobbyHeadCount,
+  nudgeLobbyLabels,
   lobbyShownSamples,
   lobbySpawn,
   solveLobbyCells,
@@ -431,6 +432,25 @@ describe("lobby world", () => {
       worldH,
     });
     assert.equal(cold.probes, LOBBY_SOLVE_MAX_PROBES);
+    const home = shown[0]!;
+    const cell = LOBBY_SAMPLE_CELLS.findIndex((spot) => spot.x === home.x && spot.y === home.y);
+    const stayed = solveLobbyCells({
+      samples: [{ id: home.id, nickname: home.nickname, homeX: home.x, homeY: home.y, cell }],
+      player: { x: home.x, y: home.y, nickname: "Bé Da" },
+      lives: [{ x: home.x, y: home.y, nickname: "Khách" }],
+      cam: { x: 0, y: -5000, scale: 1 },
+      viewW: 390,
+      viewH: 844,
+      worldW,
+      worldH,
+    });
+    assert.equal(stayed.seats[0]?.x, home.x);
+    assert.equal(stayed.seats[0]?.y, home.y);
+    const labels = nudgeLobbyLabels([
+      { id: "a", left: 0, top: 0, right: 40, bottom: 16 },
+      { id: "b", left: 10, top: 20, right: 50, bottom: 36 },
+    ]);
+    assert.equal(labels.every((label) => Math.abs(label.nudge) <= 16), true);
     assert.equal(lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2), false);
     for (const friend of shown) {
       assert.equal(
@@ -539,6 +559,23 @@ describe("lobby world", () => {
     assert.ok(edge.left >= 8);
     assert.ok(edge.left + 180 <= 360 - 8);
     assert.ok(edge.top + 90 <= 580 - 8);
+
+    const crowded = placeFriendCard({
+      frameWidth: 390,
+      frameHeight: 844,
+      friendTop: 200,
+      friendLeft: 250,
+      friendWidth: 90,
+      friendHeight: 120,
+      cardWidth: 160,
+      cardHeight: 110,
+      navTop: 720,
+      avoid: { left: 280, top: 62, right: 382, bottom: 180 },
+    });
+    assert.ok(crowded.left + 160 <= 280 - 8);
+    assert.ok(crowded.left >= 8);
+    assert.ok(crowded.top >= 8);
+    assert.ok(crowded.top + 110 <= 720 - 8);
   });
 });
 

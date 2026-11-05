@@ -1015,8 +1015,33 @@
 }
 
 .beda-lobby .beda-tag {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin: 2px 0 0;
   padding: 2px 8px;
   font-size: 11px;
+  transform: translateX(calc(-50% + var(--nudge, 0px) + var(--edge, 0px))) scale(calc(1 / var(--beda-zoom, 1)));
+}
+
+/* Clip only the figure, so the baked-in ellipse under the shoes is cut off
+   while the ground shadow can sit on the sole line. */
+.beda-lobby .beda-feet {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.beda-lobby .beda-ground-shadow {
+  /* Center sits on the shoe soles. A little darker than the grass so the contact reads. */
+  bottom: -2px;
+  height: 8px;
+  background: rgba(48, 86, 64, 0.42);
+  transform-origin: center center;
+}
+
+.beda-lobby .beda-tag.is-label-fade {
+  opacity: 0.45;
 }
 
 .beda-friend.beda-pose {
@@ -1342,6 +1367,14 @@
   color: #fff;
   font-size: 12px;
   font-weight: 800;
+}
+
+.beda-lobby-chrome .beda-friend-card {
+  z-index: 12;
+  left: 8px;
+  top: 8px;
+  bottom: auto;
+  transform: none;
 }
 
 .beda-actions {

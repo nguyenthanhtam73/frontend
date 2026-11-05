@@ -177,12 +177,11 @@ export function solveLobbyCells(input: {
   worldH: number;
 }): { seats: LobbySeat[]; probes: number } {
   const zones = lobbyExclusionZones(input.viewW, input.viewH);
-  const occupied: ScreenBox[] = [
-    lobbyScreenFigure(input.player.x, input.player.y, input.player.nickname, 1.2, input.cam, input.worldW, input.worldH),
-  ];
-  for (const live of input.lives) {
-    occupied.push(lobbyScreenFigure(live.x, live.y, live.nickname, undefined, input.cam, input.worldW, input.worldH));
-  }
+  // Own Bé Da and live people are not obstacles. A figure already placed stays
+  // put when someone walks into them. Spawn and stroll choose a free cell first.
+  void input.player;
+  void input.lives;
+  const occupied: ScreenBox[] = [];
   const used = new Set<number>();
   const seats: LobbySeat[] = [];
   let probes = 0;
@@ -237,6 +236,43 @@ export function solveLobbyCells(input: {
     seats.push({ id: sample.id, cell: chosen, x: cell.x, y: cell.y, edge, hidden: false });
   }
   return { seats, probes };
+}
+
+/** Shift or fade name labels that sit on each other. Never returns a new body position. */
+export function nudgeLobbyLabels(
+  tags: readonly { id: string; left: number; top: number; right: number; bottom: number }[],
+): { id: string; nudge: number; fade: boolean }[] {
+  const placed = tags.map((tag) => ({ ...tag, nudge: 0, fade: false }));
+  const cap = Math.min(32, Math.max(1, placed.length * placed.length));
+  let steps = 0;
+  for (let i = 0; i < placed.length; i += 1) {
+    for (let j = i + 1; j < placed.length; j += 1) {
+      if (steps >= cap) break;
+      steps += 1;
+      const a = placed[i]!;
+      const b = placed[j]!;
+      const ix = Math.min(a.right + a.nudge, b.right + b.nudge) - Math.max(a.left + a.nudge, b.left + b.nudge);
+      const iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (ix <= 2 || iy <= 2) continue;
+      const shift = Math.min(16, ix / 2 + 2);
+      const front = a.top >= b.top ? a : b;
+      const back = front === a ? b : a;
+      front.nudge += front.left <= back.left ? -shift : shift;
+    }
+  }
+  for (let i = 0; i < placed.length; i += 1) {
+    for (let j = i + 1; j < placed.length; j += 1) {
+      const a = placed[i]!;
+      const b = placed[j]!;
+      const ix = Math.min(a.right + a.nudge, b.right + b.nudge) - Math.max(a.left + a.nudge, b.left + b.nudge);
+      const iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (ix > 2 && iy > 2) {
+        const back = a.top < b.top ? a : b;
+        back.fade = true;
+      }
+    }
+  }
+  return placed.map((tag) => ({ id: tag.id, nudge: tag.nudge, fade: tag.fade }));
 }
 
 /** True when this figure's box meets a control while the camera is looking at them. */
@@ -651,6 +687,8 @@ export function placeFriendCard(input: {
   navTop: number;
   gap?: number;
   margin?: number;
+  /** Screen box the card must not cover, such as the zoom cluster. */
+  avoid?: { left: number; top: number; right: number; bottom: number };
 }): FriendCardPlacement {
   const gap = input.gap ?? FRIEND_CARD_GAP;
   const margin = input.margin ?? 8;
@@ -685,6 +723,27 @@ export function placeFriendCard(input: {
     if (right + input.cardWidth <= input.frameWidth - margin) left = right;
     else if (leftSide >= margin) left = leftSide;
   }
+  const avoid = input.avoid;
+  if (avoid) {
+    const hits =
+      left < avoid.right + gap &&
+      left + input.cardWidth + gap > avoid.left &&
+      top < avoid.bottom + gap &&
+      top + input.cardHeight + gap > avoid.top;
+    if (hits) {
+      const shiftLeft = avoid.left - gap - input.cardWidth;
+      if (shiftLeft >= margin) left = shiftLeft;
+      else {
+        const under = avoid.bottom + gap;
+        if (under + input.cardHeight <= maxTop) top = under;
+      }
+    }
+  }
+  if (input.cardWidth + margin * 2 <= input.frameWidth) {
+    left = Math.min(Math.max(margin, left), maxLeft);
+  }
+  if (top < margin) top = margin;
+  if (top > maxTop) top = maxTop;
   return { top, left, flipped };
 }
 
