@@ -522,14 +522,38 @@ img.be-da-flies-exit {
   box-shadow: 0 10px 28px rgba(246, 184, 200, 0.38);
 }
 
-/* Diary corner. About 2.5× the old 3.25rem chip, and wider once the invite
-   bubble sits above her. The header keeps that space clear of the title. */
+/* Diary corner. About 2.5× the old 3.25rem chip. She shares the title row,
+   so the next control starts under her feet instead of under a blank band. */
+[data-diary-page] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+[data-diary-page]:has(.be-da-diary-chip) {
+  column-gap: 0.75rem;
+}
+
+[data-diary-page] > :not(.be-da-diary-chip) {
+  grid-column: 1 / -1;
+}
+
+[data-diary-page] > .diary-chip-head,
+[data-diary-page] > header.diary-chip-head {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  padding-right: 0;
+}
+
 .be-da-diary-chip {
-  position: absolute;
-  top: 0.25rem;
-  right: max(12px, env(safe-area-inset-right));
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
   z-index: 5;
   width: 8.25rem;
+  margin-right: max(0px, calc(env(safe-area-inset-right) - 0.25rem));
   border: 0;
   background: transparent;
   padding: 1.85rem 0 0;
@@ -582,11 +606,6 @@ img.be-da-flies-exit {
   animation-play-state: paused;
 }
 
-[data-diary-page] .diary-chip-head {
-  min-height: 12.75rem;
-  padding-right: 10.75rem;
-}
-
 @media (min-width: 1024px) {
   .be-da-diary-chip {
     width: 9.75rem;
@@ -595,11 +614,6 @@ img.be-da-flies-exit {
 
   .be-da-diary-bubble {
     font-size: 14px;
-  }
-
-  [data-diary-page] .diary-chip-head {
-    min-height: 15rem;
-    padding-right: 13rem;
   }
 }
 
@@ -827,8 +841,8 @@ img.be-da-flies-exit {
 
 @media (min-width: 1024px) {
   [data-routine-page][data-be-da="on"] .routine-head {
-    min-height: 15rem;
-    padding-right: 13rem;
+    min-height: 0;
+    padding-right: 0;
   }
 }
 

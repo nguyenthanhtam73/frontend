@@ -27,7 +27,9 @@ function fieldFocused(): boolean {
 }
 
 function sheetOpen(): boolean {
-  return !!document.querySelector("[role='dialog'], [role='alertdialog']");
+  // Only a real modal covers the page. The install hint is a non-modal dialog
+  // and must not hide Bé Da.
+  return !!document.querySelector("[role='dialog'][aria-modal='true'], [role='alertdialog']");
 }
 
 /**
