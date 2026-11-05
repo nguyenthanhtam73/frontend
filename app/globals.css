@@ -522,16 +522,17 @@ img.be-da-flies-exit {
   box-shadow: 0 10px 28px rgba(246, 184, 200, 0.38);
 }
 
-/* Diary corner. Sits in the header's padded gap, under any dialog. */
+/* Diary corner. About 2.5× the old 3.25rem chip, and wider once the invite
+   bubble sits above her. The header keeps that space clear of the title. */
 .be-da-diary-chip {
   position: absolute;
-  top: 0;
+  top: 0.25rem;
   right: max(12px, env(safe-area-inset-right));
   z-index: 5;
-  width: 3.25rem;
+  width: 8.25rem;
   border: 0;
   background: transparent;
-  padding: 0;
+  padding: 1.85rem 0 0;
   line-height: 0;
 }
 
@@ -540,9 +541,66 @@ img.be-da-flies-exit {
   pointer-events: none;
 }
 
+.be-da-diary-chip .be-da-chip-wave {
+  display: block;
+  width: 100%;
+}
+
+.be-da-diary-bubble {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: max-content;
+  max-width: 10.5rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  border: 1px solid #f6b8c8;
+  background: #fff8f3;
+  padding: 4px 10px;
+  color: #6b4450;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.be-da-diary-chip img[src*="zzz.svg"] {
+  visibility: hidden;
+}
+
+.be-da-diary-chip.is-dozing .be-da-chip-wave,
+.be-da-diary-chip.is-quiet .be-da-chip-wave,
+.be-da-diary-chip.is-quiet .bd-breathe,
+.be-da-diary-chip.is-quiet .be-da-chip-zzz i {
+  animation: none;
+}
+
+.be-da-diary-chip.is-paused .bd-breathe,
+.be-da-diary-chip.is-paused .be-da-chip-wave,
+.be-da-diary-chip.is-paused .be-da-chip-zzz i {
+  animation-play-state: paused;
+}
+
 [data-diary-page] .diary-chip-head {
-  min-height: 3.5rem;
-  padding-right: 4.25rem;
+  min-height: 12.75rem;
+  padding-right: 10.75rem;
+}
+
+@media (min-width: 1024px) {
+  .be-da-diary-chip {
+    width: 9.75rem;
+    padding-top: 2rem;
+  }
+
+  .be-da-diary-bubble {
+    font-size: 14px;
+  }
+
+  [data-diary-page] .diary-chip-head {
+    min-height: 15rem;
+    padding-right: 13rem;
+  }
 }
 
 .be-da-chip-bob {
@@ -769,8 +827,8 @@ img.be-da-flies-exit {
 
 @media (min-width: 1024px) {
   [data-routine-page][data-be-da="on"] .routine-head {
-    min-height: 0;
-    padding-right: 0;
+    min-height: 15rem;
+    padding-right: 13rem;
   }
 }
 

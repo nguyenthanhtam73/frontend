@@ -41,7 +41,9 @@ export function BeDaDiaryChip() {
   const { view, hidden } = useBeDaView();
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [quiet, setQuiet] = useState(false);
+  const [paused, setPaused] = useState(false);
   const room = gameRoomView(view);
+  const dozing = room.mood === "sleepy";
 
   useEffect(() => {
     const read = () => setLook(storedLook());
@@ -50,11 +52,15 @@ export function BeDaDiaryChip() {
       if (event.key != null && event.key !== GAME_LOOK_KEY) return;
       read();
     };
+    const onHide = () => setPaused(document.hidden);
+    onHide();
     window.addEventListener("focus", read);
     window.addEventListener("storage", onStore);
+    document.addEventListener("visibilitychange", onHide);
     return () => {
       window.removeEventListener("focus", read);
       window.removeEventListener("storage", onStore);
+      document.removeEventListener("visibilitychange", onHide);
     };
   }, []);
 
@@ -87,9 +93,25 @@ export function BeDaDiaryChip() {
         if (quiet) return;
         router.push("/be-da");
       }}
-      className={quiet ? "be-da-diary-chip is-quiet" : "be-da-diary-chip"}
+      className={[
+        "be-da-diary-chip",
+        quiet ? "is-quiet" : "",
+        dozing ? "is-dozing" : "",
+        paused ? "is-paused" : "",
+      ].filter(Boolean).join(" ")}
     >
-      <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
+      {dozing ? (
+        <span className="be-da-chip-zzz" aria-hidden>
+          <i>z</i>
+          <i>z</i>
+          <i>Z</i>
+        </span>
+      ) : (
+        <span className="be-da-diary-bubble">{t("diaryHello")}</span>
+      )}
+      <span className="be-da-chip-wave">
+        <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
+      </span>
     </button>
   );
 }
