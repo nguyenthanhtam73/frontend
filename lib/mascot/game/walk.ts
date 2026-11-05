@@ -19,6 +19,13 @@ export type Obstacle = { x: number; y: number; rx: number; ry: number };
 
 export type Camera = { x: number; y: number; scale: number };
 
+/** Screen pixels the follow camera keeps clear. Zero on every side matches the old frame. */
+export type CameraPad = { top: number; right: number; bottom: number; left: number };
+
+function cameraPad(pad?: CameraPad): CameraPad {
+  return { top: pad?.top ?? 0, right: pad?.right ?? 0, bottom: pad?.bottom ?? 0, left: pad?.left ?? 0 };
+}
+
 export type Walker = {
   x: number;
   y: number;
@@ -282,15 +289,17 @@ export function clampCamera(
   viewH: number,
   worldW: number,
   worldH: number,
+  pad?: CameraPad,
 ): Camera {
+  const p = cameraPad(pad);
   const width = worldW * camera.scale;
   const height = worldH * camera.scale;
   let x = camera.x;
   let y = camera.y;
-  if (width <= viewW) x = (viewW - width) / 2;
-  else x = clamp(x, viewW - width, 0);
-  if (height <= viewH) y = (viewH - height) / 2;
-  else y = clamp(y, viewH - height, 0);
+  if (width + p.left + p.right <= viewW) x = p.left + (viewW - p.left - p.right - width) / 2;
+  else x = clamp(x, viewW - p.right - width, p.left);
+  if (height + p.top + p.bottom <= viewH) y = p.top + (viewH - p.top - p.bottom - height) / 2;
+  else y = clamp(y, viewH - p.bottom - height, p.top);
   return { x, y, scale: camera.scale };
 }
 
@@ -309,10 +318,14 @@ export function followCamera(
   worldH: number,
   dt: number,
   follow: boolean,
+  pad?: CameraPad,
 ): Camera {
   if (!follow) return camera;
-  const tx = viewW * 0.5 - playerX * worldW * camera.scale;
-  const ty = viewH * 0.46 - playerY * worldH * camera.scale;
+  const p = cameraPad(pad);
+  const anchorX = p.left + (viewW - p.left - p.right) * 0.5;
+  const anchorY = p.top + (viewH - p.top - p.bottom) * 0.46;
+  const tx = anchorX - playerX * worldW * camera.scale;
+  const ty = anchorY - playerY * worldH * camera.scale;
   const k = 1 - Math.exp(-3.2 * Math.min(0.05, Math.max(0, dt)));
   return { ...camera, x: camera.x + (tx - camera.x) * k, y: camera.y + (ty - camera.y) * k };
 }

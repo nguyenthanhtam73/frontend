@@ -17,12 +17,22 @@ import {
   type GameLook,
 } from "./look";
 import {
+  LOBBY_FIGURE_GAP,
   LOBBY_PLAYER_SPOT,
+  LOBBY_SAMPLE_CAP,
+  LOBBY_SAMPLE_CELLS,
   LOBBY_WORLD,
   SAMPLE_LOBBY_FRIENDS,
   clampLobbyPoint,
+  lobbyFigureBox,
+  lobbyFigureHitsChrome,
   lobbyHeadCount,
+  lobbyShownSamples,
   lobbySpawn,
+  lobbyBodyBox,
+  lobbyTooClose,
+  screenBoxesOverlap,
+  tagEdgeDelta,
   lobbyStackZ,
   lobbyTagNudgePx,
   placeFriendCard,
@@ -324,8 +334,90 @@ describe("lobby world", () => {
     }
     assert.ok(Math.min(...xs) < 0.15);
     assert.ok(Math.max(...xs) > 0.85);
+    assert.ok(Math.min(...xs) < 0.2);
+    assert.ok(Math.max(...xs) > 0.8);
     assert.ok(Math.min(...ys) < 0.2);
     assert.ok(Math.max(...ys) > 0.9);
+    const worldW = 390 * 1.3;
+    const worldH = worldW * 3;
+    const { spawn } = LOBBY_WORLD;
+    let near = 0;
+    for (let i = 0; i < SAMPLE_LOBBY_FRIENDS.length; i += 1) {
+      const a = SAMPLE_LOBBY_FRIENDS[i]!;
+      if (Math.abs(a.x - spawn.x) <= 0.14 && Math.abs(a.y - spawn.y) <= 0.12) near += 1;
+      for (let j = i + 1; j < SAMPLE_LOBBY_FRIENDS.length; j += 1) {
+        const b = SAMPLE_LOBBY_FRIENDS[j]!;
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyBodyBox(a.x, a.y, a.nickname, worldW, worldH),
+            lobbyBodyBox(b.x, b.y, b.nickname, worldW, worldH),
+            0,
+          ),
+          false,
+          `${a.id} ${b.id}`,
+        );
+      }
+    }
+    assert.ok(near <= 3, `near spawn ${near}`);
+  });
+
+  it("draws a short sample cast on cells that stay apart at 390px", () => {
+    const shown = lobbyShownSamples();
+    assert.equal(shown.length, LOBBY_SAMPLE_CAP);
+    assert.equal(LOBBY_SAMPLE_CAP, 6);
+    assert.ok(shown.some((friend) => friend.id === "keo-deo"));
+    assert.ok(shown.some((friend) => friend.id === "meo-may"));
+    const worldW = 390 * 1.3;
+    const worldH = worldW * 3;
+    const floor = LOBBY_SAMPLE_CELLS.filter((cell) => cell.y >= LOBBY_WORLD.walk.minY);
+    assert.equal(floor.length, 12);
+    for (let i = 0; i < shown.length; i += 1) {
+      const a = shown[i]!;
+      assert.equal(lobbyFigureHitsChrome(a.x, a.y, a.nickname), false, a.id);
+      for (let j = i + 1; j < shown.length; j += 1) {
+        const b = shown[j]!;
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyFigureBox(a.x, a.y, a.nickname, worldW, worldH),
+            lobbyFigureBox(b.x, b.y, b.nickname, worldW, worldH),
+            LOBBY_FIGURE_GAP,
+          ),
+          false,
+          `${a.id} ${b.id}`,
+        );
+      }
+    }
+    const spot = lobbySpawn(() => 0.5);
+    assert.equal(lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2), false);
+    for (const friend of shown) {
+      assert.equal(
+        screenBoxesOverlap(
+          lobbyFigureBox(spot.x, spot.y, "Bé Da 0000", worldW, worldH, 1.2),
+          lobbyFigureBox(friend.x, friend.y, friend.nickname, worldW, worldH),
+          LOBBY_FIGURE_GAP,
+        ),
+        false,
+        friend.id,
+      );
+    }
+  });
+
+  it("keeps a name tag inside the screen by the smallest shift", () => {
+    assert.equal(tagEdgeDelta({ left: 20, right: 90 }, { left: 0, right: 390 }), 0);
+    assert.equal(tagEdgeDelta({ left: 340, right: 410 }, { left: 0, right: 390 }), -28);
+    assert.equal(tagEdgeDelta({ left: -12, right: 70 }, { left: 0, right: 390 }), 20);
+    const wide = tagEdgeDelta({ left: -30, right: 420 }, { left: 0, right: 390 });
+    assert.equal(-30 + wide, 8);
+  });
+
+  it("spawns away from someone already standing in the arrival box", () => {
+    const taken = { x: 0.42, y: 0.6 };
+    const rolls = [0, 1, 0.5, 0.5];
+    let i = 0;
+    const spot = lobbySpawn(() => rolls[i++] ?? 0.5, [taken]);
+    assert.equal(lobbyTooClose(spot, taken), false);
+    assert.ok(spot.x >= 0.5 - 0.08 && spot.x <= 0.5 + 0.08);
+    assert.ok(spot.y >= 0.55 - 0.05 && spot.y <= 0.55 + 0.05);
   });
 
   it("stacks by y and nudges tags away from the Bé Da in front", () => {

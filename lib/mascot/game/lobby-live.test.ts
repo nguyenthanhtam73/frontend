@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
+import { LOBBY_FIGURE_GAP, LOBBY_SAMPLE_CAP, lobbyFigureBox, lobbyShownSamples, screenBoxesOverlap } from "@/lib/mascot/game/lobby";
 import { LobbyConnection, type LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
 import {
   LOBBY_ACCESS_COOKIE,
@@ -135,7 +135,7 @@ describe("lobby nickname", () => {
 describe("lobby crowd", () => {
   it("keeps sample visitors until real people fill the hall", () => {
     const alone = lobbyActors({ live: false, people: [], selfId: null, hidden: new Set(), poses: {} });
-    assert.equal(alone.length, SAMPLE_LOBBY_FRIENDS.length);
+    assert.equal(alone.length, LOBBY_SAMPLE_CAP);
     assert.equal(alone.length + 1 <= LOBBY_CAP, true);
     assert.equal(alone.every((actor) => actor.sample), true);
 
@@ -153,8 +153,8 @@ describe("lobby crowd", () => {
     const real = few.filter((actor) => !actor.sample);
     const samples = few.filter((actor) => actor.sample);
     assert.equal(real.length, 11);
-    assert.equal(samples.length, 16);
-    assert.equal(real.length + samples.length + 1, LOBBY_CAP);
+    assert.equal(samples.length, LOBBY_SAMPLE_CAP);
+    assert.equal(real.length + samples.length + 1 <= LOBBY_CAP, true);
 
     const packed = lobbyActors({
       live: true,
@@ -191,11 +191,28 @@ describe("lobby crowd", () => {
   });
 
   it("walks a sample visitor inside the band", () => {
-    const start = sampleWander("keo-deo", 0, 0.6, 0.74);
-    const later = sampleWander("keo-deo", 4000, 0.6, 0.74);
+    const shown = lobbyShownSamples();
+    const home = shown.find((friend) => friend.id === "keo-deo")!;
+    const start = sampleWander("keo-deo", 0, home.x, home.y);
+    const later = sampleWander("keo-deo", 5000, home.x, home.y);
     assert.ok(start.x >= 0.06 && start.x <= 0.94);
     assert.ok(start.y >= 0.12 && start.y <= 0.96);
-    assert.ok(Math.abs(start.x - later.x) + Math.abs(start.y - later.y) > 0);
+    assert.ok(later.x >= 0.06 && later.x <= 0.94);
+    const worldW = 390 * 1.3;
+    const worldH = worldW * 3;
+    for (const step of [start, later]) {
+      for (const other of shown) {
+        if (other.id === "keo-deo") continue;
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyFigureBox(step.x, step.y, home.nickname, worldW, worldH),
+            lobbyFigureBox(other.x, other.y, other.nickname, worldW, worldH),
+            LOBBY_FIGURE_GAP,
+          ),
+          false,
+        );
+      }
+    }
   });
 });
 

@@ -26,41 +26,6 @@ export type SampleLobbyFriend = {
   sample: true;
 };
 
-export const SAMPLE_LOBBY_FRIENDS: readonly SampleLobbyFriend[] = [
-  { id: "nang-som", nickname: "Nắng Sớm", x: 0.08, y: 0.16, mood: "normal", glow: 1, outfit: "outfit_ao_dai", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
-  { id: "suong-mai", nickname: "Sương Mai", x: 0.24, y: 0.18, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
-  { id: "tra-sua", nickname: "Trà Sữa", x: 0.4, y: 0.15, mood: "sparkle", glow: 3, outfit: "outfit_hoodie", hair: "hair_short_bob", clip: null, sample: true },
-  { id: "may-hong", nickname: "Mây Hồng", x: 0.56, y: 0.2, mood: "happy", glow: 4, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
-  { id: "chanh-leo", nickname: "Chanh Leo", x: 0.72, y: 0.17, mood: "normal", glow: 2, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
-  { id: "oc-que", nickname: "Ốc Quế", x: 0.9, y: 0.22, mood: "happy", glow: 4, outfit: "outfit_pajamas", hair: "hair_high_pony", clip: null, sample: true },
-  { id: "meo-may", nickname: "Mèo Máy", x: 0.12, y: 0.32, mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_ribbon_bow", sample: true },
-  { id: "banh-flan", nickname: "Bánh Flan", x: 0.3, y: 0.36, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
-  { id: "keo-deo", nickname: "Kẹo Dẻo", x: 0.48, y: 0.3, mood: "sleepy", glow: 4, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: null, sample: true },
-  { id: "cun-con", nickname: "Cún Con", x: 0.66, y: 0.4, mood: "normal", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_flower_clip", sample: true },
-  { id: "hat-de", nickname: "Hạt Dẻ", x: 0.84, y: 0.34, mood: "happy", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_sleep_buns", clip: "accessory_ribbon_bow", sample: true },
-  { id: "gau-mo", nickname: "Gấu Mơ", x: 0.08, y: 0.5, mood: "normal", glow: 2, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
-  { id: "dau-tay", nickname: "Dâu Tây", x: 0.22, y: 0.56, mood: "sparkle", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: null, sample: true },
-  { id: "bo-xanh", nickname: "Bơ Xanh", x: 0.4, y: 0.48, mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
-  { id: "be-mit", nickname: "Bé Mít", x: 0.58, y: 0.54, mood: "sleepy", glow: 1, outfit: "outfit_hoodie", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
-  { id: "su-kem", nickname: "Su Kem", x: 0.76, y: 0.5, mood: "sparkle", glow: 5, outfit: "outfit_ao_len", hair: "hair_short_bob", clip: null, sample: true },
-  { id: "bong-gon", nickname: "Bông Gòn", x: 0.92, y: 0.46, mood: "happy", glow: 4, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
-  { id: "gio-mat", nickname: "Gió Mát", x: 0.14, y: 0.68, mood: "normal", glow: 2, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: null, sample: true },
-  { id: "mua-nho", nickname: "Mưa Nhỏ", x: 0.32, y: 0.74, mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
-  { id: "sao-dem", nickname: "Sao Đêm", x: 0.5, y: 0.66, mood: "sparkle", glow: 4, outfit: "outfit_hoodie", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
-  { id: "com-nguoi", nickname: "Cơm Nguội", x: 0.68, y: 0.72, mood: "normal", glow: 1, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: null, sample: true },
-  { id: "tra-dao", nickname: "Trà Đào", x: 0.86, y: 0.64, mood: "happy", glow: 5, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
-  { id: "sen-hong", nickname: "Sen Hồng", x: 0.1, y: 0.86, mood: "sparkle", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_high_pony", clip: null, sample: true },
-  { id: "lac-rang", nickname: "Lắc Răng", x: 0.28, y: 0.92, mood: "happy", glow: 2, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
-  { id: "mo-uoc", nickname: "Mơ Ước", x: 0.46, y: 0.84, mood: "normal", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: null, sample: true },
-  { id: "ca-phe", nickname: "Cà Phê", x: 0.64, y: 0.94, mood: "happy", glow: 1, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
-  { id: "yen-nhe", nickname: "Yên Nhẹ", x: 0.84, y: 0.88, mood: "sleepy", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
-];
-
-/** Sample visitors plus the player's own Bé Da. */
-export function lobbyHeadCount(): number {
-  return SAMPLE_LOBBY_FRIENDS.length + 1;
-}
-
 /**
  * Shared lobby world. Android uses these same numbers.
  * Positions are normalized 0..1 over the whole world, origin top-left, y at the feet.
@@ -80,6 +45,284 @@ export const LOBBY_WORLD = {
 /** Center of the arrival box. The live player uses `lobbySpawn` instead. */
 export const LOBBY_PLAYER_SPOT = { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y };
 
+export type ScreenBox = { left: number; top: number; right: number; bottom: number };
+
+/** Back button, zoom cluster, and the bottom menu, in screen pixels. */
+export function lobbyChromePad(viewW: number, _viewH: number): { top: number; right: number; bottom: number; left: number } {
+  const nav = lobbyNavReservePx(viewW);
+  return { top: 176, right: 148, bottom: nav, left: 68 };
+}
+
+export function lobbyExclusionZones(viewW: number, viewH: number): ScreenBox[] {
+  const pad = lobbyChromePad(viewW, viewH);
+  return [
+    { left: 0, top: 0, right: pad.left, bottom: 68 },
+    { left: viewW - pad.right, top: 0, right: viewW, bottom: pad.top },
+    { left: 0, top: viewH - pad.bottom, right: viewW, bottom: viewH },
+  ];
+}
+
+/** Approximate on-screen width of a name pill at the lobby's 12px weight. */
+export function lobbyTagWidthPx(nickname: string): number {
+  return Math.ceil(nickname.length * 7.8 + 28);
+}
+
+/** Figure plus the name pill, in world pixels at zoom 1. Origin is the top-left of the world. */
+export function lobbyBodyBox(x: number, y: number, nickname: string, worldW: number, worldH: number): ScreenBox {
+  const figW = 110 * (0.78 + 0.4 * y) * 0.78;
+  const figH = figW * (250 / 220);
+  const tagW = lobbyTagWidthPx(nickname) * 0.9;
+  const width = Math.max(figW, tagW);
+  const height = figH + 12;
+  const cx = x * worldW;
+  const feet = y * worldH;
+  return { left: cx - width / 2, top: feet - height, right: cx + width / 2, bottom: feet + 4 };
+}
+
+export function screenBoxesOverlap(a: ScreenBox, b: ScreenBox, gap = 2): boolean {
+  return a.left < b.right + gap && a.right + gap > b.left && a.top < b.bottom + gap && a.bottom + gap > b.top;
+}
+
+/**
+ * How far apart figure boxes stay at the 390px lobby, zoom 1.
+ * A pair that is closer than this on both axes counts as overlapping.
+ */
+export const LOBBY_FIGURE_GAP = 12;
+
+/**
+ * Figure plus name pill in world pixels at zoom 1.
+ * Sized from the lobby art (84px) and the 11px name pill, which is what the screen measures.
+ */
+export function lobbyFigureBox(
+  x: number,
+  y: number,
+  nickname: string,
+  worldW: number,
+  worldH: number,
+  ms?: number,
+): ScreenBox {
+  const scale = ms ?? 0.78 + 0.4 * Math.min(1, Math.max(0, y));
+  const figW = 84 * scale;
+  const figH = figW * 1.45;
+  const tagW = Math.ceil(nickname.length * 8.2 + 22);
+  const width = Math.max(figW, tagW);
+  const height = figH + 18;
+  const cx = x * worldW;
+  const feet = y * worldH;
+  return { left: cx - width / 2, top: feet - height, right: cx + width / 2, bottom: feet + 6 };
+}
+
+/** True when this figure's box meets a control while the camera is looking at them. */
+export function lobbyFigureHitsChrome(
+  x: number,
+  y: number,
+  nickname: string,
+  ms?: number,
+  view: { viewW: number; viewH: number } = { viewW: 390, viewH: 844 },
+): boolean {
+  const cam = lobbyOpeningCamera({ x, y }, view);
+  const box = lobbyFigureBox(x, y, nickname, cam.worldW, cam.worldH, ms);
+  const screen = {
+    left: cam.x + box.left,
+    top: cam.y + box.top,
+    right: cam.x + box.right,
+    bottom: cam.y + box.bottom,
+  };
+  if (screen.bottom <= 0 || screen.top >= cam.viewH || screen.right <= 0 || screen.left >= view.viewW) return false;
+  return lobbyExclusionZones(view.viewW, view.viewH).some((zone) => screenBoxesOverlap(screen, zone, 8));
+}
+
+/** 2×6 floor cells, plus spare seats above the world. Floor spacing at 390px is wider than a figure and its name. */
+const SAMPLE_COLS = [0.24, 0.76] as const;
+const SAMPLE_ROWS = [0.16, 0.32, 0.48, 0.64, 0.8, 0.96] as const;
+
+export const LOBBY_SAMPLE_CELLS: readonly { x: number; y: number }[] = (() => {
+  const cells: { x: number; y: number }[] = [];
+  for (const y of SAMPLE_ROWS) {
+    for (const x of SAMPLE_COLS) cells.push({ x, y });
+  }
+  for (const y of [-0.42, -0.7, -0.98]) {
+    cells.push({ x: 0.28, y }, { x: 0.72, y });
+  }
+  return cells;
+})();
+
+/** One visitor per staggered floor cell, so the homes themselves stay apart. */
+export const LOBBY_SAMPLE_HOMES: readonly { x: number; y: number }[] = [
+  { x: 0.24, y: 0.16 },
+  { x: 0.76, y: 0.32 },
+  { x: 0.24, y: 0.48 },
+  { x: 0.76, y: 0.64 },
+  { x: 0.24, y: 0.8 },
+  { x: 0.76, y: 0.96 },
+];
+
+export const LOBBY_SAMPLE_CAP = LOBBY_SAMPLE_HOMES.length;
+
+export const LOBBY_SAMPLE_IDS = ["suong-mai", "may-hong", "meo-may", "keo-deo", "chanh-leo", "gau-mo"] as const;
+
+/**
+ * Another floor cell whose figure box misses everyone already placed and the opening controls.
+ * Spare cells above the world are not returned here; the lobby frame uses those only when the screen is full.
+ */
+export function lobbyFreeCell(
+  prefer: { x: number; y: number },
+  others: readonly { x: number; y: number; nickname: string }[],
+  nickname: string,
+  viewW = 390,
+  viewH = 844,
+): { x: number; y: number } {
+  const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
+  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  const floor = LOBBY_SAMPLE_CELLS.filter((cell) => cell.y >= LOBBY_WORLD.walk.minY);
+  const ordered = [...floor].sort((a, b) => {
+    const da = (a.x - prefer.x) ** 2 + (a.y - prefer.y) ** 2;
+    const db = (b.x - prefer.x) ** 2 + (b.y - prefer.y) ** 2;
+    return da - db;
+  });
+  for (const cell of ordered) {
+    const mine = lobbyFigureBox(cell.x, cell.y, nickname, worldW, worldH);
+    const crowded = others.some((other) =>
+      screenBoxesOverlap(mine, lobbyFigureBox(other.x, other.y, other.nickname, worldW, worldH), LOBBY_FIGURE_GAP),
+    );
+    if (crowded || lobbyFigureHitsChrome(cell.x, cell.y, nickname, undefined, { viewW, viewH })) continue;
+    return cell;
+  }
+  return ordered[0] ?? clampLobbyPoint(prefer.x, prefer.y);
+}
+
+function lobbyWorldSize(viewW: number) {
+  const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
+  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  return { worldW, worldH };
+}
+
+/** Camera on the spawn center, inset by the control pads. */
+export function lobbyOpeningCamera(
+  player: { x: number; y: number } = LOBBY_PLAYER_SPOT,
+  view: { viewW: number; viewH: number } = { viewW: 390, viewH: 844 },
+) {
+  const { worldW, worldH } = lobbyWorldSize(view.viewW);
+  const pad = lobbyChromePad(view.viewW, view.viewH);
+  let x = pad.left + (view.viewW - pad.left - pad.right) * 0.5 - player.x * worldW;
+  let y = pad.top + (view.viewH - pad.top - pad.bottom) * 0.46 - player.y * worldH;
+  x = Math.min(pad.left, Math.max(view.viewW - pad.right - worldW, x));
+  y = Math.min(pad.top, Math.max(view.viewH - pad.bottom - worldH, y));
+  return { x, y, worldW, worldH, viewW: view.viewW, viewH: view.viewH, scale: 1 };
+}
+
+function bodyHitsZones(
+  x: number,
+  y: number,
+  nickname: string,
+  cam: { x: number; y: number; worldW: number; worldH: number; viewH: number },
+  zones: readonly ScreenBox[],
+): boolean {
+  const box = lobbyBodyBox(x, y, nickname, cam.worldW, cam.worldH);
+  const screen = {
+    left: cam.x + box.left,
+    top: cam.y + box.top,
+    right: cam.x + box.right,
+    bottom: cam.y + box.bottom,
+  };
+  if (screen.bottom <= 0 || screen.top >= cam.viewH) return false;
+  return zones.some((zone) => screenBoxesOverlap(screen, zone, 0));
+}
+
+/**
+ * A free floor cell for this visitor. A blocked cell is skipped — the figure is not slid a few pixels.
+ */
+export function sampleRenderSpot(
+  spot: { x: number; y: number; nickname: string },
+  others: readonly { x: number; y: number; nickname: string }[],
+  viewW = 390,
+  viewH = 844,
+): { x: number; y: number } {
+  return lobbyFreeCell(spot, others, spot.nickname, viewW, viewH);
+}
+
+/** True when this visitor's figure or name would sit under a control at the opening camera. */
+export function sampleStandsUnderOpeningChrome(x: number, y: number, nickname = ""): boolean {
+  const cam = lobbyOpeningCamera();
+  return bodyHitsZones(x, y, nickname, cam, lobbyExclusionZones(cam.viewW, cam.viewH));
+}
+
+/**
+ * Even spots across the whole walkable floor. Boxes do not overlap at zoom 1,
+ * at most three stand near the arrival box, and none sit under the opening controls.
+ */
+export function layoutSampleSpots<T extends { id: string; nickname: string }>(people: readonly T[]): (T & { x: number; y: number })[] {
+  const grid: { x: number; y: number }[] = [];
+  for (let row = 0; row < 9; row += 1) {
+    const y = 0.14 + row * 0.1;
+    for (const x of [0.1, 0.5, 0.9]) grid.push({ x, y });
+  }
+  return people.map((person, index) => {
+    const spot = grid[index] ?? { x: 0.5, y: 0.55 };
+    return { ...person, ...clampLobbyPoint(spot.x, spot.y) };
+  });
+}
+
+const SAMPLE_ROSTER: readonly Omit<SampleLobbyFriend, "x" | "y">[] = [
+  { id: "nang-som", nickname: "Nắng Sớm", mood: "normal", glow: 1, outfit: "outfit_ao_dai", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
+  { id: "suong-mai", nickname: "Sương Mai", mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+  { id: "tra-sua", nickname: "Trà Sữa", mood: "sparkle", glow: 3, outfit: "outfit_hoodie", hair: "hair_short_bob", clip: null, sample: true },
+  { id: "may-hong", nickname: "Mây Hồng", mood: "happy", glow: 4, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
+  { id: "chanh-leo", nickname: "Chanh Leo", mood: "normal", glow: 2, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "oc-que", nickname: "Ốc Quế", mood: "happy", glow: 4, outfit: "outfit_pajamas", hair: "hair_high_pony", clip: null, sample: true },
+  { id: "meo-may", nickname: "Mèo Máy", mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_ribbon_bow", sample: true },
+  { id: "banh-flan", nickname: "Bánh Flan", mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
+  { id: "keo-deo", nickname: "Kẹo Dẻo", mood: "sleepy", glow: 4, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: null, sample: true },
+  { id: "cun-con", nickname: "Cún Con", mood: "normal", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_flower_clip", sample: true },
+  { id: "hat-de", nickname: "Hạt Dẻ", mood: "happy", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_sleep_buns", clip: "accessory_ribbon_bow", sample: true },
+  { id: "gau-mo", nickname: "Gấu Mơ", mood: "normal", glow: 2, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
+  { id: "dau-tay", nickname: "Dâu Tây", mood: "sparkle", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: null, sample: true },
+  { id: "bo-xanh", nickname: "Bơ Xanh", mood: "happy", glow: 5, outfit: "outfit_ao_dai", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+  { id: "be-mit", nickname: "Bé Mít", mood: "sleepy", glow: 1, outfit: "outfit_hoodie", hair: "hair_sleep_buns", clip: "accessory_flower_clip", sample: true },
+  { id: "su-kem", nickname: "Su Kem", mood: "sparkle", glow: 5, outfit: "outfit_ao_len", hair: "hair_short_bob", clip: null, sample: true },
+  { id: "bong-gon", nickname: "Bông Gòn", mood: "happy", glow: 4, outfit: "outfit_ao_thun_yem", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "gio-mat", nickname: "Gió Mát", mood: "normal", glow: 2, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: null, sample: true },
+  { id: "mua-nho", nickname: "Mưa Nhỏ", mood: "happy", glow: 3, outfit: "outfit_vay_hoa", hair: "hair_twin_tails", clip: "accessory_flower_clip", sample: true },
+  { id: "sao-dem", nickname: "Sao Đêm", mood: "sparkle", glow: 4, outfit: "outfit_hoodie", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+  { id: "com-nguoi", nickname: "Cơm Nguội", mood: "normal", glow: 1, outfit: "outfit_ao_len", hair: "hair_sleep_buns", clip: null, sample: true },
+  { id: "tra-dao", nickname: "Trà Đào", mood: "happy", glow: 5, outfit: "outfit_pajamas", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
+  { id: "sen-hong", nickname: "Sen Hồng", mood: "sparkle", glow: 3, outfit: "outfit_ao_thun_yem", hair: "hair_high_pony", clip: null, sample: true },
+  { id: "lac-rang", nickname: "Lắc Răng", mood: "happy", glow: 2, outfit: "outfit_hoodie", hair: "hair_twin_tails", clip: "accessory_ribbon_bow", sample: true },
+  { id: "mo-uoc", nickname: "Mơ Ước", mood: "normal", glow: 4, outfit: "outfit_vay_hoa", hair: "hair_sleep_buns", clip: null, sample: true },
+  { id: "ca-phe", nickname: "Cà Phê", mood: "happy", glow: 1, outfit: "outfit_ao_dai", hair: "hair_short_bob", clip: "accessory_flower_clip", sample: true },
+  { id: "yen-nhe", nickname: "Yên Nhẹ", mood: "sleepy", glow: 2, outfit: "outfit_ao_len", hair: "hair_high_pony", clip: "accessory_ribbon_bow", sample: true },
+];
+
+export const SAMPLE_LOBBY_FRIENDS: readonly SampleLobbyFriend[] = layoutSampleSpots(SAMPLE_ROSTER);
+
+/**
+ * The visitors actually drawn in an empty hall.
+ * The rest of the roster stays available for the spa and for backfill when one of these is hidden.
+ * Homes sit on staggered cells so their boxes clear each other at 390px.
+ */
+export function lobbyShownSamples(hidden: ReadonlySet<string> = new Set()): SampleLobbyFriend[] {
+  const picked: SampleLobbyFriend[] = [];
+  const seen = new Set<string>();
+  const take = (friend: SampleLobbyFriend) => {
+    if (picked.length >= LOBBY_SAMPLE_CAP || hidden.has(friend.id) || seen.has(friend.id)) return;
+    const home = LOBBY_SAMPLE_HOMES[picked.length];
+    if (!home) return;
+    seen.add(friend.id);
+    picked.push({ ...friend, x: home.x, y: home.y });
+  };
+  for (const id of LOBBY_SAMPLE_IDS) {
+    const friend = SAMPLE_LOBBY_FRIENDS.find((item) => item.id === id);
+    if (friend) take(friend);
+  }
+  for (const friend of SAMPLE_LOBBY_FRIENDS) take(friend);
+  return picked;
+}
+
+/** Sample visitors plus the player's own Bé Da. */
+export function lobbyHeadCount(): number {
+  return SAMPLE_LOBBY_FRIENDS.length + 1;
+}
+
 function unit(roll: number): number {
   const u = Number.isFinite(roll) ? Math.min(0.999999, Math.max(0, roll)) : 0.5;
   return u * 2 - 1;
@@ -96,15 +339,82 @@ export function clampLobbyPoint(x: number, y: number): { x: number; y: number } 
   };
 }
 
-/** A random point in the arrival box, then clamped to the floor. */
-export function lobbySpawn(random: () => number = Math.random): { x: number; y: number } {
+/** Feet closer than this in both axes are standing on each other. */
+export const LOBBY_CLEAR_X = 0.08;
+export const LOBBY_CLEAR_Y = 0.04;
+const SPAWN_TRIES = 8;
+
+export function lobbyTooClose(a: { x: number; y: number }, b: { x: number; y: number }): boolean {
+  return Math.abs(a.x - b.x) < LOBBY_CLEAR_X - 1e-4 && Math.abs(a.y - b.y) < LOBBY_CLEAR_Y - 1e-4;
+}
+
+/** Larger means the spot has more room. Infinity when nobody else is there. */
+export function lobbyCrowding(spot: { x: number; y: number }, others: readonly { x: number; y: number }[]): number {
+  let best = Infinity;
+  for (const other of others) {
+    const nx = Math.abs(spot.x - other.x) / LOBBY_CLEAR_X;
+    const ny = Math.abs(spot.y - other.y) / LOBBY_CLEAR_Y;
+    best = Math.min(best, Math.hypot(nx, ny));
+  }
+  return best;
+}
+
+function rawSpawn(random: () => number): { x: number; y: number } {
   const { spawn } = LOBBY_WORLD;
   return clampLobbyPoint(spawn.x + unit(random()) * spawn.dx, spawn.y + unit(random()) * spawn.dy);
 }
 
-/** Stable arrival spot when a person shows up without coordinates. */
-export function lobbySpawnForId(id: string): { x: number; y: number } {
-  let hash = 2166136261;
+/**
+ * A point in the arrival box that is not on top of anyone.
+ * Tries a few random points, then keeps the least crowded.
+ */
+function spawnBlocked(spot: { x: number; y: number }, other: { x: number; y: number; nickname?: string }): boolean {
+  if (lobbyTooClose(spot, other)) return true;
+  const worldW = 390 * LOBBY_WORLD.viewportWidthScale;
+  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  const name = other.nickname ?? "Mây Hồng";
+  return screenBoxesOverlap(
+    lobbyFigureBox(spot.x, spot.y, "Bé Da 0000", worldW, worldH, 1.2),
+    lobbyFigureBox(other.x, other.y, name, worldW, worldH),
+    LOBBY_FIGURE_GAP,
+  );
+}
+
+function spawnCandidates(random: () => number): { x: number; y: number }[] {
+  const { spawn } = LOBBY_WORLD;
+  const fixed = [
+    { x: spawn.x, y: spawn.y },
+    { x: spawn.x, y: spawn.y - spawn.dy * 0.5 },
+    { x: spawn.x, y: spawn.y + spawn.dy * 0.5 },
+    { x: spawn.x - spawn.dx * 0.45, y: spawn.y },
+    { x: spawn.x + spawn.dx * 0.45, y: spawn.y },
+  ];
+  const rolls = Array.from({ length: SPAWN_TRIES }, () => rawSpawn(random));
+  return [...fixed, ...rolls].map((spot) => clampLobbyPoint(spot.x, spot.y));
+}
+
+export function lobbySpawn(
+  random: () => number = Math.random,
+  others: readonly { x: number; y: number; nickname?: string }[] = lobbyShownSamples(),
+): { x: number; y: number } {
+  const spots = spawnCandidates(random);
+  let fallback = spots[0] ?? { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y };
+  let fallbackScore = -1;
+  for (const spot of spots) {
+    if (lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2)) continue;
+    if (!others.some((other) => spawnBlocked(spot, other))) return spot;
+    if (others.some((other) => lobbyTooClose(spot, other))) continue;
+    const score = lobbyCrowding(spot, others);
+    if (score > fallbackScore) {
+      fallback = spot;
+      fallbackScore = score;
+    }
+  }
+  return fallback;
+}
+
+function hashedSpawn(id: string, salt: number): { x: number; y: number } {
+  let hash = (2166136261 ^ salt) >>> 0;
   for (let i = 0; i < id.length; i += 1) hash = Math.imul(hash ^ id.charCodeAt(i), 16777619) >>> 0;
   const a = (hash & 0xffff) / 0x10000;
   const b = ((hash >>> 16) & 0xffff) / 0x10000;
@@ -112,12 +422,62 @@ export function lobbySpawnForId(id: string): { x: number; y: number } {
   return clampLobbyPoint(spawn.x + (a * 2 - 1) * spawn.dx, spawn.y + (b * 2 - 1) * spawn.dy);
 }
 
+/** Stable arrival spot when a person shows up without coordinates. */
+export function lobbySpawnForId(
+  id: string,
+  others: readonly { x: number; y: number; nickname?: string }[] = lobbyShownSamples(),
+): { x: number; y: number } {
+  const clear = (spot: { x: number; y: number }) =>
+    !lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2) && !others.some((other) => spawnBlocked(spot, other));
+  let best = hashedSpawn(id, 0);
+  let bestScore = lobbyCrowding(best, others);
+  if (clear(best)) return best;
+  for (let salt = 1; salt < SPAWN_TRIES; salt += 1) {
+    const spot = hashedSpawn(id, salt);
+    if (clear(spot)) return spot;
+    if (others.some((other) => lobbyTooClose(spot, other))) continue;
+    const score = lobbyCrowding(spot, others);
+    if (score > bestScore) {
+      best = spot;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/** True when some point in the arrival box is within the old point clearance of these feet. */
+export function sampleBlocksSpawn(x: number, y: number): boolean {
+  const { spawn } = LOBBY_WORLD;
+  const nx = Math.min(Math.max(x, spawn.x - spawn.dx), spawn.x + spawn.dx);
+  const ny = Math.min(Math.max(y, spawn.y - spawn.dy), spawn.y + spawn.dy);
+  return lobbyTooClose({ x, y }, { x: nx, y: ny });
+}
+
 export type LobbySpot = { id: string; x: number; y: number };
 
 /** Gap between the floating action card and the friend's head or the nav. */
 export const FRIEND_CARD_GAP = 8;
 
-const TAG_NUDGE_PX = 48;
+/** Name tags stay this far inside the screen edge. */
+export const TAG_VIEW_MARGIN = 8;
+
+/**
+ * Horizontal screen shift that pulls a name tag inside the frame.
+ * Moves it only as far as the edge requires, so it stays under its Bé Da.
+ */
+export function tagEdgeDelta(
+  tag: { left: number; right: number },
+  frame: { left: number; right: number },
+  margin = TAG_VIEW_MARGIN,
+): number {
+  const min = frame.left + margin;
+  const max = frame.right - margin;
+  let dx = 0;
+  if (tag.left < min) dx = min - tag.left;
+  if (tag.right + dx > max) dx -= tag.right + dx - max;
+  if (tag.left + dx < min) dx = min - tag.left;
+  return dx;
+}
 
 /** Round-nav block. Mirrors `--beda-nav-reserve` in be-da-game.css, before measurement. */
 export function lobbyNavReservePx(viewportWidth: number, safeAreaBottom = 0): number {
@@ -129,29 +489,11 @@ export function lobbyNavReservePx(viewportWidth: number, safeAreaBottom = 0): nu
   return padTop + orb + gap + 18 + padBottom;
 }
 
-/**
- * Shift a name tag off the face of the nearest Bé Da standing in front.
- * Negative is left. Tags with nobody close still step aside so shadows
- * don't stack on a neighbor.
- */
+/** Tags stay centered under their Bé Da. The screen clamp slides them in from the edges. */
 export function lobbyTagNudgePx(spot: LobbySpot, spots: readonly LobbySpot[]): number {
-  let nearest: LobbySpot | null = null;
-  let nearestDy = Infinity;
-  let nearestDx = Infinity;
-  for (const other of spots) {
-    if (other.id === spot.id) continue;
-    const dy = other.y - spot.y;
-    if (dy <= 0.012) continue;
-    const dx = Math.abs(other.x - spot.x);
-    if (dx > 0.14) continue;
-    if (dy < nearestDy - 0.001 || (Math.abs(dy - nearestDy) <= 0.001 && dx < nearestDx)) {
-      nearest = other;
-      nearestDy = dy;
-      nearestDx = dx;
-    }
-  }
-  if (!nearest) return spot.x < 0.5 ? -TAG_NUDGE_PX / 2 : TAG_NUDGE_PX / 2;
-  return nearest.x >= spot.x ? -TAG_NUDGE_PX : TAG_NUDGE_PX;
+  void spot;
+  void spots;
+  return 0;
 }
 
 /** Lower on the screen (larger y) paints in front. */

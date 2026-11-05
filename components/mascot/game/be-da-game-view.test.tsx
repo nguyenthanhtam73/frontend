@@ -168,9 +168,9 @@ describe("Bé Da game screen", () => {
     assert.match(html, /Mèo Máy/);
     assert.match(html, /beda-tag-me/);
     assert.match(visibleText(html), /Bạn/);
-    assert.equal((html.match(/data-sample="true"/g) ?? []).length, 27);
+    assert.equal((html.match(/data-sample="true"/g) ?? []).length, 6);
     assert.equal(html.includes("@"), false);
-    assert.match(html, /Sảnh 1 · 28\/28 người/);
+    assert.match(html, /Sảnh 1 · 7\/28 người/);
     assert.match(html, /data-testid="beda-hall"/);
     assert.match(html, /data-lobby-mode="sample"/);
     assert.match(html, /Ẩn bạn này/);
