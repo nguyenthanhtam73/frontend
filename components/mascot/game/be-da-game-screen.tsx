@@ -37,7 +37,7 @@ import {
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
-import { createSpaRoom, listMySpaRooms, readRememberedSpaRooms, rememberSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
+import { createSpaRoom, listMySpaRooms, mergeSpaRoomCodes, readRememberedSpaRooms, rememberSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
 import {
   SPA_TAB_KEY,
   normalizeRoomCode,
@@ -293,9 +293,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     void listMySpaRooms()
       .then((rooms) => {
         if (cancel) return;
-        const codes = rooms.map((room) => room.code);
-        for (const code of codes) rememberSpaRoom(localStorage, code);
-        setMyRooms(readRememberedSpaRooms(localStorage));
+        setMyRooms(mergeSpaRoomCodes(localStorage, rooms.map((room) => room.code)));
       })
       .catch(() => {
         if (!cancel) setMyRooms(readRememberedSpaRooms(localStorage));
@@ -329,8 +327,18 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       setMyRooms(readRememberedSpaRooms(localStorage));
       router.push(roomInvitePath(next));
     } catch (err) {
-      setCreateProblem(spaProblemFromError(err));
-      setMyRooms(readRememberedSpaRooms(localStorage));
+      const problem = spaProblemFromError(err);
+      setCreateProblem(problem);
+      if (problem === "too-many") {
+        try {
+          const rooms = await listMySpaRooms();
+          setMyRooms(mergeSpaRoomCodes(localStorage, rooms.map((room) => room.code)));
+        } catch {
+          setMyRooms(readRememberedSpaRooms(localStorage));
+        }
+      } else {
+        setMyRooms(readRememberedSpaRooms(localStorage));
+      }
     } finally {
       setCreatingRoom(false);
     }

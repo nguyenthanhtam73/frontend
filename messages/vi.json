@@ -3428,7 +3428,7 @@
       "spaFull": "Phòng đã đủ 8 người.",
       "spaMissing": "Không thấy phòng này. Kiểm tra mã nhé.",
       "spaRate": "Bạn làm hơi nhanh. Đợi một chút rồi thử lại.",
-      "spaTooMany": "Bạn đang mở 3 phòng. Bấm Vào phòng để vào lại.",
+      "spaTooMany": "Bạn đã có 3 phòng",
       "spaMember": "Chưa vào được phòng. Thử lại nhé.",
       "spaOffline": "Mạng đang chậm. Thử lại nhé.",
       "wave": "Vẫy tay",
