@@ -3,6 +3,8 @@
 export const GAME_SOUND_KEY = "beda-game-sound";
 export const GAME_WAVE_KEY = "beda-game-wave-day";
 export const GAME_CHEST_KEY = "beda-game-chest-day";
+export const GAME_CHEST_MORNING_KEY = "beda-game-chest-morning";
+export const GAME_CHEST_EVENING_KEY = "beda-game-chest-evening";
 
 type Store = Pick<Storage, "getItem" | "setItem">;
 
@@ -26,4 +28,19 @@ export function readDayFlag(storage: Pick<Storage, "getItem">, key: string, toda
 
 export function writeDayFlag(storage: Store, key: string, today: string): void {
   storage.setItem(key, today);
+}
+
+/**
+ * Which session chests were already opened today.
+ * A legacy beda-game-chest-day value for today counts as both, and is left in place.
+ */
+export function chestClaimedSessions(
+  storage: Pick<Storage, "getItem">,
+  today: string,
+): { morning: boolean; evening: boolean } {
+  const legacy = readDayFlag(storage, GAME_CHEST_KEY, today);
+  return {
+    morning: legacy || readDayFlag(storage, GAME_CHEST_MORNING_KEY, today),
+    evening: legacy || readDayFlag(storage, GAME_CHEST_EVENING_KEY, today),
+  };
 }

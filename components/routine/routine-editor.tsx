@@ -43,6 +43,7 @@ import { useRoutineSuggest, type SuggestError } from "./use-routine-suggest";
 import { useDirtyBeforeUnload } from "./hooks/use-dirty-beforeunload";
 import { useNavigationBlock } from "@/lib/hooks/use-navigation-block";
 import { streakDateKey } from "@/lib/streak/history";
+import { sessionGate, type SessionPhase } from "@/lib/routine/session-window";
 import { isSessionComplete, poseForStep, streakDotBonus } from "@/lib/mascot/pose";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
@@ -382,6 +383,7 @@ export function RoutineEditor() {
     : 0;
 
   function onRoutineToggle(section: "morning" | "evening", id: string) {
+    if (sessionGate(section).phase !== "open") return;
     if (!mascotOn) {
       r.toggleComplete(section, id);
       return;
@@ -401,6 +403,12 @@ export function RoutineEditor() {
     }
     if (turningOn) useBeDaPoseStore.getState().showStepPose(poseForStep(step));
   }
+
+  const clock = new Date();
+  const morningGate = sessionGate("morning", clock);
+  const eveningGate = sessionGate("evening", clock);
+  const sessionNote = (phase: SessionPhase) =>
+    phase === "early" ? t("sessionEarly") : phase === "late" ? t("sessionLate") : undefined;
 
   const hasEditorContent = useMemo(
     () =>
@@ -617,6 +625,8 @@ export function RoutineEditor() {
           onToggle={(id) => onRoutineToggle("morning", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
+          tickPhase={morningGate.phase}
+          tickClosedLabel={sessionNote(morningGate.phase)}
           onEditLockedAttempt={engageEditQuota}
         />
         <SectionCard
@@ -655,6 +665,8 @@ export function RoutineEditor() {
           onToggle={(id) => onRoutineToggle("evening", id)}
           labels={editorLabels(t)}
           editLocked={editLocked}
+          tickPhase={eveningGate.phase}
+          tickClosedLabel={sessionNote(eveningGate.phase)}
           onEditLockedAttempt={engageEditQuota}
         />
       </div>

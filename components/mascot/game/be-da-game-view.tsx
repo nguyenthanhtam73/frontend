@@ -24,6 +24,7 @@ import {
 import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
+import { sessionGate } from "@/lib/routine/session-window";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
@@ -188,6 +189,15 @@ export function BeDaGameView({
   createProblem?: SpaNotice;
 }) {
   const t = useTranslations("mascot");
+  const sessionNote = (section: "morning" | "evening") => {
+    const gate = sessionGate(section);
+    if (gate.phase === "open") return { phase: gate.phase, closed: false, note: "" };
+    return {
+      phase: gate.phase,
+      closed: true,
+      note: gate.phase === "early" ? t("game.sessionEarly") : t("game.sessionLate"),
+    };
+  };
   const rootRef = useRef<HTMLDivElement>(null);
   const [careSheet, setCareSheet] = useState(false);
   const [missionSheet, setMissionSheet] = useState(false);
@@ -432,9 +442,18 @@ export function BeDaGameView({
             </div>
             {(["morning", "evening"] as const).map((section) => {
               const rows = (careSteps ?? []).filter((step) => step.section === section);
+              const gate = sessionNote(section);
               return (
-                <section key={section}>
-                  <h3>{t(section === "morning" ? "game.careMorning" : "game.careEvening")}</h3>
+                <section
+                  key={section}
+                  className={gate.closed ? "beda-session is-closed" : "beda-session"}
+                  data-testid={`beda-mission-session-${section}`}
+                  data-phase={gate.phase}
+                >
+                  <h3>
+                    {t(section === "morning" ? "game.careMorning" : "game.careEvening")}
+                    {gate.note ? <span className="beda-session-note">{gate.note}</span> : null}
+                  </h3>
                   {rows.length === 0 ? <p className="beda-step-empty">{t("game.stepsEmpty")}</p> : null}
                   {rows.map((step) => {
                     const link = routineAffiliateLink(step);
@@ -446,7 +465,11 @@ export function BeDaGameView({
                           data-testid="beda-mission-step"
                           data-section={section}
                           data-done={step.completed ? "true" : "false"}
-                          onClick={() => onToggleCareStep?.(step)}
+                          disabled={gate.closed}
+                          onClick={() => {
+                            if (gate.closed) return;
+                            onToggleCareStep?.(step);
+                          }}
                         >
                           <span className="beda-check">{step.completed ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
                           {step.title}
@@ -500,9 +523,18 @@ export function BeDaGameView({
             </div>
             {(["morning", "evening"] as const).map((section) => {
               const rows = (careSteps ?? []).filter((step) => step.section === section);
+              const gate = sessionNote(section);
               return (
-                <section key={section}>
-                  <h3>{t(section === "morning" ? "game.careMorning" : "game.careEvening")}</h3>
+                <section
+                  key={section}
+                  className={gate.closed ? "beda-session is-closed" : "beda-session"}
+                  data-testid={`beda-session-${section}`}
+                  data-phase={gate.phase}
+                >
+                  <h3>
+                    {t(section === "morning" ? "game.careMorning" : "game.careEvening")}
+                    {gate.note ? <span className="beda-session-note">{gate.note}</span> : null}
+                  </h3>
                   {rows.length === 0 ? <p className="beda-step-empty">{t("game.stepsEmpty")}</p> : null}
                   {rows.map((step) => (
                     <button
@@ -512,7 +544,11 @@ export function BeDaGameView({
                       data-testid="beda-routine-step"
                       data-section={section}
                       data-done={step.completed ? "true" : "false"}
-                      onClick={() => onToggleCareStep?.(step)}
+                      disabled={gate.closed}
+                      onClick={() => {
+                        if (gate.closed) return;
+                        onToggleCareStep?.(step);
+                      }}
                     >
                       <span className="beda-check">{step.completed ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
                       {step.title}
@@ -525,7 +561,11 @@ export function BeDaGameView({
               type="button"
               className="beda-step-all"
               data-testid="beda-routine-finish"
-              disabled={(careSteps ?? []).length > 0 && (careSteps ?? []).every((step) => step.completed)}
+              disabled={(() => {
+                const open = sessionGate("morning").phase === "open" ? "morning" : "evening";
+                const rows = (careSteps ?? []).filter((step) => step.section === open);
+                return rows.length === 0 || rows.every((step) => step.completed);
+              })()}
               onClick={() => onFinishCareSteps?.()}
             >
               {t("game.allDone")}

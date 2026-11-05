@@ -93,6 +93,8 @@ export function SectionCard({
   labels,
   accent,
   editLocked = false,
+  tickPhase = "open",
+  tickClosedLabel,
   highlightEmptyTitles = false,
   sectionAlert,
   onEditLockedAttempt,
@@ -116,6 +118,9 @@ export function SectionCard({
   labels: SectionLabels;
   accent: "am" | "pm";
   editLocked?: boolean;
+  /** open lets ticks through. early and late dim the session and block ticks. */
+  tickPhase?: "open" | "early" | "late";
+  tickClosedLabel?: string;
   highlightEmptyTitles?: boolean;
   sectionAlert?: SectionAlert | null;
   onEditLockedAttempt?: () => void;
@@ -152,10 +157,13 @@ export function SectionCard({
     [onRemove],
   );
 
+  const ticksClosed = tickPhase !== "open";
+
   return (
     <Card
-      className="transition-shadow hover:shadow-md"
+      className={cn("transition-shadow hover:shadow-md", ticksClosed && "opacity-60")}
       data-testid={`routine-section-${section}`}
+      data-session-phase={tickPhase}
     >
       <CardContent className="space-y-3 p-3.5 sm:space-y-4 sm:p-6">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -171,6 +179,14 @@ export function SectionCard({
             <div className="min-w-0">
               <p className="text-base font-semibold leading-tight sm:text-sm">{title}</p>
               <p className="text-sm leading-snug text-muted-foreground sm:text-xs">{desc}</p>
+              {ticksClosed && tickClosedLabel ? (
+                <p
+                  className="text-xs font-semibold text-muted-foreground"
+                  data-testid={`routine-session-note-${section}`}
+                >
+                  {tickClosedLabel}
+                </p>
+              ) : null}
             </div>
           </div>
           {steps.length > 0 ? (
@@ -297,7 +313,8 @@ export function SectionCard({
                     onMoveUp={() => onMove(step.id, -1)}
                     onMoveDown={() => onMove(step.id, 1)}
                     onChange={(patch) => onUpdate(step.id, patch)}
-                  onToggle={() => onToggle(step.id)}
+                    onToggle={() => onToggle(step.id)}
+                  ticksClosed={ticksClosed}
                   labels={labels}
                   highlightEmptyTitle={highlightEmptyTitles && !step.title.trim()}
                   detailsExpandedDefault={detailsExpandedDefault}
@@ -475,6 +492,7 @@ function StepRow({
   onMoveDown,
   onChange,
   onToggle,
+  ticksClosed = false,
   labels,
   highlightEmptyTitle = false,
   detailsExpandedDefault,
@@ -495,6 +513,7 @@ function StepRow({
   onMoveDown: () => void;
   onChange: (patch: Partial<RoutineStepDTO>) => void;
   onToggle: () => void;
+  ticksClosed?: boolean;
   labels: SectionLabels;
   highlightEmptyTitle?: boolean;
   detailsExpandedDefault: boolean;
@@ -534,12 +553,17 @@ function StepRow({
 
         <button
           type="button"
-          onClick={onToggle}
+          onClick={() => {
+            if (ticksClosed) return;
+            onToggle();
+          }}
+          disabled={ticksClosed}
           data-testid={`routine-step-tick-${section}-${index}`}
           aria-label={step.completed ? labels.completeOn : labels.completeOff}
           aria-pressed={step.completed}
           className={cn(
             "inline-flex size-11 shrink-0 items-center justify-center rounded-full border transition-all duration-200 active:scale-[0.95] sm:size-10",
+            ticksClosed && "cursor-not-allowed",
             step.completed
               ? "border-emerald-500 bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
               : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",

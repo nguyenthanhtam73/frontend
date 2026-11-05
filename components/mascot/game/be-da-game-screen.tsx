@@ -16,8 +16,10 @@ import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
 import { useSpaRoom } from "@/components/mascot/game/use-spa-room";
 import { localePath } from "@/lib/mascot/game/path";
 import {
-  GAME_CHEST_KEY,
+  GAME_CHEST_EVENING_KEY,
+  GAME_CHEST_MORNING_KEY,
   GAME_WAVE_KEY,
+  chestClaimedSessions,
   readDayFlag,
   readSoundEnabled,
   writeDayFlag,
@@ -47,6 +49,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import { isSessionComplete } from "@/lib/mascot/pose";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 import { keepAffiliate } from "@/lib/routine/affiliate-link";
+import { pendingChestSession, sessionComplete, sessionOpen } from "@/lib/routine/session-window";
 import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query";
 import { streakDateKey } from "@/lib/streak/history";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
@@ -87,7 +90,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [tab, setTab] = useState<GameTab>("care");
   const [soundOn, setSoundOn] = useState(true);
   const [waved, setWaved] = useState(false);
-  const [claimed, setClaimed] = useState(false);
+  const [claimedMorning, setClaimedMorning] = useState(false);
+  const [claimedEvening, setClaimedEvening] = useState(false);
   const [ready, setReady] = useState(false);
   const [chestDismissed, setChestDismissed] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState("keo-deo");
@@ -98,7 +102,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [burst, setBurst] = useState(0);
   const soundRef = useRef(true);
-  const autoChest = useRef(false);
+  const autoChest = useRef<string | null>(null);
   soundRef.current = soundOn;
 
   useEffect(() => {
@@ -106,7 +110,9 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     // A removed item stays in storage. The figure wears the default until they pick again.
     setLook(equippedGameLook(readGameLook(localStorage), { admin: closetAdmin }));
     setWaved(readDayFlag(localStorage, GAME_WAVE_KEY, today));
-    setClaimed(readDayFlag(localStorage, GAME_CHEST_KEY, today));
+    const claimed = chestClaimedSessions(localStorage, today);
+    setClaimedMorning(claimed.morning);
+    setClaimedEvening(claimed.evening);
     setReady(true);
     const root = document.documentElement;
     const prevHtml = root.style.overflow;
@@ -158,6 +164,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   );
   const toggleCareStep = useCallback(
     (step: { id: string; section: "morning" | "evening" }) => {
+      if (!sessionOpen(step.section)) return;
       const current = queryClient.getQueryData<RoutineDTO>(routineTodayQueryKey) ?? routineQuery.data;
       if (!current) return;
       const next: RoutineDTO = {
@@ -174,12 +181,26 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     const current = queryClient.getQueryData<RoutineDTO>(routineTodayQueryKey) ?? routineQuery.data;
     if (!current) return;
     const done = (steps: RoutineStepDTO[]) => steps.map((item) => ({ ...item, completed: true }));
-    void commitTicks({ ...current, morning: done(current.morning), evening: done(current.evening) });
+    const morningOpen = sessionOpen("morning");
+    const eveningOpen = sessionOpen("evening");
+    void commitTicks({
+      ...current,
+      morning: morningOpen ? done(current.morning) : current.morning,
+      evening: eveningOpen ? done(current.evening) : current.evening,
+    });
   }, [commitTicks, queryClient, routineQuery.data]);
   const routineToday = mascotQuery.data?.routineToday ?? null;
   const quests = gameQuests({ morning, routineToday, wavedToday: waved });
   const day = routineSummary(careSteps);
-  const canChest = day.allDone && !claimed;
+  const morningDone = sessionComplete(morning);
+  const eveningDone = sessionComplete(evening);
+  const pendingChest = pendingChestSession({
+    morningDone,
+    eveningDone,
+    morningClaimed: claimedMorning,
+    eveningClaimed: claimedEvening,
+  });
+  const canChest = pendingChest != null;
 
   useEffect(() => {
     if (roomCode) return;
@@ -202,11 +223,12 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   }, [roomCode]);
 
   useEffect(() => {
-    if (!ready || autoChest.current || !canChest || roomCode) return;
-    autoChest.current = true;
+    if (!ready || !pendingChest || roomCode) return;
+    if (autoChest.current === pendingChest) return;
+    autoChest.current = pendingChest;
     setChestDismissed(false);
     setTab("quests");
-  }, [ready, canChest, roomCode]);
+  }, [ready, pendingChest, roomCode]);
 
   useEffect(() => {
     if (!toast) return;
@@ -336,8 +358,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
 
   function onClaim() {
     feedback();
-    writeDayFlag(localStorage, GAME_CHEST_KEY, today);
-    setClaimed(true);
+    if (pendingChest === "morning") {
+      writeDayFlag(localStorage, GAME_CHEST_MORNING_KEY, today);
+      setClaimedMorning(true);
+    } else if (pendingChest === "evening") {
+      writeDayFlag(localStorage, GAME_CHEST_EVENING_KEY, today);
+      setClaimedEvening(true);
+    }
     setChestDismissed(true);
     setTab("care");
   }
@@ -409,10 +436,16 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSwitchHall={presence.switchHall}
       look={look}
       wornIds={wornIds}
-      hearts={day.morning.done + day.evening.done}
+      hearts={
+        pendingChest === "morning"
+          ? day.morning.done
+          : pendingChest === "evening"
+            ? day.evening.done
+            : day.morning.done + day.evening.done
+      }
       wavedToday={waved}
       streakKept={(streak.data?.current_streak ?? 0) > 0 || checkedIn}
-      giftTaken={claimed}
+      giftTaken={!pendingChest && (claimedMorning || claimedEvening)}
       player={view}
       burst={burst}
       homeHref={localePath(locale, "/check-in")}
