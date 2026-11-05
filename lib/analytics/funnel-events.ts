@@ -22,6 +22,9 @@ export const FIRST_PARTY_FUNNEL_EVENTS = {
   checkInSubmitClicked: "checkin_submit_clicked",
   checkInSubmitSuccess: "checkin_submit_success",
   checkInSubmitError: "checkin_submit_error",
+  androidBetaView: "android_beta_banner_view",
+  androidBetaClick: "android_beta_banner_click",
+  androidBetaDismiss: "android_beta_banner_dismiss",
 } as const;
 
 export type FirstPartyFunnelEvent =

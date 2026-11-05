@@ -44,6 +44,9 @@ describe("funnel analytics", () => {
     assert.equal(FUNNEL_EVENTS.paywallView, "paywall_view");
     assert.equal(FUNNEL_EVENTS.checkoutConfirm, "checkout_confirm");
     assert.equal(FUNNEL_EVENTS.paid, "paid");
+    assert.equal(FUNNEL_EVENTS.androidBetaView, "android_beta_banner_view");
+    assert.equal(FUNNEL_EVENTS.androidBetaClick, "android_beta_banner_click");
+    assert.equal(FUNNEL_EVENTS.androidBetaDismiss, "android_beta_banner_dismiss");
   });
 
   it("accepts only known funnel event names", () => {

@@ -273,6 +273,12 @@
     "offlineNoticeBody": "Some features (photo uploads, AI buddy, saving routines) may not work until you're back online.",
     "offlineCheckInBody": "Uploading check-in photos and getting AI feedback need a connection. You can still prepare your entry and submit it later."
   },
+  "androidBeta": {
+    "title": "Try the DaDiary app first 🎁",
+    "group": "Google Group",
+    "optIn": "Play opt-in",
+    "dismiss": "Dismiss"
+  },
   "iosInstall": {
     "bannerTitle": "Install DaDiary on your home screen to use it like an app",
     "bannerDescription": "Tap Share → Add to Home Screen",

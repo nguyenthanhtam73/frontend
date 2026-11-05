@@ -11,6 +11,7 @@ export const SHELL_MESSAGE_NAMESPACES = [
   "pwa",
   "push",
   "iosInstall",
+  "androidBeta",
   "disclaimer",
   "errorBoundary",
   "auth",

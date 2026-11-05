@@ -36,6 +36,9 @@
  * | paywall_view       | paywall_view                                       |
  * | checkout_confirm   | checkout_confirm                                   |
  * | paid               | paid (+ Meta Purchase / TikTok CompletePayment)    |
+ * | android_beta_view  | android_beta_banner_view                           |
+ * | android_beta_click | android_beta_banner_click { target }               |
+ * | android_beta_dismiss | android_beta_banner_dismiss                      |
  */
 
 import { persistPaywallView } from "@/lib/api/paywall-view";
@@ -68,6 +71,9 @@ export const FUNNEL_EVENTS = {
   paywallView: "paywall_view",
   checkoutConfirm: "checkout_confirm",
   paid: "paid",
+  androidBetaView: "android_beta_banner_view",
+  androidBetaClick: "android_beta_banner_click",
+  androidBetaDismiss: "android_beta_banner_dismiss",
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

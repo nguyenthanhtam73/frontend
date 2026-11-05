@@ -6,6 +6,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 
 import { ActivationCheckInBanner } from "@/components/activation/activation-check-in-banner";
+import { AndroidBetaBanner } from "@/components/site/android-beta-banner";
 import { AdAttributionCapture } from "@/components/site/ad-attribution-capture";
 import { HashScroll } from "@/components/site/hash-scroll";
 import { MetaPixel } from "@/components/site/meta-pixel";
@@ -103,6 +104,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             <OfflineIndicator />
             <NavigationBlockListener />
             <SiteHeader />
+            <AndroidBetaBanner />
             <ActivationCheckInBanner />
             <HashScroll />
             <main className="flex min-w-0 max-w-full flex-1 flex-col">{children}</main>

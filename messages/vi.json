@@ -273,6 +273,12 @@
     "offlineNoticeBody": "Một số tính năng (đăng ảnh, bạn đồng hành AI, lưu chăm da sáng tối) có thể chưa hoạt động cho tới khi có mạng lại.",
     "offlineCheckInBody": "Tải ảnh và nhận lời khuyên AI cần kết nối mạng. Bạn vẫn có thể chuẩn bị nội dung và gửi sau."
   },
+  "androidBeta": {
+    "title": "Dùng thử app DaDiary sớm nhất 🎁",
+    "group": "Nhóm Google",
+    "optIn": "Đăng ký Play",
+    "dismiss": "Đóng"
+  },
   "iosInstall": {
     "bannerTitle": "Cài DaDiary về màn hình chính để dùng như app",
     "bannerDescription": "Bấm nút Chia sẻ → Thêm vào Màn hình chính",
