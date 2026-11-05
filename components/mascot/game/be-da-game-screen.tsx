@@ -31,7 +31,7 @@ import { skyPeriod } from "@/lib/mascot/game/sky";
 import {
   DEFAULT_GAME_LOOK,
   readGameLook,
-  writeGameLook,
+  saveGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
@@ -99,6 +99,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [myRooms, setMyRooms] = useState<string[]>([]);
   const [toast, setToast] = useState<GameToast>(null);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
+  const [wornLook, setWornLook] = useState<GameLook | null>(null);
   const [burst, setBurst] = useState(0);
   const soundRef = useRef(true);
   const autoChest = useRef<string | null>(null);
@@ -107,7 +108,10 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   useEffect(() => {
     setSoundOn(readSoundEnabled(localStorage));
     // A removed item stays in storage. The figure wears the default until they pick again.
-    setLook(equippedGameLook(readGameLook(localStorage), { admin: closetAdmin }));
+    const stored = readGameLook(localStorage);
+    const shown = equippedGameLook(stored, { admin: closetAdmin });
+    setLook(shown);
+    setWornLook(stored ? shown : null);
     setWaved(readDayFlag(localStorage, GAME_WAVE_KEY, today));
     const claimed = chestClaimedSessions(localStorage, today);
     setClaimedMorning(claimed.morning);
@@ -493,12 +497,19 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}
+      wornLook={wornLook}
       closetAdmin={closetAdmin}
       onLook={(next) => {
         const saved = equippedGameLook(next, { admin: closetAdmin });
+        if (!saveGameLook(localStorage, saved)) {
+          setToast({ kind: "wear-failed", name: "" });
+          return false;
+        }
         feedback();
         setLook(saved);
-        writeGameLook(localStorage, saved);
+        setWornLook(saved);
+        setToast({ kind: "worn", name: saved.outfit });
+        return true;
       }}
     />
   );

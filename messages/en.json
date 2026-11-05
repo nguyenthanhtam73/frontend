@@ -3492,6 +3492,8 @@
         "accessory_star_clip": "Star clip"
       },
       "toast": {
+        "worn": "Bé Da is wearing {name} ✨",
+        "wearFailed": "Couldn't wear that, try again",
         "wave": "{name} waved at you",
         "heart": "Heart sent to {name}",
         "outfit": "{name}'s outfit looks lovely"

@@ -1510,6 +1510,27 @@
   box-shadow: 0 5px 0 #e2bcc6, 0 12px 24px rgba(0, 0, 0, 0.16);
 }
 
+.beda-toast.is-wear,
+.beda-toast.is-error {
+  z-index: 12;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  white-space: nowrap;
+  text-align: center;
+  padding: 8px 14px;
+}
+
+.beda-game[data-tab="wardrobe"] .beda-toast.is-wear,
+.beda-game[data-tab="wardrobe"] .beda-toast.is-error {
+  top: auto;
+  bottom: calc(50vh + 12px);
+}
+
+.beda-toast.is-error {
+  background: #fff1f2;
+  color: #9f1239;
+}
+
 .beda-toast i {
   display: grid;
   width: 34px;
@@ -1761,6 +1782,16 @@
   outline: 3px solid #2b8c86;
 }
 
+.beda-wearing-badge {
+  border-radius: 999px;
+  background: #2b8c86;
+  padding: 2px 6px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 .beda-pick-art {
   position: relative;
   width: 64px;
@@ -1893,6 +1924,15 @@
   margin-top: 8px;
 }
 
+.beda-game[data-tab="wardrobe"] .beda-wear-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: 4px;
+  background: #fffaf5;
+  padding-top: 8px;
+}
+
 .beda-wear {
   display: block;
   width: 100%;
@@ -1904,6 +1944,13 @@
   font-size: 16px;
   font-weight: 900;
   box-shadow: 0 4px 0 #e7a0b4;
+}
+
+.beda-wear:disabled {
+  background: #d7efe9;
+  color: #1f6f6a;
+  box-shadow: none;
+  cursor: default;
 }
 
 .beda-game[data-tab="wardrobe"] .beda-picks {

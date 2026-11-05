@@ -14,7 +14,7 @@ import {
   lobbyActors,
   type LobbyActor,
 } from "@/lib/mascot/game/lobby-live";
-import { gameDress, isGameClip, isGameHair, isGameOutfit, type GameLook, type GamePose } from "@/lib/mascot/game/look";
+import { gameDress, isGameClip, isGameHair, isGameOutfit, sameGameLook, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import {
   equippedGameLook,
   grantedWardrobeItems,
@@ -40,7 +40,10 @@ export type CareStep = {
   product_name?: string;
 };
 
-export type GameToast = { name: string; kind: "wave" | "heart" | "outfit" } | null;
+export type GameToast =
+  | { name: string; kind: "wave" | "heart" | "outfit" | "worn" }
+  | { name: ""; kind: "wear-failed" }
+  | null;
 
 const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "quests" | "lobby" }[] = [
   { id: "care", icon: "care", label: "care" },
@@ -95,6 +98,7 @@ export function BeDaGameView({
   onClaim,
   onLook,
   closetAdmin = false,
+  wornLook = null,
   wavedToday = false,
   actors,
   you,
@@ -152,9 +156,11 @@ export function BeDaGameView({
   onSelectFriend: (id: string) => void;
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
-  onLook: (look: GameLook) => void;
+  onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
   closetAdmin?: boolean;
+  /** The look last saved with Mặc. Null until that save succeeds. */
+  wornLook?: GameLook | null;
   /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
   wavedToday?: boolean;
   actors?: readonly LobbyActor[];
@@ -356,12 +362,16 @@ export function BeDaGameView({
         <Wardrobe
           wornIds={wornIds}
           closetAdmin={closetAdmin}
+          wornLook={wornLook}
           preview={draft}
           onTry={(next) => {
             setDraft(next);
             setTryFlash((n) => n + 1);
           }}
-          onWear={() => onLook(draft)}
+          onWear={() => {
+            if (onLook(draft)) return;
+            setDraft(equipped);
+          }}
         />
       ) : null}
 
@@ -886,12 +896,14 @@ function Chest({
 function Wardrobe({
   wornIds,
   closetAdmin,
+  wornLook,
   preview,
   onTry,
   onWear,
 }: {
   wornIds: string[];
   closetAdmin: boolean;
+  wornLook: GameLook | null;
   preview: GameLook;
   onTry: (look: GameLook) => void;
   onWear: () => void;
@@ -902,6 +914,7 @@ function Wardrobe({
   const outfits = grantedWardrobeItems("outfit", access);
   const hairs = grantedWardrobeItems("hair", access);
   const clips = grantedWardrobeItems("clip", access);
+  const wearingSaved = wornLook != null && sameGameLook(wornLook, preview);
   return (
     <section className="beda-card beda-sheet" data-testid="beda-wardrobe" aria-label={t("game.wardrobe")}>
       <h2>{t("game.wardrobe")}</h2>
@@ -920,6 +933,7 @@ function Wardrobe({
         label={t("game.pickOutfit")}
         items={outfits}
         selected={preview.outfit}
+        wearingId={wornLook?.outfit ?? null}
         crop="is-outfit"
         onPick={(id) => {
           if (isGameOutfit(id)) onTry({ ...preview, outfit: id });
@@ -929,6 +943,7 @@ function Wardrobe({
         label={t("game.pickHair")}
         items={hairs}
         selected={preview.hair}
+        wearingId={wornLook?.hair ?? null}
         crop="is-hair"
         onPick={(id) => {
           if (isGameHair(id)) onTry({ ...preview, hair: id });
@@ -968,8 +983,14 @@ function Wardrobe({
       ) : null}
       <p className="beda-note">{t("game.tryNote")}</p>
       <div className="beda-wear-bar">
-        <button type="button" className="beda-wear" data-testid="beda-wear" onClick={onWear}>
-          {t("game.wear")}
+        <button
+          type="button"
+          className="beda-wear"
+          data-testid="beda-wear"
+          disabled={wearingSaved}
+          onClick={onWear}
+        >
+          {wearingSaved ? t("game.wearing") : t("game.wear")}
         </button>
       </div>
     </section>
@@ -980,12 +1001,14 @@ function WardrobeSlotPicks({
   label,
   items,
   selected,
+  wearingId,
   crop,
   onPick,
 }: {
   label: string;
   items: readonly WardrobeItem[];
   selected: string;
+  wearingId: string | null;
   crop: "is-outfit" | "is-hair";
   onPick: (id: WardrobeItem["id"]) => void;
 }) {
@@ -1002,9 +1025,15 @@ function WardrobeSlotPicks({
             className={selected === item.id ? "beda-pick is-on" : "beda-pick"}
             aria-label={t(`game.look.${item.id}`)}
             aria-pressed={selected === item.id}
+            data-wearing={wearingId === item.id ? "true" : "false"}
             onClick={() => onPick(item.id)}
           >
             <WardrobeThumb src={wardrobeThumbSrc(item)} crop={crop} />
+            {wearingId === item.id ? (
+              <span className="beda-wearing-badge" data-testid="beda-wearing-badge">
+                {t("game.wearing")}
+              </span>
+            ) : null}
             {t(`game.look.${item.id}`)}
           </button>
         ))}
@@ -1047,8 +1076,22 @@ function PersonIcon() {
   );
 }
 
-function Toast({ toast }: { toast: { name: string; kind: "wave" | "heart" | "outfit" } }) {
+function Toast({ toast }: { toast: Exclude<GameToast, null> }) {
   const t = useTranslations("mascot");
+  if (toast.kind === "worn") {
+    return (
+      <div className="beda-toast is-wear" role="status" data-testid="beda-toast">
+        {t("game.toast.worn", { name: t(`game.look.${toast.name}`) })}
+      </div>
+    );
+  }
+  if (toast.kind === "wear-failed") {
+    return (
+      <div className="beda-toast is-error" role="status" data-testid="beda-toast">
+        {t("game.toast.wearFailed")}
+      </div>
+    );
+  }
   const icon = toast.kind === "heart" ? "heart" : toast.kind === "outfit" ? "outfit" : "wave";
   return (
     <div className="beda-toast" role="status" data-testid="beda-toast">
