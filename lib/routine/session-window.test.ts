@@ -9,6 +9,7 @@ import {
 } from "@/lib/mascot/game/prefs";
 import {
   pendingChestSession,
+  routineDayKey,
   sessionComplete,
   sessionGate,
   vietnamMinutes,
@@ -27,6 +28,14 @@ describe("vietnam session windows", () => {
     assert.equal(vietnamMinutes(vn(15, 59)), 15 * 60 + 59);
     assert.equal(vietnamMinutes(vn(16, 0)), 16 * 60);
     assert.equal(vietnamMinutes(vn(23, 30)), 23 * 60 + 30);
+  });
+
+  it("keeps 00:00–04:00 evening on the previous civil day", () => {
+    assert.equal(routineDayKey(vn(0, 0)), "2026-11-04");
+    assert.equal(routineDayKey(vn(3, 59)), "2026-11-04");
+    assert.equal(routineDayKey(vn(4, 0)), "2026-11-05");
+    assert.equal(routineDayKey(vn(16, 0)), "2026-11-05");
+    assert.equal(routineDayKey(vn(23, 30)), "2026-11-05");
   });
 
   it("opens morning from 04:00 until 16:00 and evening the rest of the day", () => {

@@ -9,7 +9,7 @@ import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import { redirectToLoginWithNext } from "@/lib/auth/redirect-to-login";
 import { usageQueryKey } from "@/lib/api/usage";
 import { routineTodayQueryKey } from "@/lib/routine/today-query";
-import { streakDateKey } from "@/lib/streak/history";
+import { routineDayKey } from "@/lib/routine/session-window";
 import type {
   RoutineDTO,
   RoutineHistoryDTO,
@@ -426,7 +426,7 @@ export function useRoutine(msg: RoutineMessages, locale = "vi") {
 
   /** Copy a past day's steps into *today's* draft. Never writes that past row. */
   const applyHistoryAsTodayDraft = useCallback((entry: RoutineDTO) => {
-    const today = streakDateKey();
+    const today = routineDayKey();
     setRoutine((cur) => ({
       ...cur,
       morning: cloneStepsForToday(entry.morning ?? []),

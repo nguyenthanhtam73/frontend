@@ -49,9 +49,8 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import { isSessionComplete } from "@/lib/mascot/pose";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 import { keepAffiliate } from "@/lib/routine/affiliate-link";
-import { pendingChestSession, sessionComplete, sessionOpen } from "@/lib/routine/session-window";
+import { pendingChestSession, routineDayKey, sessionComplete, sessionOpen } from "@/lib/routine/session-window";
 import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query";
-import { streakDateKey } from "@/lib/streak/history";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 import "@/components/mascot/game/be-da-game.css";
@@ -62,7 +61,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const queryClient = useQueryClient();
   const code = roomCode ? normalizeRoomCode(roomCode) : null;
   const inSpa = roomCode != null;
-  const today = streakDateKey();
+  const today = routineDayKey();
   const user = useAuthStore((s) => s.user);
   const closetAdmin = user?.is_admin === true;
   const hasAuth = !!user || !!getAccessToken();
