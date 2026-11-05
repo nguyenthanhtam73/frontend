@@ -496,12 +496,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         const saved = equippedGameLook(next, { admin: closetAdmin });
         if (!saveGameLook(localStorage, saved)) {
           setToast({ kind: "wear-failed", name: "" });
-          return;
+          return false;
         }
         feedback();
         setLook(saved);
         setWornLook(saved);
         setToast({ kind: "worn", name: saved.outfit });
+        return true;
       }}
     />
   );

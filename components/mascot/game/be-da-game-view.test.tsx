@@ -65,7 +65,7 @@ function renderGame(
     onSelectFriend: () => undefined,
     onFriendAction: () => undefined,
     onClaim: () => undefined,
-    onLook: () => undefined,
+    onLook: () => true,
     ...extra,
   };
   return renderToStaticMarkup(
@@ -181,7 +181,7 @@ describe("Bé Da game screen", () => {
       wornLook: DEFAULT_GAME_LOOK,
       toast: { kind: "worn", name: "outfit_pajamas" },
     });
-    assert.match(html, /Đã mặc Đồ ngủ cho Bé Da 🎉/);
+    assert.match(html, /Bé Da đã mặc Đồ ngủ ✨/);
     assert.match(html, /data-testid="beda-wearing-badge"/);
     assert.match(html, /data-wearing="true"/);
     assert.match(html, /data-testid="beda-wear" disabled=""/);
@@ -191,7 +191,7 @@ describe("Bé Da game screen", () => {
       tab: "wardrobe" satisfies GameTab,
       toast: { kind: "wear-failed", name: "" },
     });
-    assert.match(failed, /Chưa mặc được\. Thử lại nhé\./);
+    assert.match(failed, /Chưa mặc được, thử lại nha/);
     assert.match(failed, /data-testid="beda-wear"(?![^>]*disabled)/);
   });
 

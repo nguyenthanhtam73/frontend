@@ -156,7 +156,7 @@ export function BeDaGameView({
   onSelectFriend: (id: string) => void;
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
-  onLook: (look: GameLook) => void;
+  onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
   closetAdmin?: boolean;
   /** The look last saved with Mặc. Null until that save succeeds. */
@@ -368,7 +368,10 @@ export function BeDaGameView({
             setDraft(next);
             setTryFlash((n) => n + 1);
           }}
-          onWear={() => onLook(draft)}
+          onWear={() => {
+            if (onLook(draft)) return;
+            setDraft(equipped);
+          }}
         />
       ) : null}
 
