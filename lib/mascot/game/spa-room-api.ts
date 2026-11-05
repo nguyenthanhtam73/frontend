@@ -74,6 +74,21 @@ export function rememberSpaRoom(storage: Pick<Storage, "getItem" | "setItem">, c
   storage.setItem(MINE_KEY, JSON.stringify(codes));
 }
 
+/**
+ * Rooms from GET /mine are the list to show. An empty reply (including an older
+ * server that has no /mine) keeps whatever this device already remembered.
+ */
+export function mergeSpaRoomCodes(storage: Pick<Storage, "getItem" | "setItem">, codes: string[]): string[] {
+  const fromApi: string[] = [];
+  for (const item of codes) {
+    const code = normalizeRoomCode(item);
+    if (code && !fromApi.includes(code)) fromApi.push(code);
+  }
+  if (fromApi.length === 0) return readRememberedSpaRooms(storage);
+  for (const code of fromApi) rememberSpaRoom(storage, code);
+  return fromApi.slice(0, 8);
+}
+
 export function readMySpaRooms(data: unknown): SpaRoomRecord[] {
   if (!data || typeof data !== "object") return [];
   const rooms = (data as { rooms?: unknown }).rooms;

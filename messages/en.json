@@ -3428,7 +3428,7 @@
       "spaFull": "This room already has 8 people.",
       "spaMissing": "No room with that code. Check it and try again.",
       "spaRate": "That was a bit fast. Wait a moment and try again.",
-      "spaTooMany": "You already have 3 open rooms. Tap Enter room to go back in.",
+      "spaTooMany": "You already have 3 rooms",
       "spaMember": "Couldn't enter the room. Try again.",
       "spaOffline": "The network is slow. Try again.",
       "wave": "Wave",

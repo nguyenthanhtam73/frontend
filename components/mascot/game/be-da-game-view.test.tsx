@@ -278,6 +278,19 @@ describe("Bé Da game screen", () => {
     assert.match(html, /Tạo phòng/);
   });
 
+  it("shows the 3-room cap with a button for every room", () => {
+    const html = renderGame({
+      tab: "lobby",
+      myRooms: ["DA7K2M", "BE3N9Q", "CU4P8R"],
+      createProblem: "too-many",
+    });
+    assert.match(html, /Bạn đã có 3 phòng/);
+    assert.match(html, /Vào phòng DA7K2M/);
+    assert.match(html, /Vào phòng BE3N9Q/);
+    assert.match(html, /Vào phòng CU4P8R/);
+    assert.equal((html.match(/data-testid="beda-reenter-room"/g) ?? []).length, 3);
+  });
+
   it("offers the next hall when this one is full", () => {
     const html = renderGame({
       tab: "lobby",

@@ -25,7 +25,7 @@ import {
   spaRoomProblem,
   zaloShareUrl,
 } from "@/lib/mascot/game/spa-room";
-import { readSpaRoom } from "@/lib/mascot/game/spa-room-api";
+import { mergeSpaRoomCodes, readSpaRoom } from "@/lib/mascot/game/spa-room-api";
 
 const SELF = "k3m8p2q9w4xn";
 const OTHER = "a9b8c7d6e5f4";
@@ -43,6 +43,35 @@ function person(id: string, nickname: string): WirePerson {
     action: "idle",
   };
 }
+
+function memoryStorage(seed: Record<string, string> = {}): Storage {
+  const data = { ...seed };
+  return {
+    getItem: (key) => (key in data ? data[key] : null),
+    setItem: (key, value) => {
+      data[key] = value;
+    },
+    removeItem: (key) => {
+      delete data[key];
+    },
+    clear: () => {
+      for (const key of Object.keys(data)) delete data[key];
+    },
+    key: (index) => Object.keys(data)[index] ?? null,
+    get length() {
+      return Object.keys(data).length;
+    },
+  };
+}
+
+describe("spa room list", () => {
+  it("uses the server list and keeps device memory when the server has none", () => {
+    const storage = memoryStorage({ "beda-spa-rooms": JSON.stringify(["DA7K2M"]) });
+    assert.deepEqual(mergeSpaRoomCodes(storage, []), ["DA7K2M"]);
+    assert.deepEqual(mergeSpaRoomCodes(storage, ["cu4p8r", "be3n9q", "nope", "cu4p8r"]), ["CU4P8R", "BE3N9Q"]);
+    assert.deepEqual(mergeSpaRoomCodes(memoryStorage(), []), []);
+  });
+});
 
 describe("spa room HTTP errors", () => {
   it("maps the live room codes and statuses", () => {
