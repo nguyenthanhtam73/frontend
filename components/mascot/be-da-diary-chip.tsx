@@ -33,8 +33,8 @@ function sheetOpen(): boolean {
 }
 
 /**
- * Small corner Bé Da for the skin diary. She stays in the page header's
- * empty corner, and steps aside while a field or a sheet is open.
+ * Floating Bé Da for the skin diary. She is fixed to the corner, so the
+ * header lays out as if she were not there, and she steps aside for a modal.
  */
 export function BeDaDiaryChip() {
   const t = useTranslations("mascot");
@@ -44,6 +44,7 @@ export function BeDaDiaryChip() {
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [quiet, setQuiet] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [scrolling, setScrolling] = useState(false);
   const room = gameRoomView(view);
   const dozing = room.mood === "sleepy";
 
@@ -81,6 +82,30 @@ export function BeDaDiaryChip() {
     };
   }, [hidden]);
 
+  useEffect(() => {
+    if (hidden) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reduce.matches) return;
+    const scrollingNow = { current: false };
+    let timer = 0;
+    const onScroll = () => {
+      if (!scrollingNow.current) {
+        scrollingNow.current = true;
+        setScrolling(true);
+      }
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        scrollingNow.current = false;
+        setScrolling(false);
+      }, 1000);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer);
+    };
+  }, [hidden]);
+
   if (hidden) return null;
 
   return (
@@ -88,6 +113,7 @@ export function BeDaDiaryChip() {
       type="button"
       data-testid="be-da-diary-chip"
       data-quiet={quiet ? "true" : "false"}
+      data-scrolling={scrolling ? "true" : "false"}
       aria-label={t("homeAria")}
       aria-hidden={quiet ? true : undefined}
       tabIndex={quiet ? -1 : 0}
@@ -100,6 +126,7 @@ export function BeDaDiaryChip() {
         quiet ? "is-quiet" : "",
         dozing ? "is-dozing" : "",
         paused ? "is-paused" : "",
+        scrolling ? "is-scrolling" : "",
       ].filter(Boolean).join(" ")}
     >
       {dozing ? (

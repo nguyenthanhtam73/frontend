@@ -438,6 +438,7 @@
 .be-da-chip-bob,
 .be-da-chip-wave,
 .be-da-chip-zzz i,
+.be-da-diary-bubble,
 .be-da-routine-chip .bd-lids,
 .be-da-chip-bubbles span,
 .bd-lids,
@@ -458,6 +459,15 @@
 
   .be-da-flies-exit {
     opacity: 0 !important;
+  }
+
+  .be-da-diary-chip {
+    transition: none !important;
+  }
+
+  .be-da-diary-chip.is-scrolling {
+    transform: none !important;
+    opacity: 1 !important;
   }
 }
 
@@ -522,42 +532,35 @@ img.be-da-flies-exit {
   box-shadow: 0 10px 28px rgba(246, 184, 200, 0.38);
 }
 
-/* Diary corner. About 2.5× the old 3.25rem chip. She shares the title row,
-   so the next control starts under her feet instead of under a blank band. */
-[data-diary-page] {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-}
-
-[data-diary-page]:has(.be-da-diary-chip) {
-  column-gap: 0.75rem;
-}
-
-[data-diary-page] > :not(.be-da-diary-chip) {
-  grid-column: 1 / -1;
-}
-
-[data-diary-page] > .diary-chip-head,
-[data-diary-page] > header.diary-chip-head {
-  grid-column: 1;
-  grid-row: 1;
-  min-height: 0;
-  padding-right: 0;
-}
-
+/* Floating diary Bé Da. Fixed, so she follows the scroll and takes no layout. */
 .be-da-diary-chip {
-  position: relative;
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
-  z-index: 5;
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  z-index: 25;
   width: 8.25rem;
-  margin-right: max(0px, calc(env(safe-area-inset-right) - 0.25rem));
   border: 0;
   background: transparent;
   padding: 1.85rem 0 0;
   line-height: 0;
+  transform-origin: 100% 100%;
+  transition: transform 320ms ease, opacity 320ms ease;
+}
+
+.be-da-diary-chip.is-scrolling {
+  transform: scale(0.6);
+  opacity: 0.6;
+}
+
+[data-diary-page]:has(.be-da-diary-chip) {
+  padding-bottom: calc(15rem + env(safe-area-inset-bottom));
+}
+
+/* Keep the section's add button on the left so the floating chip does not cover it. */
+[data-diary-page]:has(.be-da-diary-chip) [data-testid^="routine-section-"] header > button {
+  width: auto;
+  align-self: flex-start;
+  margin-right: 8.75rem;
 }
 
 .be-da-diary-chip.is-quiet {
@@ -587,6 +590,17 @@ img.be-da-flies-exit {
   line-height: 1.3;
   white-space: nowrap;
   pointer-events: none;
+  animation: be-da-diary-hello 7s ease forwards;
+}
+
+@keyframes be-da-diary-hello {
+  0%,
+  68% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .be-da-diary-chip img[src*="zzz.svg"] {
@@ -602,7 +616,8 @@ img.be-da-flies-exit {
 
 .be-da-diary-chip.is-paused .bd-breathe,
 .be-da-diary-chip.is-paused .be-da-chip-wave,
-.be-da-diary-chip.is-paused .be-da-chip-zzz i {
+.be-da-diary-chip.is-paused .be-da-chip-zzz i,
+.be-da-diary-chip.is-paused .be-da-diary-bubble {
   animation-play-state: paused;
 }
 
@@ -610,10 +625,19 @@ img.be-da-flies-exit {
   .be-da-diary-chip {
     width: 9.75rem;
     padding-top: 2rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .be-da-diary-bubble {
     font-size: 14px;
+  }
+
+  [data-diary-page]:has(.be-da-diary-chip) {
+    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
+  }
+
+  [data-diary-page]:has(.be-da-diary-chip) [data-testid^="routine-section-"] header > button {
+    margin-right: 11rem;
   }
 }
 
