@@ -2,7 +2,13 @@ import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
 import {
   clampLobbyPoint,
-  lobbyBodyBox,
+  LOBBY_FIGURE_GAP,
+  LOBBY_SAMPLE_CAP,
+  LOBBY_WORLD,
+  lobbyFigureBox,
+  lobbyFigureHitsChrome,
+  lobbyFreeCell,
+  lobbyShownSamples,
   lobbySpawnForId,
   screenBoxesOverlap,
   SAMPLE_LOBBY_FRIENDS,
@@ -528,11 +534,10 @@ export function lobbyActors(input: {
       });
     }
   }
-  const room = Math.max(0, LOBBY_CAP - 1 - real.length);
+  const room = Math.max(0, Math.min(LOBBY_SAMPLE_CAP, LOBBY_CAP - 1 - real.length));
   const samples: LobbyActor[] = [];
-  for (const friend of SAMPLE_LOBBY_FRIENDS) {
+  for (const friend of lobbyShownSamples(input.hidden)) {
     if (samples.length >= room) break;
-    if (input.hidden.has(friend.id)) continue;
     samples.push(sampleActor(friend, input.poses[friend.id] ?? null));
   }
   return [...samples, ...real];
@@ -560,20 +565,23 @@ function hashPhase(id: string): number {
 
 function strollBlocked(x: number, y: number, selfId: string): boolean {
   const self = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === selfId);
-  const worldW = 390 * 1.3;
-  const worldH = worldW * 3;
-  return SAMPLE_LOBBY_FRIENDS.some(
+  const nickname = self?.nickname ?? "Mây Hồng";
+  const worldW = 390 * LOBBY_WORLD.viewportWidthScale;
+  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  if (lobbyFigureHitsChrome(x, y, nickname)) return true;
+  const mine = lobbyFigureBox(x, y, nickname, worldW, worldH);
+  return lobbyShownSamples().some(
     (friend) =>
       friend.id !== selfId &&
       screenBoxesOverlap(
-        lobbyBodyBox(x, y, self?.nickname ?? friend.nickname, worldW, worldH),
-        lobbyBodyBox(friend.x, friend.y, friend.nickname, worldW, worldH),
-        0,
+        mine,
+        lobbyFigureBox(friend.x, friend.y, friend.nickname, worldW, worldH),
+        LOBBY_FIGURE_GAP,
       ),
   );
 }
 
-/** A small stroll around a sample visitor's authored spot. Stays inside the walk band. */
+/** A small stroll around a sample visitor's spot. A step that meets someone or a control takes another free cell. */
 export function sampleWander(
   id: string,
   tMs: number,
@@ -583,8 +591,15 @@ export function sampleWander(
   const phase = hashPhase(id);
   const dx = Math.sin(tMs / 4800 + phase) * 0.03;
   const dy = Math.cos(tMs / 6200 + phase) * 0.015;
+  const self = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === id);
+  const nickname = self?.nickname ?? "Mây Hồng";
   let feet = clampLobbyPoint(baseX + dx, baseY + dy);
-  if (strollBlocked(feet.x, feet.y, id)) feet = clampLobbyPoint(baseX, baseY);
+  if (strollBlocked(feet.x, feet.y, id)) {
+    const others = lobbyShownSamples()
+      .filter((friend) => friend.id !== id)
+      .map((friend) => ({ x: friend.x, y: friend.y, nickname: friend.nickname }));
+    feet = lobbyFreeCell({ x: baseX, y: baseY }, others, nickname);
+  }
   const facing: LobbyFacing = Math.cos(tMs / 4800 + phase) > 0 ? "right" : "left";
   return { x: feet.x, y: feet.y, facing };
 }

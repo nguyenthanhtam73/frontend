@@ -17,11 +17,17 @@ import {
   type GameLook,
 } from "./look";
 import {
+  LOBBY_FIGURE_GAP,
   LOBBY_PLAYER_SPOT,
+  LOBBY_SAMPLE_CAP,
+  LOBBY_SAMPLE_CELLS,
   LOBBY_WORLD,
   SAMPLE_LOBBY_FRIENDS,
   clampLobbyPoint,
+  lobbyFigureBox,
+  lobbyFigureHitsChrome,
   lobbyHeadCount,
+  lobbyShownSamples,
   lobbySpawn,
   lobbyBodyBox,
   lobbyTooClose,
@@ -353,6 +359,47 @@ describe("lobby world", () => {
       }
     }
     assert.ok(near <= 3, `near spawn ${near}`);
+  });
+
+  it("draws a short sample cast on cells that stay apart at 390px", () => {
+    const shown = lobbyShownSamples();
+    assert.equal(shown.length, LOBBY_SAMPLE_CAP);
+    assert.equal(LOBBY_SAMPLE_CAP, 6);
+    assert.ok(shown.some((friend) => friend.id === "keo-deo"));
+    assert.ok(shown.some((friend) => friend.id === "meo-may"));
+    const worldW = 390 * 1.3;
+    const worldH = worldW * 3;
+    const floor = LOBBY_SAMPLE_CELLS.filter((cell) => cell.y >= LOBBY_WORLD.walk.minY);
+    assert.equal(floor.length, 12);
+    for (let i = 0; i < shown.length; i += 1) {
+      const a = shown[i]!;
+      assert.equal(lobbyFigureHitsChrome(a.x, a.y, a.nickname), false, a.id);
+      for (let j = i + 1; j < shown.length; j += 1) {
+        const b = shown[j]!;
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyFigureBox(a.x, a.y, a.nickname, worldW, worldH),
+            lobbyFigureBox(b.x, b.y, b.nickname, worldW, worldH),
+            LOBBY_FIGURE_GAP,
+          ),
+          false,
+          `${a.id} ${b.id}`,
+        );
+      }
+    }
+    const spot = lobbySpawn(() => 0.5);
+    assert.equal(lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2), false);
+    for (const friend of shown) {
+      assert.equal(
+        screenBoxesOverlap(
+          lobbyFigureBox(spot.x, spot.y, "Bé Da 0000", worldW, worldH, 1.2),
+          lobbyFigureBox(friend.x, friend.y, friend.nickname, worldW, worldH),
+          LOBBY_FIGURE_GAP,
+        ),
+        false,
+        friend.id,
+      );
+    }
   });
 
   it("keeps a name tag inside the screen by the smallest shift", () => {

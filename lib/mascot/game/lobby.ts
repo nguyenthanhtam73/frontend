@@ -83,6 +83,114 @@ export function screenBoxesOverlap(a: ScreenBox, b: ScreenBox, gap = 2): boolean
   return a.left < b.right + gap && a.right + gap > b.left && a.top < b.bottom + gap && a.bottom + gap > b.top;
 }
 
+/**
+ * How far apart figure boxes stay at the 390px lobby, zoom 1.
+ * A pair that is closer than this on both axes counts as overlapping.
+ */
+export const LOBBY_FIGURE_GAP = 12;
+
+/**
+ * Figure plus name pill in world pixels at zoom 1.
+ * Sized from the lobby art (84px) and the 11px name pill, which is what the screen measures.
+ */
+export function lobbyFigureBox(
+  x: number,
+  y: number,
+  nickname: string,
+  worldW: number,
+  worldH: number,
+  ms?: number,
+): ScreenBox {
+  const scale = ms ?? 0.78 + 0.4 * Math.min(1, Math.max(0, y));
+  const figW = 84 * scale;
+  const figH = figW * 1.45;
+  const tagW = Math.ceil(nickname.length * 8.2 + 22);
+  const width = Math.max(figW, tagW);
+  const height = figH + 18;
+  const cx = x * worldW;
+  const feet = y * worldH;
+  return { left: cx - width / 2, top: feet - height, right: cx + width / 2, bottom: feet + 6 };
+}
+
+/** True when this figure's box meets a control while the camera is looking at them. */
+export function lobbyFigureHitsChrome(
+  x: number,
+  y: number,
+  nickname: string,
+  ms?: number,
+  view: { viewW: number; viewH: number } = { viewW: 390, viewH: 844 },
+): boolean {
+  const cam = lobbyOpeningCamera({ x, y }, view);
+  const box = lobbyFigureBox(x, y, nickname, cam.worldW, cam.worldH, ms);
+  const screen = {
+    left: cam.x + box.left,
+    top: cam.y + box.top,
+    right: cam.x + box.right,
+    bottom: cam.y + box.bottom,
+  };
+  if (screen.bottom <= 0 || screen.top >= cam.viewH || screen.right <= 0 || screen.left >= view.viewW) return false;
+  return lobbyExclusionZones(view.viewW, view.viewH).some((zone) => screenBoxesOverlap(screen, zone, 8));
+}
+
+/** 2×6 floor cells, plus spare seats above the world. Floor spacing at 390px is wider than a figure and its name. */
+const SAMPLE_COLS = [0.24, 0.76] as const;
+const SAMPLE_ROWS = [0.16, 0.32, 0.48, 0.64, 0.8, 0.96] as const;
+
+export const LOBBY_SAMPLE_CELLS: readonly { x: number; y: number }[] = (() => {
+  const cells: { x: number; y: number }[] = [];
+  for (const y of SAMPLE_ROWS) {
+    for (const x of SAMPLE_COLS) cells.push({ x, y });
+  }
+  for (const y of [-0.42, -0.7, -0.98]) {
+    cells.push({ x: 0.28, y }, { x: 0.72, y });
+  }
+  return cells;
+})();
+
+/** One visitor per staggered floor cell, so the homes themselves stay apart. */
+export const LOBBY_SAMPLE_HOMES: readonly { x: number; y: number }[] = [
+  { x: 0.24, y: 0.16 },
+  { x: 0.76, y: 0.32 },
+  { x: 0.24, y: 0.48 },
+  { x: 0.76, y: 0.64 },
+  { x: 0.24, y: 0.8 },
+  { x: 0.76, y: 0.96 },
+];
+
+export const LOBBY_SAMPLE_CAP = LOBBY_SAMPLE_HOMES.length;
+
+export const LOBBY_SAMPLE_IDS = ["suong-mai", "may-hong", "meo-may", "keo-deo", "chanh-leo", "gau-mo"] as const;
+
+/**
+ * Another floor cell whose figure box misses everyone already placed and the opening controls.
+ * Spare cells above the world are not returned here; the lobby frame uses those only when the screen is full.
+ */
+export function lobbyFreeCell(
+  prefer: { x: number; y: number },
+  others: readonly { x: number; y: number; nickname: string }[],
+  nickname: string,
+  viewW = 390,
+  viewH = 844,
+): { x: number; y: number } {
+  const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
+  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  const floor = LOBBY_SAMPLE_CELLS.filter((cell) => cell.y >= LOBBY_WORLD.walk.minY);
+  const ordered = [...floor].sort((a, b) => {
+    const da = (a.x - prefer.x) ** 2 + (a.y - prefer.y) ** 2;
+    const db = (b.x - prefer.x) ** 2 + (b.y - prefer.y) ** 2;
+    return da - db;
+  });
+  for (const cell of ordered) {
+    const mine = lobbyFigureBox(cell.x, cell.y, nickname, worldW, worldH);
+    const crowded = others.some((other) =>
+      screenBoxesOverlap(mine, lobbyFigureBox(other.x, other.y, other.nickname, worldW, worldH), LOBBY_FIGURE_GAP),
+    );
+    if (crowded || lobbyFigureHitsChrome(cell.x, cell.y, nickname, undefined, { viewW, viewH })) continue;
+    return cell;
+  }
+  return ordered[0] ?? clampLobbyPoint(prefer.x, prefer.y);
+}
+
 function lobbyWorldSize(viewW: number) {
   const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
   const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
@@ -121,58 +229,16 @@ function bodyHitsZones(
   return zones.some((zone) => screenBoxesOverlap(screen, zone, 0));
 }
 
-const NUDGE_STEPS: readonly { x: number; y: number }[] = [
-  { x: 0, y: 0.06 },
-  { x: 0, y: 0.1 },
-  { x: 0, y: -0.06 },
-  { x: 0, y: -0.1 },
-  { x: -0.08, y: 0 },
-  { x: 0.08, y: 0 },
-  { x: -0.12, y: 0.04 },
-  { x: 0.12, y: 0.04 },
-  { x: -0.08, y: 0.08 },
-  { x: 0.08, y: 0.08 },
-];
-
 /**
- * Move a sample visitor just far enough that their figure and name are not under
- * the back button, zoom cluster, or bottom menu. Keeps clear of people already placed.
+ * A free floor cell for this visitor. A blocked cell is skipped — the figure is not slid a few pixels.
  */
 export function sampleRenderSpot(
   spot: { x: number; y: number; nickname: string },
   others: readonly { x: number; y: number; nickname: string }[],
-  cam: { x: number; y: number; scale: number },
-  viewW: number,
-  viewH: number,
-  worldW: number,
-  worldH: number,
+  viewW = 390,
+  viewH = 844,
 ): { x: number; y: number } {
-  const zones = lobbyExclusionZones(viewW, viewH);
-  const hits = (x: number, y: number) => {
-    const box = lobbyBodyBox(x, y, spot.nickname, worldW, worldH);
-    const screen = {
-      left: cam.x + box.left * cam.scale,
-      top: cam.y + box.top * cam.scale,
-      right: cam.x + box.right * cam.scale,
-      bottom: cam.y + box.bottom * cam.scale,
-    };
-    if (screen.bottom <= 0 || screen.top >= viewH || screen.right <= 0 || screen.left >= viewW) return false;
-    return zones.some((zone) => screenBoxesOverlap(screen, zone, 0));
-  };
-  const crowded = (x: number, y: number) =>
-    others.some((other) =>
-      screenBoxesOverlap(
-        lobbyBodyBox(x, y, spot.nickname, worldW, worldH),
-        lobbyBodyBox(other.x, other.y, other.nickname, worldW, worldH),
-        0,
-      ),
-    );
-  if (!hits(spot.x, spot.y)) return { x: spot.x, y: spot.y };
-  for (const step of NUDGE_STEPS) {
-    const cand = clampLobbyPoint(spot.x + step.x, spot.y + step.y);
-    if (!hits(cand.x, cand.y) && !crowded(cand.x, cand.y)) return cand;
-  }
-  return { x: spot.x, y: spot.y };
+  return lobbyFreeCell(spot, others, spot.nickname, viewW, viewH);
 }
 
 /** True when this visitor's figure or name would sit under a control at the opening camera. */
@@ -229,6 +295,29 @@ const SAMPLE_ROSTER: readonly Omit<SampleLobbyFriend, "x" | "y">[] = [
 
 export const SAMPLE_LOBBY_FRIENDS: readonly SampleLobbyFriend[] = layoutSampleSpots(SAMPLE_ROSTER);
 
+/**
+ * The visitors actually drawn in an empty hall.
+ * The rest of the roster stays available for the spa and for backfill when one of these is hidden.
+ * Homes sit on staggered cells so their boxes clear each other at 390px.
+ */
+export function lobbyShownSamples(hidden: ReadonlySet<string> = new Set()): SampleLobbyFriend[] {
+  const picked: SampleLobbyFriend[] = [];
+  const seen = new Set<string>();
+  const take = (friend: SampleLobbyFriend) => {
+    if (picked.length >= LOBBY_SAMPLE_CAP || hidden.has(friend.id) || seen.has(friend.id)) return;
+    const home = LOBBY_SAMPLE_HOMES[picked.length];
+    if (!home) return;
+    seen.add(friend.id);
+    picked.push({ ...friend, x: home.x, y: home.y });
+  };
+  for (const id of LOBBY_SAMPLE_IDS) {
+    const friend = SAMPLE_LOBBY_FRIENDS.find((item) => item.id === id);
+    if (friend) take(friend);
+  }
+  for (const friend of SAMPLE_LOBBY_FRIENDS) take(friend);
+  return picked;
+}
+
 /** Sample visitors plus the player's own Bé Da. */
 export function lobbyHeadCount(): number {
   return SAMPLE_LOBBY_FRIENDS.length + 1;
@@ -281,33 +370,47 @@ function rawSpawn(random: () => number): { x: number; y: number } {
  */
 function spawnBlocked(spot: { x: number; y: number }, other: { x: number; y: number; nickname?: string }): boolean {
   if (lobbyTooClose(spot, other)) return true;
-  const worldW = 390 * 1.3;
-  const worldH = worldW * 3;
+  const worldW = 390 * LOBBY_WORLD.viewportWidthScale;
+  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
   const name = other.nickname ?? "Mây Hồng";
   return screenBoxesOverlap(
-    lobbyBodyBox(spot.x, spot.y, "Bé Da", worldW, worldH),
-    lobbyBodyBox(other.x, other.y, name, worldW, worldH),
-    0,
+    lobbyFigureBox(spot.x, spot.y, "Bé Da 0000", worldW, worldH, 1.2),
+    lobbyFigureBox(other.x, other.y, name, worldW, worldH),
+    LOBBY_FIGURE_GAP,
   );
+}
+
+function spawnCandidates(random: () => number): { x: number; y: number }[] {
+  const { spawn } = LOBBY_WORLD;
+  const fixed = [
+    { x: spawn.x, y: spawn.y },
+    { x: spawn.x, y: spawn.y - spawn.dy * 0.5 },
+    { x: spawn.x, y: spawn.y + spawn.dy * 0.5 },
+    { x: spawn.x - spawn.dx * 0.45, y: spawn.y },
+    { x: spawn.x + spawn.dx * 0.45, y: spawn.y },
+  ];
+  const rolls = Array.from({ length: SPAWN_TRIES }, () => rawSpawn(random));
+  return [...fixed, ...rolls].map((spot) => clampLobbyPoint(spot.x, spot.y));
 }
 
 export function lobbySpawn(
   random: () => number = Math.random,
-  others: readonly { x: number; y: number; nickname?: string }[] = SAMPLE_LOBBY_FRIENDS,
+  others: readonly { x: number; y: number; nickname?: string }[] = lobbyShownSamples(),
 ): { x: number; y: number } {
-  let best = rawSpawn(random);
-  let bestScore = lobbyCrowding(best, others);
-  if (!others.some((other) => spawnBlocked(best, other))) return best;
-  for (let attempt = 1; attempt < SPAWN_TRIES; attempt += 1) {
-    const spot = rawSpawn(random);
+  const spots = spawnCandidates(random);
+  let fallback = spots[0] ?? { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y };
+  let fallbackScore = -1;
+  for (const spot of spots) {
+    if (lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2)) continue;
     if (!others.some((other) => spawnBlocked(spot, other))) return spot;
+    if (others.some((other) => lobbyTooClose(spot, other))) continue;
     const score = lobbyCrowding(spot, others);
-    if (score > bestScore) {
-      best = spot;
-      bestScore = score;
+    if (score > fallbackScore) {
+      fallback = spot;
+      fallbackScore = score;
     }
   }
-  return best;
+  return fallback;
 }
 
 function hashedSpawn(id: string, salt: number): { x: number; y: number } {
@@ -322,14 +425,17 @@ function hashedSpawn(id: string, salt: number): { x: number; y: number } {
 /** Stable arrival spot when a person shows up without coordinates. */
 export function lobbySpawnForId(
   id: string,
-  others: readonly { x: number; y: number }[] = SAMPLE_LOBBY_FRIENDS,
+  others: readonly { x: number; y: number; nickname?: string }[] = lobbyShownSamples(),
 ): { x: number; y: number } {
+  const clear = (spot: { x: number; y: number }) =>
+    !lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2) && !others.some((other) => spawnBlocked(spot, other));
   let best = hashedSpawn(id, 0);
   let bestScore = lobbyCrowding(best, others);
-  if (!others.some((other) => lobbyTooClose(best, other))) return best;
+  if (clear(best)) return best;
   for (let salt = 1; salt < SPAWN_TRIES; salt += 1) {
     const spot = hashedSpawn(id, salt);
-    if (!others.some((other) => lobbyTooClose(spot, other))) return spot;
+    if (clear(spot)) return spot;
+    if (others.some((other) => lobbyTooClose(spot, other))) continue;
     const score = lobbyCrowding(spot, others);
     if (score > bestScore) {
       best = spot;

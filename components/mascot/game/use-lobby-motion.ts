@@ -3,15 +3,14 @@
 import { useLayoutEffect, useRef } from "react";
 
 import {
+  LOBBY_SAMPLE_CELLS,
   LOBBY_WORLD,
-  SAMPLE_LOBBY_FRIENDS,
   lobbyChromePad,
   lobbyExclusionZones,
   lobbyStackZ,
   tagEdgeDelta,
 } from "@/lib/mascot/game/lobby";
 import { spaFootScale } from "@/lib/mascot/game/spa-room";
-import { sampleWander } from "@/lib/mascot/game/lobby-live";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -51,10 +50,20 @@ function liteMotion(): boolean {
   return (typeof cores === "number" && cores > 0 && cores <= 4) || (typeof memory === "number" && memory > 0 && memory <= 2);
 }
 
-/** Pull every name tag inside the viewport using its measured screen box. */
+/** Pull a name tag that is already on screen inside the viewport. Off-screen tags stay put. */
 function clampLobbyTags(frame: HTMLElement) {
   const view = frame.getBoundingClientRect();
   for (const tag of frame.querySelectorAll<HTMLElement>(".beda-tag")) {
+    const seen = tag.getBoundingClientRect();
+    const onScreen =
+      seen.bottom > view.top + 2 &&
+      seen.top < view.bottom - 2 &&
+      seen.right > view.left + 2 &&
+      seen.left < view.right - 2;
+    if (!onScreen) {
+      if (tag.style.getPropertyValue("--edge") !== "0px") tag.style.setProperty("--edge", "0px");
+      continue;
+    }
     for (let pass = 0; pass < 3; pass += 1) {
       const before = tag.getBoundingClientRect();
       const dx = tagEdgeDelta(before, view);
@@ -71,51 +80,37 @@ function clampLobbyTags(frame: HTMLElement) {
   }
 }
 
-/** Slide sample visitors until their figure and name clear the real control boxes. */
-function nudgeSamplesOffChrome(frame: HTMLElement) {
-  const root = frame.closest(".beda-game") ?? document;
-  const zones = [".beda-back", ".beda-zoom", ".beda-nav"]
-    .map((selector) => root.querySelector<HTMLElement>(selector))
-    .filter((el): el is HTMLElement => el != null);
-  const view = frame.getBoundingClientRect();
-  for (const el of frame.querySelectorAll<HTMLElement>('[data-sample="true"].beda-pose')) {
-    for (let pass = 0; pass < 10; pass += 1) {
-      const art = el.querySelector(".beda-friend-art")?.getBoundingClientRect();
-      const tag = el.querySelector(".beda-tag")?.getBoundingClientRect();
-      if (!art || !tag) break;
-      const box = {
-        left: Math.min(art.left, tag.left),
-        top: Math.min(art.top, tag.top),
-        right: Math.max(art.right, tag.right),
-        bottom: Math.max(art.bottom, tag.bottom),
-      };
-      let dx = 0;
-      let dy = 0;
-      for (const zoneEl of zones) {
-        const zone = zoneEl.getBoundingClientRect();
-        const ix = Math.min(box.right, zone.right) - Math.max(box.left, zone.left);
-        const iy = Math.min(box.bottom, zone.bottom) - Math.max(box.top, zone.top);
-        if (ix <= 2 || iy <= 2) continue;
-        const viewMid = view.left + view.width / 2;
-        if (zone.top > view.top + view.height * 0.55) dy -= iy + 8;
-        else if (zone.left > viewMid) dx -= ix + 8;
-        else dx += ix + 8;
-      }
-      if (dx === 0 && dy === 0) break;
-      const mx = Number.parseFloat(el.style.getPropertyValue("--mx") || "0") || 0;
-      const my = Number.parseFloat(el.style.getPropertyValue("--my") || "0") || 0;
-      const homeMx = Number(el.dataset.homeMx ?? mx);
-      const homeMy = Number(el.dataset.homeMy ?? my);
-      const nextMx = Math.min(homeMx + 48, Math.max(homeMx - 48, mx + dx));
-      const nextMy = Math.min(homeMy + 48, Math.max(homeMy - 48, my + dy));
-      if (nextMx === mx && nextMy === my) break;
-      el.style.setProperty("--mx", `${nextMx}px`);
-      el.style.setProperty("--my", `${nextMy}px`);
-    }
-  }
+type ScreenBox = { left: number; top: number; right: number; bottom: number };
+
+function unionBox(el: HTMLElement): { box: ScreenBox; tag: DOMRect } | null {
+  const art = el.querySelector(".beda-friend-art")?.getBoundingClientRect();
+  const tag = el.querySelector(".beda-tag")?.getBoundingClientRect();
+  if (!art || !tag) return null;
+  return {
+    tag,
+    box: {
+      left: Math.min(art.left, tag.left),
+      top: Math.min(art.top, tag.top),
+      right: Math.max(art.right, tag.right),
+      bottom: Math.max(art.bottom, tag.bottom),
+    },
+  };
 }
 
-/** Live figures keep their synced spot. The controls fade instead of shoving them. */
+function crowds(a: ScreenBox, b: ScreenBox, gap: number): boolean {
+  const ix = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+  const iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+  return ix > -gap && iy > -gap;
+}
+
+function tagClipped(tag: DOMRect, view: DOMRect): boolean {
+  const visible =
+    tag.bottom > view.top + 2 && tag.top < view.bottom - 2 && tag.right > view.left + 2 && tag.left < view.right - 2;
+  if (!visible) return false;
+  return tag.left < view.left + 8 - 0.6 || tag.right > view.right - 8 + 0.6;
+}
+
+/** Live people keep their synced spot. Sample visitors move, so they do not fade the controls. */
 function fadeCoveredControls(frame: HTMLElement) {
   const root = frame.closest(".beda-game") ?? frame;
   const figures = frame.querySelectorAll<HTMLElement>(".beda-friend");
@@ -125,6 +120,7 @@ function fadeCoveredControls(frame: HTMLElement) {
     const box = el.getBoundingClientRect();
     let covered = false;
     for (const fig of figures) {
+      if (fig.getAttribute("data-sample") === "true") continue;
       const body = fig.getBoundingClientRect();
       if (box.left < body.right - 6 && box.right > body.left + 6 && box.top < body.bottom - 6 && box.bottom > body.top + 6) {
         covered = true;
@@ -153,6 +149,97 @@ function placeLobby(
   el.style.setProperty("--ms", String(size));
   el.style.setProperty("--sy", String(squash));
   el.style.zIndex = String(lobbyStackZ(y));
+}
+
+type SampleSeat = { el: HTMLElement; id: string; x: number; y: number };
+
+/**
+ * Put each sample on a grid cell whose measured figure and name miss the others,
+ * the player, and the real control boxes. A blocked cell is left unused.
+ */
+function assignSampleCells(frame: HTMLElement, samples: SampleSeat[], worldW: number, worldH: number): Map<string, { x: number; y: number }> {
+  const view = frame.getBoundingClientRect();
+  const root = frame.closest(".beda-game") ?? document;
+  const zones: ScreenBox[] = [];
+  for (const selector of [".beda-back", ".beda-zoom", ".beda-nav"]) {
+    const node = root.querySelector<HTMLElement>(selector);
+    if (!node) continue;
+    const rect = node.getBoundingClientRect();
+    zones.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
+  }
+  const occupied: ScreenBox[] = [];
+  const you = frame.querySelector<HTMLElement>("[data-lobby-you]");
+  const youBox = you ? unionBox(you) : null;
+  if (youBox) occupied.push(youBox.box);
+  for (const live of frame.querySelectorAll<HTMLElement>('[data-sample="false"].beda-pose')) {
+    const box = unionBox(live);
+    if (box) occupied.push(box.box);
+  }
+  const used = new Set<number>();
+  const seats = new Map<string, { x: number; y: number }>();
+  const measure = (el: HTMLElement) => {
+    const measured = unionBox(el);
+    if (!measured) return null;
+    if (zones.some((zone) => crowds(measured.box, zone, 8))) return null;
+    if (occupied.some((box) => crowds(measured.box, box, 12))) return null;
+    if (tagClipped(measured.tag, view)) return null;
+    const onScreen =
+      measured.box.bottom > view.top &&
+      measured.box.top < view.bottom &&
+      measured.box.right > view.left &&
+      measured.box.left < view.right;
+    return { box: measured.box, onScreen };
+  };
+  const sit = (sample: SampleSeat, index: number) => {
+    const cell = LOBBY_SAMPLE_CELLS[index];
+    if (!cell) return null;
+    const tag = sample.el.querySelector<HTMLElement>(".beda-tag");
+    if (tag) tag.style.setProperty("--edge", "0px");
+    const size = 0.78 + Math.max(0, cell.y) * 0.4;
+    placeLobby(sample.el, cell.x, cell.y, worldW, worldH, size, 1);
+    sample.el.style.display = "";
+    return measure(sample.el);
+  };
+
+  for (const sample of samples) {
+    const current = Number(sample.el.dataset.cell ?? "-1");
+    if (current >= 0 && !used.has(current)) {
+      const kept = sit(sample, current);
+      if (kept?.onScreen) {
+        used.add(current);
+        occupied.push(kept.box);
+        const cell = LOBBY_SAMPLE_CELLS[current]!;
+        seats.set(sample.id, { x: cell.x, y: cell.y });
+        continue;
+      }
+    }
+    let best = -1;
+    let bestScore = Infinity;
+    for (let index = 0; index < LOBBY_SAMPLE_CELLS.length; index += 1) {
+      if (used.has(index)) continue;
+      const cell = LOBBY_SAMPLE_CELLS[index]!;
+      const fit = sit(sample, index);
+      if (!fit) continue;
+      const dist = (cell.x - sample.x) ** 2 + (cell.y - sample.y) ** 2;
+      const score = (fit.onScreen ? 0 : 100) + dist;
+      if (score < bestScore) {
+        best = index;
+        bestScore = score;
+      }
+    }
+    if (best < 0) {
+      sample.el.style.display = "none";
+      delete sample.el.dataset.cell;
+      continue;
+    }
+    const fit = sit(sample, best);
+    sample.el.dataset.cell = String(best);
+    used.add(best);
+    if (fit) occupied.push(fit.box);
+    const cell = LOBBY_SAMPLE_CELLS[best]!;
+    seats.set(sample.id, { x: cell.x, y: cell.y });
+  }
+  return seats;
 }
 
 function setFacing(
@@ -290,6 +377,29 @@ export function useLobbyMotion(input: {
       );
     };
 
+    const goalClearsChrome = (point: { x: number; y: number }) => {
+      const size = viewSize();
+      const pad = chromePad();
+      const settled = clampCamera(
+        {
+          x: pad.left + (size.w - pad.left - pad.right) * 0.5 - point.x * size.worldW * cam.scale,
+          y: pad.top + (size.h - pad.top - pad.bottom) * 0.46 - point.y * size.worldH * cam.scale,
+          scale: cam.scale,
+        },
+        size.w,
+        size.h,
+        size.worldW,
+        size.worldH,
+        pad,
+      );
+      const width = Math.max(84 * 1.2, 120);
+      const height = width * 1.45 + 22;
+      const cx = settled.x + point.x * size.worldW * cam.scale;
+      const feet = settled.y + point.y * size.worldH * cam.scale;
+      const body = { left: cx - width / 2, top: feet - height, right: cx + width / 2, bottom: feet + 8 };
+      return !lobbyExclusionZones(size.w, size.h).some((zone) => crowds(body, zone, 4));
+    };
+
     const toLobby = (clientX: number, clientY: number) => {
       if (tapBlocked(clientX, clientY)) return null;
       const box = frame.getBoundingClientRect();
@@ -297,9 +407,9 @@ export function useLobbyMotion(input: {
       const { worldW, worldH } = viewSize();
       const depth = worldPt.y / worldH;
       if (depth < LOBBY_WORLD.walk.minY) return null;
-      const point = clampPoint({ x: worldPt.x / worldW, y: depth }, LOBBY_BOUNDS);
+      let point = clampPoint({ x: worldPt.x / worldW, y: depth }, LOBBY_BOUNDS);
       if (ellipseContains(point, LOBBY_FOUNTAIN)) {
-        return clampPoint(
+        point = clampPoint(
           {
             x: LOBBY_FOUNTAIN.x + Math.sign(point.x - LOBBY_FOUNTAIN.x || 1) * LOBBY_FOUNTAIN.rx * 1.15,
             y: LOBBY_FOUNTAIN.y + Math.sign(point.y - LOBBY_FOUNTAIN.y || 1) * LOBBY_FOUNTAIN.ry * 1.15,
@@ -307,7 +417,14 @@ export function useLobbyMotion(input: {
           LOBBY_BOUNDS,
         );
       }
-      return point;
+      if (goalClearsChrome(point)) return point;
+      for (let step = 1; step <= 10; step += 1) {
+        for (const dy of [step * 0.025, -step * 0.025]) {
+          const alt = clampPoint({ x: point.x, y: point.y + dy }, LOBBY_BOUNDS);
+          if (goalClearsChrome(alt)) return alt;
+        }
+      }
+      return null;
     };
 
     const aim = (clientX: number, clientY: number) => {
@@ -425,43 +542,46 @@ export function useLobbyMotion(input: {
         });
       }
 
-      const drawn: { x: number; y: number; nickname: string }[] = [];
+      const samples: SampleSeat[] = [];
       for (const actor of actorsProp.current) {
         const pose = world.querySelector<HTMLElement>(`[data-friend-id="${actor.id}"].beda-pose`);
         if (!pose) continue;
+        if (actor.sample) {
+          samples.push({ el: pose, id: actor.id, x: actor.x, y: actor.y });
+          continue;
+        }
         let x = actor.x;
         let y = actor.y;
         let face = actor.facing === "left" ? -1 : 1;
-        const sampleName = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id)?.nickname ?? actor.id;
-        if (actor.sample) {
-          const wandered = reduced
-            ? { x: actor.x, y: actor.y, facing: actor.facing }
-            : sampleWander(actor.id, now, actor.x, actor.y);
-          x = wandered.x;
-          y = wandered.y;
-          face = wandered.facing === "left" ? -1 : 1;
-        } else {
-          const known = glideTargets.get(actor.id);
-          if (!known || Math.hypot(known.x - actor.x, known.y - actor.y) > 0.0008) {
-            glides.set(actor.id, pushGlide(glides.get(actor.id) ?? null, actor.x, actor.y, now));
-            glideTargets.set(actor.id, { x: actor.x, y: actor.y });
-          }
-          const glide = glides.get(actor.id);
-          const drawn = glide ? sampleGlide(glide, now) : { x: actor.x, y: actor.y };
-          x = drawn.x;
-          y = drawn.y;
-          const moving = glide ? Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 : false;
-          face = moving ? glide!.face : face;
+        const known = glideTargets.get(actor.id);
+        if (!known || Math.hypot(known.x - actor.x, known.y - actor.y) > 0.0008) {
+          glides.set(actor.id, pushGlide(glides.get(actor.id) ?? null, actor.x, actor.y, now));
+          glideTargets.set(actor.id, { x: actor.x, y: actor.y });
         }
+        const glide = glides.get(actor.id);
+        const drawn = glide ? sampleGlide(glide, now) : { x: actor.x, y: actor.y };
+        x = drawn.x;
+        y = drawn.y;
+        const moving = glide ? Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 : false;
+        face = moving ? glide!.face : face;
         placeLobby(pose, x, y, size.worldW, size.worldH, 0.78 + y * 0.4, 1);
         const prev = seen.get(actor.id);
         seen.set(actor.id, { x, y, t: now });
         const elapsed = prev ? (now - prev.t) / 1000 : 0;
         const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
         setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
-        drawn.push({ x, y, nickname: sampleName });
       }
-      nudgeSamplesOffChrome(frame);
+      const seats = assignSampleCells(frame, samples, size.worldW, size.worldH);
+      for (const sample of samples) {
+        const seat = seats.get(sample.id);
+        if (!seat) continue;
+        const prev = seen.get(sample.id);
+        seen.set(sample.id, { x: seat.x, y: seat.y, t: now });
+        const elapsed = prev ? (now - prev.t) / 1000 : 0;
+        const moving = !!prev && elapsed > 0 && Math.hypot(seat.x - prev.x, seat.y - prev.y) / elapsed > 0.02;
+        const face = actorsProp.current.find((actor) => actor.id === sample.id)?.facing === "left" ? -1 : 1;
+        setFacing(sample.el, face, moving ? now / 159 : 0, moving, lite, 0, { world, x: seat.x, y: seat.y });
+      }
       clampLobbyTags(frame);
       fadeCoveredControls(frame);
       frameId = window.requestAnimationFrame(tick);
