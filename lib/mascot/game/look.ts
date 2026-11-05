@@ -98,3 +98,17 @@ export function writeGameLook(storage: Store, look: GameLook): void {
     JSON.stringify({ outfit: look.outfit, hair: look.hair, clip: look.clip }),
   );
 }
+
+export function sameGameLook(a: GameLook, b: GameLook): boolean {
+  return a.outfit === b.outfit && a.hair === b.hair && a.clip === b.clip;
+}
+
+/** False when the device refuses the write. The caller keeps the previous look. */
+export function saveGameLook(storage: Store, look: GameLook): boolean {
+  try {
+    writeGameLook(storage, look);
+    return true;
+  } catch {
+    return false;
+  }
+}

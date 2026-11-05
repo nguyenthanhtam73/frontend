@@ -13,6 +13,8 @@ import {
   GAME_LOOK_KEY,
   GAME_OUTFITS,
   readGameLook,
+  sameGameLook,
+  saveGameLook,
   writeGameLook,
   type GameLook,
 } from "./look";
@@ -348,6 +350,22 @@ describe("game closet", () => {
     assert.equal(readGameLook(store), null);
     store.setItem(GAME_LOOK_KEY, JSON.stringify({ outfit: "outfit_nope", hair: "hair_sleep_buns", clip: null }));
     assert.equal(readGameLook(store), null);
+  });
+
+  it("reports a failed wear save and leaves the previous look", () => {
+    const store = memory();
+    writeGameLook(store, DEFAULT_GAME_LOOK);
+    const broken = {
+      getItem: (key: string) => store.getItem(key),
+      setItem: () => {
+        throw new Error("quota");
+      },
+    };
+    const next: GameLook = { ...DEFAULT_GAME_LOOK, hair: "hair_twin_tails" };
+    assert.equal(saveGameLook(broken, next), false);
+    assert.equal(sameGameLook(readGameLook(store) ?? DEFAULT_GAME_LOOK, DEFAULT_GAME_LOOK), true);
+    assert.equal(saveGameLook(store, next), true);
+    assert.equal(sameGameLook(readGameLook(store) ?? DEFAULT_GAME_LOOK, next), true);
   });
 });
 

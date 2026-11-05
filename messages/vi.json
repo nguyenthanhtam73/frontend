@@ -3492,6 +3492,8 @@
         "accessory_star_clip": "Kẹp sao"
       },
       "toast": {
+        "worn": "Đã mặc {name} cho Bé Da 🎉",
+        "wearFailed": "Chưa mặc được. Thử lại nhé.",
         "wave": "{name} vẫy tay với bạn",
         "heart": "Đã thả tim cho {name}",
         "outfit": "Đồ của {name} xinh quá"

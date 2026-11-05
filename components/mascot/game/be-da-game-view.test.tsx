@@ -157,6 +157,8 @@ describe("Bé Da game screen", () => {
     assert.equal((html.match(/class="beda-pick is-on"|class="beda-pick"/g) ?? []).length, 1);
     assert.match(html, /data-testid="beda-wear"/);
     assert.match(html, />Mặc</);
+    assert.equal(html.includes('data-testid="beda-wearing-badge"'), false);
+    assert.equal(html.includes("disabled"), false);
     assert.match(html, /beda-pick-skel/);
     assert.match(html, /is-loading/);
     assert.equal(html.includes('loading="lazy"'), false);
@@ -170,6 +172,27 @@ describe("Bé Da game screen", () => {
     assert.match(html, /Đồ ngủ/);
     const plain = renderGame({ tab: "wardrobe" satisfies GameTab });
     assert.equal(plain.includes("Áo thử"), false);
+  });
+
+  it("shows the worn badge, disabled button, and success toast after Mặc", () => {
+    const html = renderGame({
+      tab: "wardrobe" satisfies GameTab,
+      look: DEFAULT_GAME_LOOK,
+      wornLook: DEFAULT_GAME_LOOK,
+      toast: { kind: "worn", name: "outfit_pajamas" },
+    });
+    assert.match(html, /Đã mặc Đồ ngủ cho Bé Da 🎉/);
+    assert.match(html, /data-testid="beda-wearing-badge"/);
+    assert.match(html, /data-wearing="true"/);
+    assert.match(html, /data-testid="beda-wear" disabled=""/);
+    assert.match(html, /Đang mặc/);
+    assert.match(html, /\/mascot\/outfits\/outfit_pajamas\.svg/);
+    const failed = renderGame({
+      tab: "wardrobe" satisfies GameTab,
+      toast: { kind: "wear-failed", name: "" },
+    });
+    assert.match(failed, /Chưa mặc được\. Thử lại nhé\./);
+    assert.match(failed, /data-testid="beda-wear"(?![^>]*disabled)/);
   });
 
   it("draws the wide lobby with sample nicknames only", () => {
