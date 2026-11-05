@@ -61,6 +61,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const inSpa = roomCode != null;
   const today = streakDateKey();
   const user = useAuthStore((s) => s.user);
+  const closetAdmin = user?.is_admin === true;
   const hasAuth = !!user || !!getAccessToken();
   const { view: homeView } = useBeDaView();
   const view = useMemo(() => gameRoomView(homeView), [homeView]);
@@ -102,7 +103,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   useEffect(() => {
     setSoundOn(readSoundEnabled(localStorage));
     // A removed item stays in storage. The figure wears the default until they pick again.
-    setLook(equippedGameLook(readGameLook(localStorage)));
+    setLook(equippedGameLook(readGameLook(localStorage), { admin: closetAdmin }));
     setWaved(readDayFlag(localStorage, GAME_WAVE_KEY, today));
     setClaimed(readDayFlag(localStorage, GAME_CHEST_KEY, today));
     setReady(true);
@@ -117,7 +118,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       root.style.overflow = prevHtml;
       document.body.style.overflow = prevBody;
     };
-  }, [today]);
+  }, [today, closetAdmin]);
 
   const morning = routineQuery.data?.morning ?? [];
   const evening = routineQuery.data?.evening ?? [];
@@ -424,10 +425,12 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}
+      closetAdmin={closetAdmin}
       onLook={(next) => {
+        const saved = equippedGameLook(next, { admin: closetAdmin });
         feedback();
-        setLook(next);
-        writeGameLook(localStorage, next);
+        setLook(saved);
+        writeGameLook(localStorage, saved);
       }}
     />
   );

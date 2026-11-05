@@ -93,6 +93,7 @@ export function BeDaGameView({
   onFriendAction,
   onClaim,
   onLook,
+  closetAdmin = false,
   wavedToday = false,
   actors,
   you,
@@ -150,6 +151,8 @@ export function BeDaGameView({
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
   onLook: (look: GameLook) => void;
+  /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
+  closetAdmin?: boolean;
   /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
   wavedToday?: boolean;
   actors?: readonly LobbyActor[];
@@ -190,14 +193,14 @@ export function BeDaGameView({
   const spaOpen = spa != null;
   const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
   const wardrobeOpen = tab === "wardrobe" && !chestOpen && !spaOpen;
-  const equipped = equippedGameLook(look);
+  const equipped = equippedGameLook(look, { admin: closetAdmin });
   const [draft, setDraft] = useState(equipped);
   const [tryFlash, setTryFlash] = useState(0);
   const shownLook = wardrobeOpen ? draft : equipped;
 
   useEffect(() => {
-    setDraft(equippedGameLook(look));
-  }, [look, wardrobeOpen]);
+    setDraft(equippedGameLook(look, { admin: closetAdmin }));
+  }, [look, wardrobeOpen, closetAdmin]);
 
   useEffect(() => {
     if (!wardrobeOpen) return;
@@ -339,6 +342,7 @@ export function BeDaGameView({
       {wardrobeOpen ? (
         <Wardrobe
           wornIds={wornIds}
+          closetAdmin={closetAdmin}
           preview={draft}
           onTry={(next) => {
             setDraft(next);
@@ -838,20 +842,23 @@ function Chest({
 
 function Wardrobe({
   wornIds,
+  closetAdmin,
   preview,
   onTry,
   onWear,
 }: {
   wornIds: string[];
+  closetAdmin: boolean;
   preview: GameLook;
   onTry: (look: GameLook) => void;
   onWear: () => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
-  const outfits = grantedWardrobeItems("outfit");
-  const hairs = grantedWardrobeItems("hair");
-  const clips = grantedWardrobeItems("clip");
+  const access = { admin: closetAdmin };
+  const outfits = grantedWardrobeItems("outfit", access);
+  const hairs = grantedWardrobeItems("hair", access);
+  const clips = grantedWardrobeItems("clip", access);
   return (
     <section className="beda-card beda-sheet" data-testid="beda-wardrobe" aria-label={t("game.wardrobe")}>
       <h2>{t("game.wardrobe")}</h2>

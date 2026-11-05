@@ -10,6 +10,7 @@ export const GAME_OUTFITS = [
   "outfit_vay_hoa",
   "outfit_ao_thun_yem",
   "outfit_ao_len",
+  "outfit_ao_thu",
 ] as const;
 
 export const GAME_HAIRS = [

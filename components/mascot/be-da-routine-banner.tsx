@@ -15,12 +15,13 @@ import {
 } from "@/lib/mascot/game/look";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 const TAP_MS = 480;
 
-function storedLook(): GameLook {
+function storedLook(admin: boolean): GameLook {
   if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
-  return equippedGameLook(readGameLook(localStorage));
+  return equippedGameLook(readGameLook(localStorage), { admin });
 }
 
 /** Small corner Bé Da on /routine. Same room view and closet as Góc bình yên. */
@@ -29,13 +30,14 @@ export function BeDaRoutineBanner() {
   const locale = useLocale();
   const router = useRouter();
   const { view, hidden } = useBeDaView();
+  const closetAdmin = useAuthStore((s) => s.user?.is_admin === true);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [tapped, setTapped] = useState(false);
   const room = gameRoomView(view);
   const dozing = room.mood === "sleepy";
 
   useEffect(() => {
-    const read = () => setLook(storedLook());
+    const read = () => setLook(storedLook(closetAdmin));
     read();
     const onShow = () => {
       if (document.visibilityState === "hidden") return;
@@ -53,7 +55,7 @@ export function BeDaRoutineBanner() {
       document.removeEventListener("visibilitychange", onShow);
       window.removeEventListener("storage", onStore);
     };
-  }, []);
+  }, [closetAdmin]);
 
   useLayoutEffect(() => {
     if (hidden) return;

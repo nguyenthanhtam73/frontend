@@ -1,7 +1,8 @@
 /**
  * Player closet. One entry here is one item.
- * `grant` is reserved for later: "gift" (complete something) or "sell".
- * Only "default" is owned today. Do not build gifting or selling here.
+ * `grant` is how the item is owned. "default" is everyone. "admin" follows
+ * is_admin and stays out of every other account's list. "gift" and "sell"
+ * are reserved. Do not build gifting or selling here.
  * Lobby visitors can still wear the other drawings; those are not closet items.
  */
 
@@ -18,8 +19,12 @@ import {
 
 export type WardrobeSlot = "outfit" | "hair" | "clip";
 
-/** How a player can receive an item. Only "default" is granted today. */
-export type WardrobeGrant = "default" | "gift" | "sell";
+/** How a player can receive an item. "admin" is not in the shared owned list. */
+export type WardrobeGrant = "default" | "admin" | "gift" | "sell";
+
+export type ClosetAccess = {
+  admin?: boolean;
+};
 
 export type WardrobeItem = {
   id: GameOutfitId | GameHairId | GameClipId;
@@ -30,10 +35,18 @@ export type WardrobeItem = {
 /** The piece Bé Da is already wearing. Add one object when a new item exists. */
 export const WARDROBE_CATALOG: readonly WardrobeItem[] = [
   { id: "outfit_pajamas", slot: "outfit", grant: "default" },
+  { id: "outfit_ao_thu", slot: "outfit", grant: "admin" },
 ];
 
-export function grantedWardrobeItems(slot?: WardrobeSlot): readonly WardrobeItem[] {
-  return WARDROBE_CATALOG.filter((item) => item.grant === "default" && (slot == null || item.slot === slot));
+/** Default rows only, unless access.admin is set. Admin rows stay hidden otherwise. */
+export function grantedWardrobeItems(slot?: WardrobeSlot, access?: ClosetAccess): readonly WardrobeItem[] {
+  const admin = access?.admin === true;
+  return WARDROBE_CATALOG.filter((item) => {
+    if (slot != null && item.slot !== slot) return false;
+    if (item.grant === "default") return true;
+    if (item.grant === "admin") return admin;
+    return false;
+  });
 }
 
 export function wardrobeThumbSrc(item: WardrobeItem): string {
@@ -46,11 +59,11 @@ export function wardrobeThumbSrc(item: WardrobeItem): string {
  * What the player is shown wearing. A saved look that names a removed item
  * falls back to the default piece. The stored value is left untouched.
  */
-export function equippedGameLook(look: GameLook | null | undefined): GameLook {
+export function equippedGameLook(look: GameLook | null | undefined, access?: ClosetAccess): GameLook {
   const base = look ?? DEFAULT_GAME_LOOK;
-  const outfits = new Set(grantedWardrobeItems("outfit").map((item) => item.id));
-  const hairs = new Set(grantedWardrobeItems("hair").map((item) => item.id));
-  const clips = new Set(grantedWardrobeItems("clip").map((item) => item.id));
+  const outfits = new Set(grantedWardrobeItems("outfit", access).map((item) => item.id));
+  const hairs = new Set(grantedWardrobeItems("hair", access).map((item) => item.id));
+  const clips = new Set(grantedWardrobeItems("clip", access).map((item) => item.id));
   const outfit = isGameOutfit(base.outfit) && outfits.has(base.outfit) ? base.outfit : DEFAULT_GAME_LOOK.outfit;
   const hair = isGameHair(base.hair) && hairs.has(base.hair) ? base.hair : DEFAULT_GAME_LOOK.hair;
   const clip = base.clip && isGameClip(base.clip) && clips.has(base.clip) ? base.clip : null;
