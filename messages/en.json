@@ -3442,6 +3442,7 @@
       "productLink": "View product",
       "morningCount": "{done}/{total} morning steps",
       "eveningCount": "{done}/{total} evening steps",
+      "extra": "Extra",
       "tasks": {
         "wash": "Wash your face this morning",
         "spf": "Put on sunscreen",

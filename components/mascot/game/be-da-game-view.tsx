@@ -465,19 +465,22 @@ export function BeDaGameView({
                 </section>
               );
             })}
-            <button
-              type="button"
-              className={wavedToday ? "beda-quest-row beda-step is-done" : "beda-quest-row beda-step"}
-              data-testid="beda-mission-wave"
-              data-done={wavedToday ? "true" : "false"}
-              onClick={() => {
-                setMissionSheet(false);
-                onTab("lobby");
-              }}
-            >
-              <span className="beda-check">{wavedToday ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
-              {t("game.tasks.wave")}
-            </button>
+            <section>
+              <h3>{t("game.extra")}</h3>
+              <button
+                type="button"
+                className={wavedToday ? "beda-quest-row beda-step is-done" : "beda-quest-row beda-step"}
+                data-testid="beda-mission-wave"
+                data-done={wavedToday ? "true" : "false"}
+                onClick={() => {
+                  setMissionSheet(false);
+                  onTab("lobby");
+                }}
+              >
+                <span className="beda-check">{wavedToday ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
+                {t("game.tasks.wave")}
+              </button>
+            </section>
           </div>
         </div>
       ) : null}
