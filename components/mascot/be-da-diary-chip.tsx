@@ -15,10 +15,11 @@ import {
 } from "@/lib/mascot/game/look";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
-function storedLook(): GameLook {
+function storedLook(admin: boolean): GameLook {
   if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
-  return equippedGameLook(readGameLook(localStorage));
+  return equippedGameLook(readGameLook(localStorage), { admin });
 }
 
 function fieldFocused(): boolean {
@@ -42,6 +43,7 @@ export function BeDaDiaryChip() {
   const locale = useLocale();
   const router = useRouter();
   const { view, hidden } = useBeDaView();
+  const closetAdmin = useAuthStore((s) => s.user?.is_admin === true);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [quiet, setQuiet] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -50,7 +52,7 @@ export function BeDaDiaryChip() {
   const dozing = room.mood === "sleepy";
 
   useEffect(() => {
-    const read = () => setLook(storedLook());
+    const read = () => setLook(storedLook(closetAdmin));
     read();
     const onStore = (event: StorageEvent) => {
       if (event.key != null && event.key !== GAME_LOOK_KEY) return;
@@ -66,7 +68,7 @@ export function BeDaDiaryChip() {
       window.removeEventListener("storage", onStore);
       document.removeEventListener("visibilitychange", onHide);
     };
-  }, []);
+  }, [closetAdmin]);
 
   useEffect(() => {
     if (hidden) return;

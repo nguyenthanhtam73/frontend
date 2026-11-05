@@ -145,6 +145,8 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("/mascot/hair/hair_twin_tails.svg"), false);
     assert.equal(html.includes("/mascot/accessory/accessory_flower_clip.svg"), false);
     assert.equal(html.includes("Áo dài"), false);
+    assert.equal(html.includes("Áo thử"), false);
+    assert.equal(html.includes("outfit_ao_thu"), false);
     assert.equal(html.includes("Váy hoa"), false);
     assert.equal(html.includes("Kẹp hoa"), false);
     assert.equal(html.includes("Hoodie"), false);
@@ -159,6 +161,15 @@ describe("Bé Da game screen", () => {
     assert.match(html, /is-loading/);
     assert.equal(html.includes('loading="lazy"'), false);
     assertNoScores(html);
+  });
+
+  it("lists Áo thử only for an admin account", () => {
+    const html = renderGame({ tab: "wardrobe" satisfies GameTab, closetAdmin: true });
+    assert.match(html, /Áo thử/);
+    assert.match(html, /\/mascot\/outfits\/outfit_ao_thu\.svg/);
+    assert.match(html, /Đồ ngủ/);
+    const plain = renderGame({ tab: "wardrobe" satisfies GameTab });
+    assert.equal(plain.includes("Áo thử"), false);
   });
 
   it("draws the wide lobby with sample nicknames only", () => {
