@@ -179,7 +179,7 @@ export function BeDaLobby({
     const frame = frameRef.current;
     if (!frame || !selected) return;
     const card = frame.querySelector<HTMLElement>("[data-testid='beda-actions']");
-    const friend = card?.closest<HTMLElement>(".beda-friend");
+    const friend = frame.querySelector<HTMLElement>(`[data-friend-id="${selected.id}"]`);
     if (!card || !friend) return;
     const nav = frame.closest(".beda-game")?.querySelector<HTMLElement>(".beda-nav");
     const frameBox = frame.getBoundingClientRect();
@@ -187,6 +187,7 @@ export function BeDaLobby({
     const navTop = (nav?.getBoundingClientRect().top ?? frameBox.bottom) - frameBox.top;
     const cardWidth = card.offsetWidth;
     const cardHeight = card.offsetHeight;
+    const zoom = frame.querySelector(".beda-zoom")?.getBoundingClientRect();
     const placement = placeFriendCard({
       frameWidth: frame.clientWidth,
       frameHeight: frame.clientHeight,
@@ -198,11 +199,17 @@ export function BeDaLobby({
       cardHeight,
       navTop,
       gap: FRIEND_CARD_GAP,
+      avoid: zoom
+        ? {
+            left: zoom.left - frameBox.left,
+            top: zoom.top - frameBox.top,
+            right: zoom.right - frameBox.left,
+            bottom: zoom.bottom - frameBox.top,
+          }
+        : undefined,
     });
-    const naturalTop = friendBox.top - frameBox.top - cardHeight - FRIEND_CARD_GAP;
-    const naturalLeft = friendBox.left - frameBox.left + friendBox.width / 2 - cardWidth / 2;
-    card.style.setProperty("--beda-card-dx", `${Math.round(placement.left - naturalLeft)}px`);
-    card.style.setProperty("--beda-card-dy", `${Math.round(placement.top - naturalTop)}px`);
+    card.style.left = `${Math.round(placement.left)}px`;
+    card.style.top = `${Math.round(placement.top)}px`;
     card.dataset.placement = placement.flipped ? "below" : "above";
   };
 
@@ -330,8 +337,6 @@ export function BeDaLobby({
             selected={actor.id === selectedId}
             nudge={lobbyTagNudgePx(actor, spots)}
             onSelect={onSelect}
-            onAction={onAction}
-            onHide={onHide}
           />
         ))}
         <div
@@ -352,7 +357,9 @@ export function BeDaLobby({
             <span className="beda-friend-art">
               <span className="beda-ground-shadow" aria-hidden />
               <span className="beda-ring" />
-              <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
+              <span className="beda-feet">
+                <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
+              </span>
             </span>
             <span
               className="beda-tag beda-tag-me"
@@ -454,6 +461,34 @@ export function BeDaLobby({
             <button type="submit">{tLobby("game.nicknameSave")}</button>
           </form>
         ) : null}
+        {selected ? (
+          <div className="beda-actions beda-card beda-friend-card" data-testid="beda-actions" role="group" aria-label={selected.nickname}>
+            <p className="beda-card-name">{selected.nickname}</p>
+            <button
+              type="button"
+              className="beda-hide"
+              data-testid="beda-hide-friend"
+              onClick={() => onHide(selected.id)}
+            >
+              {tLobby("game.hideFriend")}
+            </button>
+            <p className="beda-hide-note">{tLobby("game.hideFriendNote")}</p>
+            <div className="beda-action-row">
+              <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
+                <GameIcon name="wave" />
+                {tLobby("game.wave")}
+              </button>
+              <button type="button" className="beda-action" onClick={() => onAction("heart")}>
+                <GameIcon name="heart" />
+                {tLobby("game.heart")}
+              </button>
+              <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
+                <GameIcon name="outfit" />
+                {tLobby("game.outfit")}
+              </button>
+            </div>
+          </div>
+        ) : null}
         <div className="beda-zoom" data-testid="beda-zoom">
           <button type="button" aria-label={tLobby("game.zoomIn")} onClick={() => motion.current.zoomBy(1.2)}>
             +
@@ -477,18 +512,13 @@ function FriendButton({
   selected,
   nudge,
   onSelect,
-  onAction,
-  onHide,
 }: {
   actor: LobbyActor;
   locale: string;
   selected: boolean;
   nudge: number;
   onSelect: (id: string) => void;
-  onAction: (kind: "wave" | "heart" | "outfit") => void;
-  onHide: (id: string) => void;
 }) {
-  const t = useTranslations("mascot");
   const sample = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id);
   const view = actor.sample && sample ? sampleFriendView(sample) : lobbyNeutralView();
   const pose: GamePose | null = actor.pose;
@@ -500,39 +530,13 @@ function FriendButton({
       data-friend-id={actor.id}
       data-testid={`beda-friend-${actor.id}`}
     >
-      {selected ? (
-        <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={actor.nickname}>
-          <p className="beda-card-name">{actor.nickname}</p>
-          <button
-            type="button"
-            className="beda-hide"
-            data-testid="beda-hide-friend"
-            onClick={() => onHide(actor.id)}
-          >
-            {t("game.hideFriend")}
-          </button>
-          <p className="beda-hide-note">{t("game.hideFriendNote")}</p>
-          <div className="beda-action-row">
-            <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
-              <GameIcon name="wave" />
-              {t("game.wave")}
-            </button>
-            <button type="button" className="beda-action" onClick={() => onAction("heart")}>
-              <GameIcon name="heart" />
-              {t("game.heart")}
-            </button>
-            <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
-              <GameIcon name="outfit" />
-              {t("game.outfit")}
-            </button>
-          </div>
-        </div>
-      ) : null}
       <button type="button" className="beda-friend-hit" onClick={() => onSelect(actor.id)}>
         <span className="beda-friend-art">
           <span className="beda-ground-shadow" aria-hidden />
           <span className="beda-ring" />
-          <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
+          <span className="beda-feet">
+            <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
+          </span>
         </span>
         <span className="beda-tag" style={{ ["--nudge" as string]: `${nudge}px` }}>
           {actor.nickname}

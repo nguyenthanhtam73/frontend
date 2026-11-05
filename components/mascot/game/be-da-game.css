@@ -1024,20 +1024,20 @@
   transform: translateX(calc(-50% + var(--nudge, 0px) + var(--edge, 0px))) scale(calc(1 / var(--beda-zoom, 1)));
 }
 
-/* Soles sit at y=208 in the 250-tall viewBox. Shift the drawing down so the
-   feet meet the anchor, and clip the empty padding (and the baked-in shadow)
-   that used to hang below them. */
-.beda-lobby .beda-friend-art {
+/* Clip only the figure, so the baked-in ellipse under the shoes is cut off
+   while the ground shadow can sit on the sole line. */
+.beda-lobby .beda-feet {
+  display: block;
+  width: 100%;
   overflow: hidden;
 }
 
-.beda-lobby .beda-friend-art .bd-breathe {
-  transform: translateY(16.8%);
-}
-
 .beda-lobby .beda-ground-shadow {
-  bottom: 0;
-  transform-origin: center bottom;
+  /* Center sits on the shoe soles. A little darker than the grass so the contact reads. */
+  bottom: -2px;
+  height: 8px;
+  background: rgba(48, 86, 64, 0.42);
+  transform-origin: center center;
 }
 
 .beda-lobby .beda-tag.is-label-fade {
@@ -1367,6 +1367,14 @@
   color: #fff;
   font-size: 12px;
   font-weight: 800;
+}
+
+.beda-lobby-chrome .beda-friend-card {
+  z-index: 12;
+  left: 8px;
+  top: 8px;
+  bottom: auto;
+  transform: none;
 }
 
 .beda-actions {

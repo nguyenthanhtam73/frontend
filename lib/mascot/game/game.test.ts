@@ -559,6 +559,23 @@ describe("lobby world", () => {
     assert.ok(edge.left >= 8);
     assert.ok(edge.left + 180 <= 360 - 8);
     assert.ok(edge.top + 90 <= 580 - 8);
+
+    const crowded = placeFriendCard({
+      frameWidth: 390,
+      frameHeight: 844,
+      friendTop: 200,
+      friendLeft: 250,
+      friendWidth: 90,
+      friendHeight: 120,
+      cardWidth: 160,
+      cardHeight: 110,
+      navTop: 720,
+      avoid: { left: 280, top: 62, right: 382, bottom: 180 },
+    });
+    assert.ok(crowded.left + 160 <= 280 - 8);
+    assert.ok(crowded.left >= 8);
+    assert.ok(crowded.top >= 8);
+    assert.ok(crowded.top + 110 <= 720 - 8);
   });
 });
 

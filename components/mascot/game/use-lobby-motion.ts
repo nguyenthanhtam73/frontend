@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from "react";
 
 import {
+  LOBBY_SOLVE_INTERVAL_MS,
   LOBBY_WORLD,
   lobbyChromePad,
   lobbyExclusionZones,
@@ -127,13 +128,20 @@ function setFacing(
   const pose = walkPose(phase, moving, lite);
   const sign = face < 0 ? -1 : 1;
   const planted = pose.plant >= 0 ? "r" : "l";
-  const next = `scaleX(${sign}) translate(${pose.sway * sign}px, ${pose.bob + bounce}px) rotate(${pose.tilt}deg) scaleY(${pose.squash})`;
-  if (art.dataset.pose !== next) {
-    art.dataset.pose = next;
-    art.dataset.plant = planted;
-    art.style.transform = next;
-    art.style.transformOrigin = "50% 100%";
+  const figure = art.querySelector<HTMLElement>(".bd-figure");
+  const lobby = Boolean(root.closest(".beda-lobby"));
+  const target = lobby && figure ? figure : art;
+  // Soles end at y=208 of the 250-tall viewBox. The shift is on the figure,
+  // not .bd-breathe, because the breath animation owns that element's transform.
+  const drop = lobby ? "16.8%" : "0px";
+  const next = `scaleX(${sign}) translate(${pose.sway * sign}px, calc(${drop} + ${pose.bob + bounce}px)) rotate(${pose.tilt}deg) scaleY(${pose.squash})`;
+  if (target.dataset.pose !== next) {
+    target.dataset.pose = next;
+    target.dataset.plant = planted;
+    target.style.transform = next;
+    target.style.transformOrigin = lobby ? "50% 83.2%" : "50% 100%";
   }
+  if (lobby && figure && art.style.transform) art.style.transform = "";
   const shadow = root.querySelector<HTMLElement>(".beda-ground-shadow");
   if (shadow) {
     const squash = `scale(${pose.shadowX}, ${pose.shadowY})`;
@@ -213,6 +221,7 @@ export function useLobbyMotion(input: {
     let echoed = { x: youProp.current.x, y: youProp.current.y };
     let last = performance.now();
     let frameId = 0;
+    let lastSolve = -LOBBY_SOLVE_INTERVAL_MS;
     let lastSolveKey = "";
 
     const pointers = new Map<number, { x: number; y: number }>();
@@ -487,8 +496,8 @@ export function useLobbyMotion(input: {
         const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
         setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
       }
-      const solveKey = samples.map((sample) => sample.seat.id).join(",");
-      if (solveKey !== lastSolveKey) {
+      const solveKey = `${Math.round(cam.x / 8)}|${Math.round(cam.y / 8)}|${cam.scale.toFixed(2)}|${size.w}|${size.h}|${samples.map((sample) => sample.seat.id).join(",")}`;
+      if (solveKey !== lastSolveKey && now - lastSolve >= LOBBY_SOLVE_INTERVAL_MS) {
         const solved = solveLobbyCells({
           samples: samples.map((sample) => sample.seat),
           player: { x: walker.x, y: walker.y, nickname: youProp.current.nickname || "Bé Da" },
@@ -557,6 +566,7 @@ export function useLobbyMotion(input: {
           el.style.setProperty("--nudge", `${label.nudge}px`);
           el.classList.toggle("is-label-fade", label.fade);
         }
+        lastSolve = now;
         lastSolveKey = solveKey;
       }
       for (const sample of samples) {

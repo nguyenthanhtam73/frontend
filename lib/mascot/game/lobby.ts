@@ -687,6 +687,8 @@ export function placeFriendCard(input: {
   navTop: number;
   gap?: number;
   margin?: number;
+  /** Screen box the card must not cover, such as the zoom cluster. */
+  avoid?: { left: number; top: number; right: number; bottom: number };
 }): FriendCardPlacement {
   const gap = input.gap ?? FRIEND_CARD_GAP;
   const margin = input.margin ?? 8;
@@ -721,6 +723,27 @@ export function placeFriendCard(input: {
     if (right + input.cardWidth <= input.frameWidth - margin) left = right;
     else if (leftSide >= margin) left = leftSide;
   }
+  const avoid = input.avoid;
+  if (avoid) {
+    const hits =
+      left < avoid.right + gap &&
+      left + input.cardWidth + gap > avoid.left &&
+      top < avoid.bottom + gap &&
+      top + input.cardHeight + gap > avoid.top;
+    if (hits) {
+      const shiftLeft = avoid.left - gap - input.cardWidth;
+      if (shiftLeft >= margin) left = shiftLeft;
+      else {
+        const under = avoid.bottom + gap;
+        if (under + input.cardHeight <= maxTop) top = under;
+      }
+    }
+  }
+  if (input.cardWidth + margin * 2 <= input.frameWidth) {
+    left = Math.min(Math.max(margin, left), maxLeft);
+  }
+  if (top < margin) top = margin;
+  if (top > maxTop) top = maxTop;
   return { top, left, flipped };
 }
 
