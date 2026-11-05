@@ -599,10 +599,6 @@ img.be-da-flies-exit {
   }
 }
 
-.be-da-diary-chip img[src*="zzz.svg"] {
-  visibility: hidden;
-}
-
 .be-da-diary-chip.is-dozing .be-da-chip-wave,
 .be-da-diary-chip.is-quiet .be-da-chip-wave,
 .be-da-diary-chip.is-quiet .bd-breathe,
@@ -693,10 +689,6 @@ img.be-da-flies-exit {
 .be-da-routine-chip.is-dozing .be-da-chip-wave,
 .be-da-routine-chip.is-dozing .bd-lids {
   animation: none;
-}
-
-.be-da-routine-chip img[src*="zzz.svg"] {
-  visibility: hidden;
 }
 
 .be-da-chip-bubbles {

@@ -90,13 +90,7 @@ export function BeDaRoutineBanner() {
             : "be-da-routine-chip absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
       }
     >
-      {dozing ? (
-        <span className="be-da-chip-zzz" aria-hidden>
-          <i>z</i>
-          <i>z</i>
-          <i>Z</i>
-        </span>
-      ) : (
+      {dozing ? null : (
         <span className="be-da-chip-bubbles">
           <span>{t("routineBubble1")}</span>
           <span>{t("routineBubble2")}</span>
