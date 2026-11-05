@@ -9,6 +9,7 @@ import { ActivationStreakCard } from "@/components/activation/activation-streak-
 import { CheckInFirstVisit } from "@/components/activation/check-in-first-visit";
 import { CheckInFormSkeleton } from "@/components/check-in/check-in-form-skeleton";
 import { CheckInPageHero } from "@/components/check-in/check-in-page-hero";
+import { BeDaHomeSlot } from "@/components/mascot/be-da-slots";
 import { CheckInPageView } from "@/components/check-in/check-in-page-view";
 import { OfflineNotice } from "@/components/site/offline-notice";
 
@@ -38,7 +39,8 @@ export default async function CheckInPage({ params }: Props) {
   await params;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-3 pb-28 sm:px-6 sm:py-10 sm:pb-10 lg:pb-14">
+    <div data-diary-page className="relative mx-auto w-full max-w-6xl px-4 pt-3 pb-28 sm:px-6 sm:py-10 sm:pb-10 lg:pb-14">
+      <BeDaHomeSlot />
       <CheckInPageView />
       <CheckInPageHero part="title" />
 

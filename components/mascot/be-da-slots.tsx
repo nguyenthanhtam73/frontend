@@ -4,13 +4,8 @@ import dynamic from "next/dynamic";
 
 import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
 
-const BeDaRoutineBanner = dynamic(
-  () => import("@/components/mascot/be-da-routine-banner").then((mod) => mod.BeDaRoutineBanner),
-  { ssr: false },
-);
-
-const BeDaHomeLink = dynamic(
-  () => import("@/components/mascot/be-da-home-link").then((mod) => mod.BeDaHomeLink),
+const BeDaDiaryChip = dynamic(
+  () => import("@/components/mascot/be-da-diary-chip").then((mod) => mod.BeDaDiaryChip),
   { ssr: false },
 );
 
@@ -21,11 +16,11 @@ const BeDaHomeLink = dynamic(
 export function BeDaRoutineSlot() {
   const { enabled, pending } = useMascotFeature();
   if (pending || !enabled) return null;
-  return <BeDaRoutineBanner />;
+  return <BeDaDiaryChip />;
 }
 
 export function BeDaHomeSlot() {
   const { enabled, pending } = useMascotFeature();
   if (pending || !enabled) return null;
-  return <BeDaHomeLink />;
+  return <BeDaDiaryChip />;
 }

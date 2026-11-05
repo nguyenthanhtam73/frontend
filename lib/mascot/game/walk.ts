@@ -158,7 +158,7 @@ export function stepWalker(
   const dx = goal.x - walker.x;
   const dy = goal.y - walker.y;
   const dist = Math.hypot(dx, dy);
-  if (reduced || dist < 0.008) {
+  if (reduced || dist < (lobbyPace ? 0.002 : 0.008)) {
     const face = dx < -0.004 ? -1 : dx > 0.004 ? 1 : walker.face || 1;
     const real = clampPoint(walker.goal, bounds);
     const arrived = Math.hypot(real.x - goal.x, real.y - goal.y) < 0.02;
@@ -182,8 +182,14 @@ export function stepWalker(
   let nx = walker.x + vx * safeDt;
   let ny = walker.y + vy * safeDt;
   if (vx * (goal.x - nx) + vy * (goal.y - ny) < 0) {
-    nx = goal.x;
-    ny = goal.y;
+    if (lobbyPace) {
+      const step = Math.min(dist, Math.max(0, pace) * safeDt);
+      nx = walker.x + (dx / dist) * step;
+      ny = walker.y + (dy / dist) * step;
+    } else {
+      nx = goal.x;
+      ny = goal.y;
+    }
     vx = 0;
     vy = 0;
   }

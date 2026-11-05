@@ -64,6 +64,61 @@ describe("lobby walk", () => {
     assert.equal(walkPose(1, false).bob, 0);
   });
 
+  it("keeps ten retargets under a 5px frame step", () => {
+    const worldPx = 507;
+    const speed = lobbyWorldSpeed(worldPx, 1);
+    let walker = createWalker({ x: 0.2, y: 0.55 });
+    const goals = Array.from({ length: 10 }, (_, index) => ({
+      x: 0.28 + (index % 2 === 0 ? 0.12 : -0.04) + index * 0.015,
+      y: 0.5 + (index % 3) * 0.03,
+    }));
+    let goalIndex = 0;
+    let last = { x: walker.x, y: walker.y };
+    let maxPx = 0;
+    for (let frame = 0; frame < 120; frame += 1) {
+      if (frame % 12 === 0 && goalIndex < goals.length) {
+        walker = { ...walker, goal: goals[goalIndex]! };
+        goalIndex += 1;
+      }
+      walker = stepWalker(walker, 1 / 60, null, LOBBY_BOUNDS, false, speed, true);
+      const jumped = Math.hypot((walker.x - last.x) * worldPx, (walker.y - last.y) * worldPx);
+      maxPx = Math.max(maxPx, jumped);
+      last = { x: walker.x, y: walker.y };
+    }
+    assert.equal(goalIndex, 10);
+    assert.ok(maxPx < 5, `own jump ${maxPx}`);
+  });
+
+  it("glides a remote figure through ten updates under 5px a frame", () => {
+    const worldW = 507;
+    const worldH = 1521;
+    let drawn = { x: 0.4, y: 0.55 };
+    let glide: ReturnType<typeof pushGlide> = {
+      fromX: drawn.x,
+      fromY: drawn.y,
+      toX: drawn.x,
+      toY: drawn.y,
+      t0: 0,
+      dur: 0,
+      face: 1,
+    };
+    let maxPx = 0;
+    for (let index = 0; index < 10; index += 1) {
+      const next = { x: 0.43 + index * 0.025, y: 0.55 + (index % 2) * 0.015 };
+      const dx = (next.x - drawn.x) * worldW;
+      const dy = (next.y - drawn.y) * worldH;
+      const dur = Math.max(220, (Math.hypot(dx, dy) / 90) * 1000);
+      glide = pushGlide(glide, next.x, next.y, index * 200, dur);
+      for (let step = 1; step <= 12; step += 1) {
+        const pos = sampleGlide(glide, index * 200 + step * (200 / 12));
+        const jumped = Math.hypot((pos.x - drawn.x) * worldW, (pos.y - drawn.y) * worldH);
+        maxPx = Math.max(maxPx, jumped);
+        drawn = pos;
+      }
+    }
+    assert.ok(maxPx < 5, `remote jump ${maxPx}`);
+  });
+
   it("snaps when motion is reduced", () => {
     const walker = stepWalker(
       { ...createWalker({ x: 0.2, y: 0.62 }), goal: { x: 0.3, y: 0.66 } },
