@@ -112,6 +112,133 @@ export function lobbyFigureBox(
   return { left: cx - width / 2, top: feet - height, right: cx + width / 2, bottom: feet + 6 };
 }
 
+/** Hard stop so a seat search cannot walk the cell list forever. */
+export const LOBBY_SOLVE_MAX_PROBES = 128;
+
+/** Seat searches while the camera is moving stay at least this far apart. */
+export const LOBBY_SOLVE_INTERVAL_MS = 250;
+
+export type LobbySeatInput = {
+  id: string;
+  nickname: string;
+  homeX: number;
+  homeY: number;
+  /** Cell chosen last time, or -1. A clear cell is kept even when it is off screen. */
+  cell: number;
+};
+
+export type LobbySeat = {
+  id: string;
+  cell: number;
+  x: number;
+  y: number;
+  edge: number;
+  hidden: boolean;
+};
+
+function lobbyScreenFigure(
+  x: number,
+  y: number,
+  nickname: string,
+  ms: number | undefined,
+  cam: { x: number; y: number; scale: number },
+  worldW: number,
+  worldH: number,
+): ScreenBox {
+  const world = lobbyFigureBox(x, y, nickname, worldW, worldH, ms);
+  const scale = cam.scale;
+  return {
+    left: cam.x + world.left * scale,
+    top: cam.y + world.top * scale,
+    right: cam.x + world.right * scale,
+    bottom: cam.y + world.bottom * scale,
+  };
+}
+
+function lobbySeatBlocked(box: ScreenBox, zones: readonly ScreenBox[], occupied: readonly ScreenBox[], viewW: number, viewH: number): boolean {
+  if (zones.some((zone) => screenBoxesOverlap(box, zone, 8))) return true;
+  if (occupied.some((other) => screenBoxesOverlap(box, other, LOBBY_FIGURE_GAP))) return true;
+  const visible = box.bottom > 2 && box.top < viewH - 2 && box.right > 2 && box.left < viewW - 2;
+  return visible && (box.left < 8 || box.right > viewW - 8);
+}
+
+/**
+ * Pick a free cell for each sample visitor from their boxes, not from the DOM.
+ * One probe checks one cell. A cell that is already clear stays put, on screen or not.
+ */
+export function solveLobbyCells(input: {
+  samples: readonly LobbySeatInput[];
+  player: { x: number; y: number; nickname: string };
+  lives: readonly { x: number; y: number; nickname: string }[];
+  cam: { x: number; y: number; scale: number };
+  viewW: number;
+  viewH: number;
+  worldW: number;
+  worldH: number;
+}): { seats: LobbySeat[]; probes: number } {
+  const zones = lobbyExclusionZones(input.viewW, input.viewH);
+  const occupied: ScreenBox[] = [
+    lobbyScreenFigure(input.player.x, input.player.y, input.player.nickname, 1.2, input.cam, input.worldW, input.worldH),
+  ];
+  for (const live of input.lives) {
+    occupied.push(lobbyScreenFigure(live.x, live.y, live.nickname, undefined, input.cam, input.worldW, input.worldH));
+  }
+  const used = new Set<number>();
+  const seats: LobbySeat[] = [];
+  let probes = 0;
+  const sampleSize = (y: number) => 0.78 + Math.max(0, y) * 0.4;
+  const probe = (index: number, nickname: string): ScreenBox | null => {
+    if (probes >= LOBBY_SOLVE_MAX_PROBES) return null;
+    if (index < 0 || index >= LOBBY_SAMPLE_CELLS.length || used.has(index)) return null;
+    probes += 1;
+    const cell = LOBBY_SAMPLE_CELLS[index]!;
+    const box = lobbyScreenFigure(cell.x, cell.y, nickname, sampleSize(cell.y), input.cam, input.worldW, input.worldH);
+    if (lobbySeatBlocked(box, zones, occupied, input.viewW, input.viewH)) return null;
+    return box;
+  };
+
+  for (const sample of input.samples) {
+    let chosen = -1;
+    let box: ScreenBox | null = null;
+    if (sample.cell >= 0) {
+      box = probe(sample.cell, sample.nickname);
+      if (box) chosen = sample.cell;
+    }
+    if (!box) {
+      let best = Infinity;
+      for (let index = 0; index < LOBBY_SAMPLE_CELLS.length; index += 1) {
+        if (probes >= LOBBY_SOLVE_MAX_PROBES) break;
+        const fit = probe(index, sample.nickname);
+        if (!fit) continue;
+        const cell = LOBBY_SAMPLE_CELLS[index]!;
+        const onScreen = fit.bottom > 0 && fit.top < input.viewH && fit.right > 0 && fit.left < input.viewW;
+        const dist = (cell.x - sample.homeX) ** 2 + (cell.y - sample.homeY) ** 2;
+        const score = (onScreen ? 0 : 100) + dist;
+        if (score < best) {
+          best = score;
+          chosen = index;
+          box = fit;
+        }
+      }
+    }
+    if (chosen < 0 || !box) {
+      seats.push({ id: sample.id, cell: -1, x: sample.homeX, y: sample.homeY, edge: 0, hidden: true });
+      continue;
+    }
+    used.add(chosen);
+    occupied.push(box);
+    const cell = LOBBY_SAMPLE_CELLS[chosen]!;
+    const tagW = lobbyTagWidthPx(sample.nickname);
+    const center = input.cam.x + cell.x * input.worldW * input.cam.scale;
+    const left = center - tagW / 2;
+    const right = left + tagW;
+    const tagVisible = right > 2 && left < input.viewW - 2;
+    const edge = tagVisible ? tagEdgeDelta({ left, right }, { left: 0, right: input.viewW }) : 0;
+    seats.push({ id: sample.id, cell: chosen, x: cell.x, y: cell.y, edge, hidden: false });
+  }
+  return { seats, probes };
+}
+
 /** True when this figure's box meets a control while the camera is looking at them. */
 export function lobbyFigureHitsChrome(
   x: number,

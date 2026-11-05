@@ -21,6 +21,7 @@ import {
   LOBBY_PLAYER_SPOT,
   LOBBY_SAMPLE_CAP,
   LOBBY_SAMPLE_CELLS,
+  LOBBY_SOLVE_MAX_PROBES,
   LOBBY_WORLD,
   SAMPLE_LOBBY_FRIENDS,
   clampLobbyPoint,
@@ -29,6 +30,7 @@ import {
   lobbyHeadCount,
   lobbyShownSamples,
   lobbySpawn,
+  solveLobbyCells,
   lobbyBodyBox,
   lobbyTooClose,
   screenBoxesOverlap,
@@ -388,6 +390,47 @@ describe("lobby world", () => {
       }
     }
     const spot = lobbySpawn(() => 0.5);
+    const parked = solveLobbyCells({
+      samples: shown.map((friend) => ({
+        id: friend.id,
+        nickname: friend.nickname,
+        homeX: friend.x,
+        homeY: friend.y,
+        cell: LOBBY_SAMPLE_CELLS.findIndex((cell) => cell.x === friend.x && cell.y === friend.y),
+      })),
+      player: { x: 0.5, y: 0.55, nickname: "Bé Da" },
+      lives: [],
+      cam: { x: 0, y: -5000, scale: 1 },
+      viewW: 390,
+      viewH: 844,
+      worldW,
+      worldH,
+    });
+    assert.equal(parked.probes, shown.length);
+    assert.equal(
+      parked.seats.every((seat, index) => {
+        const home = shown[index]!;
+        return !seat.hidden && seat.cell === LOBBY_SAMPLE_CELLS.findIndex((cell) => cell.x === home.x && cell.y === home.y);
+      }),
+      true,
+    );
+    const cold = solveLobbyCells({
+      samples: Array.from({ length: 20 }, (_, index) => ({
+        id: `extra-${index}`,
+        nickname: "Mây Hồng",
+        homeX: 0.5,
+        homeY: 0.5,
+        cell: -1,
+      })),
+      player: { x: 0.5, y: 0.55, nickname: "Bé Da" },
+      lives: [],
+      cam: { x: 0, y: 0, scale: 1 },
+      viewW: 390,
+      viewH: 844,
+      worldW,
+      worldH,
+    });
+    assert.equal(cold.probes, LOBBY_SOLVE_MAX_PROBES);
     assert.equal(lobbyFigureHitsChrome(spot.x, spot.y, "Bé Da 0000", 1.2), false);
     for (const friend of shown) {
       assert.equal(
