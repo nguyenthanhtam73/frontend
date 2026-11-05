@@ -3,13 +3,13 @@
 import { useLayoutEffect, useRef } from "react";
 
 import {
-  LOBBY_SOLVE_INTERVAL_MS,
   LOBBY_WORLD,
   lobbyChromePad,
   lobbyExclusionZones,
   lobbyFigureBox,
   lobbyStackZ,
   screenBoxesOverlap,
+  nudgeLobbyLabels,
   solveLobbyCells,
   type LobbySeatInput,
   type ScreenBox,
@@ -127,12 +127,12 @@ function setFacing(
   const pose = walkPose(phase, moving, lite);
   const sign = face < 0 ? -1 : 1;
   const planted = pose.plant >= 0 ? "r" : "l";
-  const next = `scaleX(${sign}) translateY(${pose.bob + bounce}px) rotate(${pose.tilt}deg)`;
+  const next = `scaleX(${sign}) translate(${pose.sway * sign}px, ${pose.bob + bounce}px) rotate(${pose.tilt}deg) scaleY(${pose.squash})`;
   if (art.dataset.pose !== next) {
     art.dataset.pose = next;
     art.dataset.plant = planted;
     art.style.transform = next;
-    art.style.transformOrigin = planted === "r" ? "58% 100%" : "42% 100%";
+    art.style.transformOrigin = "50% 100%";
   }
   const shadow = root.querySelector<HTMLElement>(".beda-ground-shadow");
   if (shadow) {
@@ -148,9 +148,8 @@ function setFacing(
   art.dataset.step = planted;
   const foot = document.createElement("i");
   foot.className = "beda-foot";
-  const back = sign > 0 ? -0.012 : 0.012;
-  const side = planted === "r" ? 0.01 : -0.01;
-  foot.style.left = `${(ground.x + back + side) * 100}%`;
+  const side = planted === "r" ? 7 : -7;
+  foot.style.left = `calc(${ground.x * 100}% + ${side}px)`;
   foot.style.top = `${ground.y * 100}%`;
   ground.world.appendChild(foot);
   foot.addEventListener("animationend", () => foot.remove(), { once: true });
@@ -214,7 +213,6 @@ export function useLobbyMotion(input: {
     let echoed = { x: youProp.current.x, y: youProp.current.y };
     let last = performance.now();
     let frameId = 0;
-    let lastSolve = -LOBBY_SOLVE_INTERVAL_MS;
     let lastSolveKey = "";
 
     const pointers = new Map<number, { x: number; y: number }>();
@@ -424,7 +422,7 @@ export function useLobbyMotion(input: {
       const bounceT = bounceUntil > now ? (bounceUntil - now) / 320 : 0;
       const bounce = bounceT > 0 ? Math.sin((1 - bounceT) * Math.PI) * -7 : 0;
       if (youEl) {
-        placeLobby(youEl, walker.x, walker.y, size.worldW, size.worldH, 1.2, walker.squash);
+        placeLobby(youEl, walker.x, walker.y, size.worldW, size.worldH, 1.2, 1);
         setFacing(youEl, walker.face, walker.phase, youMoving, lite, bounce, {
           world,
           x: walker.x,
@@ -489,8 +487,8 @@ export function useLobbyMotion(input: {
         const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
         setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
       }
-      const solveKey = `${Math.round(cam.x)}|${Math.round(cam.y)}|${cam.scale.toFixed(2)}|${size.w}|${size.h}|${walker.x.toFixed(3)}|${walker.y.toFixed(3)}|${samples.length}`;
-      if (solveKey !== lastSolveKey && now - lastSolve >= LOBBY_SOLVE_INTERVAL_MS) {
+      const solveKey = samples.map((sample) => sample.seat.id).join(",");
+      if (solveKey !== lastSolveKey) {
         const solved = solveLobbyCells({
           samples: samples.map((sample) => sample.seat),
           player: { x: walker.x, y: walker.y, nickname: youProp.current.nickname || "Bé Da" },
@@ -500,6 +498,27 @@ export function useLobbyMotion(input: {
           viewH: size.h,
           worldW: size.worldW,
           worldH: size.worldH,
+        });
+        const labelTags: {
+          id: string;
+          left: number;
+          right: number;
+          top: number;
+          bottom: number;
+          el: HTMLElement | null;
+        }[] = [];
+        const youTag = youEl?.querySelector<HTMLElement>(".beda-tag") ?? null;
+        const youName = youProp.current.nickname || "Bé Da";
+        const youTagW = Math.max(48, youName.length * 7 + 16);
+        const youCenter = cam.x + walker.x * size.worldW * cam.scale;
+        const youFeet = cam.y + walker.y * size.worldH * cam.scale;
+        labelTags.push({
+          id: "you",
+          left: youCenter - youTagW / 2,
+          right: youCenter + youTagW / 2,
+          top: youFeet,
+          bottom: youFeet + 18,
+          el: youTag,
         });
         for (const seat of solved.seats) {
           const sample = samples.find((item) => item.seat.id === seat.id);
@@ -512,7 +531,18 @@ export function useLobbyMotion(input: {
           sample.el.style.display = "";
           sample.el.dataset.cell = String(seat.cell);
           placeLobby(sample.el, seat.x, seat.y, size.worldW, size.worldH, 0.78 + Math.max(0, seat.y) * 0.4, 1);
-          sample.el.querySelector<HTMLElement>(".beda-tag")?.style.setProperty("--edge", `${seat.edge}px`);
+          const tag = sample.el.querySelector<HTMLElement>(".beda-tag");
+          tag?.style.setProperty("--edge", `${seat.edge}px`);
+          const tagW = Math.max(48, (tag?.textContent?.trim().length ?? 6) * 7 + 16);
+          const center = cam.x + seat.x * size.worldW * cam.scale;
+          labelTags.push({
+            id: seat.id,
+            left: center - tagW / 2,
+            right: center + tagW / 2,
+            top: cam.y + seat.y * size.worldH * cam.scale,
+            bottom: cam.y + seat.y * size.worldH * cam.scale + 18,
+            el: tag,
+          });
           const prev = seen.get(seat.id);
           seen.set(seat.id, { x: seat.x, y: seat.y, t: now });
           const elapsed = prev ? (now - prev.t) / 1000 : 0;
@@ -521,8 +551,19 @@ export function useLobbyMotion(input: {
           const face = actor?.facing === "left" ? -1 : 1;
           setFacing(sample.el, face, moving ? now / 159 : 0, moving, lite, 0, { world, x: seat.x, y: seat.y });
         }
-        lastSolve = now;
+        for (const label of nudgeLobbyLabels(labelTags)) {
+          const el = labelTags.find((tag) => tag.id === label.id)?.el;
+          if (!el) continue;
+          el.style.setProperty("--nudge", `${label.nudge}px`);
+          el.classList.toggle("is-label-fade", label.fade);
+        }
         lastSolveKey = solveKey;
+      }
+      for (const sample of samples) {
+        if (sample.el.style.display === "none") continue;
+        const actor = actorsProp.current.find((item) => item.id === sample.seat.id);
+        const face = actor?.facing === "left" ? -1 : 1;
+        setFacing(sample.el, face, now / 700, false, lite, 0);
       }
       const bodies = [
         screenFigure(walker.x, walker.y, youProp.current.nickname || "Bé Da", 1.2, cam, size.worldW, size.worldH),

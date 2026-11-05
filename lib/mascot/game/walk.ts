@@ -149,7 +149,13 @@ export function stepWalker(
 ): Walker {
   const safeDt = Math.min(0.05, Math.max(0, dt));
   if (!walker.goal) {
-    return { ...walker, vx: 0, vy: 0, squash: approach(walker.squash, 1, safeDt, 10) };
+    return {
+      ...walker,
+      vx: 0,
+      vy: 0,
+      squash: approach(walker.squash, 1, safeDt, 10),
+      phase: walker.phase + safeDt * 1.4,
+    };
   }
   const lobbyPace = ease;
   const goal = obstacle
@@ -233,23 +239,34 @@ export type Glide = {
   face: number;
 };
 
-/** Bob, sway, and shadow squash for one step. Idle values are a resting pose. */
+/**
+ * Step cycle. Bob is 0 when a foot plants, so the sprite rests on the ground,
+ * and only lifts a few pixels between steps. Idle is a small breath, also up
+ * from the ground. `lite` is accepted so older callers keep working; the cycle stays visible.
+ */
 export function walkPose(phase: number, moving: boolean, lite = false): {
   bob: number;
+  sway: number;
   tilt: number;
+  squash: number;
   shadowX: number;
   shadowY: number;
   plant: number;
 } {
-  if (!moving) return { bob: 0, tilt: 0, shadowX: 1, shadowY: 0.85, plant: 0 };
+  void lite;
+  if (!moving) {
+    const breath = (1 - Math.cos(phase)) * 0.8;
+    return { bob: breath === 0 ? 0 : -breath, sway: 0, tilt: 0, squash: 1, shadowX: 1, shadowY: 0.9, plant: 0 };
+  }
   const step = Math.sin(phase);
-  if (lite) return { bob: -Math.abs(step) * 3.6, tilt: 0, shadowX: 1, shadowY: 0.85, plant: 0 };
-  const plant = Math.abs(Math.cos(phase));
+  const lift = Math.abs(step);
   return {
-    bob: -Math.abs(step) * 3.6,
-    tilt: step * 2.4,
-    shadowX: 0.82 + plant * 0.34,
-    shadowY: 0.42 + (1 - plant) * 0.7,
+    bob: lift === 0 ? 0 : -lift * 4,
+    sway: step * 2.5,
+    tilt: step * 5,
+    squash: 1 - (1 - lift) * 0.04,
+    shadowX: 0.86 + lift * 0.2,
+    shadowY: 0.7 + (1 - lift) * 0.2,
     plant: step >= 0 ? 1 : -1,
   };
 }

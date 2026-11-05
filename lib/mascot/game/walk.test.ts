@@ -56,12 +56,16 @@ describe("lobby walk", () => {
     assert.ok(earlyRate < laterRate);
     const lifted = walkPose(Math.PI / 2, true);
     assert.ok(lifted.bob <= -3 && lifted.bob >= -4);
+    assert.ok(Math.abs(lifted.tilt) > 2);
+    assert.ok(lifted.squash < 1.02 && lifted.squash > 0.9);
     const planted = walkPose(0, true);
-    assert.ok(planted.shadowY < lifted.shadowY);
+    assert.equal(planted.bob, 0);
+    assert.ok(planted.squash < 1);
     const lite = walkPose(Math.PI / 2, true, true);
     assert.ok(lite.bob <= -3 && lite.bob >= -4);
-    assert.equal(lite.tilt, 0);
-    assert.equal(walkPose(1, false).bob, 0);
+    assert.ok(Math.abs(lite.tilt) > 2);
+    assert.equal(walkPose(0, false).bob, 0);
+    assert.ok(walkPose(Math.PI, false).bob < 0 && walkPose(Math.PI, false).bob >= -2);
   });
 
   it("keeps ten retargets under a 5px frame step", () => {

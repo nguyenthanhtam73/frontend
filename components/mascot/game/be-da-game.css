@@ -1015,8 +1015,33 @@
 }
 
 .beda-lobby .beda-tag {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  margin: 2px 0 0;
   padding: 2px 8px;
   font-size: 11px;
+  transform: translateX(calc(-50% + var(--nudge, 0px) + var(--edge, 0px))) scale(calc(1 / var(--beda-zoom, 1)));
+}
+
+/* Soles sit at y=208 in the 250-tall viewBox. Shift the drawing down so the
+   feet meet the anchor, and clip the empty padding (and the baked-in shadow)
+   that used to hang below them. */
+.beda-lobby .beda-friend-art {
+  overflow: hidden;
+}
+
+.beda-lobby .beda-friend-art .bd-breathe {
+  transform: translateY(16.8%);
+}
+
+.beda-lobby .beda-ground-shadow {
+  bottom: 0;
+  transform-origin: center bottom;
+}
+
+.beda-lobby .beda-tag.is-label-fade {
+  opacity: 0.45;
 }
 
 .beda-friend.beda-pose {
