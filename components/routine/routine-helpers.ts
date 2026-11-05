@@ -3,6 +3,7 @@
  * touch React, the network, or `next-intl` lives here so the parts/ files stay
  * lean and the unit-testable surface is obvious.
  */
+import { affiliatePayload } from "@/lib/routine/affiliate-link";
 import type { RoutineDTO, RoutineHistoryDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 export type StepSection = "morning" | "evening";
@@ -109,6 +110,7 @@ export function stripStep(s: RoutineStepDTO): RoutineStepDTO {
     ...(howTo ? { how_to: howTo } : {}),
     ...(dose ? { dose } : {}),
     ...(why ? { why } : {}),
+    ...affiliatePayload(s),
   };
 }
 

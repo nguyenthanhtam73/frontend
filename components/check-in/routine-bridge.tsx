@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApplyConfirmDialog } from "@/components/routine/parts/apply-confirm-dialog";
+import { affiliatePayload, routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ToastBanner } from "@/components/ui/toast-banner";
@@ -480,6 +481,7 @@ function QuickColumn({
   toggleOffLabel: string;
   disabled: boolean;
 }) {
+  const tProduct = useTranslations("productSuggestions");
   return (
     <div className="rounded-xl border bg-card p-3">
       <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
@@ -495,7 +497,9 @@ function QuickColumn({
         <p className="text-xs text-muted-foreground">{emptyLabel}</p>
       ) : (
         <ul className="space-y-1.5">
-          {steps.map((s) => (
+          {steps.map((s) => {
+            const link = routineAffiliateLink(s);
+            return (
             <li key={s.id}>
               <button
                 type="button"
@@ -541,8 +545,20 @@ function QuickColumn({
                   </span>
                 ) : null}
               </button>
+              {link ? (
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="sponsored noopener"
+                  className="mt-1 inline-block px-2 text-[11px] font-semibold text-primary underline"
+                  data-testid="routine-aff-link"
+                >
+                  {s.product_name?.trim() || tProduct("viewShopee")}
+                </a>
+              ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>
@@ -562,5 +578,6 @@ function stripStep(s: RoutineStepDTO): RoutineStepDTO {
     ...(howTo ? { how_to: howTo } : {}),
     ...(dose ? { dose } : {}),
     ...(why ? { why } : {}),
+    ...affiliatePayload(s),
   };
 }

@@ -22,7 +22,9 @@ import {
   type GameLook,
   type GamePose,
 } from "@/lib/mascot/game/look";
-import type { GameBubbleKind, GameQuest, GameQuestId } from "@/lib/mascot/game/quests";
+import { routineSummary } from "@/lib/mascot/game/missions";
+import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
+import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
@@ -32,7 +34,10 @@ export type CareStep = {
   id: string;
   section: "morning" | "evening";
   title: string;
+  category?: string;
   completed?: boolean;
+  affiliate_link?: string;
+  product_name?: string;
 };
 
 export type GameToast = { name: string; kind: "wave" | "heart" | "outfit" } | null;
@@ -93,6 +98,7 @@ export function BeDaGameView({
   onFriendAction,
   onClaim,
   onLook,
+  wavedToday = false,
   actors,
   you,
   hall = 1,
@@ -149,6 +155,8 @@ export function BeDaGameView({
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
   onLook: (look: GameLook) => void;
+  /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
+  wavedToday?: boolean;
   actors?: readonly LobbyActor[];
   you?: {
     x: number;
@@ -182,6 +190,8 @@ export function BeDaGameView({
   const t = useTranslations("mascot");
   const rootRef = useRef<HTMLDivElement>(null);
   const [careSheet, setCareSheet] = useState(false);
+  const [missionSheet, setMissionSheet] = useState(false);
+  const sheetReturn = useRef<GameTab>("care");
   const spaOpen = spa != null;
   const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
   const wardrobeOpen = tab === "wardrobe" && !chestOpen && !spaOpen;
@@ -234,7 +244,8 @@ export function BeDaGameView({
   };
   const shownHallCount = hallCount ?? lobbyPeople.length + 1;
   const doorCountLabel = t("game.doorCount", { count: friendCount });
-  const openQuests = quests.filter((quest) => !quest.done).length;
+  const summary = routineSummary(careSteps ?? []);
+  const openSteps = summary.morning.total + summary.evening.total - summary.morning.done - summary.evening.done;
   const activeNav: GameTab | null = spaOpen ? null : chestOpen ? "quests" : tab;
 
   return (
@@ -301,12 +312,19 @@ export function BeDaGameView({
           progress={progress}
           showPrettyLine={showPrettyLine}
           quests={quests}
+          summary={summary}
           giftTaken={giftTaken}
           doorCountLabel={doorCountLabel}
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
           onOpenLobby={() => onTab("lobby")}
           onOpenWardrobe={() => onTab("wardrobe")}
+          onOpenMissions={() => {
+            sheetReturn.current = tab === "quests" ? sheetReturn.current : tab;
+            setCareSheet(false);
+            onTab("quests");
+            setMissionSheet(true);
+          }}
         />
       )}
 
@@ -385,6 +403,88 @@ export function BeDaGameView({
       </div>
       )}
 
+      {missionSheet && !spaOpen && !chestOpen ? (
+        <div className="beda-care-sheet" role="dialog" aria-modal="true" aria-label={t("game.questTitle")} data-testid="beda-mission-sheet">
+          <button
+            type="button"
+            className="beda-care-back"
+            aria-label={t("game.careClose")}
+            onClick={() => {
+              setMissionSheet(false);
+              onTab(sheetReturn.current === "quests" ? "care" : sheetReturn.current);
+            }}
+          />
+          <div className="beda-care-card">
+            <div className="beda-care-head">
+              <h2>{t("game.questTitle")}</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setMissionSheet(false);
+                  onTab(sheetReturn.current === "quests" ? "care" : sheetReturn.current);
+                }}
+              >
+                {t("game.careClose")}
+              </button>
+            </div>
+            {(["morning", "evening"] as const).map((section) => {
+              const rows = (careSteps ?? []).filter((step) => step.section === section);
+              return (
+                <section key={section}>
+                  <h3>{t(section === "morning" ? "game.careMorning" : "game.careEvening")}</h3>
+                  {rows.length === 0 ? <p className="beda-step-empty">{t("game.stepsEmpty")}</p> : null}
+                  {rows.map((step) => {
+                    const link = routineAffiliateLink(step);
+                    return (
+                      <div key={`${step.section}-${step.id}`}>
+                        <button
+                          type="button"
+                          className={step.completed ? "beda-quest-row beda-step is-done" : "beda-quest-row beda-step"}
+                          data-testid="beda-mission-step"
+                          data-section={section}
+                          data-done={step.completed ? "true" : "false"}
+                          onClick={() => onToggleCareStep?.(step)}
+                        >
+                          <span className="beda-check">{step.completed ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
+                          {step.title}
+                        </button>
+                        {link ? (
+                          <a
+                            className="beda-quest-link"
+                            href={link}
+                            target="_blank"
+                            rel="sponsored noopener"
+                            data-testid="beda-mission-aff"
+                          >
+                            {step.product_name?.trim() || t("game.productLink")}
+                          </a>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </section>
+              );
+            })}
+            <section>
+              <h3>{t("game.extra")}</h3>
+              <button
+                type="button"
+                className={wavedToday ? "beda-quest-row beda-step is-done" : "beda-quest-row beda-step"}
+                data-testid="beda-mission-wave"
+                data-done={wavedToday ? "true" : "false"}
+                onClick={() => {
+                  setMissionSheet(false);
+                  onTab("lobby");
+                }}
+              >
+                <span className="beda-check">{wavedToday ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
+                {t("game.tasks.wave")}
+              </button>
+            </section>
+          </div>
+        </div>
+      ) : null}
+
       {careSheet && !spaOpen ? (
         <div className="beda-care-sheet" role="dialog" aria-modal="true" aria-label={t("game.care")} data-testid="beda-care-sheet">
           <button type="button" className="beda-care-back" aria-label={t("game.careClose")} onClick={() => setCareSheet(false)} />
@@ -443,18 +543,27 @@ export function BeDaGameView({
               data-testid={`beda-nav-${item.id}`}
               onClick={() => {
                 if (item.id === "care" && !spaOpen) {
+                  setMissionSheet(false);
                   onTab("care");
                   setCareSheet(true);
                   return;
                 }
+                if (item.id === "quests" && !spaOpen) {
+                  sheetReturn.current = tab === "quests" ? sheetReturn.current : tab;
+                  setCareSheet(false);
+                  onTab("quests");
+                  setMissionSheet(true);
+                  return;
+                }
                 setCareSheet(false);
+                setMissionSheet(false);
                 onTab(item.id);
               }}
             >
               <span className={burst > 0 && on ? "beda-nav-orb beda-pop" : "beda-nav-orb"}>
                 <GameIcon name={item.icon} />
               </span>
-              {item.id === "quests" && openQuests > 0 ? <span className="beda-badge">{openQuests}</span> : null}
+              {item.id === "quests" && openSteps > 0 ? <span className="beda-badge">{openSteps}</span> : null}
               {t(`game.${item.label}`)}
             </button>
           );
@@ -474,12 +583,14 @@ function Room({
   progress,
   showPrettyLine,
   quests,
+  summary,
   giftTaken,
   doorCountLabel,
   hideCards,
   showHero,
   onOpenLobby,
   onOpenWardrobe,
+  onOpenMissions,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -490,12 +601,14 @@ function Room({
   progress: number | null;
   showPrettyLine: boolean;
   quests: GameQuest[];
+  summary: ReturnType<typeof routineSummary>;
   giftTaken: boolean;
   doorCountLabel: string;
   hideCards: boolean;
   showHero: boolean;
   onOpenLobby: () => void;
   onOpenWardrobe: () => void;
+  onOpenMissions: () => void;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
@@ -578,9 +691,23 @@ function Room({
                 {giftTaken ? t("game.giftTaken") : t("game.gift")}
               </span>
             </h2>
-            {quests.map((quest) => (
-              <QuestRow key={quest.id} quest={quest} onOpenLobby={onOpenLobby} />
-            ))}
+            {(["morning", "evening"] as const).map((section) => {
+              const stats = summary[section];
+              return (
+                <button
+                  key={section}
+                  type="button"
+                  className="beda-quest-row"
+                  data-testid="beda-mission-summary"
+                  data-section={section}
+                  data-done={stats.done}
+                  data-total={stats.total}
+                  onClick={onOpenMissions}
+                >
+                  {t(section === "morning" ? "game.morningCount" : "game.eveningCount", stats)}
+                </button>
+              );
+            })}
           </section>
           <button type="button" className="beda-card beda-door" onClick={onOpenLobby}>
             <GameIcon name="door" />
@@ -642,42 +769,6 @@ function Bubble({ kind }: { kind: GameBubbleKind }) {
         </>
       ) : null}
     </p>
-  );
-}
-
-function QuestRow({
-  quest,
-  onOpenLobby,
-}: {
-  quest: GameQuest;
-  onOpenLobby: () => void;
-}) {
-  const t = useTranslations("mascot");
-  const label = t(`game.tasks.${quest.id}`);
-  const body = (
-    <>
-      <span className="beda-check">{quest.done ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
-      {label}
-    </>
-  );
-  if (quest.done) {
-    return (
-      <div className="beda-quest-row is-done" data-quest={quest.id}>
-        {body}
-      </div>
-    );
-  }
-  if (quest.id === "wave") {
-    return (
-      <button type="button" className="beda-quest-row" data-quest={quest.id} onClick={onOpenLobby}>
-        {body}
-      </button>
-    );
-  }
-  return (
-    <button type="button" className="beda-quest-row" data-quest={quest.id as GameQuestId}>
-      {body}
-    </button>
   );
 }
 

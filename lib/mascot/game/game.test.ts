@@ -51,6 +51,8 @@ import {
   writeDayFlag,
   writeSoundEnabled,
 } from "./prefs";
+import { missionRows, missionStepForQuest, routineSummary } from "./missions";
+import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import {
   chestHearts,
   chestReady,
@@ -124,6 +126,28 @@ describe("game quests and chest", () => {
     { category: "moisturizer", title: "Kem dưỡng", completed: false },
     { category: "spf", title: "Kem chống nắng", completed: false },
   ];
+
+  it("marks the same routine step done from either side", () => {
+    const steps = [
+      { id: "wash-1", section: "morning" as const, category: "cleanser", title: "Rửa mặt", completed: false, affiliate_link: "https://s.shopee.vn/70HPIj8Km4", product_name: "Sữa rửa mặt tạo bọt" },
+      { id: "spf-1", section: "morning" as const, category: "spf", title: "Kem chống nắng", completed: false },
+    ];
+    assert.equal(missionRows(steps)[0]?.done, false);
+    assert.equal(gameQuests({ morning: steps, routineToday: null, wavedToday: false })[0]?.done, false);
+    const ticked = steps.map((step) => (step.id === "wash-1" ? { ...step, completed: true } : step));
+    assert.equal(missionRows(ticked).filter((row) => row.done).length, 1);
+    assert.equal(gameQuests({ morning: ticked, routineToday: null, wavedToday: false })[0]?.done, true);
+    assert.equal(missionStepForQuest(ticked, "wash")?.id, "wash-1");
+    assert.equal(missionStepForQuest(ticked, "spf")?.id, "spf-1");
+    assert.equal(missionRows(ticked)[0]?.affiliateLink, "https://s.shopee.vn/70HPIj8Km4");
+    assert.equal(routineAffiliateLink({ affiliate_link: "javascript:alert(1)" }), null);
+    assert.equal(routineAffiliateLink({}), null);
+    const summary = routineSummary(ticked);
+    assert.deepEqual(summary.morning, { done: 1, total: 2 });
+    assert.equal(summary.allDone, false);
+    assert.equal(routineSummary(ticked.map((step) => ({ ...step, completed: true }))).allDone, true);
+    assert.equal(routineSummary([]).allDone, false);
+  });
 
   it("reads wash and sunscreen from routine ticks", () => {
     const open = gameQuests({ morning, routineToday: null, wavedToday: false });
