@@ -33,8 +33,8 @@ function sheetOpen(): boolean {
 }
 
 /**
- * Small corner Bé Da for the skin diary. She stays in the page header's
- * empty corner, and steps aside while a field or a sheet is open.
+ * Floating Bé Da for the skin diary. She is fixed to the corner, so the
+ * header lays out as if she were not there, and she steps aside for a modal.
  */
 export function BeDaDiaryChip() {
   const t = useTranslations("mascot");
