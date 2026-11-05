@@ -460,6 +460,15 @@
   .be-da-flies-exit {
     opacity: 0 !important;
   }
+
+  .be-da-diary-chip {
+    transition: none !important;
+  }
+
+  .be-da-diary-chip.is-scrolling {
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 @keyframes be-da-buzz {
@@ -534,6 +543,13 @@ img.be-da-flies-exit {
   background: transparent;
   padding: 1.85rem 0 0;
   line-height: 0;
+  transform-origin: 100% 100%;
+  transition: transform 320ms ease, opacity 320ms ease;
+}
+
+.be-da-diary-chip.is-scrolling {
+  transform: scale(0.6);
+  opacity: 0.6;
 }
 
 [data-diary-page]:has(.be-da-diary-chip) {
