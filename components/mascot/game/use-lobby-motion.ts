@@ -3,12 +3,16 @@
 import { useLayoutEffect, useRef } from "react";
 
 import {
-  LOBBY_SAMPLE_CELLS,
+  LOBBY_SOLVE_INTERVAL_MS,
   LOBBY_WORLD,
   lobbyChromePad,
   lobbyExclusionZones,
+  lobbyFigureBox,
   lobbyStackZ,
-  tagEdgeDelta,
+  screenBoxesOverlap,
+  solveLobbyCells,
+  type LobbySeatInput,
+  type ScreenBox,
 } from "@/lib/mascot/game/lobby";
 import { spaFootScale } from "@/lib/mascot/game/spa-room";
 import {
@@ -36,7 +40,14 @@ import {
 const HOLD_MS = 280;
 const PAN_PX = 10;
 
-type ActorSpot = { id: string; x: number; y: number; sample: boolean; facing: "left" | "right" };
+type ActorSpot = {
+  id: string;
+  x: number;
+  y: number;
+  sample: boolean;
+  facing: "left" | "right";
+  nickname?: string;
+};
 
 function reducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -50,87 +61,38 @@ function liteMotion(): boolean {
   return (typeof cores === "number" && cores > 0 && cores <= 4) || (typeof memory === "number" && memory > 0 && memory <= 2);
 }
 
-/** Pull a name tag that is already on screen inside the viewport. Off-screen tags stay put. */
-function clampLobbyTags(frame: HTMLElement) {
-  const view = frame.getBoundingClientRect();
-  for (const tag of frame.querySelectorAll<HTMLElement>(".beda-tag")) {
-    const seen = tag.getBoundingClientRect();
-    const onScreen =
-      seen.bottom > view.top + 2 &&
-      seen.top < view.bottom - 2 &&
-      seen.right > view.left + 2 &&
-      seen.left < view.right - 2;
-    if (!onScreen) {
-      if (tag.style.getPropertyValue("--edge") !== "0px") tag.style.setProperty("--edge", "0px");
-      continue;
-    }
-    for (let pass = 0; pass < 3; pass += 1) {
-      const before = tag.getBoundingClientRect();
-      const dx = tagEdgeDelta(before, view);
-      if (Math.abs(dx) < 0.5) break;
-      const prev = Number.parseFloat(tag.style.getPropertyValue("--edge") || "0") || 0;
-      tag.style.setProperty("--edge", `${prev + dx}px`);
-      const after = tag.getBoundingClientRect();
-      const gained = after.left - before.left;
-      if (Math.abs(gained) < 0.25) break;
-      if (Math.abs(gained - dx) > 0.75) {
-        tag.style.setProperty("--edge", `${prev + (dx * dx) / gained}px`);
-      }
-    }
-  }
-}
-
-type ScreenBox = { left: number; top: number; right: number; bottom: number };
-
-function unionBox(el: HTMLElement): { box: ScreenBox; tag: DOMRect } | null {
-  const art = el.querySelector(".beda-friend-art")?.getBoundingClientRect();
-  const tag = el.querySelector(".beda-tag")?.getBoundingClientRect();
-  if (!art || !tag) return null;
+function screenFigure(
+  x: number,
+  y: number,
+  nickname: string,
+  ms: number | undefined,
+  cam: { x: number; y: number; scale: number },
+  worldW: number,
+  worldH: number,
+): ScreenBox {
+  const world = lobbyFigureBox(x, y, nickname, worldW, worldH, ms);
+  const scale = cam.scale;
   return {
-    tag,
-    box: {
-      left: Math.min(art.left, tag.left),
-      top: Math.min(art.top, tag.top),
-      right: Math.max(art.right, tag.right),
-      bottom: Math.max(art.bottom, tag.bottom),
-    },
+    left: cam.x + world.left * scale,
+    top: cam.y + world.top * scale,
+    right: cam.x + world.right * scale,
+    bottom: cam.y + world.bottom * scale,
   };
-}
-
-function crowds(a: ScreenBox, b: ScreenBox, gap: number): boolean {
-  const ix = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-  const iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-  return ix > -gap && iy > -gap;
-}
-
-function tagClipped(tag: DOMRect, view: DOMRect): boolean {
-  const visible =
-    tag.bottom > view.top + 2 && tag.top < view.bottom - 2 && tag.right > view.left + 2 && tag.left < view.right - 2;
-  if (!visible) return false;
-  return tag.left < view.left + 8 - 0.6 || tag.right > view.right - 8 + 0.6;
 }
 
 /** Live people keep their synced spot. Sample visitors move, so they do not fade the controls. */
-function fadeCoveredControls(frame: HTMLElement) {
+function fadeCoveredControls(frame: HTMLElement, bodies: readonly ScreenBox[], viewW: number, viewH: number) {
   const root = frame.closest(".beda-game") ?? frame;
-  const figures = frame.querySelectorAll<HTMLElement>(".beda-friend");
-  const mark = (selector: string) => {
-    const el = root.querySelector<HTMLElement>(selector);
-    if (!el) return;
-    const box = el.getBoundingClientRect();
-    let covered = false;
-    for (const fig of figures) {
-      if (fig.getAttribute("data-sample") === "true") continue;
-      const body = fig.getBoundingClientRect();
-      if (box.left < body.right - 6 && box.right > body.left + 6 && box.top < body.bottom - 6 && box.bottom > body.top + 6) {
-        covered = true;
-        break;
-      }
-    }
-    el.classList.toggle("is-clear", covered);
-  };
-  mark(".beda-zoom");
-  mark(".beda-hud");
+  const zones = lobbyExclusionZones(viewW, viewH);
+  const zoom = zones[1];
+  const hud: ScreenBox = { left: 0, top: 0, right: viewW, bottom: 64 };
+  const hit = (zone: ScreenBox | undefined) => !!zone && bodies.some((body) => screenBoxesOverlap(body, zone, 0));
+  root.querySelector(".beda-zoom")?.classList.toggle("is-clear", hit(zoom));
+  root.querySelector(".beda-hud")?.classList.toggle("is-clear", hit(hud));
+}
+
+function lobbySheetOpen(frame: HTMLElement): boolean {
+  return !!frame.closest(".beda-game")?.querySelector(".beda-care-sheet, .beda-sheet, .beda-chest");
 }
 
 function placeLobby(
@@ -149,97 +111,6 @@ function placeLobby(
   el.style.setProperty("--ms", String(size));
   el.style.setProperty("--sy", String(squash));
   el.style.zIndex = String(lobbyStackZ(y));
-}
-
-type SampleSeat = { el: HTMLElement; id: string; x: number; y: number };
-
-/**
- * Put each sample on a grid cell whose measured figure and name miss the others,
- * the player, and the real control boxes. A blocked cell is left unused.
- */
-function assignSampleCells(frame: HTMLElement, samples: SampleSeat[], worldW: number, worldH: number): Map<string, { x: number; y: number }> {
-  const view = frame.getBoundingClientRect();
-  const root = frame.closest(".beda-game") ?? document;
-  const zones: ScreenBox[] = [];
-  for (const selector of [".beda-back", ".beda-zoom", ".beda-nav"]) {
-    const node = root.querySelector<HTMLElement>(selector);
-    if (!node) continue;
-    const rect = node.getBoundingClientRect();
-    zones.push({ left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom });
-  }
-  const occupied: ScreenBox[] = [];
-  const you = frame.querySelector<HTMLElement>("[data-lobby-you]");
-  const youBox = you ? unionBox(you) : null;
-  if (youBox) occupied.push(youBox.box);
-  for (const live of frame.querySelectorAll<HTMLElement>('[data-sample="false"].beda-pose')) {
-    const box = unionBox(live);
-    if (box) occupied.push(box.box);
-  }
-  const used = new Set<number>();
-  const seats = new Map<string, { x: number; y: number }>();
-  const measure = (el: HTMLElement) => {
-    const measured = unionBox(el);
-    if (!measured) return null;
-    if (zones.some((zone) => crowds(measured.box, zone, 8))) return null;
-    if (occupied.some((box) => crowds(measured.box, box, 12))) return null;
-    if (tagClipped(measured.tag, view)) return null;
-    const onScreen =
-      measured.box.bottom > view.top &&
-      measured.box.top < view.bottom &&
-      measured.box.right > view.left &&
-      measured.box.left < view.right;
-    return { box: measured.box, onScreen };
-  };
-  const sit = (sample: SampleSeat, index: number) => {
-    const cell = LOBBY_SAMPLE_CELLS[index];
-    if (!cell) return null;
-    const tag = sample.el.querySelector<HTMLElement>(".beda-tag");
-    if (tag) tag.style.setProperty("--edge", "0px");
-    const size = 0.78 + Math.max(0, cell.y) * 0.4;
-    placeLobby(sample.el, cell.x, cell.y, worldW, worldH, size, 1);
-    sample.el.style.display = "";
-    return measure(sample.el);
-  };
-
-  for (const sample of samples) {
-    const current = Number(sample.el.dataset.cell ?? "-1");
-    if (current >= 0 && !used.has(current)) {
-      const kept = sit(sample, current);
-      if (kept?.onScreen) {
-        used.add(current);
-        occupied.push(kept.box);
-        const cell = LOBBY_SAMPLE_CELLS[current]!;
-        seats.set(sample.id, { x: cell.x, y: cell.y });
-        continue;
-      }
-    }
-    let best = -1;
-    let bestScore = Infinity;
-    for (let index = 0; index < LOBBY_SAMPLE_CELLS.length; index += 1) {
-      if (used.has(index)) continue;
-      const cell = LOBBY_SAMPLE_CELLS[index]!;
-      const fit = sit(sample, index);
-      if (!fit) continue;
-      const dist = (cell.x - sample.x) ** 2 + (cell.y - sample.y) ** 2;
-      const score = (fit.onScreen ? 0 : 100) + dist;
-      if (score < bestScore) {
-        best = index;
-        bestScore = score;
-      }
-    }
-    if (best < 0) {
-      sample.el.style.display = "none";
-      delete sample.el.dataset.cell;
-      continue;
-    }
-    const fit = sit(sample, best);
-    sample.el.dataset.cell = String(best);
-    used.add(best);
-    if (fit) occupied.push(fit.box);
-    const cell = LOBBY_SAMPLE_CELLS[best]!;
-    seats.set(sample.id, { x: cell.x, y: cell.y });
-  }
-  return seats;
 }
 
 function setFacing(
@@ -292,7 +163,7 @@ function setFacing(
 export function useLobbyMotion(input: {
   frameRef: React.RefObject<HTMLDivElement | null>;
   worldRef: React.RefObject<HTMLDivElement | null>;
-  you: { x: number; y: number };
+  you: { x: number; y: number; nickname?: string };
   actors: readonly ActorSpot[];
   onWalk: (x: number, y: number, pace?: "walk" | "idle") => void;
   onEmptyTap?: () => void;
@@ -343,6 +214,8 @@ export function useLobbyMotion(input: {
     let echoed = { x: youProp.current.x, y: youProp.current.y };
     let last = performance.now();
     let frameId = 0;
+    let lastSolve = -LOBBY_SOLVE_INTERVAL_MS;
+    let lastSolveKey = "";
 
     const pointers = new Map<number, { x: number; y: number }>();
     let downPoint = { x: 0, y: 0 };
@@ -397,7 +270,7 @@ export function useLobbyMotion(input: {
       const cx = settled.x + point.x * size.worldW * cam.scale;
       const feet = settled.y + point.y * size.worldH * cam.scale;
       const body = { left: cx - width / 2, top: feet - height, right: cx + width / 2, bottom: feet + 8 };
-      return !lobbyExclusionZones(size.w, size.h).some((zone) => crowds(body, zone, 4));
+      return !lobbyExclusionZones(size.w, size.h).some((zone) => screenBoxesOverlap(body, zone, 4));
     };
 
     const toLobby = (clientX: number, clientY: number) => {
@@ -471,8 +344,16 @@ export function useLobbyMotion(input: {
     applyCamera();
 
     const tick = (now: number) => {
+      if (document.hidden) {
+        frameId = 0;
+        return;
+      }
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      if (lobbySheetOpen(frame)) {
+        frameId = window.requestAnimationFrame(tick);
+        return;
+      }
       const size = viewSize();
       const speed = lobbyWorldSpeed(size.worldW || 1, cam.scale);
       const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, false, speed, true);
@@ -542,12 +423,23 @@ export function useLobbyMotion(input: {
         });
       }
 
-      const samples: SampleSeat[] = [];
+      const samples: { el: HTMLElement; seat: LobbySeatInput }[] = [];
+      const lives: { x: number; y: number; nickname: string }[] = [];
       for (const actor of actorsProp.current) {
         const pose = world.querySelector<HTMLElement>(`[data-friend-id="${actor.id}"].beda-pose`);
         if (!pose) continue;
         if (actor.sample) {
-          samples.push({ el: pose, id: actor.id, x: actor.x, y: actor.y });
+          const cell = Number(pose.dataset.cell ?? "-1");
+          samples.push({
+            el: pose,
+            seat: {
+              id: actor.id,
+              nickname: actor.nickname ?? actor.id,
+              homeX: actor.x,
+              homeY: actor.y,
+              cell: Number.isFinite(cell) ? cell : -1,
+            },
+          });
           continue;
         }
         let x = actor.x;
@@ -565,25 +457,53 @@ export function useLobbyMotion(input: {
         const moving = glide ? Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 : false;
         face = moving ? glide!.face : face;
         placeLobby(pose, x, y, size.worldW, size.worldH, 0.78 + y * 0.4, 1);
+        lives.push({ x, y, nickname: actor.nickname ?? actor.id });
         const prev = seen.get(actor.id);
         seen.set(actor.id, { x, y, t: now });
         const elapsed = prev ? (now - prev.t) / 1000 : 0;
         const actorMoving = !!prev && elapsed > 0 && Math.hypot(x - prev.x, y - prev.y) / elapsed > 0.02;
         setFacing(pose, face, actorMoving ? now / 159 : 0, actorMoving, lite, 0, { world, x, y });
       }
-      const seats = assignSampleCells(frame, samples, size.worldW, size.worldH);
-      for (const sample of samples) {
-        const seat = seats.get(sample.id);
-        if (!seat) continue;
-        const prev = seen.get(sample.id);
-        seen.set(sample.id, { x: seat.x, y: seat.y, t: now });
-        const elapsed = prev ? (now - prev.t) / 1000 : 0;
-        const moving = !!prev && elapsed > 0 && Math.hypot(seat.x - prev.x, seat.y - prev.y) / elapsed > 0.02;
-        const face = actorsProp.current.find((actor) => actor.id === sample.id)?.facing === "left" ? -1 : 1;
-        setFacing(sample.el, face, moving ? now / 159 : 0, moving, lite, 0, { world, x: seat.x, y: seat.y });
+      const solveKey = `${Math.round(cam.x)}|${Math.round(cam.y)}|${cam.scale.toFixed(2)}|${size.w}|${size.h}|${walker.x.toFixed(3)}|${walker.y.toFixed(3)}|${samples.length}`;
+      if (solveKey !== lastSolveKey && now - lastSolve >= LOBBY_SOLVE_INTERVAL_MS) {
+        const solved = solveLobbyCells({
+          samples: samples.map((sample) => sample.seat),
+          player: { x: walker.x, y: walker.y, nickname: youProp.current.nickname || "Bé Da" },
+          lives,
+          cam,
+          viewW: size.w,
+          viewH: size.h,
+          worldW: size.worldW,
+          worldH: size.worldH,
+        });
+        for (const seat of solved.seats) {
+          const sample = samples.find((item) => item.seat.id === seat.id);
+          if (!sample) continue;
+          if (seat.hidden) {
+            sample.el.style.display = "none";
+            delete sample.el.dataset.cell;
+            continue;
+          }
+          sample.el.style.display = "";
+          sample.el.dataset.cell = String(seat.cell);
+          placeLobby(sample.el, seat.x, seat.y, size.worldW, size.worldH, 0.78 + Math.max(0, seat.y) * 0.4, 1);
+          sample.el.querySelector<HTMLElement>(".beda-tag")?.style.setProperty("--edge", `${seat.edge}px`);
+          const prev = seen.get(seat.id);
+          seen.set(seat.id, { x: seat.x, y: seat.y, t: now });
+          const elapsed = prev ? (now - prev.t) / 1000 : 0;
+          const moving = !!prev && elapsed > 0 && Math.hypot(seat.x - prev.x, seat.y - prev.y) / elapsed > 0.02;
+          const actor = actorsProp.current.find((item) => item.id === seat.id);
+          const face = actor?.facing === "left" ? -1 : 1;
+          setFacing(sample.el, face, moving ? now / 159 : 0, moving, lite, 0, { world, x: seat.x, y: seat.y });
+        }
+        lastSolve = now;
+        lastSolveKey = solveKey;
       }
-      clampLobbyTags(frame);
-      fadeCoveredControls(frame);
+      const bodies = [
+        screenFigure(walker.x, walker.y, youProp.current.nickname || "Bé Da", 1.2, cam, size.worldW, size.worldH),
+        ...lives.map((live) => screenFigure(live.x, live.y, live.nickname, undefined, cam, size.worldW, size.worldH)),
+      ];
+      fadeCoveredControls(frame, bodies, size.w, size.h);
       frameId = window.requestAnimationFrame(tick);
     };
     tick(last);
@@ -660,10 +580,18 @@ export function useLobbyMotion(input: {
     frame.addEventListener("pointermove", move);
     frame.addEventListener("pointerup", up);
     frame.addEventListener("pointercancel", up);
+    const onVisible = () => {
+      if (document.hidden || frameId !== 0) return;
+      last = performance.now();
+      frameId = window.requestAnimationFrame(tick);
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       window.cancelAnimationFrame(frameId);
+      frameId = 0;
       ring.remove();
+      document.removeEventListener("visibilitychange", onVisible);
       frame.removeEventListener("wheel", onWheel);
       frame.removeEventListener("pointerdown", down);
       frame.removeEventListener("pointermove", move);
