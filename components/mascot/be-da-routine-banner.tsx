@@ -13,13 +13,14 @@ import {
   readGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
 
 const TAP_MS = 480;
 
 function storedLook(): GameLook {
   if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
-  return readGameLook(localStorage) ?? DEFAULT_GAME_LOOK;
+  return equippedGameLook(readGameLook(localStorage));
 }
 
 /** Small corner Bé Da on /routine. Same room view and closet as Góc bình yên. */

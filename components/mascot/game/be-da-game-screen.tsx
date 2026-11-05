@@ -32,6 +32,7 @@ import {
   writeGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import { createSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
@@ -100,8 +101,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
 
   useEffect(() => {
     setSoundOn(readSoundEnabled(localStorage));
-    const savedLook = readGameLook(localStorage);
-    if (savedLook) setLook(savedLook);
+    // A removed item stays in storage. The figure wears the default until they pick again.
+    setLook(equippedGameLook(readGameLook(localStorage)));
     setWaved(readDayFlag(localStorage, GAME_WAVE_KEY, today));
     setClaimed(readDayFlag(localStorage, GAME_CHEST_KEY, today));
     setReady(true);
