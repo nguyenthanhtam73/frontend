@@ -132,7 +132,7 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
-  it("wears a real outfit, hair, and clip from the closet", () => {
+  it("shows only the default closet item and falls back from a removed look", () => {
     const look: GameLook = {
       outfit: "outfit_ao_dai",
       hair: "hair_twin_tails",
@@ -140,18 +140,19 @@ describe("Bé Da game screen", () => {
     };
     const html = renderGame({ look, tab: "wardrobe" satisfies GameTab });
     assert.match(html, /data-testid="beda-wardrobe"/);
-    assert.match(html, /\/mascot\/outfits\/outfit_ao_dai\.svg/);
-    assert.match(html, /\/mascot\/hair\/hair_twin_tails\.svg/);
-    assert.match(html, /\/mascot\/accessory\/accessory_flower_clip\.svg/);
-    assert.match(html, /Áo dài/);
-    assert.match(html, /Váy hoa/);
-    assert.match(html, /Kẹp hoa/);
+    assert.match(html, /\/mascot\/outfits\/outfit_pajamas\.svg/);
+    assert.equal(html.includes("/mascot/outfits/outfit_ao_dai.svg"), false);
+    assert.equal(html.includes("/mascot/hair/hair_twin_tails.svg"), false);
+    assert.equal(html.includes("/mascot/accessory/accessory_flower_clip.svg"), false);
+    assert.equal(html.includes("Áo dài"), false);
+    assert.equal(html.includes("Váy hoa"), false);
+    assert.equal(html.includes("Kẹp hoa"), false);
+    assert.equal(html.includes("Hoodie"), false);
+    assert.match(html, /Đồ ngủ/);
     assert.match(html, /Không mua|không mua/);
     assert.equal(html.includes("hue-rotate"), false);
-    assert.match(html, /aria-label="Áo dài"[^>]*aria-pressed="true"/);
-    assert.match(html, /aria-label="Tóc hai bên"[^>]*aria-pressed="true"/);
-    assert.match(html, /aria-label="Kẹp hoa"[^>]*aria-pressed="true"/);
-    assert.match(html, /aria-label="Hoodie"[^>]*aria-pressed="false"/);
+    assert.match(html, /aria-label="Đồ ngủ"[^>]*aria-pressed="true"/);
+    assert.equal((html.match(/class="beda-pick is-on"|class="beda-pick"/g) ?? []).length, 1);
     assert.match(html, /data-testid="beda-wear"/);
     assert.match(html, />Mặc</);
     assert.match(html, /beda-pick-skel/);

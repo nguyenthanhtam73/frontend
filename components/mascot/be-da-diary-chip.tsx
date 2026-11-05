@@ -13,11 +13,12 @@ import {
   readGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
 
 function storedLook(): GameLook {
   if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
-  return readGameLook(localStorage) ?? DEFAULT_GAME_LOOK;
+  return equippedGameLook(readGameLook(localStorage));
 }
 
 function fieldFocused(): boolean {
