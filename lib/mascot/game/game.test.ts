@@ -51,7 +51,7 @@ import {
   writeDayFlag,
   writeSoundEnabled,
 } from "./prefs";
-import { missionRows, missionStepForQuest } from "./missions";
+import { missionRows, missionStepForQuest, routineSummary } from "./missions";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import {
   chestHearts,
@@ -142,6 +142,11 @@ describe("game quests and chest", () => {
     assert.equal(missionRows(ticked)[0]?.affiliateLink, "https://s.shopee.vn/70HPIj8Km4");
     assert.equal(routineAffiliateLink({ affiliate_link: "javascript:alert(1)" }), null);
     assert.equal(routineAffiliateLink({}), null);
+    const summary = routineSummary(ticked);
+    assert.deepEqual(summary.morning, { done: 1, total: 2 });
+    assert.equal(summary.allDone, false);
+    assert.equal(routineSummary(ticked.map((step) => ({ ...step, completed: true }))).allDone, true);
+    assert.equal(routineSummary([]).allDone, false);
   });
 
   it("reads wash and sunscreen from routine ticks", () => {

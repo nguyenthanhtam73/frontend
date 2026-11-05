@@ -3440,6 +3440,8 @@
       "careEvening": "Evening",
       "careClose": "Close",
       "productLink": "View product",
+      "morningCount": "{done}/{total} morning steps",
+      "eveningCount": "{done}/{total} evening steps",
       "tasks": {
         "wash": "Wash your face this morning",
         "spf": "Put on sunscreen",

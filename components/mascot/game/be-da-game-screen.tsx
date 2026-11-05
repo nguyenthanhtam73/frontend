@@ -23,7 +23,8 @@ import {
   writeDayFlag,
   writeSoundEnabled,
 } from "@/lib/mascot/game/prefs";
-import { chestHearts, chestReady, checkedInOnDay, gameBubbleKind, gameQuests } from "@/lib/mascot/game/quests";
+import { routineSummary } from "@/lib/mascot/game/missions";
+import { checkedInOnDay, gameBubbleKind, gameQuests } from "@/lib/mascot/game/quests";
 import { skyPeriod } from "@/lib/mascot/game/sky";
 import {
   DEFAULT_GAME_LOOK,
@@ -174,7 +175,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   }, [commitTicks, queryClient, routineQuery.data]);
   const routineToday = mascotQuery.data?.routineToday ?? null;
   const quests = gameQuests({ morning, routineToday, wavedToday: waved });
-  const canChest = chestReady(quests, claimed);
+  const day = routineSummary(careSteps);
+  const canChest = day.allDone && !claimed;
 
   useEffect(() => {
     if (roomCode) return;
@@ -199,6 +201,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   useEffect(() => {
     if (!ready || autoChest.current || !canChest || roomCode) return;
     autoChest.current = true;
+    setChestDismissed(false);
     setTab("quests");
   }, [ready, canChest, roomCode]);
 
@@ -303,11 +306,6 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     if (waved) return;
     writeDayFlag(localStorage, GAME_WAVE_KEY, today);
     setWaved(true);
-    const next = gameQuests({ morning, routineToday, wavedToday: true });
-    if (chestReady(next, claimed)) {
-      setChestDismissed(false);
-      setTab("quests");
-    }
   }
 
   function onClaim() {
@@ -385,7 +383,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSwitchHall={presence.switchHall}
       look={look}
       wornIds={wornIds}
-      hearts={chestHearts(quests)}
+      hearts={day.morning.done + day.evening.done}
+      wavedToday={waved}
       streakKept={(streak.data?.current_streak ?? 0) > 0 || checkedIn}
       giftTaken={claimed}
       player={view}

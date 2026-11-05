@@ -22,8 +22,8 @@ import {
   type GameLook,
   type GamePose,
 } from "@/lib/mascot/game/look";
-import { missionStepForQuest } from "@/lib/mascot/game/missions";
-import type { GameBubbleKind, GameQuest, GameQuestId } from "@/lib/mascot/game/quests";
+import { routineSummary } from "@/lib/mascot/game/missions";
+import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
@@ -98,6 +98,7 @@ export function BeDaGameView({
   onFriendAction,
   onClaim,
   onLook,
+  wavedToday = false,
   actors,
   you,
   hall = 1,
@@ -154,6 +155,8 @@ export function BeDaGameView({
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
   onLook: (look: GameLook) => void;
+  /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
+  wavedToday?: boolean;
   actors?: readonly LobbyActor[];
   you?: {
     x: number;
@@ -241,7 +244,8 @@ export function BeDaGameView({
   };
   const shownHallCount = hallCount ?? lobbyPeople.length + 1;
   const doorCountLabel = t("game.doorCount", { count: friendCount });
-  const openQuests = quests.filter((quest) => !quest.done).length;
+  const summary = routineSummary(careSteps ?? []);
+  const openSteps = summary.morning.total + summary.evening.total - summary.morning.done - summary.evening.done;
   const activeNav: GameTab | null = spaOpen ? null : chestOpen ? "quests" : tab;
 
   return (
@@ -308,16 +312,18 @@ export function BeDaGameView({
           progress={progress}
           showPrettyLine={showPrettyLine}
           quests={quests}
+          summary={summary}
           giftTaken={giftTaken}
           doorCountLabel={doorCountLabel}
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
           onOpenLobby={() => onTab("lobby")}
           onOpenWardrobe={() => onTab("wardrobe")}
-          onToggleQuest={(id) => {
-            if (id !== "wash" && id !== "spf") return;
-            const step = missionStepForQuest(careSteps ?? [], id);
-            if (step) onToggleCareStep?.(step);
+          onOpenMissions={() => {
+            sheetReturn.current = tab === "quests" ? sheetReturn.current : tab;
+            setCareSheet(false);
+            onTab("quests");
+            setMissionSheet(true);
           }}
         />
       )}
@@ -459,6 +465,19 @@ export function BeDaGameView({
                 </section>
               );
             })}
+            <button
+              type="button"
+              className={wavedToday ? "beda-quest-row beda-step is-done" : "beda-quest-row beda-step"}
+              data-testid="beda-mission-wave"
+              data-done={wavedToday ? "true" : "false"}
+              onClick={() => {
+                setMissionSheet(false);
+                onTab("lobby");
+              }}
+            >
+              <span className="beda-check">{wavedToday ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
+              {t("game.tasks.wave")}
+            </button>
           </div>
         </div>
       ) : null}
@@ -541,7 +560,7 @@ export function BeDaGameView({
               <span className={burst > 0 && on ? "beda-nav-orb beda-pop" : "beda-nav-orb"}>
                 <GameIcon name={item.icon} />
               </span>
-              {item.id === "quests" && openQuests > 0 ? <span className="beda-badge">{openQuests}</span> : null}
+              {item.id === "quests" && openSteps > 0 ? <span className="beda-badge">{openSteps}</span> : null}
               {t(`game.${item.label}`)}
             </button>
           );
@@ -561,13 +580,14 @@ function Room({
   progress,
   showPrettyLine,
   quests,
+  summary,
   giftTaken,
   doorCountLabel,
   hideCards,
   showHero,
   onOpenLobby,
   onOpenWardrobe,
-  onToggleQuest,
+  onOpenMissions,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -578,13 +598,14 @@ function Room({
   progress: number | null;
   showPrettyLine: boolean;
   quests: GameQuest[];
+  summary: ReturnType<typeof routineSummary>;
   giftTaken: boolean;
   doorCountLabel: string;
   hideCards: boolean;
   showHero: boolean;
   onOpenLobby: () => void;
   onOpenWardrobe: () => void;
-  onToggleQuest: (id: GameQuestId) => void;
+  onOpenMissions: () => void;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
@@ -667,9 +688,23 @@ function Room({
                 {giftTaken ? t("game.giftTaken") : t("game.gift")}
               </span>
             </h2>
-            {quests.map((quest) => (
-              <QuestRow key={quest.id} quest={quest} onOpenLobby={onOpenLobby} onToggleQuest={onToggleQuest} />
-            ))}
+            {(["morning", "evening"] as const).map((section) => {
+              const stats = summary[section];
+              return (
+                <button
+                  key={section}
+                  type="button"
+                  className="beda-quest-row"
+                  data-testid="beda-mission-summary"
+                  data-section={section}
+                  data-done={stats.done}
+                  data-total={stats.total}
+                  onClick={onOpenMissions}
+                >
+                  {t(section === "morning" ? "game.morningCount" : "game.eveningCount", stats)}
+                </button>
+              );
+            })}
           </section>
           <button type="button" className="beda-card beda-door" onClick={onOpenLobby}>
             <GameIcon name="door" />
@@ -731,44 +766,6 @@ function Bubble({ kind }: { kind: GameBubbleKind }) {
         </>
       ) : null}
     </p>
-  );
-}
-
-function QuestRow({
-  quest,
-  onOpenLobby,
-  onToggleQuest,
-}: {
-  quest: GameQuest;
-  onOpenLobby: () => void;
-  onToggleQuest: (id: GameQuestId) => void;
-}) {
-  const t = useTranslations("mascot");
-  const label = t(`game.tasks.${quest.id}`);
-  const body = (
-    <>
-      <span className="beda-check">{quest.done ? <GameIcon name="check" className="beda-ico-sm" /> : null}</span>
-      {label}
-    </>
-  );
-  if (quest.done) {
-    return (
-      <div className="beda-quest-row is-done" data-quest={quest.id}>
-        {body}
-      </div>
-    );
-  }
-  if (quest.id === "wave") {
-    return (
-      <button type="button" className="beda-quest-row" data-quest={quest.id} onClick={onOpenLobby}>
-        {body}
-      </button>
-    );
-  }
-  return (
-    <button type="button" className="beda-quest-row" data-quest={quest.id as GameQuestId} onClick={() => onToggleQuest(quest.id)}>
-      {body}
-    </button>
   );
 }
 

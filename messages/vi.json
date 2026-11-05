@@ -3440,6 +3440,8 @@
       "careEvening": "Buổi tối",
       "careClose": "Đóng",
       "productLink": "Xem sản phẩm",
+      "morningCount": "{done}/{total} bước sáng",
+      "eveningCount": "{done}/{total} bước tối",
       "tasks": {
         "wash": "Rửa mặt buổi sáng",
         "spf": "Thoa kem chống nắng",
