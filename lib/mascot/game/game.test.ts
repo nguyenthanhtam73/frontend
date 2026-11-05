@@ -16,6 +16,7 @@ import {
   writeGameLook,
   type GameLook,
 } from "./look";
+import { equippedGameLook, grantedWardrobeItems, WARDROBE_CATALOG } from "./wardrobe";
 import {
   LOBBY_FIGURE_GAP,
   LOBBY_PLAYER_SPOT,
@@ -245,7 +246,9 @@ describe("sample lobby", () => {
       assert.equal(view.glowProgress, null);
       assert.equal(GAME_OUTFITS.includes(friend.outfit), true);
     }
-    assert.equal(new Set(SAMPLE_LOBBY_FRIENDS.map((friend) => friend.outfit)).size, GAME_OUTFITS.length);
+    const sampleOutfits = new Set(SAMPLE_LOBBY_FRIENDS.map((friend) => friend.outfit));
+    assert.equal(sampleOutfits.has("outfit_ao_thu"), false);
+    assert.equal(sampleOutfits.size, GAME_OUTFITS.filter((id) => id !== "outfit_ao_thu").length);
   });
 
   it("draws closet clothes in the layer order from LAYERS-NEW", () => {
@@ -296,6 +299,38 @@ describe("sample lobby", () => {
 });
 
 describe("game closet", () => {
+  it("offers one default item and leaves a removed equipped look in storage", () => {
+    assert.equal(WARDROBE_CATALOG.length, 2);
+    assert.deepEqual(grantedWardrobeItems(), [
+      { id: "outfit_pajamas", slot: "outfit", grant: "default" },
+    ]);
+    assert.equal(grantedWardrobeItems().some((item) => item.id === "outfit_ao_thu"), false);
+    assert.deepEqual(
+      grantedWardrobeItems(undefined, { admin: true }).map((item) => item.id),
+      ["outfit_pajamas", "outfit_ao_thu"],
+    );
+    assert.equal(grantedWardrobeItems("hair").length, 0);
+    assert.equal(grantedWardrobeItems("clip").length, 0);
+    const store = memory();
+    const removed: GameLook = {
+      outfit: "outfit_hoodie",
+      hair: "hair_short_bob",
+      clip: "accessory_flower_clip",
+    };
+    writeGameLook(store, removed);
+    assert.deepEqual(readGameLook(store), removed);
+    assert.deepEqual(equippedGameLook(readGameLook(store)), DEFAULT_GAME_LOOK);
+    assert.deepEqual(readGameLook(store), removed);
+    const shirt: GameLook = { ...DEFAULT_GAME_LOOK, outfit: "outfit_ao_thu" };
+    writeGameLook(store, shirt);
+    assert.deepEqual(readGameLook(store), shirt);
+    assert.equal(equippedGameLook(shirt).outfit, "outfit_pajamas");
+    assert.equal(equippedGameLook(shirt, { admin: true }).outfit, "outfit_ao_thu");
+    assert.equal(readGameLook(store)?.outfit, "outfit_ao_thu");
+    assert.deepEqual(equippedGameLook(null), DEFAULT_GAME_LOOK);
+    assert.deepEqual(equippedGameLook(DEFAULT_GAME_LOOK), DEFAULT_GAME_LOOK);
+  });
+
   it("remembers a valid look and drops a broken one", () => {
     const store = memory();
     assert.equal(readGameLook(store), null);

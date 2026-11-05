@@ -32,6 +32,7 @@ import {
   writeGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import { createSpaRoom, listMySpaRooms, readRememberedSpaRooms, rememberSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
@@ -60,6 +61,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const inSpa = roomCode != null;
   const today = streakDateKey();
   const user = useAuthStore((s) => s.user);
+  const closetAdmin = user?.is_admin === true;
   const hasAuth = !!user || !!getAccessToken();
   const { view: homeView } = useBeDaView();
   const view = useMemo(() => gameRoomView(homeView), [homeView]);
@@ -101,8 +103,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
 
   useEffect(() => {
     setSoundOn(readSoundEnabled(localStorage));
-    const savedLook = readGameLook(localStorage);
-    if (savedLook) setLook(savedLook);
+    // A removed item stays in storage. The figure wears the default until they pick again.
+    setLook(equippedGameLook(readGameLook(localStorage), { admin: closetAdmin }));
     setWaved(readDayFlag(localStorage, GAME_WAVE_KEY, today));
     setClaimed(readDayFlag(localStorage, GAME_CHEST_KEY, today));
     setReady(true);
@@ -117,7 +119,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       root.style.overflow = prevHtml;
       document.body.style.overflow = prevBody;
     };
-  }, [today]);
+  }, [today, closetAdmin]);
 
   const morning = routineQuery.data?.morning ?? [];
   const evening = routineQuery.data?.evening ?? [];
@@ -451,10 +453,12 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}
+      closetAdmin={closetAdmin}
       onLook={(next) => {
+        const saved = equippedGameLook(next, { admin: closetAdmin });
         feedback();
-        setLook(next);
-        writeGameLook(localStorage, next);
+        setLook(saved);
+        writeGameLook(localStorage, saved);
       }}
     />
   );

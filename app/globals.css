@@ -532,35 +532,31 @@ img.be-da-flies-exit {
   box-shadow: 0 10px 28px rgba(246, 184, 200, 0.38);
 }
 
-/* Floating diary Bé Da. Fixed, so she follows the scroll and takes no layout. */
+/* Floating diary Bé Da. Fixed overlay: she follows the scroll and adds no page space. */
 .be-da-diary-chip {
   position: fixed;
   right: max(12px, env(safe-area-inset-right));
-  bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  /* 140px above the previous 5.75rem offset. At a 16px root (390) that is 232px, plus the safe-area inset. */
+  bottom: calc(5.75rem + 140px + env(safe-area-inset-bottom));
   z-index: 25;
   width: 8.25rem;
   border: 0;
   background: transparent;
   padding: 1.85rem 0 0;
   line-height: 0;
+  pointer-events: none;
   transform-origin: 100% 100%;
   transition: transform 320ms ease, opacity 320ms ease;
+}
+
+.be-da-diary-chip .bd-figure,
+.be-da-diary-chip .bd-figure img {
+  pointer-events: auto;
 }
 
 .be-da-diary-chip.is-scrolling {
   transform: scale(0.6);
   opacity: 0.6;
-}
-
-[data-diary-page]:has(.be-da-diary-chip) {
-  padding-bottom: calc(15rem + env(safe-area-inset-bottom));
-}
-
-/* Keep the section's add button on the left so the floating chip does not cover it. */
-[data-diary-page]:has(.be-da-diary-chip) [data-testid^="routine-section-"] header > button {
-  width: auto;
-  align-self: flex-start;
-  margin-right: 8.75rem;
 }
 
 .be-da-diary-chip.is-quiet {
@@ -603,10 +599,6 @@ img.be-da-flies-exit {
   }
 }
 
-.be-da-diary-chip img[src*="zzz.svg"] {
-  visibility: hidden;
-}
-
 .be-da-diary-chip.is-dozing .be-da-chip-wave,
 .be-da-diary-chip.is-quiet .be-da-chip-wave,
 .be-da-diary-chip.is-quiet .bd-breathe,
@@ -625,19 +617,12 @@ img.be-da-flies-exit {
   .be-da-diary-chip {
     width: 9.75rem;
     padding-top: 2rem;
-    bottom: max(1rem, env(safe-area-inset-bottom));
+    /* 140px above the previous 1rem offset. At the 17px desktop root that is 157px when the safe area is empty. */
+    bottom: calc(140px + max(1rem, env(safe-area-inset-bottom)));
   }
 
   .be-da-diary-bubble {
     font-size: 14px;
-  }
-
-  [data-diary-page]:has(.be-da-diary-chip) {
-    padding-bottom: calc(13rem + env(safe-area-inset-bottom));
-  }
-
-  [data-diary-page]:has(.be-da-diary-chip) [data-testid^="routine-section-"] header > button {
-    margin-right: 11rem;
   }
 }
 
@@ -699,10 +684,6 @@ img.be-da-flies-exit {
 .be-da-routine-chip.is-dozing .be-da-chip-wave,
 .be-da-routine-chip.is-dozing .bd-lids {
   animation: none;
-}
-
-.be-da-routine-chip img[src*="zzz.svg"] {
-  visibility: hidden;
 }
 
 .be-da-chip-bubbles {

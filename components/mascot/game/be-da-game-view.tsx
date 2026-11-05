@@ -14,14 +14,13 @@ import {
   lobbyActors,
   type LobbyActor,
 } from "@/lib/mascot/game/lobby-live";
+import { gameDress, isGameClip, isGameHair, isGameOutfit, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import {
-  GAME_CLIPS,
-  GAME_HAIRS,
-  GAME_OUTFITS,
-  gameDress,
-  type GameLook,
-  type GamePose,
-} from "@/lib/mascot/game/look";
+  equippedGameLook,
+  grantedWardrobeItems,
+  wardrobeThumbSrc,
+  type WardrobeItem,
+} from "@/lib/mascot/game/wardrobe";
 import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
@@ -51,12 +50,8 @@ const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "ques
 
 const WORN_EXTRAS = ["accessory_pink_headband", "accessory_star_clip"] as const;
 
-/** Every closet thumbnail. Preloaded when the wardrobe opens so tiles are not waiting on a tap. */
-const WARDROBE_ITEM_SRCS = [
-  ...GAME_OUTFITS.map((id) => `/mascot/outfits/${id}.svg`),
-  ...GAME_HAIRS.map((id) => `/mascot/hair/${id}.svg`),
-  ...GAME_CLIPS.map((id) => `/mascot/accessory/${id}.svg`),
-];
+/** Closet thumbnails. Preloaded when the wardrobe opens so the tile is not waiting on a tap. */
+const WARDROBE_ITEM_SRCS = grantedWardrobeItems().map(wardrobeThumbSrc);
 
 const BURST = [
   { dx: "-28px", dy: "-36px", color: "#ffe08a" },
@@ -98,6 +93,7 @@ export function BeDaGameView({
   onFriendAction,
   onClaim,
   onLook,
+  closetAdmin = false,
   wavedToday = false,
   actors,
   you,
@@ -156,6 +152,8 @@ export function BeDaGameView({
   onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
   onClaim: () => void;
   onLook: (look: GameLook) => void;
+  /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
+  closetAdmin?: boolean;
   /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
   wavedToday?: boolean;
   actors?: readonly LobbyActor[];
@@ -197,13 +195,14 @@ export function BeDaGameView({
   const spaOpen = spa != null;
   const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
   const wardrobeOpen = tab === "wardrobe" && !chestOpen && !spaOpen;
-  const [draft, setDraft] = useState(look);
+  const equipped = equippedGameLook(look, { admin: closetAdmin });
+  const [draft, setDraft] = useState(equipped);
   const [tryFlash, setTryFlash] = useState(0);
-  const shownLook = wardrobeOpen ? draft : look;
+  const shownLook = wardrobeOpen ? draft : equipped;
 
   useEffect(() => {
-    setDraft(look);
-  }, [look, wardrobeOpen]);
+    setDraft(equippedGameLook(look, { admin: closetAdmin }));
+  }, [look, wardrobeOpen, closetAdmin]);
 
   useEffect(() => {
     if (!wardrobeOpen) return;
@@ -263,7 +262,7 @@ export function BeDaGameView({
         <BeDaSpaRoom
           locale={locale}
           player={player}
-          look={look}
+          look={equipped}
           soundOn={soundOn}
           selectedId={selectedFriendId}
           youPose={youPose}
@@ -282,7 +281,7 @@ export function BeDaGameView({
           sky={sky}
           player={player}
           locale={locale}
-          look={look}
+          look={equipped}
           dragLabel={t("game.drag")}
           selectedId={selectedFriendId}
           actors={lobbyPeople}
@@ -338,7 +337,7 @@ export function BeDaGameView({
           streakKept={streakKept}
           player={player}
           locale={locale}
-          look={look}
+          look={equipped}
           onClaim={onClaim}
         />
       ) : null}
@@ -346,6 +345,7 @@ export function BeDaGameView({
       {wardrobeOpen ? (
         <Wardrobe
           wornIds={wornIds}
+          closetAdmin={closetAdmin}
           preview={draft}
           onTry={(next) => {
             setDraft(next);
@@ -845,87 +845,87 @@ function Chest({
 
 function Wardrobe({
   wornIds,
+  closetAdmin,
   preview,
   onTry,
   onWear,
 }: {
   wornIds: string[];
+  closetAdmin: boolean;
   preview: GameLook;
   onTry: (look: GameLook) => void;
   onWear: () => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
+  const access = { admin: closetAdmin };
+  const outfits = grantedWardrobeItems("outfit", access);
+  const hairs = grantedWardrobeItems("hair", access);
+  const clips = grantedWardrobeItems("clip", access);
   return (
     <section className="beda-card beda-sheet" data-testid="beda-wardrobe" aria-label={t("game.wardrobe")}>
       <h2>{t("game.wardrobe")}</h2>
       <p>{t("game.wearing")}</p>
       <ul className="beda-worn">
-        <li>{t(`game.look.${preview.outfit}`)}</li>
-        <li>{t(`game.look.${preview.hair}`)}</li>
-        {preview.clip ? <li>{t(`game.look.${preview.clip}`)}</li> : null}
+        {outfits.some((item) => item.id === preview.outfit) ? <li>{t(`game.look.${preview.outfit}`)}</li> : null}
+        {hairs.some((item) => item.id === preview.hair) ? <li>{t(`game.look.${preview.hair}`)}</li> : null}
+        {preview.clip && clips.some((item) => item.id === preview.clip) ? (
+          <li>{t(`game.look.${preview.clip}`)}</li>
+        ) : null}
         {extras.map((id) => (
           <li key={id}>{t(`game.look.${id}`)}</li>
         ))}
       </ul>
-      <p>{t("game.pickOutfit")}</p>
-      <div className="beda-picks">
-        {GAME_OUTFITS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            className={preview.outfit === id ? "beda-pick is-on" : "beda-pick"}
-            aria-label={t(`game.look.${id}`)}
-            aria-pressed={preview.outfit === id}
-            onClick={() => onTry({ ...preview, outfit: id })}
-          >
-            <WardrobeThumb src={`/mascot/outfits/${id}.svg`} crop="is-outfit" />
-            {t(`game.look.${id}`)}
-          </button>
-        ))}
-      </div>
-      <p>{t("game.pickHair")}</p>
-      <div className="beda-picks">
-        {GAME_HAIRS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            className={preview.hair === id ? "beda-pick is-on" : "beda-pick"}
-            aria-label={t(`game.look.${id}`)}
-            aria-pressed={preview.hair === id}
-            onClick={() => onTry({ ...preview, hair: id })}
-          >
-            <WardrobeThumb src={`/mascot/hair/${id}.svg`} crop="is-hair" />
-            {t(`game.look.${id}`)}
-          </button>
-        ))}
-      </div>
-      <p>{t("game.pickClip")}</p>
-      <div className="beda-picks">
-        <button
-          type="button"
-          className={preview.clip == null ? "beda-pick is-on" : "beda-pick"}
-          aria-label={t("game.look.clip_none")}
-          aria-pressed={preview.clip == null}
-          onClick={() => onTry({ ...preview, clip: null })}
-        >
-          <span className="beda-pick-art is-clip is-empty" />
-          {t("game.look.clip_none")}
-        </button>
-        {GAME_CLIPS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            className={preview.clip === id ? "beda-pick is-on" : "beda-pick"}
-            aria-label={t(`game.look.${id}`)}
-            aria-pressed={preview.clip === id}
-            onClick={() => onTry({ ...preview, clip: id })}
-          >
-            <WardrobeThumb src={`/mascot/accessory/${id}.svg`} crop="is-clip" />
-            {t(`game.look.${id}`)}
-          </button>
-        ))}
-      </div>
+      <WardrobeSlotPicks
+        label={t("game.pickOutfit")}
+        items={outfits}
+        selected={preview.outfit}
+        crop="is-outfit"
+        onPick={(id) => {
+          if (isGameOutfit(id)) onTry({ ...preview, outfit: id });
+        }}
+      />
+      <WardrobeSlotPicks
+        label={t("game.pickHair")}
+        items={hairs}
+        selected={preview.hair}
+        crop="is-hair"
+        onPick={(id) => {
+          if (isGameHair(id)) onTry({ ...preview, hair: id });
+        }}
+      />
+      {clips.length > 0 ? (
+        <>
+          <p>{t("game.pickClip")}</p>
+          <div className="beda-picks">
+            <button
+              type="button"
+              className={preview.clip == null ? "beda-pick is-on" : "beda-pick"}
+              aria-label={t("game.look.clip_none")}
+              aria-pressed={preview.clip == null}
+              onClick={() => onTry({ ...preview, clip: null })}
+            >
+              <span className="beda-pick-art is-clip is-empty" />
+              {t("game.look.clip_none")}
+            </button>
+            {clips.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={preview.clip === item.id ? "beda-pick is-on" : "beda-pick"}
+                aria-label={t(`game.look.${item.id}`)}
+                aria-pressed={preview.clip === item.id}
+                onClick={() => {
+                  if (isGameClip(item.id)) onTry({ ...preview, clip: item.id });
+                }}
+              >
+                <WardrobeThumb src={wardrobeThumbSrc(item)} crop="is-clip" />
+                {t(`game.look.${item.id}`)}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
       <p className="beda-note">{t("game.tryNote")}</p>
       <div className="beda-wear-bar">
         <button type="button" className="beda-wear" data-testid="beda-wear" onClick={onWear}>
@@ -933,6 +933,43 @@ function Wardrobe({
         </button>
       </div>
     </section>
+  );
+}
+
+function WardrobeSlotPicks({
+  label,
+  items,
+  selected,
+  crop,
+  onPick,
+}: {
+  label: string;
+  items: readonly WardrobeItem[];
+  selected: string;
+  crop: "is-outfit" | "is-hair";
+  onPick: (id: WardrobeItem["id"]) => void;
+}) {
+  const t = useTranslations("mascot");
+  if (items.length === 0) return null;
+  return (
+    <>
+      <p>{label}</p>
+      <div className="beda-picks">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={selected === item.id ? "beda-pick is-on" : "beda-pick"}
+            aria-label={t(`game.look.${item.id}`)}
+            aria-pressed={selected === item.id}
+            onClick={() => onPick(item.id)}
+          >
+            <WardrobeThumb src={wardrobeThumbSrc(item)} crop={crop} />
+            {t(`game.look.${item.id}`)}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 

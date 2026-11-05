@@ -13,13 +13,15 @@ import {
   readGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 const TAP_MS = 480;
 
-function storedLook(): GameLook {
+function storedLook(admin: boolean): GameLook {
   if (typeof window === "undefined") return DEFAULT_GAME_LOOK;
-  return readGameLook(localStorage) ?? DEFAULT_GAME_LOOK;
+  return equippedGameLook(readGameLook(localStorage), { admin });
 }
 
 /** Small corner Bé Da on /routine. Same room view and closet as Góc bình yên. */
@@ -28,13 +30,14 @@ export function BeDaRoutineBanner() {
   const locale = useLocale();
   const router = useRouter();
   const { view, hidden } = useBeDaView();
+  const closetAdmin = useAuthStore((s) => s.user?.is_admin === true);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [tapped, setTapped] = useState(false);
   const room = gameRoomView(view);
   const dozing = room.mood === "sleepy";
 
   useEffect(() => {
-    const read = () => setLook(storedLook());
+    const read = () => setLook(storedLook(closetAdmin));
     read();
     const onShow = () => {
       if (document.visibilityState === "hidden") return;
@@ -52,7 +55,7 @@ export function BeDaRoutineBanner() {
       document.removeEventListener("visibilitychange", onShow);
       window.removeEventListener("storage", onStore);
     };
-  }, []);
+  }, [closetAdmin]);
 
   useLayoutEffect(() => {
     if (hidden) return;
@@ -90,13 +93,7 @@ export function BeDaRoutineBanner() {
             : "be-da-routine-chip absolute top-0 z-20 flex min-h-11 items-end justify-center px-1 pb-1 pt-1 outline-none focus-visible:ring-2 focus-visible:ring-[#F6B8C8]"
       }
     >
-      {dozing ? (
-        <span className="be-da-chip-zzz" aria-hidden>
-          <i>z</i>
-          <i>z</i>
-          <i>Z</i>
-        </span>
-      ) : (
+      {dozing ? null : (
         <span className="be-da-chip-bubbles">
           <span>{t("routineBubble1")}</span>
           <span>{t("routineBubble2")}</span>

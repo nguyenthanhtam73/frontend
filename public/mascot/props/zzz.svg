@@ -1,2 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 250" fill="none"><text x="156" y="78" font-size="14" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="700" fill="#C9967F">z</text><text x="168" y="64" font-size="16" font-weight="700" fill="#C9967F" font-family="ui-sans-serif, system-ui, sans-serif">z</text><text x="180" y="50" font-size="18" font-weight="700" fill="#C9967F" font-family="ui-sans-serif, system-ui, sans-serif">Z</text></svg>
+<!--
+  Same 220×250 viewBox as Bé Da. Head anchor is the right sleep-bun's
+  top-right corner at (171, 71). The nearest z starts at (166, 76):
+  5 units left of that corner and 5 units below it (text baseline), so the
+  letter sits on the bun's upper-right edge and the rest climb beside her head.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 250" fill="none"><text x="166" y="76" font-size="14" font-family="ui-sans-serif, system-ui, sans-serif" font-weight="700" fill="#C9967F">z</text><text x="176" y="64" font-size="16" font-weight="700" fill="#C9967F" font-family="ui-sans-serif, system-ui, sans-serif">z</text><text x="187" y="50" font-size="18" font-weight="700" fill="#C9967F" font-family="ui-sans-serif, system-ui, sans-serif">Z</text></svg>
