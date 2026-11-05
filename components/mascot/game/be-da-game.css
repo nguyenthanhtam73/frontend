@@ -479,6 +479,21 @@
   padding: 8px 10px;
 }
 
+.beda-session.is-closed {
+  opacity: 0.45;
+}
+
+.beda-session-note {
+  margin-left: 8px;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.beda-step:disabled {
+  cursor: default;
+}
+
 .beda-step-all {
   min-height: 44px;
   width: 100%;
