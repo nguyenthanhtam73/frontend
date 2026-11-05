@@ -129,15 +129,7 @@ export function BeDaDiaryChip() {
         scrolling ? "is-scrolling" : "",
       ].filter(Boolean).join(" ")}
     >
-      {dozing ? (
-        <span className="be-da-chip-zzz" aria-hidden>
-          <i>z</i>
-          <i>z</i>
-          <i>Z</i>
-        </span>
-      ) : (
-        <span className="be-da-diary-bubble">{t("diaryHello")}</span>
-      )}
+      {dozing ? null : <span className="be-da-diary-bubble">{t("diaryHello")}</span>}
       <span className="be-da-chip-wave">
         <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
       </span>
