@@ -344,9 +344,9 @@ export function BeDaLobby({
           <button
             type="button"
             className="beda-friend-hit"
-            onClick={() => {
-              setDraft(you.nickname);
-              setEditing(true);
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
             }}
           >
             <span className="beda-friend-art">

@@ -300,11 +300,18 @@ export function useLobbyMotion(input: {
       return null;
     };
 
+    let lastAim = 0;
+    let queuedAim: { x: number; y: number } | null = null;
     const aim = (clientX: number, clientY: number) => {
       const point = toLobby(clientX, clientY);
       if (!point) return;
+      const now = performance.now();
+      queuedAim = point;
+      if (now - lastAim < 150) return;
+      lastAim = now;
       follow = true;
-      walker.goal = point;
+      walker.goal = queuedAim;
+      queuedAim = null;
     };
 
     api.current.panBy = (dx, dy, user = true) => {
@@ -350,6 +357,12 @@ export function useLobbyMotion(input: {
       }
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      if (queuedAim && now - lastAim >= 150) {
+        lastAim = now;
+        follow = true;
+        walker.goal = queuedAim;
+        queuedAim = null;
+      }
       if (lobbySheetOpen(frame)) {
         frameId = window.requestAnimationFrame(tick);
         return;
@@ -359,11 +372,7 @@ export function useLobbyMotion(input: {
       const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, false, speed, true);
       Object.assign(walker, stepped);
       const server = youProp.current;
-      if (!walker.goal && Math.hypot(server.x - echoed.x, server.y - echoed.y) > 0.02) {
-        walker.x = server.x;
-        walker.y = server.y;
-        echoed = { x: server.x, y: server.y };
-      }
+      echoed = { x: server.x, y: server.y };
       if (walker.goal) {
         ring.hidden = false;
         ring.style.left = `${walker.goal.x * 100}%`;
@@ -447,7 +456,23 @@ export function useLobbyMotion(input: {
         let face = actor.facing === "left" ? -1 : 1;
         const known = glideTargets.get(actor.id);
         if (!known || Math.hypot(known.x - actor.x, known.y - actor.y) > 0.0008) {
-          glides.set(actor.id, pushGlide(glides.get(actor.id) ?? null, actor.x, actor.y, now));
+          const previous = glides.get(actor.id) ?? null;
+          const from = previous
+            ? sampleGlide(previous, now)
+            : seen.get(actor.id) ?? { x: actor.x, y: actor.y };
+          const anchor = previous ?? {
+            fromX: from.x,
+            fromY: from.y,
+            toX: from.x,
+            toY: from.y,
+            t0: now,
+            dur: 0,
+            face: 1,
+          };
+          const dx = (actor.x - from.x) * size.worldW;
+          const dy = (actor.y - from.y) * size.worldH;
+          const dur = Math.max(220, (Math.hypot(dx, dy) / 90) * 1000);
+          glides.set(actor.id, pushGlide(anchor, actor.x, actor.y, now, dur));
           glideTargets.set(actor.id, { x: actor.x, y: actor.y });
         }
         const glide = glides.get(actor.id);

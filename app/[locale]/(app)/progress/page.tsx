@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { pageLocaleMetadata } from "@/lib/seo";
 
+import { BeDaHomeSlot } from "@/components/mascot/be-da-slots";
 import { PendingCheckinBanner } from "@/components/progress/pending-checkin-banner";
 import { ProgressTimeline } from "@/components/progress/progress-timeline";
 
@@ -29,8 +30,9 @@ export default async function ProgressPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "progress" });
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6 pb-16 sm:px-6 sm:py-10 lg:pb-20">
-      <header className="mb-5 max-w-2xl space-y-2 sm:mb-6 sm:space-y-3">
+    <div data-diary-page className="relative mx-auto w-full max-w-5xl px-4 py-6 pb-16 sm:px-6 sm:py-10 lg:pb-20">
+      <BeDaHomeSlot />
+      <header className="diary-chip-head mb-5 max-w-2xl space-y-2 sm:mb-6 sm:space-y-3">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           {t("sectionLabel")}
         </p>

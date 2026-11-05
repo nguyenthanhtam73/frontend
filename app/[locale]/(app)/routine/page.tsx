@@ -28,9 +28,9 @@ export default async function RoutinePage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "routine" });
 
   return (
-    <div data-routine-page className="relative mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-10">
+    <div data-routine-page data-diary-page className="relative mx-auto w-full max-w-5xl px-4 py-4 sm:px-6 sm:py-10">
       <BeDaRoutineSlot />
-      <header className="routine-head mb-4 max-w-2xl space-y-1 sm:mb-6 sm:space-y-2">
+      <header className="diary-chip-head routine-head mb-4 max-w-2xl space-y-1 sm:mb-6 sm:space-y-2">
         <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
           <span className="inline-block size-1.5 rounded-full bg-primary" aria-hidden />
           {t("sectionEyebrow")}

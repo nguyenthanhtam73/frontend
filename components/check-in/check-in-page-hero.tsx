@@ -5,9 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { isNeverCheckedInCheckIn } from "@/lib/check-in/d0-form";
-import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
 import { useStreak } from "@/lib/hooks/use-streak";
-import { BeDaHomeSlot } from "@/components/mascot/be-da-slots";
 
 /**
  * Page hero — D0 / never_checked_in copy says one face photo is enough.
@@ -25,7 +23,7 @@ export function CheckInPageHero({
   const subtitle = neverCheckedIn ? t("d0PageSub") : t("pageSub");
 
   const title = (
-    <header className="mb-3 max-w-2xl space-y-1 sm:mb-6 sm:space-y-2">
+    <header className="diary-chip-head mb-3 max-w-2xl space-y-1 sm:mb-6 sm:space-y-2">
       <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground sm:text-xs sm:tracking-[0.2em]">
         {t("sectionEyebrow")}
       </p>
@@ -73,14 +71,7 @@ export function CheckInPageHero({
 }
 
 function CheckInTitle({ title }: { title: ReactNode }) {
-  const { enabled, pending } = useMascotFeature();
-  if (pending || !enabled) return title;
-  return (
-    <div className="flex items-start justify-between gap-2">
-      <div className="min-w-0 flex-1">{title}</div>
-      <BeDaHomeSlot />
-    </div>
-  );
+  return title;
 }
 
 function HeroTile({
