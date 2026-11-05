@@ -34,7 +34,7 @@ import {
 } from "@/lib/mascot/game/look";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
-import { createSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
+import { createSpaRoom, listMySpaRooms, readRememberedSpaRooms, rememberSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
 import {
   SPA_TAB_KEY,
   normalizeRoomCode,
@@ -91,6 +91,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [selectedFriendId, setSelectedFriendId] = useState("keo-deo");
   const [createProblem, setCreateProblem] = useState<SpaNotice>(null);
   const [creatingRoom, setCreatingRoom] = useState(false);
+  const [myRooms, setMyRooms] = useState<string[]>([]);
   const [toast, setToast] = useState<GameToast>(null);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [burst, setBurst] = useState(0);
@@ -260,6 +261,26 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     if (next) playGameTing(true);
   }
 
+  useEffect(() => {
+    if (tab !== "lobby" || inSpa) return;
+    let cancel = false;
+    const remembered = readRememberedSpaRooms(localStorage);
+    setMyRooms(remembered);
+    void listMySpaRooms()
+      .then((rooms) => {
+        if (cancel) return;
+        const codes = rooms.map((room) => room.code);
+        for (const code of codes) rememberSpaRoom(localStorage, code);
+        setMyRooms(readRememberedSpaRooms(localStorage));
+      })
+      .catch(() => {
+        if (!cancel) setMyRooms(readRememberedSpaRooms(localStorage));
+      });
+    return () => {
+      cancel = true;
+    };
+  }, [tab, inSpa]);
+
   function leaveSpa(next: GameTab) {
     try {
       sessionStorage.setItem(SPA_TAB_KEY, next);
@@ -280,9 +301,12 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         setCreateProblem("offline");
         return;
       }
+      rememberSpaRoom(localStorage, next);
+      setMyRooms(readRememberedSpaRooms(localStorage));
       router.push(roomInvitePath(next));
     } catch (err) {
       setCreateProblem(spaProblemFromError(err));
+      setMyRooms(readRememberedSpaRooms(localStorage));
     } finally {
       setCreatingRoom(false);
     }
@@ -415,7 +439,11 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onCreateRoom={() => void createRoom()}
       creatingRoom={creatingRoom}
       createProblem={createProblem}
-      onJoinRoom={(next) => router.push(roomInvitePath(next))}
+      myRooms={myRooms}
+      onJoinRoom={(next) => {
+        rememberSpaRoom(localStorage, next);
+        router.push(roomInvitePath(next));
+      }}
       onLeaveSpa={() => leaveSpa("care")}
       onSpaLobby={() => leaveSpa("lobby")}
       onSpaWalk={spaRoom.walkTo}

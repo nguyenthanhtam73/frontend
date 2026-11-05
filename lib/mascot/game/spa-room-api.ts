@@ -46,6 +46,57 @@ export function spaProblemFromError(err: unknown): Exclude<SpaNotice, null> {
   return "offline";
 }
 
+const MINE_KEY = "beda-spa-rooms";
+
+/** Codes this device has opened. Kept so a full create cap still has a way back in. */
+export function readRememberedSpaRooms(storage: Pick<Storage, "getItem">): string[] {
+  const raw = storage.getItem(MINE_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    const codes: string[] = [];
+    for (const item of parsed) {
+      if (typeof item !== "string") continue;
+      const code = normalizeRoomCode(item);
+      if (code && !codes.includes(code)) codes.push(code);
+    }
+    return codes.slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+export function rememberSpaRoom(storage: Pick<Storage, "getItem" | "setItem">, code: string): void {
+  const next = normalizeRoomCode(code);
+  if (!next) return;
+  const codes = [next, ...readRememberedSpaRooms(storage).filter((item) => item !== next)].slice(0, 8);
+  storage.setItem(MINE_KEY, JSON.stringify(codes));
+}
+
+export function readMySpaRooms(data: unknown): SpaRoomRecord[] {
+  if (!data || typeof data !== "object") return [];
+  const rooms = (data as { rooms?: unknown }).rooms;
+  if (!Array.isArray(rooms)) return [];
+  const out: SpaRoomRecord[] = [];
+  for (const item of rooms) {
+    const room = readSpaRoom(item);
+    if (room && !out.some((have) => have.code === room.code)) out.push(room);
+  }
+  return out;
+}
+
+/** GET /api/v1/mascot/rooms/mine. Missing on an older server is an empty list. */
+export async function listMySpaRooms(): Promise<SpaRoomRecord[]> {
+  try {
+    const data = await apiGet<unknown>(`${ROOMS}/mine`, roomCall);
+    return readMySpaRooms(data);
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 404 || err.status === 405)) return [];
+    throw err;
+  }
+}
+
 /** POST /api/v1/mascot/rooms. The server picks the 6-letter code. */
 export async function createSpaRoom(): Promise<SpaRoomRecord> {
   const data = await apiPost<unknown>(ROOMS, undefined, roomCall);

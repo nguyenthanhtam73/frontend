@@ -1200,7 +1200,9 @@
 .beda-lobby-chrome {
   position: absolute;
   inset: 0;
-  z-index: 7;
+  /* Figures use z-index 20–1020 so nearer ones paint in front. The chrome
+     has to sit above that or Tạo phòng / Vào phòng cannot be tapped. */
+  z-index: 1100;
   pointer-events: none;
 }
 
@@ -2779,6 +2781,12 @@
   box-shadow: 0 3px 0 #c5e6e2;
 }
 
+.beda-spa-entry button.is-reenter {
+  background: #145e62;
+  color: #fff;
+  box-shadow: 0 3px 0 #0c3d3c;
+}
+
 .beda-spa-entry input {
   width: 7.5em;
   background: #fff;
@@ -2791,10 +2799,12 @@
 .beda-spa-entry p {
   flex-basis: 100%;
   margin: 0;
-  color: #fff;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px 10px;
+  color: #9a123c;
   font-size: 12px;
   font-weight: 800;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 .beda-game.is-spa {
