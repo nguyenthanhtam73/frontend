@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 import { shellArt } from "@/lib/game/core/art";
 import { startShellClock } from "@/lib/game/core/clock";
 import { cappedDpr, MAX_DPR } from "@/lib/game/core/dpr";
-import { arrowGoal, pointerKind } from "@/lib/game/core/input";
+import { arrowGoal, pointerGesture, pointerKind } from "@/lib/game/core/input";
+import { applyPinch, wheelZoomFactor } from "@/lib/game/core/zoom";
 import { emptyRemoteBook, stepRemotes } from "@/lib/game/core/movement";
 import { readRoomList, roomEnterLabel } from "@/lib/game/core/rooms";
 import { GAME_EMBED_PATH, GAME_SESSION_STORAGE_KEY, hasGameSession } from "@/lib/game/core/session";
@@ -25,8 +26,23 @@ describe("pixi shell", () => {
   it("treats a short press as a tap and a slide as a drag", () => {
     assert.equal(pointerKind(4), "tap");
     assert.equal(pointerKind(24), "drag");
+    assert.equal(pointerGesture(2, 40), "pinch");
+    assert.equal(pointerGesture(1, 24), "drag");
     assert.deepEqual(arrowGoal({ x: 0.5, y: 0.6 }, "ArrowLeft"), { x: 0.44, y: 0.6 });
     assert.equal(arrowGoal({ x: 0.5, y: 0.6 }, "Enter"), null);
+  });
+
+  it("zooms around the pinch center and clamps the range", () => {
+    const start = { x: 0, y: 0, scale: 1 };
+    const zoomed = applyPinch(start, { dist: 100, x: 120, y: 80 }, { dist: 200, x: 120, y: 80 }, 120, 80);
+    assert.equal(zoomed.scale, 2);
+    assert.ok(Math.abs(zoomed.x - (120 - 120 * 2)) < 0.01);
+    const capped = applyPinch(zoomed, { dist: 100, x: 0, y: 0 }, { dist: 400, x: 0, y: 0 }, 0, 0);
+    assert.equal(capped.scale, 2.5);
+    const out = applyPinch({ x: 0, y: 0, scale: 0.7 }, { dist: 100, x: 0, y: 0 }, { dist: 10, x: 0, y: 0 }, 0, 0);
+    assert.equal(out.scale, 0.6);
+    assert.ok(wheelZoomFactor(100) < 1);
+    assert.ok(wheelZoomFactor(-100) > 1);
   });
 
   it("pauses the loop while the tab is hidden and drops the gap", () => {

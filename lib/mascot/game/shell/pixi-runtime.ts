@@ -1,9 +1,10 @@
 import { Application, Assets, Container, Graphics, Sprite, type Texture } from "pixi.js";
 
 import { LOBBY_WORLD } from "@/lib/mascot/game/lobby";
-import { cappedDpr } from "@/lib/game/core/dpr";
-import { arrowGoal, pointerKind } from "@/lib/game/core/input";
 import { startShellClock } from "@/lib/game/core/clock";
+import { cappedDpr } from "@/lib/game/core/dpr";
+import { arrowGoal, pointerGesture } from "@/lib/game/core/input";
+import { applyPinch, wheelZoomFactor, type PinchSample } from "@/lib/game/core/zoom";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -19,6 +20,7 @@ import {
   followCamera,
   screenToWorld,
   walkPose,
+  zoomAt,
   type Camera,
   type Walker,
 } from "@/lib/mascot/game/walk";
@@ -69,6 +71,7 @@ export async function startPixiShell(options: {
   const pointers = new Map<number, { x: number; y: number }>();
   let down = { x: 0, y: 0 };
   let dragged = false;
+  let pinch: PinchSample | null = null;
 
   const view = () => ({
     w: parent.clientWidth || 1,
@@ -110,23 +113,24 @@ export async function startPixiShell(options: {
       const key = sprite.art.join("|");
       const have = figures.get(sprite.id);
       if (have?.key === key) continue;
-      if (have) {
-        have.root.destroy({ children: true });
-        figures.delete(sprite.id);
-      }
-      const root = new Container();
-      world.addChild(root);
+      const next = new Container();
       for (const src of sprite.art) {
         try {
           const texture = await Assets.load<Texture>(src);
           const plate = new Sprite(texture);
           plate.anchor.set(0.5, 1);
-          root.addChild(plate);
+          next.addChild(plate);
         } catch {
           /* a missing plate does not block the rest of the figure */
         }
       }
-      figures.set(sprite.id, { key, root });
+      if (next.children.length === 0) {
+        next.destroy();
+        continue;
+      }
+      if (have) have.root.destroy({ children: true });
+      world.addChild(next);
+      figures.set(sprite.id, { key, root: next });
     }
   };
 
@@ -163,7 +167,8 @@ export async function startPixiShell(options: {
 
   const api: ShellApi = {
     zoomBy(factor) {
-      cam = { ...cam, scale: Math.min(2.5, Math.max(0.6, cam.scale * factor)) };
+      const { w, h } = view();
+      cam = zoomAt(cam, factor, w / 2, h / 2);
       if (cam.scale > 1.05) follow = true;
     },
     recenter() {
@@ -248,19 +253,68 @@ export async function startPixiShell(options: {
         label.style.top = `${drawnY}px`;
       }
     }
+    const host = options.canvas.parentElement;
+    if (host) host.dataset.zoom = cam.scale.toFixed(3);
     app.render();
   });
 
+  const viewPoint = (clientX: number, clientY: number) => {
+    const box = options.canvas.getBoundingClientRect();
+    return { x: clientX - box.left, y: clientY - box.top };
+  };
+
+  const beginPinch = () => {
+    const pts = [...pointers.values()];
+    const a = pts[0];
+    const b = pts[1];
+    if (!a || !b) return;
+    pinch = {
+      dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+      x: (a.x + b.x) / 2,
+      y: (a.y + b.y) / 2,
+    };
+    if (walker) walker.goal = null;
+    dragged = true;
+    follow = false;
+  };
+
   const onDown = (event: PointerEvent) => {
-    if ((event.target as HTMLElement).closest("button, a, input, .beda-actions, .beda-zoom")) return;
+    if (options.getSnapshot().scene !== "lobby") return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const target = event.target instanceof Element ? event.target : null;
+    const onControl = !!target?.closest("button, a, input, textarea, .beda-zoom, .beda-actions, .beda-nick, .beda-spa-entry");
+    if (onControl && pointers.size === 0) return;
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size >= 2) {
+      beginPinch();
+      return;
+    }
     down = { x: event.clientX, y: event.clientY };
     dragged = false;
   };
   const onMove = (event: PointerEvent) => {
     if (!pointers.has(event.pointerId)) return;
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (pointerKind(Math.hypot(event.clientX - down.x, event.clientY - down.y)) === "drag") {
+    if (pointerGesture(pointers.size, 0) === "pinch" && pinch) {
+      event.preventDefault();
+      const pts = [...pointers.values()];
+      const a = pts[0];
+      const b = pts[1];
+      if (!a || !b) return;
+      const next = {
+        dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2,
+      };
+      const focus = viewPoint(next.x, next.y);
+      cam = applyPinch(cam, pinch, next, focus.x, focus.y);
+      pinch = next;
+      follow = cam.scale > 1.05;
+      if (walker) walker.goal = null;
+      return;
+    }
+    if (pinch) return;
+    if (pointerGesture(1, Math.hypot(event.clientX - down.x, event.clientY - down.y)) === "drag") {
       dragged = true;
       aim(event.clientX, event.clientY);
     }
@@ -268,15 +322,37 @@ export async function startPixiShell(options: {
   const onUp = (event: PointerEvent) => {
     if (!pointers.has(event.pointerId)) return;
     pointers.delete(event.pointerId);
-    if (!dragged && pointerKind(Math.hypot(event.clientX - down.x, event.clientY - down.y)) === "tap") {
+    if (pointers.size >= 2) {
+      beginPinch();
+      return;
+    }
+    pinch = null;
+    if (pointers.size > 0) return;
+    const distance = Math.hypot(event.clientX - down.x, event.clientY - down.y);
+    if (!dragged && pointerGesture(1, distance) === "tap") {
       aim(event.clientX, event.clientY);
       options.onEmptyTap?.();
     }
+    dragged = false;
   };
-  parent.addEventListener("pointerdown", onDown);
-  parent.addEventListener("pointermove", onMove);
-  parent.addEventListener("pointerup", onUp);
-  parent.addEventListener("pointercancel", onUp);
+  const onWheel = (event: WheelEvent) => {
+    if (options.getSnapshot().scene !== "lobby") return;
+    event.preventDefault();
+    const focus = viewPoint(event.clientX, event.clientY);
+    cam = zoomAt(cam, wheelZoomFactor(event.deltaY), focus.x, focus.y);
+    if (cam.scale > 1.05) follow = true;
+  };
+  const onGesture = (event: Event) => {
+    event.preventDefault();
+  };
+  const surface = options.labels.current ?? parent;
+  surface.addEventListener("pointerdown", onDown);
+  surface.addEventListener("pointermove", onMove);
+  surface.addEventListener("pointerup", onUp);
+  surface.addEventListener("pointercancel", onUp);
+  surface.addEventListener("wheel", onWheel, { passive: false });
+  surface.addEventListener("gesturestart", onGesture);
+  surface.addEventListener("gesturechange", onGesture);
 
   const onKey = (event: KeyboardEvent) => {
     if ((event.target as HTMLElement).closest("input, textarea, button")) return;
@@ -314,10 +390,13 @@ export async function startPixiShell(options: {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
       media.removeEventListener("change", onReduce);
-      parent.removeEventListener("pointerdown", onDown);
-      parent.removeEventListener("pointermove", onMove);
-      parent.removeEventListener("pointerup", onUp);
-      parent.removeEventListener("pointercancel", onUp);
+      surface.removeEventListener("pointerdown", onDown);
+      surface.removeEventListener("pointermove", onMove);
+      surface.removeEventListener("pointerup", onUp);
+      surface.removeEventListener("pointercancel", onUp);
+      surface.removeEventListener("wheel", onWheel);
+      surface.removeEventListener("gesturestart", onGesture);
+      surface.removeEventListener("gesturechange", onGesture);
       app.destroy(false, { children: true });
     },
   };

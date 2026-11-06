@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
 import { BeDaGameGate } from "@/components/mascot/game/be-da-game-gate";
+import { gameWebViewViewport } from "@/lib/game/webview-viewport";
+
+export const viewport = gameWebViewViewport;
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },

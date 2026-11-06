@@ -59,6 +59,12 @@
   z-index: 4;
 }
 
+.beda-lobby[data-engine="pixi"],
+.beda-lobby[data-engine="pixi"] .beda-pixi-host,
+.beda-lobby[data-engine="pixi"] .beda-pixi-host canvas {
+  touch-action: none;
+}
+
 .beda-lobby[data-engine="pixi"] .beda-lobby-world {
   pointer-events: none;
 }
@@ -1928,6 +1934,12 @@
 
 .beda-game[data-tab="wardrobe"] .beda-bubble {
   display: none;
+}
+
+/* The closet preview is the figure in the top half. The room canvas would
+   otherwise show a second head above the item sheet. */
+.beda-game[data-tab="wardrobe"] .beda-pixi-host {
+  visibility: hidden;
 }
 
 /* Phone: large preview in the top half, item panel in the bottom half. */
