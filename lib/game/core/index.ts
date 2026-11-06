@@ -5,7 +5,7 @@
 export { lookArt, shellArt } from "@/lib/game/core/art";
 export { startShellClock, type ShellClock } from "@/lib/game/core/clock";
 export { MAX_DPR, cappedDpr } from "@/lib/game/core/dpr";
-export { DRAG_PX, arrowGoal, pointerGesture, pointerKind } from "@/lib/game/core/input";
+export { DRAG_PX, PAN_ARM_MS, TAP_MS, arrowGoal, gestureKind, pointerGesture, pointerKind } from "@/lib/game/core/input";
 export {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -19,7 +19,7 @@ export {
 export { normalizeRoomCode, readRoomList, roomEnterLabel, type RoomSummary } from "@/lib/game/core/rooms";
 export { GAME_EMBED_PATH, GAME_SESSION_STORAGE_KEY, hasGameSession } from "@/lib/game/core/session";
 export type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib/game/core/types";
-export { applyPinch, wheelZoomFactor, type PinchSample } from "@/lib/game/core/zoom";
+export { applyPinch, easeZoom, panCamera, wheelZoomFactor, type PinchSample } from "@/lib/game/core/zoom";
 export {
   WARDROBE_CATALOG,
   equippedGameLook,

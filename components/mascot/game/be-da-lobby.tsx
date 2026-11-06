@@ -565,8 +565,18 @@ export function BeDaLobby({
           <button type="button" aria-label={tLobby("game.zoomOut")} onClick={() => motion.current.zoomBy(1 / 1.2)}>
             −
           </button>
-          <button type="button" data-testid="beda-recenter" onClick={() => motion.current.recenter()}>
-            {tLobby("game.backToMe")}
+          <button
+            type="button"
+            className="beda-locate"
+            data-testid="beda-recenter"
+            aria-label={tLobby("game.backToMe")}
+            onClick={() => motion.current.recenter()}
+          >
+            <svg className="beda-locate-ico" viewBox="0 0 32 32" aria-hidden>
+              <circle cx="16" cy="16" r="5.5" fill="none" stroke="currentColor" strokeWidth="2.4" />
+              <path d="M16 3.5v5.2M16 23.3v5.2M3.5 16h5.2M23.3 16h5.2" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+              <circle cx="16" cy="16" r="1.7" fill="currentColor" />
+            </svg>
           </button>
         </div>
         {showHint && !editing ? <div className="beda-drag-hint">{dragLabel}</div> : null}

@@ -7,8 +7,9 @@ import { fileURLToPath } from "node:url";
 import { shellArt } from "@/lib/game/core/art";
 import { startShellClock } from "@/lib/game/core/clock";
 import { cappedDpr, MAX_DPR } from "@/lib/game/core/dpr";
-import { arrowGoal, pointerGesture, pointerKind } from "@/lib/game/core/input";
-import { applyPinch, wheelZoomFactor } from "@/lib/game/core/zoom";
+import { arrowGoal, gestureKind, pointerGesture, pointerKind } from "@/lib/game/core/input";
+import { applyPinch, easeZoom, panCamera, wheelZoomFactor } from "@/lib/game/core/zoom";
+import { screenToWorld, zoomAt } from "@/lib/mascot/game/walk";
 import { emptyRemoteBook, stepRemotes } from "@/lib/game/core/movement";
 import { readRoomList, roomEnterLabel } from "@/lib/game/core/rooms";
 import { GAME_EMBED_PATH, GAME_SESSION_STORAGE_KEY, hasGameSession } from "@/lib/game/core/session";
@@ -43,6 +44,29 @@ describe("pixi shell", () => {
     assert.equal(out.scale, 0.6);
     assert.ok(wheelZoomFactor(100) < 1);
     assert.ok(wheelZoomFactor(-100) > 1);
+  });
+
+  it("pans inside the frame and eases zoom without sliding the focus", () => {
+    const start = { x: 0, y: 0, scale: 2 };
+    assert.equal(panCamera(start, 80, 0, 100, 100, 200, 200).x, 0);
+    assert.equal(panCamera(start, -1000, 0, 100, 100, 200, 200).x, 100 - 400);
+    const desired = zoomAt(start, 1.25, 40, 50);
+    const mid = easeZoom(start, desired, 40, 50, 0.016, false);
+    assert.ok(mid.scale > start.scale && mid.scale < desired.scale);
+    const held = screenToWorld(40, 50, mid);
+    const landed = screenToWorld(40, 50, desired);
+    assert.ok(Math.abs(held.x - landed.x) < 0.05);
+    assert.ok(Math.abs(held.y - landed.y) < 0.05);
+    assert.deepEqual(easeZoom(start, desired, 40, 50, 0.016, true), desired);
+  });
+
+  it("does not treat the first 100ms of a pinch as a pan or a walk", () => {
+    assert.equal(gestureKind(100, 30, 1), "hold");
+    assert.equal(gestureKind(80, 40, 1), "hold");
+    assert.equal(gestureKind(140, 30, 1), "pan");
+    assert.equal(gestureKind(100, 30, 2), "pinch");
+    assert.equal(gestureKind(200, 4, 1), "tap");
+    assert.equal(gestureKind(300, 4, 1), "hold");
   });
 
   it("pauses the loop while the tab is hidden and drops the gap", () => {

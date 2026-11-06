@@ -1376,6 +1376,23 @@
   font-size: 13px;
 }
 
+.beda-lobby .beda-zoom .beda-locate {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.beda-locate-ico {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
 .beda-switch {
   position: absolute;
   top: calc(62px + env(safe-area-inset-top));

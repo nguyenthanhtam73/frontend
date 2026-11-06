@@ -16,6 +16,31 @@ export function pointerGesture(pointerCount: number, distancePx: number): "pinch
   return pointerKind(distancePx);
 }
 
+/** A tap is a short press. Anything longer is not a walk. */
+export const TAP_MS = 250;
+
+/**
+ * One finger can move a little before the other lands. Pan does not start
+ * until this has passed, so that head start is not a camera shove.
+ */
+export const PAN_ARM_MS = 120;
+
+/**
+ * Pinch wins over everything. A one-finger slide becomes a pan only after
+ * PAN_ARM_MS. A short press under DRAG_PX and TAP_MS is a walk.
+ */
+export function gestureKind(
+  elapsedMs: number,
+  distancePx: number,
+  pointerCount: number,
+): "pinch" | "pan" | "tap" | "hold" {
+  if (pointerCount >= 2) return "pinch";
+  if (pointerCount !== 1) return "hold";
+  if (distancePx >= DRAG_PX && elapsedMs >= PAN_ARM_MS) return "pan";
+  if (distancePx < DRAG_PX && elapsedMs <= TAP_MS) return "tap";
+  return "hold";
+}
+
 /** Arrow keys walk one short step. Other keys are ignored. */
 export function arrowGoal(from: Point, key: string, step = 0.06): Point | null {
   if (key === "ArrowLeft") return { x: from.x - step, y: from.y };
