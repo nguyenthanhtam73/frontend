@@ -42,6 +42,39 @@ describe("lobby walk mask", () => {
     assert.deepEqual(findRoute(plaza, { x: 0.1, y: 0.1 }, { x: 0.12, y: 0.1 }), []);
   });
 
+  it("stops on her side of a wall when the target cannot be reached", () => {
+    const split = grid([
+      "...#...",
+      "...#...",
+      "...#...",
+      "...#...",
+      "...#...",
+      "...#...",
+      "...#...",
+    ]);
+    const route = findRoute(split, { x: 0.1, y: 0.5 }, { x: 0.9, y: 0.5 });
+    assert.ok(route.length >= 1);
+    for (const point of route) {
+      assert.equal(isWalkable(split, point.x, point.y), true);
+      assert.ok(point.x < 0.5);
+    }
+  });
+
+  it("returns no route from a fully black mask", () => {
+    const black = grid(["###", "###", "###"]);
+    const spot = nearestWalkable(black, 0.5, 0.5);
+    assert.equal(isWalkable(black, spot.x, spot.y), false);
+    assert.deepEqual(findRoute(black, { x: 0.2, y: 0.2 }, { x: 0.8, y: 0.8 }), []);
+  });
+
+  it("begins on the nearest path when she starts off it", () => {
+    const edge = grid(["#....", "#....", "#....", "#....", "#...."]);
+    const route = findRoute(edge, { x: 0.05, y: 0.5 }, { x: 0.9, y: 0.5 });
+    assert.ok(route.length >= 1);
+    for (const point of route) assert.equal(isWalkable(edge, point.x, point.y), true);
+    assert.ok(route[route.length - 1]!.x > 0.7);
+  });
+
   it("moves the lower name down when two pills overlap", () => {
     const stacked = stackNameLabels([
       { x: 100, y: 40, w: 80, h: 22 },

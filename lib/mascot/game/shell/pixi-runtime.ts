@@ -92,6 +92,8 @@ export async function startPixiShell(options: {
   let walkGrid: WalkGrid | null = null;
   let walkGridKey = "";
   let route: WalkPoint[] = [];
+  /** Nearest path cell for a person standing on black. Keyed by id, grid, and cell. */
+  const standCache = new Map<string, WalkPoint>();
   let layoutPark: (worldW: number, worldH: number) => void = () => {};
   const feet = new Container();
   viewport.addChild(feet);
@@ -238,14 +240,31 @@ export async function startPixiShell(options: {
     }
   };
   const ensureWalkGrid = (worldW: number, worldH: number) => {
-    if (!maskPixels) return null;
+    if (!maskPixels) return walkGrid;
+    if (worldW < 64 || worldH < 64) return walkGrid;
     const size = gridSize(worldW, worldH);
     const key = `${size.cols}x${size.rows}`;
     if (!walkGrid || walkGridKey !== key) {
       walkGrid = gridFromMask(maskPixels, maskW, maskH, size.cols, size.rows);
       walkGridKey = key;
+      standCache.clear();
+      maskPixels = null;
+      maskW = 0;
+      maskH = 0;
     }
     return walkGrid;
+  };
+
+  const snappedStand = (id: string, grid: WalkGrid, x: number, y: number): WalkPoint => {
+    if (isWalkable(grid, x, y)) return { x, y };
+    const c = Math.min(grid.cols - 1, Math.max(0, Math.floor(x * grid.cols)));
+    const r = Math.min(grid.rows - 1, Math.max(0, Math.floor(y * grid.rows)));
+    const key = `${id}|${walkGridKey}|${c},${r}`;
+    const cached = standCache.get(key);
+    if (cached) return cached;
+    const stand = nearestWalkable(grid, x, y);
+    standCache.set(key, stand);
+    return stand;
   };
 
   const loadMask = () => {
@@ -502,7 +521,7 @@ export async function startPixiShell(options: {
     if (walker) {
       placeLocal(walker, local ? { x: local.x, y: local.y } : null, owned);
       if (grid && !walker.goal && !isWalkable(grid, walker.x, walker.y)) {
-        const stand = nearestWalkable(grid, walker.x, walker.y);
+        const stand = snappedStand(local?.id ?? "you", grid, walker.x, walker.y);
         walker.x = stand.x;
         walker.y = stand.y;
       }
@@ -584,7 +603,9 @@ export async function startPixiShell(options: {
       const figure = figures.get(sprite.id);
       if (!figure) continue;
       let at = sprite.local && walker ? walker : (remotes.get(sprite.id) ?? sprite);
-      if (grid && !(sprite.local && walker) && !isWalkable(grid, at.x, at.y)) at = nearestWalkable(grid, at.x, at.y);
+      if (grid && !(sprite.local && walker) && !isWalkable(grid, at.x, at.y)) {
+        at = snappedStand(sprite.id, grid, at.x, at.y);
+      }
       const moving = sprite.local && walker ? Math.hypot(walker.vx, walker.vy) > 0.02 : false;
       const pose = walkPose(sprite.local && walker ? walker.phase : moving ? now / 159 : now / 700, moving, true);
       const worldX = at.x * worldW;
