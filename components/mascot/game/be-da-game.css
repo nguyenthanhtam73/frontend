@@ -67,7 +67,20 @@
 }
 
 .beda-lobby[data-engine="pixi"] .beda-lobby-world {
+  z-index: 4;
   pointer-events: none;
+}
+
+/* Screen-space names. They do not scale with the camera, so the letters stay the same size and stay sharp when he pinches. */
+.beda-lobby[data-engine="pixi"] .beda-tag {
+  top: auto;
+  bottom: 2px;
+  left: 50%;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.2;
+  transform: translate(-50%, -100%);
+  transform-origin: center bottom;
 }
 
 .beda-lobby[data-engine="pixi"] .beda-friend,

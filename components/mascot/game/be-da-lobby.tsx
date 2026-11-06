@@ -176,6 +176,7 @@ export function BeDaLobby({
   };
 
   const revealSelected = () => {
+    if (pixi) return;
     const frame = frameRef.current;
     const world = worldRef.current;
     if (!frame || !world || !selected) return;
@@ -189,6 +190,7 @@ export function BeDaLobby({
   };
 
   const settleLift = () => {
+    if (pixi) return;
     const frame = frameRef.current;
     const world = worldRef.current;
     if (!frame || !world) return;
