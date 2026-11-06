@@ -59,6 +59,7 @@
   z-index: 4;
 }
 
+.beda-game:has(.beda-lobby[data-engine="pixi"]),
 .beda-lobby[data-engine="pixi"],
 .beda-lobby[data-engine="pixi"] .beda-pixi-host,
 .beda-lobby[data-engine="pixi"] .beda-pixi-host canvas {

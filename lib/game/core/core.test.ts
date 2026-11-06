@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { shellArt } from "@/lib/game/core/art";
 import { startShellClock } from "@/lib/game/core/clock";
-import { cappedDpr, MAX_DPR } from "@/lib/game/core/dpr";
+import { cappedDpr, MAX_DPR, rendererResolution } from "@/lib/game/core/dpr";
 import { arrowGoal, gestureKind, pointerGesture, pointerKind } from "@/lib/game/core/input";
 import { applyPinch, easeZoom, panCamera, wheelZoomFactor } from "@/lib/game/core/zoom";
 import { screenToWorld, zoomAt } from "@/lib/mascot/game/walk";
@@ -22,6 +22,11 @@ describe("pixi shell", () => {
     assert.equal(cappedDpr(3), 2);
     assert.equal(cappedDpr(1.5), 1.5);
     assert.equal(cappedDpr(0), 1);
+    assert.equal(rendererResolution(2, 390, 844), 2);
+    assert.equal(rendererResolution(3, 390, 844), 2);
+    assert.equal(rendererResolution(2, 1024, 1366), 1.5);
+    assert.equal(rendererResolution(2, 1366, 1024), 1.5);
+    assert.equal(rendererResolution(1, 1024, 1366), 1);
   });
 
   it("treats a short press as a tap and a slide as a drag", () => {

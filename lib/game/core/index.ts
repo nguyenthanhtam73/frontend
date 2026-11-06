@@ -4,7 +4,7 @@
  */
 export { lookArt, shellArt } from "@/lib/game/core/art";
 export { startShellClock, type ShellClock } from "@/lib/game/core/clock";
-export { MAX_DPR, cappedDpr } from "@/lib/game/core/dpr";
+export { LARGE_SCREEN_MAX_DPR, LARGE_SCREEN_SHORT_SIDE, MAX_DPR, cappedDpr, rendererResolution } from "@/lib/game/core/dpr";
 export { DRAG_PX, PAN_ARM_MS, TAP_MS, arrowGoal, gestureKind, pointerGesture, pointerKind } from "@/lib/game/core/input";
 export {
   LOBBY_BOUNDS,
