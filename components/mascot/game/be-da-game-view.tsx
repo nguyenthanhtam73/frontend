@@ -803,7 +803,12 @@ function Room({
       ) : null}
 
       {showHero ? (
-      <div className="beda-hero-wrap" data-testid="beda-hero" data-art={roomArt.join(" ")}>
+      <div
+        className="beda-hero-wrap"
+        data-testid="beda-hero"
+        data-art={roomArt.join(" ")}
+        data-wardrobe-preview={hideCards ? "on" : "off"}
+      >
         <Bubble kind={bubbleKind} />
         {!pixi || hideCards ? (
           <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
