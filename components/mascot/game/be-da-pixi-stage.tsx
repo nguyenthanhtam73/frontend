@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import type { ShellApi, ShellSnapshot } from "@/lib/mascot/game/shell/types";
+import type { ShellApi, ShellSnapshot } from "@/lib/game/core/types";
 
 /**
  * Canvas host. Pixi itself is imported only after this mounts, and only on the

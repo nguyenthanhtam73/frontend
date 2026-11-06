@@ -26,8 +26,8 @@ import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { sessionGate } from "@/lib/routine/session-window";
-import { lookArt } from "@/lib/mascot/game/shell/art";
-import type { ShellSnapshot } from "@/lib/mascot/game/shell/types";
+import { lookArt } from "@/lib/game/core/art";
+import type { ShellSnapshot } from "@/lib/game/core/types";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 

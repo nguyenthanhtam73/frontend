@@ -11,10 +11,24 @@ const BeDaGameScreen = dynamic(
   { ssr: false },
 );
 
-/** Full-screen trial. The chunk stays unloaded unless GET /me says features.mascot. */
-export function BeDaGameGate({ roomCode = null }: { roomCode?: string | null }) {
+/**
+ * Full-screen trial. The chunk stays unloaded unless GET /me says features.mascot.
+ * `embed` is the Android WebView entry: hide site chrome immediately and keep touch as the primary input.
+ */
+export function BeDaGameGate({ roomCode = null, embed = false }: { roomCode?: string | null; embed?: boolean }) {
   const { enabled, pending } = useMascotFeature();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!embed) return;
+    document.body.dataset.gameEmbed = "1";
+    const previous = document.body.style.touchAction;
+    document.body.style.touchAction = "manipulation";
+    return () => {
+      delete document.body.dataset.gameEmbed;
+      document.body.style.touchAction = previous;
+    };
+  }, [embed]);
 
   useEffect(() => {
     if (pending || enabled) return;

@@ -1,5 +1,9 @@
 import type { Point } from "@/lib/mascot/game/walk";
 
+/**
+ * Touch and mouse both arrive as pointer events. A slide walks.
+ * A short press is a tap. Nothing in here is hover-only.
+ */
 export const DRAG_PX = 10;
 
 export function pointerKind(distancePx: number): "tap" | "drag" {

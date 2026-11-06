@@ -1,12 +1,17 @@
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
+import { shellArt } from "@/lib/game/core/art";
+import { startShellClock } from "@/lib/game/core/clock";
+import { cappedDpr, MAX_DPR } from "@/lib/game/core/dpr";
+import { arrowGoal, pointerKind } from "@/lib/game/core/input";
+import { emptyRemoteBook, stepRemotes } from "@/lib/game/core/movement";
+import { readRoomList, roomEnterLabel } from "@/lib/game/core/rooms";
+import { GAME_EMBED_PATH, GAME_SESSION_STORAGE_KEY, hasGameSession } from "@/lib/game/core/session";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
-import { emptyRemoteBook, stepRemotes } from "@/lib/mascot/game/shell/actors";
-import { shellArt } from "@/lib/mascot/game/shell/art";
-import { cappedDpr, MAX_DPR } from "@/lib/mascot/game/shell/dpr";
-import { arrowGoal, pointerKind } from "@/lib/mascot/game/shell/input";
-import { startShellClock } from "@/lib/mascot/game/shell/loop";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 
 describe("pixi shell", () => {
@@ -79,5 +84,31 @@ describe("pixi shell", () => {
     const dressed = shellArt(crowd, { outfitId: DEFAULT_GAME_LOOK.outfit, hairId: DEFAULT_GAME_LOOK.hair, clipId: null, pose: null }, true);
     assert.ok(dressed.some((src) => src.includes("/mascot/outfits/outfit_pajamas.svg")));
     assert.ok(dressed.some((src) => src.includes("/mascot/faces/happy/eyes.svg")));
+  });
+
+  it("names a room button Vào phòng plus the code", () => {
+    const rooms = readRoomList({
+      rooms: [{ code: "da7k2m", cap: 8, member_count: 2, joined: true, owner: true }],
+    });
+    assert.equal(rooms[0]?.code, "DA7K2M");
+    assert.equal(rooms[0]?.memberCount, 2);
+    assert.equal(rooms[0]?.cap, 8);
+    assert.equal(roomEnterLabel("DA7K2M"), "Vào phòng DA7K2M");
+    assert.equal(GAME_EMBED_PATH, "/goc-binh-yen/game");
+    assert.equal(GAME_SESSION_STORAGE_KEY, "dadiary_access_token");
+    assert.equal(hasGameSession("token"), true);
+    assert.equal(hasGameSession("  "), false);
+  });
+
+  it("does not import React, Pixi, or Next", () => {
+    const dir = path.dirname(fileURLToPath(import.meta.url));
+    const files = readdirSync(dir).filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"));
+    assert.ok(files.length >= 6);
+    for (const name of files) {
+      const source = readFileSync(path.join(dir, name), "utf8");
+      assert.equal(/from ["']react["']/.test(source), false, name);
+      assert.equal(/from ["']pixi\.js["']/.test(source), false, name);
+      assert.equal(/from ["']next["']|from ["']next\//.test(source), false, name);
+    }
   });
 });

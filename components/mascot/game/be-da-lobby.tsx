@@ -19,8 +19,8 @@ import {
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
 import { type LobbyActor } from "@/lib/mascot/game/lobby-live";
-import { lookArt } from "@/lib/mascot/game/shell/art";
-import type { ShellSnapshot } from "@/lib/mascot/game/shell/types";
+import { lookArt } from "@/lib/game/core/art";
+import type { ShellSnapshot } from "@/lib/game/core/types";
 import { useLobbyMotion } from "@/components/mascot/game/use-lobby-motion";
 import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode, type SpaNotice } from "@/lib/mascot/game/spa-room";
 import type { GamePose } from "@/lib/mascot/game/look";

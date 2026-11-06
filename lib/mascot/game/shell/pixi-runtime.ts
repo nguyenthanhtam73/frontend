@@ -1,6 +1,9 @@
 import { Application, Assets, Container, Graphics, Sprite, type Texture } from "pixi.js";
 
 import { LOBBY_WORLD } from "@/lib/mascot/game/lobby";
+import { cappedDpr } from "@/lib/game/core/dpr";
+import { arrowGoal, pointerKind } from "@/lib/game/core/input";
+import { startShellClock } from "@/lib/game/core/clock";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -9,11 +12,8 @@ import {
   placeLocal,
   stepLocal,
   stepRemotes,
-} from "@/lib/mascot/game/shell/actors";
-import { cappedDpr } from "@/lib/mascot/game/shell/dpr";
-import { arrowGoal, pointerKind } from "@/lib/mascot/game/shell/input";
-import { startShellClock } from "@/lib/mascot/game/shell/loop";
-import type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib/mascot/game/shell/types";
+} from "@/lib/game/core/movement";
+import type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib/game/core/types";
 import {
   clampPoint,
   followCamera,
