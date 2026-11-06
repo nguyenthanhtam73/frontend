@@ -140,6 +140,8 @@ describe("Bé Da game screen", () => {
     };
     const html = renderGame({ look, tab: "wardrobe" satisfies GameTab });
     assert.match(html, /data-testid="beda-wardrobe"/);
+    assert.match(html, /data-wardrobe-preview="on"/);
+    assert.match(html, /data-testid="beda-hero"[\s\S]*data-testid="be-da-figure"/);
     assert.match(html, /\/mascot\/outfits\/outfit_pajamas\.svg/);
     assert.equal(html.includes("/mascot/outfits/outfit_ao_dai.svg"), false);
     assert.equal(html.includes("/mascot/hair/hair_twin_tails.svg"), false);

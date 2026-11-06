@@ -980,5 +980,5 @@ body[data-game-embed="1"] [data-activation-banner] {
 }
 
 body[data-game-embed="1"] {
-  touch-action: manipulation;
+  touch-action: none;
 }

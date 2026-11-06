@@ -803,9 +803,16 @@ function Room({
       ) : null}
 
       {showHero ? (
-      <div className="beda-hero-wrap" data-testid="beda-hero" data-art={roomArt.join(" ")}>
+      <div
+        className="beda-hero-wrap"
+        data-testid="beda-hero"
+        data-art={roomArt.join(" ")}
+        data-wardrobe-preview={hideCards ? "on" : "off"}
+      >
         <Bubble kind={bubbleKind} />
-        {pixi ? null : <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />}
+        {!pixi || hideCards ? (
+          <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+        ) : null}
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">

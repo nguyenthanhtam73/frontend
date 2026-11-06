@@ -59,6 +59,12 @@
   z-index: 4;
 }
 
+.beda-lobby[data-engine="pixi"],
+.beda-lobby[data-engine="pixi"] .beda-pixi-host,
+.beda-lobby[data-engine="pixi"] .beda-pixi-host canvas {
+  touch-action: none;
+}
+
 .beda-lobby[data-engine="pixi"] .beda-lobby-world {
   pointer-events: none;
 }
@@ -1930,15 +1936,23 @@
   display: none;
 }
 
-/* Phone: large preview in the top half, item panel in the bottom half. */
+/* The closet preview is the figure in the top half. The room canvas would
+   otherwise show a second head above the item sheet. */
+.beda-game[data-tab="wardrobe"] .beda-pixi-host {
+  visibility: hidden;
+}
+
+/* Phone: large preview in the top half, item panel in the bottom half.
+   The sheet is z-index 7 and covers from 50vh. The preview figure has to sit above it. */
 .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
   top: calc(58px + env(safe-area-inset-top));
   bottom: auto;
   height: calc(50vh - 58px - env(safe-area-inset-top));
   width: min(300px, 82vw);
-  z-index: 6;
+  z-index: 8;
   justify-content: center;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .beda-game[data-tab="wardrobe"] .beda-hero-wrap .bd-figure {
@@ -2186,8 +2200,10 @@
     left: 28px;
     height: auto;
     width: min(320px, 36vw);
+    z-index: 8;
     transform: none;
     justify-content: center;
+    pointer-events: none;
   }
 
   .beda-game[data-tab="wardrobe"] .beda-sheet {

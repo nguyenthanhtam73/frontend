@@ -30,3 +30,5 @@ It may call other plain modules (`lib/mascot/game/walk.ts`, `lib/mascot/game/war
 Open `https://dadiary.vn/goc-binh-yen/game` (English: `/en/goc-binh-yen/game`) in a WebView that already holds the site login. The page reads the same `dadiary_access_token` the site stored. It does not show a second login and it does not accept the token in the URL.
 
 The route is the existing game, full screen. Site header and footer are hidden. Walking is touch and drag through pointer events. Nothing in the room depends on hover. The framebuffer stays at a device pixel ratio of at most 2.
+
+Lobby zoom is also handled in the page: two-finger pinch, mouse wheel, and the +/- buttons. The viewport is `user-scalable=no` and the canvas uses `touch-action: none`, so the WebView does not zoom the page instead.
