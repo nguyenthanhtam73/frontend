@@ -2460,7 +2460,8 @@
 .beda-spa-art {
   position: relative;
   width: 100%;
-  transition: transform 180ms ease;
+  /* Walk pose is written every frame. A CSS transition restarts that write and the figure lags. */
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

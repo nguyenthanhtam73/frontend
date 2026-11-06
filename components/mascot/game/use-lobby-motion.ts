@@ -21,12 +21,13 @@ import {
   LOBBY_FOUNTAIN,
   SPA_BOUNDS,
   SPA_MAT,
+  adoptServerPoint,
   clampCamera,
   clampPoint,
   createWalker,
   ellipseContains,
   followCamera,
-  pushGlide,
+  planRemoteGlide,
   lobbyWorldSpeed,
   sampleGlide,
   screenToWorld,
@@ -209,6 +210,7 @@ export function useLobbyMotion(input: {
     const walker = createWalker(youProp.current);
     const glides = new Map<string, Glide>();
     const glideTargets = new Map<string, { x: number; y: number }>();
+    const sampleGlides = new Map<string, Glide>();
     const seen = new Map<string, { x: number; y: number; t: number }>();
     let wasMoving = false;
     let bounceUntil = 0;
@@ -218,7 +220,6 @@ export function useLobbyMotion(input: {
     world.appendChild(ring);
     let lastSend = 0;
     let sentMoving = false;
-    let echoed = { x: youProp.current.x, y: youProp.current.y };
     let last = performance.now();
     let frameId = 0;
     let lastSolve = -LOBBY_SOLVE_INTERVAL_MS;
@@ -378,8 +379,6 @@ export function useLobbyMotion(input: {
       const speed = lobbyWorldSpeed(size.worldW || 1, cam.scale);
       const stepped = stepWalker(walker, dt, LOBBY_FOUNTAIN, LOBBY_BOUNDS, false, speed, true);
       Object.assign(walker, stepped);
-      const server = youProp.current;
-      echoed = { x: server.x, y: server.y };
       if (walker.goal) {
         ring.hidden = false;
         ring.style.left = `${walker.goal.x * 100}%`;
@@ -390,13 +389,11 @@ export function useLobbyMotion(input: {
       if (walker.goal) {
         if (now - lastSend > 480) {
           onWalk.current(walker.x, walker.y, "walk");
-          echoed = { x: walker.x, y: walker.y };
           lastSend = now;
           sentMoving = true;
         }
       } else if (sentMoving) {
         onWalk.current(walker.x, walker.y, "idle");
-        echoed = { x: walker.x, y: walker.y };
         sentMoving = false;
         lastSend = now;
       }
@@ -463,30 +460,14 @@ export function useLobbyMotion(input: {
         let face = actor.facing === "left" ? -1 : 1;
         const known = glideTargets.get(actor.id);
         if (!known || Math.hypot(known.x - actor.x, known.y - actor.y) > 0.0008) {
-          const previous = glides.get(actor.id) ?? null;
-          const from = previous
-            ? sampleGlide(previous, now)
-            : seen.get(actor.id) ?? { x: actor.x, y: actor.y };
-          const anchor = previous ?? {
-            fromX: from.x,
-            fromY: from.y,
-            toX: from.x,
-            toY: from.y,
-            t0: now,
-            dur: 0,
-            face: 1,
-          };
-          const dx = (actor.x - from.x) * size.worldW;
-          const dy = (actor.y - from.y) * size.worldH;
-          const dur = Math.max(220, (Math.hypot(dx, dy) / 90) * 1000);
-          glides.set(actor.id, pushGlide(anchor, actor.x, actor.y, now, dur));
+          glides.set(actor.id, planRemoteGlide(glides.get(actor.id) ?? null, actor.x, actor.y, now, size.worldW, size.worldH));
           glideTargets.set(actor.id, { x: actor.x, y: actor.y });
         }
         const glide = glides.get(actor.id);
         const drawn = glide ? sampleGlide(glide, now) : { x: actor.x, y: actor.y };
         x = drawn.x;
         y = drawn.y;
-        const moving = glide ? Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 : false;
+        const moving = !!glide && Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 && now < glide.t0 + glide.dur;
         face = moving ? glide!.face : face;
         placeLobby(pose, x, y, size.worldW, size.worldH, 0.78 + y * 0.4, 1);
         lives.push({ x, y, nickname: actor.nickname ?? actor.id });
@@ -535,11 +516,18 @@ export function useLobbyMotion(input: {
           if (seat.hidden) {
             sample.el.style.display = "none";
             delete sample.el.dataset.cell;
+            sampleGlides.delete(seat.id);
             continue;
           }
           sample.el.style.display = "";
           sample.el.dataset.cell = String(seat.cell);
-          placeLobby(sample.el, seat.x, seat.y, size.worldW, size.worldH, 0.78 + Math.max(0, seat.y) * 0.4, 1);
+          const knownSeat = sampleGlides.get(seat.id);
+          if (!knownSeat || Math.hypot(knownSeat.toX - seat.x, knownSeat.toY - seat.y) > 0.0008) {
+            sampleGlides.set(
+              seat.id,
+              planRemoteGlide(knownSeat ?? null, seat.x, seat.y, now, size.worldW, size.worldH),
+            );
+          }
           const tag = sample.el.querySelector<HTMLElement>(".beda-tag");
           tag?.style.setProperty("--edge", `${seat.edge}px`);
           const tagW = Math.max(48, (tag?.textContent?.trim().length ?? 6) * 7 + 16);
@@ -552,13 +540,6 @@ export function useLobbyMotion(input: {
             bottom: cam.y + seat.y * size.worldH * cam.scale + 18,
             el: tag,
           });
-          const prev = seen.get(seat.id);
-          seen.set(seat.id, { x: seat.x, y: seat.y, t: now });
-          const elapsed = prev ? (now - prev.t) / 1000 : 0;
-          const moving = !!prev && elapsed > 0 && Math.hypot(seat.x - prev.x, seat.y - prev.y) / elapsed > 0.02;
-          const actor = actorsProp.current.find((item) => item.id === seat.id);
-          const face = actor?.facing === "left" ? -1 : 1;
-          setFacing(sample.el, face, moving ? now / 159 : 0, moving, lite, 0, { world, x: seat.x, y: seat.y });
         }
         for (const label of nudgeLobbyLabels(labelTags)) {
           const el = labelTags.find((tag) => tag.id === label.id)?.el;
@@ -571,9 +552,13 @@ export function useLobbyMotion(input: {
       }
       for (const sample of samples) {
         if (sample.el.style.display === "none") continue;
+        const glide = sampleGlides.get(sample.seat.id);
+        const drawn = glide && !reduced ? sampleGlide(glide, now) : glide ? { x: glide.toX, y: glide.toY } : { x: sample.seat.homeX, y: sample.seat.homeY };
+        placeLobby(sample.el, drawn.x, drawn.y, size.worldW, size.worldH, 0.78 + Math.max(0, drawn.y) * 0.4, 1);
         const actor = actorsProp.current.find((item) => item.id === sample.seat.id);
-        const face = actor?.facing === "left" ? -1 : 1;
-        setFacing(sample.el, face, now / 700, false, lite, 0);
+        const moving = !!glide && !reduced && Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 && now < glide.t0 + glide.dur;
+        const face = moving ? glide!.face : actor?.facing === "left" ? -1 : 1;
+        setFacing(sample.el, face, moving ? now / 159 : now / 700, moving, lite, 0, { world, x: drawn.x, y: drawn.y });
       }
       const bodies = [
         screenFigure(walker.x, walker.y, youProp.current.nickname || "Bé Da", 1.2, cam, size.worldW, size.worldH),
@@ -720,7 +705,10 @@ export function useSpaMotion(input: {
     let frameId = 0;
     let lastSend = 0;
     let sentMoving = false;
+    let owned = false;
     let seenServer = youProp.current ? { x: youProp.current.x, y: youProp.current.y } : null;
+    let mat: Obstacle = SPA_MAT;
+    let matAt = -1_000;
     const glides = new Map<string, Glide>();
     const glideTargets = new Map<string, { x: number; y: number }>();
     const pointers = new Map<number, { x: number; y: number }>();
@@ -735,12 +723,12 @@ export function useSpaMotion(input: {
       frame.style.setProperty("--beda-zoom", String(cam.scale));
     };
 
-    const obstacle = (): Obstacle => {
-      const mat = view.querySelector<HTMLElement>(".beda-spa-mat");
-      if (!mat) return SPA_MAT;
+    const measureMat = (): Obstacle => {
+      const matEl = view.querySelector<HTMLElement>(".beda-spa-mat");
+      if (!matEl) return SPA_MAT;
       const scale = cam.scale || 1;
       const viewBox = view.getBoundingClientRect();
-      const matBox = mat.getBoundingClientRect();
+      const matBox = matEl.getBoundingClientRect();
       const localX = (matBox.left - viewBox.left) / scale;
       const localY = (matBox.top - viewBox.top) / scale;
       const localW = matBox.width / scale;
@@ -753,6 +741,12 @@ export function useSpaMotion(input: {
         rx: localW / 2 / (stage.offsetWidth || 1),
         ry: localH / 2 / (stage.offsetHeight || 1),
       };
+    };
+    const obstacle = (now = performance.now()): Obstacle => {
+      if (now - matAt < 400) return mat;
+      matAt = now;
+      mat = measureMat();
+      return mat;
     };
 
     const toStage = (clientX: number, clientY: number) => {
@@ -779,6 +773,7 @@ export function useSpaMotion(input: {
         );
       }
       walker.goal = point;
+      owned = true;
     };
 
     api.current.zoomBy = (factor) => {
@@ -795,13 +790,19 @@ export function useSpaMotion(input: {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      Object.assign(walker, stepWalker(walker, dt, obstacle(), SPA_BOUNDS, reduced));
+      const speed = lobbyWorldSpeed(stage.offsetWidth || 1, 1);
+      Object.assign(walker, stepWalker(walker, dt, obstacle(now), SPA_BOUNDS, reduced, speed, true));
       const server = youProp.current;
       if (server && (!seenServer || Math.hypot(server.x - seenServer.x, server.y - seenServer.y) > 0.0008)) {
         seenServer = { x: server.x, y: server.y };
         if (!walker.goal) {
-          walker.x = server.x;
-          walker.y = server.y;
+          const next = adoptServerPoint(walker, server, owned);
+          if (next.x !== walker.x || next.y !== walker.y) {
+            walker.x = next.x;
+            walker.y = next.y;
+            walker.vx = 0;
+            walker.vy = 0;
+          }
         }
       }
       if (onWalk.current) {
@@ -843,29 +844,32 @@ export function useSpaMotion(input: {
       }
       apply();
       const pose = stage.querySelector<HTMLElement>("[data-spa-you].beda-pose");
+      const youMoving = Math.hypot(walker.vx, walker.vy) > 0.02;
       if (pose) {
         pose.style.setProperty("--mx", `${walker.x * stage.offsetWidth}px`);
         pose.style.setProperty("--my", `${walker.y * stage.offsetHeight}px`);
         pose.style.setProperty("--sy", String(walker.squash));
         pose.style.zIndex = String(20 + Math.round(walker.y * 20));
-        setFacing(pose, walker.face);
+        setFacing(pose, walker.face, walker.phase, youMoving, true);
       }
+      const stageW = stage.offsetWidth || 1;
+      const stageH = stage.offsetHeight || 1;
       for (const guest of guestsProp.current) {
         const guestPose = stage.querySelector<HTMLElement>(`[data-friend-id="${guest.id}"].beda-pose`);
         if (!guestPose) continue;
         const known = glideTargets.get(guest.id);
         if (!known || Math.hypot(known.x - guest.x, known.y - guest.y) > 0.0008) {
-          glides.set(guest.id, pushGlide(glides.get(guest.id) ?? null, guest.x, guest.y, now));
+          glides.set(guest.id, planRemoteGlide(glides.get(guest.id) ?? null, guest.x, guest.y, now, stageW, stageH));
           glideTargets.set(guest.id, { x: guest.x, y: guest.y });
         }
         const glide = glides.get(guest.id);
         const drawn = glide && !reduced ? sampleGlide(glide, now) : { x: guest.x, y: guest.y };
-        const moving = glide ? Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 : false;
-        guestPose.style.setProperty("--mx", `${drawn.x * stage.offsetWidth}px`);
-        guestPose.style.setProperty("--my", `${drawn.y * stage.offsetHeight}px`);
+        const moving = !!glide && !reduced && Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 && now < glide.t0 + Math.max(glide.dur, 1);
+        guestPose.style.setProperty("--mx", `${drawn.x * stageW}px`);
+        guestPose.style.setProperty("--my", `${drawn.y * stageH}px`);
         guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
         guestPose.style.zIndex = String(8 + Math.round(drawn.y * 24));
-        setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1);
+        setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);
       }
       frameId = window.requestAnimationFrame(tick);
     };

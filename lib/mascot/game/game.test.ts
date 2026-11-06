@@ -523,6 +523,29 @@ describe("lobby world", () => {
     });
     assert.equal(stayed.seats[0]?.x, home.x);
     assert.equal(stayed.seats[0]?.y, home.y);
+    const edgeCamX = 8 - home.x * worldW;
+    const held = solveLobbyCells({
+      samples: [{ id: home.id, nickname: home.nickname, homeX: home.x, homeY: home.y, cell }],
+      player: { x: 0.5, y: 0.55, nickname: "Bé Da" },
+      lives: [],
+      cam: { x: edgeCamX, y: 0, scale: 1 },
+      viewW: 390,
+      viewH: 844,
+      worldW,
+      worldH,
+    });
+    assert.equal(held.seats[0]?.cell, cell);
+    const fresh = solveLobbyCells({
+      samples: [{ id: "new", nickname: home.nickname, homeX: home.x, homeY: home.y, cell: -1 }],
+      player: { x: 0.5, y: 0.55, nickname: "Bé Da" },
+      lives: [],
+      cam: { x: edgeCamX, y: 0, scale: 1 },
+      viewW: 390,
+      viewH: 844,
+      worldW,
+      worldH,
+    });
+    assert.notEqual(fresh.seats[0]?.cell, cell);
     const labels = nudgeLobbyLabels([
       { id: "a", left: 0, top: 0, right: 40, bottom: 16 },
       { id: "b", left: 10, top: 20, right: 50, bottom: 36 },
