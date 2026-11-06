@@ -1,10 +1,10 @@
-import { Application, Assets, Container, Graphics, Sprite, type Texture } from "pixi.js";
+import { Application, Assets, Container, Graphics, Rectangle, RenderTexture, Sprite, Texture } from "pixi.js";
+import { Viewport } from "pixi-viewport";
 
 import { LOBBY_WORLD } from "@/lib/mascot/game/lobby";
 import { startShellClock } from "@/lib/game/core/clock";
-import { cappedDpr } from "@/lib/game/core/dpr";
-import { arrowGoal, DRAG_PX, gestureKind, TAP_MS } from "@/lib/game/core/input";
-import { applyPinch, easeZoom, panCamera, wheelZoomFactor, type PinchSample } from "@/lib/game/core/zoom";
+import { rendererResolution } from "@/lib/game/core/dpr";
+import { arrowGoal, TAP_MS } from "@/lib/game/core/input";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -15,23 +15,16 @@ import {
   stepRemotes,
 } from "@/lib/game/core/movement";
 import type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib/game/core/types";
-import {
-  clampPoint,
-  followCamera,
-  screenToWorld,
-  walkPose,
-  zoomAt,
-  type Camera,
-  type Walker,
-} from "@/lib/mascot/game/walk";
+import { ZOOM_MAX, ZOOM_MIN, clampPoint, walkPose, type Walker } from "@/lib/mascot/game/walk";
 
 const ROOM_BOUNDS = { minX: 0.16, maxX: 0.84, minY: 0.58, maxY: 0.9 };
+const TAP_PX = 10;
 
-type Figure = { key: string; root: Container };
+type Figure = { key: string; root: Container; sheet: RenderTexture | null };
 
 /**
  * Pixi world for Góc bình yên and the lobby. Loaded only after the canvas mounts.
- * Positions for other people still come from the existing snapshot sync.
+ * The lobby camera is pixi-viewport. Positions for other people still come from the snapshot.
  */
 export async function startPixiShell(options: {
   canvas: HTMLCanvasElement;
@@ -43,10 +36,12 @@ export async function startPixiShell(options: {
 }): Promise<{ destroy: () => void }> {
   const parent = options.canvas.parentElement ?? options.canvas;
   const app = new Application();
+  let viewW = parent.clientWidth || 1;
+  let viewH = parent.clientHeight || 1;
   await app.init({
     canvas: options.canvas,
     resizeTo: parent,
-    resolution: cappedDpr(window.devicePixelRatio || 1),
+    resolution: rendererResolution(window.devicePixelRatio || 1, viewW, viewH),
     autoDensity: true,
     antialias: false,
     preference: "webgl",
@@ -54,42 +49,53 @@ export async function startPixiShell(options: {
   });
   app.ticker.stop();
 
-  const world = new Container();
-  app.stage.addChild(world);
+  const lobby = options.getSnapshot().scene === "lobby";
+  const { worldW: initialW, worldH: initialH } = worldSize(options.getSnapshot().scene, viewW, viewH);
+  const viewport = new Viewport({
+    screenWidth: viewW,
+    screenHeight: viewH,
+    worldWidth: initialW,
+    worldHeight: initialH,
+    events: app.renderer.events,
+    threshold: TAP_PX,
+    passiveWheel: false,
+    noTicker: true,
+    allowPreserveDragOutside: true,
+  });
+  app.stage.addChild(viewport);
+  const hit = new Rectangle(0, 0, viewW, viewH);
+  viewport.forceHitArea = hit;
+
+  const ground = new Container();
   const backdrop = new Graphics();
-  world.addChild(backdrop);
+  ground.addChild(backdrop);
+  viewport.addChild(ground);
+  const feet = new Container();
+  viewport.addChild(feet);
+
   const figures = new Map<string, Figure>();
   const book = emptyRemoteBook();
-  let shown: Camera = { x: 0, y: 0, scale: 1 };
-  let desired: Camera = { x: 0, y: 0, scale: 1 };
-  let zoomFocus = { x: 0, y: 0 };
-  let easing = false;
-  let follow = true;
-  let panning = false;
-  let pinched = false;
   let owned = false;
   let walker: Walker | null = null;
   let lastSend = 0;
   let sentMoving = false;
   let reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let booted = false;
+  let centered = false;
   let backdropScene = "";
   let backdropSky = "";
   let backdropW = -1;
   let backdropH = -1;
   let lastSprites: readonly ShellSprite[] | null = null;
-  let zoomText = "";
-  let followStill = false;
-  let followX = Number.NaN;
-  let followY = Number.NaN;
   const spriteSize = new WeakMap<Sprite, number>();
-  let viewW = parent.clientWidth || 1;
-  let viewH = parent.clientHeight || 1;
   const labelPos = new WeakMap<HTMLElement, string>();
   const labelNodes = new Map<string, HTMLElement>();
-  const pointers = new Map<number, { x: number; y: number }>();
-  let downState: { x: number; y: number; t: number; cam: Camera } | null = null;
-  let pinch: PinchSample | null = null;
+  let downAt = 0;
+
+  function worldSize(scene: ShellSceneName, width: number, height: number) {
+    if (scene === "room") return { worldW: width, worldH: height };
+    const worldW = width * LOBBY_WORLD.viewportWidthScale;
+    return { worldW, worldH: worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width) };
+  }
 
   const readView = () => {
     const nextW = parent.clientWidth || 1;
@@ -98,15 +104,17 @@ export async function startPixiShell(options: {
     viewW = nextW;
     viewH = nextH;
     backdropW = -1;
+    const snap = options.getSnapshot();
+    const size = worldSize(snap.scene, viewW, viewH);
+    viewport.resize(viewW, viewH, size.worldW, size.worldH);
+    const resolution = rendererResolution(window.devicePixelRatio || 1, viewW, viewH);
+    if (app.renderer.resolution !== resolution) {
+      app.renderer.resolution = resolution;
+      app.resize();
+    }
   };
   const viewObserver = new ResizeObserver(readView);
   viewObserver.observe(parent);
-
-  const worldSize = (scene: ShellSceneName) => {
-    if (scene === "room") return { worldW: viewW, worldH: viewH };
-    const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
-    return { worldW, worldH: worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width) };
-  };
 
   const paintBackdrop = (scene: ShellSceneName, sky: string, worldW: number, worldH: number) => {
     const rw = Math.round(worldW);
@@ -116,18 +124,84 @@ export async function startPixiShell(options: {
     backdropSky = sky;
     backdropW = rw;
     backdropH = rh;
-    const night = sky === "night" || sky === "evening";
     backdrop.clear();
+    const night = sky === "night" || sky === "evening";
     if (scene === "room") {
       backdrop.rect(0, 0, worldW, worldH * 0.62).fill({ color: 0xf6d7e4 });
       backdrop.rect(0, worldH * 0.62, worldW, worldH).fill({ color: 0xf3d2c2 });
       backdrop.roundRect(worldW * 0.08, worldH * 0.08, worldW * 0.42, worldH * 0.22, 12).fill({ color: 0xc9e7ff });
       backdrop.roundRect(worldW * 0.58, worldH * 0.58, worldW * 0.3, worldH * 0.16, 8).fill({ color: 0xfff6ea });
-      return;
+    } else {
+      backdrop.rect(0, 0, worldW, worldH * 0.12).fill({ color: night ? 0x2c3e66 : 0xbfe7ff });
+      backdrop.rect(0, worldH * 0.12, worldW, worldH).fill({ color: night ? 0x6f9474 : 0x9fd48e });
+      backdrop.ellipse(worldW * 0.5, worldH * 0.44, worldW * 0.16, worldH * 0.045).fill({ color: 0xd7f4f8 });
     }
-    backdrop.rect(0, 0, worldW, worldH * 0.12).fill({ color: night ? 0x2c3e66 : 0xbfe7ff });
-    backdrop.rect(0, worldH * 0.12, worldW, worldH).fill({ color: night ? 0x6f9474 : 0x9fd48e });
-    backdrop.ellipse(worldW * 0.5, worldH * 0.44, worldW * 0.16, worldH * 0.045).fill({ color: 0xd7f4f8 });
+  };
+
+  const packAtlas = async (srcs: readonly string[]) => {
+    const loaded: Texture[] = [];
+    for (const src of srcs) {
+      try {
+        loaded.push(await Assets.load<Texture>(src));
+      } catch {
+        /* a missing plate does not block the rest of the figure */
+      }
+    }
+    if (loaded.length === 0) return null;
+    let width = 1;
+    let height = 0;
+    for (const texture of loaded) {
+      width = Math.max(width, Math.ceil(texture.width));
+      height += Math.ceil(texture.height);
+    }
+    height = Math.max(1, height);
+    if (width * height > 512 * 512) {
+      const loose = new Container();
+      for (const texture of loaded) {
+        const plate = new Sprite(texture);
+        plate.anchor.set(0.5, 1);
+        loose.addChild(plate);
+      }
+      return { root: loose, sheet: null };
+    }
+    const sheet = RenderTexture.create({ width, height, resolution: 1 });
+    const pack = new Container();
+    let y = 0;
+    const frames: Rectangle[] = [];
+    for (const texture of loaded) {
+      const plate = new Sprite(texture);
+      plate.y = y;
+      pack.addChild(plate);
+      frames.push(new Rectangle(0, y, Math.max(1, texture.width), Math.max(1, texture.height)));
+      y += Math.ceil(texture.height);
+    }
+    let baked = false;
+    try {
+      if (app.renderer) {
+        app.renderer.render({ container: pack, target: sheet, clear: true });
+        baked = true;
+      }
+    } catch {
+      baked = false;
+    }
+    pack.destroy({ children: true });
+    if (!baked) {
+      sheet.destroy(true);
+      const loose = new Container();
+      for (const texture of loaded) {
+        const plate = new Sprite(texture);
+        plate.anchor.set(0.5, 1);
+        loose.addChild(plate);
+      }
+      return { root: loose, sheet: null };
+    }
+    const root = new Container();
+    for (const frame of frames) {
+      const piece = new Sprite(new Texture({ source: sheet.source, frame }));
+      piece.anchor.set(0.5, 1);
+      root.addChild(piece);
+    }
+    return { root, sheet };
   };
 
   const syncFigures = async (sprites: readonly ShellSprite[]) => {
@@ -135,6 +209,7 @@ export async function startPixiShell(options: {
     for (const [id, figure] of figures) {
       if (!live.has(id)) {
         figure.root.destroy({ children: true });
+        figure.sheet?.destroy(true);
         figures.delete(id);
       }
     }
@@ -142,24 +217,14 @@ export async function startPixiShell(options: {
       const key = sprite.art.join("|");
       const have = figures.get(sprite.id);
       if (have?.key === key) continue;
-      const next = new Container();
-      for (const src of sprite.art) {
-        try {
-          const texture = await Assets.load<Texture>(src);
-          const plate = new Sprite(texture);
-          plate.anchor.set(0.5, 1);
-          next.addChild(plate);
-        } catch {
-          /* a missing plate does not block the rest of the figure */
-        }
+      const packed = await packAtlas(sprite.art);
+      if (!packed) continue;
+      if (have) {
+        have.root.destroy({ children: true });
+        have.sheet?.destroy(true);
       }
-      if (next.children.length === 0) {
-        next.destroy();
-        continue;
-      }
-      if (have) have.root.destroy({ children: true });
-      world.addChild(next);
-      figures.set(sprite.id, { key, root: next });
+      viewport.addChild(packed.root);
+      figures.set(sprite.id, { key, root: packed.root, sheet: packed.sheet });
     }
   };
 
@@ -186,60 +251,93 @@ export async function startPixiShell(options: {
     walker.vy = 0;
   };
 
-  const frameOf = () => {
-    const snap = options.getSnapshot();
-    const size = worldSize(snap.scene);
-    return { w: viewW, h: viewH, ...size };
+  const pauseFollow = () => {
+    viewport.plugins.pause("follow");
   };
 
-  const aim = (clientX: number, clientY: number) => {
+  const resumeFollow = () => {
+    if (!lobby) return;
+    viewport.follow(feet, { speed: 0 });
+  };
+
+  const aim = (worldX: number, worldY: number) => {
     const snap = options.getSnapshot();
-    const box = options.canvas.getBoundingClientRect();
-    const { worldW, worldH } = worldSize(snap.scene);
-    const local = screenToWorld(clientX - box.left, clientY - box.top, shown);
+    const size = worldSize(snap.scene, viewW, viewH);
     const point = clampPoint(
-      { x: local.x / worldW, y: local.y / worldH },
+      { x: worldX / size.worldW, y: worldY / size.worldH },
       snap.scene === "room" ? ROOM_BOUNDS : LOBBY_BOUNDS,
     );
     if (!walker) walker = lobbyWalker(point);
     walker.goal = point;
     owned = true;
-    easing = false;
-    desired = shown;
-    follow = true;
-    followStill = false;
-    panning = false;
+    resumeFollow();
   };
 
-  const queueZoom = (next: Camera, focusX: number, focusY: number) => {
-    const box = frameOf();
-    desired = panCamera(next, 0, 0, box.w, box.h, box.worldW, box.worldH);
-    zoomFocus = { x: focusX, y: focusY };
-    easing = true;
-    follow = false;
-    panning = false;
-    stopWalk();
-  };
+  if (lobby) {
+    viewport
+      .drag()
+      .pinch()
+      .wheel({ smooth: false, percent: 0.1 })
+      .decelerate({ friction: 0.9, minSpeed: 0.4 })
+      .clamp({ direction: "all", underflow: "center" })
+      .clampZoom({ minScale: ZOOM_MIN, maxScale: ZOOM_MAX });
+    viewport.on("drag-start", () => {
+      pauseFollow();
+      stopWalk();
+    });
+    viewport.on("pinch-start", () => {
+      pauseFollow();
+      stopWalk();
+    });
+    viewport.on("wheel-start", () => {
+      pauseFollow();
+      stopWalk();
+    });
+    viewport.on("pointerdown", () => {
+      downAt = performance.now();
+    });
+    viewport.on("clicked", (payload: { world?: { x: number; y: number } }) => {
+      if (performance.now() - downAt > TAP_MS) return;
+      const world = payload?.world;
+      if (!world) return;
+      aim(world.x, world.y);
+      options.onEmptyTap?.();
+    });
+  }
 
   const api: ShellApi = {
     zoomBy(factor) {
-      queueZoom(zoomAt(desired, factor, viewW / 2, viewH / 2), viewW / 2, viewH / 2);
+      if (!lobby) return;
+      pauseFollow();
+      stopWalk();
+      const scale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, viewport.scale.x * factor));
+      viewport.animate({
+        time: reduced ? 1 : 220,
+        scale,
+        ease: "easeOutCubic",
+        removeOnInterrupt: true,
+      });
     },
     recenter() {
-      easing = false;
-      panning = false;
-      desired = shown;
-      follow = true;
-      followStill = false;
+      if (!lobby) return;
+      pauseFollow();
+      const snap = options.getSnapshot();
+      const size = worldSize(snap.scene, viewW, viewH);
+      const x = (walker?.x ?? 0.5) * size.worldW;
+      const y = (walker?.y ?? 0.55) * size.worldH;
+      viewport.animate({
+        time: reduced ? 1 : 420,
+        position: { x, y },
+        ease: "easeOutCubic",
+        removeOnInterrupt: true,
+        callbackOnComplete: () => resumeFollow(),
+      });
     },
     panBy(dx, dy, user = true) {
-      const box = frameOf();
-      const next = panCamera(shown, dx, dy, box.w, box.h, box.worldW, box.worldH);
-      shown = next;
-      desired = next;
+      viewport.x += dx;
+      viewport.y += dy;
       if (user) {
-        follow = false;
-        easing = false;
+        pauseFollow();
         stopWalk();
       }
     },
@@ -248,9 +346,7 @@ export async function startPixiShell(options: {
 
   const clock = startShellClock((dt, now) => {
     const snap = options.getSnapshot();
-    const w = viewW;
-    const h = viewH;
-    const { worldW, worldH } = worldSize(snap.scene);
+    const { worldW, worldH } = worldSize(snap.scene, viewW, viewH);
     paintBackdrop(snap.scene, snap.sky, worldW, worldH);
     if (snap.sprites !== lastSprites) {
       lastSprites = snap.sprites;
@@ -262,7 +358,7 @@ export async function startPixiShell(options: {
       placeLocal(walker, local ? { x: local.x, y: local.y } : null, owned);
       const bounds = snap.scene === "room" ? ROOM_BOUNDS : LOBBY_BOUNDS;
       const obstacle = snap.scene === "lobby" ? LOBBY_FOUNTAIN : null;
-      const span = snap.scene === "room" ? w : worldW;
+      const span = snap.scene === "room" ? viewW : worldW;
       Object.assign(walker, stepLocal(walker, dt, bounds, obstacle, span, reduced));
       if (options.onWalk) {
         if (walker.goal) {
@@ -277,31 +373,20 @@ export async function startPixiShell(options: {
           lastSend = now;
         }
       }
-      if (snap.scene === "lobby" && easing) {
-        shown = easeZoom(shown, desired, zoomFocus.x, zoomFocus.y, dt, reduced);
-        if (shown === desired) easing = false;
-      } else if (snap.scene === "lobby" && follow && !panning) {
-        const parked = followStill && walker.x === followX && walker.y === followY;
-        if (!parked) {
-          if (!booted) {
-            shown = followCamera(shown, walker.x, walker.y, w, h, worldW, worldH, 1, true);
-            booted = true;
-          }
-          const nextCam = followCamera(shown, walker.x, walker.y, w, h, worldW, worldH, reduced ? 1 : dt, true);
-          if (Math.abs(nextCam.x - shown.x) < 0.4 && Math.abs(nextCam.y - shown.y) < 0.4) {
-            followStill = true;
-            followX = walker.x;
-            followY = walker.y;
-          } else {
-            followStill = false;
-            shown = nextCam;
-            desired = shown;
-          }
-        }
+      feet.position.set(walker.x * worldW, walker.y * worldH);
+      if (lobby && !centered) {
+        viewport.moveCenter(feet.x, feet.y);
+        resumeFollow();
+        centered = true;
       }
     }
-    if (world.position.x !== shown.x || world.position.y !== shown.y) world.position.set(shown.x, shown.y);
-    if (world.scale.x !== shown.scale) world.scale.set(shown.scale);
+    if (lobby) viewport.update(dt * 1000);
+    if (hit.x !== viewport.left || hit.y !== viewport.top || hit.width !== viewport.worldScreenWidth || hit.height !== viewport.worldScreenHeight) {
+      hit.x = viewport.left;
+      hit.y = viewport.top;
+      hit.width = viewport.worldScreenWidth;
+      hit.height = viewport.worldScreenHeight;
+    }
     const remotes = stepRemotes(
       book,
       snap.sprites.filter((sprite) => !sprite.local),
@@ -310,23 +395,22 @@ export async function startPixiShell(options: {
       worldH,
       reduced,
     );
-    const heightFor = (y: number) => (snap.scene === "room" ? Math.min(230, h * 0.36) : (96 + y * 36) * 1.2);
+    const heightFor = (y: number) => (snap.scene === "room" ? Math.min(230, viewH * 0.36) : (96 + y * 36) * 1.2);
     for (const sprite of snap.sprites) {
       const figure = figures.get(sprite.id);
       if (!figure) continue;
       const at = sprite.local && walker ? walker : (remotes.get(sprite.id) ?? sprite);
       const moving = sprite.local && walker ? Math.hypot(walker.vx, walker.vy) > 0.02 : false;
       const pose = walkPose(sprite.local && walker ? walker.phase : moving ? now / 159 : now / 700, moving, true);
-      const drawnX = shown.x + at.x * worldW * shown.scale;
-      const drawnY = shown.y + at.y * worldH * shown.scale;
-      figure.root.position.set(at.x * worldW, at.y * worldH + pose.bob);
+      const worldX = at.x * worldW;
+      const worldY = at.y * worldH + pose.bob;
+      figure.root.position.set(worldX, worldY);
       const face = sprite.local && walker ? walker.face : sprite.facing === "left" ? -1 : 1;
       const height = heightFor(at.y);
       if (figure.root.scale.x !== face) figure.root.scale.x = face;
       for (const child of figure.root.children) {
         if (!(child instanceof Sprite)) continue;
-        const known = spriteSize.get(child);
-        if (known === height) continue;
+        if (spriteSize.get(child) === height) continue;
         spriteSize.set(child, height);
         const texH = child.texture.height || 250;
         const texW = child.texture.width || 220;
@@ -340,6 +424,8 @@ export async function startPixiShell(options: {
         if (label) labelNodes.set(sprite.id, label);
       }
       if (label) {
+        const drawnX = viewport.x + worldX * viewport.scale.x;
+        const drawnY = viewport.y + worldY * viewport.scale.y;
         const pos = `${Math.round(drawnX)}:${Math.round(drawnY)}`;
         if (labelPos.get(label) !== pos) {
           labelPos.set(label, pos);
@@ -348,165 +434,28 @@ export async function startPixiShell(options: {
         }
       }
     }
-    const host = options.canvas.parentElement;
-    if (host) {
-      const nextZoom = shown.scale.toFixed(3);
-      if (nextZoom !== zoomText) {
-        zoomText = nextZoom;
-        host.dataset.zoom = nextZoom;
-      }
-    }
     app.render();
   });
 
-  const viewPoint = (clientX: number, clientY: number) => {
-    const box = options.canvas.getBoundingClientRect();
-    return { x: clientX - box.left, y: clientY - box.top };
-  };
-
-  const beginPinch = () => {
-    const pts = [...pointers.values()];
-    const a = pts[0];
-    const b = pts[1];
-    if (!a || !b) return;
-    if (downState) {
-      shown = downState.cam;
-      desired = downState.cam;
-    }
-    easing = false;
-    panning = false;
-    pinched = true;
-    follow = false;
-    stopWalk();
-    pinch = {
-      dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
-      x: (a.x + b.x) / 2,
-      y: (a.y + b.y) / 2,
-    };
-  };
-
-  const onDown = (event: PointerEvent) => {
-    if (options.getSnapshot().scene !== "lobby") return;
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-    const target = event.target instanceof Element ? event.target : null;
-    const onControl = !!target?.closest("button, a, input, textarea, .beda-zoom, .beda-actions, .beda-nick, .beda-spa-entry");
-    if (onControl && pointers.size === 0) return;
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    try {
-      surface.setPointerCapture(event.pointerId);
-    } catch {
-      /* the pointer can end before the frame accepts capture */
-    }
-    if (pointers.size >= 2) {
-      beginPinch();
-      return;
-    }
-    downState = { x: event.clientX, y: event.clientY, t: performance.now(), cam: { ...shown } };
-    panning = false;
-  };
-  const onMove = (event: PointerEvent) => {
-    if (!pointers.has(event.pointerId)) return;
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (gestureKind(0, 0, pointers.size) === "pinch" && pinch) {
-      event.preventDefault();
-      const pts = [...pointers.values()];
-      const a = pts[0];
-      const b = pts[1];
-      if (!a || !b) return;
-      const next = {
-        dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
-        x: (a.x + b.x) / 2,
-        y: (a.y + b.y) / 2,
-      };
-      const focus = viewPoint(next.x, next.y);
-      queueZoom(applyPinch(desired, pinch, next, focus.x, focus.y), focus.x, focus.y);
-      pinch = next;
-      return;
-    }
-    if (pinched || !downState) return;
-    const distance = Math.hypot(event.clientX - downState.x, event.clientY - downState.y);
-    const elapsed = performance.now() - downState.t;
-    if (gestureKind(elapsed, distance, 1) !== "pan") return;
-    event.preventDefault();
-    const box = frameOf();
-    const next = panCamera(
-      downState.cam,
-      event.clientX - downState.x,
-      event.clientY - downState.y,
-      box.w,
-      box.h,
-      box.worldW,
-      box.worldH,
-    );
-    easing = false;
-    follow = false;
-    panning = true;
-    stopWalk();
-    shown = next;
-    desired = next;
-  };
-  const onUp = (event: PointerEvent) => {
-    if (!pointers.has(event.pointerId)) return;
-    pointers.delete(event.pointerId);
-    if (pointers.size >= 2) {
-      beginPinch();
-      return;
-    }
-    if (pointers.size > 0) {
-      pinch = null;
-      return;
-    }
-    const wasPinch = pinched;
-    const state = downState;
-    pinched = false;
-    pinch = null;
-    downState = null;
-    const wasPan = panning;
-    panning = false;
-    if (wasPinch || !state) return;
-    const distance = Math.hypot(event.clientX - state.x, event.clientY - state.y);
-    const elapsed = performance.now() - state.t;
-    if (wasPan) return;
-    if (distance >= DRAG_PX) {
-      const box = frameOf();
-      const next = panCamera(
-        state.cam,
-        event.clientX - state.x,
-        event.clientY - state.y,
-        box.w,
-        box.h,
-        box.worldW,
-        box.worldH,
-      );
-      easing = false;
-      follow = false;
-      stopWalk();
-      shown = next;
-      desired = next;
-      return;
-    }
-    if (gestureKind(elapsed, distance, 1) === "tap" && elapsed <= TAP_MS) {
-      aim(event.clientX, event.clientY);
-      options.onEmptyTap?.();
-    }
-  };
-  const onWheel = (event: WheelEvent) => {
-    if (options.getSnapshot().scene !== "lobby") return;
-    event.preventDefault();
-    const focus = viewPoint(event.clientX, event.clientY);
-    queueZoom(zoomAt(desired, wheelZoomFactor(event.deltaY), focus.x, focus.y), focus.x, focus.y);
-  };
   const onGesture = (event: Event) => {
     event.preventDefault();
   };
-  const surface = options.labels.current ?? parent;
-  surface.addEventListener("pointerdown", onDown);
-  surface.addEventListener("pointermove", onMove);
-  surface.addEventListener("pointerup", onUp);
-  surface.addEventListener("pointercancel", onUp);
-  surface.addEventListener("wheel", onWheel, { passive: false });
-  surface.addEventListener("gesturestart", onGesture);
-  surface.addEventListener("gesturechange", onGesture);
+  const gestureOpts: AddEventListenerOptions = { passive: false };
+  let lastTouchEnd = 0;
+  const onTouchEnd = (event: TouchEvent) => {
+    const now = performance.now();
+    if (now - lastTouchEnd < 300) event.preventDefault();
+    lastTouchEnd = now;
+  };
+  const hosts = [options.canvas, parent];
+  for (const host of hosts) {
+    host.addEventListener("gesturestart", onGesture, gestureOpts);
+    host.addEventListener("gesturechange", onGesture, gestureOpts);
+    host.addEventListener("gestureend", onGesture, gestureOpts);
+    host.addEventListener("touchend", onTouchEnd, gestureOpts);
+  }
+  options.canvas.style.touchAction = "none";
+  if (parent instanceof HTMLElement) parent.style.touchAction = "none";
 
   const onKey = (event: KeyboardEvent) => {
     if ((event.target as HTMLElement).closest("input, textarea, button")) return;
@@ -520,11 +469,7 @@ export async function startPixiShell(options: {
     walker = from;
     walker.goal = clampPoint(goal, snap.scene === "room" ? ROOM_BOUNDS : LOBBY_BOUNDS);
     owned = true;
-    easing = false;
-    desired = shown;
-    follow = true;
-    followStill = false;
-    panning = false;
+    resumeFollow();
   };
   window.addEventListener("keydown", onKey);
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -533,29 +478,19 @@ export async function startPixiShell(options: {
   };
   media.addEventListener("change", onReduce);
 
-  const onResize = () => {
-    const next = cappedDpr(window.devicePixelRatio || 1);
-    if (app.renderer.resolution !== next) {
-      app.renderer.resolution = next;
-      app.resize();
-    }
-  };
-  window.addEventListener("resize", onResize);
-
   return {
     destroy() {
       clock.stop();
       viewObserver.disconnect();
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", onResize);
       media.removeEventListener("change", onReduce);
-      surface.removeEventListener("pointerdown", onDown);
-      surface.removeEventListener("pointermove", onMove);
-      surface.removeEventListener("pointerup", onUp);
-      surface.removeEventListener("pointercancel", onUp);
-      surface.removeEventListener("wheel", onWheel);
-      surface.removeEventListener("gesturestart", onGesture);
-      surface.removeEventListener("gesturechange", onGesture);
+      for (const host of hosts) {
+        host.removeEventListener("gesturestart", onGesture);
+        host.removeEventListener("gesturechange", onGesture);
+        host.removeEventListener("gestureend", onGesture);
+        host.removeEventListener("touchend", onTouchEnd);
+      }
+      viewport.destroy({ children: true });
       app.destroy(false, { children: true });
     },
   };
