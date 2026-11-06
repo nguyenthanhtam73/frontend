@@ -972,6 +972,13 @@ body[data-beda-game="on"]::-webkit-scrollbar {
 
 body[data-beda-game="on"] [data-site-header],
 body[data-beda-game="on"] [data-site-footer],
-body[data-beda-game="on"] [data-activation-banner] {
+body[data-beda-game="on"] [data-activation-banner],
+body[data-game-embed="1"] [data-site-header],
+body[data-game-embed="1"] [data-site-footer],
+body[data-game-embed="1"] [data-activation-banner] {
   display: none !important;
+}
+
+body[data-game-embed="1"] {
+  touch-action: manipulation;
 }

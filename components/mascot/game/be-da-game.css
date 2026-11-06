@@ -15,6 +15,74 @@
   font-family: var(--font-ui-sans), "Nunito Sans", system-ui, sans-serif;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.beda-pixi-host {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  touch-action: none;
+}
+
+.beda-pixi-host canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.beda-scene.is-pixi .beda-room-wall,
+.beda-scene.is-pixi .beda-room-stripes,
+.beda-scene.is-pixi .beda-room-floor,
+.beda-scene.is-pixi .beda-room-planks,
+.beda-scene.is-pixi .beda-baseboard,
+.beda-scene.is-pixi .beda-window,
+.beda-scene.is-pixi .beda-window-bar,
+.beda-scene.is-pixi .beda-shelf,
+.beda-scene.is-pixi .beda-mirror,
+.beda-scene.is-pixi .beda-sink,
+.beda-scene.is-pixi .beda-bed,
+.beda-scene.is-pixi .beda-plant {
+  visibility: hidden;
+}
+
+.beda-scene.is-pixi .beda-hero-wrap {
+  pointer-events: none;
+}
+
+.beda-scene.is-pixi .beda-pixi-host {
+  z-index: 3;
+}
+
+.beda-scene.is-pixi .beda-cabinet {
+  z-index: 4;
+}
+
+.beda-lobby[data-engine="pixi"] .beda-lobby-world {
+  pointer-events: none;
+}
+
+.beda-lobby[data-engine="pixi"] .beda-friend,
+.beda-lobby[data-engine="pixi"] .beda-friend-hit {
+  pointer-events: auto;
+  z-index: 4;
+}
+
+.beda-lobby[data-engine="pixi"] .beda-friend.beda-pose {
+  transform: translate(-50%, -100%);
+}
+
+.beda-lobby[data-engine="pixi"] .beda-lobby-sky,
+.beda-lobby[data-engine="pixi"] .beda-hill,
+.beda-lobby[data-engine="pixi"] .beda-ground,
+.beda-lobby[data-engine="pixi"] .beda-plaza,
+.beda-lobby[data-engine="pixi"] .beda-plaza-inner,
+.beda-lobby[data-engine="pixi"] .beda-tree,
+.beda-lobby[data-engine="pixi"] .beda-fountain,
+.beda-lobby[data-engine="pixi"] .beda-spark,
+.beda-lobby[data-engine="pixi"] .beda-butterfly {
+  visibility: hidden;
 }
 
 .beda-scene {

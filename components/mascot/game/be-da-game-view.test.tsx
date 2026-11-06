@@ -102,8 +102,8 @@ describe("Bé Da game screen", () => {
     assert.match(html, /chuỗi ngày/);
     assert.match(html, /data-testid="beda-hero"/);
     assert.match(html, /beda-hero-wrap/);
-    assert.match(html, /bd-breathe/);
-    assert.match(html, /bd-lids/);
+    assert.match(html, /data-testid="beda-pixi"/);
+    assert.match(html, /data-scene="room"/);
     assert.match(html, /\/mascot\/outfits\/outfit_pajamas\.svg/);
     assert.match(html, /\/mascot\/icons\/xu_coin\.svg/);
     assert.match(html, /\/mascot\/icons\/streak_flame\.svg/);
@@ -221,6 +221,9 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("sparkles.svg"), false);
     assert.equal(html.includes("accessory_star_clip"), false);
     assert.equal(html.includes("faces/sleepy"), false);
+    assert.match(html, /data-testid="beda-pixi"/);
+    assert.match(html, /data-scene="lobby"/);
+    assert.match(html, /data-engine="pixi"/);
     assert.match(html, /\/mascot\/faces\/happy\/eyes\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_hoodie\.svg/);
     assert.match(html, /\/mascot\/outfits\/outfit_vay_hoa\.svg/);

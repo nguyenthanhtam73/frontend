@@ -1,0 +1,114 @@
+import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
+
+import { shellArt } from "@/lib/game/core/art";
+import { startShellClock } from "@/lib/game/core/clock";
+import { cappedDpr, MAX_DPR } from "@/lib/game/core/dpr";
+import { arrowGoal, pointerKind } from "@/lib/game/core/input";
+import { emptyRemoteBook, stepRemotes } from "@/lib/game/core/movement";
+import { readRoomList, roomEnterLabel } from "@/lib/game/core/rooms";
+import { GAME_EMBED_PATH, GAME_SESSION_STORAGE_KEY, hasGameSession } from "@/lib/game/core/session";
+import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
+import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
+
+describe("pixi shell", () => {
+  it("caps the framebuffer at 2", () => {
+    assert.equal(MAX_DPR, 2);
+    assert.equal(cappedDpr(3), 2);
+    assert.equal(cappedDpr(1.5), 1.5);
+    assert.equal(cappedDpr(0), 1);
+  });
+
+  it("treats a short press as a tap and a slide as a drag", () => {
+    assert.equal(pointerKind(4), "tap");
+    assert.equal(pointerKind(24), "drag");
+    assert.deepEqual(arrowGoal({ x: 0.5, y: 0.6 }, "ArrowLeft"), { x: 0.44, y: 0.6 });
+    assert.equal(arrowGoal({ x: 0.5, y: 0.6 }, "Enter"), null);
+  });
+
+  it("pauses the loop while the tab is hidden and drops the gap", () => {
+    let hidden = false;
+    const steps: number[] = [];
+    const queue: Array<(time: number) => void> = [];
+    const clock = startShellClock(
+      (dt) => steps.push(dt),
+      () => hidden,
+      (cb) => {
+        queue.push(cb);
+        return queue.length;
+      },
+      () => undefined,
+    );
+    queue.shift()?.(0);
+    queue.shift()?.(100);
+    hidden = true;
+    queue.shift()?.(5000);
+    hidden = false;
+    queue.shift()?.(5100);
+    clock.stop();
+    assert.ok(steps[1]! <= 0.05);
+    assert.ok(steps.at(-1)! <= 0.05);
+    assert.ok(!steps.some((dt) => dt > 0.05));
+  });
+
+  it("glides another person between snapshot positions", () => {
+    const book = emptyRemoteBook();
+    const first = stepRemotes(book, [{ id: "a", x: 0.2, y: 0.6 }], 0, 400, 800, false);
+    assert.equal(first.get("a")?.x, 0.2);
+    stepRemotes(book, [{ id: "a", x: 0.2 + 40 / 400, y: 0.6 }], 500, 400, 800, false);
+    const mid = stepRemotes(book, [{ id: "a", x: 0.2 + 40 / 400, y: 0.6 }], 500 + 120, 400, 800, false);
+    const x = mid.get("a")?.x ?? 0;
+    assert.ok(x > 0.2 && x < 0.2 + 40 / 400);
+  });
+
+  it("keeps the six glow levels available on the private-room figure", () => {
+    for (const level of [1, 2, 3, 4, 5, 6]) {
+      const view = resolveBeDaView({
+        snapshot: { ...defaultSnapshot(), isDefault: false, glowLevel: level },
+        missedDays: 0,
+        sessionHappy: false,
+        locale: "vi",
+      });
+      const art = shellArt(view, null, false);
+      assert.ok(art.some((src) => src.includes(`level_${level}`)), art.join(" "));
+    }
+    const crowd = resolveBeDaView({
+      snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
+      missedDays: 0,
+      sessionHappy: false,
+      locale: "vi",
+    });
+    const dressed = shellArt(crowd, { outfitId: DEFAULT_GAME_LOOK.outfit, hairId: DEFAULT_GAME_LOOK.hair, clipId: null, pose: null }, true);
+    assert.ok(dressed.some((src) => src.includes("/mascot/outfits/outfit_pajamas.svg")));
+    assert.ok(dressed.some((src) => src.includes("/mascot/faces/happy/eyes.svg")));
+  });
+
+  it("names a room button Vào phòng plus the code", () => {
+    const rooms = readRoomList({
+      rooms: [{ code: "da7k2m", cap: 8, member_count: 2, joined: true, owner: true }],
+    });
+    assert.equal(rooms[0]?.code, "DA7K2M");
+    assert.equal(rooms[0]?.memberCount, 2);
+    assert.equal(rooms[0]?.cap, 8);
+    assert.equal(roomEnterLabel("DA7K2M"), "Vào phòng DA7K2M");
+    assert.equal(GAME_EMBED_PATH, "/goc-binh-yen/game");
+    assert.equal(GAME_SESSION_STORAGE_KEY, "dadiary_access_token");
+    assert.equal(hasGameSession("token"), true);
+    assert.equal(hasGameSession("  "), false);
+  });
+
+  it("does not import React, Pixi, or Next", () => {
+    const dir = path.dirname(fileURLToPath(import.meta.url));
+    const files = readdirSync(dir).filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"));
+    assert.ok(files.length >= 6);
+    for (const name of files) {
+      const source = readFileSync(path.join(dir, name), "utf8");
+      assert.equal(/from ["']react["']/.test(source), false, name);
+      assert.equal(/from ["']pixi\.js["']/.test(source), false, name);
+      assert.equal(/from ["']next["']|from ["']next\//.test(source), false, name);
+    }
+  });
+});

@@ -5,6 +5,7 @@ import type { KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { SpaProblemLine } from "@/components/mascot/game/be-da-spa-room";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook } from "@/lib/mascot/game/look";
@@ -18,12 +19,20 @@ import {
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
 import { type LobbyActor } from "@/lib/mascot/game/lobby-live";
+import { lookArt } from "@/lib/game/core/art";
+import type { ShellSnapshot } from "@/lib/game/core/types";
 import { useLobbyMotion } from "@/components/mascot/game/use-lobby-motion";
 import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode, type SpaNotice } from "@/lib/mascot/game/spa-room";
 import type { GamePose } from "@/lib/mascot/game/look";
 import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
+
+function actorArt(actor: LobbyActor): string[] {
+  const sample = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id);
+  const view = actor.sample && sample ? sampleFriendView(sample) : lobbyNeutralView();
+  return lookArt(view, actor.look, true);
+}
 
 const TREES = [
   { x: 4, y: 20, s: 0.8 },
@@ -100,6 +109,8 @@ export function BeDaLobby({
   const offsetRef = useRef(0);
   const liftRef = useRef(0);
   const seenSelect = useRef<string | null>(null);
+  const [pixi, setPixi] = useState(true);
+  const snapRef = useRef<ShellSnapshot>({ scene: "lobby", sky, sprites: [] });
   const [showHint, setShowHint] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(you.nickname);
@@ -118,11 +129,34 @@ export function BeDaLobby({
     you,
     actors,
     onWalk,
+    enabled: !pixi,
     onEmptyTap: () => {
       setShowHint(false);
       onSelect("");
     },
   });
+  snapRef.current = {
+    scene: "lobby",
+    sky,
+    sprites: [
+      ...actors.map((actor) => ({
+        id: actor.id,
+        x: actor.x,
+        y: actor.y,
+        facing: actor.facing,
+        art: actorArt(actor),
+        local: false as const,
+      })),
+      {
+        id: "you",
+        x: you.x,
+        y: you.y,
+        facing: you.facing,
+        art: lookArt(player, look, true),
+        local: true as const,
+      },
+    ],
+  };
 
   useEffect(() => {
     if (!nicknameError) return;
@@ -263,12 +297,28 @@ export function BeDaLobby({
       className="beda-lobby"
       data-testid="beda-lobby"
       data-lobby-mode={live ? "live" : "sample"}
+      data-engine={pixi ? "pixi" : "dom"}
       data-sky={sky}
       tabIndex={0}
       aria-label={dragLabel}
       style={{ ["--beda-ground-end" as string]: night ? "#6f9474" : "#9fd48e" }}
       onKeyDown={onKeyDown}
     >
+      {pixi ? (
+        <BeDaPixiStage
+          scene="lobby"
+          art={snapRef.current.sprites.map((sprite) => sprite.art.join(" ")).join(" ")}
+          snapshot={() => snapRef.current}
+          labels={frameRef}
+          onWalk={onWalk}
+          onEmptyTap={() => {
+            setShowHint(false);
+            onSelect("");
+          }}
+          api={motion}
+          onError={() => setPixi(false)}
+        />
+      ) : null}
       <div ref={worldRef} className="beda-lobby-world">
         <div className={`beda-lobby-sky beda-sky beda-sky-${sky}`} />
         <div
@@ -338,6 +388,8 @@ export function BeDaLobby({
             locale={locale}
             selected={actor.id === selectedId}
             nudge={lobbyTagNudgePx(actor, spots)}
+            art={actorArt(actor).join(" ")}
+            pixi={pixi}
             onSelect={onSelect}
           />
         ))}
@@ -345,7 +397,9 @@ export function BeDaLobby({
           className="beda-friend beda-pose"
           data-lobby-you=""
           data-friend-id="you"
+          data-pixi-label="you"
           data-testid="beda-lobby-you"
+          data-art={lookArt(player, look, true).join(" ")}
           style={{ ["--ms" as string]: "1.2" }}
         >
           <button
@@ -356,13 +410,15 @@ export function BeDaLobby({
               event.stopPropagation();
             }}
           >
-            <span className="beda-friend-art">
-              <span className="beda-ground-shadow" aria-hidden />
-              <span className="beda-ring" />
-              <span className="beda-feet">
-                <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
+            {pixi ? null : (
+              <span className="beda-friend-art">
+                <span className="beda-ground-shadow" aria-hidden />
+                <span className="beda-ring" />
+                <span className="beda-feet">
+                  <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
+                </span>
               </span>
-            </span>
+            )}
             <span
               className="beda-tag beda-tag-me"
               style={{ ["--nudge" as string]: `${lobbyTagNudgePx({ id: "you", x: you.x, y: you.y }, spots)}px` }}
@@ -524,12 +580,16 @@ function FriendButton({
   locale,
   selected,
   nudge,
+  art,
+  pixi,
   onSelect,
 }: {
   actor: LobbyActor;
   locale: string;
   selected: boolean;
   nudge: number;
+  art: string;
+  pixi: boolean;
   onSelect: (id: string) => void;
 }) {
   const sample = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id);
@@ -541,16 +601,20 @@ function FriendButton({
       className={selected ? "beda-friend beda-pose is-selected" : "beda-friend beda-pose"}
       data-sample={actor.sample ? "true" : "false"}
       data-friend-id={actor.id}
+      data-pixi-label={actor.id}
       data-testid={`beda-friend-${actor.id}`}
+      data-art={art}
     >
       <button type="button" className="beda-friend-hit" onClick={() => onSelect(actor.id)}>
-        <span className="beda-friend-art">
-          <span className="beda-ground-shadow" aria-hidden />
-          <span className="beda-ring" />
-          <span className="beda-feet">
-            <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
+        {pixi ? null : (
+          <span className="beda-friend-art">
+            <span className="beda-ground-shadow" aria-hidden />
+            <span className="beda-ring" />
+            <span className="beda-feet">
+              <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
+            </span>
           </span>
-        </span>
+        )}
         <span className="beda-tag" style={{ ["--nudge" as string]: `${nudge}px` }}>
           {actor.nickname}
         </span>
