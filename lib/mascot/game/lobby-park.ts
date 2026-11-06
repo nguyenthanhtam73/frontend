@@ -1,5 +1,5 @@
 /**
- * Pending square lobby art (designer sign-off still open).
+ * Approved path-map lobby art.
  * Swap these files when a new painting arrives — the loader only stretches them.
  *
  *   public/mascot/lobby/ground.jpg   2048×2048 base

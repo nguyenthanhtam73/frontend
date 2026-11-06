@@ -67,7 +67,11 @@
 }
 
 .beda-lobby[data-engine="pixi"] .beda-lobby-world {
-  /* Above the canvas and the edge vignette, under the chrome buttons. */
+  /* Screen-space names. Cover the canvas, not the tall DOM world. */
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
   z-index: 6;
   pointer-events: none;
 }

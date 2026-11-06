@@ -395,7 +395,7 @@ describe("lobby world", () => {
     assert.equal(LOBBY_WORLD.height, 2400);
     assert.equal(LOBBY_WORLD.minCover, 1.3);
     assert.deepEqual(LOBBY_WORLD.walk, { minX: 0.05, maxX: 0.95, minY: 0.05, maxY: 0.95 });
-    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.55, dx: 0.08, dy: 0.05 });
+    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.5552, dx: 0.08, dy: 0.05 });
     assert.deepEqual(clampLobbyPoint(0, 0), { x: 0.05, y: 0.05 });
     assert.deepEqual(clampLobbyPoint(2, 2), { x: 0.95, y: 0.95 });
     for (const view of [
@@ -412,8 +412,8 @@ describe("lobby world", () => {
     const rolls = [0, 1, 0.25, 0.75];
     let i = 0;
     const spawned = lobbySpawn(() => rolls[i++] ?? 0);
-    assert.ok(spawned.x >= 0.5 - 0.08 && spawned.x <= 0.5 + 0.08);
-    assert.ok(spawned.y >= 0.55 - 0.05 && spawned.y <= 0.55 + 0.05);
+    assert.ok(spawned.x >= LOBBY_WORLD.spawn.x - LOBBY_WORLD.spawn.dx && spawned.x <= LOBBY_WORLD.spawn.x + LOBBY_WORLD.spawn.dx);
+    assert.ok(spawned.y >= LOBBY_WORLD.spawn.y - LOBBY_WORLD.spawn.dy && spawned.y <= LOBBY_WORLD.spawn.y + LOBBY_WORLD.spawn.dy);
   });
 
   it("spreads sample friends across the whole floor", () => {

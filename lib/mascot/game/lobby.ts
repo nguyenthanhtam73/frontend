@@ -44,8 +44,8 @@ export const LOBBY_WORLD = {
    * This rectangle just keeps feet off the extreme border.
    */
   walk: { minX: 0.05, maxX: 0.95, minY: 0.05, maxY: 0.95 },
-  /** New arrivals. Random inside x±dx and y±dy. */
-  spawn: { x: 0.5, y: 0.55, dx: 0.08, dy: 0.05 },
+  /** New arrivals. On the south edge of the plaza, off the fountain. */
+  spawn: { x: 0.5, y: 0.5552, dx: 0.08, dy: 0.05 },
 } as const;
 
 /** Square pixel world. The long side of the viewport sets the size. */
