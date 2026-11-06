@@ -251,15 +251,6 @@ export async function startPixiShell(options: {
     walker.vy = 0;
   };
 
-  const pauseFollow = () => {
-    viewport.plugins.pause("follow");
-  };
-
-  const resumeFollow = () => {
-    if (!lobby) return;
-    viewport.follow(feet, { speed: 0 });
-  };
-
   const aim = (worldX: number, worldY: number) => {
     const snap = options.getSnapshot();
     const size = worldSize(snap.scene, viewW, viewH);
@@ -270,7 +261,6 @@ export async function startPixiShell(options: {
     if (!walker) walker = lobbyWalker(point);
     walker.goal = point;
     owned = true;
-    resumeFollow();
   };
 
   if (lobby) {
@@ -282,15 +272,12 @@ export async function startPixiShell(options: {
       .clamp({ direction: "all", underflow: "center" })
       .clampZoom({ minScale: ZOOM_MIN, maxScale: ZOOM_MAX });
     viewport.on("drag-start", () => {
-      pauseFollow();
       stopWalk();
     });
     viewport.on("pinch-start", () => {
-      pauseFollow();
       stopWalk();
     });
     viewport.on("wheel-start", () => {
-      pauseFollow();
       stopWalk();
     });
     viewport.on("pointerdown", () => {
@@ -308,7 +295,6 @@ export async function startPixiShell(options: {
   const api: ShellApi = {
     zoomBy(factor) {
       if (!lobby) return;
-      pauseFollow();
       stopWalk();
       const scale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, viewport.scale.x * factor));
       viewport.animate({
@@ -320,7 +306,6 @@ export async function startPixiShell(options: {
     },
     recenter() {
       if (!lobby) return;
-      pauseFollow();
       const snap = options.getSnapshot();
       const size = worldSize(snap.scene, viewW, viewH);
       const x = (walker?.x ?? 0.5) * size.worldW;
@@ -330,16 +315,12 @@ export async function startPixiShell(options: {
         position: { x, y },
         ease: "easeOutCubic",
         removeOnInterrupt: true,
-        callbackOnComplete: () => resumeFollow(),
       });
     },
     panBy(dx, dy, user = true) {
       viewport.x += dx;
       viewport.y += dy;
-      if (user) {
-        pauseFollow();
-        stopWalk();
-      }
+      if (user) stopWalk();
     },
   };
   if (options.api) options.api.current = api;
@@ -376,7 +357,6 @@ export async function startPixiShell(options: {
       feet.position.set(walker.x * worldW, walker.y * worldH);
       if (lobby && !centered) {
         viewport.moveCenter(feet.x, feet.y);
-        resumeFollow();
         centered = true;
       }
     }
@@ -425,12 +405,12 @@ export async function startPixiShell(options: {
       }
       if (label) {
         const drawnX = viewport.x + worldX * viewport.scale.x;
-        const drawnY = viewport.y + worldY * viewport.scale.y;
-        const pos = `${Math.round(drawnX)}:${Math.round(drawnY)}`;
+        const headY = viewport.y + worldY * viewport.scale.y - height * viewport.scale.y;
+        const pos = `${Math.round(drawnX)}:${Math.round(headY)}`;
         if (labelPos.get(label) !== pos) {
           labelPos.set(label, pos);
           label.style.left = `${Math.round(drawnX)}px`;
-          label.style.top = `${Math.round(drawnY)}px`;
+          label.style.top = `${Math.round(headY)}px`;
         }
       }
     }
@@ -469,7 +449,6 @@ export async function startPixiShell(options: {
     walker = from;
     walker.goal = clampPoint(goal, snap.scene === "room" ? ROOM_BOUNDS : LOBBY_BOUNDS);
     owned = true;
-    resumeFollow();
   };
   window.addEventListener("keydown", onKey);
   const media = window.matchMedia("(prefers-reduced-motion: reduce)");
