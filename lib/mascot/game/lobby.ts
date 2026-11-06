@@ -155,9 +155,17 @@ function lobbyScreenFigure(
   };
 }
 
-function lobbySeatBlocked(box: ScreenBox, zones: readonly ScreenBox[], occupied: readonly ScreenBox[], viewW: number, viewH: number): boolean {
+function lobbySeatBlocked(
+  box: ScreenBox,
+  zones: readonly ScreenBox[],
+  occupied: readonly ScreenBox[],
+  viewW: number,
+  viewH: number,
+  edge: boolean,
+): boolean {
   if (zones.some((zone) => screenBoxesOverlap(box, zone, 8))) return true;
   if (occupied.some((other) => screenBoxesOverlap(box, other, LOBBY_FIGURE_GAP))) return true;
+  if (!edge) return false;
   const visible = box.bottom > 2 && box.top < viewH - 2 && box.right > 2 && box.left < viewW - 2;
   return visible && (box.left < 8 || box.right > viewW - 8);
 }
@@ -186,13 +194,13 @@ export function solveLobbyCells(input: {
   const seats: LobbySeat[] = [];
   let probes = 0;
   const sampleSize = (y: number) => 0.78 + Math.max(0, y) * 0.4;
-  const probe = (index: number, nickname: string): ScreenBox | null => {
+  const probe = (index: number, nickname: string, edge: boolean): ScreenBox | null => {
     if (probes >= LOBBY_SOLVE_MAX_PROBES) return null;
     if (index < 0 || index >= LOBBY_SAMPLE_CELLS.length || used.has(index)) return null;
     probes += 1;
     const cell = LOBBY_SAMPLE_CELLS[index]!;
     const box = lobbyScreenFigure(cell.x, cell.y, nickname, sampleSize(cell.y), input.cam, input.worldW, input.worldH);
-    if (lobbySeatBlocked(box, zones, occupied, input.viewW, input.viewH)) return null;
+    if (lobbySeatBlocked(box, zones, occupied, input.viewW, input.viewH, edge)) return null;
     return box;
   };
 
@@ -200,14 +208,15 @@ export function solveLobbyCells(input: {
     let chosen = -1;
     let box: ScreenBox | null = null;
     if (sample.cell >= 0) {
-      box = probe(sample.cell, sample.nickname);
+      // A seat they already have stays put when the camera slides them to the screen edge.
+      box = probe(sample.cell, sample.nickname, false);
       if (box) chosen = sample.cell;
     }
     if (!box) {
       let best = Infinity;
       for (let index = 0; index < LOBBY_SAMPLE_CELLS.length; index += 1) {
         if (probes >= LOBBY_SOLVE_MAX_PROBES) break;
-        const fit = probe(index, sample.nickname);
+        const fit = probe(index, sample.nickname, true);
         if (!fit) continue;
         const cell = LOBBY_SAMPLE_CELLS[index]!;
         const onScreen = fit.bottom > 0 && fit.top < input.viewH && fit.right > 0 && fit.left < input.viewW;

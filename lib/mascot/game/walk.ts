@@ -8,8 +8,11 @@ import { LOBBY_WORLD } from "@/lib/mascot/game/lobby";
 
 export const ZOOM_MIN = 0.6;
 export const ZOOM_MAX = 2.5;
-/** Glide remote players across the gap between 4 Hz ticks. */
+/** Shortest glide between presence ticks. Longer walks stretch with the distance. */
 export const REMOTE_GLIDE_MS = 220;
+/** A jump farther than this is a respawn, not a step. Snap instead of sliding across the room. */
+export const REMOTE_SNAP_PX = 160;
+export const REMOTE_SNAP_NORM = 0.28;
 
 export type Point = { x: number; y: number };
 
@@ -283,6 +286,42 @@ export function sampleGlide(glide: Glide, now: number): Point {
     x: glide.fromX + (glide.toX - glide.fromX) * s,
     y: glide.fromY + (glide.toY - glide.fromY) * s,
   };
+}
+
+/**
+ * Glide from the figure's current drawn point to the next server point.
+ * Duration matches the walk speed, so a 2 Hz update does not play as a dash.
+ * A huge gap snaps. `previous` null means the figure is appearing now.
+ */
+export function planRemoteGlide(
+  previous: Glide | null,
+  x: number,
+  y: number,
+  now: number,
+  worldW: number,
+  worldH: number,
+): Glide {
+  const from = previous ? sampleGlide(previous, now) : { x, y };
+  const dx = (x - from.x) * Math.max(1, worldW);
+  const dy = (y - from.y) * Math.max(1, worldH);
+  const dist = Math.hypot(dx, dy);
+  const norm = Math.hypot(x - from.x, y - from.y);
+  if (previous && (dist >= REMOTE_SNAP_PX || norm >= REMOTE_SNAP_NORM)) {
+    const face = x - from.x < -0.003 ? -1 : x - from.x > 0.003 ? 1 : previous.face;
+    return { fromX: x, fromY: y, toX: x, toY: y, t0: now, dur: 0, face };
+  }
+  const dur = Math.min(800, Math.max(REMOTE_GLIDE_MS, (dist / LOBBY_SCREEN_PX_PER_SEC) * 1000));
+  return pushGlide(previous, x, y, now, dur);
+}
+
+/**
+ * Local feet win. A server echo is applied before the player has walked,
+ * or when it is far enough to be a different place. A stale nearby echo is ignored.
+ */
+export function adoptServerPoint(local: Point, server: Point, owned: boolean): Point {
+  if (!owned) return { x: server.x, y: server.y };
+  if (Math.hypot(server.x - local.x, server.y - local.y) >= REMOTE_SNAP_NORM) return { x: server.x, y: server.y };
+  return local;
 }
 
 /** Start a glide from wherever the figure is drawn now. Same point is a no-op. */

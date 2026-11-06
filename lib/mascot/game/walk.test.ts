@@ -8,7 +8,9 @@ import {
   clampCamera,
   createWalker,
   ellipseContains,
+  adoptServerPoint,
   followCamera,
+  planRemoteGlide,
   pushGlide,
   sampleGlide,
   screenToWorld,
@@ -134,6 +136,32 @@ describe("lobby walk", () => {
     assert.equal(walker.x, 0.3);
     assert.equal(walker.squash, 1);
     assert.equal(walker.goal, null);
+  });
+
+  it("glides a 2 Hz step at walk speed and snaps a respawn", () => {
+    const worldW = 390;
+    const worldH = 520;
+    const start = planRemoteGlide(null, 0.4, 0.6, 0, worldW, worldH);
+    const next = planRemoteGlide(start, 0.4 + 40 / worldW, 0.6, 500, worldW, worldH);
+    assert.ok(next.dur >= 400 && next.dur <= 500, `dur ${next.dur}`);
+    let drawn = sampleGlide(next, 500);
+    let maxPx = 0;
+    for (let step = 1; step <= 30; step += 1) {
+      const pos = sampleGlide(next, 500 + step * (1000 / 60));
+      maxPx = Math.max(maxPx, Math.hypot((pos.x - drawn.x) * worldW, (pos.y - drawn.y) * worldH));
+      drawn = pos;
+    }
+    assert.ok(maxPx < 5, `frame jump ${maxPx}`);
+    const far = planRemoteGlide(next, 0.4, 0.95, 1200, worldW, worldH);
+    assert.equal(far.dur, 0);
+    assert.equal(sampleGlide(far, 1216).y, 0.95);
+  });
+
+  it("keeps a predicted position when the server echo is close", () => {
+    const local = { x: 0.42, y: 0.61 };
+    assert.deepEqual(adoptServerPoint(local, { x: 0.4, y: 0.6 }, true), local);
+    assert.deepEqual(adoptServerPoint(local, { x: 0.8, y: 0.9 }, true), { x: 0.8, y: 0.9 });
+    assert.deepEqual(adoptServerPoint(local, { x: 0.5, y: 0.62 }, false), { x: 0.5, y: 0.62 });
   });
 
   it("glides remote players across the tick gap", () => {

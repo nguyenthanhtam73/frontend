@@ -257,7 +257,8 @@ export function useLobbyPresence(options: {
     const facing: LobbyFacing = nx < prev.x - 0.004 ? "left" : nx > prev.x + 0.004 ? "right" : prev.facing;
     const next = { ...prev, x: nx, y: ny, facing };
     youRef.current = next;
-    setYou(next);
+    // The feet are drawn from the local walker. Publishing every step re-renders the whole room.
+    if (pace === "idle" || facing !== prev.facing) setYou(next);
     if (!liveRef.current) return;
     connRef.current?.send({
       op: "move-to",
