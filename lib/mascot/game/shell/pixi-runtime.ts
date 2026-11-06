@@ -71,31 +71,51 @@ export async function startPixiShell(options: {
   let walker: Walker | null = null;
   let lastSend = 0;
   let sentMoving = false;
-  let walks = 0;
   let reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let booted = false;
-  let backdropKey = "";
+  let backdropScene = "";
+  let backdropSky = "";
+  let backdropW = -1;
+  let backdropH = -1;
+  let lastSprites: readonly ShellSprite[] | null = null;
+  let zoomText = "";
+  let followStill = false;
+  let followX = Number.NaN;
+  let followY = Number.NaN;
+  const spriteSize = new WeakMap<Sprite, number>();
+  let viewW = parent.clientWidth || 1;
+  let viewH = parent.clientHeight || 1;
+  const labelPos = new WeakMap<HTMLElement, string>();
+  const labelNodes = new Map<string, HTMLElement>();
   const pointers = new Map<number, { x: number; y: number }>();
   let downState: { x: number; y: number; t: number; cam: Camera } | null = null;
   let pinch: PinchSample | null = null;
 
-  const view = () => ({
-    w: parent.clientWidth || 1,
-    h: parent.clientHeight || 1,
-  });
+  const readView = () => {
+    const nextW = parent.clientWidth || 1;
+    const nextH = parent.clientHeight || 1;
+    if (nextW === viewW && nextH === viewH) return;
+    viewW = nextW;
+    viewH = nextH;
+    backdropW = -1;
+  };
+  const viewObserver = new ResizeObserver(readView);
+  viewObserver.observe(parent);
 
   const worldSize = (scene: ShellSceneName) => {
-    const { w } = view();
-    if (scene === "room") return { worldW: w, worldH: view().h };
-    const worldW = w * LOBBY_WORLD.viewportWidthScale;
+    if (scene === "room") return { worldW: viewW, worldH: viewH };
+    const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
     return { worldW, worldH: worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width) };
   };
 
-  const paintBackdrop = (scene: ShellSceneName, sky: string) => {
-    const { worldW, worldH } = worldSize(scene);
-    const key = `${scene}|${sky}|${Math.round(worldW)}|${Math.round(worldH)}`;
-    if (key === backdropKey) return;
-    backdropKey = key;
+  const paintBackdrop = (scene: ShellSceneName, sky: string, worldW: number, worldH: number) => {
+    const rw = Math.round(worldW);
+    const rh = Math.round(worldH);
+    if (scene === backdropScene && sky === backdropSky && rw === backdropW && rh === backdropH) return;
+    backdropScene = scene;
+    backdropSky = sky;
+    backdropW = rw;
+    backdropH = rh;
     const night = sky === "night" || sky === "evening";
     backdrop.clear();
     if (scene === "room") {
@@ -168,9 +188,8 @@ export async function startPixiShell(options: {
 
   const frameOf = () => {
     const snap = options.getSnapshot();
-    const { w, h } = view();
     const size = worldSize(snap.scene);
-    return { w, h, ...size };
+    return { w: viewW, h: viewH, ...size };
   };
 
   const aim = (clientX: number, clientY: number) => {
@@ -188,6 +207,7 @@ export async function startPixiShell(options: {
     easing = false;
     desired = shown;
     follow = true;
+    followStill = false;
     panning = false;
   };
 
@@ -203,14 +223,14 @@ export async function startPixiShell(options: {
 
   const api: ShellApi = {
     zoomBy(factor) {
-      const { w, h } = view();
-      queueZoom(zoomAt(desired, factor, w / 2, h / 2), w / 2, h / 2);
+      queueZoom(zoomAt(desired, factor, viewW / 2, viewH / 2), viewW / 2, viewH / 2);
     },
     recenter() {
       easing = false;
       panning = false;
       desired = shown;
       follow = true;
+      followStill = false;
     },
     panBy(dx, dy, user = true) {
       const box = frameOf();
@@ -228,10 +248,14 @@ export async function startPixiShell(options: {
 
   const clock = startShellClock((dt, now) => {
     const snap = options.getSnapshot();
-    const { w, h } = view();
+    const w = viewW;
+    const h = viewH;
     const { worldW, worldH } = worldSize(snap.scene);
-    paintBackdrop(snap.scene, snap.sky);
-    requestFigures(snap.sprites);
+    paintBackdrop(snap.scene, snap.sky, worldW, worldH);
+    if (snap.sprites !== lastSprites) {
+      lastSprites = snap.sprites;
+      requestFigures(snap.sprites);
+    }
     const local = snap.sprites.find((sprite) => sprite.local);
     if (!walker && local) walker = lobbyWalker(local);
     if (walker) {
@@ -244,7 +268,6 @@ export async function startPixiShell(options: {
         if (walker.goal) {
           if (now - lastSend > 480) {
             options.onWalk(walker.x, walker.y, "walk");
-            walks += 1;
             lastSend = now;
             sentMoving = true;
           }
@@ -258,16 +281,27 @@ export async function startPixiShell(options: {
         shown = easeZoom(shown, desired, zoomFocus.x, zoomFocus.y, dt, reduced);
         if (shown === desired) easing = false;
       } else if (snap.scene === "lobby" && follow && !panning) {
-        if (!booted) {
-          shown = followCamera(shown, walker.x, walker.y, w, h, worldW, worldH, 1, true);
-          booted = true;
+        const parked = followStill && walker.x === followX && walker.y === followY;
+        if (!parked) {
+          if (!booted) {
+            shown = followCamera(shown, walker.x, walker.y, w, h, worldW, worldH, 1, true);
+            booted = true;
+          }
+          const nextCam = followCamera(shown, walker.x, walker.y, w, h, worldW, worldH, reduced ? 1 : dt, true);
+          if (Math.abs(nextCam.x - shown.x) < 0.4 && Math.abs(nextCam.y - shown.y) < 0.4) {
+            followStill = true;
+            followX = walker.x;
+            followY = walker.y;
+          } else {
+            followStill = false;
+            shown = nextCam;
+            desired = shown;
+          }
         }
-        shown = followCamera(shown, walker.x, walker.y, w, h, worldW, worldH, reduced ? 1 : dt, true);
-        desired = shown;
       }
     }
-    world.position.set(shown.x, shown.y);
-    world.scale.set(shown.scale);
+    if (world.position.x !== shown.x || world.position.y !== shown.y) world.position.set(shown.x, shown.y);
+    if (world.scale.x !== shown.scale) world.scale.set(shown.scale);
     const remotes = stepRemotes(
       book,
       snap.sprites.filter((sprite) => !sprite.local),
@@ -288,29 +322,39 @@ export async function startPixiShell(options: {
       figure.root.position.set(at.x * worldW, at.y * worldH + pose.bob);
       const face = sprite.local && walker ? walker.face : sprite.facing === "left" ? -1 : 1;
       const height = heightFor(at.y);
-      figure.root.scale.x = face;
+      if (figure.root.scale.x !== face) figure.root.scale.x = face;
       for (const child of figure.root.children) {
         if (!(child instanceof Sprite)) continue;
+        const known = spriteSize.get(child);
+        if (known === height) continue;
+        spriteSize.set(child, height);
         const texH = child.texture.height || 250;
         const texW = child.texture.width || 220;
         child.height = height;
         child.width = height * (texW / texH);
-        child.scale.x = Math.abs(child.scale.x);
+        if (child.scale.x < 0) child.scale.x = -child.scale.x;
       }
-      const label = options.labels.current?.querySelector<HTMLElement>(`[data-pixi-label="${sprite.id}"]`);
+      let label = labelNodes.get(sprite.id);
+      if (!label || !label.isConnected) {
+        label = options.labels.current?.querySelector<HTMLElement>(`[data-pixi-label="${sprite.id}"]`) ?? undefined;
+        if (label) labelNodes.set(sprite.id, label);
+      }
       if (label) {
-        label.style.left = `${drawnX}px`;
-        label.style.top = `${drawnY}px`;
+        const pos = `${Math.round(drawnX)}:${Math.round(drawnY)}`;
+        if (labelPos.get(label) !== pos) {
+          labelPos.set(label, pos);
+          label.style.left = `${Math.round(drawnX)}px`;
+          label.style.top = `${Math.round(drawnY)}px`;
+        }
       }
     }
     const host = options.canvas.parentElement;
     if (host) {
-      host.dataset.zoom = shown.scale.toFixed(3);
-      host.dataset.cam = `${shown.x.toFixed(2)} ${shown.y.toFixed(2)}`;
-      host.dataset.world = walker ? `${walker.x.toFixed(4)} ${walker.y.toFixed(4)}` : "";
-      host.dataset.follow = follow ? "1" : "0";
-      host.dataset.walks = String(walks);
-      host.dataset.canvas = `${options.canvas.width}x${options.canvas.height}`;
+      const nextZoom = shown.scale.toFixed(3);
+      if (nextZoom !== zoomText) {
+        zoomText = nextZoom;
+        host.dataset.zoom = nextZoom;
+      }
     }
     app.render();
   });
@@ -479,6 +523,7 @@ export async function startPixiShell(options: {
     easing = false;
     desired = shown;
     follow = true;
+    followStill = false;
     panning = false;
   };
   window.addEventListener("keydown", onKey);
@@ -500,6 +545,7 @@ export async function startPixiShell(options: {
   return {
     destroy() {
       clock.stop();
+      viewObserver.disconnect();
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("resize", onResize);
       media.removeEventListener("change", onReduce);
