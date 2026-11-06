@@ -44,8 +44,8 @@ export type Walker = {
 /** Plaza the feet may use. Same rectangle as `LOBBY_WORLD.walk`. */
 export const LOBBY_BOUNDS: Bounds = LOBBY_WORLD.walk;
 
-/** Fountain basin in the same space as lobby taps (authored depth, not pixels). */
-export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.44, rx: 0.08, ry: 0.045 };
+/** Fountain basin in the same space as lobby taps (normalized, not pixels). */
+export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.5, rx: 0.07, ry: 0.055 };
 
 /**
  * Walkable spa floor in the room box below the top bar.
@@ -334,8 +334,8 @@ export function pushGlide(previous: Glide | null, x: number, y: number, now: num
   return { fromX: from.x, fromY: from.y, toX: x, toY: y, t0: now, dur, face };
 }
 
-export function zoomAt(camera: Camera, factor: number, focusX: number, focusY: number): Camera {
-  const scale = clamp(camera.scale * factor, ZOOM_MIN, ZOOM_MAX);
+export function zoomAt(camera: Camera, factor: number, focusX: number, focusY: number, min = ZOOM_MIN): Camera {
+  const scale = clamp(camera.scale * factor, min, ZOOM_MAX);
   const k = scale / camera.scale;
   return {
     x: focusX - (focusX - camera.x) * k,

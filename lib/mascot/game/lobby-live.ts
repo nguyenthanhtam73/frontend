@@ -4,7 +4,7 @@ import {
   clampLobbyPoint,
   LOBBY_FIGURE_GAP,
   LOBBY_SAMPLE_CAP,
-  LOBBY_WORLD,
+  lobbyWorldSize,
   lobbyFigureBox,
   lobbyFigureHitsChrome,
   lobbyFreeCell,
@@ -566,8 +566,7 @@ function hashPhase(id: string): number {
 function strollBlocked(x: number, y: number, selfId: string): boolean {
   const self = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === selfId);
   const nickname = self?.nickname ?? "Mây Hồng";
-  const worldW = 390 * LOBBY_WORLD.viewportWidthScale;
-  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  const { worldW, worldH } = lobbyWorldSize(390, 844);
   if (lobbyFigureHitsChrome(x, y, nickname)) return true;
   const mine = lobbyFigureBox(x, y, nickname, worldW, worldH);
   return lobbyShownSamples().some(
