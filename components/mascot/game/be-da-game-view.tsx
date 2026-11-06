@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
+import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
 import type { SpaNotice } from "@/lib/mascot/game/spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
@@ -25,6 +26,8 @@ import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { sessionGate } from "@/lib/routine/session-window";
+import { lookArt } from "@/lib/mascot/game/shell/art";
+import type { ShellSnapshot } from "@/lib/mascot/game/shell/types";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
@@ -665,6 +668,24 @@ function Room({
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [pixi, setPixi] = useState(true);
+  const roomArt = lookArt(player, look, false);
+  const snapRef = useRef<ShellSnapshot>({ scene: "room", sky, sprites: [] });
+  snapRef.current = {
+    scene: "room",
+    sky,
+    sprites: [
+      {
+        id: "you",
+        x: 0.5,
+        y: 0.62,
+        facing: "right",
+        art: roomArt,
+        local: true,
+      },
+    ],
+  };
   const [cabinetOpen, setCabinetOpen] = useState(false);
   const cabinetTimer = useRef<number | null>(null);
   useEffect(() => () => {
@@ -679,7 +700,16 @@ function Room({
     }, 300);
   }
   return (
-    <div className="beda-scene" data-testid="beda-room">
+    <div ref={frameRef} className={pixi ? "beda-scene is-pixi" : "beda-scene"} data-testid="beda-room">
+      {pixi ? (
+        <BeDaPixiStage
+          scene="room"
+          art={roomArt.join(" ")}
+          snapshot={() => snapRef.current}
+          labels={frameRef}
+          onError={() => setPixi(false)}
+        />
+      ) : null}
       <div className="beda-room-wall" />
       <div className="beda-room-stripes" />
       <div className="beda-room-floor" />
@@ -773,9 +803,9 @@ function Room({
       ) : null}
 
       {showHero ? (
-      <div className="beda-hero-wrap" data-testid="beda-hero">
+      <div className="beda-hero-wrap" data-testid="beda-hero" data-art={roomArt.join(" ")}>
         <Bubble kind={bubbleKind} />
-        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+        {pixi ? null : <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />}
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">

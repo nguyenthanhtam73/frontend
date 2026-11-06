@@ -175,6 +175,8 @@ export function useLobbyMotion(input: {
   actors: readonly ActorSpot[];
   onWalk: (x: number, y: number, pace?: "walk" | "idle") => void;
   onEmptyTap?: () => void;
+  /** The Pixi shell owns the lobby loop when this is false. */
+  enabled?: boolean;
 }) {
   const youProp = useRef(input.you);
   const actorsProp = useRef(input.actors);
@@ -198,6 +200,7 @@ export function useLobbyMotion(input: {
   });
 
   useLayoutEffect(() => {
+    if (input.enabled === false) return;
     const frame = input.frameRef.current;
     const world = input.worldRef.current;
     if (!frame || !world) return;
@@ -660,7 +663,7 @@ export function useLobbyMotion(input: {
       frame.removeEventListener("pointercancel", up);
       media.removeEventListener("change", onReduce);
     };
-  }, [input.frameRef, input.worldRef]);
+  }, [input.enabled, input.frameRef, input.worldRef]);
 
   return api;
 }
