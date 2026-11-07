@@ -103,6 +103,19 @@ export function sameGameLook(a: GameLook, b: GameLook): boolean {
   return a.outfit === b.outfit && a.hair === b.hair && a.clip === b.clip;
 }
 
+/**
+ * Closing the closet keeps the outfit just picked.
+ * "care" is the personal room. "wardrobe" means the save failed and the closet stays open.
+ */
+export function tabAfterWardrobeClose(
+  draft: GameLook,
+  equipped: GameLook,
+  save: (look: GameLook) => boolean,
+): "care" | "wardrobe" {
+  if (sameGameLook(draft, equipped)) return "care";
+  return save(draft) ? "care" : "wardrobe";
+}
+
 /** False when the device refuses the write. The caller keeps the previous look. */
 export function saveGameLook(storage: Store, look: GameLook): boolean {
   try {

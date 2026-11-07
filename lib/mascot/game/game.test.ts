@@ -15,6 +15,7 @@ import {
   readGameLook,
   sameGameLook,
   saveGameLook,
+  tabAfterWardrobeClose,
   writeGameLook,
   type GameLook,
 } from "./look";
@@ -369,6 +370,22 @@ describe("game closet", () => {
     assert.equal(saveGameLook(store, next), true);
     assert.equal(sameGameLook(readGameLook(store) ?? DEFAULT_GAME_LOOK, next), true);
   });
+
+  it("returns to the personal room with the outfit just picked", () => {
+    const equipped = DEFAULT_GAME_LOOK;
+    const picked: GameLook = { ...DEFAULT_GAME_LOOK, outfit: "outfit_ao_thu" };
+    const saved: GameLook[] = [];
+    assert.equal(
+      tabAfterWardrobeClose(picked, equipped, (look) => {
+        saved.push(look);
+        return true;
+      }),
+      "care",
+    );
+    assert.deepEqual(saved, [picked]);
+    assert.equal(tabAfterWardrobeClose(equipped, equipped, () => false), "care");
+    assert.equal(tabAfterWardrobeClose(picked, equipped, () => false), "wardrobe");
+  });
 });
 
 describe("game path", () => {
@@ -689,7 +706,7 @@ describe("game layout", () => {
     assert.match(css, /\.beda-cabinet\s*\{[^}]*bottom:\s*41\.6%/);
     assert.match(css, /\.beda-cabinet\s*\{[^}]*width:\s*12%/);
     assert.match(css, /\.beda-cabinet\s*\{[^}]*z-index:\s*2/);
-    assert.match(css, /min-width:\s*768px[\s\S]*\.beda-hero-wrap\s*\{[^}]*clamp\(340px,\s*48vmin,\s*520px\)/);
+    assert.match(css, /min-width:\s*768px[\s\S]*\.beda-hero-wrap\s*\{[^}]*clamp\(220px,\s*26vw,\s*300px\)/);
     assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*max\(130%,\s*130vh\)/);
     assert.match(css, /\.beda-lobby-world\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/);
     assert.match(css, /\.beda-lobby-sky\s*\{[^}]*left:\s*-60%/);

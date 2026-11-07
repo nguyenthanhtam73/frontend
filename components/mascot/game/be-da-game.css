@@ -32,27 +32,14 @@
   touch-action: none;
 }
 
-.beda-scene.is-pixi .beda-room-wall,
-.beda-scene.is-pixi .beda-room-stripes,
-.beda-scene.is-pixi .beda-room-floor,
-.beda-scene.is-pixi .beda-room-planks,
-.beda-scene.is-pixi .beda-baseboard,
-.beda-scene.is-pixi .beda-window,
-.beda-scene.is-pixi .beda-window-bar,
-.beda-scene.is-pixi .beda-shelf,
-.beda-scene.is-pixi .beda-mirror,
-.beda-scene.is-pixi .beda-sink,
-.beda-scene.is-pixi .beda-bed,
-.beda-scene.is-pixi .beda-plant {
-  visibility: hidden;
-}
-
 .beda-scene.is-pixi .beda-hero-wrap {
   pointer-events: none;
 }
 
 .beda-scene.is-pixi .beda-pixi-host {
   z-index: 3;
+  /* Bé Da and the room art are DOM. The canvas stays mounted for the scene flag. */
+  visibility: hidden;
 }
 
 .beda-scene.is-pixi .beda-cabinet {
@@ -114,6 +101,7 @@
 .beda-scene {
   position: absolute;
   inset: 0;
+  overflow: clip;
 }
 
 .beda-room-wall {
@@ -143,7 +131,7 @@
   left: -10%;
   right: -10%;
   top: 58%;
-  height: 70%;
+  height: 42%;
   background: repeating-linear-gradient(90deg, transparent 0 62px, rgba(185, 130, 106, 0.35) 62px 64px);
   transform: perspective(480px) rotateX(42deg);
   transform-origin: top center;
@@ -163,9 +151,9 @@
 .beda-window {
   position: absolute;
   left: 5%;
-  top: 16%;
+  top: 240px;
   width: min(30vw, 132px);
-  height: min(36vw, 168px);
+  height: min(24vw, 88px);
   border-radius: 70px 70px 12px 12px;
   border: 8px solid #fff8f2;
   overflow: hidden;
@@ -175,7 +163,7 @@
 .beda-window-bar {
   position: absolute;
   left: 3%;
-  top: calc(16% - 14px);
+  top: 226px;
   width: min(34vw, 156px);
   height: 12px;
   border-radius: 8px;
@@ -1836,9 +1824,51 @@
   transform: translateX(-50%);
 }
 
+.beda-wardrobe-backdrop {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.beda-sheet-handle {
+  display: block;
+  width: 48px;
+  height: 5px;
+  margin: 0 auto 8px;
+  border-radius: 99px;
+  background: #e7cfc6;
+}
+
+.beda-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.beda-sheet-x {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #ffe4ea;
+  color: #8a4b3a;
+}
+
 .beda-sheet h2 {
   margin: 0 0 6px;
   font-size: 18px;
+}
+
+.beda-sheet-head h2 {
+  margin: 0;
 }
 
 .beda-sheet p {
@@ -1984,7 +2014,7 @@
 .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
   top: calc(58px + env(safe-area-inset-top));
   bottom: auto;
-  height: calc(50vh - 58px - env(safe-area-inset-top));
+  height: calc(46vh - 58px - env(safe-area-inset-top));
   width: min(300px, 82vw);
   z-index: 8;
   justify-content: center;
@@ -2030,7 +2060,7 @@
 }
 
 .beda-game[data-tab="wardrobe"] .beda-sheet {
-  top: 50vh;
+  top: 46vh;
   right: 12px;
   bottom: calc(var(--beda-nav-reserve) + 8px);
   left: 12px;
@@ -2175,7 +2205,8 @@
 
   .beda-hero-wrap {
     bottom: calc(var(--beda-nav-reserve) + 28px);
-    width: clamp(340px, 48vmin, 520px);
+    /* Wide enough to read, narrow enough to leave the closet and the window clear. */
+    width: clamp(220px, 26vw, 300px);
   }
 
   .beda-bubble {
@@ -2188,7 +2219,7 @@
   }
 
   .beda-quest {
-    width: min(460px, 46vw);
+    width: min(320px, 36vw);
     left: 28px;
     top: calc(108px + env(safe-area-inset-top));
   }
@@ -2199,13 +2230,14 @@
   }
 
   .beda-window {
-    width: min(18vw, 210px);
-    height: min(24vw, 260px);
-    top: 14%;
+    width: min(18vw, 180px);
+    height: min(22vh, 200px);
+    top: 248px;
   }
 
   .beda-window-bar {
-    width: min(22vw, 240px);
+    width: min(20vw, 200px);
+    top: 234px;
   }
 
   .beda-chest-stage {
@@ -2229,6 +2261,28 @@
   .beda-nav-orb {
     width: 80px;
     height: 80px;
+  }
+
+  @media (max-height: 900px) {
+    .beda-hero-wrap {
+      width: min(220px, 34vh);
+      bottom: calc(var(--beda-nav-reserve) + 12px);
+    }
+
+    .beda-bubble {
+      margin-bottom: 6px;
+      padding: 8px 12px;
+      font-size: 15px;
+    }
+
+    .beda-window {
+      top: 228px;
+      height: min(18vh, 150px);
+    }
+
+    .beda-window-bar {
+      top: 214px;
+    }
   }
 
   .beda-game[data-tab="wardrobe"] .beda-hero-wrap {

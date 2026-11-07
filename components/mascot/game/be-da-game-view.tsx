@@ -15,7 +15,7 @@ import {
   lobbyActors,
   type LobbyActor,
 } from "@/lib/mascot/game/lobby-live";
-import { gameDress, isGameClip, isGameHair, isGameOutfit, sameGameLook, type GameLook, type GamePose } from "@/lib/mascot/game/look";
+import { gameDress, isGameClip, isGameHair, isGameOutfit, sameGameLook, tabAfterWardrobeClose, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import {
   equippedGameLook,
   grantedWardrobeItems,
@@ -218,10 +218,48 @@ export function BeDaGameView({
   const [draft, setDraft] = useState(equipped);
   const [tryFlash, setTryFlash] = useState(0);
   const shownLook = wardrobeOpen ? draft : equipped;
+  const wardrobeOpenRef = useRef(wardrobeOpen);
+  const closingWardrobe = useRef(false);
+  wardrobeOpenRef.current = wardrobeOpen;
+  const dismissWardrobe = () => {
+    if (closingWardrobe.current) return true;
+    if (tabAfterWardrobeClose(draft, equipped, onLook) === "wardrobe") return false;
+    closingWardrobe.current = true;
+    setCareSheet(false);
+    setMissionSheet(false);
+    onTab("care");
+    const marked = (history.state as { bedaWardrobe?: boolean } | null)?.bedaWardrobe === true;
+    if (marked) history.back();
+    return true;
+  };
+  const dismissRef = useRef(dismissWardrobe);
+  dismissRef.current = dismissWardrobe;
 
   useEffect(() => {
     setDraft(equippedGameLook(look, { admin: closetAdmin }));
   }, [look, wardrobeOpen, closetAdmin]);
+
+  useEffect(() => {
+    if (!wardrobeOpen) return;
+    closingWardrobe.current = false;
+    const prior = history.state as { bedaWardrobe?: boolean } | null;
+    if (!prior?.bedaWardrobe) history.pushState({ bedaWardrobe: true }, "");
+    const onPop = () => {
+      if (!wardrobeOpenRef.current || closingWardrobe.current) return;
+      if (!dismissRef.current()) history.pushState({ bedaWardrobe: true }, "");
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      dismissRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [wardrobeOpen]);
 
   useEffect(() => {
     if (!wardrobeOpen) return;
@@ -362,20 +400,30 @@ export function BeDaGameView({
       ) : null}
 
       {wardrobeOpen ? (
-        <Wardrobe
-          wornIds={wornIds}
-          closetAdmin={closetAdmin}
-          wornLook={wornLook}
-          preview={draft}
-          onTry={(next) => {
-            setDraft(next);
-            setTryFlash((n) => n + 1);
-          }}
-          onWear={() => {
-            if (onLook(draft)) return;
-            setDraft(equipped);
-          }}
-        />
+        <>
+          <button
+            type="button"
+            className="beda-wardrobe-backdrop"
+            data-testid="beda-wardrobe-backdrop"
+            aria-label={t("game.careClose")}
+            onClick={dismissWardrobe}
+          />
+          <Wardrobe
+            wornIds={wornIds}
+            closetAdmin={closetAdmin}
+            wornLook={wornLook}
+            preview={draft}
+            onTry={(next) => {
+              setDraft(next);
+              setTryFlash((n) => n + 1);
+            }}
+            onWear={() => {
+              if (onLook(draft)) return;
+              setDraft(equipped);
+            }}
+            onClose={dismissWardrobe}
+          />
+        </>
       ) : null}
 
       {toast ? <Toast toast={toast} /> : null}
@@ -598,6 +646,7 @@ export function BeDaGameView({
               aria-current={on ? "page" : undefined}
               data-testid={`beda-nav-${item.id}`}
               onClick={() => {
+                if (wardrobeOpen && item.id !== "wardrobe" && !dismissWardrobe()) return;
                 if (item.id === "care" && !spaOpen) {
                   setMissionSheet(false);
                   onTab("care");
@@ -675,16 +724,7 @@ function Room({
   snapRef.current = {
     scene: "room",
     sky,
-    sprites: [
-      {
-        id: "you",
-        x: 0.5,
-        y: 0.62,
-        facing: "right",
-        art: roomArt,
-        local: true,
-      },
-    ],
+    sprites: [],
   };
   const [cabinetOpen, setCabinetOpen] = useState(false);
   const cabinetTimer = useRef<number | null>(null);
@@ -810,9 +850,7 @@ function Room({
         data-wardrobe-preview={hideCards ? "on" : "off"}
       >
         <Bubble kind={bubbleKind} />
-        {!pixi || hideCards ? (
-          <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
-        ) : null}
+        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
@@ -937,6 +975,7 @@ function Wardrobe({
   preview,
   onTry,
   onWear,
+  onClose,
 }: {
   wornIds: string[];
   closetAdmin: boolean;
@@ -944,6 +983,7 @@ function Wardrobe({
   preview: GameLook;
   onTry: (look: GameLook) => void;
   onWear: () => void;
+  onClose: () => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
@@ -952,9 +992,45 @@ function Wardrobe({
   const hairs = grantedWardrobeItems("hair", access);
   const clips = grantedWardrobeItems("clip", access);
   const wearingSaved = wornLook != null && sameGameLook(wornLook, preview);
+  const drag = useRef<{ x: number; y: number; top: number } | null>(null);
   return (
-    <section className="beda-card beda-sheet" data-testid="beda-wardrobe" aria-label={t("game.wardrobe")}>
-      <h2>{t("game.wardrobe")}</h2>
+    <section
+      className="beda-card beda-sheet"
+      data-testid="beda-wardrobe"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("game.wardrobe")}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        drag.current = { x: event.clientX, y: event.clientY, top: event.currentTarget.scrollTop };
+      }}
+      onPointerUp={(event) => {
+        const start = drag.current;
+        drag.current = null;
+        if (!start) return;
+        const dy = event.clientY - start.y;
+        const dx = event.clientX - start.x;
+        if (start.top <= 0 && dy > 72 && Math.abs(dx) < 56) onClose();
+      }}
+      onPointerCancel={() => {
+        drag.current = null;
+      }}
+    >
+      <span className="beda-sheet-handle" aria-hidden />
+      <div className="beda-sheet-head">
+        <h2>{t("game.wardrobe")}</h2>
+        <button
+          type="button"
+          className="beda-sheet-x"
+          data-testid="beda-wardrobe-close"
+          aria-label={t("game.careClose")}
+          onClick={onClose}
+        >
+          <svg viewBox="0 0 32 32" className="beda-ico-sm" aria-hidden>
+            <path d="M9 9l14 14M23 9 9 23" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
       <p>{t("game.wearing")}</p>
       <ul className="beda-worn">
         {outfits.some((item) => item.id === preview.outfit) ? <li>{t(`game.look.${preview.outfit}`)}</li> : null}
