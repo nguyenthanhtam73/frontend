@@ -101,6 +101,10 @@ describe("Bé Da game screen", () => {
     assert.match(html, /7/);
     assert.match(html, /chuỗi ngày/);
     assert.match(html, /data-testid="beda-hero"/);
+    assert.match(html, /beda-hero-wrap is-floor/);
+    assert.match(html, /data-floor="on"/);
+    assert.match(html, /data-testid="beda-room-shadow"/);
+    assert.match(html, /data-walk-mask="\/mascot\/room\/walk-mask\.png\?v=[0-9a-f]{10}"/);
     assert.match(html, /beda-hero-wrap/);
     assert.match(html, /data-testid="beda-pixi"/);
     assert.match(html, /data-scene="room"/);
@@ -146,6 +150,8 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-wardrobe-backdrop"/);
     assert.match(html, /aria-label="Đóng"/);
     assert.match(html, /data-wardrobe-preview="on"/);
+    assert.match(html, /data-floor="off"/);
+    assert.equal(html.includes("beda-hero-wrap is-floor"), false);
     assert.match(html, /data-testid="beda-hero"[\s\S]*data-testid="be-da-figure"/);
     assert.match(html, /\/mascot\/outfits\/outfit_pajamas\.svg/);
     assert.equal(html.includes("/mascot/outfits/outfit_ao_dai.svg"), false);
