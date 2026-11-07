@@ -747,6 +747,10 @@
     "submitErrorGeneric": "Gửi thất bại ({status}): {detail}. Bạn có thể sửa và thử lại — dữ liệu vẫn được giữ.",
     "analyzingCoach": "Đang đọc ảnh và soạn lời khuyên — có thể mất vài phút, bạn cứ để tab mở nhé.",
     "coachBeforeSubmit": "Gửi để nhận: tóm tắt hôm nay, gợi ý điều chỉnh chăm da, điều nên cẩn thận, và nhắc an toàn.",
+    "maintenance": {
+      "title": "Hệ thống đang bảo trì",
+      "body": "Ảnh của bạn đã được lưu an toàn. Kết quả sẽ có sau ít phút, bạn quay lại xem nhé."
+    },
     "beforeAfterShare": {
       "cta": "Chia sẻ thẻ trước · sau",
       "title": "Trước · sau của mình",

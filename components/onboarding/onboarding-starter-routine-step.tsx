@@ -16,7 +16,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { ManualSkinFallbackBanner } from "@/components/onboarding/onboarding-ai-error-panel";
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { FriendlyNotice } from "@/components/onboarding/onboarding-ui";
 import { Button } from "@/components/ui/button";
 import { logAffiliateClick } from "@/lib/api/affiliate";
@@ -792,12 +792,17 @@ export function OnboardingStepStarterRoutine({
       {/* The user uploaded photos and the read failed — say so, or this reads
           as the AI's verdict on their skin. */}
       {photoReadFailed && onRetryAnalyze ? (
-        <ManualSkinFallbackBanner
-          title={t("aiLoading.photoFallbackTitle")}
-          body={t("aiLoading.photoFallbackBody")}
-          retryLabel={t("aiLoading.retryAnalyzeAiShort")}
-          onRetryAi={onRetryAnalyze}
-        />
+        <div className="space-y-2">
+          <AnalysisMaintenanceNote />
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onRetryAnalyze}
+          >
+            {t("aiLoading.retryAnalyzeAiShort")}
+          </Button>
+        </div>
       ) : null}
 
       {/* Compact header — summary + guidance + AM/PM win the first viewport. */}

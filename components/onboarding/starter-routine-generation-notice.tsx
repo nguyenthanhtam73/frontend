@@ -3,6 +3,7 @@
 import { RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { OnboardingAiLoading } from "@/components/onboarding/onboarding-ai-loading";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +14,8 @@ type StarterRoutineGenerationNoticeProps = {
   isGuest?: boolean;
   retryLoading?: boolean;
   onRetryAi?: () => void;
+  /** True when a face photo was saved with this routine. */
+  photosSaved?: boolean;
 };
 
 export function StarterRoutineGenerationNotice({
@@ -22,6 +25,7 @@ export function StarterRoutineGenerationNotice({
   isGuest = false,
   retryLoading = false,
   onRetryAi,
+  photosSaved = false,
 }: StarterRoutineGenerationNoticeProps) {
   const t = useTranslations("coachWelcome");
 
@@ -38,7 +42,13 @@ export function StarterRoutineGenerationNotice({
         </div>
       ) : null}
 
-      {(showFallbackBanner || showRetryAi) && !isGeneratingRoutine ? (
+      {showFallbackBanner && photosSaved && !isGeneratingRoutine ? (
+        <AnalysisMaintenanceNote />
+      ) : null}
+
+      {(showFallbackBanner || showRetryAi) &&
+      !(showFallbackBanner && photosSaved) &&
+      !isGeneratingRoutine ? (
         <div
           className="space-y-3 rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-3 text-sm leading-relaxed text-amber-950/80 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-100/90"
           role="status"

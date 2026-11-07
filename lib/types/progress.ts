@@ -14,6 +14,11 @@ export type ProgressEntryDTO = {
   symptoms?: string[];
   image_urls: string[]; // public "/uploads/..." paths
   status: "pending" | "processing" | "completed" | "failed";
+  /**
+   * Optional mirror of skin-check `analysis_pending`. Omitted on the progress
+   * timeline until the API sends it, and on older responses.
+   */
+  analysis_pending?: boolean;
   gauges?: SkinCoachScoreGaugesDTO;
   /** One-line coach summary for compact timeline cards (already truncated server-side). */
   snippet?: string;

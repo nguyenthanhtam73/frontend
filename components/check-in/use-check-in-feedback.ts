@@ -4,10 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  fetchSkinCheckResult,
-  isAnalysisSettled,
-} from "@/lib/api/skin-check";
+import { fetchSkinCheckResult } from "@/lib/api/skin-check";
+import { analysisPollOutcome } from "@/lib/check-in/analysis-maintenance";
 import { checkInReminderQueryKey } from "@/lib/api/check-in-reminder";
 import { streakQueryKey } from "@/lib/api/streak";
 import {
@@ -61,18 +59,6 @@ function elapsedMs(startedAt: number): number {
 
 function pollDelayMs(elapsed: number): number {
   return elapsed < POLL_PHASE_SWITCH_MS ? POLL_FAST_MS : POLL_SLOW_MS;
-}
-
-function isAnalysisFailed(payload: CreateSkinCheckResponseDTO): boolean {
-  const status = payload.analysis.status;
-  const coachErr = payload.analysis.coach?.error_message;
-  return status === "failed" || (!!coachErr && status !== "completed");
-}
-
-function isAnalysisComplete(payload: CreateSkinCheckResponseDTO): boolean {
-  return (
-    payload.analysis.status === "completed" && !!payload.analysis.coach
-  );
 }
 
 /**
@@ -235,17 +221,13 @@ export function useCheckInFeedback() {
       };
       syncPayload(merged);
 
-      if (isAnalysisComplete(merged)) {
+      // analysis_pending does not end the wait: a pending job keeps polling.
+      const outcome = analysisPollOutcome(merged);
+      if (outcome === "completed") {
         settleCompleted(merged);
         return "done";
       }
-
-      if (isAnalysisFailed(merged)) {
-        settleFailed(merged);
-        return "done";
-      }
-
-      if (isAnalysisSettled(merged.analysis.status)) {
+      if (outcome === "failed") {
         settleFailed(merged);
         return "done";
       }
@@ -475,11 +457,12 @@ export function useCheckInFeedback() {
       }
 
       const data = result.data;
-      if (isAnalysisComplete(data)) {
+      const outcome = analysisPollOutcome(data);
+      if (outcome === "completed") {
         settleCompleted(data);
         return;
       }
-      if (isAnalysisFailed(data)) {
+      if (outcome === "failed") {
         settleFailed(data);
         return;
       }

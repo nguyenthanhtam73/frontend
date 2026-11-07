@@ -3,10 +3,12 @@
 import { Clock3, Loader2, ScanSearch, Sparkles, Tag } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { ProgressPhoto } from "@/components/progress/progress-photo";
 import { useProgressReanalyze } from "@/components/progress/use-progress-reanalyze";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
 import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
 import { canShowReanalyzeCta } from "@/lib/progress/reanalyze";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
@@ -35,7 +37,11 @@ export function ProgressEntryCard({
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
   const { inFlight, run } = useProgressReanalyze(entry, onEntryChange);
-  const showReanalyze = canShowReanalyzeCta(entry) || inFlight;
+  const maintenance = showsAnalysisMaintenance({
+    analysisPending: entry.analysis_pending,
+    status: entry.status,
+  });
+  const showReanalyze = inFlight || (!maintenance && canShowReanalyzeCta(entry));
 
   return (
     <Card
@@ -83,15 +89,13 @@ export function ProgressEntryCard({
             </span>
           </div>
 
-          {entry.snippet ? (
+          {maintenance ? null : entry.snippet ? (
             <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
               <Sparkles className="mr-1 inline size-3 text-primary" aria-hidden />
               {entry.snippet}
             </p>
           ) : entry.status === "pending" || entry.status === "processing" ? (
             <p className="text-xs italic text-muted-foreground">{t("processing")}</p>
-          ) : entry.status === "failed" ? (
-            <p className="text-xs text-destructive/80">{t("failed")}</p>
           ) : entry.user_note ? (
             <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">{entry.user_note}</p>
           ) : null}
@@ -114,6 +118,12 @@ export function ProgressEntryCard({
           ) : null}
         </CardContent>
       </div>
+
+      {maintenance ? (
+        <div className="px-3 pb-3 sm:px-4">
+          <AnalysisMaintenanceNote compact />
+        </div>
+      ) : null}
 
       {showReanalyze ? (
         <div className="border-t border-border/60 px-3 pb-3 pt-2 sm:px-4 sm:pb-4">
