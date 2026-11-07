@@ -3422,6 +3422,7 @@
       "spaGoRoom": "Go to this room",
       "spaOneRoom": "You are in room {name}. Each person can only be in 1 room. The room ends on {date}, then you can create or join a new one.",
       "spaOneRoomNoDate": "You are in room {name}. Each person can only be in 1 room.",
+      "spaEnded": "This room has ended. Create or join a new one.",
       "spaInvite": "Room invite code",
       "spaCopy": "Copy",
       "spaCopied": "Code copied.",

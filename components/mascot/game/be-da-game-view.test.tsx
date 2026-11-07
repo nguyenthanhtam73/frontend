@@ -392,6 +392,43 @@ describe("Bé Da game screen", () => {
     assert.match(text, /Invite/);
   });
 
+  it("tells you an ended room is over and offers a new one", () => {
+    const html = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 1,
+        cap: 8,
+        guests: [],
+        notice: "ended",
+      },
+    });
+    const text = visibleText(html);
+    assert.match(text, /Phòng này đã kết thúc, bạn tạo hoặc vào phòng mới nhé/);
+    assert.match(html, /data-testid="beda-ended-create"/);
+    assert.match(text, /Tạo phòng/);
+    assert.match(html, /data-testid="beda-ended-join"/);
+    assert.match(text, /Nhập mã/);
+    assert.equal(html.includes("Mời bạn"), false);
+    assert.equal(html.includes('data-testid="beda-spa-code"'), false);
+    const english = renderGame(
+      {
+        spa: {
+          code: "DA7K2M",
+          count: 1,
+          cap: 8,
+          guests: [],
+          notice: "ended",
+        },
+      },
+      en,
+      "en",
+    );
+    const englishText = visibleText(english);
+    assert.match(englishText, /This room has ended\. Create or join a new one\./);
+    assert.match(englishText, /Create a room/);
+    assert.match(englishText, /Enter a code/);
+  });
+
   it("offers Vào phòng for a room this account already has", () => {
     const html = renderGame({ tab: "lobby", myRooms: ["DA7K2M"] });
     assert.match(html, /data-testid="beda-reenter-room"/);

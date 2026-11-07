@@ -260,7 +260,7 @@ export function useSpaRoom(options: {
         }
       } catch (err) {
         const problem = spaProblemFromError(err);
-        if (problem === "missing" || problem === "bad-code" || problem === "full") {
+        if (problem === "missing" || problem === "bad-code" || problem === "full" || problem === "ended") {
           if (!cancelled) setNotice(problem);
           return;
         }

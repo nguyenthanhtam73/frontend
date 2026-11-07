@@ -3371,6 +3371,42 @@
   box-shadow: 0 4px 0 #1d6e62;
 }
 
+.beda-room-ended form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.beda-room-ended input {
+  min-width: 0;
+  flex: 1;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0 14px;
+  color: #2c241c;
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.beda-room-ended .is-join,
+.beda-room-ended form button {
+  background: #fff;
+  color: #1d6e62;
+  box-shadow: 0 4px 0 #d7ece8;
+}
+
+.beda-room-ended .beda-ended-bad {
+  margin: 8px 0 0;
+  color: #9a123c;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
 @media (min-width: 768px) {
   .beda-spa {
     --beda-spa-friend: 136px;

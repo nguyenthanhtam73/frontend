@@ -86,6 +86,9 @@ describe("spa room HTTP errors", () => {
     assert.equal(spaRoomProblem(409, "too_many_rooms"), "too-many");
     assert.equal(spaRoomProblem(409, "already_in_room"), "already-in");
     assert.equal(spaRoomProblem(409, "already_in_a_room"), "already-in");
+    assert.equal(spaRoomProblem(409, "room_ended"), "ended");
+    assert.equal(spaRoomProblem(null, "room_ended"), "ended");
+    assert.equal(spaRoomProblem(409, null), "too-many");
     assert.equal(spaRoomProblem(429, "rate_limited"), "rate");
     assert.equal(spaRoomProblem(404, "room_not_found"), "missing");
     assert.equal(spaRoomProblem(404, null), "missing");

@@ -10,11 +10,14 @@ import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
 import {
+  SPA_CODE_ALPHABET,
   SPA_ROOM_CAP,
+  SPA_ROOM_CODE_LENGTH,
   SPA_ROOM_LIFE_DAYS,
   SPA_SEATS,
   SPA_YOU,
   formatRoomEndDate,
+  normalizeRoomCode,
   rankCareStreaks,
   roomInviteUrl,
   roomShareChoice,
@@ -60,7 +63,7 @@ export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
               ? t("game.spaRate")
               : notice === "too-many"
                 ? t("game.spaTooMany")
-                : notice === "already-in"
+                : notice === "already-in" || notice === "ended"
                   ? null
                 : notice === "member"
                   ? t("game.spaMember")
@@ -92,6 +95,8 @@ export function BeDaSpaRoom({
   onLoadBoard,
   inviteInitiallyOpen = false,
   onGoToRoom,
+  onCreateRoom,
+  creatingRoom = false,
 }: {
   locale: string;
   player: BeDaView;
@@ -110,9 +115,14 @@ export function BeDaSpaRoom({
   onLoadBoard?: () => Promise<readonly SpaBoardRow[]>;
   inviteInitiallyOpen?: boolean;
   onGoToRoom?: (code: string) => void;
+  onCreateRoom?: () => void;
+  creatingRoom?: boolean;
 }) {
   const t = useTranslations("mascot");
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
+  const [endedJoin, setEndedJoin] = useState(false);
+  const [endedDraft, setEndedDraft] = useState("");
+  const [endedCodeBad, setEndedCodeBad] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
   const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>([]);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -149,7 +159,7 @@ export function BeDaSpaRoom({
               ? t("game.spaRate")
               : room.notice === "too-many"
                 ? t("game.spaTooMany")
-                : room.notice === "already-in"
+                : room.notice === "already-in" || room.notice === "ended"
                   ? null
                 : room.notice === "member"
                   ? t("game.spaMember")
@@ -316,7 +326,7 @@ export function BeDaSpaRoom({
           <strong>{roomTitle}</strong>
           <span>{roomMeta}</span>
         </div>
-        {lock ? null : (
+        {lock || room.notice === "ended" ? null : (
           <button type="button" className="beda-invite-open" data-testid="beda-invite-open" onClick={() => setInviteOpen(true)}>
             {t("game.spaInviteOpen")}
           </button>
@@ -340,6 +350,63 @@ export function BeDaSpaRoom({
         </p>
       ) : null}
 
+      {room.notice === "ended" && !lock ? (
+        <div className="beda-room-lock beda-room-ended" data-testid="beda-room-ended" role="dialog" aria-modal="true">
+          <p>{t("game.spaEnded")}</p>
+          <button
+            type="button"
+            data-testid="beda-ended-create"
+            disabled={creatingRoom}
+            onClick={() => onCreateRoom?.()}
+          >
+            {t("game.spaCreate")}
+          </button>
+          {endedJoin ? (
+            <form
+              data-testid="beda-ended-code-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const next = normalizeRoomCode(endedDraft);
+                if (!next) {
+                  setEndedCodeBad(true);
+                  return;
+                }
+                setEndedCodeBad(false);
+                onGoToRoom?.(next);
+              }}
+            >
+              <input
+                data-testid="beda-ended-code"
+                aria-label={t("game.spaCodeLabel")}
+                value={endedDraft}
+                maxLength={SPA_ROOM_CODE_LENGTH}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => {
+                  const next = event.target.value
+                    .toUpperCase()
+                    .split("")
+                    .filter((char) => SPA_CODE_ALPHABET.includes(char))
+                    .join("")
+                    .slice(0, SPA_ROOM_CODE_LENGTH);
+                  setEndedDraft(next);
+                  setEndedCodeBad(false);
+                }}
+              />
+              <button type="submit" data-testid="beda-ended-join-submit">
+                {t("game.spaJoin")}
+              </button>
+            </form>
+          ) : (
+            <button type="button" className="is-join" data-testid="beda-ended-join" onClick={() => setEndedJoin(true)}>
+              {t("game.spaEnter")}
+            </button>
+          )}
+          {endedCodeBad ? <p className="beda-ended-bad">{t("game.spaCodeBad")}</p> : null}
+        </div>
+      ) : null}
+
       {lock ? (
         <div className="beda-room-lock" data-testid="beda-room-lock" role="dialog" aria-modal="true">
           <p>
@@ -353,7 +420,7 @@ export function BeDaSpaRoom({
         </div>
       ) : null}
 
-      {inviteOpen && !lock ? (
+      {inviteOpen && !lock && room.notice !== "ended" ? (
         <>
           <button
             type="button"

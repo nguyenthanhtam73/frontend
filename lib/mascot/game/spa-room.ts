@@ -182,6 +182,7 @@ export type SpaNotice =
   | "rate"
   | "too-many"
   | "already-in"
+  | "ended"
   | "member"
   | "offline"
   | null;
@@ -469,7 +470,8 @@ export function spaHeadCount(input: {
 /**
  * Map a room HTTP status or a socket error code onto a short notice.
  * `not_available` stays null so the sample spa can remain.
- * 409 is `room_full`, `too_many_rooms`, or `already_in_room` by code.
+ * 409 is `room_full`, `too_many_rooms`, `already_in_room`, or `room_ended` by code.
+ * A socket error uses the same code with no HTTP status.
  * 404 is a missing room. 429 is `rate_limited`.
  */
 export function isAlreadyInRoomCode(code: string | null | undefined): boolean {
@@ -481,6 +483,7 @@ export function spaRoomProblem(status: number | null, code: string | null): Excl
   if (name === "room_full" || name === "full") return "full";
   if (name === "too_many_rooms") return "too-many";
   if (isAlreadyInRoomCode(name)) return "already-in";
+  if (name === "room_ended" || name === "ended") return "ended";
   if (name === "rate_limited") return "rate";
   if (name === "room_not_found" || name === "not_found" || name === "unknown_room") return "missing";
   if (name === "bad_code") return "bad-code";

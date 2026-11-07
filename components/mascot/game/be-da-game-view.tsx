@@ -341,6 +341,8 @@ export function BeDaGameView({
           onLoadBoard={onSpaBoard}
           inviteInitiallyOpen={spaInviteOpen}
           onGoToRoom={onJoinRoom}
+          onCreateRoom={onCreateRoom}
+          creatingRoom={creatingRoom}
         />
       ) : showLobby ? (
         <BeDaLobby
