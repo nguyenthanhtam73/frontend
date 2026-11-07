@@ -19,7 +19,15 @@ import {
   type LobbyFacing,
 } from "@/lib/mascot/game/lobby-live";
 import type { LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
-import { getSpaBoard, getSpaRoom, joinSpaRoom, leaveSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
+import {
+  getSpaBoard,
+  getSpaRoom,
+  isAlreadyInRoomError,
+  joinSpaRoom,
+  leaveSpaRoom,
+  roomLockFromError,
+  spaProblemFromError,
+} from "@/lib/mascot/game/spa-room-api";
 import { RoomConnection } from "@/lib/mascot/game/spa-room-socket";
 import {
   SPA_HIDE_KEY,
@@ -34,6 +42,7 @@ import {
   spaHeadCount,
   spaRoomProblem,
   type RoomClientFrame,
+  type RoomClock,
   type RoomServerMessage,
   type RoomSnapshot,
   type SpaGuest,
@@ -64,6 +73,9 @@ export function useSpaRoom(options: {
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
   const [youPose, setYouPose] = useState<GamePose | null>(null);
   const [nickname] = useState(readDeviceNickname);
+  const [conflict, setConflict] = useState<RoomClock | null>(null);
+  const [roomName, setRoomName] = useState("");
+  const [endsAt, setEndsAt] = useState<string | null>(null);
 
   const lookRef = useRef(look);
   const nickRef = useRef(nickname);
@@ -115,6 +127,9 @@ export function useSpaRoom(options: {
     setNotice(null);
     setServerCode(null);
     setPreviewCount(null);
+    setConflict(null);
+    setRoomName("");
+    setEndsAt(null);
     setRoom(emptyRoom(code));
 
     const joinFrame = (): RoomClientFrame => {
@@ -236,6 +251,8 @@ export function useSpaRoom(options: {
         const preview = await getSpaRoom(code);
         if (cancelled) return;
         setPreviewCount(preview.memberCount);
+        setRoomName(preview.name);
+        setEndsAt(preview.endsAt);
         setRoom((prev) => ({ ...prev, code: preview.code, cap: preview.cap, count: preview.memberCount }));
         if (preview.memberCount >= preview.cap && !preview.joined) {
           setNotice("full");
@@ -243,7 +260,7 @@ export function useSpaRoom(options: {
         }
       } catch (err) {
         const problem = spaProblemFromError(err);
-        if (problem === "missing" || problem === "bad-code" || problem === "full") {
+        if (problem === "missing" || problem === "bad-code" || problem === "full" || problem === "ended") {
           if (!cancelled) setNotice(problem);
           return;
         }
@@ -256,9 +273,19 @@ export function useSpaRoom(options: {
         }
         joinedRef.current = true;
         setPreviewCount(joined.memberCount);
+        setRoomName(joined.name);
+        setEndsAt(joined.endsAt);
         setRoom((prev) => ({ ...prev, code: joined.code, cap: joined.cap, count: joined.memberCount }));
       } catch (err) {
-        if (!cancelled) setNotice(spaProblemFromError(err));
+        if (!cancelled) {
+          const lock = roomLockFromError(err);
+          if (isAlreadyInRoomError(err) && lock && lock.code !== code) {
+            setConflict(lock);
+            setNotice("already-in");
+          } else {
+            setNotice(spaProblemFromError(err));
+          }
+        }
         return;
       }
       const plan = readCookiePlan();
@@ -388,6 +415,9 @@ export function useSpaRoom(options: {
     youPose,
     you,
     youStreak,
+    conflict,
+    roomName,
+    endsAt,
     loadBoard,
     emote,
     hide,

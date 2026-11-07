@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
@@ -10,15 +10,22 @@ import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
 import {
+  SPA_CODE_ALPHABET,
   SPA_ROOM_CAP,
+  SPA_ROOM_CODE_LENGTH,
+  SPA_ROOM_LIFE_DAYS,
   SPA_SEATS,
   SPA_YOU,
+  formatRoomEndDate,
+  normalizeRoomCode,
   rankCareStreaks,
   roomInviteUrl,
+  roomShareChoice,
   spaFootScale,
   topCareStreak,
-  type SpaBoardRow,
   zaloShareUrl,
+  type RoomClock,
+  type SpaBoardRow,
   type SpaGuest,
   type SpaNotice,
 } from "@/lib/mascot/game/spa-room";
@@ -33,6 +40,12 @@ export type SpaRoomState = {
   /** My last server position, when the room has sent one. */
   you?: { x: number; y: number } | null;
   youStreak?: number;
+  /** Friendly name. The header uses «Phòng bạn bè» when this is empty or just the code. */
+  name?: string;
+  /** Days still left in the 8-day room. Null when the end is unknown. */
+  daysLeft?: number | null;
+  /** Set when create/join answered 409 already_in_room for a different room. */
+  lock?: RoomClock | null;
 };
 
 export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
@@ -50,6 +63,8 @@ export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
               ? t("game.spaRate")
               : notice === "too-many"
                 ? t("game.spaTooMany")
+                : notice === "already-in" || notice === "ended"
+                  ? null
                 : notice === "member"
                   ? t("game.spaMember")
                   : notice === "offline"
@@ -75,10 +90,13 @@ export function BeDaSpaRoom({
   onAction,
   onHide,
   onLeave,
-  onLobby,
   onToggleSound,
   onWalk,
   onLoadBoard,
+  inviteInitiallyOpen = false,
+  onGoToRoom,
+  onCreateRoom,
+  creatingRoom = false,
 }: {
   locale: string;
   player: BeDaView;
@@ -95,9 +113,16 @@ export function BeDaSpaRoom({
   onToggleSound: () => void;
   onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
   onLoadBoard?: () => Promise<readonly SpaBoardRow[]>;
+  inviteInitiallyOpen?: boolean;
+  onGoToRoom?: (code: string) => void;
+  onCreateRoom?: () => void;
+  creatingRoom?: boolean;
 }) {
   const t = useTranslations("mascot");
-  const [copied, setCopied] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
+  const [endedJoin, setEndedJoin] = useState(false);
+  const [endedDraft, setEndedDraft] = useState("");
+  const [endedCodeBad, setEndedCodeBad] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
   const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>([]);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -116,7 +141,6 @@ export function BeDaSpaRoom({
   });
   const cap = room.cap || SPA_ROOM_CAP;
   const count = Math.min(cap, Math.max(0, room.count));
-  const left = Math.max(0, cap - count);
   const showYou = room.notice !== "full";
   const youStreak = room.youStreak ?? 0;
   const topStreak = topCareStreak([youStreak, ...room.guests.map((guest) => guest.careStreak)]);
@@ -135,21 +159,17 @@ export function BeDaSpaRoom({
               ? t("game.spaRate")
               : room.notice === "too-many"
                 ? t("game.spaTooMany")
+                : room.notice === "already-in" || room.notice === "ended"
+                  ? null
                 : room.notice === "member"
                   ? t("game.spaMember")
                   : room.notice === "offline"
                     ? t("game.spaOffline")
                     : null;
 
-  useEffect(() => {
-    if (!copied) return;
-    const id = window.setTimeout(() => setCopied(false), 1600);
-    return () => window.clearTimeout(id);
-  }, [copied]);
-
   function onBackground(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, .beda-actions, .beda-spa-invite")) return;
+    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock")) return;
     onSelect("");
   }
 
@@ -174,38 +194,36 @@ export function BeDaSpaRoom({
   async function onCopy() {
     if (room.code.length !== 6) return;
     const ok = await copyText(room.code);
-    if (ok) setCopied(true);
+    if (ok) setInviteOpen(false);
   }
+
+  function onZaloShare(event: MouseEvent<HTMLAnchorElement>) {
+    const invite = roomInviteUrl(room.code);
+    const popup = window.open(zaloShareUrl(invite), "_blank", "noopener,noreferrer");
+    const choice = roomShareChoice(popup != null, typeof navigator.share === "function");
+    if (choice === "zalo") {
+      event.preventDefault();
+      return;
+    }
+    if (choice === "web-share") {
+      event.preventDefault();
+      void navigator.share({ url: invite, title: t("game.spaInvite") }).catch(() => undefined);
+    }
+  }
+
+  const roomTitle = room.name && room.name !== room.code ? room.name : t("game.spaRoomName");
+  const memberLine = t("game.spaMembers", { count, cap });
+  const dayLine =
+    room.daysLeft == null ? "" : t("game.spaDaysLeft", { left: room.daysLeft, total: SPA_ROOM_LIFE_DAYS });
+  const roomMeta = dayLine ? `${memberLine} · ${dayLine}` : memberLine;
+  const lock = room.lock ?? null;
+  const lockName = lock ? lock.name || lock.code : "";
+  const lockDate = lock?.endsAt ? formatRoomEndDate(new Date(lock.endsAt), locale) : "";
 
   return (
     <div ref={frameRef} className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
       <div ref={viewRef} className="beda-spa-view">
-      <div className="beda-spa-wall" />
-      <div className="beda-spa-stripes" />
-      <div className="beda-spa-wood" />
-      <div className="beda-spa-planks" />
-      <div className="beda-spa-glow" aria-hidden />
-      <div className="beda-spa-lamp" aria-hidden>
-        <i />
-        <b />
-      </div>
-      <div className="beda-spa-shelf" aria-hidden>
-        <i className="beda-spa-jar" style={{ background: "#8fd9cf" }} />
-        <i className="beda-spa-jar is-short" style={{ background: "#f7b7c9" }} />
-        <i className="beda-spa-jar" style={{ background: "#fff1c9" }} />
-        <i className="beda-spa-jar is-tall" style={{ background: "#f3c4ae" }} />
-      </div>
-      <div className="beda-spa-candles" aria-hidden>
-        <i />
-        <i />
-      </div>
-      <Plant className="is-left" />
-      <Plant className="is-right" />
-
       <div className="beda-spa-stage">
-        <div className="beda-spa-mat" aria-hidden>
-          <i className="beda-spa-cucumber" />
-        </div>
         {SPA_SEATS.map((seat) =>
           takenSeats.has(seat.id) ? null : (
             <i
@@ -301,76 +319,147 @@ export function BeDaSpaRoom({
       </button>
 
       <header className="beda-spa-head">
-        <button type="button" className="beda-spa-iconbtn" data-testid="beda-spa-leave" aria-label={t("game.spaLeave")} onClick={onLeave}>
+        <button type="button" className="beda-spa-back" data-testid="beda-spa-leave" aria-label={t("game.spaLeave")} onClick={onLeave}>
           <LeaveArrow />
         </button>
-        <div className="beda-spa-title" data-testid="beda-spa-title">
-          <House />
-          {t("game.spaTitle", { count, cap })}
+        <div className="beda-spa-titlecard" data-testid="beda-spa-title">
+          <strong>{roomTitle}</strong>
+          <span>{roomMeta}</span>
         </div>
-        <button
-          type="button"
-          className="beda-spa-iconbtn"
-          data-testid="beda-mute"
-          aria-pressed={soundOn}
-          aria-label={soundOn ? t("game.soundOn") : t("game.soundOff")}
-          onClick={onToggleSound}
-        >
-          <GameIcon name={soundOn ? "soundOn" : "soundOff"} className="beda-ico-sm" />
-        </button>
-        <div className="beda-spa-seatbar" data-testid="beda-spa-seats">
-          <span>{left === 0 ? t("game.spaSeatsFull", { cap }) : t("game.spaSeats", { cap, left })}</span>
-          <span className="beda-spa-dots" aria-hidden>
-            {Array.from({ length: cap }, (_, index) => (
-              <i key={index} className={index < count ? "beda-spa-dot is-on" : "beda-spa-dot"} />
-            ))}
-          </span>
-        </div>
+        {lock || room.notice === "ended" ? null : (
+          <button type="button" className="beda-invite-open" data-testid="beda-invite-open" onClick={() => setInviteOpen(true)}>
+            {t("game.spaInviteOpen")}
+          </button>
+        )}
       </header>
 
-      <button type="button" className="beda-spa-lobby" data-testid="beda-spa-lobby" onClick={onLobby}>
-        <PersonMark />
-        {t("game.spaToLobby")}
+      <button
+        type="button"
+        className="beda-spa-iconbtn beda-spa-mute"
+        data-testid="beda-mute"
+        aria-pressed={soundOn}
+        aria-label={soundOn ? t("game.soundOn") : t("game.soundOff")}
+        onClick={onToggleSound}
+      >
+        <GameIcon name={soundOn ? "soundOn" : "soundOff"} className="beda-ico-sm" />
       </button>
 
-      <section className="beda-spa-invite" data-testid="beda-spa-invite" aria-label={t("game.spaInvite")}>
-        <h2>{t("game.spaInvite")}</h2>
-        <div className="beda-spa-code" data-testid="beda-spa-code">
-          {Array.from({ length: 6 }, (_, index) => (
-            <b key={index}>{room.code[index] ?? ""}</b>
-          ))}
-        </div>
-        {notice ? (
-          <p className="beda-spa-notice" role="status">
-            {notice}
-          </p>
-        ) : null}
-        {copied ? (
-          <p className="beda-spa-copied" role="status">
-            {t("game.spaCopied")}
-          </p>
-        ) : null}
-        <div className="beda-spa-share">
-          <button type="button" className="beda-spa-copy" data-testid="beda-spa-copy" onClick={() => void onCopy()}>
-            <Clipboard />
-            {t("game.spaCopy")}
+      {notice ? (
+        <p className="beda-spa-status" role="status">
+          {notice}
+        </p>
+      ) : null}
+
+      {room.notice === "ended" && !lock ? (
+        <div className="beda-room-lock beda-room-ended" data-testid="beda-room-ended" role="dialog" aria-modal="true">
+          <p>{t("game.spaEnded")}</p>
+          <button
+            type="button"
+            data-testid="beda-ended-create"
+            disabled={creatingRoom}
+            onClick={() => onCreateRoom?.()}
+          >
+            {t("game.spaCreate")}
           </button>
-          {room.code.length === 6 ? (
-            <a
-              className="beda-spa-zalo"
-              data-testid="beda-spa-zalo"
-              href={zaloShareUrl(roomInviteUrl(room.code))}
-              target="_blank"
-              rel="noopener noreferrer"
+          {endedJoin ? (
+            <form
+              data-testid="beda-ended-code-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const next = normalizeRoomCode(endedDraft);
+                if (!next) {
+                  setEndedCodeBad(true);
+                  return;
+                }
+                setEndedCodeBad(false);
+                onGoToRoom?.(next);
+              }}
             >
-              <ShareArrow />
-              {t("game.spaZalo")}
-            </a>
+              <input
+                data-testid="beda-ended-code"
+                aria-label={t("game.spaCodeLabel")}
+                value={endedDraft}
+                maxLength={SPA_ROOM_CODE_LENGTH}
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => {
+                  const next = event.target.value
+                    .toUpperCase()
+                    .split("")
+                    .filter((char) => SPA_CODE_ALPHABET.includes(char))
+                    .join("")
+                    .slice(0, SPA_ROOM_CODE_LENGTH);
+                  setEndedDraft(next);
+                  setEndedCodeBad(false);
+                }}
+              />
+              <button type="submit" data-testid="beda-ended-join-submit">
+                {t("game.spaJoin")}
+              </button>
+            </form>
           ) : (
-            <span className="beda-spa-zalo is-off">{t("game.spaZalo")}</span>
+            <button type="button" className="is-join" data-testid="beda-ended-join" onClick={() => setEndedJoin(true)}>
+              {t("game.spaEnter")}
+            </button>
           )}
+          {endedCodeBad ? <p className="beda-ended-bad">{t("game.spaCodeBad")}</p> : null}
         </div>
-      </section>
+      ) : null}
+
+      {lock ? (
+        <div className="beda-room-lock" data-testid="beda-room-lock" role="dialog" aria-modal="true">
+          <p>
+            {lockDate
+              ? t("game.spaOneRoom", { name: lockName, date: lockDate })
+              : t("game.spaOneRoomNoDate", { name: lockName })}
+          </p>
+          <button type="button" data-testid="beda-current-room" onClick={() => onGoToRoom?.(lock.code)}>
+            {t("game.spaGoRoom")}
+          </button>
+        </div>
+      ) : null}
+
+      {inviteOpen && !lock && room.notice !== "ended" ? (
+        <>
+          <button
+            type="button"
+            className="beda-invite-back"
+            data-testid="beda-invite-back"
+            aria-label={t("game.spaBoardClose")}
+            onClick={() => setInviteOpen(false)}
+          />
+          <section className="beda-invite-card" data-testid="beda-invite-card" role="dialog" aria-modal="true" aria-label={t("game.spaInvite")}>
+            <h2>{t("game.spaInvite")}</h2>
+            <div className="beda-spa-code" data-testid="beda-spa-code">
+              {Array.from({ length: 6 }, (_, index) => (
+                <b key={index}>{room.code[index] ?? ""}</b>
+              ))}
+            </div>
+            <div className="beda-spa-share">
+              <button type="button" className="beda-spa-copy" data-testid="beda-spa-copy" onClick={() => void onCopy()}>
+                <Clipboard />
+                {t("game.spaCopy")}
+              </button>
+              {room.code.length === 6 ? (
+                <a
+                  className="beda-spa-zalo"
+                  data-testid="beda-spa-zalo"
+                  href={zaloShareUrl(roomInviteUrl(room.code))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={onZaloShare}
+                >
+                  <ShareArrow />
+                  {t("game.spaZalo")}
+                </a>
+              ) : (
+                <span className="beda-spa-zalo is-off">{t("game.spaZalo")}</span>
+              )}
+            </div>
+          </section>
+        </>
+      ) : null}
       {boardOpen ? (
         <div className="beda-board-sheet" role="dialog" aria-modal="true" aria-label={t("game.spaBoard")} data-testid="beda-streak-sheet">
           <button type="button" className="beda-board-back" aria-label={t("game.spaBoardClose")} onClick={() => setBoardOpen(false)} />
@@ -517,25 +606,6 @@ function Cheeks() {
   );
 }
 
-function Plant({ className }: { className: string }) {
-  return (
-    <div className={`beda-spa-plant ${className}`} aria-hidden>
-      <i />
-      <i />
-      <i />
-      <b />
-    </div>
-  );
-}
-
-function House() {
-  return (
-    <svg className="beda-spa-house" viewBox="0 0 32 32" aria-hidden>
-      <path d="M6 15 16 7l10 8v10a2 2 0 0 1-2 2h-5v-7h-6v7H8a2 2 0 0 1-2-2Z" fill="#fff" />
-    </svg>
-  );
-}
-
 function Star() {
   return (
     <svg className="beda-spa-star" viewBox="0 0 32 32" aria-hidden>
@@ -547,17 +617,7 @@ function Star() {
 function LeaveArrow() {
   return (
     <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
-      <path d="M16 8a8 8 0 1 0 6.8 3.8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M16 4.5V9h4.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function PersonMark() {
-  return (
-    <svg className="beda-spa-personmark" viewBox="0 0 32 32" aria-hidden>
-      <circle cx="16" cy="11" r="5" fill="#2f9e96" />
-      <path d="M7 26c1.4-5 4.6-7.5 9-7.5S23.6 21 25 26" fill="#2f9e96" />
+      <path d="M19 7 10 16l9 9" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

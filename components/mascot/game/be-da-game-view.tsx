@@ -7,7 +7,7 @@ import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
-import type { SpaNotice } from "@/lib/mascot/game/spa-room";
+import type { RoomClock, SpaNotice } from "@/lib/mascot/game/spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
 import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
 import {
@@ -129,6 +129,8 @@ export function BeDaGameView({
   onSpaBoard,
   creatingRoom = false,
   createProblem = null,
+  activeRoom = null,
+  spaInviteOpen = false,
 }: {
   locale: string;
   tab: GameTab;
@@ -198,6 +200,9 @@ export function BeDaGameView({
   onSpaBoard?: () => Promise<readonly { nickname: string; careStreak: number }[]>;
   creatingRoom?: boolean;
   createProblem?: SpaNotice;
+  activeRoom?: RoomClock | null;
+  /** Opens the invite card on first paint. Used by tests and screenshots. */
+  spaInviteOpen?: boolean;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -334,6 +339,10 @@ export function BeDaGameView({
           onToggleSound={onToggleSound}
           onWalk={onSpaWalk}
           onLoadBoard={onSpaBoard}
+          inviteInitiallyOpen={spaInviteOpen}
+          onGoToRoom={onJoinRoom}
+          onCreateRoom={onCreateRoom}
+          creatingRoom={creatingRoom}
         />
       ) : showLobby ? (
         <BeDaLobby
@@ -361,6 +370,7 @@ export function BeDaGameView({
           myRooms={myRooms}
           creatingRoom={creatingRoom}
           createProblem={createProblem}
+          activeRoom={activeRoom}
         />
       ) : (
         <Room

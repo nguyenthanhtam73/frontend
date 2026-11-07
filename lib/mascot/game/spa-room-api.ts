@@ -1,5 +1,15 @@
 import { ApiError, apiGet, apiPost } from "@/lib/api-client";
-import { normalizeRoomCode, readSpaBoard, spaRoomProblem, type SpaBoardRow, type SpaNotice } from "@/lib/mascot/game/spa-room";
+import {
+  isAlreadyInRoomCode,
+  normalizeRoomCode,
+  readAlreadyInRoom,
+  readSpaBoard,
+  roomEndDate,
+  spaRoomProblem,
+  type RoomClock,
+  type SpaBoardRow,
+  type SpaNotice,
+} from "@/lib/mascot/game/spa-room";
 
 /** REST room. The socket does not create or look up rooms. */
 const ROOMS = "/api/v1/mascot/rooms";
@@ -18,6 +28,11 @@ export type SpaRoomRecord = {
   joined: boolean;
   owner: boolean;
   inviteUrl: string;
+  /** Empty when the server only sent a code. */
+  name: string;
+  createdAt: string | null;
+  /** ISO end. From ends_at, or created_at plus 8 days. */
+  endsAt: string | null;
 };
 
 /** `{ success, data: { code, cap, member_count, joined, owner, invite_url } }`. */
@@ -29,6 +44,24 @@ export function readSpaRoom(data: unknown): SpaRoomRecord | null {
   const cap = typeof row.cap === "number" && Number.isFinite(row.cap) ? row.cap : 8;
   const memberCount =
     typeof row.member_count === "number" && Number.isFinite(row.member_count) ? row.member_count : 0;
+  const name =
+    typeof row.name === "string"
+      ? row.name.trim()
+      : typeof row.room_name === "string"
+        ? row.room_name.trim()
+        : typeof row.title === "string"
+          ? row.title.trim()
+          : "";
+  const createdAt = typeof row.created_at === "string" ? row.created_at : null;
+  const explicitEnd =
+    typeof row.ends_at === "string"
+      ? row.ends_at
+      : typeof row.end_at === "string"
+        ? row.end_at
+        : typeof row.ends_on === "string"
+          ? row.ends_on
+          : null;
+  const end = roomEndDate({ endsAt: explicitEnd, createdAt });
   return {
     code,
     cap,
@@ -36,7 +69,19 @@ export function readSpaRoom(data: unknown): SpaRoomRecord | null {
     joined: row.joined === true,
     owner: row.owner === true,
     inviteUrl: typeof row.invite_url === "string" ? row.invite_url : "",
+    name,
+    createdAt,
+    endsAt: end ? end.toISOString() : null,
   };
+}
+
+export function roomLockFromError(err: unknown): RoomClock | null {
+  if (!(err instanceof ApiError)) return null;
+  return readAlreadyInRoom(err.payload);
+}
+
+export function isAlreadyInRoomError(err: unknown): boolean {
+  return err instanceof ApiError && isAlreadyInRoomCode(err.code);
 }
 
 export function spaProblemFromError(err: unknown): Exclude<SpaNotice, null> {

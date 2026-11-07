@@ -22,7 +22,14 @@ import { type LobbyActor } from "@/lib/mascot/game/lobby-live";
 import { lookArt } from "@/lib/game/core/art";
 import type { ShellSnapshot } from "@/lib/game/core/types";
 import { useLobbyMotion } from "@/components/mascot/game/use-lobby-motion";
-import { SPA_CODE_ALPHABET, SPA_ROOM_CODE_LENGTH, normalizeRoomCode, type SpaNotice } from "@/lib/mascot/game/spa-room";
+import {
+  SPA_CODE_ALPHABET,
+  SPA_ROOM_CODE_LENGTH,
+  formatRoomEndDate,
+  normalizeRoomCode,
+  type RoomClock,
+  type SpaNotice,
+} from "@/lib/mascot/game/spa-room";
 import type { GamePose } from "@/lib/mascot/game/look";
 import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
@@ -77,6 +84,7 @@ export function BeDaLobby({
   myRooms = [],
   creatingRoom = false,
   createProblem = null,
+  activeRoom = null,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -102,6 +110,8 @@ export function BeDaLobby({
   myRooms?: readonly string[];
   creatingRoom?: boolean;
   createProblem?: SpaNotice;
+  /** The one room this account is still in. Hides create, join, and find. */
+  activeRoom?: RoomClock | null;
 }) {
   const tLobby = useTranslations("mascot");
   const frameRef = useRef<HTMLDivElement>(null);
@@ -432,6 +442,22 @@ export function BeDaLobby({
       </div>
       <div className="beda-lobby-chrome">
         <div className="beda-spa-entry" data-testid="beda-spa-entry">
+          {activeRoom ? (
+            <div className="beda-one-room" data-testid="beda-one-room">
+              <p>
+                {activeRoom.endsAt
+                  ? tLobby("game.spaOneRoom", {
+                      name: activeRoom.name || activeRoom.code,
+                      date: formatRoomEndDate(new Date(activeRoom.endsAt), locale),
+                    })
+                  : tLobby("game.spaOneRoomNoDate", { name: activeRoom.name || activeRoom.code })}
+              </p>
+              <button type="button" data-testid="beda-current-room" onClick={() => onJoinRoom?.(activeRoom.code)}>
+                {tLobby("game.spaGoRoom")}
+              </button>
+            </div>
+          ) : (
+            <>
           {myRooms.map((code) => (
             <button
               key={code}
@@ -495,6 +521,8 @@ export function BeDaLobby({
           )}
           {roomError ? <p role="alert">{tLobby("game.spaCodeBad")}</p> : null}
           {createProblem ? <SpaProblemLine notice={createProblem} /> : null}
+            </>
+          )}
         </div>
         {hallFull && nextHall != null ? (
           <div className="beda-switch" data-testid="beda-hall-switch">
