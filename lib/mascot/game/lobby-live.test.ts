@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { LOBBY_FIGURE_GAP, LOBBY_SAMPLE_CAP, lobbyFigureBox, lobbyShownSamples, screenBoxesOverlap } from "@/lib/mascot/game/lobby";
+import { LOBBY_FIGURE_GAP, LOBBY_SAMPLE_CAP, LOBBY_WORLD, lobbyFigureBox, lobbyShownSamples, lobbyWorldSize, screenBoxesOverlap } from "@/lib/mascot/game/lobby";
 import { LobbyConnection, type LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
 import {
   LOBBY_ACCESS_COOKIE,
@@ -195,11 +195,10 @@ describe("lobby crowd", () => {
     const home = shown.find((friend) => friend.id === "keo-deo")!;
     const start = sampleWander("keo-deo", 0, home.x, home.y);
     const later = sampleWander("keo-deo", 5000, home.x, home.y);
-    assert.ok(start.x >= 0.06 && start.x <= 0.94);
-    assert.ok(start.y >= 0.12 && start.y <= 0.96);
-    assert.ok(later.x >= 0.06 && later.x <= 0.94);
-    const worldW = 390 * 1.3;
-    const worldH = worldW * 3;
+    assert.ok(start.x >= LOBBY_WORLD.walk.minX && start.x <= LOBBY_WORLD.walk.maxX);
+    assert.ok(start.y >= LOBBY_WORLD.walk.minY && start.y <= LOBBY_WORLD.walk.maxY);
+    assert.ok(later.x >= LOBBY_WORLD.walk.minX && later.x <= LOBBY_WORLD.walk.maxX);
+    const { worldW, worldH } = lobbyWorldSize(390, 844);
     for (const step of [start, later]) {
       for (const other of shown) {
         if (other.id === "keo-deo") continue;

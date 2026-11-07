@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef } from "react";
 import {
   LOBBY_SOLVE_INTERVAL_MS,
   LOBBY_WORLD,
+  lobbyMinScale,
   lobbyChromePad,
   lobbyExclusionZones,
   lobbyFigureBox,
@@ -240,10 +241,7 @@ export function useLobbyMotion(input: {
       worldH: world.offsetHeight || 1,
     });
 
-    const chromePad = () => {
-      const { w, h } = viewSize();
-      return lobbyChromePad(w, h);
-    };
+    const chromePad = () => lobbyChromePad(viewSize().w);
 
     const applyCamera = () => {
       const { w, h, worldW, worldH } = viewSize();
@@ -335,8 +333,8 @@ export function useLobbyMotion(input: {
       applyCamera();
     };
     api.current.zoomBy = (factor) => {
-      const { w, h } = viewSize();
-      cam = zoomAt(cam, factor, w / 2, h / 2);
+      const { w, h, worldW, worldH } = viewSize();
+      cam = zoomAt(cam, factor, w / 2, h / 2, lobbyMinScale(w, h, worldW, worldH));
       if (cam.scale > 1.05) follow = true;
       applyCamera();
     };
@@ -346,7 +344,7 @@ export function useLobbyMotion(input: {
     };
 
     const { w, h, worldW, worldH } = viewSize();
-    const bootPad = lobbyChromePad(w, h);
+    const bootPad = lobbyChromePad(w);
     cam = clampCamera(
       {
         x: bootPad.left + (w - bootPad.left - bootPad.right) * 0.5 - youProp.current.x * worldW,
@@ -575,7 +573,14 @@ export function useLobbyMotion(input: {
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
       const box = frame.getBoundingClientRect();
-      cam = zoomAt(cam, Math.exp(-event.deltaY * 0.0016), event.clientX - box.left, event.clientY - box.top);
+      const view = viewSize();
+      cam = zoomAt(
+        cam,
+        Math.exp(-event.deltaY * 0.0016),
+        event.clientX - box.left,
+        event.clientY - box.top,
+        lobbyMinScale(view.w, view.h, view.worldW, view.worldH),
+      );
       if (cam.scale > 1.05) follow = true;
       applyCamera();
     };
@@ -617,7 +622,8 @@ export function useLobbyMotion(input: {
         const midX = (a!.x + b!.x) / 2;
         const midY = (a!.y + b!.y) / 2;
         const box = frame.getBoundingClientRect();
-        cam = zoomAt(cam, dist / pinch.dist, midX - box.left, midY - box.top);
+        const view = viewSize();
+        cam = zoomAt(cam, dist / pinch.dist, midX - box.left, midY - box.top, lobbyMinScale(view.w, view.h, view.worldW, view.worldH));
         cam = { ...cam, x: cam.x + (midX - pinch.x), y: cam.y + (midY - pinch.y) };
         pinch = { dist, x: midX, y: midY };
         follow = cam.scale > 1.05;

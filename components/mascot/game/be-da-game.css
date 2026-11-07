@@ -67,30 +67,36 @@
 }
 
 .beda-lobby[data-engine="pixi"] .beda-lobby-world {
-  z-index: 4;
+  /* Screen-space names. Cover the canvas, not the tall DOM world. */
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  z-index: 6;
   pointer-events: none;
 }
 
-/* Screen-space names. They do not scale with the camera, so the letters stay the same size and stay sharp when he pinches. */
+/* Screen-space names under the feet. Letters stay 14px at every zoom. */
 .beda-lobby[data-engine="pixi"] .beda-tag {
-  top: auto;
-  bottom: 2px;
+  top: 0;
+  bottom: auto;
   left: 50%;
   margin: 0;
   font-size: 14px;
   line-height: 1.2;
-  transform: translate(-50%, -100%);
-  transform-origin: center bottom;
+  transform: translate(-50%, 0);
+  transform-origin: center top;
 }
 
 .beda-lobby[data-engine="pixi"] .beda-friend,
-.beda-lobby[data-engine="pixi"] .beda-friend-hit {
+.beda-lobby[data-engine="pixi"] .beda-friend-hit,
+.beda-lobby[data-engine="pixi"] .beda-tag {
   pointer-events: auto;
-  z-index: 4;
+  z-index: 8;
 }
 
 .beda-lobby[data-engine="pixi"] .beda-friend.beda-pose {
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, 0);
 }
 
 .beda-lobby[data-engine="pixi"] .beda-lobby-sky,
@@ -905,9 +911,9 @@
   position: absolute;
   top: 0;
   left: 0;
-  /* 1.3× the viewport, then 1000:3000 so the world is three times as tall as it is wide. */
-  width: 130%;
-  aspect-ratio: 1000 / 3000;
+  /* Square, at least 1.3× the frame on both axes so the fallback can still pan. */
+  width: max(130%, 130vh);
+  aspect-ratio: 1 / 1;
   height: auto;
   transform-origin: 0 0;
   will-change: transform;

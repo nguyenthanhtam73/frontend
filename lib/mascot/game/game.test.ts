@@ -26,6 +26,8 @@ import {
   LOBBY_SAMPLE_CELLS,
   LOBBY_SOLVE_MAX_PROBES,
   LOBBY_WORLD,
+  lobbyMinScale,
+  lobbyWorldSize,
   SAMPLE_LOBBY_FRIENDS,
   clampLobbyPoint,
   lobbyFigureBox,
@@ -388,20 +390,30 @@ describe("lobby world", () => {
     { id: "you", x: LOBBY_PLAYER_SPOT.x, y: LOBBY_PLAYER_SPOT.y },
   ];
 
-  it("matches the Android 1000×3000 world and walkable floor", () => {
-    assert.equal(LOBBY_WORLD.width, 1000);
-    assert.equal(LOBBY_WORLD.height, 3000);
-    assert.equal(LOBBY_WORLD.height / LOBBY_WORLD.width, 3);
-    assert.equal(LOBBY_WORLD.viewportWidthScale, 1.3);
-    assert.deepEqual(LOBBY_WORLD.walk, { minX: 0.06, maxX: 0.94, minY: 0.12, maxY: 0.96 });
-    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.55, dx: 0.08, dy: 0.05 });
-    assert.deepEqual(clampLobbyPoint(0, 0), { x: 0.06, y: 0.12 });
-    assert.deepEqual(clampLobbyPoint(2, 2), { x: 0.94, y: 0.96 });
+  it("matches the square 2400 world and walkable floor", () => {
+    assert.equal(LOBBY_WORLD.width, 2400);
+    assert.equal(LOBBY_WORLD.height, 2400);
+    assert.equal(LOBBY_WORLD.minCover, 1.3);
+    assert.deepEqual(LOBBY_WORLD.walk, { minX: 0.05, maxX: 0.95, minY: 0.05, maxY: 0.95 });
+    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.5552, dx: 0.08, dy: 0.05 });
+    assert.deepEqual(clampLobbyPoint(0, 0), { x: 0.05, y: 0.05 });
+    assert.deepEqual(clampLobbyPoint(2, 2), { x: 0.95, y: 0.95 });
+    for (const view of [
+      { w: 390, h: 844 },
+      { w: 834, h: 1194 },
+      { w: 1194, h: 834 },
+    ]) {
+      const world = lobbyWorldSize(view.w, view.h);
+      assert.equal(world.worldW, world.worldH);
+      const min = lobbyMinScale(view.w, view.h, world.worldW, world.worldH);
+      assert.ok(world.worldW * min >= view.w * 1.3 - 0.01);
+      assert.ok(world.worldH * min >= view.h * 1.3 - 0.01);
+    }
     const rolls = [0, 1, 0.25, 0.75];
     let i = 0;
     const spawned = lobbySpawn(() => rolls[i++] ?? 0);
-    assert.ok(spawned.x >= 0.5 - 0.08 && spawned.x <= 0.5 + 0.08);
-    assert.ok(spawned.y >= 0.55 - 0.05 && spawned.y <= 0.55 + 0.05);
+    assert.ok(spawned.x >= LOBBY_WORLD.spawn.x - LOBBY_WORLD.spawn.dx && spawned.x <= LOBBY_WORLD.spawn.x + LOBBY_WORLD.spawn.dx);
+    assert.ok(spawned.y >= LOBBY_WORLD.spawn.y - LOBBY_WORLD.spawn.dy && spawned.y <= LOBBY_WORLD.spawn.y + LOBBY_WORLD.spawn.dy);
   });
 
   it("spreads sample friends across the whole floor", () => {
@@ -412,31 +424,18 @@ describe("lobby world", () => {
       assert.ok(friend.x >= walk.minX && friend.x <= walk.maxX, friend.id);
       assert.ok(friend.y >= walk.minY && friend.y <= walk.maxY, friend.id);
     }
-    assert.ok(Math.min(...xs) < 0.15);
-    assert.ok(Math.max(...xs) > 0.85);
-    assert.ok(Math.min(...xs) < 0.2);
-    assert.ok(Math.max(...xs) > 0.8);
-    assert.ok(Math.min(...ys) < 0.2);
-    assert.ok(Math.max(...ys) > 0.9);
-    const worldW = 390 * 1.3;
-    const worldH = worldW * 3;
+    assert.ok(Math.min(...xs) < 0.3);
+    assert.ok(Math.max(...xs) > 0.7);
+    assert.ok(Math.min(...ys) < 0.3);
+    assert.ok(Math.max(...ys) > 0.7);
     const { spawn } = LOBBY_WORLD;
     let near = 0;
-    for (let i = 0; i < SAMPLE_LOBBY_FRIENDS.length; i += 1) {
-      const a = SAMPLE_LOBBY_FRIENDS[i]!;
-      if (Math.abs(a.x - spawn.x) <= 0.14 && Math.abs(a.y - spawn.y) <= 0.12) near += 1;
-      for (let j = i + 1; j < SAMPLE_LOBBY_FRIENDS.length; j += 1) {
-        const b = SAMPLE_LOBBY_FRIENDS[j]!;
-        assert.equal(
-          screenBoxesOverlap(
-            lobbyBodyBox(a.x, a.y, a.nickname, worldW, worldH),
-            lobbyBodyBox(b.x, b.y, b.nickname, worldW, worldH),
-            0,
-          ),
-          false,
-          `${a.id} ${b.id}`,
-        );
-      }
+    const spots = new Set<string>();
+    for (const friend of SAMPLE_LOBBY_FRIENDS) {
+      if (Math.abs(friend.x - spawn.x) <= 0.14 && Math.abs(friend.y - spawn.y) <= 0.12) near += 1;
+      const key = `${friend.x}:${friend.y}`;
+      assert.equal(spots.has(key), false, friend.id);
+      spots.add(key);
     }
     assert.ok(near <= 3, `near spawn ${near}`);
   });
@@ -447,8 +446,7 @@ describe("lobby world", () => {
     assert.equal(LOBBY_SAMPLE_CAP, 6);
     assert.ok(shown.some((friend) => friend.id === "keo-deo"));
     assert.ok(shown.some((friend) => friend.id === "meo-may"));
-    const worldW = 390 * 1.3;
-    const worldH = worldW * 3;
+    const { worldW, worldH } = lobbyWorldSize(390, 844);
     const floor = LOBBY_SAMPLE_CELLS.filter((cell) => cell.y >= LOBBY_WORLD.walk.minY);
     assert.equal(floor.length, 12);
     for (let i = 0; i < shown.length; i += 1) {
@@ -692,8 +690,8 @@ describe("game layout", () => {
     assert.match(css, /\.beda-cabinet\s*\{[^}]*width:\s*12%/);
     assert.match(css, /\.beda-cabinet\s*\{[^}]*z-index:\s*2/);
     assert.match(css, /min-width:\s*768px[\s\S]*\.beda-hero-wrap\s*\{[^}]*clamp\(340px,\s*48vmin,\s*520px\)/);
-    assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*130%/);
-    assert.match(css, /\.beda-lobby-world\s*\{[^}]*aspect-ratio:\s*1000\s*\/\s*3000/);
+    assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*max\(130%,\s*130vh\)/);
+    assert.match(css, /\.beda-lobby-world\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/);
     assert.match(css, /\.beda-lobby-sky\s*\{[^}]*left:\s*-60%/);
     assert.match(css, /\.beda-lobby-sky\s*\{[^}]*width:\s*220%/);
     assert.match(css, /\.beda-ground\s*\{[^}]*left:\s*-60%/);

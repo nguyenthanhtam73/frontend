@@ -27,20 +27,37 @@ export type SampleLobbyFriend = {
 };
 
 /**
- * Shared lobby world. Android uses these same numbers.
- * Positions are normalized 0..1 over the whole world, origin top-left, y at the feet.
+ * Shared lobby world. Positions are normalized 0..1 over the whole world,
+ * origin top-left, y at the feet. The server stores those fractions, not pixels.
+ * Logical size is the square the 2048 texture is stretched onto.
  */
 export const LOBBY_WORLD = {
-  /** Logical size. Width:height is 1:3. */
-  width: 1000,
-  height: 3000,
-  /** Drawn world width divided by the viewport width. */
-  viewportWidthScale: 1.3,
-  /** Walkable floor. The top 12% is sky and decor, not feet. */
-  walk: { minX: 0.06, maxX: 0.94, minY: 0.12, maxY: 0.96 },
-  /** New arrivals. Random inside x±dx and y±dy. */
-  spawn: { x: 0.5, y: 0.55, dx: 0.08, dy: 0.05 },
+  width: 2400,
+  height: 2400,
+  /**
+   * At the minimum zoom the drawn world still covers the viewport by this
+   * factor on both axes, so phone and iPad can pan in every direction.
+   */
+  minCover: 1.3,
+  /**
+   * Outer clamp. The walk mask is the real floor: paths and plazas only.
+   * This rectangle just keeps feet off the extreme border.
+   */
+  walk: { minX: 0.05, maxX: 0.95, minY: 0.05, maxY: 0.95 },
+  /** New arrivals. On the south edge of the plaza, off the fountain. */
+  spawn: { x: 0.5, y: 0.5552, dx: 0.08, dy: 0.05 },
 } as const;
+
+/** Square pixel world. The long side of the viewport sets the size. */
+export function lobbyWorldSize(viewW: number, viewH: number): { worldW: number; worldH: number } {
+  const side = LOBBY_WORLD.minCover * Math.max(1, viewW, viewH);
+  return { worldW: side, worldH: side };
+}
+
+/** Smallest scale that keeps the world at least `minCover` times the viewport. */
+export function lobbyMinScale(viewW: number, viewH: number, worldW: number, worldH: number): number {
+  return LOBBY_WORLD.minCover * Math.max(viewW / Math.max(1, worldW), viewH / Math.max(1, worldH));
+}
 
 /** Center of the arrival box. The live player uses `lobbySpawn` instead. */
 export const LOBBY_PLAYER_SPOT = { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y };
@@ -48,13 +65,13 @@ export const LOBBY_PLAYER_SPOT = { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.
 export type ScreenBox = { left: number; top: number; right: number; bottom: number };
 
 /** Back button, zoom cluster, and the bottom menu, in screen pixels. */
-export function lobbyChromePad(viewW: number, _viewH: number): { top: number; right: number; bottom: number; left: number } {
+export function lobbyChromePad(viewW: number): { top: number; right: number; bottom: number; left: number } {
   const nav = lobbyNavReservePx(viewW);
   return { top: 176, right: 148, bottom: nav, left: 68 };
 }
 
 export function lobbyExclusionZones(viewW: number, viewH: number): ScreenBox[] {
-  const pad = lobbyChromePad(viewW, viewH);
+  const pad = lobbyChromePad(viewW);
   return [
     { left: 0, top: 0, right: pad.left, bottom: 68 },
     { left: viewW - pad.right, top: 0, right: viewW, bottom: pad.top },
@@ -247,6 +264,34 @@ export function solveLobbyCells(input: {
   return { seats, probes };
 }
 
+/**
+ * Push overlapping name pills apart on the vertical axis.
+ * The pill that is already lower on the screen moves further down, so a
+ * neighbor's body never covers the letters. `x` is the pill center, `y` its top.
+ */
+export function stackNameLabels<T extends { x: number; y: number; w: number; h: number }>(labels: readonly T[]): T[] {
+  const placed = labels.map((label) => ({ ...label }));
+  for (let pass = 0; pass < 6; pass += 1) {
+    placed.sort((a, b) => a.y - b.y || a.x - b.x);
+    let moved = false;
+    for (let i = 0; i < placed.length; i += 1) {
+      const a = placed[i]!;
+      for (let j = i + 1; j < placed.length; j += 1) {
+        const b = placed[j]!;
+        if (b.y >= a.y + a.h) break;
+        const overlapX = (a.w + b.w) / 2 - Math.abs(a.x - b.x);
+        const overlapY = (a.h + b.h) / 2 - Math.abs(a.y + a.h / 2 - (b.y + b.h / 2));
+        if (overlapX <= 1 || overlapY <= 1) continue;
+        const lower = a.y >= b.y ? a : b;
+        lower.y += overlapY + 2;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  return placed;
+}
+
 /** Shift or fade name labels that sit on each other. Never returns a new body position. */
 export function nudgeLobbyLabels(
   tags: readonly { id: string; left: number; top: number; right: number; bottom: number }[],
@@ -305,8 +350,8 @@ export function lobbyFigureHitsChrome(
 }
 
 /** 2×6 floor cells, plus spare seats above the world. Floor spacing at 390px is wider than a figure and its name. */
-const SAMPLE_COLS = [0.24, 0.76] as const;
-const SAMPLE_ROWS = [0.16, 0.32, 0.48, 0.64, 0.8, 0.96] as const;
+const SAMPLE_COLS = [0.3, 0.7] as const;
+const SAMPLE_ROWS = [0.24, 0.36, 0.48, 0.6, 0.72, 0.8] as const;
 
 export const LOBBY_SAMPLE_CELLS: readonly { x: number; y: number }[] = (() => {
   const cells: { x: number; y: number }[] = [];
@@ -321,12 +366,12 @@ export const LOBBY_SAMPLE_CELLS: readonly { x: number; y: number }[] = (() => {
 
 /** One visitor per staggered floor cell, so the homes themselves stay apart. */
 export const LOBBY_SAMPLE_HOMES: readonly { x: number; y: number }[] = [
-  { x: 0.24, y: 0.16 },
-  { x: 0.76, y: 0.32 },
-  { x: 0.24, y: 0.48 },
-  { x: 0.76, y: 0.64 },
-  { x: 0.24, y: 0.8 },
-  { x: 0.76, y: 0.96 },
+  { x: 0.3, y: 0.24 },
+  { x: 0.7, y: 0.36 },
+  { x: 0.3, y: 0.48 },
+  { x: 0.7, y: 0.6 },
+  { x: 0.3, y: 0.72 },
+  { x: 0.7, y: 0.8 },
 ];
 
 export const LOBBY_SAMPLE_CAP = LOBBY_SAMPLE_HOMES.length;
@@ -344,8 +389,7 @@ export function lobbyFreeCell(
   viewW = 390,
   viewH = 844,
 ): { x: number; y: number } {
-  const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
-  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  const { worldW, worldH } = lobbyWorldSize(viewW, viewH);
   const floor = LOBBY_SAMPLE_CELLS.filter((cell) => cell.y >= LOBBY_WORLD.walk.minY);
   const ordered = [...floor].sort((a, b) => {
     const da = (a.x - prefer.x) ** 2 + (a.y - prefer.y) ** 2;
@@ -363,19 +407,13 @@ export function lobbyFreeCell(
   return ordered[0] ?? clampLobbyPoint(prefer.x, prefer.y);
 }
 
-function lobbyWorldSize(viewW: number) {
-  const worldW = viewW * LOBBY_WORLD.viewportWidthScale;
-  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
-  return { worldW, worldH };
-}
-
 /** Camera on the spawn center, inset by the control pads. */
 export function lobbyOpeningCamera(
   player: { x: number; y: number } = LOBBY_PLAYER_SPOT,
   view: { viewW: number; viewH: number } = { viewW: 390, viewH: 844 },
 ) {
-  const { worldW, worldH } = lobbyWorldSize(view.viewW);
-  const pad = lobbyChromePad(view.viewW, view.viewH);
+  const { worldW, worldH } = lobbyWorldSize(view.viewW, view.viewH);
+  const pad = lobbyChromePad(view.viewW);
   let x = pad.left + (view.viewW - pad.left - pad.right) * 0.5 - player.x * worldW;
   let y = pad.top + (view.viewH - pad.top - pad.bottom) * 0.46 - player.y * worldH;
   x = Math.min(pad.left, Math.max(view.viewW - pad.right - worldW, x));
@@ -424,13 +462,11 @@ export function sampleStandsUnderOpeningChrome(x: number, y: number, nickname = 
  * at most three stand near the arrival box, and none sit under the opening controls.
  */
 export function layoutSampleSpots<T extends { id: string; nickname: string }>(people: readonly T[]): (T & { x: number; y: number })[] {
-  const grid: { x: number; y: number }[] = [];
-  for (let row = 0; row < 9; row += 1) {
-    const y = 0.14 + row * 0.1;
-    for (const x of [0.1, 0.5, 0.9]) grid.push({ x, y });
-  }
+  // Four columns clear the fountain ellipse. Only six of these are drawn at once.
+  const cols = [0.28, 0.4, 0.6, 0.72];
+  const rows = [0.22, 0.32, 0.42, 0.56, 0.68, 0.76, 0.84];
   return people.map((person, index) => {
-    const spot = grid[index] ?? { x: 0.5, y: 0.55 };
+    const spot = { x: cols[index % cols.length] ?? 0.5, y: rows[Math.floor(index / cols.length)] ?? 0.55 };
     return { ...person, ...clampLobbyPoint(spot.x, spot.y) };
   });
 }
@@ -542,8 +578,7 @@ function rawSpawn(random: () => number): { x: number; y: number } {
  */
 function spawnBlocked(spot: { x: number; y: number }, other: { x: number; y: number; nickname?: string }): boolean {
   if (lobbyTooClose(spot, other)) return true;
-  const worldW = 390 * LOBBY_WORLD.viewportWidthScale;
-  const worldH = worldW * (LOBBY_WORLD.height / LOBBY_WORLD.width);
+  const { worldW, worldH } = lobbyWorldSize(390, 844);
   const name = other.nickname ?? "Mây Hồng";
   return screenBoxesOverlap(
     lobbyFigureBox(spot.x, spot.y, "Bé Da 0000", worldW, worldH, 1.2),
