@@ -4,6 +4,7 @@ import { Viewport } from "pixi-viewport";
 import { lobbyMinScale, lobbyWorldSize, stackNameLabels } from "@/lib/mascot/game/lobby";
 import {
   LOBBY_WALK_MASK,
+  blockEllipse,
   findRoute,
   gridFromMask,
   gridSize,
@@ -15,7 +16,7 @@ import {
 import { LOBBY_DECOR, LOBBY_DECOR_MAP, LOBBY_GROUND, LOBBY_LAYOUT, type ParkPiece } from "@/lib/mascot/game/lobby-park";
 import { startShellClock } from "@/lib/game/core/clock";
 import { rendererResolution } from "@/lib/game/core/dpr";
-import { arrowGoal, TAP_MS } from "@/lib/game/core/input";
+import { arrowGoal, TAP_MS, walkTargetChanges } from "@/lib/game/core/input";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -244,6 +245,7 @@ export async function startPixiShell(options: {
     const key = `${size.cols}x${size.rows}`;
     if (!walkGrid || walkGridKey !== key) {
       walkGrid = gridFromMask(maskPixels, maskW, maskH, size.cols, size.rows);
+      blockEllipse(walkGrid, LOBBY_FOUNTAIN);
       walkGridKey = key;
       standCache.clear();
       maskPixels = null;
@@ -398,14 +400,6 @@ export async function startPixiShell(options: {
     });
   };
 
-  const stopWalk = () => {
-    route = [];
-    if (!walker) return;
-    walker.goal = null;
-    walker.vx = 0;
-    walker.vy = 0;
-  };
-
   const aimNorm = (point: { x: number; y: number }, scene: ShellSceneName) => {
     const size = worldSize(scene, viewW, viewH);
     const grid = scene === "lobby" ? ensureWalkGrid(size.worldW, size.worldH) : null;
@@ -450,19 +444,12 @@ export async function startPixiShell(options: {
         minScale: lobbyMinScale(viewW, viewH, initialW, initialH),
         maxScale: ZOOM_MAX,
       });
-    viewport.on("drag-start", () => {
-      stopWalk();
-    });
-    viewport.on("pinch-start", () => {
-      stopWalk();
-    });
-    viewport.on("wheel-start", () => {
-      stopWalk();
-    });
     viewport.on("pointerdown", () => {
       downAt = performance.now();
     });
     viewport.on("clicked", (payload: { world?: { x: number; y: number } }) => {
+      // Drag and pinch clear clickedAvailable in pixi-viewport, so this is a tap.
+      if (!walkTargetChanges("tap")) return;
       if (performance.now() - downAt > TAP_MS) return;
       const world = payload?.world;
       if (!world) return;
@@ -474,7 +461,6 @@ export async function startPixiShell(options: {
   const api: ShellApi = {
     zoomBy(factor) {
       if (!lobby) return;
-      stopWalk();
       const size = worldSize("lobby", viewW, viewH);
       const scale = Math.min(ZOOM_MAX, Math.max(lobbyMinScale(viewW, viewH, size.worldW, size.worldH), viewport.scale.x * factor));
       viewport.animate({
@@ -497,10 +483,9 @@ export async function startPixiShell(options: {
         removeOnInterrupt: true,
       });
     },
-    panBy(dx, dy, user = true) {
+    panBy(dx, dy, _user = true) {
       viewport.x += dx;
       viewport.y += dy;
-      if (user) stopWalk();
     },
   };
   if (options.api) options.api.current = api;
@@ -524,7 +509,7 @@ export async function startPixiShell(options: {
         walker.y = stand.y;
       }
       const bounds = snap.scene === "room" ? ROOM_BOUNDS : LOBBY_BOUNDS;
-      const obstacle = snap.scene === "lobby" && !grid ? LOBBY_FOUNTAIN : null;
+      const obstacle = snap.scene === "lobby" ? LOBBY_FOUNTAIN : null;
       const span = snap.scene === "room" ? viewW : worldW;
       if (reduced && route.length > 0) {
         const last = route[route.length - 1]!;
@@ -629,6 +614,8 @@ export async function startPixiShell(options: {
         if (label) labelNodes.set(sprite.id, label);
       }
       if (label) {
+        label.dataset.nx = at.x.toFixed(4);
+        label.dataset.ny = at.y.toFixed(4);
         let size = labelSize.get(label);
         if (!size) {
           const tag = label.querySelector<HTMLElement>(".beda-tag") ?? label;

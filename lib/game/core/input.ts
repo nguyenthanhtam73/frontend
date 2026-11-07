@@ -41,6 +41,11 @@ export function gestureKind(
   return "hold";
 }
 
+/** A new tap picks a destination. Panning or zooming the map leaves the walk alone. */
+export function walkTargetChanges(gesture: "tap" | "pan" | "pinch" | "wheel" | "hold"): boolean {
+  return gesture === "tap";
+}
+
 /** Arrow keys walk one short step. Other keys are ignored. */
 export function arrowGoal(from: Point, key: string, step = 0.06): Point | null {
   if (key === "ArrowLeft") return { x: from.x - step, y: from.y };

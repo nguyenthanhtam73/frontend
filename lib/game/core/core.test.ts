@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { shellArt } from "@/lib/game/core/art";
 import { startShellClock } from "@/lib/game/core/clock";
 import { cappedDpr, MAX_DPR, rendererResolution } from "@/lib/game/core/dpr";
-import { arrowGoal, gestureKind, pointerGesture, pointerKind } from "@/lib/game/core/input";
+import { arrowGoal, gestureKind, pointerGesture, pointerKind, walkTargetChanges } from "@/lib/game/core/input";
 import { applyPinch, easeZoom, panCamera, wheelZoomFactor } from "@/lib/game/core/zoom";
 import { screenToWorld, zoomAt } from "@/lib/mascot/game/walk";
 import { emptyRemoteBook, stepRemotes } from "@/lib/game/core/movement";
@@ -72,6 +72,11 @@ describe("pixi shell", () => {
     assert.equal(gestureKind(100, 30, 2), "pinch");
     assert.equal(gestureKind(200, 4, 1), "tap");
     assert.equal(gestureKind(300, 4, 1), "hold");
+    assert.equal(walkTargetChanges("tap"), true);
+    assert.equal(walkTargetChanges("pan"), false);
+    assert.equal(walkTargetChanges("pinch"), false);
+    assert.equal(walkTargetChanges("wheel"), false);
+    assert.equal(walkTargetChanges("hold"), false);
   });
 
   it("pauses the loop while the tab is hidden and drops the gap", () => {
