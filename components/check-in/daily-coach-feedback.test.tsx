@@ -46,6 +46,47 @@ const oldCheck: CreateSkinCheckResponseDTO = {
   image_urls: ["https://example.test/face.jpg"],
 };
 
+describe("DailyCoachFeedback maintenance", () => {
+  it("shows the calm note when analysis_pending is true", () => {
+    const html = renderFeedback({
+      ...oldCheck,
+      analysis_pending: true,
+      analysis: { ...oldCheck.analysis, status: "pending", coach: undefined },
+    });
+    assert.match(html, /Hệ thống đang bảo trì/);
+    assert.match(html, /Ảnh của bạn đã được lưu an toàn/);
+    assert.equal(html.includes("Hôm nay da ổn"), false);
+  });
+
+  it("keeps the old error card when analysis failed without analysis_pending", () => {
+    const html = renderFeedback({
+      ...oldCheck,
+      analysis: {
+        ...oldCheck.analysis,
+        status: "failed",
+        coach: undefined,
+      },
+    });
+    assert.equal(html.includes("Hệ thống đang bảo trì"), false);
+    assert.match(html, /Chưa tạo được lời khuyên/);
+  });
+
+  it("shows the note for a failed analysis only when analysis_pending is set", () => {
+    const html = renderFeedback({
+      ...oldCheck,
+      analysis_pending: true,
+      analysis: {
+        ...oldCheck.analysis,
+        status: "failed",
+        coach: { error_message: "Có lỗi xảy ra. Bạn thử lại giúp mình nhé." },
+      },
+    });
+    assert.match(html, /Hệ thống đang bảo trì/);
+    assert.equal(html.includes("Có lỗi xảy ra"), false);
+    assert.equal(html.includes("Chưa tạo được lời khuyên"), false);
+  });
+});
+
 describe("DailyCoachFeedback old checks", () => {
   it("renders the existing summary and gauges without the new cards", () => {
     const html = renderFeedback(oldCheck);

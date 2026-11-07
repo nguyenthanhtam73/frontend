@@ -13,6 +13,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { CabinetFirstCare } from "@/components/check-in/cabinet-first-care";
 import { CheckInBeforeAfterShare } from "@/components/check-in/check-in-before-after-share";
 import { CoachPhotoEvidenceBanner } from "@/components/check-in/coach-photo-evidence-banner";
@@ -38,6 +39,7 @@ import {
   type CoachSeverityLabelKey,
   type VisibleZoneNote,
 } from "@/lib/check-in/coach-detail-view";
+import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
 import {
   isUncertainPhotoEvidence,
   resolveCoachPhotoEvidence,
@@ -76,6 +78,15 @@ export function DailyCoachFeedback({
 
   const a = payload.analysis;
   const c = a.coach;
+
+  if (
+    showsAnalysisMaintenance({
+      analysisPending: payload.analysis_pending,
+      status: a.status,
+    })
+  ) {
+    return <AnalysisMaintenanceNote />;
+  }
 
   // Defensive fallback: backend reported `completed` but no coach payload (rare —
   // typically a parser glitch or a moderation block that didn't set status=failed).

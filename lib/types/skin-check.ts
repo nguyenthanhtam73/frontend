@@ -98,6 +98,12 @@ export type CreateSkinCheckResponseDTO = {
   };
   analysis: SkinAnalysisDTO;
   image_urls: string[];
+  /**
+   * True when the photo is saved and the coach result will be filled in later.
+   * Omitted when false, and on servers that have not shipped the field yet.
+   * Distinct from `analysis.status === "pending"` (a healthy job still polls).
+   */
+  analysis_pending?: boolean;
   /** Present on POST create when streak was updated (not on GET poll). */
   streak?: {
     /** True when the system spent one freeze for a single missed day. */

@@ -11,7 +11,7 @@ const src = fs.readFileSync(
 
 describe("ProgressEntryCard reanalyze CTA", () => {
   it("gates the CTA with canShowReanalyzeCta and keeps it while in-flight", () => {
-    assert.match(src, /canShowReanalyzeCta\(entry\) \|\| inFlight/);
+    assert.match(src, /inFlight \|\| \(!maintenance && canShowReanalyzeCta\(entry\)\)/);
     assert.match(src, /data-testid="progress-reanalyze"/);
     assert.match(src, /t\("reanalyzeCta"\)/);
   });
@@ -22,6 +22,14 @@ describe("ProgressEntryCard reanalyze CTA", () => {
     const thumbIdx = src.indexOf("size-20 shrink-0");
     const ctaIdx = src.indexOf('data-testid="progress-reanalyze"');
     assert.ok(thumbIdx > 0 && ctaIdx > thumbIdx);
+  });
+
+  it("shows the maintenance note only for analysis_pending and keeps the failed line", () => {
+    assert.match(src, /showsAnalysisMaintenance/);
+    assert.match(src, /AnalysisMaintenanceNote/);
+    assert.match(src, /entry\.status === "failed"/);
+    assert.match(src, /t\("failed"\)/);
+    assert.match(src, /t\("reanalyzeCta"\)/);
   });
 
   it("disables and marks busy while POST+poll is in flight", () => {

@@ -171,6 +171,7 @@ test.describe("Onboarding analyze — error messages", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText(copy.photoFallbackTitle)).toBeVisible();
     await expect(page.getByText(copy.photoFallbackBody)).toBeVisible();
+    await expect(page.getByTestId("analysis-maintenance-note")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: copy.retryAnalyzeAiShort }),
     ).toBeVisible();

@@ -105,8 +105,11 @@ export function applySkinCheckToProgressEntry(
     const notes = data.analysis.coach?.summary_notes?.trim();
     if (notes) next.snippet = clipProgressSnippet(notes);
     else delete next.snippet;
+    delete next.analysis_pending;
   } else {
     delete next.snippet;
+    if (data.analysis_pending === true) next.analysis_pending = true;
+    else delete next.analysis_pending;
   }
 
   const gauges = data.analysis.coach?.skin_score_gauges;

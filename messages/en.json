@@ -747,6 +747,10 @@
     "submitErrorGeneric": "Submit failed ({status}): {detail}. You can fix and retry — your data is kept.",
     "analyzingCoach": "Reading your photos and writing a friendly response — this can take a few minutes. Keep the tab open.",
     "coachBeforeSubmit": "Send to receive: today's read, routine tweaks, what to ease off, and safety notes.",
+    "maintenance": {
+      "title": "The system is under maintenance",
+      "body": "Your photo has been saved safely. The result will be ready in a few minutes — come back and take a look."
+    },
     "beforeAfterShare": {
       "cta": "Share a before/after card",
       "title": "Your before · after",

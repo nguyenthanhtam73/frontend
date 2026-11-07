@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 
 import { CalendarDays, Loader2, Lock, Moon, Sun, WandSparkles, X } from "lucide-react";
 
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,8 @@ export type CheckInDetailEntry = {
   symptoms: string[];
   snippet?: string;
   userNote?: string;
+  /** Photo is saved; the coach result is not ready (pending flag or failed). */
+  maintenance?: boolean;
   routineHints?: {
     morning: string[];
     evening: string[];
@@ -190,6 +193,8 @@ export function CheckInDetailSheet({
         </div>
 
         <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-4 sm:space-y-4 sm:px-5 sm:py-5">
+          {entry.maintenance ? <AnalysisMaintenanceNote /> : null}
+
           {entry.tags.length > 0 || entry.symptoms.length > 0 ? (
             <DetailSection title={labels.tagsSection}>
               <div className="flex flex-wrap gap-1.5">
@@ -211,7 +216,7 @@ export function CheckInDetailSheet({
             </DetailSection>
           ) : null}
 
-          {entry.snippet ? (
+          {!entry.maintenance && entry.snippet ? (
             <DetailSection title={labels.snippet}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
                 {entry.snippet}
@@ -227,6 +232,7 @@ export function CheckInDetailSheet({
             </DetailSection>
           ) : null}
 
+          {hasHints || !entry.maintenance ? (
           <DetailSection
             title={labels.hintsTitle}
             highlight={hasHints}
@@ -258,6 +264,7 @@ export function CheckInDetailSheet({
               <p className="text-sm text-muted-foreground">{labels.noHints}</p>
             )}
           </DetailSection>
+          ) : null}
         </div>
 
         {hasHints && onApply ? (

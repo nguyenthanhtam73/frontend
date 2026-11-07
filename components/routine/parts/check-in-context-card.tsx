@@ -19,11 +19,13 @@ import {
   buildStepsFromHints,
   splitRoutineHints,
 } from "@/components/check-in/routine-hint-parser";
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchSkinCheck } from "@/lib/api/skin-check";
+import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
 import { ApiError, apiGet } from "@/lib/api-client";
 import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import type { RoutineStepDTO } from "@/lib/types/routine";
@@ -44,6 +46,8 @@ type ProgressEntry = {
   symptoms?: string[];
   snippet?: string;
   user_note?: string;
+  /** Optional. Absent until the progress API echoes skin-check `analysis_pending`. */
+  analysis_pending?: boolean;
 };
 
 type DateRelative = "today" | "yesterday" | "other";
@@ -82,6 +86,8 @@ export function CheckInContextCard({
   const [cachedHints, setCachedHints] = useState<ReturnType<typeof splitRoutineHints> | null>(
     null,
   );
+  const [detailPending, setDetailPending] = useState(false);
+  const [detailStatus, setDetailStatus] = useState<string | undefined>();
 
   const canApply = !editLocked;
 
@@ -104,6 +110,8 @@ export function CheckInContextCard({
     setStatus("loading");
     setHintsReady(null);
     setCachedHints(null);
+    setDetailPending(false);
+    setDetailStatus(undefined);
     try {
       const timeline = await apiGet<{ entries?: ProgressEntry[] }>(
         "/api/v1/progress?range=30&limit=1",
@@ -132,14 +140,25 @@ export function CheckInContextCard({
   }, [load]);
 
   useEffect(() => {
-    if (status !== "ready" || !entry?.id || entry.status !== "completed") {
+    if (status !== "ready" || !entry?.id) {
       setHintsReady(false);
+      setDetailPending(false);
+      setDetailStatus(undefined);
       return;
     }
     let cancelled = false;
     (async () => {
       const detail = await fetchSkinCheck(entry.id);
       if (cancelled) return;
+      setDetailPending(detail?.analysis_pending === true);
+      setDetailStatus(detail?.analysis?.status);
+      const coachReady =
+        entry.status === "completed" || detail?.analysis?.status === "completed";
+      if (!coachReady) {
+        setCachedHints(null);
+        setHintsReady(false);
+        return;
+      }
       const split = splitRoutineHints(detail?.analysis?.coach?.routine_hints);
       const total =
         split.morning.length + split.evening.length + split.other.length;
@@ -156,6 +175,12 @@ export function CheckInContextCard({
     [entry, t],
   );
 
+  const maintenance = showsAnalysisMaintenance({
+    analysisPending: detailPending || entry?.analysis_pending === true,
+    status:
+      entry?.status === "completed" ? "completed" : (detailStatus ?? entry?.status),
+  });
+
   const detailEntry: CheckInDetailEntry | null = useMemo(() => {
     if (!entry || !dateInfo) return null;
     return {
@@ -164,11 +189,12 @@ export function CheckInContextCard({
       symptoms: entry.symptoms ?? [],
       snippet: entry.snippet,
       userNote: entry.user_note,
+      maintenance,
       routineHints: cachedHints ?? undefined,
       tagLabel: conditionLabel,
       symptomLabel,
     };
-  }, [entry, dateInfo, cachedHints, conditionLabel, symptomLabel]);
+  }, [entry, dateInfo, cachedHints, conditionLabel, symptomLabel, maintenance]);
 
   const detailLabels = useMemo(
     () => ({
@@ -319,7 +345,9 @@ export function CheckInContextCard({
             ) : null}
           </div>
 
-          {e.status && e.status !== "completed" ? (
+          {maintenance ? (
+            <AnalysisMaintenanceNote />
+          ) : e.status && e.status !== "completed" ? (
             <Badge
               variant="outline"
               className={cn(
@@ -352,7 +380,7 @@ export function CheckInContextCard({
             </div>
           ) : null}
 
-          {e.snippet ? (
+          {!maintenance && e.snippet ? (
             <div className="space-y-1.5 rounded-xl border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm">
               <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{e.snippet}</p>
               {snippetLong ? (

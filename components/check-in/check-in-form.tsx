@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AiFeedbackLoading } from "@/components/check-in/ai-feedback-loading";
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { CheckInOpenActions } from "@/components/check-in/check-in-open-actions";
 import { DailyCoachFeedback } from "@/components/check-in/daily-coach-feedback";
 import { CheckInPushOffers } from "@/components/check-in/check-in-push-offers";
@@ -79,6 +80,7 @@ import {
   canSubmitCheckIn,
   isSkipModeReady,
 } from "@/lib/check-in/check-in-submit";
+import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
 import { shouldGuestAiWait } from "@/lib/check-in/guest-ai-wait";
 import {
   clearLocalGuestCheckIn,
@@ -145,6 +147,10 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const router = useRouter();
   const feedback = useCheckInFeedback();
+  const analysisMaintenance = showsAnalysisMaintenance({
+    analysisPending: feedback.payload?.analysis_pending,
+    status: feedback.payload?.analysis?.status,
+  });
   const onSubmitSuccess = feedback.onSubmitSuccess;
   useEffect(() => {
     if (feedback.phase !== "completed") return;
@@ -943,37 +949,49 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
         ) : null}
 
         {feedback.phase === "processing" ? (
-          <AiFeedbackLoading
-            variant="processing"
-            progress={feedback.fakeProgress}
-            statusStep={feedback.statusStep}
-            isSlow={feedback.isSlow}
-            isResumed={feedback.isResumed}
-            startedAt={feedback.startedAt}
-            onCancelWait={feedback.cancelWait}
-            onViewLater={handleViewLater}
-          />
+          analysisMaintenance ? (
+            <AnalysisMaintenanceNote />
+          ) : (
+            <AiFeedbackLoading
+              variant="processing"
+              progress={feedback.fakeProgress}
+              statusStep={feedback.statusStep}
+              isSlow={feedback.isSlow}
+              isResumed={feedback.isResumed}
+              startedAt={feedback.startedAt}
+              onCancelWait={feedback.cancelWait}
+              onViewLater={handleViewLater}
+            />
+          )
         ) : null}
 
         {feedback.phase === "timeout" ? (
-          <AiFeedbackLoading
-            variant="timeout"
-            progress={feedback.fakeProgress}
-            isResumed={feedback.isResumed}
-            onRetryPolling={feedback.retryPolling}
-            onViewLater={handleViewLater}
-          />
+          analysisMaintenance ? (
+            <AnalysisMaintenanceNote />
+          ) : (
+            <AiFeedbackLoading
+              variant="timeout"
+              progress={feedback.fakeProgress}
+              isResumed={feedback.isResumed}
+              onRetryPolling={feedback.retryPolling}
+              onViewLater={handleViewLater}
+            />
+          )
         ) : null}
 
         {feedback.phase === "failed" ? (
-          <FeedbackFailedCard
-            message={
-              feedback.failureMessage ?? tCoach("failedUnknown")
-            }
-            onRetry={feedback.resetFeedback}
-            retryLabel={tCoach("retry")}
-            title={tCoach("failedTitle")}
-          />
+          analysisMaintenance ? (
+            <AnalysisMaintenanceNote />
+          ) : (
+            <FeedbackFailedCard
+              message={
+                feedback.failureMessage ?? tCoach("failedUnknown")
+              }
+              onRetry={feedback.resetFeedback}
+              retryLabel={tCoach("retry")}
+              title={tCoach("failedTitle")}
+            />
+          )
         ) : null}
 
         {feedback.phase === "completed" && feedback.payload ? (

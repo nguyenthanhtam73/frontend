@@ -3,6 +3,7 @@
 import { Loader2, Sparkles, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { usePendingCheckinBanner } from "@/components/progress/use-pending-checkin-banner";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -26,9 +27,33 @@ function formatWaitDuration(
  */
 export function PendingCheckinBanner({ className }: { className?: string }) {
   const t = useTranslations("progress.pendingBanner");
-  const { show, exiting, elapsedMs, dismiss } = usePendingCheckinBanner();
+  const { show, exiting, elapsedMs, maintenance, dismiss } = usePendingCheckinBanner();
 
   if (!show) return null;
+
+  if (maintenance) {
+    return (
+      <div
+        className={cn("mb-3 sm:mb-5", className)}
+        data-testid="pending-checkin-maintenance"
+      >
+        <AnalysisMaintenanceNote />
+        <div className="mt-2 flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={dismiss}
+            className="min-h-11 gap-1 px-3 text-xs text-muted-foreground hover:text-foreground sm:min-h-9 sm:text-sm"
+            aria-label={t("dismiss")}
+          >
+            <X className="size-3.5" aria-hidden />
+            <span className="sr-only sm:not-sr-only">{t("dismiss")}</span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchSkinCheckResult } from "@/lib/api/skin-check";
+import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
 import { apiGet } from "@/lib/api-client";
 import {
   clearPersistedCheckInPending,
@@ -79,6 +80,7 @@ export function usePendingCheckinBanner() {
   const [exiting, setExiting] = useState(false);
   const [checkId, setCheckId] = useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [maintenance, setMaintenance] = useState(false);
 
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -118,6 +120,7 @@ export function usePendingCheckinBanner() {
     setShow(false);
     setExiting(false);
     setElapsedMs(0);
+    setMaintenance(false);
   }, [clearElapsed, clearExit, clearPoll]);
 
   const hideAnimated = useCallback(() => {
@@ -185,9 +188,17 @@ export function usePendingCheckinBanner() {
 
       const status = result.data.analysis.status;
       if (isAnalysisProcessing(status)) {
+        // Flag set: show the calm note, but keep polling until the job settles.
+        setMaintenance(
+          showsAnalysisMaintenance({
+            analysisPending: result.data.analysis_pending,
+            status,
+          }),
+        );
         markVisible(id, waitStartedAt);
         return "processing";
       }
+      setMaintenance(false);
 
       // completed / failed (or any non-processing terminal state) — the result is
       // ready, so drop the pending session and retire the banner.
@@ -262,6 +273,7 @@ export function usePendingCheckinBanner() {
     exiting,
     checkId,
     elapsedMs,
+    maintenance,
     dismiss,
   };
 }

@@ -139,10 +139,40 @@ describe("applySkinCheckToProgressEntry", () => {
     assert.equal(next.gauges?.overall, 0.82);
   });
 
-  it("clears snippet on failed so retry copy can show", () => {
+  it("clears snippet on failed so the failed line can show", () => {
     const next = applySkinCheckToProgressEntry(entry(), payload("failed"));
     assert.equal(next.status, "failed");
     assert.equal(next.snippet, undefined);
+    assert.equal(next.analysis_pending, undefined);
+  });
+
+  it("keeps an omitted analysis_pending unset and copies it only while unsettled", () => {
+    const waiting = applySkinCheckToProgressEntry(
+      entry(),
+      payload("pending", { analysis_pending: true }),
+    );
+    assert.equal(waiting.status, "pending");
+    assert.equal(waiting.analysis_pending, true);
+    assert.equal(waiting.snippet, undefined);
+
+    const withoutFlag = applySkinCheckToProgressEntry(waiting, payload("processing"));
+    assert.equal(withoutFlag.analysis_pending, undefined);
+
+    const done = applySkinCheckToProgressEntry(
+      waiting,
+      payload("completed", {
+        analysis: {
+          id: "an-2",
+          skin_check_id: "chk-1",
+          status: "completed",
+          coach: { summary_notes: "Da dịu hơn." },
+        },
+        analysis_pending: true,
+      }),
+    );
+    assert.equal(done.status, "completed");
+    assert.equal(done.analysis_pending, undefined);
+    assert.equal(done.snippet, "Da dịu hơn.");
   });
 });
 
@@ -180,6 +210,23 @@ describe("pollUntilSkinCheckSettled", () => {
     assert.equal(out.analysis.status, "completed");
     assert.deepEqual(ticks, ["completed"]);
     assert.deepEqual(sleeps, [REANALYZE_POLL.fastMs]);
+  });
+
+  it("keeps polling a pending check when analysis_pending is set", async () => {
+    let calls = 0;
+    const out = await pollUntilSkinCheckSettled("chk-1", {
+      fetchResult: async () => {
+        calls += 1;
+        if (calls === 1) {
+          return { ok: true, data: payload("pending", { analysis_pending: true }) };
+        }
+        return { ok: true, data: payload("completed") };
+      },
+      sleep: async () => {},
+      now: () => 0,
+    });
+    assert.equal(calls, 2);
+    assert.equal(out.analysis.status, "completed");
   });
 
   it("retries a network blip then settles", async () => {
