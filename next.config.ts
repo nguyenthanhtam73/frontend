@@ -31,7 +31,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // 308 only when the Host is www.dadiary.vn. Preview *.vercel.app hosts miss
+  // Lobby pictures are requested with a content hash (`?v=`). A year-long
+// immutable cache is safe for those URLs and wrong for an unversioned path:
+// browsers and the service worker would keep the previous mask forever.
+// 308 only when the Host is www.dadiary.vn. Preview *.vercel.app hosts miss
   // the condition, and the destination is the apex so the rule cannot loop.
   // Next.js forwards the query string when the destination does not set one.
   async headers() {

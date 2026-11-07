@@ -412,7 +412,7 @@ describe("lobby world", () => {
     assert.equal(LOBBY_WORLD.height, 2400);
     assert.equal(LOBBY_WORLD.minCover, 1.3);
     assert.deepEqual(LOBBY_WORLD.walk, { minX: 0.05, maxX: 0.95, minY: 0.05, maxY: 0.95 });
-    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.5552, dx: 0.08, dy: 0.05 });
+    assert.deepEqual(LOBBY_WORLD.spawn, { x: 0.5, y: 0.62, dx: 0.09, dy: 0.015 });
     assert.deepEqual(clampLobbyPoint(0, 0), { x: 0.05, y: 0.05 });
     assert.deepEqual(clampLobbyPoint(2, 2), { x: 0.95, y: 0.95 });
     for (const view of [
@@ -449,7 +449,7 @@ describe("lobby world", () => {
     let near = 0;
     const spots = new Set<string>();
     for (const friend of SAMPLE_LOBBY_FRIENDS) {
-      if (Math.abs(friend.x - spawn.x) <= 0.14 && Math.abs(friend.y - spawn.y) <= 0.12) near += 1;
+      if (Math.abs(friend.x - spawn.x) <= spawn.dx && Math.abs(friend.y - spawn.y) <= spawn.dy) near += 1;
       const key = `${friend.x}:${friend.y}`;
       assert.equal(spots.has(key), false, friend.id);
       spots.add(key);
@@ -589,13 +589,14 @@ describe("lobby world", () => {
   });
 
   it("spawns away from someone already standing in the arrival box", () => {
-    const taken = { x: 0.42, y: 0.6 };
+    const { spawn } = LOBBY_WORLD;
+    const taken = { x: spawn.x - spawn.dx, y: spawn.y };
     const rolls = [0, 1, 0.5, 0.5];
     let i = 0;
     const spot = lobbySpawn(() => rolls[i++] ?? 0.5, [taken]);
     assert.equal(lobbyTooClose(spot, taken), false);
-    assert.ok(spot.x >= 0.5 - 0.08 && spot.x <= 0.5 + 0.08);
-    assert.ok(spot.y >= 0.55 - 0.05 && spot.y <= 0.55 + 0.05);
+    assert.ok(spot.x >= spawn.x - spawn.dx && spot.x <= spawn.x + spawn.dx);
+    assert.ok(spot.y >= spawn.y - spawn.dy && spot.y <= spawn.y + spawn.dy);
   });
 
   it("stacks by y and nudges tags away from the Bé Da in front", () => {

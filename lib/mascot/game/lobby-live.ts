@@ -1,3 +1,4 @@
+import { snapOutsideFountain } from "@/lib/mascot/game/walk";
 import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
 import {
@@ -320,7 +321,8 @@ function readPerson(value: unknown): WirePerson | null {
   const rawX = num(row.x);
   const rawY = num(row.y);
   const spawned = rawX == null || rawY == null ? lobbySpawnForId(row.id) : null;
-  const feet = clampLobbyPoint(spawned?.x ?? lobbyCoord(rawX ?? 0), spawned?.y ?? lobbyCoord(rawY ?? 0));
+  const placed = clampLobbyPoint(spawned?.x ?? lobbyCoord(rawX ?? 0), spawned?.y ?? lobbyCoord(rawY ?? 0));
+  const feet = snapOutsideFountain(placed);
   const facing = row.facing === "left" ? "left" : "right";
   return {
     id: row.id,

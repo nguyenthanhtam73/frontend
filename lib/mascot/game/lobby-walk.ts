@@ -4,7 +4,7 @@
  * sends the real paths. Cells are about 20 world pixels, inside the 16–24 range.
  */
 
-export const LOBBY_WALK_MASK = "/mascot/lobby/walk-mask.png";
+export const LOBBY_WALK_MASK = "/mascot/lobby/walk-mask.png?v=4cf563d3f4";
 export const WALK_CELL_PX = 20;
 
 export type WalkPoint = { x: number; y: number };

@@ -8,6 +8,7 @@ import {
   clampCamera,
   createWalker,
   ellipseContains,
+  snapOutsideFountain,
   adoptServerPoint,
   followCamera,
   planRemoteGlide,
@@ -37,8 +38,21 @@ describe("lobby walk", () => {
     assert.equal(walker.goal, null);
   });
 
+  it("pushes feet that land on the stone rim back outside the basin", () => {
+    const rim = { x: 0.5, y: 0.56 };
+    assert.equal(ellipseContains(rim, LOBBY_FOUNTAIN), true);
+    const out = snapOutsideFountain(rim);
+    assert.equal(ellipseContains(out, LOBBY_FOUNTAIN), false);
+    assert.ok(out.y > rim.y);
+    const centre = snapOutsideFountain({ x: LOBBY_FOUNTAIN.x, y: LOBBY_FOUNTAIN.y });
+    assert.equal(ellipseContains(centre, LOBBY_FOUNTAIN), false);
+    assert.ok(centre.y > LOBBY_FOUNTAIN.y);
+    const clear = snapOutsideFountain({ x: 0.2, y: 0.62 });
+    assert.deepEqual(clear, { x: 0.2, y: 0.62 });
+  });
+
   it("routes around the fountain instead of through it", () => {
-    const from = { x: 0.2, y: 0.56 };
+    const from = { x: 0.2, y: 0.62 };
     const via = steerGoal(from, { x: 0.85, y: 0.56 }, LOBBY_FOUNTAIN, LOBBY_BOUNDS);
     assert.equal(ellipseContains(via, LOBBY_FOUNTAIN), false);
     assert.equal(segmentHits(from, via, LOBBY_FOUNTAIN), false);
