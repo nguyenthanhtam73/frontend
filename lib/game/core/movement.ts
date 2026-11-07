@@ -3,6 +3,7 @@ import {
   LOBBY_FOUNTAIN,
   adoptServerPoint,
   createWalker,
+  snapOutsideFountain,
   lobbyWorldSpeed,
   planRemoteGlide,
   sampleGlide,
@@ -13,6 +14,8 @@ import {
   type Point,
   type Walker,
 } from "@/lib/mascot/game/walk";
+
+export { snapOutsideFountain };
 
 export type RemoteBook = {
   glides: Map<string, Glide>;
@@ -69,7 +72,7 @@ export function stepLocal(
 
 export function placeLocal(walker: Walker, server: Point | null, owned: boolean): void {
   if (!server || walker.goal) return;
-  const next = adoptServerPoint(walker, server, owned);
+  const next = snapOutsideFountain(adoptServerPoint(walker, server, owned));
   if (next.x === walker.x && next.y === walker.y) return;
   walker.x = next.x;
   walker.y = next.y;
@@ -78,7 +81,7 @@ export function placeLocal(walker: Walker, server: Point | null, owned: boolean)
 }
 
 export function lobbyWalker(at: Point): Walker {
-  return createWalker(at);
+  return createWalker(snapOutsideFountain(at));
 }
 
 export { LOBBY_BOUNDS, LOBBY_FOUNTAIN };

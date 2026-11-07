@@ -12,13 +12,13 @@
  */
 
 export const LOBBY_GROUND = {
-  src: "/mascot/lobby/ground.jpg",
+  src: "/mascot/lobby/ground.jpg?v=1f14be26c2",
   size: 2048,
 } as const;
 
-export const LOBBY_DECOR = "/mascot/lobby/decor.png";
-export const LOBBY_DECOR_MAP = "/mascot/lobby/decor.json";
-export const LOBBY_LAYOUT = "/mascot/lobby/layout.json";
+export const LOBBY_DECOR = "/mascot/lobby/decor.png?v=d75074d448";
+export const LOBBY_DECOR_MAP = "/mascot/lobby/decor.json?v=bbda391eac";
+export const LOBBY_LAYOUT = "/mascot/lobby/layout.json?v=2ff8683f11";
 
 export type ParkAnchor = "feet" | "center";
 export type ParkKind = "prop" | "sky" | "water" | "stone" | "butterfly" | "petal";

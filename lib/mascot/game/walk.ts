@@ -44,8 +44,14 @@ export type Walker = {
 /** Plaza the feet may use. Same rectangle as `LOBBY_WORLD.walk`. */
 export const LOBBY_BOUNDS: Bounds = LOBBY_WORLD.walk;
 
-/** Fountain basin in the same space as lobby taps (normalized, not pixels). */
-export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5, y: 0.5, rx: 0.07, ry: 0.055 };
+/**
+ * Drawn fountain, not the centre of its texture.
+ * The 400px frame has empty space at the top and left, so the stone rim
+ * (opaque pixels, scale 0.7, anchor centre) runs about
+ * x 0.455–0.567, y 0.453–0.566. Feet are the bottom of Bé Da's sprite,
+ * so the blocked oval adds a margin past that rim and she cannot stand on the lip.
+ */
+export const LOBBY_FOUNTAIN: Obstacle = { x: 0.5113, y: 0.5094, rx: 0.078, ry: 0.08 };
 
 /**
  * Walkable spa floor in the room box below the top bar.
@@ -75,6 +81,19 @@ export function clampPoint(point: Point, bounds: Bounds): Point {
   return {
     x: clamp(point.x, bounds.minX, bounds.maxX),
     y: clamp(point.y, bounds.minY, bounds.maxY),
+  };
+}
+
+/** Push feet that landed in the basin out to the near side of the rim. */
+export function snapOutsideFountain(point: Point, obstacle: Obstacle = LOBBY_FOUNTAIN): Point {
+  const nx = (point.x - obstacle.x) / obstacle.rx;
+  const ny = (point.y - obstacle.y) / obstacle.ry;
+  const dist = Math.hypot(nx, ny);
+  if (dist >= 1) return point;
+  if (dist < 1e-6) return { x: obstacle.x, y: obstacle.y + obstacle.ry * 1.04 };
+  return {
+    x: obstacle.x + (nx / dist) * obstacle.rx * 1.04,
+    y: obstacle.y + (ny / dist) * obstacle.ry * 1.04,
   };
 }
 

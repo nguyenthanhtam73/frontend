@@ -20,6 +20,7 @@ import { arrowGoal, TAP_MS, walkTargetChanges } from "@/lib/game/core/input";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
+  snapOutsideFountain,
   emptyRemoteBook,
   lobbyWalker,
   placeLocal,
@@ -262,7 +263,7 @@ export async function startPixiShell(options: {
     const key = `${id}|${walkGridKey}|${c},${r}`;
     const cached = standCache.get(key);
     if (cached) return cached;
-    const stand = nearestWalkable(grid, x, y);
+    const stand = snapOutsideFountain(nearestWalkable(grid, x, y));
     standCache.set(key, stand);
     return stand;
   };
@@ -413,7 +414,7 @@ export async function startPixiShell(options: {
         walker.x = stand.x;
         walker.y = stand.y;
       }
-      const goal = nearestWalkable(grid, point.x, point.y);
+      const goal = snapOutsideFountain(nearestWalkable(grid, point.x, point.y));
       route = findRoute(grid, walker, goal);
       walker.goal = route.shift() ?? null;
     } else {
@@ -512,7 +513,7 @@ export async function startPixiShell(options: {
       const obstacle = snap.scene === "lobby" ? LOBBY_FOUNTAIN : null;
       const span = snap.scene === "room" ? viewW : worldW;
       if (reduced && route.length > 0) {
-        const last = route[route.length - 1]!;
+        const last = snapOutsideFountain(route[route.length - 1]!);
         walker.x = last.x;
         walker.y = last.y;
         walker.goal = null;
@@ -521,6 +522,14 @@ export async function startPixiShell(options: {
         route = [];
       }
       Object.assign(walker, stepLocal(walker, dt, bounds, obstacle, span, reduced));
+      const outside = snapOutsideFountain(walker);
+      if (outside.x !== walker.x || outside.y !== walker.y) {
+        walker.x = outside.x;
+        walker.y = outside.y;
+        walker.vx = 0;
+        walker.vy = 0;
+      }
+      if (walker.goal) walker.goal = snapOutsideFountain(walker.goal);
       if (!walker.goal && route.length > 0) walker.goal = route.shift() ?? null;
       if (options.onWalk) {
         if (walker.goal) {
