@@ -46,15 +46,19 @@ describe("showsAnalysisMaintenance", () => {
     );
   });
 
-  it("is true for a failed analysis even when the flag is missing", () => {
-    assert.equal(showsAnalysisMaintenance({ status: "failed" }), true);
+  it("is true for a failed analysis only when analysis_pending is set", () => {
+    assert.equal(
+      showsAnalysisMaintenance({ analysisPending: true, status: "failed" }),
+      true,
+    );
+    assert.equal(showsAnalysisMaintenance({ status: "failed" }), false);
     assert.equal(
       showsAnalysisMaintenance({ analysisPending: false, status: "failed" }),
-      true,
+      false,
     );
     assert.equal(
       showsAnalysisMaintenance({ analysisPending: undefined, status: "failed" }),
-      true,
+      false,
     );
   });
 
@@ -98,7 +102,42 @@ describe("analysisPollOutcome", () => {
     );
   });
 
-  it("treats a settled check with no coach as failed so the UI does not spin", () => {
-    assert.equal(analysisPollOutcome(payload("completed")), "failed");
+  it("treats a coach error or a missing coach as a terminal failure, not maintenance", () => {
+    const coachError = payload("processing", {
+      analysis: {
+        id: "an-1",
+        skin_check_id: "chk-1",
+        status: "processing",
+        coach: { error_message: "Có lỗi xảy ra. Bạn thử lại giúp mình nhé." },
+      },
+    });
+    assert.equal(analysisPollOutcome(coachError), "failed");
+    assert.equal(
+      showsAnalysisMaintenance({
+        analysisPending: coachError.analysis_pending,
+        status: coachError.analysis.status,
+      }),
+      false,
+    );
+
+    const missingCoach = payload("completed");
+    assert.equal(analysisPollOutcome(missingCoach), "failed");
+    assert.equal(
+      showsAnalysisMaintenance({
+        analysisPending: missingCoach.analysis_pending,
+        status: missingCoach.analysis.status,
+      }),
+      false,
+    );
+
+    const flagged = payload("failed", { analysis_pending: true });
+    assert.equal(analysisPollOutcome(flagged), "failed");
+    assert.equal(
+      showsAnalysisMaintenance({
+        analysisPending: flagged.analysis_pending,
+        status: flagged.analysis.status,
+      }),
+      true,
+    );
   });
 });

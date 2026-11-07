@@ -169,11 +169,9 @@ test.describe("Onboarding analyze — error messages", () => {
     await expect(
       page.getByTestId("onboarding-step-starter-routine"),
     ).toBeVisible({ timeout: 30_000 });
-    const note = page.getByTestId("analysis-maintenance-note");
-    await expect(note).toBeVisible();
-    await expect(note).toContainText(vi.checkIn.maintenance.title);
-    await expect(note).toContainText(vi.checkIn.maintenance.body);
-    await expect(page.getByText(copy.photoFallbackTitle)).toBeHidden();
+    await expect(page.getByText(copy.photoFallbackTitle)).toBeVisible();
+    await expect(page.getByText(copy.photoFallbackBody)).toBeVisible();
+    await expect(page.getByTestId("analysis-maintenance-note")).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: copy.retryAnalyzeAiShort }),
     ).toBeVisible();

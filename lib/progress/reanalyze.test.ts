@@ -139,7 +139,7 @@ describe("applySkinCheckToProgressEntry", () => {
     assert.equal(next.gauges?.overall, 0.82);
   });
 
-  it("clears snippet on failed so the maintenance note can show", () => {
+  it("clears snippet on failed so the failed line can show", () => {
     const next = applySkinCheckToProgressEntry(entry(), payload("failed"));
     assert.equal(next.status, "failed");
     assert.equal(next.snippet, undefined);

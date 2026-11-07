@@ -96,6 +96,8 @@ export function ProgressEntryCard({
             </p>
           ) : entry.status === "pending" || entry.status === "processing" ? (
             <p className="text-xs italic text-muted-foreground">{t("processing")}</p>
+          ) : entry.status === "failed" ? (
+            <p className="text-xs text-destructive/80">{t("failed")}</p>
           ) : entry.user_note ? (
             <p className="line-clamp-2 text-xs text-muted-foreground sm:text-sm">{entry.user_note}</p>
           ) : null}

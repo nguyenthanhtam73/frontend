@@ -352,7 +352,9 @@ export function CheckInContextCard({
               variant="outline"
               className={cn(
                 "text-[11px] uppercase tracking-wider",
-                "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200",
+                e.status === "failed"
+                  ? "border-destructive/30 bg-destructive/10 text-destructive"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200",
               )}
             >
               {translateSafely(t, `status.${e.status}`)}

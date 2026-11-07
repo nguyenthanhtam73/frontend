@@ -58,9 +58,23 @@ describe("DailyCoachFeedback maintenance", () => {
     assert.equal(html.includes("Hôm nay da ổn"), false);
   });
 
-  it("shows the calm note when analysis failed, even without the flag", () => {
+  it("keeps the old error card when analysis failed without analysis_pending", () => {
     const html = renderFeedback({
       ...oldCheck,
+      analysis: {
+        ...oldCheck.analysis,
+        status: "failed",
+        coach: undefined,
+      },
+    });
+    assert.equal(html.includes("Hệ thống đang bảo trì"), false);
+    assert.match(html, /Chưa tạo được lời khuyên/);
+  });
+
+  it("shows the note for a failed analysis only when analysis_pending is set", () => {
+    const html = renderFeedback({
+      ...oldCheck,
+      analysis_pending: true,
       analysis: {
         ...oldCheck.analysis,
         status: "failed",

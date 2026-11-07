@@ -11,22 +11,24 @@ export type AnalysisMaintenanceInput = {
 };
 
 /**
- * Show the calm maintenance note instead of an empty coach or a generic error.
- * A completed analysis always wins, even if an older client still sees the flag.
+ * Show the calm maintenance note only when the server set `analysis_pending`.
+ * A failed analysis without that flag keeps the existing error card and retry.
+ * A completed coach always wins, even if an older payload still carries the flag.
  * `pending` / `processing` without the flag is a normal wait, not this note.
  */
 export function showsAnalysisMaintenance(input: AnalysisMaintenanceInput): boolean {
   if (input.status === "completed") return false;
-  if (input.analysisPending === true) return true;
-  return input.status === "failed";
+  return input.analysisPending === true;
 }
 
 export type AnalysisPollOutcome = "completed" | "failed" | "continue";
 
 /**
  * Whether check-in polling should stop.
- * `analysis_pending` does not stop the loop: a still-pending job keeps polling
- * exactly as before. Failed and completed are terminal.
+ * `analysis_pending` does not stop the loop: a still-pending job keeps polling.
+ * A coach error or a completed row with no coach is the existing terminal
+ * failure (error card + retry). It is not the maintenance note — that UI
+ * checks `analysis_pending` on its own.
  */
 export function analysisPollOutcome(
   payload: Pick<CreateSkinCheckResponseDTO, "analysis">,

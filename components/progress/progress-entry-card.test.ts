@@ -24,10 +24,12 @@ describe("ProgressEntryCard reanalyze CTA", () => {
     assert.ok(thumbIdx > 0 && ctaIdx > thumbIdx);
   });
 
-  it("shows the maintenance note for a failed or analysis_pending row", () => {
+  it("shows the maintenance note only for analysis_pending and keeps the failed line", () => {
     assert.match(src, /showsAnalysisMaintenance/);
     assert.match(src, /AnalysisMaintenanceNote/);
-    assert.equal(src.includes('t("failed")'), false);
+    assert.match(src, /entry\.status === "failed"/);
+    assert.match(src, /t\("failed"\)/);
+    assert.match(src, /t\("reanalyzeCta"\)/);
   });
 
   it("disables and marks busy while POST+poll is in flight", () => {
