@@ -397,7 +397,6 @@ function CoachWelcomeLoaded({
             isGeneratingRoutine={isGeneratingRoutine}
             showFallbackBanner={showFallbackBanner}
             showRetryAi={showRetryAi}
-            photosSaved={displayPhotoUrls.length > 0}
             isGuest={isGuest}
             retryLoading={retryAiLoading}
             onRetryAi={() => {

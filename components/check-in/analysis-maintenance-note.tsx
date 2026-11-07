@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Calm stand-in for a skin-check coach that is not ready yet.
- * Shown when `analysis_pending` is true or the analysis status is `failed`.
+ * Shown only when `analysis_pending` is true.
  */
 export function AnalysisMaintenanceNote({
   compact = false,
