@@ -992,30 +992,61 @@ function Wardrobe({
   const hairs = grantedWardrobeItems("hair", access);
   const clips = grantedWardrobeItems("clip", access);
   const wearingSaved = wornLook != null && sameGameLook(wornLook, preview);
-  const drag = useRef<{ x: number; y: number; top: number } | null>(null);
+  const drag = useRef<{ id: number; x: number; y: number } | null>(null);
+  const [pull, setPull] = useState(0);
+  function endDrag(target: HTMLElement, pointerId: number) {
+    drag.current = null;
+    setPull(0);
+    try {
+      if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId);
+    } catch {
+      /* The pointer is already gone after a cancel. */
+    }
+  }
   return (
     <section
       className="beda-card beda-sheet"
       data-testid="beda-wardrobe"
+      data-pull={pull}
       role="dialog"
       aria-modal="true"
       aria-label={t("game.wardrobe")}
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        drag.current = { x: event.clientX, y: event.clientY, top: event.currentTarget.scrollTop };
-      }}
-      onPointerUp={(event) => {
-        const start = drag.current;
-        drag.current = null;
-        if (!start) return;
-        const dy = event.clientY - start.y;
-        const dx = event.clientX - start.x;
-        if (start.top <= 0 && dy > 72 && Math.abs(dx) < 56) onClose();
-      }}
-      onPointerCancel={() => {
-        drag.current = null;
-      }}
+      style={pull > 0 ? { transform: `translateY(${pull}px)` } : undefined}
     >
+      <div
+        className="beda-sheet-grab"
+        data-testid="beda-wardrobe-grab"
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          if ((event.target as Element).closest("[data-testid='beda-wardrobe-close']")) return;
+          const grab = event.currentTarget;
+          drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+          setPull(0);
+          try {
+            grab.setPointerCapture(event.pointerId);
+            grab.dataset.captured = grab.hasPointerCapture(event.pointerId) ? "yes" : "no";
+          } catch {
+            grab.dataset.captured = "no";
+          }
+        }}
+        onPointerMove={(event) => {
+          const start = drag.current;
+          if (!start || start.id !== event.pointerId) return;
+          const dy = event.clientY - start.y;
+          const dx = event.clientX - start.x;
+          setPull(dy > 0 && dy >= Math.abs(dx) ? Math.min(dy, 180) : 0);
+        }}
+        onPointerUp={(event) => {
+          const start = drag.current;
+          const dy = start && start.id === event.pointerId ? event.clientY - start.y : 0;
+          const dx = start && start.id === event.pointerId ? event.clientX - start.x : 0;
+          endDrag(event.currentTarget, event.pointerId);
+          if (dy > 72 && Math.abs(dx) < 56) onClose();
+        }}
+        onPointerCancel={(event) => {
+          endDrag(event.currentTarget, event.pointerId);
+        }}
+      >
       <span className="beda-sheet-handle" aria-hidden />
       <div className="beda-sheet-head">
         <h2>{t("game.wardrobe")}</h2>
@@ -1030,6 +1061,7 @@ function Wardrobe({
             <path d="M9 9l14 14M23 9 9 23" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
           </svg>
         </button>
+      </div>
       </div>
       <p>{t("game.wearing")}</p>
       <ul className="beda-worn">

@@ -1833,6 +1833,17 @@
   background: transparent;
 }
 
+.beda-sheet-grab {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -14px -14px 8px;
+  padding: 14px 14px 4px;
+  background: #fffaf5;
+  touch-action: none;
+  cursor: grab;
+}
+
 .beda-sheet-handle {
   display: block;
   width: 48px;
@@ -2067,6 +2078,9 @@
   width: auto;
   max-height: none;
   transform: none;
+  overflow: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .beda-wear-bar {

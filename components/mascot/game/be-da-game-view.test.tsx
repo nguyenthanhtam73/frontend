@@ -141,6 +141,8 @@ describe("Bé Da game screen", () => {
     const html = renderGame({ look, tab: "wardrobe" satisfies GameTab });
     assert.match(html, /data-testid="beda-wardrobe"/);
     assert.match(html, /data-testid="beda-wardrobe-close"/);
+    assert.match(html, /data-testid="beda-wardrobe-grab"/);
+    assert.match(html, /beda-sheet-grab/);
     assert.match(html, /data-testid="beda-wardrobe-backdrop"/);
     assert.match(html, /aria-label="Đóng"/);
     assert.match(html, /data-wardrobe-preview="on"/);
