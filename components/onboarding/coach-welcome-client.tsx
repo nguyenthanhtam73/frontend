@@ -64,6 +64,7 @@ import { normalizeReviewPhotoUrls } from "@/lib/onboarding/photo-session-urls";
 import { isOnboardingComplete } from "@/lib/onboarding/snapshot";
 import { loadGuestReviewFromSession } from "@/lib/onboarding/review-data";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import { fetchCoachWelcomeAnalysisPending } from "@/lib/onboarding/coach-welcome-analysis-pending";
 import { useStarterRoutineLive } from "@/lib/onboarding/use-starter-routine-live";
 import {
   hasNeverCheckedIn,
@@ -157,6 +158,7 @@ function CoachWelcomeLoaded({
   const [photosAttachFailed, setPhotosAttachFailed] = useState(
     () => readCoachWelcomeSession()?.photosAttachFailed === true,
   );
+  const [analysisPending, setAnalysisPending] = useState(false);
   const {
     starter,
     isGeneratingRoutine,
@@ -192,6 +194,20 @@ function CoachWelcomeLoaded({
       Boolean(userId) && isFirstCheckInLaterToday(userId ?? "", streakDateKey()),
     );
   }, [userId]);
+
+  useEffect(() => {
+    if (isGuest || !signedIn) {
+      setAnalysisPending(false);
+      return;
+    }
+    let cancelled = false;
+    void fetchCoachWelcomeAnalysisPending().then((value) => {
+      if (!cancelled) setAnalysisPending(value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isGuest, signedIn]);
 
   useEffect(() => {
     router.prefetch("/check-in");
@@ -397,6 +413,7 @@ function CoachWelcomeLoaded({
             isGeneratingRoutine={isGeneratingRoutine}
             showFallbackBanner={showFallbackBanner}
             showRetryAi={showRetryAi}
+            analysisPending={analysisPending}
             isGuest={isGuest}
             retryLoading={retryAiLoading}
             onRetryAi={() => {
