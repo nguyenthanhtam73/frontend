@@ -37,11 +37,22 @@ import {
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
-import { createSpaRoom, listMySpaRooms, mergeSpaRoomCodes, readRememberedSpaRooms, rememberSpaRoom, spaProblemFromError } from "@/lib/mascot/game/spa-room-api";
+import {
+  createSpaRoom,
+  listMySpaRooms,
+  mergeSpaRoomCodes,
+  readRememberedSpaRooms,
+  rememberSpaRoom,
+  roomLockFromError,
+  spaProblemFromError,
+} from "@/lib/mascot/game/spa-room-api";
 import {
   SPA_TAB_KEY,
   normalizeRoomCode,
+  pickActiveRoom,
+  remainingRoomDays,
   roomInvitePath,
+  type RoomClock,
   type SpaNotice,
 } from "@/lib/mascot/game/spa-room";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
@@ -97,6 +108,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [createProblem, setCreateProblem] = useState<SpaNotice>(null);
   const [creatingRoom, setCreatingRoom] = useState(false);
   const [myRooms, setMyRooms] = useState<string[]>([]);
+  const [roomLock, setRoomLock] = useState<RoomClock | null>(null);
   const [toast, setToast] = useState<GameToast>(null);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [wornLook, setWornLook] = useState<GameLook | null>(null);
@@ -296,7 +308,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     void listMySpaRooms()
       .then((rooms) => {
         if (cancel) return;
-        setMyRooms(mergeSpaRoomCodes(localStorage, rooms.map((room) => room.code)));
+        setRoomLock(pickActiveRoom(rooms));
+        const open = rooms.filter((room) => !room.endsAt || Date.parse(room.endsAt) > Date.now());
+        setMyRooms(
+          rooms.length === 0
+            ? readRememberedSpaRooms(localStorage)
+            : mergeSpaRoomCodes(localStorage, open.map((room) => room.code)),
+        );
       })
       .catch(() => {
         if (!cancel) setMyRooms(readRememberedSpaRooms(localStorage));
@@ -331,10 +349,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       router.push(roomInvitePath(next));
     } catch (err) {
       const problem = spaProblemFromError(err);
+      const lock = roomLockFromError(err);
       setCreateProblem(problem);
-      if (problem === "too-many") {
+      if (lock) setRoomLock(lock);
+      if (problem === "too-many" || problem === "already-in") {
         try {
           const rooms = await listMySpaRooms();
+          if (!lock) setRoomLock(pickActiveRoom(rooms));
           setMyRooms(mergeSpaRoomCodes(localStorage, rooms.map((room) => room.code)));
         } catch {
           setMyRooms(readRememberedSpaRooms(localStorage));
@@ -478,6 +499,9 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
               notice: code ? spaRoom.notice : "bad-code",
               you: code ? spaRoom.you : null,
               youStreak: code ? spaRoom.youStreak : 0,
+              name: code ? spaRoom.roomName : "",
+              daysLeft: code && spaRoom.endsAt ? remainingRoomDays(new Date(spaRoom.endsAt), new Date()) : null,
+              lock: code ? spaRoom.conflict : null,
             }
           : null
       }
@@ -486,6 +510,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       creatingRoom={creatingRoom}
       createProblem={createProblem}
       myRooms={myRooms}
+      activeRoom={inSpa ? null : roomLock}
       onJoinRoom={(next) => {
         rememberSpaRoom(localStorage, next);
         router.push(roomInvitePath(next));

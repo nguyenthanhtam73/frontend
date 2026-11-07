@@ -21,7 +21,6 @@ import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
   SPA_BOUNDS,
-  SPA_MAT,
   adoptServerPoint,
   clampCamera,
   clampPoint,
@@ -716,7 +715,8 @@ export function useSpaMotion(input: {
     let sentMoving = false;
     let owned = false;
     let seenServer = youProp.current ? { x: youProp.current.x, y: youProp.current.y } : null;
-    let mat: Obstacle = SPA_MAT;
+    const clearMat: Obstacle = { x: -2, y: -2, rx: 0, ry: 0 };
+    let mat: Obstacle = clearMat;
     let matAt = -1_000;
     const glides = new Map<string, Glide>();
     const glideTargets = new Map<string, { x: number; y: number }>();
@@ -734,7 +734,7 @@ export function useSpaMotion(input: {
 
     const measureMat = (): Obstacle => {
       const matEl = view.querySelector<HTMLElement>(".beda-spa-mat");
-      if (!matEl) return SPA_MAT;
+      if (!matEl) return clearMat;
       const scale = cam.scale || 1;
       const viewBox = view.getBoundingClientRect();
       const matBox = matEl.getBoundingClientRect();
@@ -901,7 +901,7 @@ export function useSpaMotion(input: {
 
     const down = (event: PointerEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-spa-invite, .beda-spa-head")) return;
+      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock")) return;
       if (!target.closest(".beda-spa-view")) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       downPoint = { x: event.clientX, y: event.clientY };

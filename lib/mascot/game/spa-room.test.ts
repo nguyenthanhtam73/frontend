@@ -17,7 +17,14 @@ import {
   normalizeRoomCode,
   parseRoomMessage,
   roomFrameAllowed,
+  formatRoomEndDate,
+  oneRoomMessage,
+  pickActiveRoom,
+  readAlreadyInRoom,
+  remainingRoomDays,
+  roomEndDate,
   roomInviteUrl,
+  roomShareChoice,
   sampleSpaGuests,
   seatGuests,
   shouldRetryRoomJoin,
@@ -77,6 +84,8 @@ describe("spa room HTTP errors", () => {
   it("maps the live room codes and statuses", () => {
     assert.equal(spaRoomProblem(409, "room_full"), "full");
     assert.equal(spaRoomProblem(409, "too_many_rooms"), "too-many");
+    assert.equal(spaRoomProblem(409, "already_in_room"), "already-in");
+    assert.equal(spaRoomProblem(409, "already_in_a_room"), "already-in");
     assert.equal(spaRoomProblem(429, "rate_limited"), "rate");
     assert.equal(spaRoomProblem(404, "room_not_found"), "missing");
     assert.equal(spaRoomProblem(404, null), "missing");
@@ -103,7 +112,62 @@ describe("spa room HTTP errors", () => {
     assert.equal(room?.memberCount, 3);
     assert.equal(room?.joined, true);
     assert.equal(room?.cap, 8);
+    assert.equal(room?.name, "");
+    assert.equal(room?.endsAt, null);
     assert.equal(readSpaRoom({ member_count: 1 }), null);
+  });
+
+  it("keeps one room for 8 days and reads a 409 already_in_room", () => {
+    const created = "2026-11-07T03:00:00.000Z";
+    const end = roomEndDate({ createdAt: created });
+    assert.equal(end?.toISOString(), "2026-11-15T03:00:00.000Z");
+    assert.equal(remainingRoomDays(end!, new Date(created)), 8);
+    assert.equal(remainingRoomDays(end!, new Date("2026-11-12T03:00:00.000Z")), 3);
+    assert.equal(remainingRoomDays(end!, new Date("2026-11-15T03:00:00.000Z")), 0);
+    assert.equal(formatRoomEndDate(end!, "vi"), "15/11/2026");
+    assert.match(formatRoomEndDate(end!, "en"), /November 15, 2026/);
+    assert.equal(
+      oneRoomMessage("DA7K2M", "15/11/2026", "vi"),
+      "Bạn đang ở phòng DA7K2M. Mỗi người chỉ ở 1 phòng thôi, phòng kết thúc ngày 15/11/2026 rồi bạn tạo hoặc vào phòng mới nhé.",
+    );
+    assert.match(oneRoomMessage("DA7K2M", "November 15, 2026", "en"), /1 room/);
+    const lock = readAlreadyInRoom({
+      success: false,
+      error: {
+        code: "already_in_room",
+        message: "already in a room",
+        room: { code: "da7k2m", name: "Phòng trà", ends_at: "2026-11-15T03:00:00.000Z" },
+      },
+    });
+    assert.equal(lock?.code, "DA7K2M");
+    assert.equal(lock?.name, "Phòng trà");
+    assert.equal(lock?.endsAt, "2026-11-15T03:00:00.000Z");
+    const flat = readAlreadyInRoom({
+      error: { code: "already_in_room", room_code: "BE3N9Q", ends_at: "2026-11-20T03:00:00.000Z" },
+    });
+    assert.equal(flat?.code, "BE3N9Q");
+    assert.equal(readAlreadyInRoom({ error: { code: "room_full", room_code: "DA7K2M" } }), null);
+    const withCreated = readSpaRoom({
+      code: "DA7K2M",
+      cap: 8,
+      member_count: 1,
+      created_at: created,
+    });
+    assert.equal(withCreated?.endsAt, "2026-11-15T03:00:00.000Z");
+    assert.equal(
+      pickActiveRoom([
+        { code: "OLDROOM", createdAt: "2026-10-01T03:00:00.000Z" },
+        { code: "DA7K2M", name: "Phòng trà", endsAt: "2026-11-15T03:00:00.000Z" },
+      ], Date.parse("2026-11-10T03:00:00.000Z"))?.code,
+      "DA7K2M",
+    );
+    assert.equal(
+      pickActiveRoom([{ code: "DA7K2M", endsAt: "2026-11-01T03:00:00.000Z" }], Date.parse("2026-11-10T03:00:00.000Z")),
+      null,
+    );
+    assert.equal(roomShareChoice(true, true), "zalo");
+    assert.equal(roomShareChoice(false, true), "web-share");
+    assert.equal(roomShareChoice(false, false), "zalo-link");
   });
 });
 

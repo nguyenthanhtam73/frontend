@@ -31,6 +31,9 @@ import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type W
  */
 
 export const SPA_ROOM_CAP = 8;
+/** One room stays open this many days, then the person can create or join another. */
+export const SPA_ROOM_LIFE_DAYS = 8;
+export const ROOM_TIME_ZONE = "Asia/Ho_Chi_Minh";
 export const SPA_ROOM_CODE_LENGTH = 6;
 /** No 0/O or 1/I, so a code read aloud is hard to mix up. */
 export const SPA_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -73,15 +76,15 @@ export type SpaSeat = {
   scale: number;
 };
 
-/** Fill order. The first four are the seats in the spa mockup. The last three stay open. */
+/** Fill order. Seats stay on the edges so the middle of the floor is open to walk. */
 export const SPA_SEATS: readonly SpaSeat[] = [
-  { id: "back-left", x: 32, y: 50, scale: 0.86 },
-  { id: "back-right", x: 68, y: 50, scale: 0.86 },
-  { id: "left", x: 14, y: 66, scale: 0.94 },
-  { id: "right", x: 86, y: 66, scale: 0.94 },
-  { id: "front-left", x: 34, y: 78, scale: 1 },
-  { id: "front-right", x: 66, y: 78, scale: 1 },
-  { id: "back", x: 50, y: 30, scale: 0.7 },
+  { id: "back-left", x: 18, y: 48, scale: 0.82 },
+  { id: "back-right", x: 82, y: 48, scale: 0.82 },
+  { id: "left", x: 12, y: 66, scale: 0.9 },
+  { id: "right", x: 88, y: 66, scale: 0.9 },
+  { id: "front-left", x: 24, y: 82, scale: 0.96 },
+  { id: "front-right", x: 76, y: 82, scale: 0.96 },
+  { id: "back", x: 50, y: 36, scale: 0.68 },
 ];
 
 export const SPA_YOU = { id: "you" as const, x: 50, y: 92, scale: 1.24 };
@@ -178,6 +181,7 @@ export type SpaNotice =
   | "name"
   | "rate"
   | "too-many"
+  | "already-in"
   | "member"
   | "offline"
   | null;
@@ -258,6 +262,130 @@ export function roomInviteUrl(code: string): string {
 /** Zalo's share sheet. The link is the invite, not a chat message. */
 export function zaloShareUrl(inviteUrl: string): string {
   return `https://zalo.me/share?url=${encodeURIComponent(inviteUrl)}`;
+}
+
+const ROOM_LIFE_MS = SPA_ROOM_LIFE_DAYS * 24 * 60 * 60 * 1000;
+
+/** The one open room this account is still in. */
+export type RoomClock = {
+  code: string;
+  /** Shown in the one-room sentence. The code, when the server sent no name. */
+  name: string;
+  /** ISO end. Null when the server did not say when the room closes. */
+  endsAt: string | null;
+};
+
+function parseIso(value: string | null | undefined): Date | null {
+  if (!value || !value.trim()) return null;
+  const at = Date.parse(value);
+  if (!Number.isFinite(at)) return null;
+  return new Date(at);
+}
+
+function firstText(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+/** Explicit end, or created_at plus 8 days. */
+export function roomEndDate(input: { endsAt?: string | null; createdAt?: string | null }): Date | null {
+  const explicit = parseIso(input.endsAt);
+  if (explicit) return explicit;
+  const created = parseIso(input.createdAt);
+  if (!created) return null;
+  return new Date(created.getTime() + ROOM_LIFE_MS);
+}
+
+/** Days still left, from 8 down to 0. A partial day counts as one until the end instant. */
+export function remainingRoomDays(endsAt: Date, now: Date): number {
+  const left = endsAt.getTime() - now.getTime();
+  if (left <= 0) return 0;
+  return Math.min(SPA_ROOM_LIFE_DAYS, Math.ceil(left / (24 * 60 * 60 * 1000)));
+}
+
+export function formatRoomEndDate(endsAt: Date, locale: string): string {
+  const vi = locale.toLowerCase().startsWith("vi");
+  return new Intl.DateTimeFormat(vi ? "vi-VN" : "en-US", {
+    timeZone: ROOM_TIME_ZONE,
+    day: "numeric",
+    month: vi ? "numeric" : "long",
+    year: "numeric",
+  }).format(endsAt);
+}
+
+export function oneRoomMessage(name: string, dateLabel: string, locale: string): string {
+  const room = name.trim();
+  if (locale.toLowerCase().startsWith("vi")) {
+    return `Bạn đang ở phòng ${room}. Mỗi người chỉ ở 1 phòng thôi, phòng kết thúc ngày ${dateLabel} rồi bạn tạo hoặc vào phòng mới nhé.`;
+  }
+  return `You are in room ${room}. Each person can only be in 1 room. The room ends on ${dateLabel}, then you can create or join a new one.`;
+}
+
+function readClockRow(row: unknown): RoomClock | null {
+  if (!row || typeof row !== "object") return null;
+  const rec = row as Record<string, unknown>;
+  const rawCode = typeof rec.room_code === "string" ? rec.room_code : typeof rec.code === "string" ? rec.code : "";
+  const code = normalizeRoomCode(rawCode);
+  if (!code) return null;
+  const name = firstText(rec.name, rec.room_name, rec.title) ?? code;
+  const end = roomEndDate({
+    endsAt: firstText(rec.ends_at, rec.end_at, rec.ends_on, rec.end_time, rec.expires_at),
+    createdAt: firstText(rec.created_at),
+  });
+  return { code, name, endsAt: end ? end.toISOString() : null };
+}
+
+/** 409 body whose code is already_in_room, plus the room the person is already in. */
+export function readAlreadyInRoom(payload: unknown): RoomClock | null {
+  if (!payload || typeof payload !== "object") return null;
+  const body = payload as Record<string, unknown>;
+  const error = body.error && typeof body.error === "object" ? (body.error as Record<string, unknown>) : null;
+  const code = firstText(error?.code, body.code) ?? "";
+  if (!isAlreadyInRoomCode(code)) return null;
+  const nested =
+    readClockRow(error?.room) ??
+    readClockRow(error?.current_room) ??
+    readClockRow(body.data) ??
+    readClockRow(body.room);
+  if (nested) return nested;
+  if (!error) return null;
+  return readClockRow({
+    room_code: error.room_code ?? error.current_code,
+    name: firstText(error.room_name, error.name),
+    ends_at: firstText(error.ends_at, error.end_at, error.ends_on, error.end_time),
+    created_at: firstText(error.created_at),
+  });
+}
+
+/** The open room to keep. A room whose end has passed is ignored. */
+export function pickActiveRoom(
+  rooms: readonly { code: string; name?: string; endsAt?: string | null; createdAt?: string | null }[],
+  now = Date.now(),
+): RoomClock | null {
+  const open: { clock: RoomClock; end: number }[] = [];
+  for (const room of rooms) {
+    const code = normalizeRoomCode(room.code);
+    if (!code) continue;
+    const end = roomEndDate({ endsAt: room.endsAt ?? null, createdAt: room.createdAt ?? null });
+    if (end && end.getTime() <= now) continue;
+    const name = (room.name ?? "").trim() || code;
+    open.push({
+      clock: { code, name, endsAt: end ? end.toISOString() : null },
+      end: end ? end.getTime() : Number.POSITIVE_INFINITY,
+    });
+  }
+  if (open.length === 0) return null;
+  open.sort((a, b) => b.end - a.end);
+  return open[0]!.clock;
+}
+
+/** Zalo share first. Web Share only when that window did not open. */
+export function roomShareChoice(zaloOpened: boolean, canWebShare: boolean): "zalo" | "web-share" | "zalo-link" {
+  if (zaloOpened) return "zalo";
+  if (canWebShare) return "web-share";
+  return "zalo-link";
 }
 
 export function sampleSpaGuests(
@@ -341,13 +469,18 @@ export function spaHeadCount(input: {
 /**
  * Map a room HTTP status or a socket error code onto a short notice.
  * `not_available` stays null so the sample spa can remain.
- * 409 is `room_full` or `too_many_rooms` by code. 404 is a missing room.
- * 429 is `rate_limited`.
+ * 409 is `room_full`, `too_many_rooms`, or `already_in_room` by code.
+ * 404 is a missing room. 429 is `rate_limited`.
  */
+export function isAlreadyInRoomCode(code: string | null | undefined): boolean {
+  return code === "already_in_room" || code === "already_in_a_room";
+}
+
 export function spaRoomProblem(status: number | null, code: string | null): Exclude<SpaNotice, null> | null {
   const name = code ?? "";
   if (name === "room_full" || name === "full") return "full";
   if (name === "too_many_rooms") return "too-many";
+  if (isAlreadyInRoomCode(name)) return "already-in";
   if (name === "rate_limited") return "rate";
   if (name === "room_not_found" || name === "not_found" || name === "unknown_room") return "missing";
   if (name === "bad_code") return "bad-code";

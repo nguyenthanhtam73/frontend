@@ -272,16 +272,19 @@ describe("Bé Da game screen", () => {
         cap: 8,
         guests: sampleSpaGuests(new Set()),
         notice: null,
+        daysLeft: 5,
       },
     });
     const text = visibleText(html);
     assert.match(html, /data-testid="beda-spa"/);
-    assert.match(text, /Phòng nhóm · 5\/8/);
-    assert.match(text, /8 chỗ · còn 3/);
-    assert.match(text, /Mã mời vào phòng/);
-    assert.match(text, /Sao chép mã/);
-    assert.match(text, /Gửi qua Zalo/);
-    assert.match(text, /Ra sảnh/);
+    assert.match(text, /Phòng bạn bè/);
+    assert.match(text, /5\/8 người/);
+    assert.match(text, /Còn 5\/8 ngày/);
+    assert.match(text, /Mời bạn/);
+    assert.equal(html.includes('data-testid="beda-spa-code"'), false);
+    assert.equal(html.includes("DA7K2M"), false);
+    assert.equal(html.includes("Mã mời vào phòng"), false);
+    assert.equal(html.includes("Ra sảnh"), false);
     assert.match(text, /Trà Sữa/);
     assert.match(text, /Mây Hồng/);
     assert.match(text, /Ốc Quế/);
@@ -294,20 +297,99 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("faces/sleepy"), false);
     assert.match(html, /\/mascot\/faces\/happy\/eyes\.svg/);
     assert.equal((html.match(/class="beda-cuke /g) ?? []).length, 10);
-    assert.match(html, /beda-spa-cucumber/);
-    assert.match(html, /beda-spa-mat/);
-    assert.equal((html.match(/class="beda-spa-dot is-on"/g) ?? []).length, 5);
-    assert.equal((html.match(/class="beda-spa-dot"/g) ?? []).length, 3);
+    assert.equal(html.includes("beda-spa-cucumber"), false);
+    assert.equal(html.includes("beda-spa-mat"), false);
     assert.match(html, /Ẩn bạn này/);
     assert.match(html, /Vẫy tay/);
     assert.match(html, /Thả tim/);
     assert.match(html, /Khen đồ/);
-    assert.match(html, /https:\/\/zalo\.me\/share\?url=https%3A%2F%2Fdadiary\.vn%2Fbe-da%2Fphong%2FDA7K2M/);
+    assert.equal(html.includes("zalo.me"), false);
     assert.equal(html.includes("textarea"), false);
     assert.equal(html.includes('data-testid="beda-coins"'), false);
     assert.equal(html.includes('data-testid="beda-streak"'), false);
     assert.equal(html.includes("ấm trà"), false);
     assertNoScores(html);
+  });
+
+  it("keeps the invite code behind Mời bạn", () => {
+    const html = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 5,
+        cap: 8,
+        guests: sampleSpaGuests(new Set()),
+        notice: null,
+        daysLeft: 5,
+      },
+      spaInviteOpen: true,
+    });
+    const text = visibleText(html);
+    assert.match(html, /data-testid="beda-invite-card"/);
+    assert.match(html, /data-testid="beda-invite-back"/);
+    assert.match(text, /Mã mời vào phòng/);
+    assert.match(text, /Sao chép/);
+    assert.match(text, /Gửi qua Zalo/);
+    assert.match(html, /data-testid="beda-spa-code"/);
+    assert.match(text, /D/);
+    assert.match(html, /https:\/\/zalo\.me\/share\?url=https%3A%2F%2Fdadiary\.vn%2Fbe-da%2Fphong%2FDA7K2M/);
+  });
+
+  it("says the person is already in one room and hides create, join, and find", () => {
+    const html = renderGame({
+      tab: "lobby",
+      activeRoom: { code: "DA7K2M", name: "DA7K2M", endsAt: "2026-11-15T03:00:00.000Z" },
+      myRooms: ["DA7K2M", "BE3N9Q"],
+    });
+    const text = visibleText(html);
+    assert.match(
+      text,
+      /Bạn đang ở phòng DA7K2M\. Mỗi người chỉ ở 1 phòng thôi, phòng kết thúc ngày 15\/11\/2026 rồi bạn tạo hoặc vào phòng mới nhé\./,
+    );
+    assert.match(html, /data-testid="beda-current-room"/);
+    assert.match(text, /Vào phòng này/);
+    assert.equal(html.includes("Tạo phòng"), false);
+    assert.equal(html.includes("Nhập mã"), false);
+    assert.equal(html.includes("Tìm phòng"), false);
+    assert.equal(html.includes('data-testid="beda-create-room"'), false);
+    assert.equal(html.includes('data-testid="beda-enter-code"'), false);
+    assert.equal(html.includes('data-testid="beda-reenter-room"'), false);
+    const english = renderGame(
+      {
+        tab: "lobby",
+        activeRoom: { code: "DA7K2M", name: "DA7K2M", endsAt: "2026-11-15T03:00:00.000Z" },
+      },
+      en,
+      "en",
+    );
+    const englishText = visibleText(english);
+    assert.match(englishText, /You are in room DA7K2M/);
+    assert.match(englishText, /November 15, 2026/);
+    assert.match(englishText, /Go to this room/);
+    assert.equal(english.includes("Create a room"), false);
+    assert.equal(english.includes("Enter a code"), false);
+  });
+
+  it("shows the English room header with days left", () => {
+    const html = renderGame(
+      {
+        spa: {
+          code: "DA7K2M",
+          count: 5,
+          cap: 8,
+          guests: [],
+          notice: null,
+          daysLeft: 5,
+          name: "Tea room",
+        },
+      },
+      en,
+      "en",
+    );
+    const text = visibleText(html);
+    assert.match(text, /Tea room/);
+    assert.match(text, /5\/8 people/);
+    assert.match(text, /5\/8 days left/);
+    assert.match(text, /Invite/);
   });
 
   it("offers Vào phòng for a room this account already has", () => {
