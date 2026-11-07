@@ -108,16 +108,78 @@ export function nearestWalkable(grid: WalkGrid, x: number, y: number): WalkPoint
   return centerOf(grid, start.c, start.r);
 }
 
+function walkableCell(grid: WalkGrid, c: number, r: number): boolean {
+  if (c < 0 || r < 0 || c >= grid.cols || r >= grid.rows) return false;
+  return grid.walk[r * grid.cols + c] === 1;
+}
+
+/**
+ * Every cell the segment crosses, including the two sides of a diagonal step.
+ * Rounding the line onto one cell used to skip a blocked corner and cut the fountain.
+ */
 function lineClear(grid: WalkGrid, from: { c: number; r: number }, to: { c: number; r: number }): boolean {
-  const steps = Math.max(Math.abs(to.c - from.c), Math.abs(to.r - from.r));
-  if (steps === 0) return grid.walk[from.r * grid.cols + from.c] === 1;
-  for (let i = 0; i <= steps; i += 1) {
-    const t = i / steps;
-    const c = Math.round(from.c + (to.c - from.c) * t);
-    const r = Math.round(from.r + (to.r - from.r) * t);
-    if (grid.walk[r * grid.cols + c] !== 1) return false;
+  let c = from.c;
+  let r = from.r;
+  const dc = Math.abs(to.c - from.c);
+  const dr = Math.abs(to.r - from.r);
+  const sc = to.c > from.c ? 1 : to.c < from.c ? -1 : 0;
+  const sr = to.r > from.r ? 1 : to.r < from.r ? -1 : 0;
+  let err = dc - dr;
+  while (true) {
+    if (!walkableCell(grid, c, r)) return false;
+    if (c === to.c && r === to.r) return true;
+    const doubled = err * 2;
+    const stepC = doubled > -dr;
+    const stepR = doubled < dc;
+    if (stepC && stepR && (!walkableCell(grid, c + sc, r) || !walkableCell(grid, c, r + sr))) return false;
+    if (stepC) {
+      err -= dr;
+      c += sc;
+    }
+    if (stepR) {
+      err += dc;
+      r += sr;
+    }
   }
-  return true;
+}
+
+/** True when the straight segment between two points stays on walkable cells. */
+export function segmentStaysWalkable(grid: WalkGrid, from: WalkPoint, to: WalkPoint): boolean {
+  return lineClear(grid, cellOf(grid, from.x, from.y), cellOf(grid, to.x, to.y));
+}
+
+/**
+ * The fountain basin is not a path, even when a coarse cell is mostly the ring around it.
+ * A cell is blocked when any corner or its center sits inside the ellipse.
+ */
+export function blockEllipse(
+  grid: WalkGrid,
+  obstacle: { x: number; y: number; rx: number; ry: number },
+): void {
+  const { cols, rows, walk } = grid;
+  for (let r = 0; r < rows; r += 1) {
+    const y0 = r / rows;
+    const y1 = (r + 1) / rows;
+    for (let c = 0; c < cols; c += 1) {
+      const x0 = c / cols;
+      const x1 = (c + 1) / cols;
+      const samples = [
+        [x0, y0],
+        [x1, y0],
+        [x0, y1],
+        [x1, y1],
+        [(x0 + x1) / 2, (y0 + y1) / 2],
+      ];
+      for (const [x, y] of samples) {
+        const nx = (x - obstacle.x) / obstacle.rx;
+        const ny = (y - obstacle.y) / obstacle.ry;
+        if (nx * nx + ny * ny <= 1) {
+          walk[r * cols + c] = 0;
+          break;
+        }
+      }
+    }
+  }
 }
 
 function reconstruct(parent: Int32Array, goal: number, cols: number): { c: number; r: number }[] {

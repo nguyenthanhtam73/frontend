@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { stackNameLabels } from "@/lib/mascot/game/lobby";
-import { findRoute, isWalkable, nearestWalkable, type WalkGrid } from "@/lib/mascot/game/lobby-walk";
+import { blockEllipse, findRoute, isWalkable, nearestWalkable, segmentStaysWalkable, type WalkGrid } from "@/lib/mascot/game/lobby-walk";
+import { LOBBY_FOUNTAIN } from "@/lib/mascot/game/walk";
 
 function grid(rows: string[]): WalkGrid {
   const cols = rows[0]!.length;
@@ -73,6 +74,55 @@ describe("lobby walk mask", () => {
     assert.ok(route.length >= 1);
     for (const point of route) assert.equal(isWalkable(edge, point.x, point.y), true);
     assert.ok(route[route.length - 1]!.x > 0.7);
+  });
+
+  it("does not cut the blocked corner between two diagonal cells", () => {
+    const corner = grid(["#.", ".."]);
+    const from = { x: 0.25, y: 0.75 };
+    const to = { x: 0.75, y: 0.25 };
+    assert.equal(segmentStaysWalkable(corner, from, to), false);
+    const route = findRoute(corner, from, to);
+    assert.ok(route.length >= 1);
+    let prev = from;
+    for (const point of route) {
+      assert.equal(segmentStaysWalkable(corner, prev, point), true);
+      assert.equal(isWalkable(corner, point.x, point.y), true);
+      prev = point;
+    }
+  });
+
+  it("keeps a ring path around the fountain and never a chord through it", () => {
+    const ring = grid([
+      ".......",
+      "..###..",
+      ".#...#.",
+      ".#...#.",
+      ".#...#.",
+      "..###..",
+      ".......",
+    ]);
+    const route = findRoute(ring, { x: 0.08, y: 0.5 }, { x: 0.92, y: 0.5 });
+    assert.ok(route.length >= 2);
+    let prev = { x: 0.08, y: 0.5 };
+    for (const point of route) {
+      assert.equal(segmentStaysWalkable(ring, prev, point), true);
+      assert.equal(isWalkable(ring, point.x, point.y), true);
+      const nx = (point.x - 0.5) / 0.2;
+      const ny = (point.y - 0.5) / 0.2;
+      assert.ok(nx * nx + ny * ny > 1);
+      prev = point;
+    }
+  });
+
+  it("blocks every cell that touches the fountain basin", () => {
+    const open = grid([".....", ".....", ".....", ".....", "....."]);
+    blockEllipse(open, LOBBY_FOUNTAIN);
+    assert.equal(isWalkable(open, 0.5, 0.5), false);
+    assert.equal(isWalkable(open, 0.5, 0.9), true);
+    const inside = nearestWalkable(open, 0.5, 0.5);
+    const nx = (inside.x - 0.5) / LOBBY_FOUNTAIN.rx;
+    const ny = (inside.y - 0.5) / LOBBY_FOUNTAIN.ry;
+    assert.ok(nx * nx + ny * ny > 1);
   });
 
   it("moves the lower name down when two pills overlap", () => {
