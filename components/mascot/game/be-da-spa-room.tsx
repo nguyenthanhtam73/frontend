@@ -5,9 +5,11 @@ import type { MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { BeDaActorLayer } from "@/components/mascot/game/be-da-actor-layer";
 import { useSpaMotion } from "@/components/mascot/game/use-lobby-motion";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
+import { lookArt } from "@/lib/game/core/art";
 import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
 import {
   SPA_CODE_ALPHABET,
@@ -223,6 +225,7 @@ export function BeDaSpaRoom({
   return (
     <div ref={frameRef} className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
       <div ref={viewRef} className="beda-spa-view">
+        <BeDaActorLayer />
       <div className="beda-spa-stage">
         {SPA_SEATS.map((seat) =>
           takenSeats.has(seat.id) ? null : (
@@ -282,7 +285,12 @@ export function BeDaSpaRoom({
         {showYou ? (
           <div
             className="beda-spa-person is-you beda-pose"
-            data-spa-you=""
+            data-spa-you="you"
+            data-actor=""
+            data-outfit={look.outfit}
+            data-hair={look.hair}
+            data-pose={youPose ?? ""}
+            data-art={lookArt(player, look, true).join(" ")}
             data-testid="beda-spa-you"
             style={{ zIndex: 40, ["--scale" as string]: String(SPA_YOU.scale) }}
           >
@@ -536,6 +544,11 @@ function SpaPerson({
       }
       data-sample={guest.sample ? "true" : "false"}
       data-friend-id={guest.id}
+      data-actor=""
+      data-outfit={guest.outfit}
+      data-hair={guest.hair}
+      data-pose={guest.pose ?? ""}
+      data-art={lookArt(view, { outfit: guest.outfit, hair: guest.hair, clip: guest.clip }, true).join(" ")}
       data-testid={`beda-spa-guest-${guest.id}`}
       style={
         standing

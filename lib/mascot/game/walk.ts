@@ -411,6 +411,32 @@ export function followCamera(
   return { ...camera, x: camera.x + (tx - camera.x) * k, y: camera.y + (ty - camera.y) * k };
 }
 
+/**
+ * Pixi `Ticker.deltaTime` is 1 at the target 60fps (`elapsedMS * Ticker.targetFPMS`).
+ * https://pixijs.com/8.x/guides/components/application/ticker-plugin
+ * Convert that scalar to seconds and drop a hitch longer than one slow frame.
+ */
+export function secondsFromDeltaTime(deltaTime: number): number {
+  if (!Number.isFinite(deltaTime) || deltaTime <= 0) return 0;
+  return Math.min(0.05, deltaTime / 60);
+}
+
+/**
+ * Feet further down the screen draw later. Equal heights stay in caller order.
+ * Pixi sorts these with `sortableChildren` + `zIndex`.
+ * https://pixijs.com/8.x/guides/concepts/scene-graph
+ */
+export function depthRank(y: number): number {
+  if (!Number.isFinite(y)) return 0;
+  return Math.round(y * 10000);
+}
+
+/** Whole pixels so a moving camera does not shimmer the sprite. */
+export function pixelSnap(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value);
+}
+
 export function viewportFrame(
   camera: Camera,
   viewW: number,

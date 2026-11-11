@@ -35,6 +35,12 @@ import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
+function actorMotion(pose: "wave" | "cheer" | null, walking: boolean): "idle" | "walk" | "wave" {
+  if (walking) return "walk";
+  if (pose === "wave" || pose === "cheer") return "wave";
+  return "idle";
+}
+
 function actorArt(actor: LobbyActor): string[] {
   const sample = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id);
   const view = actor.sample && sample ? sampleFriendView(sample) : lobbyNeutralView();
@@ -156,6 +162,7 @@ export function BeDaLobby({
         facing: actor.facing,
         art: actorArt(actor),
         local: false as const,
+        motion: actorMotion(actor.pose, actor.walking),
       })),
       {
         id: "you",
@@ -164,6 +171,7 @@ export function BeDaLobby({
         facing: you.facing,
         art: lookArt(player, look, true),
         local: true as const,
+        motion: actorMotion(you.pose, false),
       },
     ],
   };

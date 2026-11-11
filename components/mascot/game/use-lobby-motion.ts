@@ -128,10 +128,16 @@ function setFacing(
   if (!art) return;
   const pose = walkPose(phase, moving, lite);
   const sign = face < 0 ? -1 : 1;
+  root.dataset.moving = moving ? "1" : "0";
+  root.dataset.face = sign < 0 ? "left" : "right";
   const planted = pose.plant >= 0 ? "r" : "l";
   const figure = art.querySelector<HTMLElement>(".bd-figure");
   const lobby = Boolean(root.closest(".beda-lobby"));
   const target = lobby && figure ? figure : art;
+  if (!lobby && root.closest("[data-actors='pixi']")) {
+    if (art.style.transform) art.style.transform = "";
+    return;
+  }
   // Soles end at y=208 of the 250-tall viewBox. The shift is on the figure,
   // not .bd-breathe, because the breath animation owns that element's transform.
   const drop = lobby ? "16.8%" : "0px";

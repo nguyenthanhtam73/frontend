@@ -7,6 +7,8 @@ export type ShellSprite = {
   facing: "left" | "right";
   art: readonly string[];
   local?: boolean;
+  /** Idle, walk, or wave. The walker still wins while the feet are moving. */
+  motion?: "idle" | "walk" | "wave";
 };
 
 export type ShellSnapshot = {

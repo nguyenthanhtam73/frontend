@@ -42,6 +42,7 @@ export function BeDaPixiStage({
     if (!host) return;
     const canvas = document.createElement("canvas");
     canvas.setAttribute("aria-hidden", "true");
+    host.dataset.loading = "1";
     host.appendChild(canvas);
     let dead = false;
     let destroy = () => canvas.remove();
@@ -66,6 +67,7 @@ export function BeDaPixiStage({
           handle.destroy();
           canvas.remove();
         };
+        delete host.dataset.loading;
         onReady?.();
       })
       .catch(() => {
