@@ -2,12 +2,12 @@
  * Raster idle / walk / wave sheets from the real SVG layers.
  * Nothing is redrawn: each frame is the same stack the DOM figure paints.
  */
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import playwright from "playwright";
 
 import { lookArt } from "@/lib/game/core/art";
-import { armMarkup } from "@/lib/mascot/game/sheet-arms";
+import { armMarkup, withoutChinHand } from "@/lib/mascot/game/sheet-arms";
 import { SHEET_CSS, SHEET_DPR, sheetKeyFromArt } from "@/lib/mascot/game/actor-sheet";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import { SAMPLE_LOBBY_FRIENDS, sampleFriendView } from "@/lib/mascot/game/lobby";
@@ -48,10 +48,14 @@ function arts(): Map<string, readonly string[]> {
   return found;
 }
 
+function layerImg(src: string): string {
+  if (!src.endsWith("/glow/level_1.svg")) return `<img alt="" src="${src}">`;
+  const svg = withoutChinHand(readFileSync(join(process.cwd(), "public", src), "utf8"));
+  return `<img alt="" src="data:image/svg+xml,${encodeURIComponent(svg)}">`;
+}
+
 function layersHtml(art: readonly string[]): string {
-  return art
-    .map((src) => `<img alt="" src="${src}">`)
-    .join("");
+  return art.map((src) => layerImg(src)).join("");
 }
 
 function outfitSrc(art: readonly string[]): string {

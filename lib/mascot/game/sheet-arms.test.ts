@@ -3,12 +3,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, it } from "node:test";
 
-import { IDLE_ARM_LEFT, IDLE_ARM_RIGHT, armMarkup, armPose, sleeveArmSrc } from "./sheet-arms";
+import { CHIN_ARM, HANG_ARM, IDLE_ARM_LEFT, armMarkup, armPose, sleeveArmSrc, withoutChinHand } from "./sheet-arms";
 
 /** Face fill on body_chibi. The sleeve hand uses this same paint. */
 const FACE_SKIN = { r: 255, g: 228, b: 218 };
 const SHEET_COUNT = 31;
-const HAND_PIXELS = 200;
 
 type Rgba = { w: number; h: number; px: Uint8Array };
 
@@ -74,37 +73,57 @@ function isFaceSkin(px: Uint8Array, i: number): boolean {
   return a >= 180 && Math.abs(r - FACE_SKIN.r) < 28 && Math.abs(g - FACE_SKIN.g) < 28 && Math.abs(b - FACE_SKIN.b) < 32 && r > g && g >= b - 8;
 }
 
-type HandCount = { left: number; right: number; leftY: number; rightY: number };
+type HandBlob = { n: number; x: number; y: number };
 
-/** Skin pixels of a hand beside the body. The head, ears, and legs sit outside these boxes. */
-function countHands(image: Rgba, frame: { x: number; y: number; w: number; h: number }, clip: string): HandCount {
-  let left = 0;
-  let right = 0;
-  let leftY = 0;
-  let rightY = 0;
+/** Hands are skin outside the face and the legs. Ears are smaller than a hand. */
+function handBlobs(image: Rgba, frame: { x: number; y: number; w: number; h: number }): HandBlob[] {
   const { px, w } = image;
+  const seen = new Uint8Array(frame.w * frame.h);
+  const blobs: HandBlob[] = [];
+  const stack: number[] = [];
   for (let y = 0; y < frame.h; y += 1) {
     for (let x = 0; x < frame.w; x += 1) {
+      const local = y * frame.w + x;
+      if (seen[local]) continue;
       const i = ((frame.y + y) * w + (frame.x + x)) * 4;
-      if (!isFaceSkin(px, i)) continue;
-      const lowLeft = x < 164 && y > 310 && y < 430;
-      const lowRight = x > 296 && y > 320 && y < 430;
-      const raised = x > 300 && y > 232 && y < 300;
-      if (lowLeft) {
-        left += 1;
-        leftY += y;
-      } else if (clip === "wave" ? raised : lowRight) {
-        right += 1;
-        rightY += y;
+      if (!isFaceSkin(px, i) || inFaceOrLeg(x, y)) continue;
+      let n = 0;
+      let sx = 0;
+      let sy = 0;
+      stack.push(local);
+      seen[local] = 1;
+      while (stack.length) {
+        const at = stack.pop() ?? 0;
+        const ax = at % frame.w;
+        const ay = (at / frame.w) | 0;
+        n += 1;
+        sx += ax;
+        sy += ay;
+        const neighbors = [at - 1, at + 1, at - frame.w, at + frame.w];
+        for (const next of neighbors) {
+          if (next < 0 || next >= seen.length || seen[next]) continue;
+          const nx = next % frame.w;
+          const ny = (next / frame.w) | 0;
+          if (Math.abs(nx - ax) + Math.abs(ny - ay) !== 1) continue;
+          const ni = ((frame.y + ny) * w + (frame.x + nx)) * 4;
+          if (!isFaceSkin(px, ni) || inFaceOrLeg(nx, ny)) continue;
+          seen[next] = 1;
+          stack.push(next);
+        }
       }
+      if (n >= 70) blobs.push({ n, x: sx / n / 2, y: sy / n / 2 });
     }
   }
-  return {
-    left,
-    right,
-    leftY: left ? leftY / left : 0,
-    rightY: right ? rightY / right : 0,
-  };
+  return blobs;
+}
+
+function inFaceOrLeg(x: number, y: number): boolean {
+  const cx = x / 2 - 110;
+  const cy = y / 2 - 104;
+  if (cx * cx + cy * cy < 44 * 44) return true;
+  const cssX = x / 2;
+  const cssY = y / 2;
+  return cssY > 168 && cssX > 75 && cssX < 145;
 }
 
 describe("sheet arms", () => {
@@ -123,19 +142,27 @@ describe("sheet arms", () => {
     }
   });
 
-  it("swings the arms opposite the legs and raises one arm to wave", () => {
+  it("rests one hand at the chin, swings the walk, and raises one arm to wave", () => {
     const idle = armPose("idle", 0);
-    assert.equal(idle.right, IDLE_ARM_RIGHT);
+    assert.equal(idle.left, CHIN_ARM);
     assert.equal(idle.left, IDLE_ARM_LEFT);
+    assert.equal(idle.right, HANG_ARM);
     const step = armPose("walk", 1);
-    assert.ok(step.right < idle.right);
-    assert.ok(step.left > idle.left);
     const back = armPose("walk", 4);
-    assert.ok(back.right > idle.right);
-    assert.ok(back.left < idle.left);
+    assert.ok(step.right < HANG_ARM && step.right < back.right);
+    assert.ok(step.left > HANG_ARM && step.left > back.left);
+    assert.ok(step.left > CHIN_ARM);
     const wave = armPose("wave", 2);
     assert.ok(Math.abs(wave.right) < 20);
-    assert.equal(wave.left, IDLE_ARM_LEFT);
+    assert.equal(wave.left, HANG_ARM);
+  });
+
+  it("drops the loose chest hand from the glow plate", () => {
+    const svg = readFileSync(new URL("../../../public/mascot/glow/level_1.svg", import.meta.url), "utf8");
+    const next = withoutChinHand(svg);
+    assert.equal(next.includes("M77 150"), false);
+    assert.match(next, /M100 62/);
+    assert.match(next, /M88 158/);
   });
 
   it("keeps the sleeve layers outside the walk clip in the sheet capture", () => {
@@ -162,42 +189,40 @@ describe("sheet arms", () => {
     }
   });
 
-  it("gives every idle, walk, and wave frame two face-colored hands", () => {
+  it("gives every frame exactly two hands outside the face", () => {
     const dir = new URL("../../../public/mascot/game/sheets/", import.meta.url);
     const sheets = readdirSync(dir).filter((name) => name.endsWith(".png")).sort();
     assert.equal(sheets.length, SHEET_COUNT);
-    let swing: { step: HandCount; back: HandCount; idle: HandCount; wave: HandCount } | null = null;
     for (const name of sheets) {
       const json = JSON.parse(readFileSync(new URL(`${name.replace(/\.png$/, "")}.json`, dir), "utf8")) as {
         animations: Record<string, string[]>;
         frames: Record<string, { frame: { x: number; y: number; w: number; h: number } }>;
       };
-      assert.deepEqual(json.animations.idle?.length, 4, name);
-      assert.deepEqual(json.animations.walk?.length, 6, name);
-      assert.deepEqual(json.animations.wave?.length, 6, name);
+      assert.equal(json.animations.idle?.length, 4, name);
+      assert.equal(json.animations.walk?.length, 6, name);
+      assert.equal(json.animations.wave?.length, 6, name);
       const image = decodePng(readFileSync(new URL(name, dir)));
       for (const clip of ["idle", "walk", "wave"] as const) {
-        json.animations[clip]?.forEach((frameName, index) => {
+        for (const frameName of json.animations[clip] ?? []) {
           const frame = json.frames[frameName]?.frame;
           assert.ok(frame, frameName);
-          const hands = countHands(image, frame, clip);
-          assert.ok(hands.left >= HAND_PIXELS, `${name} ${frameName} left ${hands.left}`);
-          assert.ok(hands.right >= HAND_PIXELS, `${name} ${frameName} right ${hands.right}`);
-          if (name.includes("pajamas__hair_sleep_buns") && swing == null && index === 0 && clip === "idle") {
-            swing = {
-              idle: hands,
-              step: countHands(image, json.frames.walk_1!.frame, "walk"),
-              back: countHands(image, json.frames.walk_4!.frame, "walk"),
-              wave: countHands(image, json.frames.wave_2!.frame, "wave"),
-            };
+          const hands = handBlobs(image, frame).filter((hand) => hand.y >= 120);
+          assert.equal(
+            hands.length,
+            2,
+            `${name} ${frameName} ${hands.map((hand) => `${hand.n}@${hand.x.toFixed(0)},${hand.y.toFixed(0)}`).join(" ")}`,
+          );
+          const high = [...hands].sort((a, b) => a.y - b.y)[0];
+          const low = [...hands].sort((a, b) => b.y - a.y)[0];
+          if (clip === "idle") assert.ok(high && low && high.y < 160 && high.y < low.y - 15, frameName);
+          if (clip === "walk") {
+            assert.ok(hands.every((hand) => hand.y > 165), frameName);
+            assert.ok(Math.min(...hands.map((hand) => hand.x)) < 100, frameName);
+            assert.ok(Math.max(...hands.map((hand) => hand.x)) > 140, frameName);
           }
-        });
+          if (clip === "wave") assert.ok(high && low && high.x > 140 && low.x < 100 && high.y < low.y - 20, frameName);
+        }
       }
     }
-    assert.ok(swing);
-    const posed = swing as { step: HandCount; back: HandCount; idle: HandCount; wave: HandCount };
-    assert.ok(posed.step.rightY < posed.back.rightY);
-    assert.ok(posed.step.leftY > posed.back.leftY);
-    assert.ok(posed.wave.rightY < posed.idle.rightY - 40);
   });
 });

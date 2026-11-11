@@ -5,10 +5,19 @@
  * same file mirrored, not a new drawing.
  */
 
-/** Degrees around the shoulder. 100 hangs the sleeve beside the dress; 0 is the drawn wave. */
-export const IDLE_ARM_RIGHT = 100;
-export const IDLE_ARM_LEFT = 100;
+/** Degrees around the shoulder. 100 hangs the sleeve; 0 is the drawn wave; -112 rests the left hand under the chin. */
+export const HANG_ARM = 100;
+export const CHIN_ARM = -112;
+export const IDLE_ARM_RIGHT = HANG_ARM;
+export const IDLE_ARM_LEFT = CHIN_ARM;
 export const WALK_ARM_SWING = 14;
+
+/** The glow plate also draws a loose hand on the chest. The sleeve replaces it. */
+const CHIN_HAND = /<path d="M7[67] 15[01][\s\S]*?\/>|<path d="M78 160[\s\S]*?\/>|<path d="M80 159[\s\S]*?\/>/g;
+
+export function withoutChinHand(svg: string): string {
+  return svg.replace(CHIN_HAND, "");
+}
 
 const WAVE_WAG = [-12, -4, 10, 2, -8, 6] as const;
 
@@ -19,16 +28,15 @@ export function sleeveArmSrc(outfitSrc: string): string {
   return `/mascot/outfits/arm_wave_right__${sleeve}.svg`;
 }
 
-/** Both sleeves hang at rest. Walk swings them opposite the legs. Wave lifts the right arm. */
+/** Idle rests the left hand at the chin. Walk and wave do not. Walk swings both arms opposite the legs. */
 export function armPose(clip: ArmClip, index: number): { right: number; left: number } {
-  if (clip === "wave") {
-    return { right: WAVE_WAG[index] ?? 0, left: IDLE_ARM_LEFT };
-  }
-  const swing = clip === "walk" ? Math.sin((index / 6) * Math.PI * 2) : 0;
+  if (clip === "wave") return { right: WAVE_WAG[index] ?? 0, left: HANG_ARM };
+  if (clip === "idle") return { right: HANG_ARM, left: CHIN_ARM };
+  const swing = Math.sin((index / 6) * Math.PI * 2);
   // Positive swing is the left leg stepping forward, so the right arm lifts and the left arm drops.
   return {
-    right: IDLE_ARM_RIGHT - swing * WALK_ARM_SWING,
-    left: IDLE_ARM_LEFT + swing * WALK_ARM_SWING,
+    right: HANG_ARM - swing * WALK_ARM_SWING,
+    left: HANG_ARM + swing * WALK_ARM_SWING,
   };
 }
 
