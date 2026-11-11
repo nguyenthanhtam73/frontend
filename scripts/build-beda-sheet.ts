@@ -7,6 +7,7 @@ import { join } from "node:path";
 import playwright from "playwright";
 
 import { lookArt } from "@/lib/game/core/art";
+import { armMarkup } from "@/lib/mascot/game/sheet-arms";
 import { SHEET_CSS, SHEET_DPR, sheetKeyFromArt } from "@/lib/mascot/game/actor-sheet";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import { SAMPLE_LOBBY_FRIENDS, sampleFriendView } from "@/lib/mascot/game/lobby";
@@ -47,28 +48,25 @@ function arts(): Map<string, readonly string[]> {
   return found;
 }
 
-function sleeveOf(art: readonly string[]): string {
-  const outfit = art.find((src) => src.includes("/outfits/outfit_"));
-  const id = outfit?.match(/outfit_([a-z0-9_]+)\.svg/)?.[1] ?? "pajamas";
-  return id;
-}
-
 function layersHtml(art: readonly string[]): string {
   return art
     .map((src) => `<img alt="" src="${src}">`)
     .join("");
 }
 
-function frameHtml(art: readonly string[], clip: string, index: number): string {
+function outfitSrc(art: readonly string[]): string {
+  return art.find((src) => src.includes("/outfits/outfit_")) ?? "/mascot/outfits/outfit_pajamas.svg";
+}
+
+function frameHtml(art: readonly string[], clip: "idle" | "walk" | "wave", index: number): string {
   const stack = layersHtml(art);
+  const arms = armMarkup(outfitSrc(art), clip, index);
   if (clip === "idle") {
     const blink = index === 2 ? `<img alt="" src="/mascot/fx/eyelids.svg">` : "";
-    return `<div class="frame"><div class="stack">${stack}${blink}</div></div>`;
+    return `<div class="frame"><div class="stack">${stack}${blink}</div>${arms}</div>`;
   }
   if (clip === "wave") {
-    const wag = [-12, -4, 10, 2, -8, 6][index] ?? 0;
-    const arm = `/mascot/outfits/arm_wave_right__${sleeveOf(art)}.svg`;
-    return `<div class="frame"><div class="stack">${stack}</div><img class="arm" alt="" src="${arm}" style="transform:rotate(${wag}deg)"></div>`;
+    return `<div class="frame"><div class="stack">${stack}</div>${arms}</div>`;
   }
   const swing = Math.sin((index / 6) * Math.PI * 2);
   const bob = -Math.abs(swing) * 2.2;
@@ -80,6 +78,7 @@ function frameHtml(art: readonly string[], clip: string, index: number): string 
     <div class="mover" style="transform:translate(${slide}px, ${liftL.toFixed(2)}px)"><div class="stack leg-l">${stack}</div></div>
     <div class="mover" style="transform:translate(${(-swing * 4).toFixed(2)}px, ${liftR.toFixed(2)}px)"><div class="stack leg-r">${stack}</div></div>
     <div class="mover" style="transform:translateY(${bob.toFixed(2)}px)"><div class="stack upper">${stack}</div></div>
+    <div class="mover" style="transform:translateY(${bob.toFixed(2)}px)">${arms}</div>
   </div>`;
 }
 
@@ -104,6 +103,7 @@ function sheetHtml(art: readonly string[]): string {
     .upper{clip-path:inset(0 0 26% 0)}
     .shadow{clip-path:inset(88% 0 0 0)}
     .arm{transform-origin:62.7% 63.2%}
+    .arm-mirror{position:absolute;inset:0;transform:scaleX(-1)}
   </style></head><body><div id="sheet">${cells.join("")}</div></body></html>`;
 }
 
