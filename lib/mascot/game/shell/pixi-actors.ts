@@ -60,7 +60,7 @@ export function createActor(sheet: Spritesheet, key: string): ActorNodes {
   root.sortableChildren = true;
   root.eventMode = "none";
   const shadow = new Graphics();
-  shadow.ellipse(0, 2, 48, 12).fill({ color: 0x3c2a30, alpha: 0.22 });
+  shadow.ellipse(0, 0, 42, 8).fill({ color: 0x5c362e, alpha: 0.28 });
   shadow.zIndex = 0;
   shadow.eventMode = "none";
   const frames = sheet.animations.idle ?? sheet.animations.walk ?? [];
@@ -96,6 +96,8 @@ export function layoutActor(actor: ActorNodes, height: number): void {
   anim.width = next * (SHEET_CSS.w / SHEET_CSS.h);
   const scale = next / SHEET_CSS.h;
   actor.shadow.scale.set(scale);
+  // Sole is the anchor. The contact oval sits a few pixels under it, behind the sprite.
+  actor.shadow.position.set(0, 16 * scale);
 }
 
 export function stepActors(actors: Iterable<ActorNodes>, ticker: Ticker): void {
@@ -169,10 +171,11 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
       const moving = el.dataset.moving === "1";
       const clip = actorClip(moving, el.dataset.pose);
       setActorClip(have.nodes, have.sheet, clip);
-      layoutActor(have.nodes, box.height / scale || 140);
+      const drawn = box.height / scale || 140;
+      layoutActor(have.nodes, drawn);
       have.nodes.root.position.set(
         Math.round((box.left + box.width / 2 - rootBox.left) / scale),
-        Math.round((box.bottom - rootBox.top) / scale),
+        Math.round((box.bottom - rootBox.top) / scale - (1 - SHEET_ANCHOR_Y) * have.nodes.anim.height),
       );
       have.nodes.root.scale.x = el.dataset.face === "left" ? -1 : 1;
       have.nodes.root.zIndex = Math.round((box.bottom - rootBox.top) / scale);

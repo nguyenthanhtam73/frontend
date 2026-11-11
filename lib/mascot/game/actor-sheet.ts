@@ -9,8 +9,11 @@ export const SHEET_CSS = { w: 220, h: 250 } as const;
 export const SHEET_DPR = 2;
 export const SHEET_FRAME = { w: SHEET_CSS.w * SHEET_DPR, h: SHEET_CSS.h * SHEET_DPR } as const;
 
-/** Bottom of the frame, where the ground shadow ends. Matches the DOM figure box. */
-export const SHEET_ANCHOR_Y = 1;
+/**
+ * Shoes on the 250px sheet (body legs end at y=208).
+ * The baked ground shadow hangs just below this line.
+ */
+export const SHEET_ANCHOR_Y = 208 / 250;
 
 const OUTFITS = new Set([
   "outfit_pajamas",

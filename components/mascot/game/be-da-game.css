@@ -547,7 +547,7 @@
 
 .beda-hero-wrap.is-floor .beda-pretty {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 26px);
   left: 50%;
   width: min(220px, 64vw);
   margin: 0;

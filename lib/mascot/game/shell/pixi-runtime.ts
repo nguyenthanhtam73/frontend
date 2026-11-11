@@ -28,7 +28,7 @@ import {
 } from "@/lib/game/core/movement";
 import type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib/game/core/types";
 import { ZOOM_MAX, clampPoint, depthRank, pixelSnap, secondsFromDeltaTime, walkPose, type Walker } from "@/lib/mascot/game/walk";
-import { actorClip } from "@/lib/mascot/game/actor-sheet";
+import { SHEET_ANCHOR_Y, actorClip } from "@/lib/mascot/game/actor-sheet";
 import {
   actorLookFromArt,
   createActor,
@@ -722,7 +722,7 @@ export async function startPixiShell(options: {
         pendingLabels.push({
           el: label,
           x: viewport.x + worldX * viewport.scale.x,
-          y: viewport.y + worldY * viewport.scale.y + NAME_GAP_PX,
+          y: viewport.y + (worldY + (figure.nodes ? height * (1 - SHEET_ANCHOR_Y) : 0)) * viewport.scale.y + NAME_GAP_PX,
           w: size.w,
           h: size.h,
         });
@@ -772,13 +772,15 @@ export async function startPixiShell(options: {
     const hostBox = host.getBoundingClientRect();
     const scale = hostBox.width / (host.clientWidth || 1) || 1;
     const fig = hero.querySelector<HTMLElement>(".bd-figure");
-    const box = (fig ?? hero).getBoundingClientRect();
+    const figBox = fig?.getBoundingClientRect();
+    const heroBox = hero.getBoundingClientRect();
     const moving = hero.dataset.stepping === "1";
     setActorClip(have.nodes, have.sheet, actorClip(moving, null));
-    layoutActor(have.nodes, box.height / scale);
+    layoutActor(have.nodes, (figBox?.height || heroBox.height) / scale);
+    // The wrap's bottom edge is the floor anchor. Shoes sit there; the caption hangs below.
     have.root.position.set(
-      pixelSnap((box.left + box.width / 2 - hostBox.left) / scale),
-      pixelSnap((box.bottom - hostBox.top) / scale),
+      pixelSnap((heroBox.left + heroBox.width / 2 - hostBox.left) / scale),
+      pixelSnap((heroBox.bottom - hostBox.top) / scale),
     );
     const face = Number(hero.style.getPropertyValue("--face") || "1");
     have.root.scale.x = face < 0 ? -1 : 1;
