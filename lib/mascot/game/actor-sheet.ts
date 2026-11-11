@@ -1,9 +1,13 @@
 /**
- * Bé Da spritesheet names. Pixi loads `<outfit>__<hair>.json` with Assets.
- * Frames are idle, walk, and wave. The PNG sits beside the JSON.
+ * Bé Da spritesheet names. Each sheet is one full layer stack
+ * (body, outfit, hair, accessories, glow), rasterized at 2×.
+ * Pixi loads the JSON with Assets. The PNG sits beside it.
  */
 
-export const SHEET_FRAME = { w: 176, h: 200 } as const;
+/** CSS size of one frame. The PNG is this times SHEET_DPR. */
+export const SHEET_CSS = { w: 220, h: 250 } as const;
+export const SHEET_DPR = 2;
+export const SHEET_FRAME = { w: SHEET_CSS.w * SHEET_DPR, h: SHEET_CSS.h * SHEET_DPR } as const;
 
 /** Bottom of the frame, where the ground shadow ends. Matches the DOM figure box. */
 export const SHEET_ANCHOR_Y = 1;
@@ -28,8 +32,20 @@ export function sheetKey(outfit: string, hair: string): string {
   return `${worn}__${style}`;
 }
 
-export function sheetJsonUrl(outfit: string, hair: string): string {
-  return `/mascot/game/sheets/${sheetKey(outfit, hair)}.json`;
+/** Stable id for one exact layer list, so a bow or a glow plate gets its own sheet. */
+export function sheetKeyFromArt(art: readonly string[]): string {
+  const look = lookFromArt(art);
+  let hash = 2166136261;
+  const text = art.join("\n");
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${sheetKey(look.outfit, look.hair)}__${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+export function sheetJsonUrlFromArt(art: readonly string[]): string {
+  return `/mascot/game/sheets/${sheetKeyFromArt(art)}.json`;
 }
 
 /** Pull the closet ids out of the layer list the shell already carries. */

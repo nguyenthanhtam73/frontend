@@ -3,11 +3,10 @@ import { AnimatedSprite, Application, Assets, Container, Graphics, Spritesheet, 
 import { rendererResolution } from "@/lib/game/core/dpr";
 import {
   SHEET_ANCHOR_Y,
-  SHEET_FRAME,
+  SHEET_CSS,
   actorClip,
-  lookFromArt,
-  sheetJsonUrl,
-  sheetKey,
+  sheetJsonUrlFromArt,
+  sheetKeyFromArt,
   type ActorClip,
 } from "@/lib/mascot/game/actor-sheet";
 
@@ -28,16 +27,17 @@ export function applyLinearScaleMode(): void {
   TextureStyle.defaultOptions.scaleMode = "linear";
 }
 
-export function loadActorSheet(outfit: string, hair: string): Promise<Spritesheet> {
+export function loadActorSheet(art: readonly string[]): Promise<Spritesheet> {
   applyLinearScaleMode();
-  const key = sheetKey(outfit, hair);
+  const key = sheetKeyFromArt(art);
   let pending = sheets.get(key);
   if (!pending) {
-    pending = Assets.load<Spritesheet>(sheetJsonUrl(outfit, hair)).then((sheet) => {
+    pending = Assets.load<Spritesheet>(sheetJsonUrlFromArt(art)).then((sheet) => {
       const texture = Object.values(sheet.textures)[0];
       if (texture?.source) {
+        // Full-resolution sample. Mipmaps would pick a soft level on a phone.
         texture.source.scaleMode = "linear";
-        texture.source.autoGenerateMipmaps = true;
+        texture.source.autoGenerateMipmaps = false;
       }
       return sheet;
     });
@@ -93,8 +93,8 @@ export function layoutActor(actor: ActorNodes, height: number): void {
   actor.height = next;
   const anim = actor.anim;
   anim.height = next;
-  anim.width = next * (SHEET_FRAME.w / SHEET_FRAME.h);
-  const scale = next / SHEET_FRAME.h;
+  anim.width = next * (SHEET_CSS.w / SHEET_CSS.h);
+  const scale = next / SHEET_CSS.h;
   actor.shadow.scale.set(scale);
 }
 
@@ -142,16 +142,16 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
     people.forEach((el, index) => {
       const id = el.dataset.friendId || el.dataset.spaYou || `actor-${index}`;
       live.add(id);
-      const outfit = el.dataset.outfit || "outfit_pajamas";
-      const hair = el.dataset.hair || "hair_sleep_buns";
-      const key = sheetKey(outfit, hair);
+      const layers = (el.dataset.art ?? "").split(/\s+/).filter(Boolean);
+      const key = sheetKeyFromArt(layers);
       const have = actors.get(id);
+      if (!layers.length) return;
       if (!have || have.nodes.key !== key) {
         if (have) destroyActor(have.nodes);
         actors.delete(id);
         if (busy) return;
         busy = true;
-        void loadActorSheet(outfit, hair)
+        void loadActorSheet(layers)
           .then((sheet) => {
             const nodes = createActor(sheet, key);
             nodes.root.zIndex = index;
@@ -196,7 +196,6 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
   };
 }
 
-export function actorLookFromArt(art: readonly string[]): { outfit: string; hair: string; key: string } {
-  const look = lookFromArt(art);
-  return { ...look, key: sheetKey(look.outfit, look.hair) };
+export function actorLookFromArt(art: readonly string[]): { key: string } {
+  return { key: sheetKeyFromArt(art) };
 }

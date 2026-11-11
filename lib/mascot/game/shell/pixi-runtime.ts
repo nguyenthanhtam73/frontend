@@ -420,7 +420,7 @@ export async function startPixiShell(options: {
     if (have?.key === look.key && have.nodes) return have;
     let sheet: Awaited<ReturnType<typeof loadActorSheet>> | null = null;
     try {
-      sheet = await loadActorSheet(look.outfit, look.hair);
+      sheet = await loadActorSheet(art);
     } catch {
       sheet = null;
     }
