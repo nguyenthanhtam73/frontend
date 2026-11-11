@@ -1,9 +1,9 @@
-import { AnimatedSprite, Application, Assets, Container, Graphics, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
+import { AnimatedSprite, Application, Assets, Container, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
 
 import { rendererResolution } from "@/lib/game/core/dpr";
+import { attachIfMounted, createShellLife, destroyShellLife } from "@/lib/mascot/game/shell/pixi-guard";
 import {
   SHEET_ANCHOR_Y,
-  SHEET_CSS,
   actorClip,
   sheetJsonUrlFromArt,
   sheetKeyFromArt,
@@ -49,7 +49,6 @@ export function loadActorSheet(art: readonly string[]): Promise<Spritesheet> {
 export type ActorNodes = {
   key: string;
   root: Container;
-  shadow: Graphics;
   anim: AnimatedSprite;
   clip: ActorClip;
   height: number;
@@ -57,12 +56,7 @@ export type ActorNodes = {
 
 export function createActor(sheet: Spritesheet, key: string): ActorNodes {
   const root = new Container();
-  root.sortableChildren = true;
   root.eventMode = "none";
-  const shadow = new Graphics();
-  shadow.ellipse(0, 0, 42, 8).fill({ color: 0x5c362e, alpha: 0.28 });
-  shadow.zIndex = 0;
-  shadow.eventMode = "none";
   const frames = sheet.animations.idle ?? sheet.animations.walk ?? [];
   const anim = new AnimatedSprite(frames);
   anim.anchor.set(0.5, SHEET_ANCHOR_Y);
@@ -70,11 +64,10 @@ export function createActor(sheet: Spritesheet, key: string): ActorNodes {
   anim.loop = true;
   anim.autoUpdate = false;
   anim.roundPixels = true;
-  anim.zIndex = 1;
   anim.eventMode = "none";
   anim.play();
-  root.addChild(shadow, anim);
-  return { key, root, shadow, anim, clip: "idle", height: 0 };
+  root.addChild(anim);
+  return { key, root, anim, clip: "idle", height: 0 };
 }
 
 export function setActorClip(actor: ActorNodes, sheet: Spritesheet, clip: ActorClip): void {
@@ -93,11 +86,7 @@ export function layoutActor(actor: ActorNodes, height: number): void {
   actor.height = next;
   const anim = actor.anim;
   anim.height = next;
-  anim.width = next * (SHEET_CSS.w / SHEET_CSS.h);
-  const scale = next / SHEET_CSS.h;
-  actor.shadow.scale.set(scale);
-  // Sole is the anchor. The contact oval sits a few pixels under it, behind the sprite.
-  actor.shadow.position.set(0, 16 * scale);
+  anim.width = next * (220 / 250);
 }
 
 export function stepActors(actors: Iterable<ActorNodes>, ticker: Ticker): void {
@@ -134,9 +123,11 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
   app.stage.sortableChildren = true;
 
   const actors = new Map<string, { nodes: ActorNodes; sheet: Spritesheet }>();
+  const life = createShellLife();
   let busy = false;
 
   const tick = (ticker: Ticker) => {
+    if (life.destroyed) return;
     const people = options.root.querySelectorAll<HTMLElement>("[data-actor]");
     const live = new Set<string>();
     const rootBox = options.root.getBoundingClientRect();
@@ -155,10 +146,14 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
         busy = true;
         void loadActorSheet(layers)
           .then((sheet) => {
+            if (life.destroyed) return;
             const nodes = createActor(sheet, key);
-            nodes.root.zIndex = index;
-            app.stage.addChild(nodes.root);
-            actors.set(id, { nodes, sheet });
+            const attached = attachIfMounted(life, nodes, (ready) => {
+              ready.root.zIndex = index;
+              app.stage.addChild(ready.root);
+              actors.set(id, { nodes: ready, sheet });
+            });
+            if (!attached) destroyActor(nodes);
           })
           .catch(() => undefined)
           .finally(() => {
@@ -191,6 +186,7 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
 
   return {
     destroy() {
+      destroyShellLife(life, () => undefined);
       app.ticker.remove(tick);
       for (const actor of actors.values()) destroyActor(actor.nodes);
       actors.clear();

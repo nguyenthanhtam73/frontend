@@ -43,7 +43,8 @@
 }
 
 .beda-scene.is-pixi[data-depth="back"] .beda-pixi-host {
-  z-index: 0;
+  /* Above the wall and floor (z-index auto). The bed at 1 still paints over her. */
+  z-index: 1;
 }
 
 .beda-scene.is-pixi[data-actors="pixi"] .beda-hero-wrap.is-floor .bd-figure,

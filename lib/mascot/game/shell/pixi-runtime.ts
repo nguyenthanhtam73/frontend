@@ -30,6 +30,12 @@ import type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib
 import { ZOOM_MAX, clampPoint, depthRank, pixelSnap, secondsFromDeltaTime, walkPose, type Walker } from "@/lib/mascot/game/walk";
 import { SHEET_ANCHOR_Y, actorClip } from "@/lib/mascot/game/actor-sheet";
 import {
+  createShellLife,
+  destroyShellLife,
+  attachIfMounted,
+  scheduleRecenterResume,
+} from "@/lib/mascot/game/shell/pixi-guard";
+import {
   actorLookFromArt,
   createActor,
   destroyActor,
@@ -393,20 +399,25 @@ export async function startPixiShell(options: {
       }
     }
     for (const sprite of sprites) {
+      if (life.destroyed) return;
       const look = actorLookFromArt(sprite.art);
       const have = figures.get(sprite.id);
       if (have?.key === look.key && have.nodes) continue;
       const actor = await ensureActor(sprite.id, sprite.art);
+      if (life.destroyed) return;
       if (actor) continue;
       const key = sprite.art.join("|");
       if (have?.key === key) continue;
       const packed = await packAtlas(sprite.art);
+      if (life.destroyed) return;
       if (!packed) continue;
       if (have) destroyFigure(have);
       viewport.addChild(packed.root);
       figures.set(sprite.id, { key, root: packed.root, nodes: null, sheet: null, plates: packed.sheet });
     }
   };
+
+  const life = createShellLife();
 
   const destroyFigure = (figure: Figure) => {
     if (figure.nodes) destroyActor(figure.nodes);
@@ -424,10 +435,17 @@ export async function startPixiShell(options: {
     } catch {
       sheet = null;
     }
-    if (!sheet) return null;
+    if (life.destroyed || !sheet) return null;
     if (have) destroyFigure(have);
+    if (life.destroyed) return null;
     const nodes = createActor(sheet, look.key);
-    viewport.addChild(nodes.root);
+    const attached = attachIfMounted(life, nodes, (ready) => {
+      viewport.addChild(ready.root);
+    });
+    if (!attached) {
+      destroyActor(nodes);
+      return null;
+    }
     const figure: Figure = { key: look.key, root: nodes.root, nodes, sheet, plates: null };
     figures.set(id, figure);
     return figure;
@@ -544,7 +562,13 @@ export async function startPixiShell(options: {
         ease: "easeOutCubic",
         removeOnInterrupt: true,
       });
-      window.setTimeout(() => viewport.plugins.resume("follow"), reduced ? 30 : 460);
+      scheduleRecenterResume(
+        life,
+        reduced ? 30 : 460,
+        () => viewport.plugins.resume("follow"),
+        (fn, ms) => window.setTimeout(fn, ms),
+        (id) => window.clearTimeout(id),
+      );
     },
     panBy(dx, dy, _user = true) {
       viewport.x += dx;
@@ -834,6 +858,7 @@ export async function startPixiShell(options: {
 
   return {
     destroy() {
+      destroyShellLife(life, (id) => window.clearTimeout(id));
       app.ticker.stop();
       viewObserver.disconnect();
       window.removeEventListener("keydown", onKey);

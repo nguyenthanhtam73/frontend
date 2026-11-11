@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import type { ShellApi, ShellSnapshot } from "@/lib/game/core/types";
+import { notePixiInitFailed } from "@/lib/mascot/game/shell/pixi-guard";
 
 /**
  * Canvas host. Pixi itself is imported only after this mounts, and only on the
@@ -71,7 +72,8 @@ export function BeDaPixiStage({
         onReady?.();
       })
       .catch(() => {
-        if (!dead) onError?.();
+        canvas.remove();
+        notePixiInitFailed(host.dataset, dead, onError);
       });
     return () => {
       dead = true;
