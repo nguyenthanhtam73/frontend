@@ -37,8 +37,55 @@
 }
 
 .beda-scene.is-pixi .beda-pixi-host {
-  z-index: 3;
-  /* Bé Da and the room art are DOM. The canvas stays mounted for the scene flag. */
+  z-index: 4;
+  visibility: visible;
+  pointer-events: none;
+}
+
+.beda-scene.is-pixi[data-depth="back"] .beda-pixi-host {
+  z-index: 0;
+}
+
+.beda-scene.is-pixi[data-actors="pixi"] .beda-hero-wrap.is-floor .bd-figure,
+.beda-scene.is-pixi[data-actors="pixi"] .beda-hero-wrap.is-floor .beda-room-shadow {
+  visibility: hidden;
+}
+
+.beda-pixi-host[data-loading="1"]::after,
+.beda-actor-host[data-loading="1"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-top-color: #2b8c86;
+  border-radius: 50%;
+  animation: beda-spin 0.7s linear infinite;
+}
+
+@keyframes beda-spin {
+  to { transform: rotate(360deg); }
+}
+
+.beda-actor-host {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.beda-actor-host canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.beda-spa-view[data-actors="pixi"] .bd-figure {
   visibility: hidden;
 }
 
@@ -74,6 +121,11 @@
   line-height: 1.2;
   transform: translate(-50%, 0);
   transform-origin: center top;
+}
+
+.beda-lobby[data-engine="pixi"] .beda-tag:not(.beda-tag-me) {
+  background: rgba(255, 250, 246, 0.96);
+  text-shadow: 0 1px 0 #fff;
 }
 
 .beda-lobby[data-engine="pixi"] .beda-friend,
@@ -2811,6 +2863,11 @@
 .beda-cuke.is-right {
   right: 27%;
   transform: rotate(18deg);
+}
+
+.beda-spa .beda-tag:not(.beda-tag-me) {
+  background: rgba(255, 250, 246, 0.96);
+  box-shadow: 0 1px 0 #fff, 0 3px 0 #e2bcc6, 0 8px 16px rgba(40, 24, 20, 0.22);
 }
 
 .beda-spa .beda-tag-me {

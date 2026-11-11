@@ -7,6 +7,9 @@ import {
   SPA_BOUNDS,
   clampCamera,
   createWalker,
+  depthRank,
+  pixelSnap,
+  secondsFromDeltaTime,
   ellipseContains,
   snapOutsideFountain,
   adoptServerPoint,
@@ -20,6 +23,7 @@ import {
   lobbyWorldSpeed,
   stepWalker,
   walkPose,
+  type Walker,
   zoomAt,
 } from "./walk";
 
@@ -137,6 +141,36 @@ describe("lobby walk", () => {
       }
     }
     assert.ok(maxPx < 5, `remote jump ${maxPx}`);
+  });
+
+  it("turns ticker deltaTime into seconds and caps a hitch", () => {
+    assert.equal(secondsFromDeltaTime(1), 1 / 60);
+    assert.equal(secondsFromDeltaTime(2), 2 / 60);
+    assert.equal(secondsFromDeltaTime(0), 0);
+    assert.equal(secondsFromDeltaTime(-1), 0);
+    assert.equal(secondsFromDeltaTime(Number.NaN), 0);
+    assert.equal(secondsFromDeltaTime(100), 0.05);
+  });
+
+  it("lands in the same place at 30fps and 60fps", () => {
+    const speed = lobbyWorldSpeed(507, 1);
+    const goal = { x: 0.84, y: 0.62 };
+    let slow: Walker = { ...createWalker({ x: 0.2, y: 0.62 }), goal };
+    let fast: Walker = { ...createWalker({ x: 0.2, y: 0.62 }), goal };
+    for (let i = 0; i < 20; i += 1) slow = stepWalker(slow, 1 / 30, null, LOBBY_BOUNDS, false, speed, true);
+    for (let i = 0; i < 40; i += 1) fast = stepWalker(fast, 1 / 60, null, LOBBY_BOUNDS, false, speed, true);
+    assert.ok(Math.abs(slow.x - fast.x) < 0.03, `${slow.x} vs ${fast.x}`);
+    assert.ok(fast.x > 0.2);
+    assert.ok(fast.face > 0);
+  });
+
+  it("sorts nearer feet in front and snaps positions to pixels", () => {
+    assert.ok(depthRank(0.42) < depthRank(0.8));
+    assert.equal(depthRank(0.8), 8000);
+    assert.equal(depthRank(Number.NaN), 0);
+    assert.equal(pixelSnap(12.6), 13);
+    assert.equal(pixelSnap(12.2), 12);
+    assert.equal(pixelSnap(Number.POSITIVE_INFINITY), 0);
   });
 
   it("snaps when motion is reduced", () => {

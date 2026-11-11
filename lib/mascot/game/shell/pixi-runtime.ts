@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics, Rectangle, RenderTexture, Sprite, Texture } from "pixi.js";
+import { Application, Assets, Container, Graphics, Rectangle, RenderTexture, Sprite, Texture, type Ticker } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import { lobbyMinScale, lobbyWorldSize, stackNameLabels } from "@/lib/mascot/game/lobby";
@@ -14,7 +14,6 @@ import {
   type WalkPoint,
 } from "@/lib/mascot/game/lobby-walk";
 import { LOBBY_DECOR, LOBBY_DECOR_MAP, LOBBY_GROUND, LOBBY_LAYOUT, type ParkPiece } from "@/lib/mascot/game/lobby-park";
-import { startShellClock } from "@/lib/game/core/clock";
 import { rendererResolution } from "@/lib/game/core/dpr";
 import { arrowGoal, TAP_MS, walkTargetChanges } from "@/lib/game/core/input";
 import {
@@ -28,14 +27,32 @@ import {
   stepRemotes,
 } from "@/lib/game/core/movement";
 import type { ShellApi, ShellSceneName, ShellSnapshot, ShellSprite } from "@/lib/game/core/types";
-import { ZOOM_MAX, clampPoint, walkPose, type Walker } from "@/lib/mascot/game/walk";
+import { ZOOM_MAX, clampPoint, depthRank, pixelSnap, secondsFromDeltaTime, walkPose, type Walker } from "@/lib/mascot/game/walk";
+import { actorClip } from "@/lib/mascot/game/actor-sheet";
+import {
+  actorLookFromArt,
+  createActor,
+  destroyActor,
+  layoutActor,
+  loadActorSheet,
+  setActorClip,
+  stepActors,
+  applyLinearScaleMode,
+  type ActorNodes,
+} from "@/lib/mascot/game/shell/pixi-actors";
 
 const ROOM_BOUNDS = { minX: 0.16, maxX: 0.84, minY: 0.58, maxY: 0.9 };
 const TAP_PX = 10;
 /** Screen pixels between the shoes and the top of the name. */
 const NAME_GAP_PX = 6;
 
-type Figure = { key: string; root: Container; sheet: RenderTexture | null };
+type Figure = {
+  key: string;
+  root: Container;
+  nodes: ActorNodes | null;
+  sheet: Awaited<ReturnType<typeof loadActorSheet>> | null;
+  plates: RenderTexture | null;
+};
 
 /**
  * Pixi world for Góc bình yên and the lobby. Loaded only after the canvas mounts.
@@ -53,6 +70,7 @@ export async function startPixiShell(options: {
   const app = new Application();
   let viewW = parent.clientWidth || 1;
   let viewH = parent.clientHeight || 1;
+  applyLinearScaleMode();
   await app.init({
     canvas: options.canvas,
     resizeTo: parent,
@@ -60,9 +78,13 @@ export async function startPixiShell(options: {
     autoDensity: true,
     antialias: false,
     preference: "webgl",
+    powerPreference: "low-power",
     backgroundAlpha: 0,
   });
-  app.ticker.stop();
+  // One private ticker. deltaTime is 1 at 60fps; minFPS caps a hitch at 50ms.
+  // https://pixijs.com/8.x/guides/components/application/ticker-plugin
+  app.ticker.maxFPS = 60;
+  app.ticker.minFPS = 20;
 
   const lobby = options.getSnapshot().scene === "lobby";
   const { worldW: initialW, worldH: initialH } = worldSize(options.getSnapshot().scene, viewW, viewH);
@@ -364,25 +386,51 @@ export async function startPixiShell(options: {
   const syncFigures = async (sprites: readonly ShellSprite[]) => {
     const live = new Set(sprites.map((sprite) => sprite.id));
     for (const [id, figure] of figures) {
+      if (id === "room-you") continue;
       if (!live.has(id)) {
-        figure.root.destroy({ children: true });
-        figure.sheet?.destroy(true);
+        destroyFigure(figure);
         figures.delete(id);
       }
     }
     for (const sprite of sprites) {
-      const key = sprite.art.join("|");
+      const look = actorLookFromArt(sprite.art);
       const have = figures.get(sprite.id);
+      if (have?.key === look.key && have.nodes) continue;
+      const actor = await ensureActor(sprite.id, sprite.art);
+      if (actor) continue;
+      const key = sprite.art.join("|");
       if (have?.key === key) continue;
       const packed = await packAtlas(sprite.art);
       if (!packed) continue;
-      if (have) {
-        have.root.destroy({ children: true });
-        have.sheet?.destroy(true);
-      }
+      if (have) destroyFigure(have);
       viewport.addChild(packed.root);
-      figures.set(sprite.id, { key, root: packed.root, sheet: packed.sheet });
+      figures.set(sprite.id, { key, root: packed.root, nodes: null, sheet: null, plates: packed.sheet });
     }
+  };
+
+  const destroyFigure = (figure: Figure) => {
+    if (figure.nodes) destroyActor(figure.nodes);
+    else figure.root.destroy({ children: true, texture: false, textureSource: false });
+    figure.plates?.destroy(true);
+  };
+
+  const ensureActor = async (id: string, art: readonly string[]) => {
+    const look = actorLookFromArt(art);
+    const have = figures.get(id);
+    if (have?.key === look.key && have.nodes) return have;
+    let sheet: Awaited<ReturnType<typeof loadActorSheet>> | null = null;
+    try {
+      sheet = await loadActorSheet(look.outfit, look.hair);
+    } catch {
+      sheet = null;
+    }
+    if (!sheet) return null;
+    if (have) destroyFigure(have);
+    const nodes = createActor(sheet, look.key);
+    viewport.addChild(nodes.root);
+    const figure: Figure = { key: look.key, root: nodes.root, nodes, sheet, plates: null };
+    figures.set(id, figure);
+    return figure;
   };
 
   let syncing = false;
@@ -439,12 +487,23 @@ export async function startPixiShell(options: {
       .drag()
       .pinch()
       .wheel({ smooth: false, percent: 0.1 })
-      .decelerate({ friction: 0.9, minSpeed: 0.4 })
+      // Gentle coast after a drag. friction is per frame; 0.95 is the documented glide.
+      // https://davidfig.github.io/pixi-viewport/jsdoc/js_plugins_Decelerate.js.html
+      .decelerate({ friction: 0.95, minSpeed: 0.25 })
       .clamp({ direction: "all", underflow: "center" })
       .clampZoom({
         minScale: lobbyMinScale(viewW, viewH, initialW, initialH),
         maxScale: ZOOM_MAX,
-      });
+      })
+      // speed is pixels per frame. radius is a dead-zone so idle bob does not shake the camera.
+      // https://davidfig.github.io/pixi-viewport/jsdoc/js_plugins_Follow.js.html
+      .follow(feet, { speed: 9, radius: 32 });
+    viewport.plugins.pause("follow");
+    const pauseFollow = () => viewport.plugins.pause("follow");
+    const resumeFollow = () => viewport.plugins.resume("follow");
+    viewport.on("drag-start", pauseFollow);
+    viewport.on("pinch-start", pauseFollow);
+    viewport.on("wheel", pauseFollow);
     viewport.on("pointerdown", () => {
       downAt = performance.now();
     });
@@ -454,6 +513,7 @@ export async function startPixiShell(options: {
       if (performance.now() - downAt > TAP_MS) return;
       const world = payload?.world;
       if (!world) return;
+      resumeFollow();
       aim(world.x, world.y);
       options.onEmptyTap?.();
     });
@@ -477,12 +537,14 @@ export async function startPixiShell(options: {
       const size = worldSize(snap.scene, viewW, viewH);
       const x = (walker?.x ?? 0.5) * size.worldW;
       const y = (walker?.y ?? 0.55) * size.worldH;
+      viewport.plugins.pause("follow");
       viewport.animate({
         time: reduced ? 1 : 420,
         position: { x, y },
         ease: "easeOutCubic",
         removeOnInterrupt: true,
       });
+      window.setTimeout(() => viewport.plugins.resume("follow"), reduced ? 30 : 460);
     },
     panBy(dx, dy, _user = true) {
       viewport.x += dx;
@@ -491,7 +553,9 @@ export async function startPixiShell(options: {
   };
   if (options.api) options.api.current = api;
 
-  const clock = startShellClock((dt, now) => {
+  const onTick = (ticker: Ticker) => {
+    const dt = secondsFromDeltaTime(ticker.deltaTime);
+    const now = performance.now();
     const snap = options.getSnapshot();
     const { worldW, worldH } = worldSize(snap.scene, viewW, viewH);
     if (snap.scene !== "lobby" || !parkGround) paintBackdrop(snap.scene, snap.sky, worldW, worldH);
@@ -547,11 +611,12 @@ export async function startPixiShell(options: {
       feet.position.set(walker.x * worldW, walker.y * worldH);
       if (lobby && !centered) {
         viewport.moveCenter(feet.x, feet.y);
+        viewport.plugins.resume("follow");
         centered = true;
       }
     }
     if (lobby) {
-      viewport.update(dt * 1000);
+      viewport.update(ticker.deltaMS);
       if (parkSprites.length > 0 && !reduced) {
         const t = now / 1000;
         for (const item of parkSprites) {
@@ -589,8 +654,9 @@ export async function startPixiShell(options: {
       worldH,
       reduced,
     );
-    const heightFor = (y: number) => (snap.scene === "room" ? Math.min(230, viewH * 0.36) : (96 + y * 36) * 1.2);
+    const heightFor = (y: number) => (snap.scene === "room" ? Math.min(200, viewH * 0.32) : (96 + y * 36) * 1.15);
     const pendingLabels: { el: HTMLElement; x: number; y: number; w: number; h: number }[] = [];
+    const actorNodes: ActorNodes[] = [];
     for (const sprite of snap.sprites) {
       const figure = figures.get(sprite.id);
       if (!figure) continue;
@@ -598,24 +664,40 @@ export async function startPixiShell(options: {
       if (grid && !(sprite.local && walker) && !isWalkable(grid, at.x, at.y)) {
         at = snappedStand(sprite.id, grid, at.x, at.y);
       }
-      const moving = sprite.local && walker ? Math.hypot(walker.vx, walker.vy) > 0.02 : false;
+      const glide = book.glides.get(sprite.id);
+      const remoteMoving =
+        !sprite.local &&
+        !!glide &&
+        glide.dur > 0 &&
+        now < glide.t0 + glide.dur &&
+        Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.004;
+      const moving = sprite.local && walker ? Math.hypot(walker.vx, walker.vy) > 0.02 : remoteMoving;
       const pose = walkPose(sprite.local && walker ? walker.phase : moving ? now / 159 : now / 700, moving, true);
       const worldX = at.x * worldW;
-      const worldY = at.y * worldH + pose.bob;
-      figure.root.position.set(worldX, worldY);
-      figure.root.zIndex = Math.round(at.y * 10000);
-      const face = sprite.local && walker ? walker.face : sprite.facing === "left" ? -1 : 1;
+      const worldY = at.y * worldH + (figure.nodes ? 0 : pose.bob);
+      figure.root.position.set(pixelSnap(worldX), pixelSnap(worldY));
+      figure.root.zIndex = depthRank(at.y);
+      const face = sprite.local && walker ? (walker.face < 0 ? -1 : 1) : sprite.facing === "left" ? -1 : 1;
       const height = heightFor(at.y);
-      if (figure.root.scale.x !== face) figure.root.scale.x = face;
-      for (const child of figure.root.children) {
-        if (!(child instanceof Sprite)) continue;
-        if (spriteSize.get(child) === height) continue;
-        spriteSize.set(child, height);
-        const texH = child.texture.height || 250;
-        const texW = child.texture.width || 220;
-        child.height = height;
-        child.width = height * (texW / texH);
-        if (child.scale.x < 0) child.scale.x = -child.scale.x;
+      if (figure.nodes && figure.sheet) {
+        setActorClip(figure.nodes, figure.sheet, actorClip(moving, sprite.motion));
+        layoutActor(figure.nodes, height);
+        figure.root.scale.x = face;
+        actorNodes.push(figure.nodes);
+      } else if (figure.root.scale.x !== face) {
+        figure.root.scale.x = face;
+      }
+      if (!figure.nodes) {
+        for (const child of figure.root.children) {
+          if (!(child instanceof Sprite)) continue;
+          if (spriteSize.get(child) === height) continue;
+          spriteSize.set(child, height);
+          const texH = child.texture.height || 250;
+          const texW = child.texture.width || 220;
+          child.height = height;
+          child.width = height * (texW / texH);
+          if (child.scale.x < 0) child.scale.x = -child.scale.x;
+        }
       }
       let label = labelNodes.get(sprite.id);
       if (!label || !label.isConnected) {
@@ -646,6 +728,11 @@ export async function startPixiShell(options: {
         });
       }
     }
+    if (snap.scene === "room") {
+      const roomActor = placeRoomHero();
+      if (roomActor) actorNodes.push(roomActor);
+    }
+    stepActors(actorNodes, ticker);
     for (const label of stackNameLabels(pendingLabels)) {
       const pos = `${Math.round(label.x)}:${Math.round(label.y)}:${label.w}`;
       if (labelPos.get(label.el) !== pos) {
@@ -654,7 +741,54 @@ export async function startPixiShell(options: {
         label.el.style.top = `${Math.round(label.y)}px`;
       }
     }
-    app.render();
+  };
+  let roomBusy = false;
+  const placeRoomHero = () => {
+    const hero = options.labels.current?.querySelector<HTMLElement>('[data-testid="beda-hero"]');
+    const scene = options.canvas.parentElement?.parentElement;
+    if (!hero || hero.dataset.floor !== "on") {
+      const old = figures.get("room-you");
+      if (old) {
+        destroyFigure(old);
+        figures.delete("room-you");
+      }
+      if (scene instanceof HTMLElement) delete scene.dataset.actors;
+      return null;
+    }
+    const art = (hero.dataset.art ?? "").split(/\s+/).filter(Boolean);
+    const look = actorLookFromArt(art);
+    const have = figures.get("room-you");
+    if (!have?.nodes || !have.sheet || have.key !== look.key) {
+      if (!roomBusy) {
+        roomBusy = true;
+        void ensureActor("room-you", art).finally(() => {
+          roomBusy = false;
+        });
+      }
+      return null;
+    }
+    const host = options.canvas.parentElement;
+    if (!host || !(scene instanceof HTMLElement)) return null;
+    const hostBox = host.getBoundingClientRect();
+    const scale = hostBox.width / (host.clientWidth || 1) || 1;
+    const fig = hero.querySelector<HTMLElement>(".bd-figure");
+    const box = (fig ?? hero).getBoundingClientRect();
+    const moving = hero.dataset.stepping === "1";
+    setActorClip(have.nodes, have.sheet, actorClip(moving, null));
+    layoutActor(have.nodes, box.height / scale);
+    have.root.position.set(
+      pixelSnap((box.left + box.width / 2 - hostBox.left) / scale),
+      pixelSnap((box.bottom - hostBox.top) / scale),
+    );
+    const face = Number(hero.style.getPropertyValue("--face") || "1");
+    have.root.scale.x = face < 0 ? -1 : 1;
+    have.root.zIndex = depthRank(Number(hero.dataset.ny) || 0.76);
+    scene.dataset.actors = "pixi";
+    scene.dataset.depth = Number(hero.dataset.ny) > 0.72 ? "front" : "back";
+    return have.nodes;
+  };
+  app.ticker.add((ticker) => {
+    onTick(ticker);
   });
 
   const onGesture = (event: Event) => {
@@ -698,7 +832,7 @@ export async function startPixiShell(options: {
 
   return {
     destroy() {
-      clock.stop();
+      app.ticker.stop();
       viewObserver.disconnect();
       window.removeEventListener("keydown", onKey);
       media.removeEventListener("change", onReduce);
@@ -710,7 +844,7 @@ export async function startPixiShell(options: {
       }
       for (const item of parkSprites) item.texture.destroy(false);
       viewport.destroy({ children: true });
-      app.destroy(false, { children: true });
+      app.destroy({ removeView: false }, { children: true, texture: false, textureSource: false });
     },
   };
 }
