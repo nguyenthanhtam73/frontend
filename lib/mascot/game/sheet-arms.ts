@@ -5,9 +5,9 @@
  * same file mirrored, not a new drawing.
  */
 
-/** Degrees around the shoulder. 100 hangs the sleeve; 0 is the drawn wave; -112 rests the left hand under the chin. */
+/** Degrees around the shoulder. 100 hangs the sleeve; 0 is the drawn wave; -108 sets the left hand on the chin. */
 export const HANG_ARM = 100;
-export const CHIN_ARM = -112;
+export const CHIN_ARM = -108;
 export const IDLE_ARM_RIGHT = HANG_ARM;
 export const IDLE_ARM_LEFT = CHIN_ARM;
 export const WALK_ARM_SWING = 14;

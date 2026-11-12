@@ -111,7 +111,7 @@ function handBlobs(image: Rgba, frame: { x: number; y: number; w: number; h: num
           stack.push(next);
         }
       }
-      if (n >= 70) blobs.push({ n, x: sx / n / 2, y: sy / n / 2 });
+      if (n >= 60) blobs.push({ n, x: sx / n / 2, y: sy / n / 2 });
     }
   }
   return blobs;
@@ -120,7 +120,7 @@ function handBlobs(image: Rgba, frame: { x: number; y: number; w: number; h: num
 function inFaceOrLeg(x: number, y: number): boolean {
   const cx = x / 2 - 110;
   const cy = y / 2 - 104;
-  if (cx * cx + cy * cy < 44 * 44) return true;
+  if (cx * cx + cy * cy < 42 * 42) return true;
   const cssX = x / 2;
   const cssY = y / 2;
   return cssY > 168 && cssX > 75 && cssX < 145;
@@ -214,7 +214,7 @@ describe("sheet arms", () => {
           );
           const high = [...hands].sort((a, b) => a.y - b.y)[0];
           const low = [...hands].sort((a, b) => b.y - a.y)[0];
-          if (clip === "idle") assert.ok(high && low && high.y < 160 && high.y < low.y - 15, frameName);
+          if (clip === "idle") assert.ok(high && low && high.y < 150 && high.y < low.y - 15, frameName);
           if (clip === "walk") {
             assert.ok(hands.every((hand) => hand.y > 165), frameName);
             assert.ok(Math.min(...hands.map((hand) => hand.x)) < 100, frameName);
@@ -225,4 +225,54 @@ describe("sheet arms", () => {
       }
     }
   });
+
+  it("keeps other outfits a different color from the default pajamas dress", () => {
+    const dir = new URL("../../../public/mascot/game/sheets/", import.meta.url);
+    const sheets = readdirSync(dir).filter((name) => name.endsWith(".png")).sort();
+    const byOutfit = new Map<string, string>();
+    for (const name of sheets) {
+      const outfit = name.split("__")[0] ?? "";
+      if (!byOutfit.has(outfit)) byOutfit.set(outfit, name);
+    }
+    const colors = [...byOutfit.entries()].map(([outfit, name]) => ({
+      outfit,
+      color: dressColor(decodePng(readFileSync(new URL(name, dir)))),
+    }));
+    const pajamas = colors.find((item) => item.outfit === "outfit_pajamas");
+    assert.ok(pajamas);
+    assert.ok(pajamas.color.r > 220 && pajamas.color.b > 180 && pajamas.color.r - pajamas.color.g > 30);
+    const others = colors.filter((item) => item.outfit !== "outfit_pajamas");
+    assert.ok(others.length >= 5);
+    for (const item of others) {
+      const distance = Math.hypot(item.color.r - pajamas.color.r, item.color.g - pajamas.color.g, item.color.b - pajamas.color.b);
+      assert.ok(distance > 40, `${item.outfit} matches the default dress (${distance.toFixed(0)})`);
+    }
+  });
 });
+
+function dressColor(image: Rgba): { r: number; g: number; b: number } {
+  const bins = new Map<string, { n: number; r: number; g: number; b: number }>();
+  for (let y = 310; y < 360; y += 1) {
+    for (let x = 180; x < 290; x += 1) {
+      const i = (y * image.w + x) * 4;
+      const r = image.px[i] ?? 0;
+      const g = image.px[i + 1] ?? 0;
+      const b = image.px[i + 2] ?? 0;
+      const a = image.px[i + 3] ?? 0;
+      if (a < 200) continue;
+      if (r > 230 && g > 200 && b > 190) continue;
+      if (Math.abs(r - 201) < 30 && Math.abs(g - 150) < 30 && Math.abs(b - 127) < 30) continue;
+      const key = `${r >> 4},${g >> 4},${b >> 4}`;
+      const bin = bins.get(key) ?? { n: 0, r: 0, g: 0, b: 0 };
+      bin.n += 1;
+      bin.r += r;
+      bin.g += g;
+      bin.b += b;
+      bins.set(key, bin);
+    }
+  }
+  let best = { n: 0, r: 0, g: 0, b: 0 };
+  for (const bin of bins.values()) if (bin.n > best.n) best = bin;
+  assert.ok(best.n > 0);
+  return { r: best.r / best.n, g: best.g / best.n, b: best.b / best.n };
+}
