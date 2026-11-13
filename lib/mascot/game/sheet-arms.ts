@@ -5,12 +5,16 @@
  * same file mirrored, not a new drawing.
  */
 
-/** Degrees around the shoulder. 100 hangs the sleeve; 0 is the drawn wave; -108 sets the left hand on the chin. */
+/**
+ * Degrees around the shoulder. The sleeve file is a short arm: 100 hangs it
+ * above the hem, 0 is the small drawn wave. The chin rest is a separate bent
+ * sleeve (`arm_chin__`), not a long rotation of this one.
+ */
 export const HANG_ARM = 100;
-export const CHIN_ARM = -108;
+export const CHIN_ARM = 0;
 export const IDLE_ARM_RIGHT = HANG_ARM;
 export const IDLE_ARM_LEFT = CHIN_ARM;
-export const WALK_ARM_SWING = 14;
+export const WALK_ARM_SWING = 6;
 
 /** The glow plate also draws a loose hand on the chest. The sleeve replaces it. */
 const CHIN_HAND = /<path d="M7[67] 15[01][\s\S]*?\/>|<path d="M78 160[\s\S]*?\/>|<path d="M80 159[\s\S]*?\/>/g;
@@ -19,13 +23,20 @@ export function withoutChinHand(svg: string): string {
   return svg.replace(CHIN_HAND, "");
 }
 
-const WAVE_WAG = [-12, -4, 10, 2, -8, 6] as const;
+const WAVE_WAG = [-6, -2, 5, 1, -4, 3] as const;
 
 export type ArmClip = "idle" | "walk" | "wave";
 
+function sleeveId(outfitSrc: string): string {
+  return outfitSrc.match(/outfit_([a-z0-9_]+)\.svg/)?.[1] ?? "pajamas";
+}
+
 export function sleeveArmSrc(outfitSrc: string): string {
-  const sleeve = outfitSrc.match(/outfit_([a-z0-9_]+)\.svg/)?.[1] ?? "pajamas";
-  return `/mascot/outfits/arm_wave_right__${sleeve}.svg`;
+  return `/mascot/outfits/arm_wave_right__${sleeveId(outfitSrc)}.svg`;
+}
+
+export function chinArmSrc(outfitSrc: string): string {
+  return `/mascot/outfits/arm_chin__${sleeveId(outfitSrc)}.svg`;
 }
 
 /** Idle rests the left hand at the chin. Walk and wave do not. Walk swings both arms opposite the legs. */
@@ -40,9 +51,15 @@ export function armPose(clip: ArmClip, index: number): { right: number; left: nu
   };
 }
 
-/** Two sleeve images, right and mirrored left, so a frame always has both arms. */
+function armImg(src: string, deg: number, side: "r" | "l"): string {
+  const img = `<img class="arm arm-${side}" alt="" src="${src}" style="transform:rotate(${deg.toFixed(1)}deg)">`;
+  return side === "l" ? `<div class="arm-mirror">${img}</div>` : img;
+}
+
+/** Two short sleeves. Idle swaps the left one for the bent chin rest. */
 export function armMarkup(outfitSrc: string, clip: ArmClip, index: number): string {
-  const src = sleeveArmSrc(outfitSrc);
   const pose = armPose(clip, index);
-  return `<img class="arm arm-r" alt="" src="${src}" style="transform:rotate(${pose.right.toFixed(1)}deg)"><div class="arm-mirror"><img class="arm arm-l" alt="" src="${src}" style="transform:rotate(${pose.left.toFixed(1)}deg)"></div>`;
+  const hang = sleeveArmSrc(outfitSrc);
+  const leftSrc = clip === "idle" ? chinArmSrc(outfitSrc) : hang;
+  return armImg(hang, pose.right, "r") + armImg(leftSrc, pose.left, "l");
 }

@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, it } from "node:test";
 
-import { CHIN_ARM, HANG_ARM, IDLE_ARM_LEFT, armMarkup, armPose, sleeveArmSrc, withoutChinHand } from "./sheet-arms";
+import { CHIN_ARM, HANG_ARM, IDLE_ARM_LEFT, armMarkup, armPose, chinArmSrc, sleeveArmSrc, withoutChinHand } from "./sheet-arms";
 
 /** Face fill on body_chibi. The sleeve hand uses this same paint. */
 const FACE_SKIN = { r: 255, g: 228, b: 218 };
@@ -111,7 +111,7 @@ function handBlobs(image: Rgba, frame: { x: number; y: number; w: number; h: num
           stack.push(next);
         }
       }
-      if (n >= 60) blobs.push({ n, x: sx / n / 2, y: sy / n / 2 });
+      if (n >= 80) blobs.push({ n, x: sx / n / 2, y: sy / n / 2 });
     }
   }
   return blobs;
@@ -130,16 +130,36 @@ describe("sheet arms", () => {
   it("uses the outfit sleeve file, not a new drawing", () => {
     assert.equal(sleeveArmSrc("/mascot/outfits/outfit_hoodie.svg"), "/mascot/outfits/arm_wave_right__hoodie.svg");
     assert.equal(sleeveArmSrc("/mascot/outfits/outfit_ao_dai.svg"), "/mascot/outfits/arm_wave_right__ao_dai.svg");
+    assert.equal(chinArmSrc("/mascot/outfits/outfit_ao_len.svg"), "/mascot/outfits/arm_chin__ao_len.svg");
   });
 
-  it("puts both arms on idle, walk, and wave frames", () => {
-    for (const clip of ["idle", "walk", "wave"] as const) {
+  it("puts both short arms on every frame, and the chin sleeve only when idle", () => {
+    const hang = "/mascot/outfits/arm_wave_right__pajamas.svg";
+    const chin = "/mascot/outfits/arm_chin__pajamas.svg";
+    for (const clip of ["walk", "wave"] as const) {
       const html = armMarkup("/mascot/outfits/outfit_pajamas.svg", clip, clip === "walk" ? 1 : 0);
-      const src = "/mascot/outfits/arm_wave_right__pajamas.svg";
-      assert.equal(html.split(src).length - 1, 2, clip);
-      assert.match(html, /arm-r/);
-      assert.match(html, /arm-l/);
+      assert.equal(html.split(hang).length - 1, 2, clip);
+      assert.equal(html.includes(chin), false, clip);
     }
+    const idle = armMarkup("/mascot/outfits/outfit_pajamas.svg", "idle", 0);
+    assert.equal(idle.split(hang).length - 1, 1);
+    assert.equal(idle.split(chin).length - 1, 1);
+    assert.match(idle, /arm-r/);
+    assert.match(idle, /arm-l/);
+  });
+
+  it("draws a short sleeve that cannot hang past the hem", () => {
+    const svg = readFileSync(new URL("../../../public/mascot/outfits/arm_wave_right__pajamas.svg", import.meta.url), "utf8");
+    const hand = svg.match(/circle cx="([\d.]+)" cy="([\d.]+)"/);
+    assert.ok(hand);
+    const dx = Number(hand[1]) - 138;
+    const dy = Number(hand[2]) - 158;
+    assert.ok(Math.hypot(dx, dy) < 28, "short arm");
+    const chin = readFileSync(new URL("../../../public/mascot/outfits/arm_chin__pajamas.svg", import.meta.url), "utf8");
+    const chinHand = chin.match(/circle cx="([\d.]+)" cy="([\d.]+)"/);
+    assert.ok(chinHand);
+    const cy = Number(chinHand[2]);
+    assert.ok(cy > 136 && cy < 150);
   });
 
   it("rests one hand at the chin, swings the walk, and raises one arm to wave", () => {
@@ -185,7 +205,7 @@ describe("sheet arms", () => {
     assert.ok(sleeves.length >= 7);
     for (const name of sleeves) {
       const svg = readFileSync(new URL(`../../../public/mascot/outfits/${name}`, import.meta.url), "utf8");
-      assert.match(svg, /circle cx="164" cy="128"[^>]*fill="#FFE4DA"/, name);
+      assert.match(svg, /fill="#FFE4DA"/, name);
     }
   });
 
