@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
@@ -10,11 +10,9 @@ import { SpaProblemLine } from "@/components/mascot/game/be-da-spa-room";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook } from "@/lib/mascot/game/look";
 import {
-  FRIEND_CARD_GAP,
   SAMPLE_LOBBY_FRIENDS,
   lobbyNeutralView,
   lobbyTagNudgePx,
-  placeFriendCard,
   sampleFriendView,
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
@@ -231,55 +229,14 @@ export function BeDaLobby({
     motion.current.panBy(0, -(next - current), false);
   };
 
-  const placeCard = () => {
-    const frame = frameRef.current;
-    if (!frame || !selected) return;
-    const card = frame.querySelector<HTMLElement>("[data-testid='beda-actions']");
-    const friend = frame.querySelector<HTMLElement>(`[data-friend-id="${selected.id}"]`);
-    if (!card || !friend) return;
-    const nav = frame.closest(".beda-game")?.querySelector<HTMLElement>(".beda-nav");
-    const frameBox = frame.getBoundingClientRect();
-    const friendBox = friend.getBoundingClientRect();
-    const navTop = (nav?.getBoundingClientRect().top ?? frameBox.bottom) - frameBox.top;
-    const cardWidth = card.offsetWidth;
-    const cardHeight = card.offsetHeight;
-    const zoom = frame.querySelector(".beda-zoom")?.getBoundingClientRect();
-    const placement = placeFriendCard({
-      frameWidth: frame.clientWidth,
-      frameHeight: frame.clientHeight,
-      friendTop: friendBox.top - frameBox.top,
-      friendLeft: friendBox.left - frameBox.left,
-      friendWidth: friendBox.width,
-      friendHeight: friendBox.height,
-      cardWidth,
-      cardHeight,
-      navTop,
-      gap: FRIEND_CARD_GAP,
-      avoid: zoom
-        ? {
-            left: zoom.left - frameBox.left,
-            top: zoom.top - frameBox.top,
-            right: zoom.right - frameBox.left,
-            bottom: zoom.bottom - frameBox.top,
-          }
-        : undefined,
-    });
-    card.style.left = `${Math.round(placement.left)}px`;
-    card.style.top = `${Math.round(placement.top)}px`;
-    card.dataset.placement = placement.flipped ? "below" : "above";
-  };
-
   const syncRef = useRef<() => void>(() => {});
-  const placeCardRef = useRef<() => void>(() => {});
   syncRef.current = () => {
     if (seenSelect.current !== selectedId) {
       seenSelect.current = selectedId;
       revealSelected();
     }
     settleLift();
-    placeCard();
   };
-  placeCardRef.current = placeCard;
 
   useLayoutEffect(() => {
     const frame = frameRef.current;
@@ -308,7 +265,6 @@ export function BeDaLobby({
     event.preventDefault();
     setShowHint(false);
     paint(offsetRef.current + (event.key === "ArrowLeft" ? -140 : 140));
-    placeCardRef.current();
   }
 
   return (
@@ -323,6 +279,12 @@ export function BeDaLobby({
       aria-label={dragLabel}
       style={{ ["--beda-ground-end" as string]: night ? "#6f9474" : "#9fd48e" }}
       onKeyDown={onKeyDown}
+      onClick={(event: MouseEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLElement;
+        if (target.closest("button, a, input, .beda-actions")) return;
+        setShowHint(false);
+        onSelect("");
+      }}
     >
       {pixi ? (
         <BeDaPixiStage

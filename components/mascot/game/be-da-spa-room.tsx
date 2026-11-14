@@ -222,8 +222,33 @@ export function BeDaSpaRoom({
   const lockName = lock ? lock.name || lock.code : "";
   const lockDate = lock?.endsAt ? formatRoomEndDate(new Date(lock.endsAt), locale) : "";
 
+  const selectedGuest = room.guests.find((guest) => guest.id === selectedId) ?? null;
+
   return (
     <div ref={frameRef} className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
+      {selectedGuest ? (
+        <div className="beda-actions beda-card beda-friend-card" data-testid="beda-actions" role="group" aria-label={selectedGuest.nickname}>
+          <p className="beda-card-name">{selectedGuest.nickname}</p>
+          <button type="button" className="beda-hide" data-testid="beda-hide-friend" onClick={() => onHide(selectedGuest.id)}>
+            {t("game.hideFriend")}
+          </button>
+          <p className="beda-hide-note">{t("game.hideFriendNote")}</p>
+          <div className="beda-action-row">
+            <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
+              <GameIcon name="wave" />
+              {t("game.wave")}
+            </button>
+            <button type="button" className="beda-action" onClick={() => onAction("heart")}>
+              <GameIcon name="heart" />
+              {t("game.heart")}
+            </button>
+            <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
+              <GameIcon name="outfit" />
+              {t("game.outfit")}
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div ref={viewRef} className="beda-spa-view">
         <BeDaActorLayer />
       <div className="beda-spa-stage">
@@ -254,8 +279,6 @@ export function BeDaSpaRoom({
               standing={false}
               crown={crowned(guest.careStreak)}
               onSelect={onSelect}
-              onAction={onAction}
-              onHide={onHide}
             />
           );
         })}
@@ -277,8 +300,6 @@ export function BeDaSpaRoom({
               standing
               crown={crowned(guest.careStreak)}
               onSelect={onSelect}
-              onAction={onAction}
-              onHide={onHide}
             />
           );
         })}
@@ -512,8 +533,6 @@ function SpaPerson({
   standing,
   crown,
   onSelect,
-  onAction,
-  onHide,
 }: {
   guest: SpaGuest;
   locale: string;
@@ -524,8 +543,6 @@ function SpaPerson({
   standing: boolean;
   crown: boolean;
   onSelect: (id: string) => void;
-  onAction: (kind: "wave" | "heart" | "outfit") => void;
-  onHide: (id: string) => void;
 }) {
   const t = useTranslations("mascot");
   const sample = guest.sample ? SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === guest.id) : undefined;
@@ -561,29 +578,6 @@ function SpaPerson({
             }
       }
     >
-      {selected ? (
-        <div className="beda-actions beda-card" data-testid="beda-actions" role="group" aria-label={guest.nickname}>
-          <p className="beda-card-name">{guest.nickname}</p>
-          <button type="button" className="beda-hide" data-testid="beda-hide-friend" onClick={() => onHide(guest.id)}>
-            {t("game.hideFriend")}
-          </button>
-          <p className="beda-hide-note">{t("game.hideFriendNote")}</p>
-          <div className="beda-action-row">
-            <button type="button" className="beda-action is-wave" onClick={() => onAction("wave")}>
-              <GameIcon name="wave" />
-              {t("game.wave")}
-            </button>
-            <button type="button" className="beda-action" onClick={() => onAction("heart")}>
-              <GameIcon name="heart" />
-              {t("game.heart")}
-            </button>
-            <button type="button" className="beda-action" onClick={() => onAction("outfit")}>
-              <GameIcon name="outfit" />
-              {t("game.outfit")}
-            </button>
-          </div>
-        </div>
-      ) : null}
       <button type="button" className="beda-spa-hit" onClick={() => onSelect(guest.id)}>
         <span className="beda-spa-art">
           <Cheeks />
