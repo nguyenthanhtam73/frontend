@@ -405,7 +405,8 @@ export function BeDaLobby({
               className="beda-tag beda-tag-me"
               style={{ ["--nudge" as string]: `${lobbyTagNudgePx({ id: "you", x: you.x, y: you.y }, spots)}px` }}
             >
-              <GameIcon name="pin" className="beda-ico-sm" /> {you.nickname}
+              <GameIcon name="pin" className="beda-tag-pin" />
+              <span className="beda-tag-label">{you.nickname}</span>
             </span>
           </button>
         </div>
@@ -626,7 +627,7 @@ function FriendButton({
           </span>
         )}
         <span className="beda-tag" style={{ ["--nudge" as string]: `${nudge}px` }}>
-          {actor.nickname}
+          <span className="beda-tag-label">{actor.nickname}</span>
         </span>
       </button>
     </div>

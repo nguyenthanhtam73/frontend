@@ -722,6 +722,22 @@ describe("game layout", () => {
     assert.match(css, /prefers-reduced-motion:\s*reduce/);
     assert.equal(css.includes("w-[148px]"), false);
   });
+
+  it("keeps lobby name pills on one line and caps their width", () => {
+    const css = fs.readFileSync(
+      path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../components/mascot/game/be-da-game.css"),
+      "utf8",
+    );
+    const tag = css.match(/(?:^|\n)\.beda-tag\s*\{[^}]*\}/)?.[0] ?? "";
+    assert.match(tag, /display:\s*inline-flex/);
+    assert.match(tag, /max-width:\s*9rem/);
+    assert.match(tag, /white-space:\s*nowrap/);
+    assert.doesNotMatch(tag, /max-width:\s*none/);
+    const pin = css.match(/\.beda-tag-pin,\s*\n\.beda-tag > img\s*\{[^}]*\}/)?.[0] ?? "";
+    assert.match(pin, /width:\s*12px/);
+    assert.match(pin, /height:\s*12px/);
+    assert.match(pin, /max-width:\s*none/);
+  });
 });
 
 const HIDDEN_ROOM_PROPS = /door|sign_|flies|props\/pillow\.svg|pot\.svg|suitcase|mirror|body_sit|waiting_door|messy\/[234]|room_/;
