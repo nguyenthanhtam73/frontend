@@ -321,8 +321,13 @@ export function BeDaSpaRoom({
             </span>
             <span className="beda-name">
               <span className="beda-tag beda-tag-me">
-                {crowned(youStreak) ? <span aria-hidden>👑 </span> : null}
-                <Star /> {t("game.you")}
+                {crowned(youStreak) ? (
+                  <span className="beda-tag-mark" aria-hidden>
+                    👑
+                  </span>
+                ) : null}
+                <Star />
+                <span className="beda-tag-label">{t("game.you")}</span>
               </span>
               <StreakFlame streak={youStreak} label={t("game.spaStreak", { count: youStreak })} />
             </span>
@@ -585,8 +590,12 @@ function SpaPerson({
         </span>
         <span className="beda-name">
           <span className="beda-tag">
-            {crown ? <span aria-hidden>👑 </span> : null}
-            {guest.nickname}
+            {crown ? (
+              <span className="beda-tag-mark" aria-hidden>
+                👑
+              </span>
+            ) : null}
+            <span className="beda-tag-label">{guest.nickname}</span>
           </span>
           <StreakFlame streak={guest.careStreak ?? 0} label={t("game.spaStreak", { count: guest.careStreak ?? 0 })} />
         </span>

@@ -1392,22 +1392,52 @@
 
 .beda-tag {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   width: max-content;
-  max-width: none;
+  /* Long nicknames stay one line. "Bé Da 7222" still fits; longer names ellipsize. */
+  max-width: 9rem;
+  min-width: 0;
   flex: none;
   margin-top: -8px;
-  overflow: visible;
+  overflow: hidden;
   border-radius: 999px;
   background: #fff;
   padding: 3px 10px;
   color: #3c2a30;
   font-size: 12px;
   font-weight: 800;
+  line-height: 1.2;
   white-space: nowrap;
-  text-overflow: clip;
   box-shadow: 0 3px 0 #e2bcc6;
   transform: translateX(calc(var(--nudge, 0px) + var(--edge, 0px))) scale(calc(1 / var(--beda-zoom, 1)));
   transform-origin: center top;
+}
+
+.beda-tag-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Preflight makes img display:block, which stacked the pin over the nickname
+   and covered Bé Da. Marks stay on the same line as the letters. */
+.beda-tag-pin,
+.beda-tag > img,
+.beda-tag-mark,
+.beda-tag .beda-spa-star {
+  flex: none;
+}
+
+.beda-tag-pin,
+.beda-tag > img {
+  display: block;
+  width: 12px;
+  height: 12px;
+  max-width: none;
 }
 
 .beda-tag-me {
