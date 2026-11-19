@@ -311,13 +311,13 @@ export function BeDaSpaRoom({
             data-outfit={look.outfit}
             data-hair={look.hair}
             data-pose={youPose ?? ""}
-            data-art={lookArt(player, look, true).join(" ")}
+            data-art={lookArt(player, look, true, true).join(" ")}
             data-testid="beda-spa-you"
             style={{ zIndex: 40, ["--scale" as string]: String(SPA_YOU.scale) }}
           >
             <span className="beda-spa-art">
               <Cheeks />
-              <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd className="w-full" />
+              <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd marks className="w-full" />
             </span>
             <span className="beda-name">
               <span className="beda-tag beda-tag-me">
@@ -551,7 +551,8 @@ function SpaPerson({
 }) {
   const t = useTranslations("mascot");
   const sample = guest.sample ? SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === guest.id) : undefined;
-  const view = sample ? sampleFriendView(sample) : lobbyNeutralView();
+  const base = sample ? sampleFriendView(sample) : lobbyNeutralView();
+  const view = guest.gender === "male" ? { ...base, gender: "male" as const } : base;
   const dress = gameDress({ outfit: guest.outfit, hair: guest.hair, clip: guest.clip }, guest.pose);
   return (
     <div

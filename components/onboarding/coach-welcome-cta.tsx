@@ -7,6 +7,8 @@ import { CoachWelcomeNextStepCard } from "@/components/onboarding/coach-welcome-
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Link } from "@/i18n/navigation";
+import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
+import { BEDA_INTRO_PATH } from "@/lib/mascot/intro";
 import { FUNNEL_EVENTS, trackFunnelEvent } from "@/lib/analytics/funnel";
 import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
 import { GUEST_CLAIM_RETURN_PATH } from "@/lib/onboarding/claim-guest-coach-welcome";
@@ -79,6 +81,8 @@ export function CoachWelcomePrimaryCta({
   onSaveToAccount?: () => void;
 }) {
   const t = useTranslations("coachWelcome");
+  const { enabled } = useMascotFeature();
+  const nextHref = enabled ? BEDA_INTRO_PATH : "/check-in";
 
   if (pendingAccountClaim) {
     return (
@@ -92,7 +96,7 @@ export function CoachWelcomePrimaryCta({
 
   return (
     <ButtonLink
-      href="/check-in"
+      href={nextHref}
       size="lg"
       className={cn(primaryBtnClass, className)}
       onClick={() =>
@@ -205,6 +209,8 @@ export function CoachWelcomeStickyBar({
   onSaveToAccount?: () => void;
 }) {
   const t = useTranslations("coachWelcome");
+  const { enabled } = useMascotFeature();
+  const nextHref = enabled ? BEDA_INTRO_PATH : "/check-in";
   const showGuestAuth = isGuest && !signedIn && !pendingAccountClaim;
 
   return (
@@ -228,7 +234,7 @@ export function CoachWelcomeStickyBar({
           />
         ) : (
           <ButtonLink
-            href="/check-in"
+            href={nextHref}
             size="lg"
             className={primaryBtnClass}
             onClick={() =>
@@ -297,6 +303,8 @@ export function CoachWelcomeCta({
   className,
 }: CoachWelcomeCtaBaseProps & { showPrimary?: boolean }) {
   const t = useTranslations("coachWelcome");
+  const { enabled } = useMascotFeature();
+  const nextHref = enabled ? BEDA_INTRO_PATH : "/check-in";
   const showGuestAuth = isGuest && !signedIn && !pendingAccountClaim;
 
   return (
@@ -376,7 +384,7 @@ export function CoachWelcomeCta({
             </>
           ) : (
             <ButtonLink
-              href="/check-in"
+              href={nextHref}
               size="default"
               variant="secondary"
               className="min-h-11 w-full gap-2 font-semibold"

@@ -56,6 +56,7 @@ const WIRE_KEYS = new Set([
   "target",
   "hide",
   "code",
+  "gender",
 ]);
 
 export type SpaSeatId =
@@ -115,6 +116,8 @@ export type SpaGuest = {
   outfit: GameOutfitId;
   hair: GameHairId;
   clip: GameClipId | null;
+  /** Male visitors use the short-hair placeholder. */
+  gender?: "male";
   pose: GamePose | null;
   sample: boolean;
   /** Omitted or 0 means no flame. */
@@ -195,6 +198,7 @@ export type RoomClientFrame =
       outfit: string;
       hair: string;
       accessory: string;
+      gender?: "male";
       facing: LobbyFacing;
       action: "idle";
     }
@@ -442,6 +446,7 @@ export function seatGuests(
       outfit: look.outfit,
       hair: look.hair,
       clip: look.clip,
+      ...(person.gender === "male" ? { gender: "male" as const } : {}),
       pose: poses[person.id] ?? lobbyPose(person.action),
       sample: false,
       careStreak: person.careStreak,
@@ -516,6 +521,7 @@ export function encodeRoomFrame(frame: RoomClientFrame): string {
       base.accessory = frame.accessory;
       base.facing = frame.facing;
       base.action = frame.action;
+      if (frame.gender === "male") base.gender = "male";
       break;
     case "wave":
     case "heart":
@@ -568,6 +574,7 @@ function readPerson(value: unknown): WirePerson | null {
     outfit: typeof row.outfit === "string" ? row.outfit : "",
     hair: typeof row.hair === "string" ? row.hair : "",
     accessory: typeof row.accessory === "string" ? row.accessory : "",
+    ...(row.gender === "male" ? { gender: "male" as const } : {}),
     x: placed ? lobbyCoord(x) : 0,
     y: placed ? lobbyCoord(y) : 0,
     facing: row.facing === "left" ? "left" : "right",

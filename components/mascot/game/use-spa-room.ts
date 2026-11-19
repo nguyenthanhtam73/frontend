@@ -61,9 +61,10 @@ export function useSpaRoom(options: {
   active: boolean;
   code: string | null;
   look: GameLook;
+  gender?: "female" | "male";
   onRemoteEmote?: (toast: { name: string; kind: SpaEmoteKind }) => void;
 }) {
-  const { active, code, look, onRemoteEmote } = options;
+  const { active, code, look, gender, onRemoteEmote } = options;
   const [live, setLive] = useState(false);
   const [notice, setNotice] = useState<SpaNotice>(null);
   const [room, setRoom] = useState<RoomSnapshot>(() => emptyRoom(code ?? ""));
@@ -87,6 +88,8 @@ export function useSpaRoom(options: {
   const joinedRef = useRef(false);
   const retriedRef = useRef(false);
   const timers = useRef<number[]>([]);
+  const genderRef = useRef(gender);
+  genderRef.current = gender;
   lookRef.current = look;
   nickRef.current = nickname;
   hiddenRef.current = hidden;
@@ -141,6 +144,7 @@ export function useSpaRoom(options: {
         outfit: worn.outfit,
         hair: worn.hair,
         accessory: worn.clip ?? "",
+        ...(genderRef.current === "male" ? { gender: "male" as const } : {}),
         facing: "right",
         action: "idle",
       };

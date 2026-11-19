@@ -99,6 +99,15 @@ export function writeGameLook(storage: Store, look: GameLook): void {
   );
 }
 
+/**
+ * Male is the short-hair placeholder: no bows, no clips.
+ * Female keeps the look the player picked.
+ */
+export function genderLook(look: GameLook, gender: "female" | "male" | null | undefined): GameLook {
+  if (gender !== "male") return look;
+  return { outfit: look.outfit, hair: "hair_short_bob", clip: null };
+}
+
 export function sameGameLook(a: GameLook, b: GameLook): boolean {
   return a.outfit === b.outfit && a.hair === b.hair && a.clip === b.clip;
 }

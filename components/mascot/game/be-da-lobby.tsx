@@ -41,7 +41,8 @@ function actorMotion(pose: "wave" | "cheer" | null, walking: boolean): "idle" | 
 
 function actorArt(actor: LobbyActor): string[] {
   const sample = SAMPLE_LOBBY_FRIENDS.find((friend) => friend.id === actor.id);
-  const view = actor.sample && sample ? sampleFriendView(sample) : lobbyNeutralView();
+  const base = actor.sample && sample ? sampleFriendView(sample) : lobbyNeutralView();
+  const view = actor.gender === "male" ? { ...base, gender: "male" as const } : base;
   return lookArt(view, actor.look, true);
 }
 
@@ -167,7 +168,7 @@ export function BeDaLobby({
         x: you.x,
         y: you.y,
         facing: you.facing,
-        art: lookArt(player, look, true),
+        art: lookArt(player, look, true, true),
         local: true as const,
         motion: actorMotion(you.pose, false),
       },
@@ -381,7 +382,7 @@ export function BeDaLobby({
           data-friend-id="you"
           data-pixi-label="you"
           data-testid="beda-lobby-you"
-          data-art={lookArt(player, look, true).join(" ")}
+          data-art={lookArt(player, look, true, true).join(" ")}
           style={{ ["--ms" as string]: "1.2" }}
         >
           <button
@@ -397,7 +398,7 @@ export function BeDaLobby({
                 <span className="beda-ground-shadow" aria-hidden />
                 <span className="beda-ring" />
                 <span className="beda-feet">
-                  <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd className="w-full" />
+                  <BeDaFigure view={player} locale={locale} dress={gameDress(look, you.pose)} crowd marks className="w-full" />
                 </span>
               </span>
             )}

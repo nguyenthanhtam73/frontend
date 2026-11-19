@@ -53,9 +53,10 @@ export type LobbyEmoteKind = "wave" | "heart" | "outfit";
 export function useLobbyPresence(options: {
   active: boolean;
   look: GameLook;
+  gender?: "female" | "male";
   onRemoteEmote?: (toast: { name: string; kind: LobbyEmoteKind }) => void;
 }) {
-  const { active, look, onRemoteEmote } = options;
+  const { active, look, gender, onRemoteEmote } = options;
   const [hall, setHall] = useState<HallSnapshot>(emptyHall);
   const [live, setLive] = useState(false);
   const [nickname, setNicknameState] = useState(readDeviceNickname);
@@ -68,6 +69,8 @@ export function useLobbyPresence(options: {
   });
 
   const lookRef = useRef(look);
+  const genderRef = useRef(gender);
+  genderRef.current = gender;
   const youRef = useRef(you);
   const nickRef = useRef(nickname);
   const hiddenRef = useRef(hidden);
@@ -96,6 +99,7 @@ export function useLobbyPresence(options: {
       outfit: worn.outfit,
       hair: worn.hair,
       accessory: worn.clip ?? "",
+      ...(genderRef.current === "male" ? { gender: "male" as const } : {}),
       x: here.x,
       y: here.y,
       facing: here.facing,
