@@ -30,6 +30,7 @@ import { checkedInOnDay, gameBubbleKind, gameQuests } from "@/lib/mascot/game/qu
 import { skyPeriod } from "@/lib/mascot/game/sky";
 import {
   DEFAULT_GAME_LOOK,
+  genderLook,
   readGameLook,
   saveGameLook,
   type GameLook,
@@ -111,6 +112,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [roomLock, setRoomLock] = useState<RoomClock | null>(null);
   const [toast, setToast] = useState<GameToast>(null);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
+  const presented = useMemo(() => genderLook(look, view.gender), [look, view.gender]);
   const [wornLook, setWornLook] = useState<GameLook | null>(null);
   const [burst, setBurst] = useState(0);
   const soundRef = useRef(true);
@@ -253,7 +255,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
 
   const presence = useLobbyPresence({
     active: tab === "lobby" && !inSpa,
-    look,
+    look: presented,
+    gender: view.gender,
     onRemoteEmote: (event) => {
       setToast(event);
       setBurst((n) => n + 1);
@@ -263,7 +266,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const spaRoom = useSpaRoom({
     active: code != null,
     code,
-    look,
+    look: presented,
+    gender: view.gender,
     onRemoteEmote: (event) => {
       setToast(event);
       setBurst((n) => n + 1);
@@ -466,7 +470,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onWalk={presence.walkTo}
       onNickname={presence.setNickname}
       onSwitchHall={presence.switchHall}
-      look={look}
+      look={presented}
       wornIds={wornIds}
       hearts={
         pendingChest === "morning"

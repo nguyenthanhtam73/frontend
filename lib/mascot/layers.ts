@@ -115,6 +115,8 @@ export function mascotStack(
      * No room stickers, glow sparkles, star clip, or sleepy props.
      */
     crowd?: boolean;
+    /** Draw the latest skin marks even on a crowd figure (the local player). */
+    marks?: boolean;
   } = {},
 ): StackLayer[] {
   const now = options.now ?? Date.now();
@@ -173,7 +175,8 @@ export function mascotStack(
     if (!crowd) push("glow", glowLayerSrc(level, "mid"));
   }
 
-  if (showFace && !crowd) {
+  const drawMarks = options.marks === true || (!crowd && options.marks !== false);
+  if (showFace && drawMarks) {
     for (const mark of view.marks) {
       push(
         "skin-marks",
@@ -223,7 +226,27 @@ export function mascotStack(
   }
   if (view.flies) push("fx-flies", "/mascot/fx/flies/flies.svg", 1);
 
-  return options.dress ? applyGameDress(layers, options.dress) : layers;
+  const dressed = options.dress ? applyGameDress(layers, options.dress) : layers;
+  return view.gender === "male" ? malePlaceholder(dressed) : dressed;
+}
+
+/**
+ * Male Bé Da has no finished drawing yet. This is a stand-in: the existing
+ * short bob, with bows, pigtails, the headband, and hair clips taken off.
+ * Proportions stay the current ones. Replace this when real male art lands.
+ */
+export function malePlaceholder(layers: StackLayer[]): StackLayer[] {
+  const out: StackLayer[] = [];
+  for (const layer of layers) {
+    if (layer.slot === "accessory-headband" || layer.slot === "accessory-clip") continue;
+    if (/accessory_(pink_headband|star_clip|ribbon_bow|flower_clip)/.test(layer.src)) continue;
+    if (layer.slot === "hair") {
+      out.push({ ...layer, src: "/mascot/hair/hair_short_bob.svg" });
+      continue;
+    }
+    out.push(layer);
+  }
+  return out;
 }
 
 /**

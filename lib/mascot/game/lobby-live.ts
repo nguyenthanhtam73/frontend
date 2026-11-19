@@ -58,6 +58,8 @@ export type WirePerson = {
   outfit: string;
   hair: string;
   accessory: string;
+  /** "male" is the short-hair placeholder. Missing means the drawn female art. */
+  gender?: "male";
   x: number;
   y: number;
   facing: LobbyFacing;
@@ -120,6 +122,7 @@ export type LobbyClientFrame =
       outfit: string;
       hair: string;
       accessory: string;
+      gender?: "male";
       x: number;
       y: number;
       facing: LobbyFacing;
@@ -278,6 +281,7 @@ export function encodeLobbyFrame(frame: LobbyClientFrame): string {
       base.action = frame.action;
       if (frame.lobby != null) base.lobby = frame.lobby;
       if (frame.hide) base.hide = frame.hide.filter(isSessionId).slice(0, 64);
+      if (frame.gender === "male") base.gender = "male";
       break;
     }
     case "move-to": {
@@ -330,6 +334,7 @@ function readPerson(value: unknown): WirePerson | null {
     outfit: typeof row.outfit === "string" ? row.outfit : "",
     hair: typeof row.hair === "string" ? row.hair : "",
     accessory: typeof row.accessory === "string" ? row.accessory : "",
+    ...(row.gender === "male" ? { gender: "male" as const } : {}),
     x: feet.x,
     y: feet.y,
     facing,
@@ -505,6 +510,8 @@ export type LobbyActor = {
   walking: boolean;
   look: GameLook;
   sample: boolean;
+  /** Male visitors use the short-hair placeholder. */
+  gender?: "male";
 };
 
 /**
@@ -533,6 +540,7 @@ export function lobbyActors(input: {
         walking: person.action === "walk",
         look: lobbyLook(person.outfit, person.hair, person.accessory),
         sample: false,
+        ...(person.gender === "male" ? { gender: "male" as const } : {}),
       });
     }
   }

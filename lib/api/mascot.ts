@@ -1,5 +1,5 @@
 import { ApiError, apiGet, apiPost } from "@/lib/api-client";
-import { parseMascot, type MascotSnapshot } from "@/lib/mascot/model";
+import { parseMascot, type BeDaGender, type MascotSnapshot } from "@/lib/mascot/model";
 
 export { mascotQueryKey } from "@/lib/mascot/query-key";
 
@@ -29,6 +29,12 @@ export function markMascotGlowSeen(): Promise<void> {
       throw err;
     });
   return glowSeen;
+}
+
+/** POST /api/v1/me/mascot/intro. Saves gender and marks the intro as seen. */
+export async function saveMascotIntro(gender: BeDaGender): Promise<MascotSnapshot> {
+  const data = await apiPost<unknown>("/api/v1/me/mascot/intro", { gender }, { toastOnError: false });
+  return parseMascot(data);
 }
 
 /** Allow the next level-up to acknowledge again. */

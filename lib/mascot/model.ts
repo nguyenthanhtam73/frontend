@@ -85,8 +85,14 @@ export type RoutineToday = {
   pmTotal: number;
 };
 
+export type BeDaGender = "female" | "male";
+
 export type MascotSnapshot = {
   loadout: MascotLoadout;
+  /** Null when the payload did not say. Female is the drawn art. */
+  gender: BeDaGender | null;
+  /** Null when the server has no intro field yet. False means the page is still due. */
+  introSeen: boolean | null;
   mood: string;
   skinMarks: SkinMark[];
   skinMarksPrev: SkinMark[];
@@ -215,6 +221,8 @@ export type BeDaView = {
   nearLevelUp: boolean;
   levelUp: boolean;
   shopItemIds: string[];
+  /** Female is the drawn art. Male is the short-hair placeholder. */
+  gender: BeDaGender;
 };
 
 const LEVEL_RANK: Record<SkinLevel, number> = { light: 1, medium: 2, heavy: 3 };
@@ -337,6 +345,8 @@ export function defaultSnapshot(): MascotSnapshot {
     nearLevelUp: false,
     levelUp: false,
     shopItemIds: [],
+    gender: null,
+    introSeen: null,
   };
 }
 
@@ -518,8 +528,18 @@ export function parseMascot(value: unknown): MascotSnapshot {
     routineToday: parseRoutineToday(row.routine_today),
     lastStepDone: asString(row.last_step_done) || null,
     isDefault: false,
+    gender: parseGender(row.gender),
+    introSeen: parseIntroSeen(row.intro_seen),
     ...parseGlow(row, loadout),
   };
+}
+
+function parseGender(value: unknown): BeDaGender | null {
+  return value === "male" || value === "female" ? value : null;
+}
+
+function parseIntroSeen(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
 }
 
 const SHOP_LIST_KEYS = ["owned_items", "owned", "grants", "shop_items"] as const;
@@ -691,6 +711,7 @@ export function resolveBeDaView(input: {
     nearLevelUp: snap.nearLevelUp,
     levelUp: snap.levelUp,
     shopItemIds: snap.shopItemIds,
+    gender: snap.gender === "male" ? "male" : "female",
   };
 }
 

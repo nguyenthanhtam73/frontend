@@ -24,6 +24,8 @@ export function BeDaFigure({
   dress = null,
   imageLoading = "eager",
   crowd = false,
+  /** Skin marks on a crowd figure. The local player uses this in the lobby. */
+  marks = false,
   className,
 }: {
   view: BeDaView;
@@ -42,6 +44,8 @@ export function BeDaFigure({
   imageLoading?: "eager" | "lazy";
   /** Shared lobby and spa. Happy open eyes, shadow, and name tag only. */
   crowd?: boolean;
+  /** Draw skin marks on a crowd figure. */
+  marks?: boolean;
   className?: string;
 }) {
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -50,7 +54,7 @@ export function BeDaFigure({
     if (timer.current) clearTimeout(timer.current);
   }, []);
 
-  const layers = mascotStack(view, { reaction, stepPose, locale, dress, crowd });
+  const layers = mascotStack(view, { reaction, stepPose, locale, dress, crowd, marks: marks || undefined });
   const showExitFlies = fliesExit && !view.flies && !crowd;
   const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
   const floorSrc = !crowd && view.glowLevel >= 5 ? `/mascot/glow/level_${view.glowLevel}_floor.svg` : null;
@@ -111,6 +115,8 @@ export function BeDaFigure({
         data-mood={view.mood}
         data-glow-level={view.glowLevel}
         data-level={view.glowLevel}
+        data-gender={view.gender}
+        data-art={view.gender === "male" ? "placeholder" : "drawn"}
       >
         {art}
       </span>
@@ -128,6 +134,8 @@ export function BeDaFigure({
       data-mood={view.mood}
       data-glow-level={view.glowLevel}
       data-level={view.glowLevel}
+      data-gender={view.gender}
+      data-art={view.gender === "male" ? "placeholder" : "drawn"}
       data-reaction={reaction ?? ""}
     >
       {art}
