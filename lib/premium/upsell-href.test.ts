@@ -54,7 +54,7 @@ describe("readUpsellFeatureFromSearch", () => {
 });
 
 describe("hasLiveUsageMeter", () => {
-  it("requires a real backend counter — never invents 3/5/3", () => {
+  it("requires a real backend counter — never invents catalog quotas", () => {
     assert.equal(hasLiveUsageMeter({}), false);
     assert.equal(hasLiveUsageMeter({ used: 0, limit: 0, remaining: 0 }), false);
     assert.equal(hasLiveUsageMeter({ unlimited: true, limit: 3 }), false);

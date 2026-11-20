@@ -4,6 +4,12 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { COMPARE_ROWS } from "../premium/pricing";
+import {
+  FREE_WARDROBE_PRODUCT_LIMIT,
+  wardrobeProductLimit,
+} from "../types/wardrobe";
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 function readLocale(locale: "vi" | "en") {
@@ -20,6 +26,70 @@ function collectStrings(value: unknown, out: string[] = []): string[] {
   }
   return out;
 }
+
+describe("free wardrobe product limit", () => {
+  it("falls back to 10 and prefers a positive usage limit", () => {
+    assert.equal(FREE_WARDROBE_PRODUCT_LIMIT, 10);
+    assert.equal(wardrobeProductLimit(undefined), 10);
+    assert.equal(wardrobeProductLimit(null), 10);
+    assert.equal(wardrobeProductLimit(0), 10);
+    assert.equal(wardrobeProductLimit(Number.NaN), 10);
+    assert.equal(wardrobeProductLimit(10), 10);
+    assert.equal(wardrobeProductLimit(7), 7);
+  });
+
+  it("says 10 shelf products and leaves the other Free caps at 3", () => {
+    const vi = JSON.parse(fs.readFileSync(path.join(ROOT, "messages/vi.json"), "utf8"));
+    const en = JSON.parse(fs.readFileSync(path.join(ROOT, "messages/en.json"), "utf8"));
+
+    assert.match(vi.features.items.cabinet.desc, /tới 10 sản phẩm/);
+    assert.doesNotMatch(vi.features.items.cabinet.desc, /3 sản phẩm/);
+    assert.match(en.features.items.cabinet.desc, /up to 10 products/);
+    assert.doesNotMatch(en.features.items.cabinet.desc, /up to 3 products/);
+
+    assert.match(vi.landingFaq.q2.answer, /Tủ đồ: xem và thêm tối đa 10 sản phẩm/);
+    assert.match(vi.landingFaq.q2.answer, /Gợi ý routine AI: 3 lần\/tháng/);
+    assert.match(vi.landingFaq.q2.answer, /Progress: khoảng 3 tháng/);
+    assert.match(en.landingFaq.q2.answer, /Shelf: view and add up to 10 products/);
+    assert.match(en.landingFaq.q2.answer, /AI routine suggestions: 3\/month/);
+    assert.match(en.landingFaq.q2.answer, /last 3 months/);
+
+    assert.match(vi.premium.wardrobeBody, /\{n\} sản phẩm/);
+    assert.doesNotMatch(vi.premium.wardrobeBody, /3 sản phẩm/);
+    assert.match(en.premium.wardrobeBody, /\{n\} products/);
+
+    assert.match(vi.pricing.fromContext.wardrobe_full, /đủ 10 món/);
+    assert.match(en.pricing.fromContext.wardrobe_full, /10 items/);
+    assert.match(vi.pricing.plans.free.features.f4, /10 sản phẩm tủ đồ/);
+    assert.match(vi.pricing.plans.free.features.f4, /Progress 3 tháng/);
+    assert.match(en.pricing.plans.free.features.f4, /10 shelf products/);
+    assert.match(en.pricing.plans.free.features.f4, /last 3 months/);
+    assert.equal(vi.pricing.plans.free.features.f2, "3 gợi ý routine AI / tháng");
+    assert.equal(en.pricing.plans.free.features.f2, "3 AI routine suggestions / month");
+
+    assert.equal(vi.pricing.compare.values.shelf, "Tối đa {n} sản phẩm");
+    assert.equal(en.pricing.compare.values.shelf, "Up to {n} products");
+    assert.equal("shelf3" in vi.pricing.compare.values, false);
+    assert.equal("shelf3" in en.pricing.compare.values, false);
+    assert.equal(vi.pricing.compare.values.quota3, "3 / tháng");
+    assert.equal(vi.pricing.compare.values.months3, "3 tháng");
+    assert.equal(
+      COMPARE_ROWS.find((row) => row.key === "wardrobe")?.free,
+      "shelf",
+    );
+
+    assert.match(vi.pricing.faq.q1.answer, /tới 10 sản phẩm vào tủ đồ/);
+    assert.match(en.pricing.faq.q1.answer, /up to 10 shelf products/);
+    assert.match(vi.cabinet.sub, /tới 10 sản phẩm/);
+    assert.match(en.cabinet.sub, /up to 10 products/);
+    assert.match(vi.cabinet.starterAddHint, /\{n\} suất/);
+    assert.match(en.cabinet.starterAddHint, /\{n\}-product/);
+    assert.match(vi.cabinet.premiumWardrobeBody, /\{n\} sản phẩm/);
+    assert.match(en.cabinet.premiumWardrobeBody, /\{n\} products/);
+    assert.doesNotMatch(vi.cabinet.sub, /3 sản phẩm/);
+    assert.doesNotMatch(en.cabinet.sub, /3 products/);
+  });
+});
 
 describe("cabinet user-facing copy", () => {
   it("does not say affiliate or PAO on the shelf, in Vietnamese or English", () => {
