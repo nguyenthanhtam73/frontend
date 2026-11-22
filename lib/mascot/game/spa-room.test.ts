@@ -27,6 +27,7 @@ import {
   roomShareChoice,
   sampleSpaGuests,
   seatGuests,
+  SPA_SEATS,
   shouldRetryRoomJoin,
   SPA_ENTRY_TIMEOUT_MS,
   spaEntryPhase,
@@ -271,6 +272,24 @@ describe("spa room code", () => {
 });
 
 describe("spa room seats", () => {
+  it("keeps every mockup seat on the floor under the shelves, bed, and sofa", () => {
+    assert.equal(SPA_SEATS.length, 7);
+    for (const seat of SPA_SEATS) {
+      assert.equal(seat.y >= 56, true, seat.id);
+      assert.equal(seat.x >= 8 && seat.x <= 92, true, seat.id);
+    }
+    const back = SPA_SEATS.find((seat) => seat.id === "back");
+    const backLeft = SPA_SEATS.find((seat) => seat.id === "back-left");
+    const backRight = SPA_SEATS.find((seat) => seat.id === "back-right");
+    assert.equal(back?.y, 56);
+    assert.equal(backLeft && backLeft.y > 48, true);
+    assert.equal(backRight && backRight.y > 48, true);
+    const xs = SPA_SEATS.map((seat) => seat.x).sort((a, b) => a - b);
+    for (let i = 1; i < xs.length; i += 1) {
+      assert.equal(xs[i]! - xs[i - 1]! >= 8, true);
+    }
+  });
+
   it("sits the sample friends on the mockup seats and leaves three open", () => {
     const guests = sampleSpaGuests(new Set());
     assert.deepEqual(
