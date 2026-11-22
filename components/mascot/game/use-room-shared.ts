@@ -106,9 +106,12 @@ export function useRoomShared(code: string | null, active: boolean, selfId: stri
       } else if (isQuestHidden(questResult.reason)) {
         setVisible(false);
       } else if (isQuestGrace(questResult.reason)) {
-        setGrace(true);
+        const problem = sharedRoomError(questResult.reason);
+        setGrace(false);
+        setExpired(true);
         setQuest(null);
-        setChests(chestsFromQuest(null, { grace: true }));
+        setMessage(friendlyRoomMessage(problem?.code ?? "room_ended", problem?.message ?? ""));
+        setChests(chestsFromQuest(null, { expired: true }));
       } else {
         const problem = sharedRoomError(questResult.reason);
         setMessage(friendlyRoomMessage(problem?.code ?? "", problem?.message ?? ""));
@@ -171,7 +174,8 @@ export function useRoomShared(code: string | null, active: boolean, selfId: stri
         .catch((err: unknown) => {
           const problem = sharedRoomError(err);
           const codeName = problem?.code ?? "";
-          const line = friendlyRoomMessage(codeName, problem?.message ?? "");
+          const line =
+            codeName === "chest_closed" ? "Cần 1 ngày của bạn" : friendlyRoomMessage(codeName, problem?.message ?? "");
           setMessage(line);
           if (codeName === "chests_expired") {
             setExpired(true);

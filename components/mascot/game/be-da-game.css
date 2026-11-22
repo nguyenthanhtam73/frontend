@@ -3616,7 +3616,7 @@
 
 .beda-room-sheet {
   position: absolute;
-  z-index: 12;
+  z-index: 22;
   left: 8px;
   right: 8px;
   bottom: calc(var(--beda-nav-reserve, 120px) + 8px);
@@ -3731,7 +3731,11 @@
 }
 
 .beda-chest-btn em {
+  overflow: visible;
   font-size: 13px;
+  line-height: 1.25;
+  white-space: normal;
+  text-overflow: unset;
 }
 
 .beda-chest-ico {
