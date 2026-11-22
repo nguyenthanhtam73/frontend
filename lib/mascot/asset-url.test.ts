@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
@@ -33,25 +34,25 @@ function assertVersioned(url: string): void {
 }
 
 describe("mascot asset urls", () => {
-  it("appends ?v=2, keeps a file hash as h, and skips API paths", () => {
-    assert.equal(MASCOT_ASSET_VERSION, "2");
-    assert.equal(mascotAssetUrl("/mascot/body/body_chibi.svg"), "/mascot/body/body_chibi.svg?v=2");
+  it("appends ?v=3, keeps a file hash as h, and skips API paths", () => {
+    assert.equal(MASCOT_ASSET_VERSION, "3");
+    assert.equal(mascotAssetUrl("/mascot/body/body_chibi.svg"), "/mascot/body/body_chibi.svg?v=3");
     const once = mascotAssetUrl("/mascot/body/body_chibi.svg");
     assert.equal(mascotAssetUrl(once), once);
     assert.equal(
       mascotAssetUrl("/mascot/room/walk-mask.png?v=866dc5866a"),
-      "/mascot/room/walk-mask.png?v=2&h=866dc5866a",
+      "/mascot/room/walk-mask.png?v=3&h=866dc5866a",
     );
     assert.equal(
       mascotAssetUrl('url("/mascot/rooms/spa-room.webp")'),
-      'url("/mascot/rooms/spa-room.webp?v=2")',
+      'url("/mascot/rooms/spa-room.webp?v=3")',
     );
     assert.equal(
       mascotAssetUrl('<image href="/mascot/fx/eyelids.svg"/>'),
-      '<image href="/mascot/fx/eyelids.svg?v=2"/>',
+      '<image href="/mascot/fx/eyelids.svg?v=3"/>',
     );
     assert.equal(mascotAssetUrl("/api/v1/mascot/rooms/DA7K2M/quest"), "/api/v1/mascot/rooms/DA7K2M/quest");
-    assert.equal(mascotAssetPath("/mascot/hair/hair_sleep_buns.svg?v=2"), "/mascot/hair/hair_sleep_buns.svg");
+    assert.equal(mascotAssetPath("/mascot/hair/hair_sleep_buns.svg?v=3"), "/mascot/hair/hair_sleep_buns.svg");
     assert.equal(MASCOT_CACHE_CONTROL.includes("immutable"), false);
     assert.match(MASCOT_CACHE_CONTROL, /max-age=0/);
     assert.match(MASCOT_CACHE_CONTROL, /must-revalidate/);
@@ -78,7 +79,7 @@ describe("mascot asset urls", () => {
       ...Object.values(GAME_ICONS),
       ...WARDROBE_CATALOG.map((item) => wardrobeThumbSrc(item)),
       sleeveArmSrc("/mascot/outfits/outfit_pajamas.svg"),
-      chinArmSrc("/mascot/outfits/outfit_hoodie.svg?v=2"),
+      chinArmSrc("/mascot/outfits/outfit_hoodie.svg?v=3"),
       sheetJsonUrlFromArt(art),
       mascotSheetImageUrl("outfit_pajamas__hair_sleep_buns__211451dc.png"),
       ROOM_WALK_MASK,
@@ -111,10 +112,16 @@ describe("mascot asset urls", () => {
       "utf8",
     );
     const found = [...css.matchAll(/url\("(\/mascot\/[^"]+)"\)/g)].map((match) => match[1] ?? "");
-    assert.deepEqual(found, [
-      mascotAssetUrl("/mascot/rooms/spa-room.webp"),
-      mascotAssetUrl("/mascot/rooms/spa-room.webp"),
-    ]);
+    const spa = path.join(process.cwd(), "public/mascot/rooms/spa-room.webp");
+    const digest = createHash("sha256").update(fs.readFileSync(spa)).digest("hex").slice(0, 10);
+    const expected = mascotAssetUrl(`/mascot/rooms/spa-room.webp?v=${digest}`);
+    assert.equal(digest, "d8cd3aeab9");
+    assert.deepEqual(found, [expected, expected]);
+    for (const url of found) {
+      const params = new URL(url, "https://dadiary.vn").searchParams;
+      assert.equal(params.get("v"), MASCOT_ASSET_VERSION);
+      assert.equal(params.get("h"), digest);
+    }
   });
 
   it("serves /mascot with a revalidating cache and no immutable", async () => {
