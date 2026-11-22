@@ -138,6 +138,7 @@ export function BeDaGameView({
   together = null,
   roomPanel,
   showActors = true,
+  onSpaRetry,
 }: {
   locale: string;
   tab: GameTab;
@@ -215,6 +216,7 @@ export function BeDaGameView({
   together?: RoomTogether | null;
   roomPanel?: "quest" | "today" | null;
   showActors?: boolean;
+  onSpaRetry?: () => void;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -358,6 +360,7 @@ export function BeDaGameView({
           together={together}
           panel={roomPanel}
           showActors={showActors}
+          onRetry={onSpaRetry}
         />
       ) : showLobby ? (
         <BeDaLobby

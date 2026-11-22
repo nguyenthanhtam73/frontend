@@ -53,6 +53,8 @@ export type SpaRoomState = {
   lock?: RoomClock | null;
   /** Live presence. Null until the socket says how many people are here. Hidden at 0. */
   onlineCount?: number | null;
+  /** Real room codes wait here instead of showing the sample cast. */
+  entry?: "loading" | "room" | "error";
 };
 
 export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
@@ -108,6 +110,7 @@ export function BeDaSpaRoom({
   panel: panelProp,
   onPanel,
   showActors = true,
+  onRetry,
 }: {
   locale: string;
   player: BeDaView;
@@ -135,6 +138,7 @@ export function BeDaSpaRoom({
   onPanel?: (panel: "quest" | "today" | null) => void;
   /** Pixi sprites. Screenshots of the drawn gesture pass false so the SVG stays. */
   showActors?: boolean;
+  onRetry?: () => void;
 }) {
   const t = useTranslations("mascot");
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
@@ -163,6 +167,7 @@ export function BeDaSpaRoom({
     guests: placed.map((guest) => ({ id: guest.id, x: guest.x, y: guest.y, facing: guest.facing })),
     you: room.you ?? null,
     onWalk,
+    enabled: room.entry !== "loading" && room.entry !== "error",
   });
   const cap = room.cap || SPA_ROOM_CAP;
   const count = Math.min(cap, Math.max(0, room.count));
@@ -247,6 +252,24 @@ export function BeDaSpaRoom({
   const lockDate = lock?.endsAt ? formatRoomEndDate(new Date(lock.endsAt), locale) : "";
 
   const selectedGuest = room.guests.find((guest) => guest.id === selectedId) ?? null;
+  if (room.entry === "loading" || room.entry === "error") {
+    return (
+      <div className="beda-spa" data-testid="beda-spa">
+        <div className="beda-room-entry">
+          {room.entry === "loading" ? (
+            <p data-testid="beda-room-loading">{t("game.spaEntering")}</p>
+          ) : (
+            <>
+              <p data-testid="beda-room-error">{t("game.spaEnterFailed")}</p>
+              <button type="button" className="beda-room-retry" data-testid="beda-room-retry" onClick={onRetry}>
+                {t("game.spaRetry")}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={frameRef} className="beda-spa" data-testid="beda-spa" onClick={onBackground}>

@@ -1,5 +1,6 @@
 import type { GameClipId, GameHairId, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
 import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type WirePerson } from "@/lib/mascot/game/lobby-live";
+import { SPA_BOUNDS, clamp } from "@/lib/mascot/game/walk";
 
 /**
  * 8-person spa room (phòng nhóm).
@@ -422,6 +423,87 @@ export function sampleSpaGuests(
   return guests;
 }
 
+/** How long a real room may stay on «Đang vào phòng…» before we offer Thử lại. */
+export const SPA_ENTRY_TIMEOUT_MS = 10_000;
+
+const ENTRY_ERRORS = new Set<Exclude<SpaNotice, null>>(["offline", "missing", "bad-code", "member"]);
+
+/** A real room code never falls through to the sample cast. */
+export function spaEntryPhase(input: {
+  live: boolean;
+  timedOut: boolean;
+  notice: SpaNotice;
+}): "loading" | "room" | "error" {
+  if (input.live) return "room";
+  if (input.notice === "full" || input.notice === "ended" || input.notice === "already-in") return "room";
+  if (input.timedOut || (input.notice != null && ENTRY_ERRORS.has(input.notice))) return "error";
+  return "loading";
+}
+
+/** People to draw. Sample friends exist only when there is no room code. */
+export function spaRoomGuests(input: {
+  code: string | null;
+  live: boolean;
+  notice: SpaNotice;
+  previewCount: number | null;
+  people: readonly WirePerson[];
+  selfId: string | null;
+  hidden: ReadonlySet<string>;
+  poses?: Readonly<Record<string, GamePose | null | undefined>>;
+}): SpaGuest[] {
+  if (input.code) {
+    if (!input.live) return [];
+    return seatGuests(input.people, input.selfId, input.hidden, input.poses);
+  }
+  if (input.notice != null || input.previewCount != null) return [];
+  return sampleSpaGuests(input.hidden, input.poses);
+}
+
+const SPA_STACK_EPS = 0.02;
+const SPA_STACK_STEP = 0.34;
+
+function clampSpaPoint(point: { x: number; y: number }): { x: number; y: number } {
+  return {
+    x: clamp(point.x, SPA_BOUNDS.minX, SPA_BOUNDS.maxX),
+    y: clamp(point.y, SPA_BOUNDS.minY, SPA_BOUNDS.maxY),
+  };
+}
+
+/**
+ * Members who join on the same floor point get a small, stable spread
+ * so one Bé Da does not cover the next. A point that has already moved
+ * (someone walked) stays put. The result stays inside the walkable floor.
+ */
+export function spreadSpaFeet(
+  people: readonly { id: string; x: number; y: number }[],
+): Map<string, { x: number; y: number }> {
+  const sorted = [...people].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const groups: { anchor: { x: number; y: number }; members: typeof sorted }[] = [];
+  for (const person of sorted) {
+    const group = groups.find((item) => Math.hypot(item.anchor.x - person.x, item.anchor.y - person.y) < SPA_STACK_EPS);
+    if (group) group.members.push(person);
+    else groups.push({ anchor: { x: person.x, y: person.y }, members: [person] });
+  }
+  const out = new Map<string, { x: number; y: number }>();
+  for (const group of groups) {
+    if (group.members.length < 2) {
+      const only = group.members[0]!;
+      out.set(only.id, { x: only.x, y: only.y });
+      continue;
+    }
+    const count = group.members.length;
+    group.members.forEach((person, index) => {
+      const shift = (index - (count - 1) / 2) * SPA_STACK_STEP;
+      const lift = index % 2 === 0 ? -0.03 : 0.025;
+      out.set(
+        person.id,
+        clampSpaPoint({ x: group.anchor.x + shift, y: group.anchor.y + lift }),
+      );
+    });
+  }
+  return out;
+}
+
 /** Real people, skipping you and anyone you hid. A guest with x/y stands there. */
 export function seatGuests(
   people: readonly WirePerson[],
@@ -431,6 +513,9 @@ export function seatGuests(
 ): SpaGuest[] {
   const others = people.filter((person) => person.id !== selfId && !hidden.has(person.id));
   others.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const spots = spreadSpaFeet(
+    people.filter((person) => person.placed !== false).map((person) => ({ id: person.id, x: person.x, y: person.y })),
+  );
   const guests: SpaGuest[] = [];
   let seatIndex = 0;
   for (const person of others) {
@@ -443,8 +528,8 @@ export function seatGuests(
       id: person.id,
       nickname: person.nickname,
       seat: seat?.id ?? null,
-      x: standing ? person.x : null,
-      y: standing ? person.y : null,
+      x: standing ? spots.get(person.id)?.x ?? person.x : null,
+      y: standing ? spots.get(person.id)?.y ?? person.y : null,
       facing: person.facing,
       outfit: look.outfit,
       hair: look.hair,

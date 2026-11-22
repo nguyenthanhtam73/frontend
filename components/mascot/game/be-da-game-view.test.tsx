@@ -616,4 +616,42 @@ describe("Bé Da game screen", () => {
     assert.equal(empty.includes("đang ở đây"), false);
     assert.equal(empty.includes('data-testid="beda-spa-online"'), false);
   });
+
+  it("shows Đang vào phòng instead of the sample cast", () => {
+    const html = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 5,
+        cap: 8,
+        guests: sampleSpaGuests(new Set()),
+        notice: null,
+        entry: "loading",
+      },
+    });
+    const text = visibleText(html);
+    assert.match(text, /Đang vào phòng…/);
+    assert.match(html, /data-testid="beda-room-loading"/);
+    assert.equal(text.includes("Trà Sữa"), false);
+    assert.equal(text.includes("Mây Hồng"), false);
+    assert.equal(text.includes("5/8 người"), false);
+  });
+
+  it("offers a big Thử lại when the room does not open", () => {
+    const html = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 1,
+        cap: 8,
+        guests: [],
+        notice: "offline",
+        entry: "error",
+      },
+    });
+    const text = visibleText(html);
+    assert.match(text, /Chưa vào được phòng/);
+    assert.match(html, /data-testid="beda-room-retry"/);
+    assert.match(text, /Thử lại/);
+    assert.match(html, /beda-room-retry/);
+    assert.equal(text.includes("Trà Sữa"), false);
+  });
 });
