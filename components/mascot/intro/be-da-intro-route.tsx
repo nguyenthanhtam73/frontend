@@ -18,6 +18,7 @@ import {
   introReplay,
   introShot,
   marksFromFirstSkin,
+  leaveClosedMascotIntro,
   postIntroDone,
   readIntroBridge,
   type IntroPageId,
@@ -85,6 +86,8 @@ export function BeDaIntroRoute() {
 
   useEffect(() => {
     if (shot || left || !mascot.isSuccess) return;
+    // A stale introSeen:true must not skip the picker while a reset refetch is in flight.
+    if (introSeen && mascot.isFetching && !replay) return;
     if (!introSeen || replay) {
       if (mascot.data?.gender) setGender(mascot.data.gender);
       return;
@@ -93,11 +96,12 @@ export function BeDaIntroRoute() {
     postIntroDone(bridge, savedGender);
     if (!bridge) router.replace(BEDA_GAME_PATH);
     setLeft(true);
-  }, [introSeen, left, mascot.data?.gender, mascot.isSuccess, replay, router, savedGender, shot]);
+  }, [introSeen, left, mascot.data?.gender, mascot.isFetching, mascot.isSuccess, replay, router, savedGender, shot]);
 
   useEffect(() => {
     if (!ready || shot || pending) return;
-    if (!enabled) router.replace("/check-in");
+    if (enabled) return;
+    leaveClosedMascotIntro(readIntroBridge(window), (href) => router.replace(href));
   }, [enabled, pending, ready, router, shot]);
 
   async function finish() {

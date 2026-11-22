@@ -501,6 +501,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
           ? {
               code: code ?? "",
               count: code ? spaRoom.count : 1,
+              onlineCount: code ? spaRoom.onlineCount : null,
               cap: spaRoom.cap,
               guests: code ? spaRoom.guests : [],
               notice: code ? spaRoom.notice : "bad-code",
@@ -532,6 +533,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onClaim={onClaim}
       wornLook={wornLook}
       closetAdmin={closetAdmin}
+      introResetAdmin={closetAdmin}
       onLook={(next) => {
         const saved = equippedGameLook(next, { admin: closetAdmin });
         if (!saveGameLook(localStorage, saved)) {

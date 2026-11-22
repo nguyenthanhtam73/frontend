@@ -465,7 +465,12 @@ export function spaHeadCount(input: {
   visibleGuests: number;
   /** Member count from GET or POST join, before the socket hello. */
   previewCount?: number | null;
+  /** API member_count. Wins over the live presence count. */
+  memberCount?: number | null;
 }): number {
+  if (input.memberCount != null && Number.isFinite(input.memberCount)) {
+    return Math.min(SPA_ROOM_CAP, Math.max(0, Math.round(input.memberCount)));
+  }
   if (input.notice === "full") return SPA_ROOM_CAP;
   if (input.live) return Math.min(SPA_ROOM_CAP, Math.max(0, Math.round(input.serverCount)));
   if (input.previewCount != null && input.notice == null) {
@@ -473,6 +478,17 @@ export function spaHeadCount(input: {
   }
   if (input.notice != null) return 1;
   return Math.min(SPA_ROOM_CAP, input.visibleGuests + 1);
+}
+
+/**
+ * Live presence shown beside the member total.
+ * Hidden at 0. Still shown when it matches the member total.
+ */
+export function spaRoomOnlineCount(online: number | null | undefined): number | null {
+  if (online == null || !Number.isFinite(online)) return null;
+  const count = Math.round(online);
+  if (count <= 0) return null;
+  return Math.min(SPA_ROOM_CAP, count);
 }
 
 /**

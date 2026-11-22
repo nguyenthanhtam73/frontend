@@ -24,6 +24,7 @@ import {
   normalizeRoomCode,
   rankCareStreaks,
   roomInviteUrl,
+  spaRoomOnlineCount,
   roomShareChoice,
   spaFootScale,
   topCareStreak,
@@ -50,6 +51,8 @@ export type SpaRoomState = {
   daysLeft?: number | null;
   /** Set when create/join answered 409 already_in_room for a different room. */
   lock?: RoomClock | null;
+  /** Live presence. Null until the socket says how many people are here. Hidden at 0. */
+  onlineCount?: number | null;
 };
 
 export function SpaProblemLine({ notice }: { notice: SpaNotice }) {
@@ -235,9 +238,10 @@ export function BeDaSpaRoom({
 
   const roomTitle = room.name && room.name !== room.code ? room.name : t("game.spaRoomName");
   const memberLine = t("game.spaMembers", { count, cap });
+  const online = spaRoomOnlineCount(room.onlineCount);
+  const onlineLine = online == null ? "" : t("game.spaOnline", { count: online });
   const dayLine =
     room.daysLeft == null ? "" : t("game.spaDaysLeft", { left: room.daysLeft, total: SPA_ROOM_LIFE_DAYS });
-  const roomMeta = dayLine ? `${memberLine} · ${dayLine}` : memberLine;
   const lock = room.lock ?? null;
   const lockName = lock ? lock.name || lock.code : "";
   const lockDate = lock?.endsAt ? formatRoomEndDate(new Date(lock.endsAt), locale) : "";
@@ -409,7 +413,16 @@ export function BeDaSpaRoom({
         </button>
         <div className="beda-spa-titlecard" data-testid="beda-spa-title">
           <strong>{roomTitle}</strong>
-          <span>{roomMeta}</span>
+          <span data-testid="beda-spa-meta">
+            {memberLine}
+            {onlineLine ? (
+              <span className="beda-spa-online" data-testid="beda-spa-online">
+                {" · "}
+                {onlineLine}
+              </span>
+            ) : null}
+            {dayLine ? ` · ${dayLine}` : null}
+          </span>
         </div>
         {lock || room.notice === "ended" ? null : (
           <button type="button" className="beda-invite-open" data-testid="beda-invite-open" onClick={() => setInviteOpen(true)}>

@@ -74,6 +74,8 @@ export function useSpaRoom(options: {
   const [room, setRoom] = useState<RoomSnapshot>(() => emptyRoom(code ?? ""));
   const [serverCode, setServerCode] = useState<string | null>(null);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [members, setMembers] = useState<number | null>(null);
+  const [presence, setPresence] = useState<number | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
   const [youPose, setYouPose] = useState<GamePose | null>(null);
@@ -134,6 +136,8 @@ export function useSpaRoom(options: {
     setNotice(null);
     setServerCode(null);
     setPreviewCount(null);
+    setMembers(null);
+    setPresence(null);
     setConflict(null);
     setRoomName("");
     setEndsAt(null);
@@ -172,6 +176,7 @@ export function useSpaRoom(options: {
               if (cancelled) return;
               joinedRef.current = true;
               setPreviewCount(room.memberCount);
+              setMembers(room.memberCount);
               connRef.current?.send(encodeRoomFrame(joinFrame()), "join");
             })
             .catch((err: unknown) => {
@@ -204,6 +209,7 @@ export function useSpaRoom(options: {
         const nextCode = message.code || code;
         setServerCode(nextCode);
         setPreviewCount(message.count);
+        setPresence(message.count);
         setRoom((prev) => applyRoomMessage(prev, message));
         return;
       }
@@ -235,6 +241,7 @@ export function useSpaRoom(options: {
           });
         }
         setRoom((prev) => applyRoomMessage(prev, message));
+        setPresence(message.count);
         if (message.count > 0) setPreviewCount(message.count);
         return;
       }
@@ -273,6 +280,7 @@ export function useSpaRoom(options: {
         const preview = await getSpaRoom(code);
         if (cancelled) return;
         setPreviewCount(preview.memberCount);
+        setMembers(preview.memberCount);
         setRoomName(preview.name);
         setEndsAt(preview.endsAt);
         setRoom((prev) => ({ ...prev, code: preview.code, cap: preview.cap, count: preview.memberCount }));
@@ -295,6 +303,7 @@ export function useSpaRoom(options: {
         }
         joinedRef.current = true;
         setPreviewCount(joined.memberCount);
+        setMembers(joined.memberCount);
         setRoomName(joined.name);
         setEndsAt(joined.endsAt);
         setRoom((prev) => ({ ...prev, code: joined.code, cap: joined.cap, count: joined.memberCount }));
@@ -360,7 +369,9 @@ export function useSpaRoom(options: {
     serverCount: room.count,
     visibleGuests: guests.length,
     previewCount,
+    memberCount: members,
   });
+  const onlineCount = members != null && live ? presence : null;
 
   async function loadBoard() {
     const roomCode = serverCode ?? code ?? "";
@@ -431,7 +442,8 @@ export function useSpaRoom(options: {
     notice,
     guests,
     count,
-    cap: SPA_ROOM_CAP,
+    onlineCount,
+    cap: room.cap || SPA_ROOM_CAP,
     code: serverCode ?? code ?? "",
     serverCode,
     youPose,

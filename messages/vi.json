@@ -3421,6 +3421,7 @@
       "spaSeatsFull": "{cap} chỗ · đã đủ",
       "spaRoomName": "Phòng bạn bè",
       "spaMembers": "{count}/{cap} người",
+      "spaOnline": "{count} đang ở đây",
       "spaDaysLeft": "Còn {left}/{total} ngày",
       "spaInviteOpen": "Mời bạn",
       "spaGoRoom": "Vào phòng này",

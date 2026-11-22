@@ -29,6 +29,7 @@ import {
   seatGuests,
   shouldRetryRoomJoin,
   spaHeadCount,
+  spaRoomOnlineCount,
   spaRoomProblem,
   zaloShareUrl,
 } from "@/lib/mascot/game/spa-room";
@@ -208,6 +209,14 @@ describe("spa room seats", () => {
     assert.equal(spaHeadCount({ live: false, notice: null, serverCount: 0, visibleGuests: 4 }), 5);
     assert.equal(spaHeadCount({ live: false, notice: "missing", serverCount: 0, visibleGuests: 0 }), 1);
     assert.equal(spaHeadCount({ live: true, notice: "full", serverCount: 8, visibleGuests: 7 }), 8);
+    assert.equal(
+      spaHeadCount({ live: true, notice: null, serverCount: 1, visibleGuests: 0, memberCount: 2 }),
+      2,
+    );
+    assert.equal(spaRoomOnlineCount(1), 1);
+    assert.equal(spaRoomOnlineCount(2), 2);
+    assert.equal(spaRoomOnlineCount(0), null);
+    assert.equal(spaRoomOnlineCount(null), null);
   });
 
   it("stands guests on their x/y and seats only people who have none yet", () => {
