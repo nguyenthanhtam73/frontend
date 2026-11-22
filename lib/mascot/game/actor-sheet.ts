@@ -19,10 +19,13 @@ const OUTFITS = new Set([
   "outfit_pajamas",
   "outfit_pajamas_boy",
   "outfit_ao_dai",
+  "outfit_ao_dai_boy",
   "outfit_hoodie",
   "outfit_vay_hoa",
+  "outfit_vay_hoa_boy",
   "outfit_ao_thun_yem",
   "outfit_ao_len",
+  "outfit_ao_len_boy",
   "outfit_ao_thu",
 ]);
 

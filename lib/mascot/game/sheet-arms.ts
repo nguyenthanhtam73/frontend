@@ -12,8 +12,10 @@
  */
 export const HANG_ARM = 100;
 export const CHIN_ARM = 0;
-export const IDLE_ARM_RIGHT = HANG_ARM;
-export const IDLE_ARM_LEFT = CHIN_ARM;
+/** Idle hangs both arms. 110 tucks them closer than the walk hang; 118 covers the shirt. */
+export const IDLE_HANG = 110;
+export const IDLE_ARM_RIGHT = IDLE_HANG;
+export const IDLE_ARM_LEFT = IDLE_HANG;
 export const WALK_ARM_SWING = 6;
 
 /** The glow plate also draws a loose hand on the chest. The sleeve replaces it. */
@@ -39,10 +41,10 @@ export function chinArmSrc(outfitSrc: string): string {
   return `/mascot/outfits/arm_chin__${sleeveId(outfitSrc)}.svg`;
 }
 
-/** Idle rests the left hand at the chin. Walk and wave do not. Walk swings both arms opposite the legs. */
+/** Idle hangs both arms. Walk swings both arms opposite the legs. Wave lifts the right arm. */
 export function armPose(clip: ArmClip, index: number): { right: number; left: number } {
   if (clip === "wave") return { right: WAVE_WAG[index] ?? 0, left: HANG_ARM };
-  if (clip === "idle") return { right: HANG_ARM, left: CHIN_ARM };
+  if (clip === "idle") return { right: IDLE_HANG, left: IDLE_HANG };
   const swing = Math.sin((index / 6) * Math.PI * 2);
   // Positive swing is the left leg stepping forward, so the right arm lifts and the left arm drops.
   return {
@@ -56,10 +58,10 @@ function armImg(src: string, deg: number, side: "r" | "l"): string {
   return side === "l" ? `<div class="arm-mirror">${img}</div>` : img;
 }
 
-/** Two short sleeves. Idle swaps the left one for the bent chin rest. */
+/** Two short sleeves. Idle uses the hanging arm on both sides (left is mirrored). */
 export function armMarkup(outfitSrc: string, clip: ArmClip, index: number): string {
   const pose = armPose(clip, index);
   const hang = sleeveArmSrc(outfitSrc);
-  const leftSrc = clip === "idle" ? chinArmSrc(outfitSrc) : hang;
+  const leftSrc = hang;
   return armImg(hang, pose.right, "r") + armImg(leftSrc, pose.left, "l");
 }

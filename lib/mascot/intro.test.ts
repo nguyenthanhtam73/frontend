@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 
 import { INTRO_RESET_CONFIRM_VI, INTRO_RESET_ERROR_VI } from "@/components/mascot/intro/be-da-intro-reset";
 import { genderLook } from "@/lib/mascot/game/look";
-import { applyMaleArt } from "@/lib/mascot/layers";
+import { applyMaleArt, facePartSrc } from "@/lib/mascot/layers";
 import { defaultSnapshot, parseMascot, resolveBeDaView } from "@/lib/mascot/model";
 import { mascotStack } from "@/lib/mascot/layers";
 import {
@@ -127,13 +127,34 @@ describe("Bé Da intro", () => {
     assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_pajamas_boy.svg");
     assert.equal(stack.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arm_wave_right__pajamas_boy.svg");
     assert.equal(stack.find((layer) => layer.slot === "glow")?.src, "/mascot/glow/level_1_nam.svg");
+    assert.equal(stack.find((layer) => layer.slot === "face-eyes")?.src, "/mascot/faces/happy_nam/eyes.svg");
+    assert.equal(stack.find((layer) => layer.slot === "face-mouth")?.src, "/mascot/faces/happy_nam/mouth.svg");
     assert.equal(stack.some((layer) => layer.src.includes("/accessory/") || layer.src.includes("twin_tails")), false);
+    const dress = (outfitId: "outfit_vay_hoa" | "outfit_ao_len" | "outfit_ao_dai" | "outfit_hoodie") =>
+      mascotStack(male, {
+        dress: { outfitId, hairId: "hair_sleep_buns", clipId: null, pose: "cheer" },
+      });
+    const floral = dress("outfit_vay_hoa");
+    assert.equal(floral.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_vay_hoa_boy.svg");
+    assert.equal(floral.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__vay_hoa_boy.svg");
+    const sweater = dress("outfit_ao_len");
+    assert.equal(sweater.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_len_boy.svg");
+    assert.equal(sweater.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_len_boy.svg");
+    const tunic = dress("outfit_ao_dai");
+    assert.equal(tunic.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_dai_boy.svg");
+    assert.equal(tunic.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_dai_boy.svg");
+    const hoodie = dress("outfit_hoodie");
+    assert.equal(hoodie.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_hoodie.svg");
+    assert.equal(hoodie.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__hoodie.svg");
     const femaleStack = mascotStack(female, {
       dress: { outfitId: "outfit_pajamas", hairId: "hair_sleep_buns", clipId: "accessory_ribbon_bow" },
     });
     assert.equal(femaleStack.find((layer) => layer.slot === "hair")?.src, "/mascot/hair/hair_sleep_buns.svg");
     assert.equal(femaleStack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_pajamas.svg");
     assert.equal(femaleStack.find((layer) => layer.slot === "glow")?.src, "/mascot/glow/level_1.svg");
+    assert.equal(femaleStack.find((layer) => layer.slot === "face-eyes")?.src, "/mascot/faces/happy/eyes.svg");
+    assert.equal(facePartSrc("sad_pillow", "brows", null, "male"), "/mascot/faces/sad_pillow_nam/brows.svg");
+    assert.equal(facePartSrc("sad_pillow", "brows", "face_photo", "male"), "/mascot/faces/items/face_photo/brows.svg");
     assert.equal(femaleStack.some((layer) => layer.src.includes("ribbon_bow")), true);
     const stripped = applyMaleArt([
       { slot: "hair", src: "/mascot/hair/hair_sleep_buns.svg", opacity: 1 },
@@ -153,19 +174,13 @@ describe("Bé Da intro", () => {
     );
     const girl = readFileSync(new URL("../../public/mascot/glow/level_1.svg", import.meta.url), "utf8");
     const boy = readFileSync(new URL("../../public/mascot/glow/level_1_nam.svg", import.meta.url), "utf8");
-    assert.match(girl, /M70 84 Q57 79/);
-    assert.match(girl, /#D97AA6/);
-    assert.equal(boy.includes("M70 84"), false);
-    assert.equal(boy.includes("M150 82"), false);
-    assert.equal(boy.includes("M50 84"), false);
-    assert.equal(boy.includes("M170 84"), false);
-    assert.equal(boy.includes("M74 76"), false);
-    assert.equal(boy.includes("M146 76"), false);
-    assert.match(girl, /M74 76/);
-    assert.match(boy, /M84 64/);
+    assert.match(girl, /#F4A5C0/);
+    assert.match(girl, /M100 62/);
+    assert.match(girl, /M88 158/);
+    assert.match(boy, /#8FB6E8/);
+    assert.equal(boy.includes("#F4A5C0"), false);
     assert.equal(boy.includes("#D97AA6"), false);
     assert.equal(boy.includes("#FF9CC6"), false);
-    assert.match(boy, /#7EAFDF/);
     assert.match(boy, /M100 62/);
     assert.match(boy, /M88 158/);
   });

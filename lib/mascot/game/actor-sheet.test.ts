@@ -7,6 +7,9 @@ describe("actor sheet", () => {
   it("names a sheet from the outfit and hair", () => {
     assert.equal(sheetKey("outfit_hoodie", "hair_short_bob"), "outfit_hoodie__hair_short_bob");
     assert.equal(sheetKey("outfit_pajamas_boy", "hair_boy_short"), "outfit_pajamas_boy__hair_boy_short");
+    assert.equal(sheetKey("outfit_vay_hoa_boy", "hair_boy_short"), "outfit_vay_hoa_boy__hair_boy_short");
+    assert.equal(sheetKey("outfit_ao_len_boy", "hair_boy_short"), "outfit_ao_len_boy__hair_boy_short");
+    assert.equal(sheetKey("outfit_ao_dai_boy", "hair_boy_short"), "outfit_ao_dai_boy__hair_boy_short");
     assert.equal(sheetKey("nope", "nope"), "outfit_pajamas__hair_sleep_buns");
   });
 
