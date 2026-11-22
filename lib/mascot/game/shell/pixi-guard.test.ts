@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  actorSheetPlan,
   createShellLife,
   destroyShellLife,
   notePixiInitFailed,
@@ -13,6 +14,13 @@ import {
 } from "./pixi-guard";
 
 describe("pixi shell lifetime", () => {
+  it("does not let a missing sheet block the other Bé Das", () => {
+    assert.equal(actorSheetPlan({ ready: false, failed: true, busy: false }), "fallback");
+    assert.equal(actorSheetPlan({ ready: false, failed: false, busy: true }), "wait");
+    assert.equal(actorSheetPlan({ ready: false, failed: false, busy: false }), "start");
+    assert.equal(actorSheetPlan({ ready: true, failed: true, busy: true }), "draw");
+  });
+
   it("does not attach a sheet that loads after destroy", () => {
     const life = createShellLife();
     const attached: string[] = [];

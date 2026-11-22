@@ -40,6 +40,22 @@ export function destroyShellLife(life: ShellLife, clearTimer: (id: number) => vo
   life.recenterTimer = 0;
 }
 
+/**
+ * One missing spritesheet must not retry forever and block the other Bé Das.
+ * A failed sheet falls back to the HTML figure. A sheet already on stage is drawn.
+ * While another sheet is loading, wait.
+ */
+export function actorSheetPlan(input: {
+  ready: boolean;
+  failed: boolean;
+  busy: boolean;
+}): "draw" | "fallback" | "wait" | "start" {
+  if (input.ready) return "draw";
+  if (input.failed) return "fallback";
+  if (input.busy) return "wait";
+  return "start";
+}
+
 /** Drop the loading spinner. Report the failure only if the host is still on the page. */
 export function notePixiInitFailed(
   dataset: { loading?: string },
