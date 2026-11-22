@@ -15,11 +15,11 @@
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 
 export const LOBBY_GROUND = {
-  src: mascotAssetUrl("/mascot/lobby/ground.jpg?v=1f14be26c2"),
+  src: mascotAssetUrl("/mascot/lobby/ground.jpg?v=3d5e408ae2"),
   size: 2048,
 } as const;
 
-export const LOBBY_DECOR = mascotAssetUrl("/mascot/lobby/decor.png?v=d75074d448");
+export const LOBBY_DECOR = mascotAssetUrl("/mascot/lobby/decor.png?v=c1c9a27279");
 export const LOBBY_DECOR_MAP = mascotAssetUrl("/mascot/lobby/decor.json?v=bbda391eac");
 export const LOBBY_LAYOUT = mascotAssetUrl("/mascot/lobby/layout.json?v=2ff8683f11");
 

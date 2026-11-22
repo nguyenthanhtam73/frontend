@@ -42,10 +42,10 @@ function renderPayload(payload: unknown) {
 describe("Bé Da backend payload", () => {
   it("renders body, hair, and outfit from the catalog ids", () => {
     const html = renderPayload(backendMascot);
-    assert.match(html, /src="\/mascot\/body\/body_chibi\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/glow\/level_1\.svg\?v=2"/);
+    assert.match(html, /src="\/mascot\/body\/body_chibi\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/glow\/level_1\.svg\?v=3"/);
     assert.equal(html.includes("_floor.svg"), false);
     assert.match(html, /data-glow-level="1"/);
     assert.match(html, /data-level="1"/);
@@ -76,11 +76,11 @@ describe("Bé Da backend payload", () => {
       glow_level: 3,
       glow_progress: 0.4,
     });
-    assert.match(html, /src="\/mascot\/body\/body_chibi\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/accessory\/accessory_pink_headband\.svg\?v=2"/);
-    assert.match(html, /src="\/mascot\/props\/room_moon\.svg\?v=2"/);
+    assert.match(html, /src="\/mascot\/body\/body_chibi\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/hair\/hair_sleep_buns\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/outfit\/outfit_cozy_pajamas\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/accessory\/accessory_pink_headband\.svg\?v=3"/);
+    assert.match(html, /src="\/mascot\/props\/room_moon\.svg\?v=3"/);
     assert.match(html, /data-level="3"/);
     assert.match(html, /bd-breathe/);
     assert.equal(html.includes("body_default"), false);
