@@ -221,7 +221,7 @@ export type BeDaView = {
   nearLevelUp: boolean;
   levelUp: boolean;
   shopItemIds: string[];
-  /** Female is the drawn art. Male is the short-hair placeholder. */
+  /** Nữ and Nam both use drawn art. Nam swaps in the boy hair and pajamas. */
   gender: BeDaGender;
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { gameDress, genderLook, DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
@@ -16,7 +16,6 @@ const COPY: Record<
     pick: string;
     female: string;
     male: string;
-    maleNote: string;
     careTitle: string;
     careBody: string;
     wardrobeTitle: string;
@@ -37,7 +36,6 @@ const COPY: Record<
     pick: "Bé Da là",
     female: "Nữ",
     male: "Nam",
-    maleNote: "Tóc ngắn tạm, chờ mẫu vẽ",
     careTitle: "Chăm da",
     careBody: "Bé Da dùng đúng routine của bạn. Xong bước nào, đánh dấu bước đó.",
     wardrobeTitle: "Tủ đồ",
@@ -57,7 +55,6 @@ const COPY: Record<
     pick: "Bé Da is",
     female: "Female",
     male: "Male",
-    maleNote: "Short hair for now, waiting on real art",
     careTitle: "Skin care",
     careBody: "Bé Da follows your real routine. Tick a step when you finish it.",
     wardrobeTitle: "Wardrobe",
@@ -202,11 +199,6 @@ function PageCopy({
             {copy.male}
           </GenderButton>
         </div>
-        {gender === "male" ? (
-          <p className="mt-2 text-center text-xs text-[#8a6572]" data-testid="beda-male-placeholder">
-            {copy.maleNote}
-          </p>
-        ) : null}
       </div>
     );
   }

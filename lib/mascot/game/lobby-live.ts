@@ -58,7 +58,7 @@ export type WirePerson = {
   outfit: string;
   hair: string;
   accessory: string;
-  /** "male" is the short-hair placeholder. Missing means the drawn female art. */
+  /** "male" uses the drawn boy hair and pajamas. Missing means the drawn female art. */
   gender?: "male";
   x: number;
   y: number;
@@ -510,7 +510,7 @@ export type LobbyActor = {
   walking: boolean;
   look: GameLook;
   sample: boolean;
-  /** Male visitors use the short-hair placeholder. */
+  /** Male visitors use the drawn boy hair and pajamas. */
   gender?: "male";
 };
 

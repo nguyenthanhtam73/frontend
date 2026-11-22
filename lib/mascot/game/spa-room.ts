@@ -116,7 +116,7 @@ export type SpaGuest = {
   outfit: GameOutfitId;
   hair: GameHairId;
   clip: GameClipId | null;
-  /** Male visitors use the short-hair placeholder. */
+  /** Male visitors use the drawn boy hair and pajamas. */
   gender?: "male";
   pose: GamePose | null;
   sample: boolean;

@@ -227,21 +227,36 @@ export function mascotStack(
   if (view.flies) push("fx-flies", "/mascot/fx/flies/flies.svg", 1);
 
   const dressed = options.dress ? applyGameDress(layers, options.dress) : layers;
-  return view.gender === "male" ? malePlaceholder(dressed) : dressed;
+  return view.gender === "male" ? applyMaleArt(dressed) : dressed;
 }
 
+const MALE_HAIR = "/mascot/hair/hair_boy_short.svg";
+const MALE_OUTFIT = "/mascot/outfits/outfit_pajamas_boy.svg";
+const MALE_LEVEL_1 = "/mascot/glow/level_1_nam.svg";
+
 /**
- * Male Bé Da has no finished drawing yet. This is a stand-in: the existing
- * short bob, with bows, pigtails, the headband, and hair clips taken off.
- * Proportions stay the current ones. Replace this when real male art lands.
+ * Nam uses the drawn boy hair and blue pajamas. Body, faces, skin marks,
+ * and fx stay shared. Headbands and clips stay off.
+ * Dirty level 1 uses the Nam plate so the bun curls and pink shirt lines do not show.
  */
-export function malePlaceholder(layers: StackLayer[]): StackLayer[] {
+export function applyMaleArt(layers: StackLayer[]): StackLayer[] {
   const out: StackLayer[] = [];
   for (const layer of layers) {
-    if (layer.slot === "accessory-headband" || layer.slot === "accessory-clip") continue;
-    if (/accessory_(pink_headband|star_clip|ribbon_bow|flower_clip)/.test(layer.src)) continue;
+    if (layer.slot.startsWith("accessory") || layer.src.includes("/accessory/")) continue;
     if (layer.slot === "hair") {
-      out.push({ ...layer, src: "/mascot/hair/hair_short_bob.svg" });
+      out.push({ ...layer, src: MALE_HAIR });
+      continue;
+    }
+    if (layer.slot === "outfit") {
+      out.push({ ...layer, src: MALE_OUTFIT });
+      continue;
+    }
+    if (layer.slot === "arms") {
+      out.push({ ...layer, src: layer.src.replace(/__[a-z0-9_]+\.svg$/, "__pajamas_boy.svg") });
+      continue;
+    }
+    if (layer.src.endsWith("/glow/level_1.svg")) {
+      out.push({ ...layer, src: MALE_LEVEL_1 });
       continue;
     }
     out.push(layer);
