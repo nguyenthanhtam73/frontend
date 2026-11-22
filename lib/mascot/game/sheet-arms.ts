@@ -1,3 +1,5 @@
+import { mascotAssetPath, mascotAssetUrl } from "@/lib/mascot/asset-url";
+
 /**
  * Sleeve arms for the spritesheet. The files already exist
  * (`outfits/arm_wave_right__<outfit>.svg`); the capture was leaving them out.
@@ -30,15 +32,15 @@ const WAVE_WAG = [-6, -2, 5, 1, -4, 3] as const;
 export type ArmClip = "idle" | "walk" | "wave";
 
 function sleeveId(outfitSrc: string): string {
-  return outfitSrc.match(/outfit_([a-z0-9_]+)\.svg/)?.[1] ?? "pajamas";
+  return mascotAssetPath(outfitSrc).match(/outfit_([a-z0-9_]+)\.svg/)?.[1] ?? "pajamas";
 }
 
 export function sleeveArmSrc(outfitSrc: string): string {
-  return `/mascot/outfits/arm_wave_right__${sleeveId(outfitSrc)}.svg`;
+  return mascotAssetUrl(`/mascot/outfits/arm_wave_right__${sleeveId(outfitSrc)}.svg`);
 }
 
 export function chinArmSrc(outfitSrc: string): string {
-  return `/mascot/outfits/arm_chin__${sleeveId(outfitSrc)}.svg`;
+  return mascotAssetUrl(`/mascot/outfits/arm_chin__${sleeveId(outfitSrc)}.svg`);
 }
 
 /** Idle hangs both arms. Walk swings both arms opposite the legs. Wave lifts the right arm. */

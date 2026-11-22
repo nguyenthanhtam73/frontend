@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { mascotStack } from "@/lib/mascot/layers";
 import type { GameDress } from "@/lib/mascot/game/look";
 import { startBeDaBlinkLoop } from "@/lib/mascot/idle";
@@ -57,7 +58,7 @@ export function BeDaFigure({
   const layers = mascotStack(view, { reaction, stepPose, locale, dress, crowd, marks: marks || undefined });
   const showExitFlies = fliesExit && !view.flies && !crowd;
   const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
-  const floorSrc = !crowd && view.glowLevel >= 5 ? `/mascot/glow/level_${view.glowLevel}_floor.svg` : null;
+  const floorSrc = !crowd && view.glowLevel >= 5 ? mascotAssetUrl(`/mascot/glow/level_${view.glowLevel}_floor.svg`) : null;
   const rootRef = useRef<HTMLElement | null>(null);
   const setRoot = useCallback((node: HTMLElement | null) => {
     rootRef.current = node;
@@ -96,10 +97,10 @@ export function BeDaFigure({
           />
         ))}
         {showExitFlies ? (
-          <img src="/mascot/fx/flies/flies.svg" alt="" decoding="async" className="be-da-flies-exit absolute inset-0 h-full w-full" />
+          <img src={mascotAssetUrl("/mascot/fx/flies/flies.svg")} alt="" decoding="async" className="be-da-flies-exit absolute inset-0 h-full w-full" />
         ) : null}
         {glowCelebrate && view.glowLevel >= 6 ? (
-          <img src="/mascot/fx/hearts.svg" alt="" decoding="async" className="pointer-events-none absolute inset-0 h-full w-full" data-testid="be-da-hearts" />
+          <img src={mascotAssetUrl("/mascot/fx/hearts.svg")} alt="" decoding="async" className="pointer-events-none absolute inset-0 h-full w-full" data-testid="be-da-hearts" />
         ) : null}
         {glowCelebrate ? <GlowBurst /> : null}
       </span>
@@ -209,7 +210,7 @@ const LayerImage = memo(function LayerImage({
   return (
     <img
       ref={ref}
-      src={src}
+      src={mascotAssetUrl(src)}
       alt=""
       data-slot={slot}
       loading={loading}

@@ -6,6 +6,7 @@
  * Lobby visitors can still wear the other drawings; those are not closet items.
  */
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import {
   DEFAULT_GAME_LOOK,
   isGameClip,
@@ -50,9 +51,9 @@ export function grantedWardrobeItems(slot?: WardrobeSlot, access?: ClosetAccess)
 }
 
 export function wardrobeThumbSrc(item: WardrobeItem): string {
-  if (item.slot === "hair") return `/mascot/hair/${item.id}.svg`;
-  if (item.slot === "clip") return `/mascot/accessory/${item.id}.svg`;
-  return `/mascot/outfits/${item.id}.svg`;
+  if (item.slot === "hair") return mascotAssetUrl(`/mascot/hair/${item.id}.svg`);
+  if (item.slot === "clip") return mascotAssetUrl(`/mascot/accessory/${item.id}.svg`);
+  return mascotAssetUrl(`/mascot/outfits/${item.id}.svg`);
 }
 
 /**

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+
 import { DEFAULT_MASCOT_IDS } from "./catalog";
 import { accessoryUnlocked, clampGlowLevel, parseGlowProgress } from "./glow";
 import { glowLayerSrc, mascotStack } from "./layers";
@@ -122,9 +124,9 @@ describe("glow layers", () => {
       assert.ok(back < room && room < body);
       assert.ok(cheeks < glow && glow < marks);
       assert.ok(mouth < front && front < lids);
-      assert.equal(stack[back]?.src, glowLayerSrc(level, "back"));
-      assert.equal(stack[glow]?.src, glowLayerSrc(level, "mid"));
-      assert.equal(stack[front]?.src, glowLayerSrc(level, "front"));
+      assert.equal(stack[back]?.src, mascotAssetUrl(glowLayerSrc(level, "back")));
+      assert.equal(stack[glow]?.src, mascotAssetUrl(glowLayerSrc(level, "mid")));
+      assert.equal(stack[front]?.src, mascotAssetUrl(glowLayerSrc(level, "front")));
     }
   });
 
@@ -135,7 +137,7 @@ describe("glow layers", () => {
       "/mascot/skin_marks/dark_spot_heavy.svg",
       "/mascot/skin_marks/dry_light.svg",
       "/mascot/skin_marks/red_medium.svg",
-    ];
+    ].map(mascotAssetUrl);
     let first: string[] | null = null;
     for (const level of [1, 2, 3, 4, 5, 6]) {
       const view = happy(level, {
@@ -151,7 +153,7 @@ describe("glow layers", () => {
       const glowAt = stack.findIndex((layer) => layer.slot === "glow");
       const firstMark = stack.findIndex((layer) => layer.slot === "skin-marks");
       assert.ok(glowAt >= 0 && firstMark === glowAt + 1, `level ${level}: marks follow glow/level_${level}`);
-      assert.equal(stack[glowAt]?.src, `/mascot/glow/level_${level}.svg`);
+      assert.equal(stack[glowAt]?.src, mascotAssetUrl(`/mascot/glow/level_${level}.svg`));
       const front = stack.findIndex((layer) => layer.slot === "glow-front");
       assert.ok(front > firstMark);
       first ??= drawn;
@@ -176,8 +178,8 @@ describe("glow layers", () => {
     assert.equal(view.mood, "back_turned");
     assert.equal(stack.some((layer) => layer.slot === "glow"), false);
     assert.equal(stack.some((layer) => layer.slot.startsWith("face-")), false);
-    assert.equal(stack[0]?.src, glowLayerSrc(6, "back"));
-    assert.ok(stack.some((layer) => layer.src === glowLayerSrc(6, "front")));
+    assert.equal(stack[0]?.src, mascotAssetUrl(glowLayerSrc(6, "back")));
+    assert.ok(stack.some((layer) => layer.src === mascotAssetUrl(glowLayerSrc(6, "front"))));
     const front = stack.findIndex((layer) => layer.slot === "glow-front");
     const body = stack.findIndex((layer) => layer.slot === "body");
     assert.ok(front > body);
@@ -197,8 +199,8 @@ describe("glow accessory unlock", () => {
     assert.equal(low.some((layer) => layer.slot === "accessory"), false);
 
     const band = mascotStack(happy(3));
-    assert.ok(band.some((layer) => layer.src.endsWith("/accessory_pink_headband.svg")));
-    assert.equal(band.some((layer) => layer.src.endsWith("/accessory_star_clip.svg")), false);
+    assert.ok(band.some((layer) => layer.src.includes("/accessory_pink_headband.svg")));
+    assert.equal(band.some((layer) => layer.src.includes("/accessory_star_clip.svg")), false);
 
     const both = mascotStack(happy(4));
     const bandAt = both.findIndex((layer) => layer.slot === "accessory-headband");
@@ -226,8 +228,8 @@ describe("glow accessory unlock", () => {
         },
       }),
     );
-    assert.ok(owned.some((layer) => layer.src.endsWith("/accessory_pink_headband.svg")));
-    assert.equal(owned.some((layer) => layer.src.endsWith("/accessory_star_clip.svg")), false);
+    assert.ok(owned.some((layer) => layer.src.includes("/accessory_pink_headband.svg")));
+    assert.equal(owned.some((layer) => layer.src.includes("/accessory_star_clip.svg")), false);
 
     const listed = mascotStack(
       viewFrom({
@@ -235,8 +237,8 @@ describe("glow accessory unlock", () => {
         loadout: { accessories: ["accessory_star_clip"] },
       }),
     );
-    assert.ok(listed.some((layer) => layer.src.endsWith("/accessory_star_clip.svg")));
-    assert.equal(listed.some((layer) => layer.src.endsWith("/accessory_pink_headband.svg")), false);
+    assert.ok(listed.some((layer) => layer.src.includes("/accessory_star_clip.svg")));
+    assert.equal(listed.some((layer) => layer.src.includes("/accessory_pink_headband.svg")), false);
   });
 
   it("defaults a payload with no glow fields to level 1 and locks the free pair", () => {
@@ -249,6 +251,6 @@ describe("glow accessory unlock", () => {
     );
     assert.equal(stack.some((layer) => layer.slot === "accessory-headband"), false);
     assert.equal(stack.some((layer) => layer.slot === "accessory"), false);
-    assert.equal(stack[0]?.src, glowLayerSrc(1, "back"));
+    assert.equal(stack[0]?.src, mascotAssetUrl(glowLayerSrc(1, "back")));
   });
 });

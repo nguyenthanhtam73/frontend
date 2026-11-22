@@ -5,6 +5,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 import { dashboardToCheckInRedirects } from "./lib/dashboard-redirect";
+import { mascotAssetHeaders } from "./lib/mascot/asset-url";
 import { wwwToApexRedirects } from "./lib/www-redirect";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -31,24 +32,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Lobby pictures are requested with a content hash (`?v=`). A year-long
-// immutable cache is safe for those URLs and wrong for an unversioned path:
-// browsers and the service worker would keep the previous mask forever.
-// 308 only when the Host is www.dadiary.vn. Preview *.vercel.app hosts miss
+  // Bé Da art keeps its file names. `immutable` + a year-long max-age pinned
+  // the previous drawing in browsers that had already visited (and in the
+  // service worker). Requests carry `?v=` from lib/mascot/asset-url.ts, and
+  // this policy revalidates instead of freezing the bytes.
+  // 308 only when the Host is www.dadiary.vn. Preview *.vercel.app hosts miss
   // the condition, and the destination is the apex so the rule cannot loop.
   // Next.js forwards the query string when the destination does not set one.
   async headers() {
-    return [
-      {
-        source: "/mascot/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-    ];
+    return mascotAssetHeaders();
   },
   async redirects() {
     // www → apex first (host-only). Then the unused /dashboard URL, which

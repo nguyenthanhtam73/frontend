@@ -1,6 +1,7 @@
 import { AnimatedSprite, Application, Assets, Container, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
 
 import { rendererResolution } from "@/lib/game/core/dpr";
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { actorSheetPlan, attachIfMounted, createShellLife, destroyShellLife, setActorReady } from "@/lib/mascot/game/shell/pixi-guard";
 import {
   SHEET_ANCHOR_Y,
@@ -32,7 +33,10 @@ export function loadActorSheet(art: readonly string[]): Promise<Spritesheet> {
   const key = sheetKeyFromArt(art);
   let pending = sheets.get(key);
   if (!pending) {
-    pending = Assets.load<Spritesheet>(sheetJsonUrlFromArt(art)).then((sheet) => {
+    // The JSON URL carries `?v=`. Pixi's spritesheet parser copies that query
+    // onto the sibling PNG, so the raster is not stuck on the old immutable copy.
+    // The map key is sheetKeyFromArt, which ignores the query.
+    pending = Assets.load<Spritesheet>(mascotAssetUrl(sheetJsonUrlFromArt(art))).then((sheet) => {
       const texture = Object.values(sheet.textures)[0];
       if (texture?.source) {
         // Full-resolution sample. Mipmaps would pick a soft level on a phone.

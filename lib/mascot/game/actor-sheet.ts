@@ -4,6 +4,8 @@
  * Pixi loads the JSON with Assets. The PNG sits beside it.
  */
 
+import { mascotAssetPath, mascotAssetUrl } from "@/lib/mascot/asset-url";
+
 /** CSS size of one frame. The PNG is this times SHEET_DPR. */
 export const SHEET_CSS = { w: 220, h: 250 } as const;
 export const SHEET_DPR = 2;
@@ -47,9 +49,10 @@ export function sheetKey(outfit: string, hair: string): string {
 
 /** Stable id for one exact layer list, so a bow or a glow plate gets its own sheet. */
 export function sheetKeyFromArt(art: readonly string[]): string {
-  const look = lookFromArt(art);
+  const paths = art.map(mascotAssetPath);
+  const look = lookFromArt(paths);
   let hash = 2166136261;
-  const text = art.join("\n");
+  const text = paths.join("\n");
   for (let i = 0; i < text.length; i += 1) {
     hash ^= text.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
@@ -58,14 +61,15 @@ export function sheetKeyFromArt(art: readonly string[]): string {
 }
 
 export function sheetJsonUrlFromArt(art: readonly string[]): string {
-  return `/mascot/game/sheets/${sheetKeyFromArt(art)}.json`;
+  return mascotAssetUrl(`/mascot/game/sheets/${sheetKeyFromArt(art)}.json`);
 }
 
 /** Pull the closet ids out of the layer list the shell already carries. */
 export function lookFromArt(art: readonly string[]): { outfit: string; hair: string } {
   let outfit = "outfit_pajamas";
   let hair = "hair_sleep_buns";
-  for (const src of art) {
+  for (const raw of art) {
+    const src = mascotAssetPath(raw);
     const worn = src.match(/\/outfits\/(outfit_[a-z0-9_]+)\.svg/);
     const style = src.match(/\/hair\/(hair_[a-z0-9_]+)\.svg/);
     if (worn?.[1] && OUTFITS.has(worn[1])) outfit = worn[1];

@@ -3,6 +3,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, it } from "node:test";
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+
 import { CHIN_ARM, HANG_ARM, IDLE_HANG, armMarkup, armPose, chinArmSrc, sleeveArmSrc, withoutChinHand } from "./sheet-arms";
 
 /** Face fill on body_chibi. The sleeve hand uses this same paint. */
@@ -130,14 +132,14 @@ function inFaceOrLeg(x: number, y: number): boolean {
 
 describe("sheet arms", () => {
   it("uses the outfit sleeve file, not a new drawing", () => {
-    assert.equal(sleeveArmSrc("/mascot/outfits/outfit_hoodie.svg"), "/mascot/outfits/arm_wave_right__hoodie.svg");
-    assert.equal(sleeveArmSrc("/mascot/outfits/outfit_ao_dai.svg"), "/mascot/outfits/arm_wave_right__ao_dai.svg");
-    assert.equal(chinArmSrc("/mascot/outfits/outfit_ao_len.svg"), "/mascot/outfits/arm_chin__ao_len.svg");
+    assert.equal(sleeveArmSrc("/mascot/outfits/outfit_hoodie.svg"), mascotAssetUrl("/mascot/outfits/arm_wave_right__hoodie.svg"));
+    assert.equal(sleeveArmSrc("/mascot/outfits/outfit_ao_dai.svg"), mascotAssetUrl("/mascot/outfits/arm_wave_right__ao_dai.svg"));
+    assert.equal(chinArmSrc("/mascot/outfits/outfit_ao_len.svg"), mascotAssetUrl("/mascot/outfits/arm_chin__ao_len.svg"));
   });
 
   it("puts both hanging sleeves on every frame, including idle", () => {
-    const hang = "/mascot/outfits/arm_wave_right__pajamas.svg";
-    const chin = "/mascot/outfits/arm_chin__pajamas.svg";
+    const hang = mascotAssetUrl("/mascot/outfits/arm_wave_right__pajamas.svg");
+    const chin = mascotAssetUrl("/mascot/outfits/arm_chin__pajamas.svg");
     for (const clip of ["idle", "walk", "wave"] as const) {
       const html = armMarkup("/mascot/outfits/outfit_pajamas.svg", clip, clip === "walk" ? 1 : 0);
       assert.equal(html.split(hang).length - 1, 2, clip);

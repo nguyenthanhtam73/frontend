@@ -1,20 +1,22 @@
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+
 export const GAME_ICONS = {
-  coin: "/mascot/icons/xu_coin.svg",
-  flame: "/mascot/icons/streak_flame.svg",
-  soundOn: "/mascot/icons/sound_on.svg",
-  soundOff: "/mascot/icons/sound_off.svg",
-  care: "/mascot/icons/nav_cham_da.svg",
-  wardrobe: "/mascot/icons/nav_tu_do.svg",
-  quests: "/mascot/icons/nav_nhiem_vu.svg",
-  lobby: "/mascot/icons/nav_sanh_chung.svg",
-  wave: "/mascot/icons/wave.svg",
-  heart: "/mascot/icons/heart.svg",
-  outfit: "/mascot/icons/khen_do.svg",
-  check: "/mascot/icons/quest_check.svg",
-  door: "/mascot/icons/door.svg",
-  pin: "/mascot/icons/minimap_pin.svg",
-  chestClosed: "/mascot/icons/chest_closed.svg",
-  chestOpen: "/mascot/icons/chest_open.svg",
+  coin: mascotAssetUrl("/mascot/icons/xu_coin.svg"),
+  flame: mascotAssetUrl("/mascot/icons/streak_flame.svg"),
+  soundOn: mascotAssetUrl("/mascot/icons/sound_on.svg"),
+  soundOff: mascotAssetUrl("/mascot/icons/sound_off.svg"),
+  care: mascotAssetUrl("/mascot/icons/nav_cham_da.svg"),
+  wardrobe: mascotAssetUrl("/mascot/icons/nav_tu_do.svg"),
+  quests: mascotAssetUrl("/mascot/icons/nav_nhiem_vu.svg"),
+  lobby: mascotAssetUrl("/mascot/icons/nav_sanh_chung.svg"),
+  wave: mascotAssetUrl("/mascot/icons/wave.svg"),
+  heart: mascotAssetUrl("/mascot/icons/heart.svg"),
+  outfit: mascotAssetUrl("/mascot/icons/khen_do.svg"),
+  check: mascotAssetUrl("/mascot/icons/quest_check.svg"),
+  door: mascotAssetUrl("/mascot/icons/door.svg"),
+  pin: mascotAssetUrl("/mascot/icons/minimap_pin.svg"),
+  chestClosed: mascotAssetUrl("/mascot/icons/chest_closed.svg"),
+  chestOpen: mascotAssetUrl("/mascot/icons/chest_open.svg"),
 } as const;
 
 export type GameIconName = keyof typeof GAME_ICONS;

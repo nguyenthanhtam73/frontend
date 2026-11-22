@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { gestureKind } from "@/lib/game/core/input";
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import {
   findRoute,
   gridFromMask,
@@ -167,7 +168,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     frame.addEventListener("pointercancel", onUp);
 
     const image = new Image();
-    image.src = ROOM_WALK_MASK;
+    image.src = mascotAssetUrl(ROOM_WALK_MASK);
     void image
       .decode()
       .then(() => {

@@ -5,6 +5,7 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { MASCOT_ASSET_VERSION } from "@/lib/mascot/asset-url";
 import { LOBBY_WALK_MASK } from "@/lib/mascot/game/lobby-walk";
 import { LOBBY_FOUNTAIN } from "@/lib/mascot/game/walk";
 import { LOBBY_DECOR, LOBBY_DECOR_MAP, LOBBY_GROUND, LOBBY_LAYOUT, parkPieceBlocksFountain, type ParkPiece } from "@/lib/mascot/game/lobby-park";
@@ -29,7 +30,9 @@ describe("lobby park dressing", () => {
     ] as const;
     for (const [url, file] of hashed) {
       const digest = createHash("sha256").update(fs.readFileSync(path.join(dir, file))).digest("hex").slice(0, 10);
-      assert.equal(url.includes(`?v=${digest}`), true, file);
+      const params = new URL(url, "https://dadiary.vn").searchParams;
+      assert.equal(params.get("v"), MASCOT_ASSET_VERSION, file);
+      assert.equal(params.get("h"), digest, file);
     }
   });
 });

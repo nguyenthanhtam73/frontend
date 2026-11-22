@@ -6,6 +6,7 @@ import { inflateSync } from "node:zlib";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { MASCOT_ASSET_VERSION } from "@/lib/mascot/asset-url";
 import { isWalkable, segmentStaysWalkable } from "@/lib/mascot/game/lobby-walk";
 import {
   ROOM_BOUNDS,
@@ -82,7 +83,9 @@ describe("personal room floor", () => {
 
   it("versions the mask so the immutable /mascot cache cannot keep an old one", () => {
     const digest = createHash("sha256").update(fs.readFileSync(maskPath)).digest("hex").slice(0, 10);
-    assert.equal(ROOM_WALK_MASK.includes(`?v=${digest}`), true);
+    const params = new URL(ROOM_WALK_MASK, "https://dadiary.vn").searchParams;
+    assert.equal(params.get("v"), MASCOT_ASSET_VERSION);
+    assert.equal(params.get("h"), digest);
   });
 
   it("ships a mask that matches the furniture blocks", () => {
