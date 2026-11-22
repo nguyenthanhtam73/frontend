@@ -413,15 +413,18 @@ export function BeDaSpaRoom({
         </button>
         <div className="beda-spa-titlecard" data-testid="beda-spa-title">
           <strong>{roomTitle}</strong>
-          <span data-testid="beda-spa-meta">
-            {memberLine}
+          <span className="beda-spa-meta" data-testid="beda-spa-meta">
+            <span className="beda-spa-bit">
+              {memberLine}
+              {onlineLine || dayLine ? " · " : ""}
+            </span>
             {onlineLine ? (
-              <span className="beda-spa-online" data-testid="beda-spa-online">
-                {" · "}
+              <span className="beda-spa-bit beda-spa-online" data-testid="beda-spa-online">
                 {onlineLine}
+                {dayLine ? " · " : ""}
               </span>
             ) : null}
-            {dayLine ? ` · ${dayLine}` : null}
+            {dayLine ? <span className="beda-spa-bit">{dayLine}</span> : null}
           </span>
         </div>
         {lock || room.notice === "ended" ? null : (

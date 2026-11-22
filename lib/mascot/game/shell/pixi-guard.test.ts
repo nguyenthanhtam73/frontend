@@ -5,6 +5,8 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  actorSheetPlan,
+  setActorReady,
   createShellLife,
   destroyShellLife,
   notePixiInitFailed,
@@ -13,6 +15,38 @@ import {
 } from "./pixi-guard";
 
 describe("pixi shell lifetime", () => {
+  it("does not let a missing sheet block the other Bé Das", () => {
+    assert.equal(actorSheetPlan({ ready: false, failed: true, busy: false }), "fallback");
+    assert.equal(actorSheetPlan({ ready: false, failed: false, busy: true }), "wait");
+    assert.equal(actorSheetPlan({ ready: false, failed: false, busy: false }), "start");
+    assert.equal(actorSheetPlan({ ready: true, failed: true, busy: true }), "draw");
+  });
+
+  it("puts the spritesheet flag back on a remounted Bé Da every frame", () => {
+    const remounted: { actorReady?: string } = {};
+    setActorReady(remounted, true);
+    assert.equal(remounted.actorReady, "1");
+    delete remounted.actorReady;
+    setActorReady(remounted, true);
+    assert.equal(remounted.actorReady, "1");
+  });
+
+  it("shows the HTML figure while a new hair or outfit sheet loads", () => {
+    const worn: { actorReady?: string } = { actorReady: "1" };
+    setActorReady(worn, false);
+    assert.equal(worn.actorReady, undefined);
+  });
+
+  it("reapplies the ready flag on the draw path and clears it when a look starts loading", () => {
+    const source = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "pixi-actors.ts"), "utf8");
+    const draw = source.indexOf("if (!have) return;");
+    const drawFlag = source.indexOf("setActorReady(el.dataset, true)", draw);
+    assert.ok(draw >= 0 && drawFlag > draw && drawFlag < draw + 80);
+    const start = source.indexOf('if (plan === "start")');
+    const clear = source.indexOf("setActorReady(el.dataset, false)", start);
+    assert.ok(start >= 0 && clear > start && clear < start + 80);
+  });
+
   it("does not attach a sheet that loads after destroy", () => {
     const life = createShellLife();
     const attached: string[] = [];

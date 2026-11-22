@@ -1,7 +1,7 @@
 import { AnimatedSprite, Application, Assets, Container, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
 
 import { rendererResolution } from "@/lib/game/core/dpr";
-import { attachIfMounted, createShellLife, destroyShellLife } from "@/lib/mascot/game/shell/pixi-guard";
+import { actorSheetPlan, attachIfMounted, createShellLife, destroyShellLife, setActorReady } from "@/lib/mascot/game/shell/pixi-guard";
 import {
   SHEET_ANCHOR_Y,
   actorClip,
@@ -123,6 +123,7 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
   app.stage.sortableChildren = true;
 
   const actors = new Map<string, { nodes: ActorNodes; sheet: Spritesheet }>();
+  const failed = new Set<string>();
   const life = createShellLife();
   let busy = false;
 
@@ -139,11 +140,24 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
       const key = sheetKeyFromArt(layers);
       const have = actors.get(id);
       if (!layers.length) return;
-      if (!have || have.nodes.key !== key) {
+      const plan = actorSheetPlan({
+        ready: Boolean(have && have.nodes.key === key),
+        failed: failed.has(key),
+        busy,
+      });
+      if (plan === "fallback") {
+        el.dataset.actorFallback = "1";
+        delete el.dataset.actorReady;
+        return;
+      }
+      delete el.dataset.actorFallback;
+      if (plan === "wait") return;
+      if (plan === "start") {
+        setActorReady(el.dataset, false);
         if (have) destroyActor(have.nodes);
         actors.delete(id);
-        if (busy) return;
         busy = true;
+        const person = el;
         void loadActorSheet(layers)
           .then((sheet) => {
             if (life.destroyed) return;
@@ -154,13 +168,21 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
               actors.set(id, { nodes: ready, sheet });
             });
             if (!attached) destroyActor(nodes);
+            else setActorReady(person.dataset, true);
+            delete person.dataset.actorFallback;
           })
-          .catch(() => undefined)
+          .catch(() => {
+            failed.add(key);
+            person.dataset.actorFallback = "1";
+            delete person.dataset.actorReady;
+          })
           .finally(() => {
             busy = false;
           });
         return;
       }
+      if (!have) return;
+      setActorReady(el.dataset, true);
       const art = el.querySelector<HTMLElement>(".beda-spa-art") ?? el;
       const box = art.getBoundingClientRect();
       const moving = el.dataset.moving === "1";

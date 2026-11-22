@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
@@ -75,6 +76,13 @@ function renderGame(
         <BeDaGameView {...props} />
       </NextIntlClientProvider>
     </QueryClientProvider>,
+  );
+}
+
+function metaBits(html: string): string[] {
+  const meta = html.match(/data-testid="beda-spa-meta"[^>]*>([\s\S]*?)<\/span>\s*<\/div>/)?.[1] ?? "";
+  return [...meta.matchAll(/class="beda-spa-bit[^"]*"[^>]*>([^<]*)</g)].map((match) =>
+    (match[1] ?? "").replace(/&nbsp;/g, " ").replace(/&#x27;/g, "'"),
   );
 }
 
@@ -568,13 +576,21 @@ describe("Bé Da game screen", () => {
         cap: 8,
         guests: [],
         notice: null,
+        daysLeft: 5,
       },
     });
     const text = visibleText(html);
     assert.match(text, /2\/8 người/);
     assert.match(text, /1 đang ở đây/);
+    assert.match(text, /Còn 5\/8 ngày/);
     assert.match(html, /data-testid="beda-spa-online"/);
     assert.equal(text.includes("1/8 người"), false);
+    const bits = metaBits(html);
+    assert.deepEqual(bits, ["2/8 người · ", "1 đang ở đây · ", "Còn 5/8 ngày"]);
+    assert.ok(bits.every((bit) => !bit.trimStart().startsWith("·")));
+    const css = readFileSync(new URL("./be-da-game.css", import.meta.url), "utf8");
+    assert.match(css, /\.beda-spa-bit\s*\{[^}]*white-space:\s*nowrap/);
+    assert.equal(/\.beda-spa-titlecard span\s*\{[^}]*display:\s*block/.test(css), false);
     const equal = renderGame({
       spa: {
         code: "DA7K2M",
