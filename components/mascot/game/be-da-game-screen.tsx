@@ -526,6 +526,9 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         router.push(roomInvitePath(next));
       }}
       onSpaRetry={() => spaRoom.retry()}
+      onSpaQuit={() => {
+        void spaRoom.leaveMembership().finally(() => leaveSpa("care"));
+      }}
       onLeaveSpa={() => leaveSpa("care")}
       onSpaLobby={() => leaveSpa("lobby")}
       onSpaWalk={spaRoom.walkTo}

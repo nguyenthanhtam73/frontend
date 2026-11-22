@@ -38,6 +38,7 @@ import {
   rankCareStreaks,
   SPA_ENTRY_TIMEOUT_MS,
   spaEntryPhase,
+  spaMembershipEnds,
   spaRoomGuests,
   spreadSpaFeet,
   shouldRetryRoomJoin,
@@ -79,7 +80,9 @@ export function useSpaRoom(options: {
   const [members, setMembers] = useState<number | null>(null);
   const [presence, setPresence] = useState<number | null>(null);
   const [timedOut, setTimedOut] = useState(false);
+  const [entered, setEntered] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const enteredRef = useRef(false);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
   const [youPose, setYouPose] = useState<GamePose | null>(null);
@@ -147,9 +150,17 @@ export function useSpaRoom(options: {
     setEndsAt(null);
     setRoom(emptyRoom(code));
     setTimedOut(false);
+    enteredRef.current = false;
+    setEntered(false);
     const entryTimer = window.setTimeout(() => {
-      if (!cancelled) setTimedOut(true);
+      if (!cancelled && !enteredRef.current) setTimedOut(true);
     }, SPA_ENTRY_TIMEOUT_MS);
+    const markEntered = () => {
+      if (cancelled || enteredRef.current) return;
+      enteredRef.current = true;
+      setEntered(true);
+      window.clearTimeout(entryTimer);
+    };
 
     const joinFrame = (): RoomClientFrame => {
       const worn = lookRef.current;
@@ -213,6 +224,7 @@ export function useSpaRoom(options: {
       }
       if (message.op === "hello") {
         setNotice(null);
+        markEntered();
         setLive(true);
         const nextCode = message.code || code;
         setServerCode(nextCode);
@@ -274,7 +286,14 @@ export function useSpaRoom(options: {
             if (!cancelled) handle(message);
           },
           onStatus: (status) => {
-            if (!cancelled) setLive(status === "live");
+            if (cancelled) return;
+            if (status === "live") {
+              markEntered();
+              setLive(true);
+              return;
+            }
+            setLive(false);
+            if (enteredRef.current) setNotice("offline");
           },
         });
         if (cancelled) return;
@@ -305,10 +324,7 @@ export function useSpaRoom(options: {
       }
       try {
         const joined = await joinSpaRoom(code);
-        if (cancelled) {
-          void leaveSpaRoom(code).catch(() => undefined);
-          return;
-        }
+        if (cancelled) return;
         joinedRef.current = true;
         setPreviewCount(joined.memberCount);
         setMembers(joined.memberCount);
@@ -321,11 +337,15 @@ export function useSpaRoom(options: {
           if (isAlreadyInRoomError(err) && lock && lock.code !== code) {
             setConflict(lock);
             setNotice("already-in");
+            return;
+          }
+          if (isAlreadyInRoomError(err)) {
+            joinedRef.current = true;
           } else {
             setNotice(spaProblemFromError(err));
+            return;
           }
-        }
-        return;
+        } else return;
       }
       const plan = readCookiePlan();
       if (!plan?.ok || cancelled) return;
@@ -339,7 +359,8 @@ export function useSpaRoom(options: {
       joinedRef.current = false;
       connRef.current?.stop();
       connRef.current = null;
-      if (joined) void leaveSpaRoom(code).catch(() => undefined);
+      // Closing the screen or retrying only drops the socket. Membership stays.
+      if (joined && spaMembershipEnds("unmount")) void leaveSpaRoom(code).catch(() => undefined);
       const plan = readCookiePlan();
       if (plan?.ok) document.cookie = clearLobbyAccessCookie(plan);
       setLive(false);
@@ -476,8 +497,13 @@ export function useSpaRoom(options: {
     emote,
     hide,
     walkTo,
-    entry: code ? spaEntryPhase({ live, timedOut, notice }) : "room",
+    entry: code ? spaEntryPhase({ live, entered, timedOut, notice }) : "room",
     retry: () => setAttempt((n) => n + 1),
+    leaveMembership: async () => {
+      const current = serverCode ?? code;
+      if (!current || !spaMembershipEnds("explicit")) return;
+      await leaveSpaRoom(current).catch(() => undefined);
+    },
   };
 }
 

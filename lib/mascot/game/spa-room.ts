@@ -428,16 +428,25 @@ export const SPA_ENTRY_TIMEOUT_MS = 10_000;
 
 const ENTRY_ERRORS = new Set<Exclude<SpaNotice, null>>(["offline", "missing", "bad-code", "member"]);
 
-/** A real room code never falls through to the sample cast. */
+/**
+ * Once the room has been entered, a later socket drop or the 10s timer
+ * must not replace the room with the entry error. Only the first wait can.
+ */
 export function spaEntryPhase(input: {
   live: boolean;
+  entered?: boolean;
   timedOut: boolean;
   notice: SpaNotice;
 }): "loading" | "room" | "error" {
-  if (input.live) return "room";
+  if (input.entered || input.live) return "room";
   if (input.notice === "full" || input.notice === "ended" || input.notice === "already-in") return "room";
   if (input.timedOut || (input.notice != null && ENTRY_ERRORS.has(input.notice))) return "error";
   return "loading";
+}
+
+/** Membership ends only when the person confirms «Rời phòng». */
+export function spaMembershipEnds(reason: "retry" | "unmount" | "explicit"): boolean {
+  return reason === "explicit";
 }
 
 /** People to draw. Sample friends exist only when there is no room code. */
@@ -460,7 +469,6 @@ export function spaRoomGuests(input: {
 }
 
 const SPA_STACK_EPS = 0.02;
-const SPA_STACK_STEP = 0.34;
 
 function clampSpaPoint(point: { x: number; y: number }): { x: number; y: number } {
   return {
@@ -492,8 +500,9 @@ export function spreadSpaFeet(
       continue;
     }
     const count = group.members.length;
+    const step = Math.min(0.12, (SPA_BOUNDS.maxX - SPA_BOUNDS.minX) / count);
     group.members.forEach((person, index) => {
-      const shift = (index - (count - 1) / 2) * SPA_STACK_STEP;
+      const shift = (index - (count - 1) / 2) * step;
       const lift = index % 2 === 0 ? -0.03 : 0.025;
       out.set(
         person.id,

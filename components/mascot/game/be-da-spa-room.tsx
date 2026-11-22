@@ -111,6 +111,7 @@ export function BeDaSpaRoom({
   onPanel,
   showActors = true,
   onRetry,
+  onQuit,
 }: {
   locale: string;
   player: BeDaView;
@@ -139,6 +140,8 @@ export function BeDaSpaRoom({
   /** Pixi sprites. Screenshots of the drawn gesture pass false so the SVG stays. */
   showActors?: boolean;
   onRetry?: () => void;
+  /** Confirmed «Rời phòng». This is the only action that deletes membership. */
+  onQuit?: () => void;
 }) {
   const t = useTranslations("mascot");
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
@@ -153,6 +156,7 @@ export function BeDaSpaRoom({
   const [endedDraft, setEndedDraft] = useState("");
   const [endedCodeBad, setEndedCodeBad] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
+  const [quitAsk, setQuitAsk] = useState(false);
   const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>([]);
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
@@ -408,6 +412,32 @@ export function BeDaSpaRoom({
         </button>
       </div>
 
+      <button type="button" className="beda-room-quit" data-testid="beda-room-quit" onClick={() => setQuitAsk(true)}>
+        {t("game.spaLeave")}
+      </button>
+      {quitAsk ? (
+        <div className="beda-room-quit-shade" role="alertdialog" aria-modal="true" data-testid="beda-room-quit-dialog">
+          <div className="beda-room-quit-card">
+            <p>{t("game.spaLeaveConfirm")}</p>
+            <div className="beda-room-quit-actions">
+              <button type="button" data-testid="beda-room-quit-cancel" onClick={() => setQuitAsk(false)}>
+                {t("game.spaLeaveNo")}
+              </button>
+              <button
+                type="button"
+                data-testid="beda-room-quit-yes"
+                onClick={() => {
+                  setQuitAsk(false);
+                  onQuit?.();
+                }}
+              >
+                {t("game.spaLeave")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <button type="button" className="beda-spa-board" data-testid="beda-streak-board" onClick={() => void openBoard()}>
         {t("game.spaBoard")}
       </button>
@@ -431,7 +461,7 @@ export function BeDaSpaRoom({
       ) : null}
 
       <header className="beda-spa-head">
-        <button type="button" className="beda-spa-back" data-testid="beda-spa-leave" aria-label={t("game.spaLeave")} onClick={onLeave}>
+        <button type="button" className="beda-spa-back" data-testid="beda-spa-leave" aria-label={t("game.back")} onClick={onLeave}>
           <LeaveArrow />
         </button>
         <div className="beda-spa-titlecard" data-testid="beda-spa-title">

@@ -3437,6 +3437,8 @@
       "spaZalo": "Send on Zalo",
       "spaToLobby": "To the lobby",
       "spaLeave": "Leave room",
+      "spaLeaveConfirm": "Leave the room? You will lose your seat and the days already counted.",
+      "spaLeaveNo": "No",
       "spaBoard": "Diligence board",
       "spaBoardClose": "Close",
       "spaBoardEmpty": "Nobody on the board yet",

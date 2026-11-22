@@ -30,6 +30,7 @@ import {
   shouldRetryRoomJoin,
   SPA_ENTRY_TIMEOUT_MS,
   spaEntryPhase,
+  spaMembershipEnds,
   spaHeadCount,
   spaRoomGuests,
   spaRoomOnlineCount,
@@ -131,6 +132,23 @@ describe("spa join spots", () => {
     }).map((guest) => guest.nickname);
     assert.ok(names.includes("Trà Sữa"));
     assert.ok(names.includes("Mây Hồng"));
+  });
+
+  it("keeps the room when the connection drops after entering", () => {
+    assert.equal(
+      spaEntryPhase({ live: false, entered: true, timedOut: true, notice: "offline" }),
+      "room",
+    );
+    assert.equal(
+      spaEntryPhase({ live: false, entered: false, timedOut: true, notice: null }),
+      "error",
+    );
+  });
+
+  it("does not end membership on retry or unmount", () => {
+    assert.equal(spaMembershipEnds("retry"), false);
+    assert.equal(spaMembershipEnds("unmount"), false);
+    assert.equal(spaMembershipEnds("explicit"), true);
   });
 });
 
