@@ -1,27 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { commitIntroReset } from "@/lib/api/mascot";
 
+export const INTRO_RESET_CONFIRM_VI = "Bạn sẽ chọn lại Bé Da Nữ/Nam ngay bây giờ.";
+export const INTRO_RESET_ERROR_VI = "Chưa đặt lại được, thử lại nhé.";
+
 const COPY = {
   vi: {
     button: "Cho chọn lại Bé Da",
-    confirm: "Bạn sẽ thấy lại bước chọn Bé Da Nữ/Nam lần tới bấm Bắt đầu.",
+    confirm: INTRO_RESET_CONFIRM_VI,
     confirmAction: "Đặt lại",
     cancel: "Không",
-    success: "Đã đặt lại, bấm Bắt đầu để chọn lại",
-    missing: "Chưa đặt lại được lúc này.",
+    missing: INTRO_RESET_ERROR_VI,
   },
   en: {
     button: "Choose Bé Da again",
-    confirm: "You'll see the Female or Male Bé Da step again the next time you tap Start.",
+    confirm: "You'll choose Female or Male Bé Da right now.",
     confirmAction: "Reset",
     cancel: "Not now",
-    success: "Reset. Tap Start to choose again.",
-    missing: "That couldn't be reset just now.",
+    missing: "Couldn't reset. Try again.",
   },
 } as const;
 
@@ -29,30 +30,28 @@ const COPY = {
  * Admin-only control on the Bé Da room. The parent mounts this only when
  * GET /me says is_admin, including inside the Android WebView.
  */
-export function BeDaIntroReset() {
+export function BeDaIntroReset({ onDone }: { onDone?: () => void }) {
   const locale = useLocale();
   const copy = locale.toLowerCase().startsWith("en") ? COPY.en : COPY.vi;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
-
-  useEffect(() => {
-    if (!notice) return;
-    const id = window.setTimeout(() => setNotice(null), 3200);
-    return () => window.clearTimeout(id);
-  }, [notice]);
+  const [error, setError] = useState<string | null>(null);
+  const busyRef = useRef(false);
 
   async function confirm() {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
+    setError(null);
     const result = await commitIntroReset(queryClient);
+    if (result === "ok") {
+      onDone?.();
+      return;
+    }
+    busyRef.current = false;
     setBusy(false);
-    setOpen(false);
-    setNotice({
-      text: result === "ok" ? copy.success : copy.missing,
-      error: result !== "ok",
-    });
+    setError(copy.missing);
   }
 
   return (
@@ -81,31 +80,32 @@ export function BeDaIntroReset() {
               <button
                 type="button"
                 data-testid="beda-intro-reset-cancel"
-                disabled={busy}
-                onClick={() => setOpen(false)}
-              >
-                {copy.cancel}
-              </button>
-              <button
-                type="button"
-                data-testid="beda-intro-reset-confirm"
-                disabled={busy}
-                onClick={() => void confirm()}
-              >
-                {copy.confirmAction}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {notice ? (
-        <div
-          className={notice.error ? "beda-intro-reset-toast is-error" : "beda-intro-reset-toast"}
-          role="status"
-          data-testid="beda-intro-reset-toast"
-        >
-          {notice.text}
-        </div>
+        disabled={busy}
+        onClick={() => {
+          if (busy) return;
+          setOpen(false);
+          setError(null);
+        }}
+      >
+        {copy.cancel}
+      </button>
+      <button
+        type="button"
+        data-testid="beda-intro-reset-confirm"
+        disabled={busy}
+        aria-busy={busy}
+        onClick={() => void confirm()}
+      >
+        {copy.confirmAction}
+      </button>
+    </div>
+    {error ? (
+      <p className="beda-intro-reset-error" role="alert" data-testid="beda-intro-reset-toast">
+        {error}
+      </p>
+    ) : null}
+  </div>
+</div>
       ) : null}
     </>
   );

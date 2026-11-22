@@ -29,6 +29,20 @@ export function introReplay(search: string): boolean {
   return new URLSearchParams(search).get("again") === "1";
 }
 
+/** After «Đặt lại», open the Nữ/Nam picker immediately. `?chon=1`. */
+export function introChooseNow(search: string): boolean {
+  return new URLSearchParams(search).get("chon") === "1";
+}
+
+/** Replay (`again`) or an admin reset (`chon`) both stay on the picker. */
+export function introShowsPicker(search: string): boolean {
+  return introReplay(search) || introChooseNow(search);
+}
+
+export function introResetHref(): string {
+  return `${BEDA_INTRO_PATH}?chon=1`;
+}
+
 /**
  * Dev-only stills. Production ignores the param so a public URL cannot skip the gate.
  */

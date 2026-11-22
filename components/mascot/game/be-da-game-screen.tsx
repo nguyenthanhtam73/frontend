@@ -8,6 +8,7 @@ import { BeDaGameView, type GameTab, type GameToast } from "@/components/mascot/
 import { useRouter } from "@/i18n/navigation";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { fetchMascot, mascotQueryKey } from "@/lib/api/mascot";
+import { introResetHref } from "@/lib/mascot/intro";
 import { getAccessToken } from "@/lib/auth-token";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
 import { useStreak } from "@/lib/hooks/use-streak";
@@ -534,6 +535,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       wornLook={wornLook}
       closetAdmin={closetAdmin}
       introResetAdmin={closetAdmin}
+      onIntroReset={() => router.push(introResetHref())}
       onLook={(next) => {
         const saved = equippedGameLook(next, { admin: closetAdmin });
         if (!saveGameLook(localStorage, saved)) {

@@ -107,6 +107,7 @@ export function BeDaGameView({
   onLook,
   closetAdmin = false,
   introResetAdmin = false,
+  onIntroReset,
   wornLook = null,
   wavedToday = false,
   actors,
@@ -175,6 +176,8 @@ export function BeDaGameView({
   closetAdmin?: boolean;
   /** Same is_admin flag. Shows «Cho chọn lại Bé Da» on the room, including the Android WebView. */
   introResetAdmin?: boolean;
+  /** After a successful reset, open the Nữ/Nam picker. */
+  onIntroReset?: () => void;
   /** The look last saved with Mặc. Null until that save succeeds. */
   wornLook?: GameLook | null;
   /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
@@ -453,7 +456,9 @@ export function BeDaGameView({
         </>
       ) : null}
 
-      {introResetAdmin && !spaOpen && !showLobby && !chestOpen && !wardrobeOpen ? <BeDaIntroReset /> : null}
+      {introResetAdmin && !spaOpen && !showLobby && !chestOpen && !wardrobeOpen ? (
+        <BeDaIntroReset onDone={onIntroReset} />
+      ) : null}
 
       {toast ? <Toast toast={toast} /> : null}
       {burst > 0 ? (
