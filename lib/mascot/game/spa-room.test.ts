@@ -248,6 +248,8 @@ describe("spa room protocol", () => {
         action: "idle",
       }),
       encodeRoomFrame({ op: "wave", target: OTHER }),
+      encodeRoomFrame({ op: "cheer" }),
+      encodeRoomFrame({ op: "poke", target: OTHER }),
       encodeRoomFrame({ op: "compliment", target: OTHER }),
       encodeRoomFrame({ op: "hide", hide: [OTHER, "not-a-session"] }),
       encodeRoomFrame({ op: "leave" }),
@@ -265,9 +267,13 @@ describe("spa room protocol", () => {
     assert.equal(join.op, "join");
     assert.equal(join.channel, "room");
     assert.equal(join.code, "DA7K2M");
-    const hide = JSON.parse(frames[3] ?? "{}") as { hide: string[] };
+    const cheer = JSON.parse(frames[2] ?? "{}") as Record<string, unknown>;
+    assert.deepEqual(cheer, { v: 1, channel: "room", op: "cheer" });
+    const poke = JSON.parse(frames[3] ?? "{}") as Record<string, unknown>;
+    assert.deepEqual(poke, { v: 1, channel: "room", op: "poke", target: OTHER });
+    const hide = JSON.parse(frames[5] ?? "{}") as { hide: string[] };
     assert.deepEqual(hide.hide, [OTHER]);
-    const move = JSON.parse(frames[5] ?? "{}") as { op: string; channel: string; x: number; y: number; facing: string; action: string };
+    const move = JSON.parse(frames[7] ?? "{}") as { op: string; channel: string; x: number; y: number; facing: string; action: string };
     assert.equal(move.op, "move-to");
     assert.equal(move.channel, "room");
     assert.equal(move.x, 0.22);

@@ -49,7 +49,11 @@ import {
   type SpaNotice,
 } from "@/lib/mascot/game/spa-room";
 
-export type SpaEmoteKind = "wave" | "heart" | "outfit";
+export type SpaEmoteKind = "wave" | "heart" | "outfit" | "cheer" | "poke";
+
+export type SpaRemote =
+  | { name: string; kind: SpaEmoteKind }
+  | { kind: "nudge"; message: string };
 
 /**
  * REST join first, then one socket `join` on channel "room".
@@ -62,7 +66,7 @@ export function useSpaRoom(options: {
   code: string | null;
   look: GameLook;
   gender?: "female" | "male";
-  onRemoteEmote?: (toast: { name: string; kind: SpaEmoteKind }) => void;
+  onRemoteEmote?: (toast: SpaRemote) => void;
 }) {
   const { active, code, look, gender, onRemoteEmote } = options;
   const [live, setLive] = useState(false);
@@ -206,7 +210,21 @@ export function useSpaRoom(options: {
       if (message.op === "tick") {
         const known = [...roomRef.current.people, ...message.upserts];
         for (const event of message.events) {
-          if (event.op !== "wave" && event.op !== "heart" && event.op !== "compliment") continue;
+          if (event.op === "nudge") {
+            if (event.target && event.target === roomRef.current.sessionId && event.message) {
+              remoteRef.current?.({ kind: "nudge", message: event.message });
+            }
+            continue;
+          }
+          if (
+            event.op !== "wave" &&
+            event.op !== "heart" &&
+            event.op !== "compliment" &&
+            event.op !== "cheer" &&
+            event.op !== "poke"
+          ) {
+            continue;
+          }
           if (!event.from || event.from === roomRef.current.sessionId) continue;
           const person = known.find((item) => item.id === event.from);
           if (!person || hiddenRef.current.has(person.id)) continue;
@@ -381,10 +399,10 @@ export function useSpaRoom(options: {
   }
 
   function emote(guest: Pick<SpaGuest, "id" | "sample">, kind: SpaEmoteKind) {
-    const pose: GamePose = kind === "wave" ? "wave" : "cheer";
+    const pose: GamePose = kind === "wave" ? "wave" : kind === "poke" ? "poke" : "cheer";
     showPose(guest.id, pose);
     setYouPose(pose);
-    const timer = window.setTimeout(() => setYouPose(null), 1400);
+    const timer = window.setTimeout(() => setYouPose(null), 1600);
     timers.current.push(timer);
     if (guest.sample || !liveRef.current || !isSessionId(guest.id)) return;
     if (kind === "outfit") connRef.current?.send(encodeRoomFrame({ op: "compliment", target: guest.id }), "compliment");

@@ -496,7 +496,8 @@ export function lobbyLook(outfit: string, hair: string, accessory: string): Game
 
 export function lobbyPose(action: string): GamePose | null {
   if (action === "wave") return "wave";
-  if (action === "heart" || action === "compliment") return "cheer";
+  if (action === "poke") return "poke";
+  if (action === "heart" || action === "compliment" || action === "cheer") return "cheer";
   return null;
 }
 

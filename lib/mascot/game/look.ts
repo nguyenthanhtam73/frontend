@@ -26,7 +26,7 @@ export const GAME_CLIPS = ["accessory_flower_clip", "accessory_ribbon_bow"] as c
 export type GameOutfitId = (typeof GAME_OUTFITS)[number];
 export type GameHairId = (typeof GAME_HAIRS)[number];
 export type GameClipId = (typeof GAME_CLIPS)[number];
-export type GamePose = "wave" | "cheer";
+export type GamePose = "wave" | "cheer" | "poke";
 
 export type GameLook = {
   outfit: GameOutfitId;

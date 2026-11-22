@@ -33,6 +33,7 @@ describe("actor sheet", () => {
     assert.equal(actorClip(true, null), "walk");
     assert.equal(actorClip(false, "wave"), "wave");
     assert.equal(actorClip(false, "cheer"), "wave");
+    assert.equal(actorClip(false, "poke"), "wave");
     assert.equal(actorClip(false, null), "idle");
   });
 });
