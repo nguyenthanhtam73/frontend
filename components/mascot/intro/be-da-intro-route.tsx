@@ -15,7 +15,7 @@ import {
   SAMPLE_FIRST_MARKS,
   introFaceMarks,
   introPageIndex,
-  introReplay,
+  introShowsPicker,
   introShot,
   marksFromFirstSkin,
   leaveClosedMascotIntro,
@@ -38,7 +38,7 @@ export function BeDaIntroRoute() {
   const { enabled, pending } = useMascotFeature();
   const { search, ready } = useClientSearch();
   const shot = introShot(search);
-  const replay = introReplay(search);
+  const replay = introShowsPicker(search);
   const [page, setPage] = useState(0);
   const [gender, setGender] = useState<BeDaGender>("female");
   const [saving, setSaving] = useState(false);

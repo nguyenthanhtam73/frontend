@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import { readFileSync } from "node:fs";
 
+import { INTRO_RESET_CONFIRM_VI, INTRO_RESET_ERROR_VI } from "@/components/mascot/intro/be-da-intro-reset";
 import { genderLook } from "@/lib/mascot/game/look";
 import { applyMaleArt } from "@/lib/mascot/layers";
 import { defaultSnapshot, parseMascot, resolveBeDaView } from "@/lib/mascot/model";
@@ -11,7 +12,10 @@ import {
   INTRO_LINE_VI,
   introDoneMessage,
   introFaceMarks,
+  introChooseNow,
   introReplay,
+  introResetHref,
+  introShowsPicker,
   leaveClosedMascotIntro,
   marksFromFirstSkin,
   postIntroDone,
@@ -38,6 +42,14 @@ describe("Bé Da intro", () => {
     assert.equal(postIntroDone(null, "female"), false);
     assert.equal(introReplay("?again=1"), true);
     assert.equal(introReplay(""), false);
+    assert.equal(introChooseNow("?chon=1"), true);
+    assert.equal(introChooseNow(""), false);
+    assert.equal(introShowsPicker("?chon=1"), true);
+    assert.equal(introShowsPicker("?again=1"), true);
+    assert.equal(introShowsPicker(""), false);
+    assert.equal(introResetHref(), "/goc-binh-yen/gioi-thieu?chon=1");
+    assert.equal(INTRO_RESET_CONFIRM_VI, "Bạn sẽ chọn lại Bé Da Nữ/Nam ngay bây giờ.");
+    assert.equal(INTRO_RESET_ERROR_VI, "Chưa đặt lại được, thử lại nhé.");
   });
 
   it("tells the Android shell the intro is done, without a gender, before leaving", () => {
