@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 250" fill="none"><circle cx="40" cy="42" r="16" fill="#FFE7A3"/><circle cx="46" cy="38" r="12" fill="#000" opacity="0"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 250" fill="none"><circle cx="40" cy="42" r="21" fill="#FFF1C2" opacity="0.5"/><circle cx="40" cy="42" r="16" fill="#FFE7A3" stroke="#E6B65C" stroke-width="2"/><circle cx="34" cy="38" r="3.4" fill="#F7D686"/><circle cx="45" cy="48" r="2.4" fill="#F7D686"/><circle cx="46" cy="35" r="1.6" fill="#F7D686"/><path d="M30 33 q2 -3.6 6 -4.6" stroke="#FFF8DE" stroke-width="1.8" stroke-linecap="round"/></svg>

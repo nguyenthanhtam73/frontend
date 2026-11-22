@@ -11,6 +11,7 @@ import {
   itemOpacity,
   markOpacity,
   moodLayer,
+  type BeDaGender,
   type BeDaView,
   type DisheveledLevel,
   type WornItem,
@@ -169,7 +170,7 @@ export function mascotStack(
   const showFace = !NO_FACE.has(mood);
 
   if (showFace) {
-    push("face-cheeks", facePartSrc(expression, "cheeks", faceId), faceOpacity ?? 1);
+    push("face-cheeks", facePartSrc(expression, "cheeks", faceId, view.gender), faceOpacity ?? 1);
     // Face plate stays under the latest check-in marks so glow never covers them.
     // Back view skips this layer. The front sparkle file is a later slot.
     if (!crowd) push("glow", glowLayerSrc(level, "mid"));
@@ -192,7 +193,7 @@ export function mascotStack(
 
   if (showFace) {
     for (const part of ["brows", "eyes", "mouth"] as const) {
-      push(`face-${part}`, facePartSrc(expression, part, faceId), faceOpacity ?? 1);
+      push(`face-${part}`, facePartSrc(expression, part, faceId, view.gender), faceOpacity ?? 1);
     }
   }
 
@@ -234,10 +235,39 @@ const MALE_HAIR = "/mascot/hair/hair_boy_short.svg";
 const MALE_OUTFIT = "/mascot/outfits/outfit_pajamas_boy.svg";
 const MALE_LEVEL_1 = "/mascot/glow/level_1_nam.svg";
 
+/** Shared drawings that have a short-sleeve Nam version. Other outfits stay as drawn. */
+const MALE_SLEEVE: Record<string, string> = {
+  pajamas: "pajamas_boy",
+  vay_hoa: "vay_hoa_boy",
+  ao_len: "ao_len_boy",
+  ao_dai: "ao_dai_boy",
+};
+
+function maleOutfitSrc(src: string): string {
+  const game = src.match(/\/outfits\/outfit_([a-z0-9_]+)\.svg$/);
+  if (game) {
+    const id = game[1] ?? "";
+    if (id.endsWith("_boy")) return src;
+    const mapped = MALE_SLEEVE[id];
+    return mapped ? `/mascot/outfits/outfit_${mapped}.svg` : src;
+  }
+  // Home still wears the cozy pajamas file. Nam keeps the blue pajamas.
+  if (src.includes("/outfit/")) return MALE_OUTFIT;
+  return src;
+}
+
+function maleArmSrc(src: string): string {
+  return src.replace(
+    /__(pajamas|vay_hoa|ao_len|ao_dai)\.svg$/,
+    (_, id: string) => `__${MALE_SLEEVE[id] ?? id}.svg`,
+  );
+}
+
 /**
- * Nam uses the drawn boy hair and blue pajamas. Body, faces, skin marks,
- * and fx stay shared. Headbands and clips stay off.
- * Dirty level 1 uses the Nam plate so the bun curls and pink shirt lines do not show.
+ * Nam uses the drawn boy hair, the blue pajamas, and the boy versions of
+ * váy hoa, áo len, and áo dài (clothes and sleeve layers). Hoodie, yếm, and
+ * áo thử stay shared. Headbands and clips stay off. Faces are chosen in
+ * `facePartSrc`. Dirty level 1 uses the Nam plate.
  */
 export function applyMaleArt(layers: StackLayer[]): StackLayer[] {
   const out: StackLayer[] = [];
@@ -248,11 +278,11 @@ export function applyMaleArt(layers: StackLayer[]): StackLayer[] {
       continue;
     }
     if (layer.slot === "outfit") {
-      out.push({ ...layer, src: MALE_OUTFIT });
+      out.push({ ...layer, src: maleOutfitSrc(layer.src) });
       continue;
     }
     if (layer.slot === "arms") {
-      out.push({ ...layer, src: layer.src.replace(/__[a-z0-9_]+\.svg$/, "__pajamas_boy.svg") });
+      out.push({ ...layer, src: maleArmSrc(layer.src) });
       continue;
     }
     if (layer.src.endsWith("/glow/level_1.svg")) {
@@ -305,9 +335,15 @@ export function glowLayerSrc(level: number, part: "back" | "mid" | "front"): str
   return `/mascot/glow/level_${level}_${part}.svg`;
 }
 
-export function facePartSrc(expression: string, part: FacePart, faceItemId: string | null): string {
+export function facePartSrc(
+  expression: string,
+  part: FacePart,
+  faceItemId: string | null,
+  gender?: BeDaGender | null,
+): string {
   if (faceItemId) return `/mascot/faces/items/${faceItemId}/${part}.svg`;
-  return `/mascot/faces/${expression}/${part}.svg`;
+  const folder = gender === "male" ? `${expression}_nam` : expression;
+  return `/mascot/faces/${folder}/${part}.svg`;
 }
 
 function frontProps(view: BeDaView, locale: string): string[] {

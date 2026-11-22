@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import { describe, it } from "node:test";
 
-import { CHIN_ARM, HANG_ARM, IDLE_ARM_LEFT, armMarkup, armPose, chinArmSrc, sleeveArmSrc, withoutChinHand } from "./sheet-arms";
+import { CHIN_ARM, HANG_ARM, IDLE_HANG, armMarkup, armPose, chinArmSrc, sleeveArmSrc, withoutChinHand } from "./sheet-arms";
 
 /** Face fill on body_chibi. The sleeve hand uses this same paint. */
 const FACE_SKIN = { r: 255, g: 228, b: 218 };
@@ -123,6 +123,8 @@ function inFaceOrLeg(x: number, y: number): boolean {
   if (cx * cx + cy * cy < 42 * 42) return true;
   const cssX = x / 2;
   const cssY = y / 2;
+  // The new pajama collar leaves a little neck under the chin. That skin is not a hand.
+  if (cssY < 165 && cssX > 88 && cssX < 132) return true;
   return cssY > 168 && cssX > 75 && cssX < 145;
 }
 
@@ -133,19 +135,16 @@ describe("sheet arms", () => {
     assert.equal(chinArmSrc("/mascot/outfits/outfit_ao_len.svg"), "/mascot/outfits/arm_chin__ao_len.svg");
   });
 
-  it("puts both short arms on every frame, and the chin sleeve only when idle", () => {
+  it("puts both hanging sleeves on every frame, including idle", () => {
     const hang = "/mascot/outfits/arm_wave_right__pajamas.svg";
     const chin = "/mascot/outfits/arm_chin__pajamas.svg";
-    for (const clip of ["walk", "wave"] as const) {
+    for (const clip of ["idle", "walk", "wave"] as const) {
       const html = armMarkup("/mascot/outfits/outfit_pajamas.svg", clip, clip === "walk" ? 1 : 0);
       assert.equal(html.split(hang).length - 1, 2, clip);
       assert.equal(html.includes(chin), false, clip);
+      assert.match(html, /arm-r/);
+      assert.match(html, /arm-l/);
     }
-    const idle = armMarkup("/mascot/outfits/outfit_pajamas.svg", "idle", 0);
-    assert.equal(idle.split(hang).length - 1, 1);
-    assert.equal(idle.split(chin).length - 1, 1);
-    assert.match(idle, /arm-r/);
-    assert.match(idle, /arm-l/);
   });
 
   it("draws a short sleeve that cannot hang past the hem", () => {
@@ -162,11 +161,9 @@ describe("sheet arms", () => {
     assert.ok(cy > 136 && cy < 150);
   });
 
-  it("rests one hand at the chin, swings the walk, and raises one arm to wave", () => {
+  it("hangs both idle arms loose, swings the walk, and raises one arm to wave", () => {
     const idle = armPose("idle", 0);
-    assert.equal(idle.left, CHIN_ARM);
-    assert.equal(idle.left, IDLE_ARM_LEFT);
-    assert.equal(idle.right, HANG_ARM);
+    assert.equal(idle.left === IDLE_HANG && idle.right === IDLE_HANG, true);
     const step = armPose("walk", 1);
     const back = armPose("walk", 4);
     assert.ok(step.right < HANG_ARM && step.right < back.right);
@@ -234,7 +231,10 @@ describe("sheet arms", () => {
           );
           const high = [...hands].sort((a, b) => a.y - b.y)[0];
           const low = [...hands].sort((a, b) => b.y - a.y)[0];
-          if (clip === "idle") assert.ok(high && low && high.y < 150 && high.y < low.y - 15, frameName);
+          if (clip === "idle") {
+            assert.ok(hands.every((hand) => hand.y > 165), frameName);
+            assert.ok(high && low && Math.abs(high.y - low.y) < 6, frameName);
+          }
           if (clip === "walk") {
             assert.ok(hands.every((hand) => hand.y > 165), frameName);
             assert.ok(Math.min(...hands.map((hand) => hand.x)) < 100, frameName);
