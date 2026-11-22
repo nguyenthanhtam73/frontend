@@ -17,6 +17,7 @@ export const SHEET_ANCHOR_Y = 208 / 250;
 
 const OUTFITS = new Set([
   "outfit_pajamas",
+  "outfit_pajamas_boy",
   "outfit_ao_dai",
   "outfit_hoodie",
   "outfit_vay_hoa",
@@ -25,7 +26,13 @@ const OUTFITS = new Set([
   "outfit_ao_thu",
 ]);
 
-const HAIRS = new Set(["hair_sleep_buns", "hair_twin_tails", "hair_short_bob", "hair_high_pony"]);
+const HAIRS = new Set([
+  "hair_sleep_buns",
+  "hair_twin_tails",
+  "hair_short_bob",
+  "hair_high_pony",
+  "hair_boy_short",
+]);
 
 export type ActorClip = "idle" | "walk" | "wave";
 

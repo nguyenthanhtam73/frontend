@@ -35,6 +35,9 @@ function arts(): Map<string, readonly string[]> {
   );
   add(lookArt(home, DEFAULT_GAME_LOOK, false));
   add(lookArt(home, DEFAULT_GAME_LOOK, true));
+  const male = { ...home, gender: "male" as const };
+  add(lookArt(male, DEFAULT_GAME_LOOK, false));
+  add(lookArt(male, DEFAULT_GAME_LOOK, true));
   for (const friend of SAMPLE_LOBBY_FRIENDS) {
     add(lookArt(sampleFriendView(friend), { outfit: friend.outfit, hair: friend.hair, clip: friend.clip }, true));
   }
@@ -49,7 +52,7 @@ function arts(): Map<string, readonly string[]> {
 }
 
 function layerImg(src: string): string {
-  if (!src.endsWith("/glow/level_1.svg")) return `<img alt="" src="${src}">`;
+  if (!/\/glow\/level_1(?:_nam)?\.svg$/.test(src)) return `<img alt="" src="${src}">`;
   const svg = withoutChinHand(readFileSync(join(process.cwd(), "public", src), "utf8"));
   return `<img alt="" src="data:image/svg+xml,${encodeURIComponent(svg)}">`;
 }

@@ -6,6 +6,7 @@ import { actorClip, lookFromArt, sheetJsonUrlFromArt, sheetKey, sheetKeyFromArt 
 describe("actor sheet", () => {
   it("names a sheet from the outfit and hair", () => {
     assert.equal(sheetKey("outfit_hoodie", "hair_short_bob"), "outfit_hoodie__hair_short_bob");
+    assert.equal(sheetKey("outfit_pajamas_boy", "hair_boy_short"), "outfit_pajamas_boy__hair_boy_short");
     assert.equal(sheetKey("nope", "nope"), "outfit_pajamas__hair_sleep_buns");
   });
 

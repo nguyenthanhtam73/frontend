@@ -7,7 +7,7 @@ import { CHIN_ARM, HANG_ARM, IDLE_ARM_LEFT, armMarkup, armPose, chinArmSrc, slee
 
 /** Face fill on body_chibi. The sleeve hand uses this same paint. */
 const FACE_SKIN = { r: 255, g: 228, b: 218 };
-const SHEET_COUNT = 31;
+const SHEET_COUNT = 33;
 
 type Rgba = { w: number; h: number; px: Uint8Array };
 

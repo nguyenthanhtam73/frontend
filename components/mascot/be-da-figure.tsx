@@ -116,7 +116,7 @@ export function BeDaFigure({
         data-glow-level={view.glowLevel}
         data-level={view.glowLevel}
         data-gender={view.gender}
-        data-art={view.gender === "male" ? "placeholder" : "drawn"}
+        data-art="drawn"
       >
         {art}
       </span>
@@ -135,7 +135,7 @@ export function BeDaFigure({
       data-glow-level={view.glowLevel}
       data-level={view.glowLevel}
       data-gender={view.gender}
-      data-art={view.gender === "male" ? "placeholder" : "drawn"}
+      data-art="drawn"
       data-reaction={reaction ?? ""}
     >
       {art}
