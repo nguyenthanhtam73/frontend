@@ -33,9 +33,9 @@ import type { LobbyYou } from "@/components/mascot/game/use-lobby-presence";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
 import type { BeDaView } from "@/lib/mascot/model";
 
-function actorMotion(pose: "wave" | "cheer" | null, walking: boolean): "idle" | "walk" | "wave" {
+function actorMotion(pose: GamePose | null, walking: boolean): "idle" | "walk" | "wave" {
   if (walking) return "walk";
-  if (pose === "wave" || pose === "cheer") return "wave";
+  if (pose === "wave" || pose === "cheer" || pose === "poke") return "wave";
   return "idle";
 }
 
