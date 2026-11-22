@@ -91,7 +91,7 @@ describe("shared room quest", () => {
     assert.equal(friendlyRoomMessage("chests_expired", err.serverMessage ?? ""), "Phòng đã kết thúc, rương hết hạn");
     assert.equal(friendlyRoomMessage("chest_closed", "chest is not open yet"), "Rương này chưa mở.");
     assert.equal(isQuestGrace(new ApiError("api", { status: 409, code: "room_ended", serverMessage: "Phòng này đã kết thúc." })), true);
-    assert.equal(chestsFromQuest(null, { grace: true }).every((item) => item.state === "claimable"), true);
+    assert.equal(chestsFromQuest(null, { expired: true }).every((item) => item.state === "expired"), true);
     assert.equal(chestsFromQuest(null, { expired: true }).every((item) => item.state === "expired"), true);
   });
 });

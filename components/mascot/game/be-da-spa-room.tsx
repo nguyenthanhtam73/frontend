@@ -137,6 +137,7 @@ export function BeDaSpaRoom({
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
   const [localPanel, setLocalPanel] = useState<"quest" | "today" | null>(null);
   const panel = panelProp !== undefined ? panelProp : localPanel;
+  const roomEnded = room.notice === "ended" || room.daysLeft === 0;
   function choosePanel(next: "quest" | "today" | null) {
     onPanel?.(next);
     if (panelProp === undefined) setLocalPanel(next);
@@ -384,7 +385,7 @@ export function BeDaSpaRoom({
         {t("game.spaBoard")}
       </button>
 
-      {together?.visible && room.notice !== "ended" ? (
+      {together?.visible ? (
         <RoomTogetherDock
           questLabel={t("game.roomQuestOpen")}
           todayLabel={t("game.roomTodayOpen")}
@@ -393,12 +394,12 @@ export function BeDaSpaRoom({
         />
       ) : null}
 
-      {together?.visible && panel && room.notice !== "ended" ? (
+      {together?.visible && panel ? (
         <div className="beda-room-sheet" data-testid="beda-room-sheet" role="dialog" aria-modal="false" aria-label={panel === "quest" ? t("game.roomQuestTitle") : t("game.roomTodayTitle")}>
           <button type="button" className="beda-room-sheet-close" data-testid="beda-room-sheet-close" onClick={() => choosePanel(null)}>
             {t("game.spaBoardClose")}
           </button>
-          {panel === "quest" ? <RoomQuestCard together={together} locale={locale} /> : <RoomTodayList together={together} locale={locale} />}
+          {panel === "quest" ? <RoomQuestCard together={together} locale={locale} /> : <RoomTodayList together={together} locale={locale} roomEnded={roomEnded} />}
         </div>
       ) : null}
 

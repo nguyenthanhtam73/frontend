@@ -149,9 +149,12 @@ function ChestButton({
 export function RoomTodayList({
   together,
   locale,
+  roomEnded = false,
 }: {
   together: RoomTogether;
   locale: string;
+  /** The 8-day room is over. Nhắc bạn is only for a room that is still open. */
+  roomEnded?: boolean;
 }) {
   const t = useTranslations("mascot");
   return (
@@ -169,7 +172,7 @@ export function RoomTodayList({
       <ul>
         {together.today.map((member) => {
           const mine = together.selfId != null && member.userId.toLowerCase() === together.selfId.toLowerCase();
-          const nudge = canNudgeMember(member, together.selfId);
+          const nudge = !roomEnded && canNudgeMember(member, together.selfId);
           const sent = together.nudged.includes(member.userId);
           const view = todayMemberView(member.look, locale);
           return (

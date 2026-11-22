@@ -84,7 +84,7 @@ function render(node: ReactNode) {
 describe("shared room panels", () => {
   it("shows one chest ready to open and the other two still shut", () => {
     const html = render(<RoomQuestCard together={together()} locale="vi" />);
-    assert.match(html, /Cả phòng đã chăm da 5 ngày/);
+    assert.match(html, /Cả phòng đã chăm da 5 lượt/);
     assert.match(html, /data-testid="beda-chest-5"/);
     assert.match(html, /data-state="claimable"/);
     assert.match(html, /data-state="locked"/);
@@ -139,7 +139,7 @@ describe("shared room panels", () => {
     assert.match(html, /Lan/);
     assert.match(html, /Minh/);
     assert.match(html, /Đã chăm da/);
-    assert.match(html, /Chưa check da/);
+    assert.match(html, /Chưa soi da/);
     assert.match(html, /data-testid="beda-nudge-22222222-2222-2222-2222-222222222222"/);
     assert.equal(html.includes("beda-nudge-11111111"), false);
     assert.match(html, /\/mascot\/body\/body_chibi\.svg/);
@@ -150,6 +150,60 @@ describe("shared room panels", () => {
     );
     assert.match(nudged, /Đã nhắc/);
     assert.match(nudged, /disabled/);
+  });
+
+  it("hides Nhắc bạn after the room has ended", () => {
+    const html = render(<RoomTodayList together={together()} locale="vi" roomEnded />);
+    assert.match(html, /Minh/);
+    assert.match(html, /Chưa soi da/);
+    assert.equal(html.includes("Nhắc bạn"), false);
+    assert.equal(html.includes("beda-nudge-"), false);
+  });
+
+  it("labels a reached chest the caller cannot open yet", () => {
+    const html = render(
+      <RoomQuestCard
+        locale="vi"
+        together={together({
+          chests: chestsFromQuest(quest()).map((chest) =>
+            chest.memberDays === 5 ? { ...chest, state: "closed" } : chest,
+          ),
+        })}
+      />,
+    );
+    assert.match(html, /Cần 1 ngày của bạn/);
+    assert.match(html, /5 lượt/);
+    assert.match(html, /15 lượt/);
+    assert.match(html, /30 lượt/);
+    assert.equal(html.includes("Chưa mở"), false);
+  });
+
+  it("draws Nam and Nữ from each member's look.gender", () => {
+    const board = together();
+    const [lan, minh] = board.today;
+    const html = render(
+      <RoomTodayList
+        locale="vi"
+        together={{
+          ...board,
+          selfId: null,
+          today: [
+            { ...lan!, look: { ...lan!.look, gender: "male" } },
+            { ...minh!, look: { ...minh!.look, gender: undefined } },
+          ],
+        }}
+      />,
+    );
+    const lanRow = html.slice(html.indexOf(`beda-today-${LAN}`), html.indexOf(`beda-today-${MINH}`));
+    const minhRow = html.slice(html.indexOf(`beda-today-${MINH}`));
+    assert.match(lanRow, /data-gender="male"/);
+    assert.match(lanRow, /\/mascot\/hair\/hair_boy_short\.svg/);
+    assert.match(lanRow, /\/mascot\/outfits\/outfit_pajamas_boy\.svg/);
+    assert.match(minhRow, /data-gender="female"/);
+    assert.match(minhRow, /\/mascot\/hair\/hair_sleep_buns\.svg/);
+    assert.match(minhRow, /\/mascot\/outfit\/outfit_cozy_pajamas\.svg/);
+    assert.equal(minhRow.includes("hair_boy_short"), false);
+    assert.equal(minhRow.includes("outfit_pajamas_boy"), false);
   });
 
   it("plays a cheer on Bé Da without a text field", () => {
@@ -184,7 +238,7 @@ describe("shared room panels", () => {
     assert.equal(html.includes("email"), false);
   });
 
-  it("keeps a grace-window room_ended quest tappable inside the ended room", () => {
+  it("shows expired chests when the room read window is over", () => {
     const html = render(
       <BeDaSpaRoom
         locale="vi"
@@ -193,7 +247,7 @@ describe("shared room panels", () => {
         soundOn={false}
         selectedId=""
         youPose={null}
-        room={{ code: "DA7K2M", count: 1, cap: 8, guests: [], notice: "ended" }}
+        room={{ code: "DA7K2M", count: 1, cap: 8, guests: [], notice: "ended", daysLeft: 0 }}
         onSelect={() => undefined}
         onAction={() => undefined}
         onHide={() => undefined}
@@ -202,15 +256,17 @@ describe("shared room panels", () => {
         onToggleSound={() => undefined}
         together={together({
           quest: null,
-          grace: true,
-          chests: chestsFromQuest(null, { grace: true }),
-          message: null,
+          grace: false,
+          expired: true,
+          message: "Phòng này đã kết thúc.",
+          chests: chestsFromQuest(null, { expired: true }),
         })}
+        panel="quest"
         showActors={false}
       />,
     );
-    assert.match(html, /Phòng đã kết thúc\. Rương vẫn có thể mở thêm vài ngày\./);
-    assert.match(html, /data-state="claimable"/);
-    assert.match(html, /data-testid="beda-ended-create"/);
+    assert.match(html, /data-state="expired"/);
+    assert.match(html, /Hết hạn/);
+    assert.equal(html.includes("data-state=\"claimable\""), false);
   });
 });

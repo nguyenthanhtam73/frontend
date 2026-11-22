@@ -285,7 +285,7 @@ export function friendlyRoomMessage(code: string, serverMessage: string): string
   return "Có lỗi xảy ra. Bạn thử lại giúp mình nhé.";
 }
 
-/** GET /quest answered room_ended. Claims can still work for a few days. */
+/** 409 room_ended. After the 3-day read window this is final: chests are expired. */
 export function isQuestGrace(err: unknown): boolean {
   const problem = sharedRoomError(err);
   return problem?.status === 409 && problem.code === "room_ended";
