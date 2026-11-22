@@ -2562,6 +2562,116 @@
   touch-action: none;
 }
 
+.beda-room-entry {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: #c48962 url("/mascot/rooms/spa-room.webp") center / cover no-repeat;
+  text-align: center;
+}
+
+.beda-room-entry p {
+  margin: 0;
+  max-width: 280px;
+  border-radius: 18px;
+  background: #fffaf5;
+  padding: 14px 18px;
+  color: #3a2a24;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.beda-room-quit {
+  position: absolute;
+  z-index: 8;
+  top: calc(62px + env(safe-area-inset-top));
+  left: 12px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 250, 245, 0.94);
+  padding: 6px 12px;
+  color: #9f1239;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 0 rgba(40, 24, 16, 0.18);
+}
+
+.beda-room-quit-shade {
+  position: absolute;
+  z-index: 1300;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(22, 24, 32, 0.45);
+  padding: 16px;
+}
+
+.beda-room-quit-card {
+  width: min(100%, 340px);
+  border-radius: 20px;
+  background: #fffaf5;
+  padding: 16px;
+  color: #3a2a24;
+  box-shadow: 0 8px 0 #e7cfc6;
+}
+
+.beda-room-quit-card p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.beda-room-quit-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.beda-room-quit-actions button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.beda-room-quit-actions button:first-child {
+  background: #fff;
+  color: #6d4454;
+}
+
+.beda-room-quit-actions button:last-child {
+  background: #c2456d;
+  color: #fff;
+}
+
+.beda-room-retry {
+  min-height: 56px;
+  min-width: 200px;
+  border: 0;
+  border-radius: 18px;
+  background: #2f9e8f;
+  padding: 0 28px;
+  color: #fff;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 5px 0 #1d6e62;
+  cursor: pointer;
+}
+
 .beda-spa-view {
   position: absolute;
   inset: 0;

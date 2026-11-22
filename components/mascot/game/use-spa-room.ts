@@ -36,8 +36,11 @@ import {
   emptyRoom,
   encodeRoomFrame,
   rankCareStreaks,
-  sampleSpaGuests,
-  seatGuests,
+  SPA_ENTRY_TIMEOUT_MS,
+  spaEntryPhase,
+  spaMembershipEnds,
+  spaRoomGuests,
+  spreadSpaFeet,
   shouldRetryRoomJoin,
   spaHeadCount,
   spaRoomProblem,
@@ -76,6 +79,10 @@ export function useSpaRoom(options: {
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [members, setMembers] = useState<number | null>(null);
   const [presence, setPresence] = useState<number | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [entered, setEntered] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const enteredRef = useRef(false);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
   const [youPose, setYouPose] = useState<GamePose | null>(null);
@@ -142,6 +149,18 @@ export function useSpaRoom(options: {
     setRoomName("");
     setEndsAt(null);
     setRoom(emptyRoom(code));
+    setTimedOut(false);
+    enteredRef.current = false;
+    setEntered(false);
+    const entryTimer = window.setTimeout(() => {
+      if (!cancelled && !enteredRef.current) setTimedOut(true);
+    }, SPA_ENTRY_TIMEOUT_MS);
+    const markEntered = () => {
+      if (cancelled || enteredRef.current) return;
+      enteredRef.current = true;
+      setEntered(true);
+      window.clearTimeout(entryTimer);
+    };
 
     const joinFrame = (): RoomClientFrame => {
       const worn = lookRef.current;
@@ -205,6 +224,7 @@ export function useSpaRoom(options: {
       }
       if (message.op === "hello") {
         setNotice(null);
+        markEntered();
         setLive(true);
         const nextCode = message.code || code;
         setServerCode(nextCode);
@@ -266,7 +286,14 @@ export function useSpaRoom(options: {
             if (!cancelled) handle(message);
           },
           onStatus: (status) => {
-            if (!cancelled) setLive(status === "live");
+            if (cancelled) return;
+            if (status === "live") {
+              markEntered();
+              setLive(true);
+              return;
+            }
+            setLive(false);
+            if (enteredRef.current) setNotice("offline");
           },
         });
         if (cancelled) return;
@@ -297,10 +324,7 @@ export function useSpaRoom(options: {
       }
       try {
         const joined = await joinSpaRoom(code);
-        if (cancelled) {
-          void leaveSpaRoom(code).catch(() => undefined);
-          return;
-        }
+        if (cancelled) return;
         joinedRef.current = true;
         setPreviewCount(joined.memberCount);
         setMembers(joined.memberCount);
@@ -313,11 +337,15 @@ export function useSpaRoom(options: {
           if (isAlreadyInRoomError(err) && lock && lock.code !== code) {
             setConflict(lock);
             setNotice("already-in");
+            return;
+          }
+          if (isAlreadyInRoomError(err)) {
+            joinedRef.current = true;
           } else {
             setNotice(spaProblemFromError(err));
+            return;
           }
-        }
-        return;
+        } else return;
       }
       const plan = readCookiePlan();
       if (!plan?.ok || cancelled) return;
@@ -326,16 +354,18 @@ export function useSpaRoom(options: {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(entryTimer);
       const joined = joinedRef.current;
       joinedRef.current = false;
       connRef.current?.stop();
       connRef.current = null;
-      if (joined) void leaveSpaRoom(code).catch(() => undefined);
+      // Closing the screen or retrying only drops the socket. Membership stays.
+      if (joined && spaMembershipEnds("unmount")) void leaveSpaRoom(code).catch(() => undefined);
       const plan = readCookiePlan();
       if (plan?.ok) document.cookie = clearLobbyAccessCookie(plan);
       setLive(false);
     };
-  }, [active, code]);
+  }, [active, code, attempt]);
 
   function showPose(id: string, pose: GamePose) {
     setPoses((prev) => ({ ...prev, [id]: pose }));
@@ -345,17 +375,28 @@ export function useSpaRoom(options: {
     timers.current.push(timer);
   }
 
-  const guests = useMemo(() => {
-    if (notice === "full") return seatGuests(room.people, null, hidden, poses);
-    if (live) return seatGuests(room.people, room.sessionId, hidden, poses);
-    if (notice != null || previewCount != null) return [];
-    return sampleSpaGuests(hidden, poses);
-  }, [notice, live, previewCount, room.people, room.sessionId, hidden, poses]);
+  const guests = useMemo(
+    () =>
+      spaRoomGuests({
+        code,
+        live: live && notice !== "full",
+        notice,
+        previewCount,
+        people: room.people,
+        selfId: notice === "full" ? null : room.sessionId,
+        hidden,
+        poses,
+      }),
+    [code, notice, live, previewCount, room.people, room.sessionId, hidden, poses],
+  );
 
   const you = useMemo(() => {
     const self = room.people.find((person) => person.id === room.sessionId);
     if (!self?.placed) return null;
-    return { x: self.x, y: self.y };
+    const spots = spreadSpaFeet(
+      room.people.filter((person) => person.placed !== false).map((person) => ({ id: person.id, x: person.x, y: person.y })),
+    );
+    return spots.get(self.id) ?? { x: self.x, y: self.y };
   }, [room.people, room.sessionId]);
   const youStreak = useMemo(() => {
     const self = room.people.find((person) => person.id === room.sessionId);
@@ -456,6 +497,13 @@ export function useSpaRoom(options: {
     emote,
     hide,
     walkTo,
+    entry: code ? spaEntryPhase({ live, entered, timedOut, notice }) : "room",
+    retry: () => setAttempt((n) => n + 1),
+    leaveMembership: async () => {
+      const current = serverCode ?? code;
+      if (!current || !spaMembershipEnds("explicit")) return;
+      await leaveSpaRoom(current).catch(() => undefined);
+    },
   };
 }
 

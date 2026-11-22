@@ -511,6 +511,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
               name: code ? spaRoom.roomName : "",
               daysLeft: code && spaRoom.endsAt ? remainingRoomDays(new Date(spaRoom.endsAt), new Date()) : null,
               lock: code ? spaRoom.conflict : null,
+              entry: code ? spaRoom.entry : "room",
             }
           : null
       }
@@ -524,6 +525,10 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onJoinRoom={(next) => {
         rememberSpaRoom(localStorage, next);
         router.push(roomInvitePath(next));
+      }}
+      onSpaRetry={() => spaRoom.retry()}
+      onSpaQuit={() => {
+        void spaRoom.leaveMembership().finally(() => leaveSpa("care"));
       }}
       onLeaveSpa={() => leaveSpa("care")}
       onSpaLobby={() => leaveSpa("lobby")}

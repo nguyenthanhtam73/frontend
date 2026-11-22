@@ -689,6 +689,8 @@ export function useSpaMotion(input: {
   guests?: readonly SpaSpot[];
   you?: { x: number; y: number } | null;
   onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
+  /** False while the entry card is up, so the floor loop starts once the stage exists. */
+  enabled?: boolean;
 }) {
   const guestsProp = useRef(input.guests ?? []);
   const youProp = useRef(input.you ?? null);
@@ -705,6 +707,7 @@ export function useSpaMotion(input: {
   });
 
   useLayoutEffect(() => {
+    if (input.enabled === false) return;
     const frame = input.frameRef.current;
     const view = input.viewRef.current;
     const stage = input.stageRef.current;
@@ -982,7 +985,7 @@ export function useSpaMotion(input: {
       frame.removeEventListener("pointercancel", up);
       media.removeEventListener("change", onReduce);
     };
-  }, [input.frameRef, input.viewRef, input.stageRef]);
+  }, [input.frameRef, input.viewRef, input.stageRef, input.enabled]);
 
   return api;
 }

@@ -28,12 +28,18 @@ import {
   sampleSpaGuests,
   seatGuests,
   shouldRetryRoomJoin,
+  SPA_ENTRY_TIMEOUT_MS,
+  spaEntryPhase,
+  spaMembershipEnds,
   spaHeadCount,
+  spaRoomGuests,
   spaRoomOnlineCount,
   spaRoomProblem,
+  spreadSpaFeet,
   zaloShareUrl,
 } from "@/lib/mascot/game/spa-room";
 import { mergeSpaRoomCodes, readSpaRoom } from "@/lib/mascot/game/spa-room-api";
+import { SPA_BOUNDS } from "@/lib/mascot/game/walk";
 
 const SELF = "k3m8p2q9w4xn";
 const OTHER = "a9b8c7d6e5f4";
@@ -71,6 +77,80 @@ function memoryStorage(seed: Record<string, string> = {}): Storage {
     },
   };
 }
+
+describe("spa join spots", () => {
+  it("stands stacked members apart inside the floor and leaves a walk alone", () => {
+    const you = "k3m8p2q9w4xn";
+    const friend = "a9b8c7d6e5h4";
+    const stacked = [
+      { id: you, x: 0.5, y: 0.7 },
+      { id: friend, x: 0.5, y: 0.7 },
+    ];
+    const once = spreadSpaFeet(stacked);
+    const again = spreadSpaFeet([...stacked].reverse());
+    const mine = once.get(you)!;
+    const theirs = once.get(friend)!;
+    assert.ok(Math.hypot(mine.x - theirs.x, mine.y - theirs.y) > 0.08);
+    assert.deepEqual(mine, again.get(you));
+    assert.deepEqual(theirs, again.get(friend));
+    for (const spot of [mine, theirs]) {
+      assert.ok(spot.x >= SPA_BOUNDS.minX && spot.x <= SPA_BOUNDS.maxX);
+      assert.ok(spot.y >= SPA_BOUNDS.minY && spot.y <= SPA_BOUNDS.maxY);
+    }
+    const walked = spreadSpaFeet([
+      { id: you, x: 0.22, y: 0.55 },
+      { id: friend, x: 0.8, y: 0.62 },
+    ]);
+    assert.deepEqual(walked.get(you), { x: 0.22, y: 0.55 });
+    assert.deepEqual(walked.get(friend), { x: 0.8, y: 0.62 });
+  });
+
+  it("keeps the sample cast off a real room code and times out the wait", () => {
+    assert.equal(SPA_ENTRY_TIMEOUT_MS, 10_000);
+    assert.equal(spaEntryPhase({ live: false, timedOut: false, notice: null }), "loading");
+    assert.equal(spaEntryPhase({ live: false, timedOut: true, notice: null }), "error");
+    assert.equal(spaEntryPhase({ live: false, timedOut: false, notice: "offline" }), "error");
+    assert.equal(spaEntryPhase({ live: true, timedOut: true, notice: "offline" }), "room");
+    const waiting = spaRoomGuests({
+      code: "DA7K2M",
+      live: false,
+      notice: null,
+      previewCount: null,
+      people: [],
+      selfId: null,
+      hidden: new Set(),
+    });
+    assert.deepEqual(waiting, []);
+    const names = spaRoomGuests({
+      code: null,
+      live: false,
+      notice: null,
+      previewCount: null,
+      people: [],
+      selfId: null,
+      hidden: new Set(),
+    }).map((guest) => guest.nickname);
+    assert.ok(names.includes("Trà Sữa"));
+    assert.ok(names.includes("Mây Hồng"));
+  });
+
+  it("keeps the room when the connection drops after entering", () => {
+    assert.equal(
+      spaEntryPhase({ live: false, entered: true, timedOut: true, notice: "offline" }),
+      "room",
+    );
+    assert.equal(
+      spaEntryPhase({ live: false, entered: false, timedOut: true, notice: null }),
+      "error",
+    );
+  });
+
+  it("does not end membership on retry or unmount", () => {
+    assert.equal(spaMembershipEnds("retry"), false);
+    assert.equal(spaMembershipEnds("unmount"), false);
+    assert.equal(spaMembershipEnds("explicit"), true);
+  });
+});
 
 describe("spa room list", () => {
   it("uses the server list and keeps device memory when the server has none", () => {
