@@ -1,7 +1,7 @@
 import { AnimatedSprite, Application, Assets, Container, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
 
 import { rendererResolution } from "@/lib/game/core/dpr";
-import { actorSheetPlan, attachIfMounted, createShellLife, destroyShellLife } from "@/lib/mascot/game/shell/pixi-guard";
+import { actorSheetPlan, attachIfMounted, createShellLife, destroyShellLife, setActorReady } from "@/lib/mascot/game/shell/pixi-guard";
 import {
   SHEET_ANCHOR_Y,
   actorClip,
@@ -153,6 +153,7 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
       delete el.dataset.actorFallback;
       if (plan === "wait") return;
       if (plan === "start") {
+        setActorReady(el.dataset, false);
         if (have) destroyActor(have.nodes);
         actors.delete(id);
         busy = true;
@@ -167,7 +168,7 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
               actors.set(id, { nodes: ready, sheet });
             });
             if (!attached) destroyActor(nodes);
-            else person.dataset.actorReady = "1";
+            else setActorReady(person.dataset, true);
             delete person.dataset.actorFallback;
           })
           .catch(() => {
@@ -181,6 +182,7 @@ export async function startActorLayer(options: LayerOptions): Promise<{ destroy:
         return;
       }
       if (!have) return;
+      setActorReady(el.dataset, true);
       const art = el.querySelector<HTMLElement>(".beda-spa-art") ?? el;
       const box = art.getBoundingClientRect();
       const moving = el.dataset.moving === "1";

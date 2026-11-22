@@ -56,6 +56,16 @@ export function actorSheetPlan(input: {
   return "start";
 }
 
+/**
+ * The spritesheet flag lives on the HTML element. A remount starts blank, so
+ * the draw path has to put it back every frame or the SVG and the canvas
+ * both show. A new hair or outfit clears it until that sheet is on stage.
+ */
+export function setActorReady(dataset: { actorReady?: string }, ready: boolean): void {
+  if (ready) dataset.actorReady = "1";
+  else delete dataset.actorReady;
+}
+
 /** Drop the loading spinner. Report the failure only if the host is still on the page. */
 export function notePixiInitFailed(
   dataset: { loading?: string },
