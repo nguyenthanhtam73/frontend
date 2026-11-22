@@ -7,7 +7,8 @@ import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type W
  * Same WebSocket as the lobby: `/api/v1/mascot/lobby/ws`.
  * Frames use `channel: "room"` and only fields the hub already accepts
  * (`v`, `channel`, `op`, `code`, `nickname`, `outfit`, `hair`, `accessory`,
- * `x`, `y`, `facing`, `action`, `target`, `hide`). A socket `join` works only after
+ * `x`, `y`, `facing`, `action`, `target`, `hide`). Gestures are `wave`,
+ * `heart`, `cheer`, and `poke`. There is no text field. A socket `join` works only after
  * REST membership. `not_available` still falls back to the sample room.
  *
  * Membership is REST, not a socket op:
@@ -203,16 +204,18 @@ export type RoomClientFrame =
       action: "idle";
     }
   | { op: "leave" }
-  | { op: "wave" | "heart"; target?: string }
+  | { op: "wave" | "heart" | "cheer" | "poke"; target?: string }
   | { op: "compliment"; target: string }
   | { op: "hide"; hide: string[] }
   | { op: "move-to"; x: number; y: number; facing?: LobbyFacing; action?: "idle" | "walk" };
 
 export type RoomEvent = {
-  op: "join" | "leave" | "wave" | "heart" | "compliment";
+  op: "join" | "leave" | "wave" | "heart" | "compliment" | "cheer" | "poke" | "nudge";
   id?: string;
   from?: string;
   target?: string;
+  /** Server sentence on a nudge. Gestures never carry text. */
+  message?: string;
 };
 
 export type RoomServerMessage =
@@ -525,6 +528,8 @@ export function encodeRoomFrame(frame: RoomClientFrame): string {
       break;
     case "wave":
     case "heart":
+    case "cheer":
+    case "poke":
       if (frame.target && isSessionId(frame.target)) base.target = frame.target;
       break;
     case "compliment":
@@ -603,12 +608,26 @@ function readEvents(value: unknown): RoomEvent[] {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
     const op = row.op;
-    if (op !== "join" && op !== "leave" && op !== "wave" && op !== "heart" && op !== "compliment") continue;
+    if (
+      op !== "join" &&
+      op !== "leave" &&
+      op !== "wave" &&
+      op !== "heart" &&
+      op !== "compliment" &&
+      op !== "cheer" &&
+      op !== "poke" &&
+      op !== "nudge"
+    ) {
+      continue;
+    }
+    const message =
+      op === "nudge" && typeof row.message === "string" ? row.message.trim().slice(0, 240) : "";
     out.push({
       op,
       id: typeof row.id === "string" ? row.id : undefined,
       from: typeof row.from === "string" ? row.from : undefined,
       target: typeof row.target === "string" ? row.target : undefined,
+      ...(message ? { message } : {}),
     });
   }
   return out;

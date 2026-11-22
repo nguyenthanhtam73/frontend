@@ -7,6 +7,7 @@ import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
+import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import type { RoomClock, SpaNotice } from "@/lib/mascot/game/spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
 import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
@@ -46,8 +47,9 @@ export type CareStep = {
 };
 
 export type GameToast =
-  | { name: string; kind: "wave" | "heart" | "outfit" | "worn" }
+  | { name: string; kind: "wave" | "heart" | "outfit" | "worn" | "cheer" | "poke" }
   | { name: ""; kind: "wear-failed" }
+  | { kind: "nudge"; message: string }
   | null;
 
 const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "quests" | "lobby" }[] = [
@@ -131,6 +133,9 @@ export function BeDaGameView({
   createProblem = null,
   activeRoom = null,
   spaInviteOpen = false,
+  together = null,
+  roomPanel,
+  showActors = true,
 }: {
   locale: string;
   tab: GameTab;
@@ -161,7 +166,7 @@ export function BeDaGameView({
   onTab: (tab: GameTab) => void;
   onToggleSound: () => void;
   onSelectFriend: (id: string) => void;
-  onFriendAction: (kind: "wave" | "heart" | "outfit") => void;
+  onFriendAction: (kind: "wave" | "heart" | "outfit" | "cheer" | "poke") => void;
   onClaim: () => void;
   onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
@@ -203,6 +208,9 @@ export function BeDaGameView({
   activeRoom?: RoomClock | null;
   /** Opens the invite card on first paint. Used by tests and screenshots. */
   spaInviteOpen?: boolean;
+  together?: RoomTogether | null;
+  roomPanel?: "quest" | "today" | null;
+  showActors?: boolean;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -343,6 +351,9 @@ export function BeDaGameView({
           onGoToRoom={onJoinRoom}
           onCreateRoom={onCreateRoom}
           creatingRoom={creatingRoom}
+          together={together}
+          panel={roomPanel}
+          showActors={showActors}
         />
       ) : showLobby ? (
         <BeDaLobby
@@ -1266,7 +1277,14 @@ function Toast({ toast }: { toast: Exclude<GameToast, null> }) {
       </div>
     );
   }
-  const icon = toast.kind === "heart" ? "heart" : toast.kind === "outfit" ? "outfit" : "wave";
+  if (toast.kind === "nudge") {
+    return (
+      <div className="beda-toast is-note" role="status" data-testid="beda-toast">
+        {toast.message}
+      </div>
+    );
+  }
+  const icon = toast.kind === "heart" || toast.kind === "cheer" ? "heart" : toast.kind === "outfit" ? "outfit" : "wave";
   return (
     <div className="beda-toast" role="status" data-testid="beda-toast">
       <i>

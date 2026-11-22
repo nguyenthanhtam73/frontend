@@ -277,8 +277,8 @@ export function applyGameDress(layers: StackLayer[], dress: GameDress): StackLay
     return layer;
   });
   const outfitAt = next.findIndex((layer) => layer.slot === "outfit");
-  if (outfitAt >= 0 && (dress.pose === "wave" || dress.pose === "cheer")) {
-    const arm = dress.pose === "wave" ? "arm_wave_right" : "arms_up";
+  if (outfitAt >= 0 && (dress.pose === "wave" || dress.pose === "cheer" || dress.pose === "poke")) {
+    const arm = dress.pose === "cheer" ? "arms_up" : "arm_wave_right";
     const sleeve = dress.outfitId.replace(/^outfit_/, "");
     next.splice(outfitAt + 1, 0, {
       slot: "arms",

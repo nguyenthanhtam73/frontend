@@ -13,6 +13,7 @@ import { useBeDaView } from "@/lib/hooks/use-mascot";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
 import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
+import { useRoomShared } from "@/components/mascot/game/use-room-shared";
 import { useSpaRoom } from "@/components/mascot/game/use-spa-room";
 import { localePath } from "@/lib/mascot/game/path";
 import {
@@ -269,11 +270,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     look: presented,
     gender: view.gender,
     onRemoteEmote: (event) => {
-      setToast(event);
+      if (event.kind === "nudge") setToast({ kind: "nudge", message: event.message });
+      else setToast(event);
       setBurst((n) => n + 1);
       playGameTing(soundRef.current);
     },
   });
+  const together = useRoomShared(code, code != null, user?.id ?? null);
 
   useEffect(() => {
     if (!code || !spaRoom.serverCode || spaRoom.serverCode === code) return;
@@ -372,7 +375,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     }
   }
 
-  function onFriendAction(kind: "wave" | "heart" | "outfit") {
+  function onFriendAction(kind: "wave" | "heart" | "outfit" | "cheer" | "poke") {
     if (inSpa) {
       const guest = spaRoom.guests.find((item) => item.id === selectedFriendId);
       if (!guest) return;
@@ -382,7 +385,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       return;
     }
     const friend = presence.actors.find((item) => item.id === selectedFriendId);
-    if (!friend) return;
+    if (!friend || kind === "cheer" || kind === "poke") return;
     feedback();
     setToast({ name: friend.nickname, kind });
     presence.emote(friend, kind);
@@ -510,6 +513,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
           : null
       }
       youPose={spaRoom.youPose}
+      together={inSpa ? together : null}
       onCreateRoom={() => void createRoom()}
       creatingRoom={creatingRoom}
       createProblem={createProblem}

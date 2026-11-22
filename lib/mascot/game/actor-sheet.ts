@@ -71,9 +71,9 @@ export function lookFromArt(art: readonly string[]): { outfit: string; hair: str
   return { outfit, hair };
 }
 
-/** Walking wins. A wave or cheer plays only while her feet are still. */
+/** Walking wins. A wave, cheer, or poke plays only while her feet are still. Poke uses the short wave. */
 export function actorClip(moving: boolean, pose: string | null | undefined): ActorClip {
   if (moving) return "walk";
-  if (pose === "wave" || pose === "cheer") return "wave";
+  if (pose === "wave" || pose === "cheer" || pose === "poke") return "wave";
   return "idle";
 }

@@ -273,6 +273,15 @@ describe("sample lobby", () => {
     assert.ok(at("accessory-clip") < at("face-cheeks"));
     assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_dai.svg");
     assert.equal(stack.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_dai.svg");
+    const poke = mascotStack(sampleFriendView(friend), {
+      dress: {
+        outfitId: "outfit_ao_dai",
+        hairId: "hair_high_pony",
+        clipId: null,
+        pose: "poke",
+      },
+    });
+    assert.equal(poke.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arm_wave_right__ao_dai.svg");
     assert.equal(stack.find((layer) => layer.slot === "hair")?.src, "/mascot/hair/hair_high_pony.svg");
     assert.equal(
       stack.find((layer) => layer.slot === "accessory-clip")?.src,

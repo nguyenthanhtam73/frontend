@@ -6,8 +6,10 @@ import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaActorLayer } from "@/components/mascot/game/be-da-actor-layer";
+import { RoomQuestCard, RoomTodayList, RoomTogetherDock } from "@/components/mascot/game/be-da-room-shared";
 import { useSpaMotion } from "@/components/mascot/game/use-lobby-motion";
 import { GameIcon } from "@/components/mascot/game/icons";
+import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
 import { lookArt } from "@/lib/game/core/art";
 import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
@@ -99,6 +101,10 @@ export function BeDaSpaRoom({
   onGoToRoom,
   onCreateRoom,
   creatingRoom = false,
+  together = null,
+  panel: panelProp,
+  onPanel,
+  showActors = true,
 }: {
   locale: string;
   player: BeDaView;
@@ -108,7 +114,7 @@ export function BeDaSpaRoom({
   youPose: GamePose | null;
   room: SpaRoomState;
   onSelect: (id: string) => void;
-  onAction: (kind: "wave" | "heart" | "outfit") => void;
+  onAction: (kind: "wave" | "heart" | "outfit" | "cheer" | "poke") => void;
   onHide: (id: string) => void;
   onLeave: () => void;
   onLobby: () => void;
@@ -119,9 +125,22 @@ export function BeDaSpaRoom({
   onGoToRoom?: (code: string) => void;
   onCreateRoom?: () => void;
   creatingRoom?: boolean;
+  /** Quest, Hôm nay, and nudges. Hidden when the mascot gate answers 404. */
+  together?: RoomTogether | null;
+  /** Which shared panel is open. Omit to let the room remember the tap. */
+  panel?: "quest" | "today" | null;
+  onPanel?: (panel: "quest" | "today" | null) => void;
+  /** Pixi sprites. Screenshots of the drawn gesture pass false so the SVG stays. */
+  showActors?: boolean;
 }) {
   const t = useTranslations("mascot");
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
+  const [localPanel, setLocalPanel] = useState<"quest" | "today" | null>(null);
+  const panel = panelProp !== undefined ? panelProp : localPanel;
+  function choosePanel(next: "quest" | "today" | null) {
+    onPanel?.(next);
+    if (panelProp === undefined) setLocalPanel(next);
+  }
   const [endedJoin, setEndedJoin] = useState(false);
   const [endedDraft, setEndedDraft] = useState("");
   const [endedCodeBad, setEndedCodeBad] = useState(false);
@@ -171,7 +190,7 @@ export function BeDaSpaRoom({
 
   function onBackground(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock")) return;
+    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-dock")) return;
     onSelect("");
   }
 
@@ -247,10 +266,18 @@ export function BeDaSpaRoom({
               {t("game.outfit")}
             </button>
           </div>
+          <div className="beda-action-row is-gesture">
+            <button type="button" className="beda-action is-cheer" data-testid="beda-cheer" onClick={() => onAction("cheer")}>
+              {t("game.cheer")}
+            </button>
+            <button type="button" className="beda-action is-poke" data-testid="beda-poke" onClick={() => onAction("poke")}>
+              {t("game.poke")}
+            </button>
+          </div>
         </div>
       ) : null}
       <div ref={viewRef} className="beda-spa-view">
-        <BeDaActorLayer />
+        {showActors ? <BeDaActorLayer /> : null}
       <div className="beda-spa-stage">
         {SPA_SEATS.map((seat) =>
           takenSeats.has(seat.id) ? null : (
@@ -319,6 +346,11 @@ export function BeDaSpaRoom({
               <Cheeks />
               <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd marks className="w-full" />
             </span>
+            {youPose === "cheer" || youPose === "poke" ? (
+              <span className="beda-gesture-bubble" data-testid="beda-gesture-bubble">
+                {youPose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
+              </span>
+            ) : null}
             <span className="beda-name">
               <span className="beda-tag beda-tag-me">
                 {crowned(youStreak) ? (
@@ -351,6 +383,24 @@ export function BeDaSpaRoom({
       <button type="button" className="beda-spa-board" data-testid="beda-streak-board" onClick={() => void openBoard()}>
         {t("game.spaBoard")}
       </button>
+
+      {together?.visible && room.notice !== "ended" ? (
+        <RoomTogetherDock
+          questLabel={t("game.roomQuestOpen")}
+          todayLabel={t("game.roomTodayOpen")}
+          onQuest={() => choosePanel(panel === "quest" ? null : "quest")}
+          onToday={() => choosePanel(panel === "today" ? null : "today")}
+        />
+      ) : null}
+
+      {together?.visible && panel && room.notice !== "ended" ? (
+        <div className="beda-room-sheet" data-testid="beda-room-sheet" role="dialog" aria-modal="false" aria-label={panel === "quest" ? t("game.roomQuestTitle") : t("game.roomTodayTitle")}>
+          <button type="button" className="beda-room-sheet-close" data-testid="beda-room-sheet-close" onClick={() => choosePanel(null)}>
+            {t("game.spaBoardClose")}
+          </button>
+          {panel === "quest" ? <RoomQuestCard together={together} locale={locale} /> : <RoomTodayList together={together} locale={locale} />}
+        </div>
+      ) : null}
 
       <header className="beda-spa-head">
         <button type="button" className="beda-spa-back" data-testid="beda-spa-leave" aria-label={t("game.spaLeave")} onClick={onLeave}>
@@ -387,6 +437,7 @@ export function BeDaSpaRoom({
       {room.notice === "ended" && !lock ? (
         <div className="beda-room-lock beda-room-ended" data-testid="beda-room-ended" role="dialog" aria-modal="true">
           <p>{t("game.spaEnded")}</p>
+          {together?.visible ? <RoomQuestCard together={together} locale={locale} /> : null}
           <button
             type="button"
             data-testid="beda-ended-create"
@@ -589,6 +640,9 @@ function SpaPerson({
           <Cheeks />
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>
+        {guest.pose === "cheer" || guest.pose === "poke" ? (
+          <span className="beda-gesture-bubble">{guest.pose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}</span>
+        ) : null}
         <span className="beda-name">
           <span className="beda-tag">
             {crown ? (
