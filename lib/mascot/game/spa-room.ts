@@ -84,10 +84,10 @@ export type SpaSeat = {
  * the bed, and the sofa. The middle stays open for the person already in the room.
  */
 export const SPA_SEATS: readonly SpaSeat[] = [
-  { id: "back-left", x: 22, y: 68, scale: 0.82 },
-  { id: "back-right", x: 78, y: 68, scale: 0.82 },
-  { id: "left", x: 10, y: 82, scale: 0.9 },
-  { id: "right", x: 90, y: 82, scale: 0.9 },
+  { id: "back-left", x: 14, y: 64, scale: 0.82 },
+  { id: "back-right", x: 86, y: 64, scale: 0.82 },
+  { id: "left", x: 28, y: 76, scale: 0.9 },
+  { id: "right", x: 72, y: 76, scale: 0.9 },
   { id: "front-left", x: 36, y: 92, scale: 0.96 },
   { id: "front-right", x: 64, y: 92, scale: 0.96 },
   { id: "back", x: 50, y: 56, scale: 0.72 },

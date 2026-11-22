@@ -284,6 +284,10 @@ describe("spa room seats", () => {
     assert.equal(back?.y, 56);
     assert.equal(backLeft && backLeft.y > 48, true);
     assert.equal(backRight && backRight.y > 48, true);
+    const right = SPA_SEATS.find((seat) => seat.id === "right");
+    const left = SPA_SEATS.find((seat) => seat.id === "left");
+    assert.equal(right && right.x <= 74 && right.x >= 68, true);
+    assert.equal(left && right && left.x + right.x === 100, true);
     const xs = SPA_SEATS.map((seat) => seat.x).sort((a, b) => a - b);
     for (let i = 1; i < xs.length; i += 1) {
       assert.equal(xs[i]! - xs[i - 1]! >= 8, true);
