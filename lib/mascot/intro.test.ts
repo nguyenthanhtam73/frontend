@@ -12,6 +12,7 @@ import {
   introDoneMessage,
   introFaceMarks,
   introReplay,
+  leaveClosedMascotIntro,
   marksFromFirstSkin,
   postIntroDone,
 } from "@/lib/mascot/intro";
@@ -37,6 +38,23 @@ describe("Bé Da intro", () => {
     assert.equal(postIntroDone(null, "female"), false);
     assert.equal(introReplay("?again=1"), true);
     assert.equal(introReplay(""), false);
+  });
+
+  it("tells the Android shell the intro is done, without a gender, before leaving", () => {
+    const steps: string[] = [];
+    leaveClosedMascotIntro(
+      { postMessage: (message) => steps.push(message) },
+      (href) => steps.push(href),
+    );
+    assert.deepEqual(steps, ['{"type":"intro_done"}', "/check-in"]);
+    assert.equal(steps[0]!.includes("gender"), false);
+    assert.equal(JSON.parse(steps[0]!).gender, undefined);
+  });
+
+  it("only redirects on the web, where there is no session bridge", () => {
+    const steps: string[] = [];
+    leaveClosedMascotIntro(null, (href) => steps.push(href));
+    assert.deepEqual(steps, ["/check-in"]);
   });
 
   it("maps a first cheek read to a few light spots", () => {

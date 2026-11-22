@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { BeDaIntroNudge } from "@/components/mascot/intro/be-da-intro-nudge";
 import { OnboardingFlowSkeleton } from "@/components/onboarding/onboarding-flow-skeleton";
 import { OnboardingReview } from "@/components/onboarding/onboarding-review";
 import { fetchSkinProfile } from "@/lib/api/profile";
@@ -126,15 +127,18 @@ export function OnboardingPageClient() {
 
   if (mode === "review" && reviewData) {
     return (
-      <OnboardingReview
-        data={reviewData}
-        onDeleted={() => {
-          revokeBlobUrls(idbBlobUrlsRef.current);
-          idbBlobUrlsRef.current = [];
-          setReviewData(null);
-          setMode("flow");
-        }}
-      />
+      <>
+        <BeDaIntroNudge />
+        <OnboardingReview
+          data={reviewData}
+          onDeleted={() => {
+            revokeBlobUrls(idbBlobUrlsRef.current);
+            idbBlobUrlsRef.current = [];
+            setReviewData(null);
+            setMode("flow");
+          }}
+        />
+      </>
     );
   }
 

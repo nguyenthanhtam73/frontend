@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
@@ -69,9 +70,11 @@ function renderGame(
     ...extra,
   };
   return renderToStaticMarkup(
-    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Ho_Chi_Minh">
-      <BeDaGameView {...props} />
-    </NextIntlClientProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Ho_Chi_Minh">
+        <BeDaGameView {...props} />
+      </NextIntlClientProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -282,6 +285,7 @@ describe("Bé Da game screen", () => {
     assert.match(text, /Phòng bạn bè/);
     assert.match(text, /5\/8 người/);
     assert.match(text, /Còn 5\/8 ngày/);
+    assert.equal(text.includes("đang ở đây"), false);
     assert.match(text, /Mời bạn/);
     assert.equal(html.includes('data-testid="beda-spa-code"'), false);
     assert.equal(html.includes("DA7K2M"), false);
@@ -391,6 +395,7 @@ describe("Bé Da game screen", () => {
     assert.match(text, /Tea room/);
     assert.match(text, /5\/8 people/);
     assert.match(text, /5\/8 days left/);
+    assert.equal(html.includes('data-testid="beda-spa-online"'), false);
     assert.match(text, /Invite/);
   });
 
@@ -541,5 +546,58 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes('data-testid="beda-hero"'), false);
     assert.match(html, /bd-breathe/);
     assertNoScores(html);
+  });
+
+  it("shows the admin Bé Da reset on the room and hides it from everyone else", () => {
+    const admin = renderGame({ introResetAdmin: true });
+    assert.match(admin, /data-testid="beda-intro-reset"/);
+    assert.match(admin, /Cho chọn lại Bé Da/);
+    const guest = renderGame();
+    assert.equal(guest.includes('data-testid="beda-intro-reset"'), false);
+    assert.equal(guest.includes("Cho chọn lại Bé Da"), false);
+    const lobby = renderGame({ introResetAdmin: true, tab: "lobby" });
+    assert.equal(lobby.includes('data-testid="beda-intro-reset"'), false);
+  });
+
+  it("shows the room member count and a smaller live count", () => {
+    const html = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 2,
+        onlineCount: 1,
+        cap: 8,
+        guests: [],
+        notice: null,
+      },
+    });
+    const text = visibleText(html);
+    assert.match(text, /2\/8 người/);
+    assert.match(text, /1 đang ở đây/);
+    assert.match(html, /data-testid="beda-spa-online"/);
+    assert.equal(text.includes("1/8 người"), false);
+    const equal = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 2,
+        onlineCount: 2,
+        cap: 8,
+        guests: [],
+        notice: null,
+      },
+    });
+    assert.match(visibleText(equal), /2 đang ở đây/);
+    const empty = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 2,
+        onlineCount: 0,
+        cap: 8,
+        guests: [],
+        notice: null,
+      },
+    });
+    assert.match(visibleText(empty), /2\/8 người/);
+    assert.equal(empty.includes("đang ở đây"), false);
+    assert.equal(empty.includes('data-testid="beda-spa-online"'), false);
   });
 });

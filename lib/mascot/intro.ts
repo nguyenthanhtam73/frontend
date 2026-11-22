@@ -64,6 +64,21 @@ export function postIntroDone(bridge: NativeSessionBridge | null, gender: BeDaGe
   return true;
 }
 
+/**
+ * Bé Da is off, but the Android shell stays on this WebView until it hears
+ * `intro_done`. Tell it (no gender) and then leave. Web has no bridge, so it
+ * only redirects to check-in.
+ */
+export function leaveClosedMascotIntro(
+  bridge: NativeSessionBridge | null,
+  replace: (href: string) => void,
+): void {
+  if (bridge?.postMessage) {
+    bridge.postMessage(JSON.stringify({ type: "intro_done" }));
+  }
+  replace("/check-in");
+}
+
 /** First analysis wins on the intro. A later check-in is used only when that read is empty. */
 export function introFaceMarks(first: readonly SkinMark[], latest: readonly SkinMark[]): SkinMark[] {
   return first.length > 0 ? [...first] : [...latest];

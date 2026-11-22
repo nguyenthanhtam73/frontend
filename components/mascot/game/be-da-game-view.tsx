@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { BeDaIntroReset } from "@/components/mascot/intro/be-da-intro-reset";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
@@ -105,6 +106,7 @@ export function BeDaGameView({
   onClaim,
   onLook,
   closetAdmin = false,
+  introResetAdmin = false,
   wornLook = null,
   wavedToday = false,
   actors,
@@ -171,6 +173,8 @@ export function BeDaGameView({
   onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
   closetAdmin?: boolean;
+  /** Same is_admin flag. Shows «Cho chọn lại Bé Da» on the room, including the Android WebView. */
+  introResetAdmin?: boolean;
   /** The look last saved with Mặc. Null until that save succeeds. */
   wornLook?: GameLook | null;
   /** Lobby wave. Shown on the mission sheet only, and not part of the routine. */
@@ -448,6 +452,8 @@ export function BeDaGameView({
           />
         </>
       ) : null}
+
+      {introResetAdmin && !spaOpen && !showLobby && !chestOpen && !wardrobeOpen ? <BeDaIntroReset /> : null}
 
       {toast ? <Toast toast={toast} /> : null}
       {burst > 0 ? (
