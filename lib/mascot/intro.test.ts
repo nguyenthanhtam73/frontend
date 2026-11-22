@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { readFileSync } from "node:fs";
 
 import { INTRO_RESET_CONFIRM_VI, INTRO_RESET_ERROR_VI } from "@/components/mascot/intro/be-da-intro-reset";
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { genderLook } from "@/lib/mascot/game/look";
 import { applyMaleArt, facePartSrc } from "@/lib/mascot/layers";
 import { defaultSnapshot, parseMascot, resolveBeDaView } from "@/lib/mascot/model";
@@ -123,36 +124,36 @@ describe("Bé Da intro", () => {
     const stack = mascotStack(male, {
       dress: { outfitId: "outfit_pajamas", hairId: "hair_twin_tails", clipId: "accessory_ribbon_bow", pose: "wave" },
     });
-    assert.equal(stack.find((layer) => layer.slot === "hair")?.src, "/mascot/hair/hair_boy_short.svg");
-    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_pajamas_boy.svg");
-    assert.equal(stack.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arm_wave_right__pajamas_boy.svg");
-    assert.equal(stack.find((layer) => layer.slot === "glow")?.src, "/mascot/glow/level_1_nam.svg");
-    assert.equal(stack.find((layer) => layer.slot === "face-eyes")?.src, "/mascot/faces/happy_nam/eyes.svg");
-    assert.equal(stack.find((layer) => layer.slot === "face-mouth")?.src, "/mascot/faces/happy_nam/mouth.svg");
+    assert.equal(stack.find((layer) => layer.slot === "hair")?.src, mascotAssetUrl("/mascot/hair/hair_boy_short.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_pajamas_boy.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arm_wave_right__pajamas_boy.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "glow")?.src, mascotAssetUrl("/mascot/glow/level_1_nam.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "face-eyes")?.src, mascotAssetUrl("/mascot/faces/happy_nam/eyes.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "face-mouth")?.src, mascotAssetUrl("/mascot/faces/happy_nam/mouth.svg"));
     assert.equal(stack.some((layer) => layer.src.includes("/accessory/") || layer.src.includes("twin_tails")), false);
     const dress = (outfitId: "outfit_vay_hoa" | "outfit_ao_len" | "outfit_ao_dai" | "outfit_hoodie") =>
       mascotStack(male, {
         dress: { outfitId, hairId: "hair_sleep_buns", clipId: null, pose: "cheer" },
       });
     const floral = dress("outfit_vay_hoa");
-    assert.equal(floral.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_vay_hoa_boy.svg");
-    assert.equal(floral.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__vay_hoa_boy.svg");
+    assert.equal(floral.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_vay_hoa_boy.svg"));
+    assert.equal(floral.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arms_up__vay_hoa_boy.svg"));
     const sweater = dress("outfit_ao_len");
-    assert.equal(sweater.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_len_boy.svg");
-    assert.equal(sweater.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_len_boy.svg");
+    assert.equal(sweater.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_ao_len_boy.svg"));
+    assert.equal(sweater.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arms_up__ao_len_boy.svg"));
     const tunic = dress("outfit_ao_dai");
-    assert.equal(tunic.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_dai_boy.svg");
-    assert.equal(tunic.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_dai_boy.svg");
+    assert.equal(tunic.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_ao_dai_boy.svg"));
+    assert.equal(tunic.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arms_up__ao_dai_boy.svg"));
     const hoodie = dress("outfit_hoodie");
-    assert.equal(hoodie.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_hoodie.svg");
-    assert.equal(hoodie.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__hoodie.svg");
+    assert.equal(hoodie.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_hoodie.svg"));
+    assert.equal(hoodie.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arms_up__hoodie.svg"));
     const femaleStack = mascotStack(female, {
       dress: { outfitId: "outfit_pajamas", hairId: "hair_sleep_buns", clipId: "accessory_ribbon_bow" },
     });
-    assert.equal(femaleStack.find((layer) => layer.slot === "hair")?.src, "/mascot/hair/hair_sleep_buns.svg");
-    assert.equal(femaleStack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_pajamas.svg");
-    assert.equal(femaleStack.find((layer) => layer.slot === "glow")?.src, "/mascot/glow/level_1.svg");
-    assert.equal(femaleStack.find((layer) => layer.slot === "face-eyes")?.src, "/mascot/faces/happy/eyes.svg");
+    assert.equal(femaleStack.find((layer) => layer.slot === "hair")?.src, mascotAssetUrl("/mascot/hair/hair_sleep_buns.svg"));
+    assert.equal(femaleStack.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_pajamas.svg"));
+    assert.equal(femaleStack.find((layer) => layer.slot === "glow")?.src, mascotAssetUrl("/mascot/glow/level_1.svg"));
+    assert.equal(femaleStack.find((layer) => layer.slot === "face-eyes")?.src, mascotAssetUrl("/mascot/faces/happy/eyes.svg"));
     assert.equal(facePartSrc("sad_pillow", "brows", null, "male"), "/mascot/faces/sad_pillow_nam/brows.svg");
     assert.equal(facePartSrc("sad_pillow", "brows", "face_photo", "male"), "/mascot/faces/items/face_photo/brows.svg");
     assert.equal(femaleStack.some((layer) => layer.src.includes("ribbon_bow")), true);

@@ -1,3 +1,4 @@
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import {
   DEFAULT_MASCOT_IDS,
   isKnownMascotItem,
@@ -228,7 +229,8 @@ export function mascotStack(
   if (view.flies) push("fx-flies", "/mascot/fx/flies/flies.svg", 1);
 
   const dressed = options.dress ? applyGameDress(layers, options.dress) : layers;
-  return view.gender === "male" ? applyMaleArt(dressed) : dressed;
+  const gendered = view.gender === "male" ? applyMaleArt(dressed) : dressed;
+  return gendered.map((layer) => ({ ...layer, src: mascotAssetUrl(layer.src) }));
 }
 
 const MALE_HAIR = "/mascot/hair/hair_boy_short.svg";

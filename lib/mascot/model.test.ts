@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+
 import {
   concernBars,
   defaultSnapshot,
@@ -258,18 +260,18 @@ describe("shop expiry and swappable face", () => {
     const hair = stack.find((layer) => layer.slot === "hair");
     const accessory = stack.find((layer) => layer.slot === "accessory");
     const headband = stack.find((layer) => layer.slot === "accessory-headband");
-    assert.equal(hair?.src, "/mascot/hair/hair_sleep_buns.svg");
+    assert.equal(hair?.src, mascotAssetUrl("/mascot/hair/hair_sleep_buns.svg"));
     assert.equal(hair?.opacity, 0.5);
     assert.equal(accessory, undefined);
     assert.match(headband?.src ?? "", /accessory_pink_headband/);
     assert.equal(facePartSrc("happy", "eyes", "face_photo"), "/mascot/faces/items/face_photo/eyes.svg");
     assert.equal(
       stack.find((layer) => layer.slot === "face-eyes")?.src,
-      "/mascot/faces/items/face_photo/eyes.svg",
+      mascotAssetUrl("/mascot/faces/items/face_photo/eyes.svg"),
     );
     assert.ok(stack.findIndex((layer) => layer.slot === "outfit") < stack.findIndex((layer) => layer.slot === "hair"));
     assert.ok(stack.findIndex((layer) => layer.slot === "hair") < stack.findIndex((layer) => layer.slot === "face-eyes"));
-    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfit/outfit_cozy_pajamas.svg");
+    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfit/outfit_cozy_pajamas.svg"));
   });
 
   it("falls back to the default hair when a photo hair expires", () => {
@@ -288,7 +290,7 @@ describe("shop expiry and swappable face", () => {
     });
     view.loadout.hair = { id: "hair_photo", expiresAt: "2026-11-01T00:00:00Z" };
     const hair = mascotStack(view, { now }).find((layer) => layer.slot === "hair");
-    assert.equal(hair?.src, "/mascot/hair/hair_sleep_buns.svg");
+    assert.equal(hair?.src, mascotAssetUrl("/mascot/hair/hair_sleep_buns.svg"));
     assert.equal(hair?.opacity, 1);
   });
 });

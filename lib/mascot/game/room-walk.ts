@@ -2,13 +2,14 @@
  * Personal-room floor. White on `walk-mask.png` is where her feet may stand.
  * The picture matches `ROOM_BLOCKS`: wall and window above the planks, the
  * nav along the bottom, and pads in front of the bed, closet, plant, and sink.
- * The query hash is the file's sha256 prefix so the year-long /mascot cache
- * cannot keep an older mask.
+ * `v` is the shared art generation. `h` is this file's sha256 prefix so a
+ * mask edit still busts without waiting for the next generation bump.
  */
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
 
-export const ROOM_WALK_MASK = "/mascot/room/walk-mask.png?v=866dc5866a";
+export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=866dc5866a");
 export const ROOM_MASK_PX = 256;
 /** Logical room used only to size the path grid (~20px cells). */
 export const ROOM_WORLD = 1000;

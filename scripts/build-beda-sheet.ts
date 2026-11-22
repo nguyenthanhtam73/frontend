@@ -7,6 +7,7 @@ import { join } from "node:path";
 import playwright from "playwright";
 
 import { lookArt } from "@/lib/game/core/art";
+import { mascotAssetPath, mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { armMarkup, withoutChinHand } from "@/lib/mascot/game/sheet-arms";
 import { SHEET_CSS, SHEET_DPR, sheetKeyFromArt } from "@/lib/mascot/game/actor-sheet";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
@@ -52,8 +53,9 @@ function arts(): Map<string, readonly string[]> {
 }
 
 function layerImg(src: string): string {
-  if (!/\/glow\/level_1(?:_nam)?\.svg$/.test(src)) return `<img alt="" src="${src}">`;
-  const svg = withoutChinHand(readFileSync(join(process.cwd(), "public", src), "utf8"));
+  const file = mascotAssetPath(src);
+  if (!/\/glow\/level_1(?:_nam)?\.svg$/.test(file)) return `<img alt="" src="${mascotAssetUrl(src)}">`;
+  const svg = withoutChinHand(readFileSync(join(process.cwd(), "public", file), "utf8"));
   return `<img alt="" src="data:image/svg+xml,${encodeURIComponent(svg)}">`;
 }
 
@@ -69,7 +71,7 @@ function frameHtml(art: readonly string[], clip: "idle" | "walk" | "wave", index
   const stack = layersHtml(art);
   const arms = armMarkup(outfitSrc(art), clip, index);
   if (clip === "idle") {
-    const blink = index === 2 ? `<img alt="" src="/mascot/fx/eyelids.svg">` : "";
+    const blink = index === 2 ? `<img alt="" src="${mascotAssetUrl("/mascot/fx/eyelids.svg")}">` : "";
     return `<div class="frame"><div class="stack">${stack}${blink}</div>${arms}</div>`;
   }
   if (clip === "wave") {

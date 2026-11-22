@@ -1,6 +1,7 @@
 import { Application, Assets, Container, Graphics, Rectangle, RenderTexture, Sprite, Texture, type Ticker } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { lobbyMinScale, lobbyWorldSize, stackNameLabels } from "@/lib/mascot/game/lobby";
 import {
   LOBBY_WALK_MASK,
@@ -236,10 +237,10 @@ export async function startPixiShell(options: {
   const loadPark = async () => {
     try {
       const [groundTex, decorTex, frames, layout] = await Promise.all([
-        Assets.load<Texture>(LOBBY_GROUND.src),
-        Assets.load<Texture>(LOBBY_DECOR),
-        fetch(LOBBY_DECOR_MAP).then((res) => res.json() as Promise<{ frames: Record<string, { x: number; y: number; w: number; h: number }> }>),
-        fetch(LOBBY_LAYOUT).then((res) => res.json() as Promise<{ pieces: ParkPiece[] }>),
+        Assets.load<Texture>(mascotAssetUrl(LOBBY_GROUND.src)),
+        Assets.load<Texture>(mascotAssetUrl(LOBBY_DECOR)),
+        fetch(mascotAssetUrl(LOBBY_DECOR_MAP)).then((res) => res.json() as Promise<{ frames: Record<string, { x: number; y: number; w: number; h: number }> }>),
+        fetch(mascotAssetUrl(LOBBY_LAYOUT)).then((res) => res.json() as Promise<{ pieces: ParkPiece[] }>),
       ]);
       const ground = new Sprite(groundTex);
       ground.anchor.set(0, 0);
@@ -298,7 +299,7 @@ export async function startPixiShell(options: {
 
   const loadMask = () => {
     const image = new Image();
-    image.src = LOBBY_WALK_MASK;
+    image.src = mascotAssetUrl(LOBBY_WALK_MASK);
     void image
       .decode()
       .then(() => {
@@ -327,7 +328,7 @@ export async function startPixiShell(options: {
     const loaded: Texture[] = [];
     for (const src of srcs) {
       try {
-        loaded.push(await Assets.load<Texture>(src));
+        loaded.push(await Assets.load<Texture>(mascotAssetUrl(src)));
       } catch {
         /* a missing plate does not block the rest of the figure */
       }

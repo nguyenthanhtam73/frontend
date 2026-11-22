@@ -4,9 +4,11 @@ import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { formatGameCoins, gameCoinCount, countRoutineTicks } from "./coins";
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { mascotStack } from "@/lib/mascot/layers";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
+
+import { formatGameCoins, gameCoinCount, countRoutineTicks } from "./coins";
 import { gameRoomView } from "./room-view";
 import {
   DEFAULT_GAME_LOOK,
@@ -271,8 +273,8 @@ describe("sample lobby", () => {
     assert.ok(at("arms") < at("hair"));
     assert.ok(at("hair") < at("accessory-clip"));
     assert.ok(at("accessory-clip") < at("face-cheeks"));
-    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfits/outfit_ao_dai.svg");
-    assert.equal(stack.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arms_up__ao_dai.svg");
+    assert.equal(stack.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfits/outfit_ao_dai.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arms_up__ao_dai.svg"));
     const poke = mascotStack(sampleFriendView(friend), {
       dress: {
         outfitId: "outfit_ao_dai",
@@ -281,14 +283,14 @@ describe("sample lobby", () => {
         pose: "poke",
       },
     });
-    assert.equal(poke.find((layer) => layer.slot === "arms")?.src, "/mascot/outfits/arm_wave_right__ao_dai.svg");
-    assert.equal(stack.find((layer) => layer.slot === "hair")?.src, "/mascot/hair/hair_high_pony.svg");
+    assert.equal(poke.find((layer) => layer.slot === "arms")?.src, mascotAssetUrl("/mascot/outfits/arm_wave_right__ao_dai.svg"));
+    assert.equal(stack.find((layer) => layer.slot === "hair")?.src, mascotAssetUrl("/mascot/hair/hair_high_pony.svg"));
     assert.equal(
       stack.find((layer) => layer.slot === "accessory-clip")?.src,
-      "/mascot/accessory/accessory_ribbon_bow.svg",
+      mascotAssetUrl("/mascot/accessory/accessory_ribbon_bow.svg"),
     );
     const plain = mascotStack(sampleFriendView(friend));
-    assert.equal(plain.find((layer) => layer.slot === "outfit")?.src, "/mascot/outfit/outfit_cozy_pajamas.svg");
+    assert.equal(plain.find((layer) => layer.slot === "outfit")?.src, mascotAssetUrl("/mascot/outfit/outfit_cozy_pajamas.svg"));
     assert.equal(plain.some((layer) => layer.slot === "arms"), false);
   });
 

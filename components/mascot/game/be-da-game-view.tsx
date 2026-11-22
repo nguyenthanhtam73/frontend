@@ -30,6 +30,7 @@ import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { sessionGate } from "@/lib/routine/session-window";
 import { useRoomWalk } from "@/components/mascot/game/use-room-walk";
 import { lookArt } from "@/lib/game/core/art";
+import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { ROOM_SPAWN, ROOM_WALK_MASK } from "@/lib/mascot/game/room-walk";
 import type { ShellSnapshot } from "@/lib/game/core/types";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
@@ -292,7 +293,7 @@ export function BeDaGameView({
     for (const src of WARDROBE_ITEM_SRCS) {
       const img = new Image();
       img.decoding = "async";
-      img.src = src;
+      img.src = mascotAssetUrl(src);
     }
   }, [wardrobeOpen]);
 
@@ -815,7 +816,7 @@ function Room({
         <i className="beda-bottle" style={{ left: "76%", height: 34, background: "#c9b8f2", animationDelay: "1.1s" }} />
       </div>
       <div className="beda-mirror" aria-hidden />
-      <img className="beda-sink" src="/mascot/props/sink.svg" alt="" decoding="async" />
+      <img className="beda-sink" src={mascotAssetUrl("/mascot/props/sink.svg")} alt="" decoding="async" />
       <div className="beda-bed" aria-hidden>
         <i className="beda-bed-leg is-back-left" />
         <i className="beda-bed-leg is-back-right" />
@@ -841,7 +842,7 @@ function Room({
           onClick={openCabinet}
         >
           <img
-            src={cabinetOpen ? "/mascot/props/wardrobe_open.svg" : "/mascot/props/wardrobe.svg"}
+            src={mascotAssetUrl(cabinetOpen ? "/mascot/props/wardrobe_open.svg" : "/mascot/props/wardrobe.svg")}
             alt=""
             decoding="async"
           />
@@ -995,7 +996,7 @@ function Chest({
         <i className="beda-coin-float" style={{ right: "28%", top: "8%", animationDelay: "0.2s" }}>
           <GameIcon name="coin" />
         </i>
-        <img src="/mascot/icons/chest_open.svg" alt="" className="beda-chest-art" decoding="async" />
+        <img src={mascotAssetUrl("/mascot/icons/chest_open.svg")} alt="" className="beda-chest-art" decoding="async" />
         <div className="beda-chest-hero">
           <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} className="w-full" />
         </div>
