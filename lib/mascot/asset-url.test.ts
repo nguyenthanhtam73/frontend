@@ -106,21 +106,26 @@ describe("mascot asset urls", () => {
     assert.equal(sheetJsonUrlFromArt(art), sheetJsonUrlFromArt(art.map(mascotAssetPath)));
   });
 
-  it("versions the spa-room plate in CSS", () => {
+  it("versions the spa-room plate and cucumber cheeks in CSS", () => {
     const css = fs.readFileSync(
       path.join(process.cwd(), "components/mascot/game/be-da-game.css"),
       "utf8",
     );
     const found = [...css.matchAll(/url\("(\/mascot\/[^"]+)"\)/g)].map((match) => match[1] ?? "");
     const spa = path.join(process.cwd(), "public/mascot/rooms/spa-room.webp");
-    const digest = createHash("sha256").update(fs.readFileSync(spa)).digest("hex").slice(0, 10);
-    const expected = mascotAssetUrl(`/mascot/rooms/spa-room.webp?v=${digest}`);
-    assert.equal(digest, "d8cd3aeab9");
-    assert.deepEqual(found, [expected, expected]);
+    const cheeks = path.join(process.cwd(), "public/mascot/props/cucumber_cheeks.svg");
+    const spaDigest = createHash("sha256").update(fs.readFileSync(spa)).digest("hex").slice(0, 10);
+    const cheekDigest = createHash("sha256").update(fs.readFileSync(cheeks)).digest("hex").slice(0, 10);
+    const spaUrl = mascotAssetUrl(`/mascot/rooms/spa-room.webp?v=${spaDigest}`);
+    const cheekUrl = mascotAssetUrl(`/mascot/props/cucumber_cheeks.svg?v=${cheekDigest}`);
+    assert.equal(spaDigest, "d8cd3aeab9");
+    assert.equal(cheekDigest, "cac8ba93e0");
+    assert.deepEqual(found, [spaUrl, spaUrl, spaUrl, cheekUrl]);
     for (const url of found) {
       const params = new URL(url, "https://dadiary.vn").searchParams;
+      const fileDigest = url.includes("cucumber_cheeks") ? cheekDigest : spaDigest;
       assert.equal(params.get("v"), MASCOT_ASSET_VERSION);
-      assert.equal(params.get("h"), digest);
+      assert.equal(params.get("h"), fileDigest);
     }
   });
 

@@ -1541,9 +1541,12 @@
 }
 
 .beda-spa .beda-zoom {
-  top: auto;
-  right: 12px;
-  bottom: calc(var(--beda-nav-reserve, 120px) + 16px);
+  top: calc(96px + env(safe-area-inset-top));
+  right: 10px;
+  bottom: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
 }
 
 .beda-spa .beda-zoom button {
@@ -2556,8 +2559,12 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  /* Fallback under the one swappable plate: public/mascot/rooms/spa-room.webp */
-  background: #c48962;
+  /* The plate always covers the frame. Brown is only the color behind a missing file. */
+  background-color: #c48962;
+  background-image: url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   color: #3c2a30;
   touch-action: none;
 }
@@ -2589,11 +2596,12 @@
 }
 
 .beda-room-quit {
-  position: absolute;
+  position: static;
   z-index: 8;
-  top: calc(62px + env(safe-area-inset-top));
-  left: 12px;
-  min-height: 36px;
+  flex: none;
+  height: 44px;
+  min-height: 44px;
+  white-space: nowrap;
   border: 0;
   border-radius: 999px;
   background: rgba(255, 250, 245, 0.94);
@@ -2675,9 +2683,19 @@
 .beda-spa-view {
   position: absolute;
   inset: 0;
+  /* At least the frame on both axes, so the plate cannot sit as a small
+     centered picture with the brown fallback showing around it. */
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   transform-origin: 0 0;
   will-change: transform;
-  background: #c48962 url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9") center / cover no-repeat;
+  background-color: #c48962;
+  background-image: url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
 }
 
 .beda-spa-wall {
@@ -3014,31 +3032,14 @@
   background: rgba(90, 60, 40, 0.12);
 }
 
+/* Two thin cucumber slices on the cheekbones. Full 220x250 layer, same anchors as the
+   faces cheeks.svg layers, so it stays inside the face for girl and boy. */
 .beda-cheeks {
   position: absolute;
   z-index: 3;
   inset: 0;
   pointer-events: none;
-}
-
-.beda-cuke {
-  position: absolute;
-  top: 43%;
-  width: 14%;
-  height: 8%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 35% 35%, #f4ffc8, #8bc34a 55%, #5a9a32);
-  box-shadow: inset 0 -1px 0 rgba(60, 100, 30, 0.35);
-}
-
-.beda-cuke.is-left {
-  left: 27%;
-  transform: rotate(-18deg);
-}
-
-.beda-cuke.is-right {
-  right: 27%;
-  transform: rotate(18deg);
+  background: url("/mascot/props/cucumber_cheeks.svg?v=5&h=cac8ba93e0") center / 100% 100% no-repeat;
 }
 
 .beda-spa .beda-tag:not(.beda-tag-me) {
@@ -3166,8 +3167,9 @@
 .beda-spa-mute {
   position: absolute;
   z-index: 6;
-  right: 12px;
-  bottom: calc(var(--beda-nav-reserve, 120px) + 132px);
+  top: calc(96px + env(safe-area-inset-top));
+  right: 112px;
+  bottom: auto;
   background: #fff6ee;
   color: #3a2a24;
 }
@@ -3303,12 +3305,10 @@
   background: #5fe0b0;
 }
 
-.beda-spa-board {
-  position: absolute;
+.beda-spa-board,
+.beda-room-me {
+  position: static;
   z-index: 6;
-  top: auto;
-  bottom: calc(var(--beda-nav-reserve, 120px) + 12px);
-  left: 12px;
   min-height: 44px;
   border: 0;
   border-radius: 999px;
@@ -3689,8 +3689,14 @@
   }
 
   .beda-spa .beda-zoom {
-    right: 28px;
-    bottom: calc(var(--beda-nav-reserve, 120px) + 16px);
+    top: calc(96px + env(safe-area-inset-top));
+    right: 12px;
+    bottom: auto;
+  }
+
+  .beda-spa-mute {
+    top: calc(96px + env(safe-area-inset-top));
+    right: 116px;
   }
 }
 
@@ -3705,13 +3711,29 @@
 
 /* Shared-room quest, today board, and cheer / poke. Mobile first, 390px wide. */
 
-.beda-room-dock {
+.beda-room-bar {
   position: absolute;
-  z-index: 7;
-  left: 150px;
-  right: 104px;
-  bottom: calc(var(--beda-nav-reserve, 120px) + 12px);
+  z-index: 9;
+  left: 8px;
+  right: 8px;
+  bottom: calc(var(--beda-nav-reserve, 120px) + 8px);
   display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.beda-room-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.beda-room-dock {
+  position: static;
+  z-index: 7;
+  display: flex;
+  flex: 0 0 auto;
   width: auto;
   gap: 6px;
 }
@@ -3720,10 +3742,13 @@
   bottom: calc(var(--beda-nav-reserve, 112px) + 80px);
 }
 
-.beda-room-dock button {
+.beda-room-dock button,
+.beda-room-bar .beda-spa-board,
+.beda-room-bar .beda-room-me {
   display: flex;
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: max-content;
   min-height: 44px;
   align-items: center;
   justify-content: center;
@@ -3731,10 +3756,10 @@
   border: 0;
   border-radius: 999px;
   background: #fff7f2;
-  padding: 8px 4px;
+  padding: 8px 10px;
   color: #8a4b3a;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1;
   white-space: nowrap;
   font-weight: 800;

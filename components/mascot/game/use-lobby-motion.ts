@@ -735,7 +735,12 @@ export function useSpaMotion(input: {
     let holdTimer = 0;
     let downPoint = { x: 0, y: 0 };
 
+    const coverScale = () =>
+      Math.max(1, frame.clientWidth / (view.offsetWidth || 1), frame.clientHeight / (view.offsetHeight || 1));
+
     const apply = () => {
+      const min = coverScale();
+      if (cam.scale < min) cam = { ...cam, scale: min };
       cam = clampCamera(cam, frame.clientWidth, frame.clientHeight, view.offsetWidth || 1, view.offsetHeight || 1);
       view.style.transform = `translate3d(${cam.x}px, ${cam.y}px, 0) scale(${cam.scale})`;
       frame.style.setProperty("--beda-zoom", String(cam.scale));
@@ -795,7 +800,7 @@ export function useSpaMotion(input: {
     };
 
     api.current.zoomBy = (factor) => {
-      cam = zoomAt(cam, factor, frame.clientWidth / 2, frame.clientHeight / 2);
+      cam = zoomAt(cam, factor, frame.clientWidth / 2, frame.clientHeight / 2, coverScale());
       if (cam.scale > 1.05) follow = true;
       apply();
     };
@@ -897,7 +902,7 @@ export function useSpaMotion(input: {
       if (!(event.target as HTMLElement).closest(".beda-spa-view, .beda-spa-stage")) return;
       event.preventDefault();
       const box = frame.getBoundingClientRect();
-      cam = zoomAt(cam, Math.exp(-event.deltaY * 0.0016), event.clientX - box.left, event.clientY - box.top);
+      cam = zoomAt(cam, Math.exp(-event.deltaY * 0.0016), event.clientX - box.left, event.clientY - box.top, coverScale());
       if (cam.scale > 1.05) follow = true;
       apply();
     };
@@ -910,7 +915,7 @@ export function useSpaMotion(input: {
 
     const down = (event: PointerEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock")) return;
+      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-bar")) return;
       if (!target.closest(".beda-spa-view")) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       downPoint = { x: event.clientX, y: event.clientY };
@@ -939,7 +944,7 @@ export function useSpaMotion(input: {
         const midX = (a!.x + b!.x) / 2;
         const midY = (a!.y + b!.y) / 2;
         const box = frame.getBoundingClientRect();
-        cam = zoomAt(cam, dist / pinch.dist, midX - box.left, midY - box.top);
+        cam = zoomAt(cam, dist / pinch.dist, midX - box.left, midY - box.top, coverScale());
         cam = { ...cam, x: cam.x + midX - pinch.x, y: cam.y + midY - pinch.y };
         pinch = { dist, x: midX, y: midY };
         follow = false;
