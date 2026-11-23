@@ -8,9 +8,15 @@ import { readRoomTree } from "@/lib/mascot/game/room-tree";
 describe("gift box", () => {
   it("turns weight_bps into a percent and does not invent a rate", () => {
     assert.equal(bpsLabel(2000, "vi"), "20");
-    assert.equal(bpsLabel(440, "vi"), "4,4");
-    assert.equal(bpsLabel(125, "vi"), "1,25");
+    assert.equal(bpsLabel(479, "vi"), "4,79");
     assert.equal(bpsLabel(50, "vi"), "0,5");
+    assert.equal(bpsLabel(5, "vi"), "0,05");
+    assert.equal(bpsLabel(5000, "vi"), "50");
+    assert.equal(bpsLabel(4790, "vi"), "47,9");
+    assert.equal(bpsLabel(4790, "en"), "47.9");
+    assert.equal(bpsLabel(200, "vi"), "2");
+    assert.equal(bpsLabel(10, "vi"), "0,1");
+    assert.equal(bpsLabel(10, "en"), "0.1");
   });
 
   it("puts the xu rows ahead of the clothes, using the weights on the payload", () => {
@@ -20,10 +26,10 @@ describe("gift box", () => {
       treeName: "Cây lá xanh",
       tiers: [
         { key: "xu", name: "Xu", weightBps: 5000, prizeCount: 4, perPrizeBps: 0, dupeCoins: 0 },
-        { key: "thuong", name: "Thường", weightBps: 4400, prizeCount: 1, perPrizeBps: 440, dupeCoins: 8 },
+        { key: "thuong", name: "Thường", weightBps: 4790, prizeCount: 1, perPrizeBps: 479, dupeCoins: 8 },
       ],
       prizes: [
-        { id: "set_la_non", name: "Bộ Lá Non", rarity: "thuong", rarityName: "Thường", kind: "set", weightBps: 440, dupeCoins: 8, coins: 0, items: [] },
+        { id: "set_la_non", name: "Bộ Lá Non", rarity: "thuong", rarityName: "Thường", kind: "set", weightBps: 479, dupeCoins: 8, coins: 0, items: [] },
         { id: "xu_18", name: "18 xu", rarity: "xu", rarityName: "Xu", kind: "coins", weightBps: 1500, dupeCoins: 0, coins: 18, items: [] },
         { id: "xu_8", name: "8 xu", rarity: "xu", rarityName: "Xu", kind: "coins", weightBps: 2000, dupeCoins: 0, coins: 8, items: [] },
       ],
@@ -34,7 +40,7 @@ describe("gift box", () => {
     assert.deepEqual(groups[0]?.rows.map((row) => row.name), ["18 xu", "8 xu"]);
     assert.equal(bpsLabel(groups[0]?.rows[0]?.weightBps ?? 0, "vi"), "15");
     assert.equal(groups[1]?.name, "Thường");
-    assert.equal(groups[1]?.weightBps, 440);
+    assert.equal(groups[1]?.weightBps, 479);
   });
 
   it("reads a coin prize from kind or type plus an amount", () => {
@@ -104,7 +110,7 @@ describe("gift box", () => {
     const opened = readOpen({
       already: true,
       box: { id: "box-3", tree_type: "leaf", opened: true },
-      prize: { id: "set_ke_la_me", name: "Bộ Kẻ Lá Me", kind: "set", rarity: "thuong", rarity_name: "Thường", weight_bps: 440, dupe_coins: 8 },
+      prize: { id: "set_ke_la_me", name: "Bộ Kẻ Lá Me", kind: "set", rarity: "thuong", rarity_name: "Thường", weight_bps: 479, dupe_coins: 8 },
       granted_items: [],
       duplicate: true,
       dupe_coins: 8,
