@@ -43,6 +43,8 @@ import {
 import { mascotFeatureEnabled } from "@/lib/mascot/feature";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { wearMascotClip, wearShopPiece } from "@/lib/mascot/game/mascot-wear";
+import { pushLoiEvent } from "@/lib/mascot/loi-noi";
+import { useLoiText, useOpenLoiLine } from "@/lib/mascot/use-loi-noi";
 import { closetFromOwned, shopClosetItems, XU_SHOP_QUERY_KEY, getXuShop } from "@/lib/mascot/game/xu-shop";
 import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import { playGameTing } from "@/lib/mascot/game/sound";
@@ -112,6 +114,12 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     staleTime: 15_000,
     retry: 1,
     refetchOnWindowFocus: false,
+  });
+  const loiText = useLoiText();
+  useOpenLoiLine({
+    ready: !streak.isLoading && !mascotQuery.isLoading,
+    missedDays: mascotQuery.data?.missedDays ?? null,
+    streak: streak.data?.current_streak ?? null,
   });
   const shopCloset = useMemo(() => {
     if (shopQuery.data) return shopClosetItems(shopQuery.data);
@@ -605,6 +613,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       ownedClipIds={ownedClipIds}
       introResetAdmin={closetAdmin}
       onIntroReset={() => router.push(introResetHref())}
+      loiText={loiText}
       shopCloset={shopCloset}
       onOpenShop={() => setShopOpen(true)}
       onWearShop={(item) => {
@@ -632,6 +641,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         setLook(saved);
         setWornLook(saved);
         setToast({ kind: "worn", name: saved.outfit });
+        pushLoiEvent("mac_do_moi");
         return true;
       }}
     />

@@ -587,6 +587,7 @@
   box-sizing: border-box;
   width: min(280px, 100%);
   margin-bottom: 10px;
+  pointer-events: none;
   border-radius: 20px;
   background: #fff;
   padding: 10px 14px;

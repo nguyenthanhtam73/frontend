@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { BUBBLE_COLOURS, bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
+import { pushLoiEvent } from "@/lib/mascot/loi-noi";
 import { formatGameCoins } from "@/lib/mascot/game/coins";
 import { wearShopPiece } from "@/lib/mascot/game/mascot-wear";
 import type { BeDaGender, BeDaView } from "@/lib/mascot/model";
@@ -790,6 +791,7 @@ export function XuShopScreen({
     setPending(true);
     try {
       await wearShopPiece(queryClient, piece.id, piece.layer, who);
+      pushLoiEvent("mac_do_moi");
       setProblem(null);
     } catch {
       setProblem(t("game.shop.wearFailed"));

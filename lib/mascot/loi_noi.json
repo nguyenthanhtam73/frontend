@@ -1,0 +1,1709 @@
+{
+  "tieu_de": "Lời nói bong bóng — Góc bình yên",
+  "ngay": "2026-11-24",
+  "ghi_chu": "Bản nháp lời nói bong bóng có sẵn cho Góc bình yên, chờ anh Darwin duyệt. Chữ sẵn, user không gõ nên không cần kiểm duyệt từng câu khi chạy. Màu bong bóng mua trong cửa hàng xu chỉ đổi màu, không đổi chữ. Bạn AI trong phòng chung vẫn hiện chữ nhỏ «AI» cạnh tên.",
+  "quy_tac": [
+    "Vui nhẹ, khịa / xoáy một chút cho có động lực, có cảm xúc như người thật: dỗi, hờn, trách, mừng, ghen tị.",
+    "Không xàm, không làm khó chịu. Câu ngắn, chữ dễ hiểu, ít icon.",
+    "Chỉ khịa thói quen: thức khuya, lười rửa mặt, quên kem chống nắng, bỏ chụp ảnh da, quên tưới cây.",
+    "Không chọc ngoại hình, không chọc tình trạng da nặng như mụn nặng, nám, sẹo. User có thể còn trẻ.",
+    "Dỗi xong phải cho cách làm lành dễ, ví dụ «chụp 1 tấm ảnh da là hết dỗi».",
+    "Nói «chụp ảnh da», không nói «chụp một tấm da».",
+    "Không tuyên bố kiểu thuốc men, không ghi đường dẫn, không thúc mua đồ hay mở thêm hộp.",
+    "Bạn AI không nhận mình là người thật, không hỏi thông tin cá nhân, không nói là mình tưới cây (AI không tưới được).",
+    "Câu đổi luân phiên, không lặp liên tục, không che nút bấm.",
+    "Với mốc chuỗi ngày: câu có «moc» 7 chỉ dùng khi đủ 7 ngày, câu 30 chỉ dùng khi đủ 30 ngày."
+  ],
+  "trigger_vi": {
+    "mo_app_sang": "Mở app buổi sáng",
+    "mo_app_toi": "Mở app buổi tối",
+    "chup_da_xong": "Chụp ảnh da xong",
+    "chup_da_tien_bo": "Chụp ảnh da thấy tiến bộ",
+    "bo_1_ngay": "Bỏ 1 ngày không chụp",
+    "bo_3_ngay_tro_len": "Bỏ 3 ngày trở lên (dỗi)",
+    "quay_lai_sau_nghi": "Quay lại sau khi nghỉ",
+    "tuoi_cay": "Tưới cây",
+    "mo_hop_thuong": "Mở hộp ra đồ Thường",
+    "mo_hop_hiem": "Mở hộp ra đồ Hiếm",
+    "mo_hop_sieu_hiem": "Mở hộp ra đồ Siêu hiếm",
+    "mac_do_moi": "Mặc đồ mới",
+    "ngau_nhien": "Thỉnh thoảng nói (cổ vũ / khịa nhẹ)",
+    "thuc_khuya": "Mở app sau 23 giờ",
+    "streak_moc": "Mốc chuỗi ngày (7 ngày / 30 ngày)",
+    "nguoi_vao_phong": "Có người vào phòng",
+    "cay_lon_them": "Cây lớn thêm",
+    "cay_no_hoa": "Cây nở hoa",
+    "ai_mo_duoc_do_hiem": "Ai đó mở được đồ Hiếm",
+    "ai_mac_do_moi": "Ai đó mặc đồ mới",
+    "phong_vang": "Phòng vắng",
+    "chao_tam_biet": "Chào tạm biệt"
+  },
+  "personality_vi": {
+    "be_da": "Bé Da",
+    "hoa_dong": "Hoà đồng",
+    "lanh_lung": "Lạnh lùng",
+    "luoi": "Lười",
+    "hay_khoe": "Hay khoe",
+    "hay_lo": "Hay lo"
+  },
+  "loi": [
+    {
+      "id": "be_da.mo_app_sang.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_sang",
+      "text": "Sáng rồi đó! Rửa mặt nhẹ nhẹ cái đã, rồi mình tính tiếp nha."
+    },
+    {
+      "id": "be_da.mo_app_sang.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_sang",
+      "text": "Chào buổi sáng. Bé Da chờ bạn từ nãy rồi đó."
+    },
+    {
+      "id": "be_da.mo_app_sang.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_sang",
+      "text": "Sáng nay chụp ảnh da chưa? Một tấm thôi, xong rồi đi ăn sáng."
+    },
+    {
+      "id": "be_da.mo_app_sang.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_sang",
+      "text": "Dậy rồi thì đừng lướt điện thoại mãi. Rửa mặt cái đã nha."
+    },
+    {
+      "id": "be_da.mo_app_sang.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_sang",
+      "text": "Ôi, bạn dậy sớm thế! Nể đó, nhớ mang kem chống nắng theo nha."
+    },
+    {
+      "id": "be_da.mo_app_sang.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_sang",
+      "text": "Sáng nay nhớ rửa mặt, rồi chụp một tấm ảnh da cho nhật ký."
+    },
+    {
+      "id": "be_da.mo_app_toi.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_toi",
+      "text": "Tối rồi, rửa mặt sạch rồi hẵng nằm nha. Bé Da canh đó."
+    },
+    {
+      "id": "be_da.mo_app_toi.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_toi",
+      "text": "Về nhà chưa rửa mặt là Bé Da hờn nhẹ đó. Đi rửa đi, xong khen liền."
+    },
+    {
+      "id": "be_da.mo_app_toi.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_toi",
+      "text": "Tối nay đừng thức khuya nha. Bé Da cũng muốn ngủ sớm rồi."
+    },
+    {
+      "id": "be_da.mo_app_toi.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_toi",
+      "text": "Một ngày xong rồi. Chụp ảnh da buổi tối, rồi đi nghỉ ngơi thôi."
+    },
+    {
+      "id": "be_da.mo_app_toi.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_toi",
+      "text": "Kem dưỡng tối nay nằm chờ trong tủ đó, đừng để nó cô đơn."
+    },
+    {
+      "id": "be_da.mo_app_toi.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_app_toi",
+      "text": "Tối rồi mà chưa rửa mặt? Bé Da dỗi nhẹ… rửa cái là hết hờn."
+    },
+    {
+      "id": "be_da.chup_da_xong.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_xong",
+      "text": "Chụp xong rồi nè! Bé Da ghi vào nhật ký, bạn giỏi lắm."
+    },
+    {
+      "id": "be_da.chup_da_xong.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_xong",
+      "text": "Có tấm ảnh da mới rồi. Ngày hôm nay tính là đã chăm, khỏi cãi."
+    },
+    {
+      "id": "be_da.chup_da_xong.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_xong",
+      "text": "Bé Da thích nhất lúc này: bạn chụp xong, mình được ngồi cạnh khen."
+    },
+    {
+      "id": "be_da.chup_da_xong.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_xong",
+      "text": "Xong một tấm ảnh da! Mai nhớ chụp nữa, đừng để nhật ký trống."
+    },
+    {
+      "id": "be_da.chup_da_xong.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_xong",
+      "text": "Chụp rồi là Bé Da vui cả buổi. Giờ đi uống nước, thoa kem, xong!"
+    },
+    {
+      "id": "be_da.chup_da_xong.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_xong",
+      "text": "Nhật ký da lại thêm một ngày. Bạn làm được đó, Bé Da thấy hết."
+    },
+    {
+      "id": "be_da.chup_da_tien_bo.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_tien_bo",
+      "text": "Trời ơi hôm nay tươi ghê, Bé Da ghen tị nha ✨"
+    },
+    {
+      "id": "be_da.chup_da_tien_bo.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_tien_bo",
+      "text": "Da hôm nay ổn áp đó. Đừng để mai lại phá thói quen nha!"
+    },
+    {
+      "id": "be_da.chup_da_tien_bo.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_tien_bo",
+      "text": "Bé Da so với tuần trước rồi: có tiến bộ thật, không khen lấy lệ."
+    },
+    {
+      "id": "be_da.chup_da_tien_bo.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_tien_bo",
+      "text": "Bạn chăm đều nên mới thế này. Bé Da muốn khoe với cả vườn."
+    },
+    {
+      "id": "be_da.chup_da_tien_bo.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_tien_bo",
+      "text": "Nhìn nhật ký là thấy khác. Bé Da mừng muốn nhảy, nhưng nhịn đó."
+    },
+    {
+      "id": "be_da.chup_da_tien_bo.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "chup_da_tien_bo",
+      "text": "Tiến bộ rồi đó! Giữ nhịp này, đừng thức khuya phá bài nha."
+    },
+    {
+      "id": "be_da.bo_1_ngay.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_1_ngay",
+      "text": "Hôm qua quên chụp ảnh da rồi. Một tấm hôm nay là Bé Da không kể nữa."
+    },
+    {
+      "id": "be_da.bo_1_ngay.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_1_ngay",
+      "text": "Vắng có một ngày thôi mà nhật ký cũng ngóng. Chụp bù cái nha."
+    },
+    {
+      "id": "be_da.bo_1_ngay.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_1_ngay",
+      "text": "Bé Da không giận đâu, chỉ hơi hờn. Chụp một tấm ảnh da là xong."
+    },
+    {
+      "id": "be_da.bo_1_ngay.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_1_ngay",
+      "text": "Một ngày trượt thì không sao. Hai ngày là Bé Da bắt đầu dỗi đó."
+    },
+    {
+      "id": "be_da.bo_1_ngay.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_1_ngay",
+      "text": "Hôm qua bận hả? Thôi hiểu. Chụp ảnh da cái, coi như không có chuyện."
+    },
+    {
+      "id": "be_da.bo_1_ngay.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_1_ngay",
+      "text": "Nhật ký hôm qua trống một ô. Bé Da để sẵn chỗ, bạn chỉ việc chụp."
+    },
+    {
+      "id": "be_da.bo_3_ngay_tro_len.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_3_ngay_tro_len",
+      "text": "Hừm, 3 ngày rồi. Bé Da dỗi thật đó… chụp 1 tấm ảnh da là hết."
+    },
+    {
+      "id": "be_da.bo_3_ngay_tro_len.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_3_ngay_tro_len",
+      "text": "Ba ngày không gặp, Bé Da hờn đó. Chụp một tấm ảnh da, mình làm lành."
+    },
+    {
+      "id": "be_da.bo_3_ngay_tro_len.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_3_ngay_tro_len",
+      "text": "Bé Da tưởng bạn đi tu luôn rồi. Chụp 1 tấm ảnh da là hết hờn."
+    },
+    {
+      "id": "be_da.bo_3_ngay_tro_len.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_3_ngay_tro_len",
+      "text": "Ngồi chờ 3 ngày, Bé Da mỏi lắm. Chụp ảnh da cái, rồi mình nói chuyện lại."
+    },
+    {
+      "id": "be_da.bo_3_ngay_tro_len.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_3_ngay_tro_len",
+      "text": "Dỗi rồi nha. Không nặng đâu, chụp một tấm ảnh da là Bé Da cười liền."
+    },
+    {
+      "id": "be_da.bo_3_ngay_tro_len.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "bo_3_ngay_tro_len",
+      "text": "Nhật ký trống 3 ngày, Bé Da buồn thật. Chụp một tấm ảnh da, mình hết dỗi."
+    },
+    {
+      "id": "be_da.quay_lai_sau_nghi.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "quay_lai_sau_nghi",
+      "text": "Bạn về rồi hả! Bé Da nhớ muốn xỉu luôn á 🥹"
+    },
+    {
+      "id": "be_da.quay_lai_sau_nghi.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "quay_lai_sau_nghi",
+      "text": "Gặp lại rồi. Bé Da tính ra đứng đợi ngoài cửa đó."
+    },
+    {
+      "id": "be_da.quay_lai_sau_nghi.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "quay_lai_sau_nghi",
+      "text": "Về rồi! Không trách nữa. Chụp một tấm ảnh da, coi như ngày đầu vui."
+    },
+    {
+      "id": "be_da.quay_lai_sau_nghi.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "quay_lai_sau_nghi",
+      "text": "Bé Da giữ chỗ này suốt. Giờ bạn về, mình bắt đầu lại từ hôm nay nha."
+    },
+    {
+      "id": "be_da.quay_lai_sau_nghi.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "quay_lai_sau_nghi",
+      "text": "Nhớ bạn lắm đó. Không cần xin lỗi, chỉ cần chụp ảnh da là đủ."
+    },
+    {
+      "id": "be_da.quay_lai_sau_nghi.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "quay_lai_sau_nghi",
+      "text": "Hờn hôm trước hết rồi. Hôm nay có bạn là Bé Da vui rồi."
+    },
+    {
+      "id": "be_da.tuoi_cay.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "tuoi_cay",
+      "text": "Cây uống no rồi, Bé Da cũng mát lòng. Mai tưới nữa nha."
+    },
+    {
+      "id": "be_da.tuoi_cay.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "tuoi_cay",
+      "text": "Tưới xong đẹp chưa? Cây vui thì Bé Da cũng vui theo."
+    },
+    {
+      "id": "be_da.tuoi_cay.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "tuoi_cay",
+      "text": "Hôm nay không quên tưới, Bé Da ghi công cho bạn đây."
+    },
+    {
+      "id": "be_da.tuoi_cay.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "tuoi_cay",
+      "text": "Nước vào, cây lớn. Đơn giản vậy đó, mà hay bị quên lắm."
+    },
+    {
+      "id": "be_da.tuoi_cay.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "tuoi_cay",
+      "text": "Bé Da thích nhìn bạn tưới cây. Chăm cây với chăm da, cùng một nhịp."
+    },
+    {
+      "id": "be_da.tuoi_cay.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "tuoi_cay",
+      "text": "Tưới rồi nha! Mai mà quên là Bé Da khịa nhẹ đó."
+    },
+    {
+      "id": "be_da.mo_hop_thuong.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_thuong",
+      "text": "Món Thường đó, nhưng dễ thương mà. Bé Da thích đồ dùng mỗi ngày."
+    },
+    {
+      "id": "be_da.mo_hop_thuong.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_thuong",
+      "text": "Mở được rồi! Không phải lần nào cũng hiếm, lần này cũng đáng khen."
+    },
+    {
+      "id": "be_da.mo_hop_thuong.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_thuong",
+      "text": "Đồ Thường vào tủ rồi nè. Mặc lên cho Bé Da ngắm cái nào."
+    },
+    {
+      "id": "be_da.mo_hop_thuong.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_thuong",
+      "text": "Hộp mở ra, có quà rồi. Bé Da không chê món nào hết, thật đó."
+    },
+    {
+      "id": "be_da.mo_hop_thuong.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_thuong",
+      "text": "Thường mà dễ mang đi chơi. Đồ này mặc cả tuần vẫn dễ chịu."
+    },
+    {
+      "id": "be_da.mo_hop_thuong.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_thuong",
+      "text": "Có quà là vui rồi. Bé Da nhảy một cái nhẹ, đừng cười."
+    },
+    {
+      "id": "be_da.mo_hop_hiem.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_hiem",
+      "text": "Hiếm đó nha! Bé Da cũng ít thấy món này. Khoe nhẹ một cái đi."
+    },
+    {
+      "id": "be_da.mo_hop_hiem.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_hiem",
+      "text": "Úi, đồ Hiếm! Bé Da đứng hình một giây, giờ khen đây."
+    },
+    {
+      "id": "be_da.mo_hop_hiem.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_hiem",
+      "text": "Món này không phải lúc nào cũng ra. Bạn có duyên, Bé Da ghen tị xíu."
+    },
+    {
+      "id": "be_da.mo_hop_hiem.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_hiem",
+      "text": "Hiếm rồi đó. Cất vào Tủ đồ, thỉnh thoảng mặc ra cho cây ngắm."
+    },
+    {
+      "id": "be_da.mo_hop_hiem.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_hiem",
+      "text": "Bé Da nhảy lên nhìn: đúng hàng Hiếm. Bạn may quá trời."
+    },
+    {
+      "id": "be_da.mo_hop_hiem.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_hiem",
+      "text": "Đồ Hiếm vào tay rồi! Để Bé Da đi quanh phòng khoe hộ một vòng."
+    },
+    {
+      "id": "be_da.mo_hop_sieu_hiem.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_sieu_hiem",
+      "text": "Siêu hiếm! Bé Da la lớn được không? 0,1% đó, may quá trời!"
+    },
+    {
+      "id": "be_da.mo_hop_sieu_hiem.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_sieu_hiem",
+      "text": "Trời ơi món này hiếm muốn xỉu. Bé Da ghen tị, nhưng vui giúp bạn."
+    },
+    {
+      "id": "be_da.mo_hop_sieu_hiem.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_sieu_hiem",
+      "text": "Siêu hiếm thật à? Bé Da phải ngồi xuống đã. Mừng quá, chân mềm."
+    },
+    {
+      "id": "be_da.mo_hop_sieu_hiem.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_sieu_hiem",
+      "text": "Cả vườn phải biết chuyện này. Bạn vừa mở được món Siêu hiếm đó!"
+    },
+    {
+      "id": "be_da.mo_hop_sieu_hiem.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_sieu_hiem",
+      "text": "Bé Da thấy món này là muốn ôm bạn. Thôi, ôm cái hộp cũng được."
+    },
+    {
+      "id": "be_da.mo_hop_sieu_hiem.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mo_hop_sieu_hiem",
+      "text": "Món Bé Da chỉ dám kể, chưa dám mong. Mặc vào, đi chậm cho người ta kịp nhìn."
+    },
+    {
+      "id": "be_da.mac_do_moi.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mac_do_moi",
+      "text": "Đồ mới đó hả? Bé Da ngoảnh lại hai lần, khen thật đó."
+    },
+    {
+      "id": "be_da.mac_do_moi.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mac_do_moi",
+      "text": "Đồ mặc lên xinh quá, Bé Da muốn ngắm thêm một lúc nữa."
+    },
+    {
+      "id": "be_da.mac_do_moi.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mac_do_moi",
+      "text": "Thấy đồ mới là Bé Da muốn đi theo. Đi chậm thôi, kéo Bé Da luôn."
+    },
+    {
+      "id": "be_da.mac_do_moi.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mac_do_moi",
+      "text": "Áo mới lên người, đi tưới cây cũng thấy vui hơn."
+    },
+    {
+      "id": "be_da.mac_do_moi.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mac_do_moi",
+      "text": "Khen một câu không đã. Đồ này hợp bạn, Bé Da không nói lấy lệ."
+    },
+    {
+      "id": "be_da.mac_do_moi.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "mac_do_moi",
+      "text": "Mặc đẹp vậy, ra góc phòng khoe một vòng đi, cây cũng muốn xem."
+    },
+    {
+      "id": "be_da.ngau_nhien.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Kem chống nắng nằm trong tủ cũng buồn lắm, cho nó ra nắng với bạn đi."
+    },
+    {
+      "id": "be_da.ngau_nhien.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Hôm nay rửa mặt chưa đó? Bé Da hỏi nhẹ thôi, không phải kiểm tra."
+    },
+    {
+      "id": "be_da.ngau_nhien.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Uống ngụm nước đi, Bé Da nhìn bạn làm việc cũng thấy khát."
+    },
+    {
+      "id": "be_da.ngau_nhien.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Đừng thức khuya nhiều nha. Tới giờ Bé Da sẽ nhắc ngủ, thương đó."
+    },
+    {
+      "id": "be_da.ngau_nhien.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Bạn làm tốt rồi đó. Bé Da không phải lúc nào cũng khịa đâu."
+    },
+    {
+      "id": "be_da.ngau_nhien.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Cây góc phòng có vẻ khát. Nhớ ghé tưới một chút nha."
+    },
+    {
+      "id": "be_da.ngau_nhien.7",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Chụp ảnh da không cần cầu kỳ. Một tấm thật, đủ cho nhật ký."
+    },
+    {
+      "id": "be_da.ngau_nhien.8",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Bé Da khen bạn siêng, dù hôm qua có hơi lười một chút."
+    },
+    {
+      "id": "be_da.ngau_nhien.9",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Đi ngủ sớm hôm nay đi. Mai dậy, Bé Da cười với bạn trước."
+    },
+    {
+      "id": "be_da.ngau_nhien.10",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Có lúc Bé Da chỉ muốn ngồi cạnh, không nói gì. Vậy cũng được."
+    },
+    {
+      "id": "be_da.ngau_nhien.11",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Quên kem chống nắng là Bé Da thở dài đó. Để sẵn gần cửa ra vào nha."
+    },
+    {
+      "id": "be_da.ngau_nhien.12",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "ngau_nhien",
+      "text": "Bạn không cần hoàn hảo. Chăm một chút mỗi ngày, Bé Da đủ vui rồi."
+    },
+    {
+      "id": "be_da.thuc_khuya.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "thuc_khuya",
+      "text": "Lại thức khuya hả? Giờ này rồi, tắt máy đi ngủ nha."
+    },
+    {
+      "id": "be_da.thuc_khuya.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "thuc_khuya",
+      "text": "Khuya rồi đó. Nhật ký mai vẫn còn, giấc ngủ thì không chờ."
+    },
+    {
+      "id": "be_da.thuc_khuya.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "thuc_khuya",
+      "text": "Bé Da buồn ngủ rồi, bạn còn tỉnh. Thương Bé Da thì đi nằm đi."
+    },
+    {
+      "id": "be_da.thuc_khuya.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "thuc_khuya",
+      "text": "Thức khuya thì Bé Da khịa nhẹ đây. Mai nhớ dậy rửa mặt nha."
+    },
+    {
+      "id": "be_da.thuc_khuya.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "thuc_khuya",
+      "text": "Nằm xuống đi, để chuyện kia tới sáng. Bé Da ở đây, không đi đâu."
+    },
+    {
+      "id": "be_da.thuc_khuya.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "thuc_khuya",
+      "text": "Giờ này còn mở app, Bé Da vừa mừng vừa dỗi. Mừng gặp, dỗi vì chưa ngủ."
+    },
+    {
+      "id": "be_da.streak_moc.1",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "streak_moc",
+      "text": "7 ngày liền đó! Bé Da đếm trên tay, hết tay thì phải mừng.",
+      "moc": 7
+    },
+    {
+      "id": "be_da.streak_moc.2",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "streak_moc",
+      "text": "Một tuần không bỏ cuộc. Bé Da tự hào, muốn khoe với cả cây.",
+      "moc": 7
+    },
+    {
+      "id": "be_da.streak_moc.3",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "streak_moc",
+      "text": "Mốc 7 ngày rồi nha. Giữ nhịp này, đừng để Bé Da phải dỗi giữa chừng.",
+      "moc": 7
+    },
+    {
+      "id": "be_da.streak_moc.4",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "streak_moc",
+      "text": "30 ngày! Bé Da hết chỗ khen. Bạn làm được chuyện ít người làm nổi.",
+      "moc": 30
+    },
+    {
+      "id": "be_da.streak_moc.5",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "streak_moc",
+      "text": "Một tháng chăm đều. Bé Da nhớ từng ngày, vui cả tháng luôn.",
+      "moc": 30
+    },
+    {
+      "id": "be_da.streak_moc.6",
+      "speaker": "be_da",
+      "personality": "be_da",
+      "trigger": "streak_moc",
+      "text": "Mốc 30 ngày rồi đó. Ôm cái đã, rồi mình đi tưới cây ăn mừng.",
+      "moc": 30
+    },
+    {
+      "id": "ban_ai.hoa_dong.nguoi_vao_phong.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "nguoi_vao_phong",
+      "text": "Ê, bạn mới vào hả? Vào ngồi đây, chỗ này mát nè!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.nguoi_vao_phong.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "nguoi_vao_phong",
+      "text": "Chào bạn! Phòng đang vui đó, vào chung cho đông nào."
+    },
+    {
+      "id": "ban_ai.hoa_dong.nguoi_vao_phong.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "nguoi_vao_phong",
+      "text": "Úi có bạn mới! Cây cũng vẫy lá chào đó, thấy không?"
+    },
+    {
+      "id": "ban_ai.hoa_dong.nguoi_vao_phong.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "nguoi_vao_phong",
+      "text": "Vào đây nè, mình chỉ chỗ cây cho. Tưới thì nhờ bạn, mình cổ vũ."
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_lon_them.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_lon_them",
+      "text": "Cây lớn thêm rồi kìa! Ai siêng tưới vậy, giỏi quá!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_lon_them.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_lon_them",
+      "text": "Nhìn cây cao hơn hôm qua. Phòng mình sang hẳn!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_lon_them.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_lon_them",
+      "text": "Lớn nữa rồi đó, vui quá. Mai nhớ tưới tiếp nha mọi người!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_lon_them.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_lon_them",
+      "text": "Cây nhà mình lên nhanh ghê. Nhờ mọi người tưới đều đó."
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_no_hoa.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở rồi kìa! Mọi người lại đây ngắm với mình nào!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_no_hoa.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_no_hoa",
+      "text": "Trời ơi hoa đẹp quá, mình muốn gọi cả phòng ra xem!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_no_hoa.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_no_hoa",
+      "text": "Nở hoa là phải ăn mừng chứ. Ai có mặt hôm nay cũng vui."
+    },
+    {
+      "id": "ban_ai.hoa_dong.cay_no_hoa.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở rồi đó, lại gần ngắm đi, lúc này đẹp nhất."
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mo_duoc_do_hiem.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Bạn kia mở được đồ Hiếm kìa! Vỗ tay nào mọi người ơi!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mo_duoc_do_hiem.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Hiếm thật luôn! Khoe lên, cả phòng vui lây theo!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mo_duoc_do_hiem.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Úi món đẹp ghê, chúc mừng bạn nha, mình vui theo luôn!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mo_duoc_do_hiem.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Có người may quá trời. Mình vui hộ, nhảy lên một cái!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mac_do_moi.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mac_do_moi",
+      "text": "Đồ mới đẹp quá! Đi một vòng cho cả phòng ngắm với."
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mac_do_moi.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mac_do_moi",
+      "text": "Áo mới đó hả? Hợp lắm, mình khen thiệt đó."
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mac_do_moi.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mac_do_moi",
+      "text": "Khoe đồ mới đi, đừng đứng góc kia, mọi người muốn xem mà!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.ai_mac_do_moi.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "ai_mac_do_moi",
+      "text": "Mặc đẹp vậy, đứng gần cây một chút, nền xanh hợp lắm!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.phong_vang.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "phong_vang",
+      "text": "Phòng hơi vắng, nhưng mình vẫn ở đây. Vào chơi lúc nào cũng được."
+    },
+    {
+      "id": "ban_ai.hoa_dong.phong_vang.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "phong_vang",
+      "text": "Yên quá. Cây với mình canh nhà, bạn cứ việc ghé chơi."
+    },
+    {
+      "id": "ban_ai.hoa_dong.phong_vang.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "phong_vang",
+      "text": "Vắng thì mình kể chuyện cho cây nghe, bạn vào nghe ké cũng được."
+    },
+    {
+      "id": "ban_ai.hoa_dong.phong_vang.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "phong_vang",
+      "text": "Phòng vắng mà cây vẫn vui. Mình ngồi đây, rảnh thì lại ngồi chung."
+    },
+    {
+      "id": "ban_ai.hoa_dong.chao_tam_biet.1",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "chao_tam_biet",
+      "text": "Đi à? Nhớ ghé lại nha, mình vẫn ở đây chơi!"
+    },
+    {
+      "id": "ban_ai.hoa_dong.chao_tam_biet.2",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "chao_tam_biet",
+      "text": "Tạm biệt bạn, đi cẩn thận. Mai vào tưới cây rồi ngồi kể chuyện nha."
+    },
+    {
+      "id": "ban_ai.hoa_dong.chao_tam_biet.3",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "chao_tam_biet",
+      "text": "Đi đường cẩn thận! Phòng này lúc nào cũng mở cửa đón bạn."
+    },
+    {
+      "id": "ban_ai.hoa_dong.chao_tam_biet.4",
+      "speaker": "ban_ai",
+      "personality": "hoa_dong",
+      "trigger": "chao_tam_biet",
+      "text": "Đi nha, về nhớ rửa mặt rồi ngủ sớm, mai gặp lại!"
+    },
+    {
+      "id": "ban_ai.lanh_lung.nguoi_vao_phong.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "nguoi_vao_phong",
+      "text": "…Ừ, chào. Cây hôm nay chưa ai tưới đâu."
+    },
+    {
+      "id": "ban_ai.lanh_lung.nguoi_vao_phong.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "nguoi_vao_phong",
+      "text": "Vào rồi thì vào. Chỗ kia còn trống."
+    },
+    {
+      "id": "ban_ai.lanh_lung.nguoi_vao_phong.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "nguoi_vao_phong",
+      "text": "Chào. Đừng ồn quá, cây đang lớn."
+    },
+    {
+      "id": "ban_ai.lanh_lung.nguoi_vao_phong.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "nguoi_vao_phong",
+      "text": "Có người mới. Mình thấy rồi."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_lon_them.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_lon_them",
+      "text": "Cây lớn. Cũng phải, có người tưới đều."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_lon_them.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_lon_them",
+      "text": "Cao thêm chút. Được đó."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_lon_them.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_lon_them",
+      "text": "Nhìn thấy khác rồi. Không tệ."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_lon_them.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_lon_them",
+      "text": "Lớn thì tốt. Giữ vậy đi."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_no_hoa.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở rồi. Ngắm rồi thôi, đừng ngắt."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_no_hoa.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_no_hoa",
+      "text": "Cũng đẹp. Mình nhìn một lúc thôi."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_no_hoa.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_no_hoa",
+      "text": "Nở rồi đó. Đúng lúc."
+    },
+    {
+      "id": "ban_ai.lanh_lung.cay_no_hoa.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa ra rồi. Phòng đỡ trống."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mo_duoc_do_hiem.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Hiếm mà. Khoe một cái cũng được, đừng lâu quá."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mo_duoc_do_hiem.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Thấy rồi. Món đẹp, khỏi phải hỏi."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mo_duoc_do_hiem.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "May đó. Cất kỹ vào."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mo_duoc_do_hiem.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Đồ Hiếm. Ừ, đáng kể."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mac_do_moi.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mac_do_moi",
+      "text": "Đồ mới à. Hợp đó."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mac_do_moi.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mac_do_moi",
+      "text": "Thấy rồi. Mặc vậy được đó."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mac_do_moi.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mac_do_moi",
+      "text": "Không tệ. Đi một vòng rồi ngồi cũng được."
+    },
+    {
+      "id": "ban_ai.lanh_lung.ai_mac_do_moi.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "ai_mac_do_moi",
+      "text": "Áo mới. Ừ, khen."
+    },
+    {
+      "id": "ban_ai.lanh_lung.phong_vang.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "phong_vang",
+      "text": "Vắng. Cũng được, yên."
+    },
+    {
+      "id": "ban_ai.lanh_lung.phong_vang.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "phong_vang",
+      "text": "Phòng trống. Cây vẫn đây. Mình cũng vậy."
+    },
+    {
+      "id": "ban_ai.lanh_lung.phong_vang.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "phong_vang",
+      "text": "Không ai vào. Thôi, ngồi được."
+    },
+    {
+      "id": "ban_ai.lanh_lung.phong_vang.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "phong_vang",
+      "text": "Yên quá. Không sao."
+    },
+    {
+      "id": "ban_ai.lanh_lung.chao_tam_biet.1",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "chao_tam_biet",
+      "text": "Ừ, đi đi. Mai gặp."
+    },
+    {
+      "id": "ban_ai.lanh_lung.chao_tam_biet.2",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "chao_tam_biet",
+      "text": "Tạm biệt. Ghé lại khi muốn."
+    },
+    {
+      "id": "ban_ai.lanh_lung.chao_tam_biet.3",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "chao_tam_biet",
+      "text": "Ừ, đi đường cẩn thận."
+    },
+    {
+      "id": "ban_ai.lanh_lung.chao_tam_biet.4",
+      "speaker": "ban_ai",
+      "personality": "lanh_lung",
+      "trigger": "chao_tam_biet",
+      "text": "Đi nha. Lần sau nhớ tưới cây."
+    },
+    {
+      "id": "ban_ai.luoi.nguoi_vao_phong.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "nguoi_vao_phong",
+      "text": "À, có bạn vào. Mình chào đây… rồi nằm lại."
+    },
+    {
+      "id": "ban_ai.luoi.nguoi_vao_phong.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "nguoi_vao_phong",
+      "text": "Chào bạn, mình hơi uể, cứ coi như đã vẫy tay rồi nha."
+    },
+    {
+      "id": "ban_ai.luoi.nguoi_vao_phong.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "nguoi_vao_phong",
+      "text": "Vào đi, chỗ này êm. Mình không dậy nữa đâu."
+    },
+    {
+      "id": "ban_ai.luoi.nguoi_vao_phong.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "nguoi_vao_phong",
+      "text": "Ồ chào… mình tỉnh một chút, rồi ngủ tiếp."
+    },
+    {
+      "id": "ban_ai.luoi.cay_lon_them.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_lon_them",
+      "text": "Cây lớn rồi à? Mình vừa mở mắt đã thấy khác."
+    },
+    {
+      "id": "ban_ai.luoi.cay_lon_them.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_lon_them",
+      "text": "Giỏi quá, mình nằm nhìn cũng thấy vui."
+    },
+    {
+      "id": "ban_ai.luoi.cay_lon_them.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_lon_them",
+      "text": "Lớn thêm là tốt. Việc nặng mình nhường người siêng."
+    },
+    {
+      "id": "ban_ai.luoi.cay_lon_them.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_lon_them",
+      "text": "Cây cao lên, mình vẫn nằm đây cổ vũ… trong mơ."
+    },
+    {
+      "id": "ban_ai.luoi.cay_no_hoa.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở rồi à? Đẹp thật, để mình ngắm từ chỗ nằm này."
+    },
+    {
+      "id": "ban_ai.luoi.cay_no_hoa.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_no_hoa",
+      "text": "Nở hoa mà mình suýt ngủ quên. May có người nhắc."
+    },
+    {
+      "id": "ban_ai.luoi.cay_no_hoa.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa đẹp quá, mình tỉnh hẳn năm phút."
+    },
+    {
+      "id": "ban_ai.luoi.cay_no_hoa.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "cay_no_hoa",
+      "text": "Nở rồi đó. Mình vỗ tay nhẹ, sợ tốn sức."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mo_duoc_do_hiem.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Hiếm luôn à? Mình ngồi dậy khen một câu, rồi nằm tiếp."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mo_duoc_do_hiem.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "May quá trời. Mình ghen tị một lúc, rồi buồn ngủ lại."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mo_duoc_do_hiem.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Món đẹp đó. Khoe đi, mình mở một mắt nhìn."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mo_duoc_do_hiem.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Chúc mừng nha. Mình vui thật, chỉ không đứng dậy được thôi."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mac_do_moi.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mac_do_moi",
+      "text": "Đồ mới đẹp quá. Mình lười đứng, nhưng khen thì khen."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mac_do_moi.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mac_do_moi",
+      "text": "Mặc đẹp vậy, đi qua cho mình khỏi phải ngồi dậy."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mac_do_moi.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mac_do_moi",
+      "text": "Áo mới đó hả? Xinh. Mình nằm nhìn cũng đủ đã."
+    },
+    {
+      "id": "ban_ai.luoi.ai_mac_do_moi.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "ai_mac_do_moi",
+      "text": "Khoe đi, mình không đi theo được, chân đang nghỉ."
+    },
+    {
+      "id": "ban_ai.luoi.phong_vang.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "phong_vang",
+      "text": "Vắng thì càng dễ ngủ. Ai vào khẽ thôi nha."
+    },
+    {
+      "id": "ban_ai.luoi.phong_vang.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "phong_vang",
+      "text": "Phòng yên quá, đúng gu mình. Cây đứng, mình nằm."
+    },
+    {
+      "id": "ban_ai.luoi.phong_vang.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "phong_vang",
+      "text": "Không ai vào, mình tranh thủ chợp mắt thêm chút."
+    },
+    {
+      "id": "ban_ai.luoi.phong_vang.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "phong_vang",
+      "text": "Vắng cũng hay. Đỡ phải chào nhiều, chào là hết hơi."
+    },
+    {
+      "id": "ban_ai.luoi.chao_tam_biet.1",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "chao_tam_biet",
+      "text": "Đi à? Mình vẫy tay từ chỗ nằm nha. Đi vui."
+    },
+    {
+      "id": "ban_ai.luoi.chao_tam_biet.2",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "chao_tam_biet",
+      "text": "Tạm biệt, đi nhẹ thôi, mình đang buồn ngủ."
+    },
+    {
+      "id": "ban_ai.luoi.chao_tam_biet.3",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "chao_tam_biet",
+      "text": "Về nhớ ngủ sớm, mình cũng buồn ngủ đây. Đi nha."
+    },
+    {
+      "id": "ban_ai.luoi.chao_tam_biet.4",
+      "speaker": "ban_ai",
+      "personality": "luoi",
+      "trigger": "chao_tam_biet",
+      "text": "Đi nha. Mai vào, mình vẫn ở chỗ cũ, chưa dậy đâu."
+    },
+    {
+      "id": "ban_ai.hay_khoe.nguoi_vao_phong.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "nguoi_vao_phong",
+      "text": "Vào rồi hả? Thấy đồ mình mặc hôm nay chưa, đẹp lắm đó."
+    },
+    {
+      "id": "ban_ai.hay_khoe.nguoi_vao_phong.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "nguoi_vao_phong",
+      "text": "Chào bạn! Đứng bên này, ánh sáng chiếu vào kính mình đẹp hơn."
+    },
+    {
+      "id": "ban_ai.hay_khoe.nguoi_vao_phong.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "nguoi_vao_phong",
+      "text": "Có người mới thì phải khoe một chút. Nhìn món này nè, hiếm đó."
+    },
+    {
+      "id": "ban_ai.hay_khoe.nguoi_vao_phong.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "nguoi_vao_phong",
+      "text": "Vào ngồi gần mình đi, nhìn rõ đồ đẹp hơn."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_lon_them.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_lon_them",
+      "text": "Cây lớn rồi, đứng cạnh mình thì vừa đẹp."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_lon_them.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_lon_them",
+      "text": "Cây lên rồi! Đứng cạnh lúc này, đồ mình nổi lắm."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_lon_them.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_lon_them",
+      "text": "Cây nhà mình sang quá, hợp với đồ mình đang mặc."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_lon_them.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_lon_them",
+      "text": "Lớn thêm một khúc, làm nền cho mình đẹp hơn nữa."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_no_hoa.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở đúng lúc mình mặc đồ đẹp. Ăn ý quá trời."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_no_hoa.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa với mình, cái nào nổi hơn? Thôi, cả hai đều ổn."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_no_hoa.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở rồi, nhưng Nơ Thạch Lô Hội của mình vẫn thắng một nhịp."
+    },
+    {
+      "id": "ban_ai.hay_khoe.cay_no_hoa.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "cay_no_hoa",
+      "text": "Nở hoa rồi, đứng cạnh mình là vừa đẹp."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mo_duoc_do_hiem.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Đồ Hiếm đó hả? Đẹp nha. Mình cũng có một món, cũng không vừa."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mo_duoc_do_hiem.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Chúc mừng bạn! Lát nữa đứng cạnh mình, hai đứa đều nổi."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mo_duoc_do_hiem.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "May quá. Mình khoe một cái, rồi khen bạn liền, công bằng đó."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mo_duoc_do_hiem.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Món đẹp đó. Mình có Kính tim Hồng Đào, nhìn hoá đơn cũng dễ thương."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mac_do_moi.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mac_do_moi",
+      "text": "Đồ mới của bạn đẹp đó. Mà đồ mình hôm nay cũng không kém."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mac_do_moi.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mac_do_moi",
+      "text": "Khoe đi! Mình cũng muốn đứng cạnh cho vui."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mac_do_moi.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mac_do_moi",
+      "text": "Mặc đẹp quá. Đứng cạnh mình thì cả hai đều sáng."
+    },
+    {
+      "id": "ban_ai.hay_khoe.ai_mac_do_moi.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "ai_mac_do_moi",
+      "text": "Áo mới hả? Xinh. Mình vừa đổi Nơ Thạch Lô Hội, kiến khỏi theo."
+    },
+    {
+      "id": "ban_ai.hay_khoe.phong_vang.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "phong_vang",
+      "text": "Vắng thì mình tự ngắm đồ mình. Cũng đủ đã."
+    },
+    {
+      "id": "ban_ai.hay_khoe.phong_vang.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "phong_vang",
+      "text": "Phòng trống, đúng lúc khoe với cây. Cây không biết khen, thôi kệ."
+    },
+    {
+      "id": "ban_ai.hay_khoe.phong_vang.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "phong_vang",
+      "text": "Không có người nhìn, mình vẫn mặc đẹp. Có chuẩn bị là khác."
+    },
+    {
+      "id": "ban_ai.hay_khoe.phong_vang.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "phong_vang",
+      "text": "Vắng thế này, kính mình cũng chưa ai khen. Thôi mình khen mình."
+    },
+    {
+      "id": "ban_ai.hay_khoe.chao_tam_biet.1",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "chao_tam_biet",
+      "text": "Đi à? Nhìn mình thêm cái rồi đi, nhớ đó nha."
+    },
+    {
+      "id": "ban_ai.hay_khoe.chao_tam_biet.2",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "chao_tam_biet",
+      "text": "Đi nha, ghé lại còn xem đồ mới của mình."
+    },
+    {
+      "id": "ban_ai.hay_khoe.chao_tam_biet.3",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "chao_tam_biet",
+      "text": "Tạm biệt! Lần sau vào, mình còn món khác để khoe."
+    },
+    {
+      "id": "ban_ai.hay_khoe.chao_tam_biet.4",
+      "speaker": "ban_ai",
+      "personality": "hay_khoe",
+      "trigger": "chao_tam_biet",
+      "text": "Đi đường cẩn thận. Đồ mình hôm nay, nhớ đó!"
+    },
+    {
+      "id": "ban_ai.hay_lo.nguoi_vao_phong.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "nguoi_vao_phong",
+      "text": "Bạn vào rồi! Thoa kem chống nắng chưa? Nắng gắt lắm á!"
+    },
+    {
+      "id": "ban_ai.hay_lo.nguoi_vao_phong.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "nguoi_vao_phong",
+      "text": "Chào bạn, vào ngồi nghỉ một chút đi, đừng đứng nắng lâu."
+    },
+    {
+      "id": "ban_ai.hay_lo.nguoi_vao_phong.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "nguoi_vao_phong",
+      "text": "Vào rồi à? Nhớ uống ngụm nước, mình lo bạn quên."
+    },
+    {
+      "id": "ban_ai.hay_lo.nguoi_vao_phong.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "nguoi_vao_phong",
+      "text": "Chào nha. Hôm nay nhớ ngủ sớm đó, đừng thức khuya."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_lon_them.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_lon_them",
+      "text": "Cây lớn rồi, vui quá… nhưng đừng quên tưới đều đó, mình lo."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_lon_them.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_lon_them",
+      "text": "Lớn thì tốt, chỉ sợ mọi người chủ quan rồi bỏ tưới."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_lon_them.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_lon_them",
+      "text": "Cây cao thêm, mình mừng, mà cũng nhắc: tưới đều, đừng quên."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_lon_them.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_lon_them",
+      "text": "Nhìn cây lớn mình yên tâm hơn. Giữ nhịp tưới nha mọi người."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_no_hoa.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa nở rồi! Đẹp thật, nhớ đừng sờ nhiều, mình lo hoa rụng."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_no_hoa.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_no_hoa",
+      "text": "Nở hoa rồi đó, vui quá. Tưới đều thì hoa mới bền, nhớ nha."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_no_hoa.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_no_hoa",
+      "text": "Hoa đẹp quá, mình vừa mừng vừa lo gió mạnh. Ngắm nhẹ thôi."
+    },
+    {
+      "id": "ban_ai.hay_lo.cay_no_hoa.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "cay_no_hoa",
+      "text": "Nở rồi kìa! Ai cũng lại xem được, chỉ đừng chen nhau."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mo_duoc_do_hiem.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Đồ Hiếm kìa, chúc mừng! Cất kỹ vào Tủ đồ, đừng để lạc."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mo_duoc_do_hiem.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "May quá, mình vui hộ. Mặc ra chơi thì cẩn thận kẻo vướng."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mo_duoc_do_hiem.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Món đẹp đó. Khoe vui thôi, về nhớ rửa mặt rồi ngủ sớm nha."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mo_duoc_do_hiem.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mo_duoc_do_hiem",
+      "text": "Chúc mừng bạn! Mình lo hộ luôn, món hiếm thì giữ kỹ đó."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mac_do_moi.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mac_do_moi",
+      "text": "Đồ mới đẹp quá! Ra ngoài nhớ thoa kem chống nắng nha."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mac_do_moi.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mac_do_moi",
+      "text": "Mặc đẹp vậy, mình khen thiệt. Chỉ lo bạn đứng nắng quá lâu."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mac_do_moi.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mac_do_moi",
+      "text": "Áo mới xinh! Về nhớ rửa mặt sạch rồi hãy ngủ nha."
+    },
+    {
+      "id": "ban_ai.hay_lo.ai_mac_do_moi.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "ai_mac_do_moi",
+      "text": "Đẹp lắm. Đi chơi vui thôi, về sớm một chút càng tốt."
+    },
+    {
+      "id": "ban_ai.hay_lo.phong_vang.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "phong_vang",
+      "text": "Phòng vắng quá, cây có khát không? Ai vào nhớ xem giúp mình."
+    },
+    {
+      "id": "ban_ai.hay_lo.phong_vang.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "phong_vang",
+      "text": "Vắng thì cũng được, chỉ lo không ai tưới cây hôm nay."
+    },
+    {
+      "id": "ban_ai.hay_lo.phong_vang.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "phong_vang",
+      "text": "Mình ngồi canh cây đây. Ai ghé qua, tưới một chút giúp nha."
+    },
+    {
+      "id": "ban_ai.hay_lo.phong_vang.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "phong_vang",
+      "text": "Yên quá. Mong có người ghé tưới, mình nhắc hoài cũng lo."
+    },
+    {
+      "id": "ban_ai.hay_lo.chao_tam_biet.1",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "chao_tam_biet",
+      "text": "Đi à? Ra ngoài nhớ thoa kem chống nắng, mình nhắc thiệt đó."
+    },
+    {
+      "id": "ban_ai.hay_lo.chao_tam_biet.2",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "chao_tam_biet",
+      "text": "Tạm biệt, về nhớ rửa mặt rồi ngủ sớm. Mai gặp lại nha."
+    },
+    {
+      "id": "ban_ai.hay_lo.chao_tam_biet.3",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "chao_tam_biet",
+      "text": "Đi cẩn thận nha. Trời nắng thì tìm chỗ mát nghỉ một chút."
+    },
+    {
+      "id": "ban_ai.hay_lo.chao_tam_biet.4",
+      "speaker": "ban_ai",
+      "personality": "hay_lo",
+      "trigger": "chao_tam_biet",
+      "text": "Đi đường cẩn thận! Đừng thức khuya, mình lo giùm đó."
+    }
+  ]
+}

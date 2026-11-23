@@ -39,6 +39,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconDismissButton } from "@/components/ui/icon-dismiss-button";
 import { useToast } from "@/hooks/use-toast";
+import { noteCheckInLoi } from "@/lib/mascot/loi-noi";
+import type { MascotSnapshot } from "@/lib/mascot/model";
 import { mascotQueryKey } from "@/lib/mascot/query-key";
 import { Link } from "@/i18n/navigation";
 import { resolveCheckInReminderKind, signupDayKey } from "@/lib/activation/check-in-reminder";
@@ -662,6 +664,7 @@ export function CheckInForm({ children }: { children?: React.ReactNode }) {
           if (items.length > 0) {
             void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
           }
+          noteCheckInLoi(queryClient.getQueryData<MascotSnapshot | null>(mascotQueryKey) ?? null, items.length > 0);
           feedback.onSubmitSuccess(data);
           scrollToFeedback();
         } catch (err) {

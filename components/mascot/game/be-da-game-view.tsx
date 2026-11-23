@@ -156,6 +156,7 @@ export function BeDaGameView({
   shopCloset = [],
   onOpenShop,
   onWearShop,
+  loiText = null,
 }: {
   locale: string;
   tab: GameTab;
@@ -245,6 +246,8 @@ export function BeDaGameView({
   shopCloset?: readonly ShopClosetItem[];
   onOpenShop?: () => void;
   onWearShop?: (item: ShopClosetItem) => void;
+  /** A short reviewed line. Empty keeps the usual care sentence. */
+  loiText?: string | null;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -454,6 +457,7 @@ export function BeDaGameView({
           showHero={!chestOpen}
           onOpenLobby={() => onTab("lobby")}
           onOpenWardrobe={() => onTab("wardrobe")}
+          loiText={loiText}
           onOpenMissions={() => {
             sheetReturn.current = tab === "quests" ? sheetReturn.current : tab;
             setCareSheet(false);
@@ -780,6 +784,7 @@ function Room({
   onOpenLobby,
   onOpenWardrobe,
   onOpenMissions,
+  loiText = null,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -798,6 +803,7 @@ function Room({
   onOpenLobby: () => void;
   onOpenWardrobe: () => void;
   onOpenMissions: () => void;
+  loiText?: string | null;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
@@ -950,7 +956,7 @@ function Room({
         }
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
-        <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} />
+        <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} loiText={loiText} />
         <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
@@ -976,7 +982,7 @@ function Room({
   );
 }
 
-function Bubble({ kind, bubbleId }: { kind: GameBubbleKind; bubbleId?: string }) {
+function Bubble({ kind, bubbleId, loiText }: { kind: GameBubbleKind; bubbleId?: string; loiText?: string | null }) {
   const t = useTranslations("mascot");
   const lead =
     kind === "wash"
@@ -987,12 +993,12 @@ function Bubble({ kind, bubbleId }: { kind: GameBubbleKind; bubbleId?: string })
           ? t("game.bubbleScreened")
           : t("game.bubbleDone");
   const nudge = kind === "washed" ? t("game.bubbleSpf") : kind === "wave" ? t("game.bubbleWave") : "";
-  if (!lead.trim()) return null;
+  if (!loiText && !lead.trim()) return null;
   const colour = bubbleColour(bubbleId);
   return (
-    <p className="beda-bubble" data-testid="beda-bubble" data-bubble={colour?.id} style={bubbleFrameStyle(bubbleId)}>
-      {lead}
-      {nudge ? (
+    <p className="beda-bubble" data-testid="beda-bubble" data-bubble={colour?.id} data-loi={loiText ? "1" : undefined} style={bubbleFrameStyle(bubbleId)}>
+      {loiText ?? lead}
+      {!loiText && nudge ? (
         <>
           <br />
           <span className="beda-bubble-nudge">{nudge}</span>
