@@ -159,10 +159,11 @@ export async function listMySpaRooms(): Promise<SpaRoomRecord[]> {
 
 /**
  * POST /api/v1/mascot/rooms. The server picks the 6-letter code.
- * An empty body plants the leaf tree. There is no seed picker yet.
+ * An empty body plants the leaf tree. Another type spends one seed of that type.
  */
-export async function createSpaRoom(): Promise<SpaRoomRecord> {
-  const data = await apiPost<unknown>(ROOMS, undefined, roomCall);
+export async function createSpaRoom(treeType?: string | null): Promise<SpaRoomRecord> {
+  const body = treeType && treeType !== "leaf" ? { tree_type: treeType } : undefined;
+  const data = await apiPost<unknown>(ROOMS, body, roomCall);
   const room = readSpaRoom(data);
   if (!room) throw new ApiError("api", { status: 502, code: "bad_message" });
   return room;

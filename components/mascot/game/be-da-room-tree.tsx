@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { useTranslations } from "next-intl";
 
 import { GameIcon } from "@/components/mascot/game/icons";
+import { SeedDrawDialog } from "@/components/mascot/game/be-da-seed-bag";
 import { Link } from "@/i18n/navigation";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { formatRoomCoins } from "@/lib/mascot/game/room-shared";
@@ -44,14 +45,18 @@ export function RoomTreeProvider({
   panel,
   locale,
   startOpen = false,
+  roomCode = null,
+  onOpenBag,
   children,
 }: {
   panel: RoomTreePanel | null;
   locale: string;
   startOpen?: boolean;
+  roomCode?: string | null;
+  onOpenBag?: () => void;
   children: ReactNode;
 }) {
-  const chrome = useTreeChrome(panel, locale, startOpen);
+  const chrome = useTreeChrome(panel, locale, startOpen, roomCode, onOpenBag);
   return <TreeChromeContext.Provider value={chrome}>{children}</TreeChromeContext.Provider>;
 }
 
@@ -81,9 +86,16 @@ export function RoomTreePreview({
   );
 }
 
-function useTreeChrome(panel: RoomTreePanel | null, locale: string, startOpen: boolean): TreeChrome {
+function useTreeChrome(
+  panel: RoomTreePanel | null,
+  locale: string,
+  startOpen: boolean,
+  roomCode: string | null,
+  onOpenBag?: () => void,
+): TreeChrome {
   const t = useTranslations("mascot");
   const [open, setOpen] = useState(startOpen);
+  const [drawOpen, setDrawOpen] = useState(false);
   const tree = panel?.visible ? panel.tree : null;
   const motion = panel?.motion ?? null;
   const light = useLightMotion(panel?.reduced ?? null);
@@ -142,8 +154,23 @@ function useTreeChrome(panel: RoomTreePanel | null, locale: string, startOpen: b
             friends={rewardCount(panel.popup)}
             locale={locale}
             light={light}
-            onTake={panel.onTakeGift}
+            canDraw={tree.canDraw && !tree.myShard && !!roomCode}
+            onTake={() => {
+              if (tree.canDraw && !tree.myShard && roomCode) {
+                setDrawOpen(true);
+                return;
+              }
+              panel.onTakeGift();
+            }}
           />
+        ) : null}
+        {drawOpen && roomCode ? (
+          <SeedDrawDialog code={roomCode} draws={tree.draws} onClose={() => { setDrawOpen(false); panel.onTakeGift(); }} />
+        ) : null}
+        {onOpenBag && tree.bloomed ? (
+          <button type="button" className="beda-seed-bag-open" data-testid="beda-seed-bag-open" onClick={onOpenBag}>
+            {t("game.seeds.bag")}
+          </button>
         ) : null}
       </>
     ),
@@ -517,6 +544,7 @@ function TreeGiftPopup({
   friends,
   locale,
   light,
+  canDraw = false,
   onTake,
 }: {
   rewards: readonly TreeReward[];
@@ -526,6 +554,7 @@ function TreeGiftPopup({
   friends: number | null;
   locale: string;
   light: boolean;
+  canDraw?: boolean;
   onTake: () => void;
 }) {
   const t = useTranslations("mascot");
@@ -579,7 +608,7 @@ function TreeGiftPopup({
         ) : null}
         {bloom ? <p className="beda-tree-stage">{t("game.tree.stage", { stage, name: stageName })}</p> : null}
         <button type="button" className="beda-tree-take" data-testid="beda-tree-take" onClick={onTake}>
-          {t("game.tree.take")}
+          {bloom && canDraw ? t("game.seeds.pick") : t("game.tree.take")}
         </button>
       </div>
     </div>

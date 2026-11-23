@@ -376,12 +376,12 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     router.push("/be-da");
   }
 
-  async function createRoom() {
+  async function createRoom(treeType?: string) {
     if (creatingRoom) return;
     setCreatingRoom(true);
     setCreateProblem(null);
     try {
-      const created = await createSpaRoom();
+      const created = await createSpaRoom(treeType);
       const next = normalizeRoomCode(created.code);
       if (!next) {
         setCreateProblem("offline");
@@ -566,6 +566,14 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSpaRetry={() => spaRoom.retry()}
       onSpaQuit={() => {
         void spaRoom.leaveMembership().finally(() => leaveSpa("care"));
+      }}
+      onPlantSeed={async (treeType) => {
+        const created = await createSpaRoom(treeType);
+        const next = normalizeRoomCode(created.code);
+        if (!next) throw new Error("bad-room");
+        rememberSpaRoom(localStorage, next);
+        setMyRooms(readRememberedSpaRooms(localStorage));
+        router.push(roomInvitePath(next));
       }}
       onLeaveSpa={() => leaveSpa("care")}
       onSpaLobby={() => leaveSpa("lobby")}

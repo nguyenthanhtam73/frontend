@@ -58,6 +58,22 @@ export type RoomTree = {
   justGranted: TreeReward[];
   /** Stages this member was paid while they were away. Empty when the server omits it. */
   unseenRewards: TreeReward[];
+  /** This member may still flip one leaf. False when the server omits it. */
+  canDraw: boolean;
+  myShard: TreeShard | null;
+  draws: TreeMemberDraw[];
+};
+
+export type TreeShard = {
+  typeKey: string;
+  nameVi: string;
+  mystery: boolean;
+};
+
+export type TreeMemberDraw = {
+  name: string;
+  pending: boolean;
+  shard: TreeShard | null;
 };
 
 export type TreeTypeInfo = {
@@ -214,7 +230,35 @@ export function readRoomTree(data: unknown): RoomTree | null {
     leveled,
     justGranted,
     unseenRewards: readRewards(body.unseen_rewards),
+    canDraw: body.can_draw === true,
+    myShard: readTreeShard(body.my_shard),
+    draws: readTreeDraws(body.draws),
   };
+}
+
+function readTreeShard(value: unknown): TreeShard | null {
+  const body = row(value);
+  if (!body) return null;
+  const typeKey = text(body.type_key, 64);
+  if (!typeKey) return null;
+  return {
+    typeKey,
+    nameVi: text(body.name_vi, 80),
+    mystery: body.mystery === true,
+  };
+}
+
+function readTreeDraws(value: unknown): TreeMemberDraw[] {
+  if (!Array.isArray(value)) return [];
+  const out: TreeMemberDraw[] = [];
+  for (const item of value) {
+    const body = row(item);
+    if (!body) continue;
+    const name = text(body.name, 40);
+    if (!name) continue;
+    out.push({ name, pending: body.pending === true, shard: readTreeShard(body.shard) });
+  }
+  return out;
 }
 
 export function readTreeTypes(data: unknown): TreeTypeInfo[] {
