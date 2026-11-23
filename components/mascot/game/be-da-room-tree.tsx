@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { GameIcon } from "@/components/mascot/game/icons";
@@ -150,17 +150,11 @@ function useTreeChrome(
         gift={shown.bloomed ? <TreeGiftBox tree={tree} locale={locale} /> : null}
         status={
           bloomDays == null || open ? null : (
-            <span className="beda-tree-status" data-testid="beda-tree-status" data-late={bloomLate ? "1" : "0"}>
-              {t("game.tree.statusLine", { waters: shown.waters, required: shown.required })}
-              <span className="beda-tree-status-sep"> · </span>
-              {bloomLate ? (
-                <span className="beda-tree-status-late" data-testid="beda-tree-late">
-                  {t("game.tree.bloomLate")}
-                </span>
-              ) : (
-                <span data-testid="beda-tree-bloom-in">{t("game.tree.bloomIn", { days: bloomDays })}</span>
-              )}
-            </span>
+            <TreeWaterLine
+              count={t("game.tree.statusLine", { waters: shown.waters, required: shown.required })}
+              rest={bloomLate ? t("game.tree.bloomLate") : t("game.tree.bloomIn", { days: bloomDays })}
+              late={bloomLate}
+            />
           )
         }
       />
@@ -273,6 +267,59 @@ function useMotionMs(
   return animMs ?? elapsed;
 }
 
+/** One cream line under the pot. The second half drops to its own line when the room is too narrow. */
+function TreeWaterLine({ count, rest, late }: { count: string; rest: string; late: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [wrapped, setWrapped] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const room = el.closest(".beda-spa-floor");
+      const limit = Math.max(0, (room?.clientWidth ?? 0) - 12);
+      const countEl = el.querySelector<HTMLElement>("[data-part='count']");
+      const restEl = el.querySelector<HTMLElement>("[data-part='rest']");
+      const need = (countEl?.scrollWidth ?? 0) + (restEl?.scrollWidth ?? 0) + 18;
+      const next = limit > 0 && need > limit;
+      setWrapped((prev) => (prev === next ? prev : next));
+    };
+    measure();
+    const room = el.closest(".beda-spa-floor");
+    const obs = new ResizeObserver(measure);
+    if (room) obs.observe(room);
+    window.addEventListener("resize", measure);
+    return () => {
+      obs.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [count, rest]);
+  return (
+    <span
+      ref={ref}
+      className="beda-tree-status"
+      data-testid="beda-tree-status"
+      data-late={late ? "1" : "0"}
+      data-wrap={wrapped ? "1" : "0"}
+    >
+      <span data-part="count" className="beda-tree-status-count">
+        {count}
+      </span>
+      {wrapped ? null : (
+        <span className="beda-tree-status-sep" aria-hidden>
+          {" · "}
+        </span>
+      )}
+      <span
+        data-part="rest"
+        className={late ? "beda-tree-status-rest is-late" : "beda-tree-status-rest"}
+        data-testid={late ? "beda-tree-late" : "beda-tree-bloom-in"}
+      >
+        {rest}
+      </span>
+    </span>
+  );
+}
+
 function TreeArt({
   stage,
   nextStage,
@@ -318,7 +365,7 @@ function TreeArt({
         className="beda-tree-hit"
         data-testid="beda-tree-open"
         aria-expanded={open}
-        aria-label={status ? undefined : openLabel}
+        aria-label={openLabel}
         onClick={onOpen}
       >
       <div className={sparkle ? "beda-tree-art is-bloom" : "beda-tree-art"} aria-hidden>
@@ -385,8 +432,8 @@ function TreeArt({
           <i key={`star-${index}`} className="beda-tree-star" style={{ ["--i" as string]: String(index), opacity: star.opacity, transform: `translateY(${star.y}px)` }} />
         ))}
       </div>
-      {status}
       </button>
+      {status}
       {gift}
     </div>
   );

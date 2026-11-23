@@ -245,7 +245,10 @@ export function TreeShot() {
           code: "DA7K2M",
           count: 3,
           cap: 8,
-          guests: sampleSpaGuests(new Set()),
+          guests: sampleSpaGuests(new Set()).map((guest) =>
+            guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
+          ),
+          you: { x: 0.4, y: 0.66 },
           notice: null,
           daysLeft,
           name: "Phòng bạn bè",

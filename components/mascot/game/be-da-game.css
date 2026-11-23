@@ -2924,6 +2924,7 @@
   z-index: 4;
   inset: 0;
   pointer-events: none;
+  container-type: inline-size;
 }
 
 .beda-spa-floor .beda-spa-person {
@@ -4324,11 +4325,12 @@
 
 .beda-spa-floor .beda-tree-spot {
   position: absolute;
-  z-index: 2000;
+  /* People use z-index = foot y × 1000, so 10000 stays above every character. */
+  z-index: 10000;
   left: 50%;
   top: 58%;
   bottom: auto;
-  width: max-content;
+  width: 128px;
   height: auto;
   transform: translate(-50%, -100%);
   pointer-events: auto;
@@ -4336,11 +4338,9 @@
 
 .beda-tree-hit {
   display: flex;
-  width: max-content;
-  max-width: min(340px, 94vw);
+  width: 128px;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
   border: 0;
   background: transparent;
   padding: 0;
@@ -4352,18 +4352,42 @@
 }
 
 .beda-tree-status {
-  display: block;
-  max-width: min(340px, 94vw);
+  position: absolute;
+  z-index: 10000;
+  top: calc(100% + 2px);
+  left: 50%;
+  translate: -50% 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: 0.25em;
+  row-gap: 1px;
+  width: max-content;
+  max-width: calc(100cqi - 12px);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fff6ec;
+  color: #6b4632;
   font-size: 11px;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.35;
   text-align: center;
-  white-space: nowrap;
-  text-shadow: 0 1px 0 #fff, 0 0 6px #fff;
+  pointer-events: none;
 }
 
-.beda-tree-status-late {
+.beda-tree-status-count,
+.beda-tree-status-rest {
+  white-space: nowrap;
+}
+
+.beda-tree-status-rest.is-late {
   color: #e08a3c;
+}
+
+.beda-tree-status[data-wrap="1"] {
+  border-radius: 12px;
 }
 
 .beda-invite-toast {
