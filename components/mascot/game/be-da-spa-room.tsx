@@ -203,7 +203,7 @@ export function BeDaSpaRoom({
 
   function onBackground(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-dock")) return;
+    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-bar, .beda-room-dock")) return;
     onSelect("");
   }
 
@@ -407,14 +407,24 @@ export function BeDaSpaRoom({
         <button type="button" aria-label={t("game.zoomOut")} onClick={() => motion.current.zoomBy(1 / 1.2)}>
           −
         </button>
-        <button type="button" data-testid="beda-recenter" onClick={() => motion.current.recenter()}>
+      </div>
+
+      <div className="beda-room-bar" data-testid="beda-room-bar">
+        <button type="button" className="beda-spa-board" data-testid="beda-streak-board" onClick={() => void openBoard()}>
+          {t("game.spaBoard")}
+        </button>
+        {together?.visible ? (
+          <RoomTogetherDock
+            questLabel={t("game.roomQuestOpen")}
+            todayLabel={t("game.roomTodayOpen")}
+            onQuest={() => choosePanel(panel === "quest" ? null : "quest")}
+            onToday={() => choosePanel(panel === "today" ? null : "today")}
+          />
+        ) : null}
+        <button type="button" className="beda-room-me" data-testid="beda-recenter" onClick={() => motion.current.recenter()}>
           {t("game.backToMe")}
         </button>
       </div>
-
-      <button type="button" className="beda-room-quit" data-testid="beda-room-quit" onClick={() => setQuitAsk(true)}>
-        {t("game.spaLeave")}
-      </button>
       {quitAsk ? (
         <div className="beda-room-quit-shade" role="alertdialog" aria-modal="true" data-testid="beda-room-quit-dialog">
           <div className="beda-room-quit-card">
@@ -438,18 +448,6 @@ export function BeDaSpaRoom({
         </div>
       ) : null}
 
-      <button type="button" className="beda-spa-board" data-testid="beda-streak-board" onClick={() => void openBoard()}>
-        {t("game.spaBoard")}
-      </button>
-
-      {together?.visible ? (
-        <RoomTogetherDock
-          questLabel={t("game.roomQuestOpen")}
-          todayLabel={t("game.roomTodayOpen")}
-          onQuest={() => choosePanel(panel === "quest" ? null : "quest")}
-          onToday={() => choosePanel(panel === "today" ? null : "today")}
-        />
-      ) : null}
 
       {together?.visible && panel ? (
         <div className="beda-room-sheet" data-testid="beda-room-sheet" role="dialog" aria-modal="false" aria-label={panel === "quest" ? t("game.roomQuestTitle") : t("game.roomTodayTitle")}>
@@ -480,6 +478,9 @@ export function BeDaSpaRoom({
             {dayLine ? <span className="beda-spa-bit">{dayLine}</span> : null}
           </span>
         </div>
+        <button type="button" className="beda-room-quit" data-testid="beda-room-quit" onClick={() => setQuitAsk(true)}>
+          {t("game.spaLeave")}
+        </button>
         {lock || room.notice === "ended" ? null : (
           <button type="button" className="beda-invite-open" data-testid="beda-invite-open" onClick={() => setInviteOpen(true)}>
             {t("game.spaInviteOpen")}

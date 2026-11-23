@@ -303,8 +303,12 @@ export function BeDaGameView({
     const nav = root.querySelector<HTMLElement>(".beda-nav");
     if (!nav) return;
     const apply = () => {
-      const height = Math.ceil(nav.offsetHeight);
-      if (height > 0) root.style.setProperty("--beda-nav-reserve", `${height}px`);
+      const rootBox = root.getBoundingClientRect();
+      const navBox = nav.getBoundingClientRect();
+      // Include the gap under the bar (safe-area and the spa nav's bottom offset).
+      // offsetHeight alone lets the room tabs slide under the nav on iPad.
+      const reserve = Math.ceil(rootBox.bottom - navBox.top);
+      if (reserve > 0) root.style.setProperty("--beda-nav-reserve", `${reserve}px`);
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -317,7 +321,7 @@ export function BeDaGameView({
       window.removeEventListener("resize", apply);
       viewport?.removeEventListener("resize", apply);
     };
-  }, [tab, chestOpen]);
+  }, [tab, chestOpen, spaOpen]);
   const lobbyPeople =
     actors ?? lobbyActors({ live: false, people: [], selfId: null, hidden: new Set(), poses: {} });
   const youSpot = you ?? {
