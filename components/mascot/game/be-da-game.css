@@ -3014,31 +3014,14 @@
   background: rgba(90, 60, 40, 0.12);
 }
 
+/* Two thin cucumber slices on the cheekbones. Full 220x250 layer, same anchors as the
+   faces cheeks.svg layers, so it stays inside the face for girl and boy. */
 .beda-cheeks {
   position: absolute;
   z-index: 3;
   inset: 0;
   pointer-events: none;
-}
-
-.beda-cuke {
-  position: absolute;
-  top: 43%;
-  width: 14%;
-  height: 8%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 35% 35%, #f4ffc8, #8bc34a 55%, #5a9a32);
-  box-shadow: inset 0 -1px 0 rgba(60, 100, 30, 0.35);
-}
-
-.beda-cuke.is-left {
-  left: 27%;
-  transform: rotate(-18deg);
-}
-
-.beda-cuke.is-right {
-  right: 27%;
-  transform: rotate(18deg);
+  background: url("/mascot/props/cucumber_cheeks.svg?v=1") center / 100% 100% no-repeat;
 }
 
 .beda-spa .beda-tag:not(.beda-tag-me) {

@@ -310,7 +310,7 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("sparkles.svg"), false);
     assert.equal(html.includes("faces/sleepy"), false);
     assert.match(html, /\/mascot\/faces\/happy\/eyes\.svg/);
-    assert.equal((html.match(/class="beda-cuke /g) ?? []).length, 10);
+    assert.equal((html.match(/class="beda-cheeks"/g) ?? []).length, 5);
     assert.equal(html.includes("beda-spa-cucumber"), false);
     assert.equal(html.includes("beda-spa-mat"), false);
     assert.match(html, /Ẩn bạn này/);

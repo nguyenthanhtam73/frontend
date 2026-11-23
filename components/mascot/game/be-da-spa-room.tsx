@@ -739,12 +739,7 @@ function StreakFlame({ streak, label }: { streak: number; label: string }) {
 }
 
 function Cheeks() {
-  return (
-    <span className="beda-cheeks" aria-hidden>
-      <i className="beda-cuke is-left" />
-      <i className="beda-cuke is-right" />
-    </span>
-  );
+  return <span className="beda-cheeks" aria-hidden />;
 }
 
 function Star() {
