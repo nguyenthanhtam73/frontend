@@ -2572,7 +2572,7 @@
   justify-content: center;
   gap: 16px;
   padding: 24px;
-  background: #c48962 url("/mascot/rooms/spa-room.webp?v=4&h=d8cd3aeab9") center / cover no-repeat;
+  background: #c48962 url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9") center / cover no-repeat;
   text-align: center;
 }
 
@@ -2677,7 +2677,7 @@
   inset: 0;
   transform-origin: 0 0;
   will-change: transform;
-  background: #c48962 url("/mascot/rooms/spa-room.webp?v=4&h=d8cd3aeab9") center / cover no-repeat;
+  background: #c48962 url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9") center / cover no-repeat;
 }
 
 .beda-spa-wall {

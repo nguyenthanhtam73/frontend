@@ -20,7 +20,7 @@ describe("actor sheet", () => {
     const bowed = [...plain, "/mascot/accessory/accessory_ribbon_bow.svg", "/mascot/accessory/accessory_pink_headband.svg"];
     assert.notEqual(sheetKeyFromArt(plain), sheetKeyFromArt(bowed));
     assert.equal(sheetKeyFromArt(bowed), sheetKeyFromArt(bowed));
-    assert.match(sheetJsonUrlFromArt(bowed), /^\/mascot\/game\/sheets\/outfit_pajamas__hair_twin_tails__[0-9a-f]{8}\.json\?v=4$/);
+    assert.match(sheetJsonUrlFromArt(bowed), /^\/mascot\/game\/sheets\/outfit_pajamas__hair_twin_tails__[0-9a-f]{8}\.json\?v=5$/);
     assert.equal(sheetKeyFromArt(bowed), sheetKeyFromArt(bowed.map(mascotAssetUrl)));
     assert.equal(sheetJsonUrlFromArt(bowed), sheetJsonUrlFromArt(bowed.map(mascotAssetUrl)));
     assert.deepEqual(lookFromArt(bowed.map(mascotAssetUrl)), lookFromArt(bowed));

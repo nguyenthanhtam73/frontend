@@ -115,7 +115,7 @@ describe("Bé Da game screen", () => {
     assert.match(html, /beda-hero-wrap is-floor/);
     assert.match(html, /data-floor="on"/);
     assert.match(html, /data-testid="beda-room-shadow"/);
-    assert.match(html, /data-walk-mask="\/mascot\/room\/walk-mask\.png\?v=4&amp;h=[0-9a-f]{10}"/);
+    assert.match(html, /data-walk-mask="\/mascot\/room\/walk-mask\.png\?v=5&amp;h=[0-9a-f]{10}"/);
     assert.match(html, /beda-hero-wrap/);
     assert.match(html, /data-testid="beda-pixi"/);
     assert.match(html, /data-scene="room"/);
