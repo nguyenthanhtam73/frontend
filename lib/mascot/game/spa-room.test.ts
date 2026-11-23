@@ -7,6 +7,8 @@ import { RoomConnection } from "@/lib/mascot/game/spa-room-socket";
 import {
   applyRoomMessage,
   emptyRoom,
+  boardMedals,
+  nameTagDrop,
   rankCareStreaks,
   readSpaBoard,
   topCareStreak,
@@ -760,6 +762,20 @@ describe("spa room protocol", () => {
       ranked.map((row) => row.nickname),
       ["An", "Mây", "Lan"],
     );
+    assert.deepEqual(boardMedals(ranked), ["gold", "gold", "silver"]);
+    assert.deepEqual(
+      boardMedals([
+        { careStreak: 18 },
+        { careStreak: 18 },
+        { careStreak: 11 },
+        { careStreak: 9 },
+        { careStreak: 0 },
+      ]),
+      ["gold", "gold", "silver", "bronze", null],
+    );
+    assert.equal(nameTagDrop({ top: 40, bottom: 62, left: 10, right: 80 }, { top: 50, bottom: 72, left: 0, right: 100 }, 0), 36);
+    assert.equal(nameTagDrop({ top: 76, bottom: 98, left: 10, right: 80 }, { top: 50, bottom: 72, left: 0, right: 100 }, 36), 36);
+    assert.equal(nameTagDrop({ top: 80, bottom: 100, left: 10, right: 40 }, { top: 50, bottom: 72, left: 0, right: 100 }, 0), 0);
     assert.equal(topCareStreak([0, 5, 5]), 5);
     assert.equal(topCareStreak([0, 0]), 0);
     const board = readSpaBoard({ members: [{ nickname: "An", care_streak: 5 }, { nickname: "Lan" }] });

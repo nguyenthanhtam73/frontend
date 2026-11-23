@@ -568,6 +568,7 @@ export function useSpaRoom(options: {
     youPose,
     you,
     youStreak,
+    youNickname: room.people.find((person) => person.id === room.sessionId)?.nickname || nickname,
     landscape,
     conflict,
     roomName,

@@ -133,7 +133,7 @@ export type SpaGuest = {
 
 export type SpaBoardRow = { nickname: string; careStreak: number };
 
-/** Highest streak above zero. Ties share it. Zero never wins a crown. */
+/** Highest streak above zero. Zero never counts. */
 export function topCareStreak(values: readonly (number | undefined)[]): number {
   let top = 0;
   for (const value of values) {
@@ -176,6 +176,37 @@ export function readSpaBoard(data: unknown): SpaBoardRow[] | null {
     rows.push({ nickname, careStreak });
   }
   return rankCareStreaks(rows);
+}
+
+export type BoardMedal = "gold" | "silver" | "bronze" | null;
+
+/**
+ * Dense medals by distinct care_streak, after the board sort (high streak, then name).
+ * The highest value is gold, the next silver, the next bronze. Ties share that medal.
+ * A fourth distinct value, and every 0, gets no medal.
+ */
+export function boardMedals(rows: readonly { careStreak: number }[]): BoardMedal[] {
+  const ladder: BoardMedal[] = ["gold", "silver", "bronze"];
+  const distinct = [...new Set(rows.map((row) => row.careStreak).filter((value) => value > 0))].sort((a, b) => b - a);
+  const byValue = new Map<number, BoardMedal>();
+  distinct.forEach((value, index) => {
+    byValue.set(value, index < ladder.length ? ladder[index]! : null);
+  });
+  return rows.map((row) => (row.careStreak > 0 ? byValue.get(row.careStreak) ?? null : null));
+}
+
+/** How far to push a name tag so it sits under the watering pill. 0 when they do not meet. */
+export function nameTagDrop(
+  tag: { top: number; bottom: number; left: number; right: number },
+  pill: { top: number; bottom: number; left: number; right: number } | null,
+  currentDrop: number,
+): number {
+  if (!pill) return 0;
+  const top = tag.top - currentDrop;
+  const bottom = tag.bottom - currentDrop;
+  const hit = tag.left < pill.right - 1 && tag.right > pill.left + 1 && top < pill.bottom && bottom > pill.top;
+  if (!hit) return 0;
+  return Math.max(0, Math.ceil(pill.bottom - top + 4));
 }
 
 /**
