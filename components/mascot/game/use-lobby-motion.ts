@@ -16,7 +16,7 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { fitSpaPlate, spaFootScale, spaPlateY, spaStackZ, spaWorldY } from "@/lib/mascot/game/spa-room";
+import { fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaFootScale, spaStackZ } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -691,13 +691,17 @@ export function useSpaMotion(input: {
   onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
   /** False while the entry card is up, so the floor loop starts once the stage exists. */
   enabled?: boolean;
+  /** 1600×1000 plate and its walk bounds. */
+  landscape?: boolean;
 }) {
   const guestsProp = useRef(input.guests ?? []);
   const youProp = useRef(input.you ?? null);
   const onWalk = useRef(input.onWalk);
+  const landscapeProp = useRef(input.landscape === true);
   guestsProp.current = input.guests ?? [];
   youProp.current = input.you ?? null;
   onWalk.current = input.onWalk;
+  landscapeProp.current = input.landscape === true;
 
   const api = useRef({
     zoomBy(factor: number) {
@@ -735,18 +739,14 @@ export function useSpaMotion(input: {
     let holdTimer = 0;
     let downPoint = { x: 0, y: 0 };
 
-    let crop = { top: 0, bottom: 1 };
-    const wideFrame = () => frame.clientWidth > frame.clientHeight;
+    const boundsNow = () => (landscapeProp.current ? SPA_LANDSCAPE_BOUNDS : SPA_BOUNDS);
 
     const chrome = () => {
       const head = frame.querySelector<HTMLElement>(".beda-spa-head");
       const bar = frame.querySelector<HTMLElement>(".beda-room-bar");
       const nav = Number.parseFloat(getComputedStyle(frame).getPropertyValue("--beda-nav-reserve")) || 0;
       const top = Math.ceil((head?.getBoundingClientRect().height ?? 64) + 4);
-      // On a wide frame the pills sit in the side margin, so the plate can use the height above the nav.
-      const bottom = wideFrame()
-        ? Math.ceil(nav + 2)
-        : Math.ceil(nav + 8 + (bar?.getBoundingClientRect().height ?? 44) + 8);
+      const bottom = Math.ceil(nav + 8 + (bar?.getBoundingClientRect().height ?? 44) + 8);
       return { top, right: 0, bottom, left: 0 };
     };
 
@@ -754,24 +754,15 @@ export function useSpaMotion(input: {
       const pad = chrome();
       const availW = Math.max(0, frame.clientWidth - pad.left - pad.right);
       const availH = Math.max(0, frame.clientHeight - pad.top - pad.bottom);
-      const plate = fitSpaPlate(availW, availH, wideFrame() ? frame.clientWidth * 0.45 : 0);
-      crop = { top: plate.cropTop, bottom: plate.cropBottom };
+      const plate = fitSpaPlate(availW, availH, landscapeProp.current);
       if (plate.width > 0 && plate.height > 0) {
         view.style.width = `${plate.width}px`;
         view.style.height = `${plate.height}px`;
-        const span = plate.cropBottom - plate.cropTop;
-        if (span >= 0.999) {
-          view.style.backgroundSize = "100% 100%";
-          view.style.backgroundPosition = "center";
-        } else {
-          view.style.backgroundSize = `100% ${(100 / span).toFixed(4)}%`;
-          view.style.backgroundPosition = `center ${((plate.cropTop / (1 - span)) * 100).toFixed(4)}%`;
-        }
+        view.style.backgroundSize = "100% 100%";
+        view.style.backgroundPosition = "center";
       }
       return pad;
     };
-
-    const visibleY = (worldY: number) => spaPlateY(worldY, crop.top, crop.bottom);
 
     const apply = () => {
       const pad = fitPlate();
@@ -810,13 +801,12 @@ export function useSpaMotion(input: {
     const toStage = (clientX: number, clientY: number) => {
       const box = frame.getBoundingClientRect();
       const local = screenToWorld(clientX - box.left, clientY - box.top, cam);
-      const visible = (local.y - stage.offsetTop) / (stage.offsetHeight || 1);
       return clampPoint(
         {
           x: (local.x - stage.offsetLeft) / (stage.offsetWidth || 1),
-          y: spaWorldY(visible, crop.top, crop.bottom),
+          y: (local.y - stage.offsetTop) / (stage.offsetHeight || 1),
         },
-        SPA_BOUNDS,
+        boundsNow(),
       );
     };
 
@@ -828,7 +818,7 @@ export function useSpaMotion(input: {
         const sy = Math.sign(point.y - mat.y) || 1;
         point = clampPoint(
           { x: mat.x + sx * mat.rx * 1.08, y: mat.y + sy * mat.ry * 1.08 },
-          SPA_BOUNDS,
+          boundsNow(),
         );
       }
       walker.goal = point;
@@ -850,7 +840,7 @@ export function useSpaMotion(input: {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const speed = lobbyWorldSpeed(stage.offsetWidth || 1, 1);
-      Object.assign(walker, stepWalker(walker, dt, obstacle(now), SPA_BOUNDS, reduced, speed, true));
+      Object.assign(walker, stepWalker(walker, dt, obstacle(now), boundsNow(), reduced, speed, true));
       const server = youProp.current;
       if (server && (!seenServer || Math.hypot(server.x - seenServer.x, server.y - seenServer.y) > 0.0008)) {
         seenServer = { x: server.x, y: server.y };
@@ -911,7 +901,7 @@ export function useSpaMotion(input: {
       const youMoving = Math.hypot(walker.vx, walker.vy) > 0.02;
       if (pose) {
         pose.style.setProperty("--mx", `${walker.x * stage.offsetWidth}px`);
-        pose.style.setProperty("--my", `${visibleY(walker.y) * stage.offsetHeight}px`);
+        pose.style.setProperty("--my", `${walker.y * stage.offsetHeight}px`);
         pose.style.setProperty("--sy", String(walker.squash));
         pose.style.zIndex = String(spaStackZ(walker.y));
         setFacing(pose, walker.face, walker.phase, youMoving, true);
@@ -930,7 +920,7 @@ export function useSpaMotion(input: {
         const drawn = glide && !reduced ? sampleGlide(glide, now) : { x: guest.x, y: guest.y };
         const moving = !!glide && !reduced && Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 && now < glide.t0 + Math.max(glide.dur, 1);
         guestPose.style.setProperty("--mx", `${drawn.x * stageW}px`);
-        guestPose.style.setProperty("--my", `${visibleY(drawn.y) * stageH}px`);
+        guestPose.style.setProperty("--my", `${drawn.y * stageH}px`);
         guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
         guestPose.style.zIndex = String(spaStackZ(drawn.y));
         setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);

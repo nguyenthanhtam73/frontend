@@ -28,6 +28,7 @@ import {
   sampleSpaGuests,
   seatGuests,
   SPA_SEATS,
+  SPA_YOU,
   shouldRetryRoomJoin,
   SPA_ENTRY_TIMEOUT_MS,
   spaEntryPhase,
@@ -37,11 +38,14 @@ import {
   spaRoomOnlineCount,
   spaRoomProblem,
   fitSpaPlate,
-  SPA_CROP_TIGHT,
+  SPA_LANDSCAPE_BOUNDS,
+  SPA_LANDSCAPE_HEIGHT,
+  SPA_LANDSCAPE_SELF_SLOT,
+  SPA_LANDSCAPE_WIDTH,
   SPA_PLATE_HEIGHT,
   SPA_PLATE_WIDTH,
+  SPA_SEATS_LANDSCAPE,
   spaMembershipChanged,
-  spaPlateY,
   spaStackZ,
   spreadSpaFeet,
   zaloShareUrl,
@@ -162,37 +166,62 @@ describe("spa join spots", () => {
     }
   });
 
-  it("fits the whole plate in portrait and crops only the empty band on a wide frame", () => {
+  it("uses the landscape plate only when the free frame is wide", () => {
     assert.equal(SPA_PLATE_WIDTH, 780);
     assert.equal(SPA_PLATE_HEIGHT, 1387);
-    const aspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+    assert.equal(SPA_LANDSCAPE_WIDTH, 1600);
+    assert.equal(SPA_LANDSCAPE_HEIGHT, 1000);
+    const portrait = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+    const landscape = SPA_LANDSCAPE_WIDTH / SPA_LANDSCAPE_HEIGHT;
     for (const [width, height] of [
       [390, 620],
       [360, 560],
       [820, 930],
     ] as const) {
       const plate = fitSpaPlate(width, height);
-      assert.equal(plate.cropTop, 0);
-      assert.equal(plate.cropBottom, 1);
-      assert.ok(plate.width <= width + 1e-6 && plate.height <= height + 1e-6);
-      assert.ok(Math.abs(plate.width / plate.height - aspect) < 1e-9);
+      assert.equal(plate.landscape, false);
+      assert.ok(Math.abs(plate.width / plate.height - portrait) < 1e-9);
     }
-    const wide = fitSpaPlate(1024, 500, 1024 * 0.45);
-    assert.equal(wide.cropTop, SPA_CROP_TIGHT.top);
-    assert.equal(wide.cropBottom, SPA_CROP_TIGHT.bottom);
-    assert.ok(wide.cropTop <= 0.17);
-    assert.ok(wide.cropBottom >= 0.776);
+    const wide = fitSpaPlate(1024, 500);
+    assert.equal(wide.landscape, true);
+    assert.ok(Math.abs(wide.width / wide.height - landscape) < 1e-9);
     assert.ok(wide.width <= 1024 && wide.height <= 500 + 1e-6);
-    assert.ok(wide.width > 500 * aspect, "cropped plate is wider than the full plate");
-    const feet = spaPlateY(0.7, wide.cropTop, wide.cropBottom);
-    assert.ok(feet > 0 && feet < 1);
+    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0, landscape: false });
+  });
+
+  it("stands a landscape party on the CapCut slots, with Bạn on front-3", () => {
+    assert.equal(SPA_SEATS_LANDSCAPE.length, 8);
+    const self = "self-beda";
+    const people = [
+      { id: self, x: 0.5, y: 0.7 },
+      ...["f0", "f1", "f2", "f3", "f4"].map((id) => ({ id, x: 0.5, y: 0.7 })),
+    ];
+    const spots = spreadSpaFeet(people, { landscape: true, selfId: self });
+    const mine = spots.get(self)!;
+    assert.equal(mine.x, 875 / 1600);
+    assert.equal(mine.y, Math.min(0.99, (935 + 50) / 1000));
+    assert.equal(mine.foot, 264 / 1600);
+    const feet = [...spots.values()];
+    for (const spot of feet) {
+      assert.ok(spot.x >= SPA_LANDSCAPE_BOUNDS.minX && spot.x <= SPA_LANDSCAPE_BOUNDS.maxX);
+      assert.ok(spot.y <= 0.99);
+    }
+    const walked = spreadSpaFeet(
+      [
+        { id: self, x: 0.4, y: 0.8 },
+        { id: "f0", x: 0.7, y: 0.75 },
+      ],
+      { landscape: true, selfId: self },
+    );
+    assert.equal(walked.get(self)?.foot, undefined);
+    assert.ok(Math.abs((walked.get(self)?.x ?? 0) - 0.4) < 1e-9);
+    assert.equal(SPA_LANDSCAPE_SELF_SLOT, "front-3");
     assert.equal(spaMembershipChanged({ upserts: [{ id: "new" }], left: [], events: [] }, new Set(["old"])), true);
     assert.equal(spaMembershipChanged({ upserts: [], left: ["old"], events: [] }, new Set(["old"])), true);
     assert.equal(
       spaMembershipChanged({ upserts: [{ id: "old" }], left: [], events: [{ op: "wave" }] }, new Set(["old"])),
       false,
     );
-    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0, cropTop: 0, cropBottom: 1 });
   });
 
   it("keeps the sample cast off a real room code and times out the wait", () => {
@@ -378,9 +407,16 @@ describe("spa room seats", () => {
     const left = SPA_SEATS.find((seat) => seat.id === "left");
     assert.equal(right && right.x <= 74 && right.x >= 68, true);
     assert.equal(left && right && left.x + right.x === 100, true);
-    const xs = SPA_SEATS.map((seat) => seat.x).sort((a, b) => a - b);
-    for (let i = 1; i < xs.length; i += 1) {
-      assert.equal(xs[i]! - xs[i - 1]! >= 8, true);
+    const frontLeft = SPA_SEATS.find((seat) => seat.id === "front-left");
+    const frontRight = SPA_SEATS.find((seat) => seat.id === "front-right");
+    assert.equal(frontLeft?.x, 30);
+    assert.equal(frontRight?.x, 70);
+    assert.equal(SPA_YOU.x, 50);
+    for (const y of new Set(SPA_SEATS.map((seat) => seat.y))) {
+      const row = SPA_SEATS.filter((seat) => seat.y === y).map((seat) => seat.x).sort((a, b) => a - b);
+      for (let i = 1; i < row.length; i += 1) {
+        assert.equal(row[i]! - row[i - 1]! >= 8, true);
+      }
     }
   });
 

@@ -1,6 +1,6 @@
 import type { GameClipId, GameHairId, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
 import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type WirePerson } from "@/lib/mascot/game/lobby-live";
-import { SPA_BOUNDS, clamp } from "@/lib/mascot/game/walk";
+import { SPA_BOUNDS, clamp, type Bounds } from "@/lib/mascot/game/walk";
 
 /**
  * 8-person spa room (phòng nhóm).
@@ -88,8 +88,8 @@ export const SPA_SEATS: readonly SpaSeat[] = [
   { id: "back-right", x: 86, y: 64, scale: 0.82 },
   { id: "left", x: 28, y: 76, scale: 0.9 },
   { id: "right", x: 72, y: 76, scale: 0.9 },
-  { id: "front-left", x: 36, y: 92, scale: 0.96 },
-  { id: "front-right", x: 64, y: 92, scale: 0.96 },
+  { id: "front-left", x: 30, y: 92, scale: 0.96 },
+  { id: "front-right", x: 70, y: 92, scale: 0.96 },
   { id: "back", x: 50, y: 56, scale: 0.72 },
 ];
 
@@ -117,6 +117,8 @@ export type SpaGuest = {
   x: number | null;
   /** 0..1 down the stage, at the feet. Null until the server sends a position. */
   y: number | null;
+  /** Landscape plate width fraction from the slot table. Portrait leaves this unset. */
+  foot?: number;
   facing: LobbyFacing;
   outfit: GameOutfitId;
   hair: GameHairId;
@@ -186,58 +188,59 @@ export function spaFootScale(y: number): number {
 export const SPA_PLATE_WIDTH = 780;
 export const SPA_PLATE_HEIGHT = 1387;
 
+/** Landscape plate `public/mascot/rooms/spa-room-landscape.webp`. */
+export const SPA_LANDSCAPE_WIDTH = 1600;
+export const SPA_LANDSCAPE_HEIGHT = 1000;
+/** Free frame wider than this uses the landscape plate. */
+export const SPA_LANDSCAPE_ASPECT = 1.2;
+
 /**
- * Wide screens crop the empty ceiling and the floor below the rug.
- * The window still contains the string lights (from about 0.17) through the rug (to about 0.776).
- * Portrait and phone keep the whole plate.
+ * Eight foot slots on the 1600×1000 plate. `w` is the Bé Da frame width in plate pixels.
+ * «Bạn» stands on front-3. Keep this table in sync with the CapCut slots file.
  */
-export const SPA_CROP_SAFE = { top: 0.145, bottom: 0.8 } as const;
-export const SPA_CROP_TIGHT = { top: 0.163, bottom: 0.778 } as const;
+export const SPA_SEATS_LANDSCAPE = [
+  { id: "back-1", row: "back" as const, x: 410, y: 700, w: 244 },
+  { id: "front-1", row: "front" as const, x: 255, y: 935, w: 264 },
+  { id: "back-2", row: "back" as const, x: 720, y: 700, w: 244 },
+  { id: "front-2", row: "front" as const, x: 565, y: 935, w: 264 },
+  { id: "back-3", row: "back" as const, x: 1030, y: 700, w: 244 },
+  { id: "front-3", row: "front" as const, x: 875, y: 935, w: 264 },
+  { id: "back-4", row: "back" as const, x: 1340, y: 700, w: 244 },
+  { id: "front-4", row: "front" as const, x: 1185, y: 935, w: 264 },
+] as const;
+
+/** The drawn anchor is the bottom of the figure plus its name. Slots are the feet, so drop by the tag. */
+export const SPA_LANDSCAPE_NAME_DROP = 50;
+
+export const SPA_LANDSCAPE_SELF_SLOT = "front-3";
+
+/** Walkable floor on the landscape plate: x 180–1420, y 660–950. */
+export const SPA_LANDSCAPE_BOUNDS: Bounds = {
+  minX: 180 / SPA_LANDSCAPE_WIDTH,
+  maxX: 1420 / SPA_LANDSCAPE_WIDTH,
+  minY: 660 / SPA_LANDSCAPE_HEIGHT,
+  maxY: 950 / SPA_LANDSCAPE_HEIGHT,
+};
 
 export type SpaPlateFit = {
   width: number;
   height: number;
-  cropTop: number;
-  cropBottom: number;
+  landscape: boolean;
 };
 
 /**
- * Largest plate that fits the free rectangle.
- * When the free rectangle is wider than it is tall, crop the empty ceiling and
- * the floor under the rug so the room can take more of the width. `minWidth`
- * may tighten that crop, but never past the lights or the rug.
+ * Largest plate that fits the free rectangle without cropping the picture.
+ * A wide frame (aspect ≥ 1.2) uses the 1600×1000 landscape plate. Anything
+ * taller uses the portrait plate, whole.
  */
-export function fitSpaPlate(availWidth: number, availHeight: number, minWidth = 0): SpaPlateFit {
+export function fitSpaPlate(availWidth: number, availHeight: number, landscape?: boolean): SpaPlateFit {
   const availW = Number.isFinite(availWidth) ? Math.max(0, availWidth) : 0;
   const availH = Number.isFinite(availHeight) ? Math.max(0, availHeight) : 0;
-  if (availW === 0 || availH === 0) return { width: 0, height: 0, cropTop: 0, cropBottom: 1 };
-  const fullAspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
-  if (availW <= availH) {
-    const width = Math.min(availW, availH * fullAspect);
-    return { width, height: width / fullAspect, cropTop: 0, cropBottom: 1 };
-  }
-  const size = (top: number, bottom: number): SpaPlateFit => {
-    const span = bottom - top;
-    const aspect = fullAspect / span;
-    const width = Math.min(availW, availH * aspect);
-    return { width, height: width / aspect, cropTop: top, cropBottom: bottom };
-  };
-  const safe = size(SPA_CROP_SAFE.top, SPA_CROP_SAFE.bottom);
-  if (!Number.isFinite(minWidth) || minWidth <= safe.width + 0.5) return safe;
-  return size(SPA_CROP_TIGHT.top, SPA_CROP_TIGHT.bottom);
-}
-
-/** Map a full-plate y into the visible crop. Points outside the crop clamp in. */
-export function spaPlateY(worldY: number, cropTop: number, cropBottom: number): number {
-  const span = Math.max(1e-6, cropBottom - cropTop);
-  const y = Math.min(cropBottom, Math.max(cropTop, worldY));
-  return (y - cropTop) / span;
-}
-
-/** Inverse of `spaPlateY` for taps on the visible plate. */
-export function spaWorldY(visibleY: number, cropTop: number, cropBottom: number): number {
-  const span = Math.max(1e-6, cropBottom - cropTop);
-  return cropTop + visibleY * span;
+  if (availW === 0 || availH === 0) return { width: 0, height: 0, landscape: false };
+  const wide = landscape ?? availW / availH >= SPA_LANDSCAPE_ASPECT;
+  const aspect = wide ? SPA_LANDSCAPE_WIDTH / SPA_LANDSCAPE_HEIGHT : SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+  const width = Math.min(availW, availH * aspect);
+  return { width, height: width / aspect, landscape: wide };
 }
 
 /** True when a tick adds or removes a member, so the header should reread member_count. */
@@ -536,10 +539,11 @@ export function spaRoomGuests(input: {
   selfId: string | null;
   hidden: ReadonlySet<string>;
   poses?: Readonly<Record<string, GamePose | null | undefined>>;
+  landscape?: boolean;
 }): SpaGuest[] {
   if (input.code) {
     if (!input.live) return [];
-    return seatGuests(input.people, input.selfId, input.hidden, input.poses);
+    return seatGuests(input.people, input.selfId, input.hidden, input.poses, input.landscape === true);
   }
   if (input.notice != null || input.previewCount != null) return [];
   return sampleSpaGuests(input.hidden, input.poses);
@@ -561,9 +565,59 @@ function clampSpaPoint(point: { x: number; y: number }): { x: number; y: number 
  * below it and half a step to the side, so back faces sit in the gaps.
  * A point that has already moved stays put. Every result stays inside the floor.
  */
+export type SpaSpreadOptions = { landscape?: boolean; selfId?: string | null };
+
+function landscapeNorm(slot: (typeof SPA_SEATS_LANDSCAPE)[number]): { x: number; y: number; foot: number } {
+  return {
+    x: slot.x / SPA_LANDSCAPE_WIDTH,
+    y: Math.min(0.99, (slot.y + SPA_LANDSCAPE_NAME_DROP) / SPA_LANDSCAPE_HEIGHT),
+    foot: slot.w / SPA_LANDSCAPE_WIDTH,
+  };
+}
+
+function clampLandscape(point: { x: number; y: number }): { x: number; y: number } {
+  return {
+    x: clamp(point.x, SPA_LANDSCAPE_BOUNDS.minX, SPA_LANDSCAPE_BOUNDS.maxX),
+    y: clamp(point.y, SPA_LANDSCAPE_BOUNDS.minY, SPA_LANDSCAPE_BOUNDS.maxY),
+  };
+}
+
+/** Stacked members, and anyone still on the shared spawn, stand on the landscape slots. */
+function spreadLandscapeFeet(
+  groups: { anchor: { x: number; y: number }; members: { id: string; x: number; y: number }[] }[],
+  selfId: string | null,
+): Map<string, { x: number; y: number; foot?: number }> {
+  const out = new Map<string, { x: number; y: number; foot?: number }>();
+  const waiting: string[] = [];
+  for (const group of groups) {
+    const stacked = group.members.length >= 2 || Math.hypot(group.anchor.x - 0.5, group.anchor.y - 0.7) < 0.03;
+    if (!stacked) {
+      for (const person of group.members) out.set(person.id, clampLandscape(person));
+      continue;
+    }
+    waiting.push(...group.members.map((person) => person.id));
+  }
+  const selfSlot = landscapeNorm(SPA_SEATS_LANDSCAPE.find((slot) => slot.id === SPA_LANDSCAPE_SELF_SLOT)!);
+  const rest = SPA_SEATS_LANDSCAPE.filter((slot) => slot.id !== SPA_LANDSCAPE_SELF_SLOT)
+    .slice()
+    .sort((a, b) => a.x - b.x)
+    .map(landscapeNorm);
+  let index = 0;
+  for (const id of waiting) {
+    if (id === selfId) {
+      out.set(id, selfSlot);
+      continue;
+    }
+    out.set(id, rest[index] ?? selfSlot);
+    index += 1;
+  }
+  return out;
+}
+
 export function spreadSpaFeet(
   people: readonly { id: string; x: number; y: number }[],
-): Map<string, { x: number; y: number }> {
+  options: SpaSpreadOptions = {},
+): Map<string, { x: number; y: number; foot?: number }> {
   const sorted = [...people].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const groups: { anchor: { x: number; y: number }; members: typeof sorted }[] = [];
   for (const person of sorted) {
@@ -571,7 +625,8 @@ export function spreadSpaFeet(
     if (group) group.members.push(person);
     else groups.push({ anchor: { x: person.x, y: person.y }, members: [person] });
   }
-  const out = new Map<string, { x: number; y: number }>();
+  if (options.landscape) return spreadLandscapeFeet(groups, options.selfId ?? null);
+  const out = new Map<string, { x: number; y: number; foot?: number }>();
   const span = SPA_BOUNDS.maxX - SPA_BOUNDS.minX;
   for (const group of groups) {
     if (group.members.length < 2) {
@@ -609,11 +664,13 @@ export function seatGuests(
   selfId: string | null,
   hidden: ReadonlySet<string>,
   poses: Readonly<Record<string, GamePose | null | undefined>> = {},
+  landscape = false,
 ): SpaGuest[] {
   const others = people.filter((person) => person.id !== selfId && !hidden.has(person.id));
   others.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const spots = spreadSpaFeet(
     people.filter((person) => person.placed !== false).map((person) => ({ id: person.id, x: person.x, y: person.y })),
+    { landscape, selfId },
   );
   const guests: SpaGuest[] = [];
   let seatIndex = 0;
@@ -629,6 +686,7 @@ export function seatGuests(
       seat: seat?.id ?? null,
       x: standing ? spots.get(person.id)?.x ?? person.x : null,
       y: standing ? spots.get(person.id)?.y ?? person.y : null,
+      ...(standing && spots.get(person.id)?.foot != null ? { foot: spots.get(person.id)?.foot } : {}),
       facing: person.facing,
       outfit: look.outfit,
       hair: look.hair,
