@@ -10,8 +10,8 @@ import {
   bpsLabel,
   getGiftRates,
   giftBoxSrc,
+  giftIconSrc,
   giftOpenArt,
-  giftPieceSrc,
   giftRateGroups,
   isCoinPrize,
   listGiftBoxes,
@@ -184,7 +184,7 @@ function GiftResult({ result, locale, onClose }: { result: GiftOpenResult; local
   return (
     <div className="beda-tree-shade" role="dialog" aria-modal="true" data-testid="beda-gift-result" data-rarity={result.prize.rarity} data-kind={coins ? "coins" : result.prize.kind}>
       <div className="beda-tree-popup beda-gift-card">
-        <p className="beda-tree-popbanner">{result.duplicate ? t("game.gift.dupeBanner") : t("game.gift.won")}</p>
+        <p className="beda-gift-banner">{result.duplicate ? t("game.gift.dupeBanner") : t("game.gift.won")}</p>
         <img className="beda-gift-art" src={mascotAssetUrl(giftBoxSrc(coins ? "thuong" : art))} alt="" />
         {coins ? <CoinBurst /> : <p className="beda-gift-rarity">{label}</p>}
         <h2 data-testid={coins ? "beda-gift-coins" : undefined}>
@@ -194,38 +194,33 @@ function GiftResult({ result, locale, onClose }: { result: GiftOpenResult; local
           <p data-testid="beda-gift-dupe">{t("game.gift.dupe", { count: result.dupeCoins })}</p>
         ) : (
           <ul className="beda-gift-items">
-            {result.granted.map((piece) => {
-              const src = giftPieceSrc(piece.slot, piece.artId);
-              return (
-                <li key={piece.id}>
-                  {src ? <img src={mascotAssetUrl(src)} alt="" /> : null}
-                  {piece.name}
-                </li>
-              );
-            })}
+            {result.granted.map((piece) => (
+              <li key={piece.id}>
+                <img src={mascotAssetUrl(giftIconSrc(piece.artId || piece.id))} alt="" />
+                {piece.name}
+              </li>
+            ))}
           </ul>
         )}
-        <div className="beda-gift-actions">
-          <button type="button" onClick={onClose}>{t("game.gift.later")}</button>
-          {coins ? (
+        <div className={coins || result.duplicate ? "beda-gift-actions is-one" : "beda-gift-actions"}>
+          {coins || result.duplicate ? (
             <button type="button" data-testid="beda-gift-take" onClick={onClose}>
               {t("game.gift.close")}
             </button>
-          ) : result.duplicate ? (
-            <button type="button" data-testid="beda-gift-take" onClick={onClose}>
-              {t("game.gift.takeCoins", { count: result.dupeCoins })}
-            </button>
           ) : (
-            <button
-              type="button"
-              data-testid="beda-gift-wear"
-              disabled={worn}
-              onClick={() => {
-                void wearGiftPieces(queryClient, result.granted).then(() => setWorn(true));
-              }}
-            >
-              {worn ? t("game.wearing") : t("game.gift.wear")}
-            </button>
+            <>
+              <button type="button" onClick={onClose}>{t("game.gift.later")}</button>
+              <button
+                type="button"
+                data-testid="beda-gift-wear"
+                disabled={worn}
+                onClick={() => {
+                  void wearGiftPieces(queryClient, result.granted).then(() => setWorn(true));
+                }}
+              >
+                {worn ? t("game.wearing") : t("game.gift.wear")}
+              </button>
+            </>
           )}
         </div>
         <span className="sr-only">{locale}</span>
@@ -261,13 +256,12 @@ export function GiftClosetSection() {
   );
   if (items.length === 0) return null;
   return (
-    <div className="beda-tree-closet" data-testid="beda-gift-closet">
+    <div className="beda-gift-closet" data-testid="beda-gift-closet">
       <p>{t("game.gift.closet")}</p>
       <div className="beda-picks">
         {items.map((item) => {
           const slot = GIFT_LAYERS.has(item.layer) ? item.layer : "hair_acc";
           const artId = item.id === "tree_clip_la_xanh" ? "acc_kep_toc_la_xanh" : item.id;
-          const src = giftPieceSrc(slot, artId);
           const on = worn.has(item.id);
           return (
             <button
@@ -280,7 +274,9 @@ export function GiftClosetSection() {
                 void wearGiftPieces(queryClient, [{ id: on ? "" : item.id, slot }]);
               }}
             >
-              <span className="beda-pick-art is-clip">{src ? <img src={mascotAssetUrl(src)} alt="" /> : null}</span>
+              <span className="beda-gift-thumb">
+                <img src={mascotAssetUrl(giftIconSrc(artId))} alt="" />
+              </span>
               {item.name}
             </button>
           );
@@ -311,9 +307,11 @@ function clothPrize(id: string, name: string, rarity: string, rarityName: string
 export function GiftPreview({
   scene,
   locale,
+  rates,
 }: {
   scene: "box" | "rates" | "prize" | "dupe" | "coins";
   locale: string;
+  rates?: GiftRateCard[] | null;
 }) {
   if (scene === "rates") {
     return (
@@ -321,7 +319,7 @@ export function GiftPreview({
         locale={locale}
         error=""
         onClose={() => undefined}
-        cards={[
+        cards={rates && rates.length > 0 ? rates : [
           {
             treeType: "leaf",
             name: "Hộp quà Lá xanh",

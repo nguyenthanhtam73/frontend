@@ -4341,7 +4341,15 @@
   height: 146px;
 }
 
-.beda-tree-plant,
+.beda-tree-plant {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
 .beda-gift-spot,
 .beda-gift-info {
   position: absolute;
@@ -4372,11 +4380,12 @@
 }
 
 .beda-gift-spot {
-  left: 50%;
-  bottom: -8px;
-  width: 72px;
-  height: 72px;
-  transform: translateX(-50%);
+  left: 2px;
+  top: 34%;
+  bottom: auto;
+  width: 52px;
+  height: 52px;
+  transform: none;
 }
 
 .beda-gift-spot img,
@@ -4401,8 +4410,10 @@
 }
 
 .beda-gift-info {
-  right: 8px;
-  bottom: 36px;
+  left: 46px;
+  right: auto;
+  top: 28%;
+  bottom: auto;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -4410,6 +4421,45 @@
   color: #2f6f74;
   font-weight: 800;
   box-shadow: 0 2px 0 #d7e6e4;
+}
+
+.beda-gift-banner {
+  display: inline-block;
+  margin: 0 auto 8px;
+  border-radius: 999px;
+  background: #ff7eb3;
+  padding: 6px 14px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.beda-gift-closet {
+  padding: 8px 16px 16px;
+}
+
+.beda-gift-closet > p {
+  margin: 0 0 8px;
+  color: #16332f;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.beda-gift-thumb {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.beda-gift-thumb img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: contain;
 }
 
 .beda-gift-card h2 {
@@ -4438,6 +4488,7 @@
 }
 
 .beda-gift-actions button:last-child,
+.beda-gift-actions.is-one button,
 .beda-gift-card .beda-tree-take {
   background: #2f9e8f;
   color: #fff;
@@ -4464,8 +4515,8 @@
 }
 
 .beda-gift-items img {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
 }
 
@@ -4473,12 +4524,20 @@
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  padding: 1px 0;
+  font-size: 14px;
   font-weight: 700;
+  line-height: 1.25;
+}
+
+.beda-gift-card section > p {
+  margin: 6px 0 2px;
+  font-size: 14px;
 }
 
 .beda-gift-card {
-  max-height: min(78vh, 640px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .beda-gift-burst {
@@ -4533,6 +4592,7 @@
 
 .beda-tree-plant {
   transform-origin: 50% 71.5%;
+  z-index: 1;
 }
 
 .beda-tree-pot {

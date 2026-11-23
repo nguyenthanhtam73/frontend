@@ -18,6 +18,7 @@
   "alias": {
     "tree_clip_la_xanh": "acc_kep_toc_la_xanh"
   },
+  "icon": "/mascot/gift/icon/{id}.svg",
   "legs": "/mascot/gift/legs/{id}.svg",
   "shoes": "/mascot/gift/shoes/{id}.svg",
   "sleeve": "/mascot/gift/top/{pose}__{id}.svg",

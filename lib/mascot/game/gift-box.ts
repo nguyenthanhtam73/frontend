@@ -154,7 +154,7 @@ export function giftOpenArt(rarity: string): "thuong" | "hiem" | "sieu" {
   return "thuong";
 }
 
-export { giftSleeveSrc, giftSrc as giftPieceSrc } from "@/lib/mascot/game/gift-wear";
+export { giftIconSrc, giftSleeveSrc, giftSrc as giftPieceSrc } from "@/lib/mascot/game/gift-wear";
 
 export async function listGiftBoxes(): Promise<GiftBoxInfo[]> {
   const data = await apiGet<unknown>(BOXES, call);
@@ -170,12 +170,22 @@ export async function openGiftBox(id: string): Promise<GiftOpenResult> {
   return opened;
 }
 
+export function parseGiftRates(data: unknown): GiftRateCard[] {
+  const body = row(data);
+  const nested = body ? row(body.data) : null;
+  const payload = nested && Array.isArray(nested.boxes) ? nested : body;
+  if (!payload || !Array.isArray(payload.boxes)) return [];
+  return payload.boxes.map(readCard).filter((card): card is GiftRateCard => card != null);
+}
+
 export async function getGiftRates(treeType?: string): Promise<GiftRateCard[]> {
   const query = treeType ? `?tree_type=${encodeURIComponent(treeType)}` : "";
   const data = await apiGet<unknown>(`${BOXES}/rates${query}`, call);
-  const body = row(data);
-  if (!body || !Array.isArray(body.boxes)) throw new ApiError("api", { status: 502, code: "bad_message" });
-  return body.boxes.map(readCard).filter((card): card is GiftRateCard => card != null);
+  const cards = parseGiftRates(data);
+  if (cards.length === 0 && !Array.isArray(row(data)?.boxes)) {
+    throw new ApiError("api", { status: 502, code: "bad_message" });
+  }
+  return cards;
 }
 
 export function readOpen(data: unknown): GiftOpenResult | null {

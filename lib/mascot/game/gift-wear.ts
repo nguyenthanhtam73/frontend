@@ -27,6 +27,7 @@ type Catalog = {
   order: string[];
   slots: Record<string, string>;
   alias: Record<string, string>;
+  icon: string;
   legs: string;
   shoes: string;
   sleeve: string;
@@ -71,6 +72,11 @@ export function giftSleeveLength(topId: string, hints?: GiftWearHints): "short" 
 
 function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? "");
+}
+
+/** Tight item drawing for closet tiles and the reveal list. The file is cropped to the piece. */
+export function giftIconSrc(id: string): string {
+  return fill(wear.icon, { id: giftFileId(id) });
 }
 
 export function giftSleeveSrc(topId: string, pose: string | null | undefined): string {
