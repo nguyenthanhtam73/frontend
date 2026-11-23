@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { BeDaSpaRoom } from "@/components/mascot/game/be-da-spa-room";
+import { TreeClosetSection } from "@/components/mascot/game/be-da-room-tree";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
+import { mascotQueryKey } from "@/lib/api/mascot";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import type { RoomTree, TreeReward } from "@/lib/mascot/game/room-tree";
 import { sampleSpaGuests } from "@/lib/mascot/game/spa-room";
@@ -42,7 +45,6 @@ function base(extra: Partial<RoomTree> = {}): RoomTree {
     leveled: false,
     justGranted: [],
     unseenRewards: [],
-    rewardedCount: null,
     ...extra,
   };
 }
@@ -81,21 +83,19 @@ function shotPanel(scene: string, ms: number | null): RoomTreePanel {
       }),
     } as RoomTreePanel;
   }
-  if (scene === "return") {
-    const reward = { ...LADDER[3]!, recipients: 4 };
+  if (scene === "seen") {
     return {
       ...idle,
       tree: base({
         stage: 4,
         stageName: "Cây nhỏ có nụ",
-        waters: 0,
+        waters: 1,
         required: 3,
-        progress: 0,
+        watered: ["Mây Hồng"],
+        progress: 0.3,
         balance: 100,
-        unseenRewards: [reward],
-        rewardedCount: 4,
+        unseenRewards: [],
       }),
-      popup: [reward],
     } as RoomTreePanel;
   }
   if (scene === "level") {
@@ -173,6 +173,30 @@ function shotPanel(scene: string, ms: number | null): RoomTreePanel {
   return { ...idle, tree: base() } as RoomTreePanel;
 }
 
+function ClosetShot() {
+  const client = useQueryClient();
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const snap = defaultSnapshot();
+    snap.isDefault = false;
+    snap.ownedItems = [
+      { id: "tree_clip_la_xanh", name: "tree_clip_la_xanh", layer: "accessory", previewOnly: false },
+      { id: "tree_sticker_la_xanh", name: "tree_sticker_la_xanh", layer: "decal", previewOnly: true },
+    ];
+    client.setQueryData(mascotQueryKey, snap);
+    setReady(true);
+  }, [client]);
+  if (!ready) return null;
+  return (
+    <div className="beda-game" data-testid="beda-tree-shot">
+      <section className="beda-card beda-sheet" data-testid="beda-wardrobe">
+        <h2>Tủ đồ</h2>
+        <TreeClosetSection selectedId="tree_clip_la_xanh" onSelect={() => undefined} />
+      </section>
+    </div>
+  );
+}
+
 export function TreeShot() {
   const [scene, setScene] = useState("stage1");
   const [ms, setMs] = useState<number | null>(null);
@@ -190,6 +214,7 @@ export function TreeShot() {
     media.addEventListener("change", apply);
     return () => media.removeEventListener("change", apply);
   }, []);
+  if (scene === "closet") return <ClosetShot />;
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
     missedDays: 0,

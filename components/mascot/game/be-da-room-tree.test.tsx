@@ -47,7 +47,6 @@ function tree(extra: Partial<RoomTree> = {}): RoomTree {
     leveled: false,
     justGranted: [],
     unseenRewards: [],
-    rewardedCount: null,
     ...extra,
   };
 }
@@ -83,6 +82,16 @@ describe("room tree card", () => {
     assert.equal(closed.includes("AI không tưới"), false);
     assert.equal(closed.includes("data-testid=\"beda-tree-rail\""), false);
     assert.equal(closed.includes("Trồng hạt mới"), false);
+
+    const bloom = render(
+      <RoomTreePreview
+        panel={panel({}, { stage: 7, stageName: "Cây hoa rực rỡ", bloomed: true, canWater: false, reason: "bloomed", waters: 0 })}
+        locale="vi"
+      />,
+    );
+    assert.match(bloom, /Cây đã nở rộ/);
+    assert.equal(bloom.includes("Đã tưới"), false);
+    assert.equal(bloom.includes("beda-tree-water"), false);
 
     const open = render(<RoomTreePreview panel={panel()} locale="vi" startOpen />);
     assert.match(open, /Đã tưới 0\/3 hôm nay/);
@@ -163,10 +172,10 @@ describe("room tree card", () => {
         panel={panel(
           {
             popup: [
-              { stage: 4, name: "Cây nhỏ có nụ", coins: 50, itemId: "tree_sticker_la_xanh", itemName: "Nhãn dán lá xanh", previewOnly: true, recipients: 4 },
+              { stage: 4, name: "Cây nhỏ có nụ", coins: 50, itemId: "tree_sticker_la_xanh", itemName: "Nhãn dán lá xanh", previewOnly: true, rewardedCount: 4 },
             ],
           },
-          { stage: 4, stageName: "Cây nhỏ có nụ", balance: 100, rewardedCount: 9 },
+          { stage: 4, stageName: "Cây nhỏ có nụ", balance: 100 },
         )}
         locale="vi"
       />,

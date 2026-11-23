@@ -32,8 +32,8 @@ export type TreeReward = {
   itemId: string;
   itemName: string;
   previewOnly: boolean;
-  /** How many real members the server paid for this rung. Null when it did not say. */
-  recipients?: number | null;
+  /** Members the server paid for this rung. Absent when the reward omits `rewarded_count`. */
+  rewardedCount?: number | null;
 };
 
 export type RoomTree = {
@@ -58,8 +58,6 @@ export type RoomTree = {
   justGranted: TreeReward[];
   /** Stages this member was paid while they were away. Empty when the server omits it. */
   unseenRewards: TreeReward[];
-  /** Members who actually received the latest reward. Null when the server did not say. */
-  rewardedCount: number | null;
 };
 
 export type TreeTypeInfo = {
@@ -163,7 +161,7 @@ function readReward(value: unknown): TreeReward | null {
     itemId,
     itemName: text(body.item_name, 80) || known?.name || "",
     previewOnly: body.preview_only === true || known?.previewOnly === true,
-    recipients: intOrNull(body.recipients ?? body.member_count),
+    rewardedCount: intOrNull(body.rewarded_count),
   };
 }
 
@@ -216,7 +214,6 @@ export function readRoomTree(data: unknown): RoomTree | null {
     leveled,
     justGranted,
     unseenRewards: readRewards(body.unseen_rewards),
-    rewardedCount: intOrNull(body.rewarded_count),
   };
 }
 
@@ -332,11 +329,15 @@ export function msUntilVietnamMidnight(now: Date): number {
   return Math.max(1000, left);
 }
 
-/** POST /api/v1/mascot/rooms/:code/tree/seen. Clears unseen_rewards for these stages. */
+/** POST /api/v1/mascot/rooms/:code/tree/rewards/seen. Marks these stages seen for this member. */
+export function treeRewardsSeenPath(code: string): string {
+  return `${ROOMS}/${encodeURIComponent(code)}/tree/rewards/seen`;
+}
+
 export async function markTreeSeen(code: string, stages: readonly number[]): Promise<void> {
   const unique = [...new Set(stages.filter((stage) => stage >= 1 && stage <= 7))];
   if (unique.length === 0) return;
-  await apiPost(`${ROOMS}/${encodeURIComponent(code)}/tree/seen`, { stages: unique }, roomCall);
+  await apiPost(treeRewardsSeenPath(code), { stages: unique }, roomCall);
 }
 
 /** Up to 80 characters. A new key for each tap. */

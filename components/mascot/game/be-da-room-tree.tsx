@@ -139,7 +139,7 @@ function useTreeChrome(panel: RoomTreePanel | null, locale: string, startOpen: b
             stage={tree.stage}
             stageName={tree.stageName}
             imageKey={tree.imageKey}
-            friends={rewardRecipients(panel.popup, tree.rewardedCount)}
+            friends={rewardCount(panel.popup)}
             locale={locale}
             light={light}
             onTake={panel.onTakeGift}
@@ -332,20 +332,27 @@ function TreeDock({
 }) {
   const t = useTranslations("mascot");
   const fill = treeProgressPercent(tree.progress);
+  const bloomed = tree.bloomed || tree.reason === "bloomed";
   return (
     <>
       {open ? null : (
-        <div className="beda-tree-chip" data-testid="beda-tree-card" data-open="0">
+        <div className="beda-tree-chip" data-testid="beda-tree-card" data-open="0" data-bloom={bloomed ? "1" : "0"}>
           <button type="button" className="beda-tree-chip-main" data-testid="beda-tree-expand" aria-expanded={false} onClick={onToggle}>
             <img src={mascotAssetUrl(treePotSrc())} alt="" />
             <span>
-              <strong data-testid="beda-tree-count">{t("game.tree.wateredShort", { waters: tree.waters, required: tree.required })}</strong>
-              <span className="beda-tree-bar" data-testid="beda-tree-bar" aria-hidden>
-                <span style={{ width: `${fill}%` }} />
-              </span>
+              {bloomed ? (
+                <strong data-testid="beda-tree-count">{t("game.tree.bloomed")}</strong>
+              ) : (
+                <>
+                  <strong data-testid="beda-tree-count">{t("game.tree.wateredShort", { waters: tree.waters, required: tree.required })}</strong>
+                  <span className="beda-tree-bar" data-testid="beda-tree-bar" aria-hidden>
+                    <span style={{ width: `${fill}%` }} />
+                  </span>
+                </>
+              )}
             </span>
           </button>
-          <TreeWater tree={tree} watering={watering} busy={busy} onWater={onWater} />
+          {bloomed ? null : <TreeWater tree={tree} watering={watering} busy={busy} onWater={onWater} />}
         </div>
       )}
       {open ? (
@@ -588,19 +595,12 @@ export function TreeClosetSection({
 }) {
   const t = useTranslations("mascot");
   const query = useQuery({ queryKey: mascotQueryKey, queryFn: fetchMascot, staleTime: 30_000 });
-  const listed = (query.data?.ownedItems ?? []).filter((item) => item.id.startsWith("tree_"));
-  const worn = (query.data?.loadout.accessories ?? []).filter((item) => isTreeWearClip(item.id));
-  const gifts = [...listed];
-  for (const item of worn) {
-    if (!gifts.some((gift) => gift.id === item.id)) {
-      gifts.push({
-        id: item.id,
-        name: TREE_CLOSET.find((row) => row.id === item.id)?.name ?? item.id,
-        layer: "accessory",
-        previewOnly: false,
-      });
-    }
-  }
+  const gifts = (query.data?.ownedItems ?? [])
+    .filter((item) => item.id.startsWith("tree_"))
+    .map((item) => ({
+      ...item,
+      name: TREE_CLOSET.find((row) => row.id === item.id)?.name ?? item.name,
+    }));
   if (gifts.length === 0) return null;
   return (
     <div className="beda-tree-closet" data-testid="beda-tree-closet">
@@ -637,11 +637,11 @@ export function TreeClosetSection({
   );
 }
 
-function rewardRecipients(rewards: readonly TreeReward[] | null, fallback: number | null): number | null {
+function rewardCount(rewards: readonly TreeReward[] | null): number | null {
   for (const reward of rewards ?? []) {
-    if (reward.recipients != null) return reward.recipients;
+    if (reward.rewardedCount != null && reward.rewardedCount > 0) return reward.rewardedCount;
   }
-  return fallback ?? null;
+  return null;
 }
 
 function Can() {

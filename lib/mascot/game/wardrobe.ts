@@ -26,6 +26,8 @@ export type WardrobeGrant = "default" | "admin" | "gift" | "sell";
 
 export type ClosetAccess = {
   admin?: boolean;
+  /** Item keys from GET /me/mascot `owned_items`. A tree clip is worn only when it is in this set. */
+  ownedIds?: ReadonlySet<string>;
 };
 
 export type WardrobeItem = {
@@ -68,7 +70,7 @@ export function equippedGameLook(look: GameLook | null | undefined, access?: Clo
   const clips = new Set(grantedWardrobeItems("clip", access).map((item) => item.id));
   const outfit = isGameOutfit(base.outfit) && outfits.has(base.outfit) ? base.outfit : DEFAULT_GAME_LOOK.outfit;
   const hair = isGameHair(base.hair) && hairs.has(base.hair) ? base.hair : DEFAULT_GAME_LOOK.hair;
-  const clip =
-    base.clip && ((isGameClip(base.clip) && clips.has(base.clip)) || isTreeWearClip(base.clip)) ? base.clip : null;
+  const ownsTreeClip = base.clip != null && isTreeWearClip(base.clip) && access?.ownedIds?.has(base.clip) === true;
+  const clip = base.clip && isGameClip(base.clip) && clips.has(base.clip) ? base.clip : ownsTreeClip ? base.clip : null;
   return { outfit, hair, clip };
 }

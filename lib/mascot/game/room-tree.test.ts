@@ -15,9 +15,12 @@ import {
   treeArtKey,
   treeFrame,
   treeIsHidden,
+  treeRewardsSeenPath,
   vietnamDayKey,
   watersUntilLevel,
 } from "@/lib/mascot/game/room-tree";
+import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
+import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import { ApiError } from "@/lib/api-client";
 
 const SAMPLE = {
@@ -117,26 +120,36 @@ describe("shared room tree", () => {
     assert.ok(key.length > 8 && key.length <= 80);
   });
 
-  it("reads unseen rewards and the count of members who were paid", () => {
+  it("reads unseen rewards and the count on each reward", () => {
     const tree = readRoomTree({
       ...SAMPLE,
-      rewarded_count: 4,
       unseen_rewards: [
-        { stage: 4, coins: 50, item_id: "tree_sticker_la_xanh", item_name: "Nhãn dán lá xanh", preview_only: true, recipients: 4 },
+        { stage: 4, coins: 50, item_id: "tree_sticker_la_xanh", item_name: "Nhãn dán lá xanh", preview_only: true, rewarded_count: 4 },
       ],
     });
-    assert.equal(tree?.rewardedCount, 4);
     assert.equal(tree?.unseenRewards.length, 1);
-    assert.equal(tree?.unseenRewards[0]?.recipients, 4);
+    assert.equal(tree?.unseenRewards[0]?.rewardedCount, 4);
     assert.equal(tree?.unseenRewards[0]?.previewOnly, true);
+    assert.equal(readRoomTree(SAMPLE)?.rewards[0]?.rewardedCount, null);
+    assert.equal(treeRewardsSeenPath("DA7K2M"), "/api/v1/mascot/rooms/DA7K2M/tree/rewards/seen");
+    const ignored = readOwnedMascotItems({
+      items: [{ id: "tree_clip_la_xanh", layer: "accessory" }],
+      grants: [{ item_id: "tree_clip_la_xanh" }],
+    });
+    assert.equal(ignored.length, 0);
     const owned = readOwnedMascotItems({
-      items: [
-        { id: "tree_clip_la_xanh", name: "Kẹp tóc lá xanh", layer: "accessory", preview_only: false },
-        { id: "tree_sticker_la_xanh", name: "Nhãn dán lá xanh", layer: "decal", preview_only: true },
+      owned_items: [
+        { item_key: "tree_clip_la_xanh", layer: "accessory", preview_only: false, source: "tree", granted_at: "2026-11-23T00:00:00Z" },
+        { item_key: "tree_sticker_la_xanh", layer: "decal", preview_only: true, source: "tree", granted_at: "2026-11-23T00:00:00Z" },
       ],
     });
     assert.equal(owned.length, 2);
+    assert.equal(owned[0]?.id, "tree_clip_la_xanh");
     assert.equal(owned[1]?.previewOnly, true);
+    const look = { ...DEFAULT_GAME_LOOK, clip: "tree_clip_la_xanh" as const };
+    assert.equal(equippedGameLook(look).clip, null);
+    assert.equal(equippedGameLook(look, { ownedIds: new Set(["tree_clip_la_xanh"]) }).clip, "tree_clip_la_xanh");
+    assert.equal(equippedGameLook(look, { ownedIds: new Set(["tree_sticker_la_xanh"]) }).clip, null);
     assert.equal(lobbyLook("outfit_pajamas", "hair_sleep_buns", "tree_clip_la_xanh").clip, "tree_clip_la_xanh");
     const noon = new Date("2026-11-23T05:00:00.000Z");
     assert.equal(vietnamDayKey(noon), "2026-11-23");

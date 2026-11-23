@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { ApiError } from "@/lib/api-client";
 import { mascotQueryKey } from "@/lib/api/mascot";
 import {
   getRoomTree,
@@ -126,19 +125,21 @@ export function useRoomTree(
     }
   }, [queryClient]);
 
-  const showUnseen = useCallback((next: RoomTree) => {
-    const fresh = next.unseenRewards.filter((reward) => !seenRef.current.has(reward.stage));
-    if (fresh.length === 0) return;
-    for (const reward of fresh) seenRef.current.add(reward.stage);
-    setPopup(fresh);
+  const presentGifts = useCallback((rewards: readonly TreeReward[]) => {
+    if (rewards.length === 0) return;
+    setPopup([...rewards]);
     const room = codeRef.current;
     if (!room) return;
-    void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
-    void markTreeSeen(room, fresh.map((reward) => reward.stage)).catch((err: unknown) => {
-      const missing = err instanceof ApiError && (err.status === 404 || err.status === 405 || err.status === 501);
-      if (missing) return;
-      for (const reward of fresh) seenRef.current.delete(reward.stage);
-    });
+    const stages = rewards.map((reward) => reward.stage).filter((stage) => !seenRef.current.has(stage));
+    if (stages.length === 0) return;
+    for (const stage of stages) seenRef.current.add(stage);
+    void markTreeSeen(room, stages)
+      .then(() => {
+        void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+      })
+      .catch(() => {
+        for (const stage of stages) seenRef.current.delete(stage);
+      });
   }, [queryClient]);
 
   const finishMotion = useCallback(() => {
@@ -169,7 +170,7 @@ export function useRoomTree(
         const fresh = await getRoomTree(room);
         const gifts = gainedRewards(prior, fresh);
         publish(fresh);
-        if (gifts.length > 0) setPopup(gifts);
+        if (gifts.length > 0) presentGifts(gifts);
       } catch {
         /* The tick already moved the plant. The next open refetches. */
       }
@@ -180,7 +181,7 @@ export function useRoomTree(
       await wait(800);
       void runQueue();
     }
-  }, [finishMotion, publish]);
+  }, [finishMotion, presentGifts, publish]);
 
   useEffect(() => {
     listen.current = (event) => {
@@ -220,7 +221,7 @@ export function useRoomTree(
       .then((next) => {
         if (cancel) return;
         publish(next);
-        showUnseen(next);
+        presentGifts(next.unseenRewards);
       })
       .catch((err: unknown) => {
         if (cancel) return;
@@ -232,7 +233,7 @@ export function useRoomTree(
     return () => {
       cancel = true;
     };
-  }, [active, code, publish, showUnseen]);
+  }, [active, code, presentGifts, publish]);
 
   useEffect(() => {
     if (!active || !code) return;
@@ -244,7 +245,7 @@ export function useRoomTree(
         .then((next) => {
           if (cancel) return;
           publish(next);
-          showUnseen(next);
+          presentGifts(next.unseenRewards);
         })
         .catch(() => undefined);
     };
@@ -270,7 +271,7 @@ export function useRoomTree(
       window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", onShow);
     };
-  }, [active, code, publish, showUnseen]);
+  }, [active, code, presentGifts, publish]);
 
   const onWater = useCallback(() => {
     const room = code;
@@ -290,7 +291,7 @@ export function useRoomTree(
           setLevel(next.leveled);
           setToastName(null);
           setMotion("water");
-          if (next.justGranted.length > 0) setPopup(next.justGranted);
+          if (next.justGranted.length > 0) presentGifts(next.justGranted);
         }
         publish(next);
       })
@@ -317,7 +318,7 @@ export function useRoomTree(
         wateringRef.current = false;
         setWatering(false);
       });
-  }, [code, publish]);
+  }, [code, presentGifts, publish]);
 
   const onTakeGift = useCallback(() => setPopup(null), []);
 

@@ -110,6 +110,7 @@ export function BeDaGameView({
   onClaim,
   onLook,
   closetAdmin = false,
+  ownedClipIds = [],
   introResetAdmin = false,
   onIntroReset,
   wornLook = null,
@@ -181,6 +182,8 @@ export function BeDaGameView({
   onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
   closetAdmin?: boolean;
+  /** Item keys from GET /me/mascot owned_items. Tree clips wear only when listed. */
+  ownedClipIds?: readonly string[];
   /** Same is_admin flag. Shows «Cho chọn lại Bé Da» on the room, including the Android WebView. */
   introResetAdmin?: boolean;
   /** After a successful reset, open the Nữ/Nam picker. */
@@ -246,7 +249,7 @@ export function BeDaGameView({
   const spaOpen = spa != null;
   const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
   const wardrobeOpen = tab === "wardrobe" && !chestOpen && !spaOpen;
-  const equipped = equippedGameLook(look, { admin: closetAdmin });
+  const equipped = equippedGameLook(look, { admin: closetAdmin, ownedIds: new Set(ownedClipIds) });
   const [draft, setDraft] = useState(equipped);
   const [tryFlash, setTryFlash] = useState(0);
   const shownLook = wardrobeOpen ? draft : equipped;
@@ -268,8 +271,8 @@ export function BeDaGameView({
   dismissRef.current = dismissWardrobe;
 
   useEffect(() => {
-    setDraft(equippedGameLook(look, { admin: closetAdmin }));
-  }, [look, wardrobeOpen, closetAdmin]);
+    setDraft(equippedGameLook(look, { admin: closetAdmin, ownedIds: new Set(ownedClipIds) }));
+  }, [look, wardrobeOpen, closetAdmin, ownedClipIds]);
 
   useEffect(() => {
     if (!wardrobeOpen) return;

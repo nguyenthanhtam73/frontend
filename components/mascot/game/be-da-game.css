@@ -4912,6 +4912,14 @@
   cursor: default;
 }
 
+.beda-spa.is-landscape .beda-zoom {
+  right: 20px;
+}
+
+.beda-spa.is-landscape .beda-spa-head {
+  padding-right: 20px;
+}
+
 .beda-spa.is-landscape .beda-tree-chip {
   left: 50%;
   right: auto;

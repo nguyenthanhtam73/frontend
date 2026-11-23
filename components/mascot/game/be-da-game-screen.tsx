@@ -74,6 +74,8 @@ import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 import "@/components/mascot/game/be-da-game.css";
 
+const EMPTY_OWNED: readonly string[] = [];
+
 export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }) {
   const locale = useLocale();
   const router = useRouter();
@@ -95,6 +97,10 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     retry: 1,
     refetchOnWindowFocus: false,
   });
+  const ownedClipIds = useMemo(
+    () => mascotQuery.data?.ownedItems.map((item) => item.id) ?? EMPTY_OWNED,
+    [mascotQuery.data],
+  );
   const routineQuery = useQuery({
     queryKey: routineTodayQueryKey,
     queryFn: () => apiGet<RoutineDTO>("/api/v1/routines", { toastOnError: false }),
@@ -155,6 +161,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     if (!ready || !mascotQuery.data) return;
     const raw = mascotQuery.data.loadout.accessories.find((item) => isTreeWearClip(item.id))?.id ?? null;
     if (!raw || !isTreeWearClip(raw)) return;
+    if (!mascotQuery.data.ownedItems.some((item) => item.id === raw && !item.previewOnly)) return;
     const server = raw;
     setLook((current) => {
       if (current.clip === server) return current;
@@ -569,10 +576,14 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onClaim={onClaim}
       wornLook={wornLook}
       closetAdmin={closetAdmin}
+      ownedClipIds={ownedClipIds}
       introResetAdmin={closetAdmin}
       onIntroReset={() => router.push(introResetHref())}
       onLook={(next) => {
-        const saved = equippedGameLook(next, { admin: closetAdmin });
+        const saved = equippedGameLook(next, {
+          admin: closetAdmin,
+          ownedIds: new Set(ownedClipIds),
+        });
         if (!saveGameLook(localStorage, saved)) {
           setToast({ kind: "wear-failed", name: "" });
           return false;
