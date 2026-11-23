@@ -116,6 +116,15 @@ export type MascotSnapshot = {
   levelUp: boolean;
   /** Item ids whose grant source is `shop`. */
   shopItemIds: string[];
+  /** Owned closet rows from GET /me/mascot `owned_items`. */
+  ownedItems: OwnedMascotItem[];
+};
+
+export type OwnedMascotItem = {
+  id: string;
+  name: string;
+  layer: string;
+  previewOnly: boolean;
 };
 
 export { poseForStep, isSessionComplete, streakDotBonus, POSE_HOLD_MS, STEP_POSES } from "@/lib/mascot/pose";
@@ -345,6 +354,7 @@ export function defaultSnapshot(): MascotSnapshot {
     nearLevelUp: false,
     levelUp: false,
     shopItemIds: [],
+    ownedItems: [],
     gender: null,
     introSeen: null,
   };
@@ -530,8 +540,31 @@ export function parseMascot(value: unknown): MascotSnapshot {
     isDefault: false,
     gender: parseGender(row.gender),
     introSeen: parseIntroSeen(row.intro_seen),
+    ownedItems: readOwnedMascotItems(row),
     ...parseGlow(row, loadout),
   };
+}
+
+/** Closet rows on GET /api/v1/me/mascot `owned_items`. Preview-only pieces are owned but not wearable. */
+export function readOwnedMascotItems(row: Record<string, unknown>): OwnedMascotItem[] {
+  const list = row.owned_items;
+  if (!Array.isArray(list)) return [];
+  const out: OwnedMascotItem[] = [];
+  const seen = new Set<string>();
+  for (const item of list) {
+    const rec = asRecord(item);
+    if (!rec) continue;
+    const id = asString(rec.item_key);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      name: asString(rec.name) || id,
+      layer: asString(rec.layer),
+      previewOnly: rec.preview_only === true,
+    });
+  }
+  return out;
 }
 
 function parseGender(value: unknown): BeDaGender | null {
@@ -575,7 +608,7 @@ function shopItemIds(row: Record<string, unknown>, loadout: MascotLoadout): stri
     }
     const rec = asRecord(value);
     if (!rec) return;
-    const id = asString(rec.id ?? rec.item_id);
+    const id = asString(rec.item_key ?? rec.id ?? rec.item_id);
     if (id && isShopSource(asString(rec.source))) ids.add(id);
   };
   for (const key of SHOP_LIST_KEYS) {

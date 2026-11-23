@@ -6,6 +6,7 @@ import {
 } from "@/lib/mascot/catalog";
 import type { GameDress } from "@/lib/mascot/game/look";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
+import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
 import {
   itemLook,
@@ -318,13 +319,19 @@ export function applyGameDress(layers: StackLayer[], dress: GameDress): StackLay
       opacity: 1,
     });
   }
-  if (dress.clipId && isGameClip(dress.clipId)) {
+  const clipSrc =
+    dress.treeClipId && isTreeWearClip(dress.treeClipId)
+      ? `/mascot/accessory/${dress.treeClipId}.svg`
+      : dress.clipId && isGameClip(dress.clipId)
+        ? `/mascot/accessory/${dress.clipId}.svg`
+        : "";
+  if (clipSrc) {
     let at = next.findIndex((layer) => layer.slot === "accessory-headband");
     if (at < 0) at = next.findIndex((layer) => layer.slot === "hair");
     if (at >= 0) {
       next.splice(at + 1, 0, {
         slot: "accessory-clip",
-        src: `/mascot/accessory/${dress.clipId}.svg`,
+        src: clipSrc,
         opacity: 1,
       });
     }

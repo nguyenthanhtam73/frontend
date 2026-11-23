@@ -157,7 +157,10 @@ export async function listMySpaRooms(): Promise<SpaRoomRecord[]> {
   }
 }
 
-/** POST /api/v1/mascot/rooms. The server picks the 6-letter code. */
+/**
+ * POST /api/v1/mascot/rooms. The server picks the 6-letter code.
+ * An empty body plants the leaf tree. There is no seed picker yet.
+ */
 export async function createSpaRoom(): Promise<SpaRoomRecord> {
   const data = await apiPost<unknown>(ROOMS, undefined, roomCall);
   const room = readSpaRoom(data);

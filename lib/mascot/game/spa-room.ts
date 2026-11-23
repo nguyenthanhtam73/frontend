@@ -1,4 +1,4 @@
-import type { GameClipId, GameHairId, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
+import type { GameClipId, GameHairId, GameLook, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
 import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type WirePerson } from "@/lib/mascot/game/lobby-live";
 import { SPA_BOUNDS, clamp, type Bounds } from "@/lib/mascot/game/walk";
 
@@ -122,7 +122,7 @@ export type SpaGuest = {
   facing: LobbyFacing;
   outfit: GameOutfitId;
   hair: GameHairId;
-  clip: GameClipId | null;
+  clip: GameLook["clip"];
   /** Male visitors use the drawn boy hair and pajamas. */
   gender?: "male";
   pose: GamePose | null;
@@ -291,12 +291,21 @@ export type RoomClientFrame =
   | { op: "move-to"; x: number; y: number; facing?: LobbyFacing; action?: "idle" | "walk" };
 
 export type RoomEvent = {
-  op: "join" | "leave" | "wave" | "heart" | "compliment" | "cheer" | "poke" | "nudge";
+  op: "join" | "leave" | "wave" | "heart" | "compliment" | "cheer" | "poke" | "nudge" | "tree_watered" | "tree_level_up";
   id?: string;
   from?: string;
   target?: string;
   /** Server sentence on a nudge. Gestures never carry text. */
   message?: string;
+  /** Set on tree_watered and tree_level_up. Display name, no account id. */
+  tree?: {
+    name: string;
+    waters: number;
+    required: number;
+    progress: number;
+    stage: number;
+    treeType: string;
+  };
 };
 
 export type RoomServerMessage =
@@ -941,6 +950,23 @@ function readPeople(value: unknown): WirePerson[] {
   return value.map(readPerson).filter((person): person is WirePerson => person != null);
 }
 
+function readTreeEvent(value: unknown): RoomEvent["tree"] | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  const stage = num(row.stage);
+  if (stage == null || stage < 1 || stage > 7) return null;
+  const progress = num(row.progress);
+  const name = typeof row.name === "string" ? row.name.trim().slice(0, 40) : "";
+  return {
+    name,
+    waters: Math.max(0, Math.trunc(num(row.waters) ?? 0)),
+    required: Math.max(0, Math.trunc(num(row.required) ?? 0)),
+    progress: progress == null ? 0 : Math.max(0, progress),
+    stage: Math.trunc(stage),
+    treeType: typeof row.tree_type === "string" && row.tree_type.trim() ? row.tree_type.trim().slice(0, 64) : "leaf",
+  };
+}
+
 function readEvents(value: unknown): RoomEvent[] {
   if (!Array.isArray(value)) return [];
   const out: RoomEvent[] = [];
@@ -948,6 +974,12 @@ function readEvents(value: unknown): RoomEvent[] {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
     const op = row.op;
+    if (op === "tree_watered" || op === "tree_level_up") {
+      const tree = readTreeEvent(row.tree);
+      if (!tree) continue;
+      out.push({ op, tree });
+      continue;
+    }
     if (
       op !== "join" &&
       op !== "leave" &&

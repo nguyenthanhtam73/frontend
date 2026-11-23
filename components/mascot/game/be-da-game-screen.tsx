@@ -15,7 +15,9 @@ import { useStreak } from "@/lib/hooks/use-streak";
 import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
 import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
 import { useRoomShared } from "@/components/mascot/game/use-room-shared";
+import { useRoomTree } from "@/components/mascot/game/use-room-tree";
 import { useSpaRoom } from "@/components/mascot/game/use-spa-room";
+import type { RoomEvent } from "@/lib/mascot/game/spa-room";
 import { localePath } from "@/lib/mascot/game/path";
 import {
   GAME_CHEST_EVENING_KEY,
@@ -37,7 +39,10 @@ import {
   saveGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { mascotFeatureEnabled } from "@/lib/mascot/feature";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
+import { wearMascotClip } from "@/lib/mascot/game/mascot-wear";
+import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import {
@@ -69,6 +74,8 @@ import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 import "@/components/mascot/game/be-da-game.css";
 
+const EMPTY_OWNED: readonly string[] = [];
+
 export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }) {
   const locale = useLocale();
   const router = useRouter();
@@ -90,6 +97,10 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     retry: 1,
     refetchOnWindowFocus: false,
   });
+  const ownedClipIds = useMemo(
+    () => mascotQuery.data?.ownedItems.map((item) => item.id) ?? EMPTY_OWNED,
+    [mascotQuery.data],
+  );
   const routineQuery = useQuery({
     queryKey: routineTodayQueryKey,
     queryFn: () => apiGet<RoutineDTO>("/api/v1/routines", { toastOnError: false }),
@@ -145,6 +156,21 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       document.body.style.overflow = prevBody;
     };
   }, [today, closetAdmin]);
+
+  useEffect(() => {
+    if (!ready || !mascotQuery.data) return;
+    const raw = mascotQuery.data.loadout.accessories.find((item) => isTreeWearClip(item.id))?.id ?? null;
+    if (!raw || !isTreeWearClip(raw)) return;
+    if (!mascotQuery.data.ownedItems.some((item) => item.id === raw && !item.previewOnly)) return;
+    const server = raw;
+    setLook((current) => {
+      if (current.clip === server) return current;
+      const next = { ...current, clip: server };
+      if (!saveGameLook(localStorage, next)) return current;
+      setWornLook(next);
+      return next;
+    });
+  }, [ready, mascotQuery.data]);
 
   const morning = routineQuery.data?.morning ?? [];
   const evening = routineQuery.data?.evening ?? [];
@@ -265,11 +291,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       playGameTing(soundRef.current);
     },
   });
+  const treeListen = useRef<(event: RoomEvent & { tree: NonNullable<RoomEvent["tree"]> }) => void>(() => undefined);
   const spaRoom = useSpaRoom({
     active: code != null,
     code,
     look: presented,
     gender: view.gender,
+    onTreeEvent: (event) => treeListen.current(event),
     onRemoteEmote: (event) => {
       if (event.kind === "nudge") setToast({ kind: "nudge", message: event.message });
       else setToast(event);
@@ -278,6 +306,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     },
   });
   const together = useRoomShared(code, code != null && spaRoom.entry === "room", user?.id ?? null);
+  const tree = useRoomTree(
+    code,
+    code != null && spaRoom.entry === "room" && mascotFeatureEnabled(user),
+    "",
+    together.applyBalance,
+    treeListen,
+  );
 
   useEffect(() => {
     if (!code || !spaRoom.serverCode || spaRoom.serverCode === code) return;
@@ -518,6 +553,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       }
       youPose={spaRoom.youPose}
       together={inSpa ? together : null}
+      tree={inSpa ? tree : null}
       onCreateRoom={() => void createRoom()}
       creatingRoom={creatingRoom}
       createProblem={createProblem}
@@ -540,13 +576,24 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onClaim={onClaim}
       wornLook={wornLook}
       closetAdmin={closetAdmin}
+      ownedClipIds={ownedClipIds}
       introResetAdmin={closetAdmin}
       onIntroReset={() => router.push(introResetHref())}
       onLook={(next) => {
-        const saved = equippedGameLook(next, { admin: closetAdmin });
+        const saved = equippedGameLook(next, {
+          admin: closetAdmin,
+          ownedIds: new Set(ownedClipIds),
+        });
         if (!saveGameLook(localStorage, saved)) {
           setToast({ kind: "wear-failed", name: "" });
           return false;
+        }
+        const clip = saved.clip && isTreeWearClip(saved.clip) ? saved.clip : null;
+        const hadTree = mascotQuery.data?.loadout.accessories.some((item) => isTreeWearClip(item.id)) ?? false;
+        if (clip || hadTree) {
+          void wearMascotClip(queryClient, clip).catch(() => {
+            setToast({ kind: "wear-failed", name: "" });
+          });
         }
         feedback();
         setLook(saved);

@@ -1,6 +1,7 @@
 import { snapOutsideFountain } from "@/lib/mascot/game/walk";
 import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
+import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import {
   clampLobbyPoint,
   LOBBY_FIGURE_GAP,
@@ -490,7 +491,7 @@ export function lobbyLook(outfit: string, hair: string, accessory: string): Game
   return {
     outfit: isGameOutfit(outfit) ? outfit : "outfit_pajamas",
     hair: isGameHair(hair) ? hair : "hair_sleep_buns",
-    clip: accessory && isGameClip(accessory) ? accessory : null,
+    clip: accessory && (isGameClip(accessory) || isTreeWearClip(accessory)) ? accessory : null,
   };
 }
 

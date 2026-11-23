@@ -8,6 +8,8 @@ import { BeDaIntroReset } from "@/components/mascot/intro/be-da-intro-reset";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
+import { TreeClosetSection } from "@/components/mascot/game/be-da-room-tree";
+import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import type { RoomClock, SpaNotice } from "@/lib/mascot/game/spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
@@ -18,6 +20,7 @@ import {
   type LobbyActor,
 } from "@/lib/mascot/game/lobby-live";
 import { gameDress, isGameClip, isGameHair, isGameOutfit, sameGameLook, tabAfterWardrobeClose, type GameLook, type GamePose } from "@/lib/mascot/game/look";
+import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import {
   equippedGameLook,
   grantedWardrobeItems,
@@ -107,6 +110,7 @@ export function BeDaGameView({
   onClaim,
   onLook,
   closetAdmin = false,
+  ownedClipIds = [],
   introResetAdmin = false,
   onIntroReset,
   wornLook = null,
@@ -138,6 +142,7 @@ export function BeDaGameView({
   activeRoom = null,
   spaInviteOpen = false,
   together = null,
+  tree = null,
   roomPanel,
   showActors = true,
   onSpaRetry,
@@ -177,6 +182,8 @@ export function BeDaGameView({
   onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
   closetAdmin?: boolean;
+  /** Item keys from GET /me/mascot owned_items. Tree clips wear only when listed. */
+  ownedClipIds?: readonly string[];
   /** Same is_admin flag. Shows «Cho chọn lại Bé Da» on the room, including the Android WebView. */
   introResetAdmin?: boolean;
   /** After a successful reset, open the Nữ/Nam picker. */
@@ -219,6 +226,7 @@ export function BeDaGameView({
   /** Opens the invite card on first paint. Used by tests and screenshots. */
   spaInviteOpen?: boolean;
   together?: RoomTogether | null;
+  tree?: RoomTreePanel | null;
   roomPanel?: "quest" | "today" | null;
   showActors?: boolean;
   onSpaRetry?: () => void;
@@ -241,7 +249,7 @@ export function BeDaGameView({
   const spaOpen = spa != null;
   const showLobby = tab === "lobby" && !chestOpen && !spaOpen;
   const wardrobeOpen = tab === "wardrobe" && !chestOpen && !spaOpen;
-  const equipped = equippedGameLook(look, { admin: closetAdmin });
+  const equipped = equippedGameLook(look, { admin: closetAdmin, ownedIds: new Set(ownedClipIds) });
   const [draft, setDraft] = useState(equipped);
   const [tryFlash, setTryFlash] = useState(0);
   const shownLook = wardrobeOpen ? draft : equipped;
@@ -263,8 +271,8 @@ export function BeDaGameView({
   dismissRef.current = dismissWardrobe;
 
   useEffect(() => {
-    setDraft(equippedGameLook(look, { admin: closetAdmin }));
-  }, [look, wardrobeOpen, closetAdmin]);
+    setDraft(equippedGameLook(look, { admin: closetAdmin, ownedIds: new Set(ownedClipIds) }));
+  }, [look, wardrobeOpen, closetAdmin, ownedClipIds]);
 
   useEffect(() => {
     if (!wardrobeOpen) return;
@@ -368,6 +376,7 @@ export function BeDaGameView({
           onCreateRoom={onCreateRoom}
           creatingRoom={creatingRoom}
           together={together}
+          tree={tree}
           panel={roomPanel}
           showActors={showActors}
           onRetry={onSpaRetry}
@@ -1188,6 +1197,10 @@ function Wardrobe({
           </div>
         </>
       ) : null}
+      <TreeClosetSection
+        selectedId={preview.clip}
+        onSelect={(clipId) => onTry({ ...preview, clip: clipId && isTreeWearClip(clipId) ? clipId : null })}
+      />
       <p className="beda-note">{t("game.tryNote")}</p>
       <div className="beda-wear-bar">
         <button

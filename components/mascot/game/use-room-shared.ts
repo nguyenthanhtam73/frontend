@@ -39,6 +39,8 @@ export type RoomTogether = {
   nudging: string | null;
   onClaim: (memberDays: number) => void;
   onNudge: (userId: string) => void;
+  /** Same xu wallet as a tree reward. */
+  applyBalance: (balance: number) => void;
 };
 
 const IDLE: RoomChest[] = [];
@@ -195,6 +197,11 @@ export function useRoomShared(code: string | null, active: boolean, selfId: stri
     [chests, claiming, code, expired],
   );
 
+  const applyBalance = useCallback((balance: number) => {
+    if (!Number.isFinite(balance)) return;
+    setCoins(Math.max(0, Math.trunc(balance)));
+  }, []);
+
   const onNudge = useCallback(
     (userId: string) => {
       if (!code || nudging) return;
@@ -251,5 +258,6 @@ export function useRoomShared(code: string | null, active: boolean, selfId: stri
     nudging,
     onClaim,
     onNudge,
+    applyBalance,
   };
 }

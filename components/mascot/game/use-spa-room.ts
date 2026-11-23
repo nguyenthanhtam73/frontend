@@ -47,6 +47,7 @@ import {
   spaRoomProblem,
   type RoomClientFrame,
   type RoomClock,
+  type RoomEvent,
   type RoomServerMessage,
   type RoomSnapshot,
   type SpaGuest,
@@ -84,8 +85,9 @@ export function useSpaRoom(options: {
   look: GameLook;
   gender?: "female" | "male";
   onRemoteEmote?: (toast: SpaRemote) => void;
+  onTreeEvent?: (event: RoomEvent & { tree: NonNullable<RoomEvent["tree"]> }) => void;
 }) {
-  const { active, code, look, gender, onRemoteEmote } = options;
+  const { active, code, look, gender, onRemoteEmote, onTreeEvent } = options;
   const landscape = useLandscapeRoom();
   const [live, setLive] = useState(false);
   const [notice, setNotice] = useState<SpaNotice>(null);
@@ -112,11 +114,13 @@ export function useSpaRoom(options: {
   const roomRef = useRef(room);
   const liveRef = useRef(live);
   const remoteRef = useRef(onRemoteEmote);
+  const treeRef = useRef(onTreeEvent);
   const connRef = useRef<RoomConnection | null>(null);
   const joinedRef = useRef(false);
   const retriedRef = useRef(false);
   const timers = useRef<number[]>([]);
   const genderRef = useRef(gender);
+  const sentClip = useRef<string | null>(null);
   genderRef.current = gender;
   lookRef.current = look;
   nickRef.current = nickname;
@@ -124,6 +128,29 @@ export function useSpaRoom(options: {
   roomRef.current = room;
   liveRef.current = live;
   remoteRef.current = onRemoteEmote;
+  treeRef.current = onTreeEvent;
+
+  useEffect(() => {
+    if (!live || !connRef.current) return;
+    const clip = look.clip ?? "";
+    if (sentClip.current == null) {
+      sentClip.current = clip;
+      return;
+    }
+    if (sentClip.current === clip) return;
+    sentClip.current = clip;
+    connRef.current.send(encodeRoomFrame({
+      op: "join",
+      code: code ?? "",
+      nickname: nickRef.current,
+      outfit: look.outfit,
+      hair: look.hair,
+      accessory: clip,
+      ...(genderRef.current === "male" ? { gender: "male" as const } : {}),
+      facing: "right",
+      action: "idle",
+    }), "join");
+  }, [live, look.clip, look.outfit, look.hair, code]);
 
   useEffect(() => {
     try {
@@ -273,6 +300,10 @@ export function useSpaRoom(options: {
         if (spaMembershipChanged(message, previousIds)) refreshMembers();
         const known = [...roomRef.current.people, ...message.upserts];
         for (const event of message.events) {
+          if ((event.op === "tree_watered" || event.op === "tree_level_up") && event.tree) {
+            treeRef.current?.({ ...event, tree: event.tree });
+            continue;
+          }
           if (event.op === "nudge") {
             if (event.target && event.target === roomRef.current.sessionId && event.message) {
               remoteRef.current?.({ kind: "nudge", message: event.message });

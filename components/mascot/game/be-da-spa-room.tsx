@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaActorLayer } from "@/components/mascot/game/be-da-actor-layer";
 import { RoomQuestCard, RoomTodayList, RoomTogetherDock } from "@/components/mascot/game/be-da-room-shared";
+import { RoomTreeDock, RoomTreePlant, RoomTreeProvider } from "@/components/mascot/game/be-da-room-tree";
+import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import { useSpaMotion } from "@/components/mascot/game/use-lobby-motion";
 import { GameIcon } from "@/components/mascot/game/icons";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
@@ -110,6 +112,8 @@ export function BeDaSpaRoom({
   onCreateRoom,
   creatingRoom = false,
   together = null,
+  tree = null,
+  treeDetailOpen = false,
   panel: panelProp,
   onPanel,
   showActors = true,
@@ -137,6 +141,10 @@ export function BeDaSpaRoom({
   creatingRoom?: boolean;
   /** Quest, Hôm nay, and nudges. Hidden when the mascot gate answers 404. */
   together?: RoomTogether | null;
+  /** Shared tree. Hidden when the mascot gate answers 404. */
+  tree?: RoomTreePanel | null;
+  /** Open the 7-stage sheet on first paint. Screenshots use this. */
+  treeDetailOpen?: boolean;
   /** Which shared panel is open. Omit to let the room remember the tap. */
   panel?: "quest" | "today" | null;
   onPanel?: (panel: "quest" | "today" | null) => void;
@@ -207,7 +215,7 @@ export function BeDaSpaRoom({
 
   function onBackground(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-bar, .beda-room-dock")) return;
+    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-bar, .beda-room-dock, .beda-tree-chip, .beda-tree-card, .beda-tree-shade")) return;
     onSelect("");
   }
 
@@ -280,6 +288,7 @@ export function BeDaSpaRoom({
   }
 
   return (
+    <RoomTreeProvider panel={tree ?? null} locale={locale} startOpen={treeDetailOpen}>
     <div ref={frameRef} className={room.landscape ? "beda-spa is-landscape" : "beda-spa"} data-testid="beda-spa" onClick={onBackground}>
       {selectedGuest ? (
         <div className="beda-actions beda-card beda-friend-card" data-testid="beda-actions" role="group" aria-label={selectedGuest.nickname}>
@@ -349,6 +358,7 @@ export function BeDaSpaRoom({
         })}
       </div>
       <div ref={stageRef} className="beda-spa-floor" data-testid="beda-spa-floor">
+        <RoomTreePlant />
         {room.guests.map((guest) => {
           const x = guest.x;
           const y = guest.y;
@@ -458,6 +468,8 @@ export function BeDaSpaRoom({
         </div>
       ) : null}
 
+
+      <RoomTreeDock />
 
       {together?.visible && panel ? (
         <div className="beda-room-sheet" data-testid="beda-room-sheet" role="dialog" aria-modal="false" aria-label={panel === "quest" ? t("game.roomQuestTitle") : t("game.roomTodayTitle")}>
@@ -657,6 +669,7 @@ export function BeDaSpaRoom({
         </div>
       ) : null}
     </div>
+    </RoomTreeProvider>
   );
 }
 
