@@ -5028,12 +5028,31 @@
   font-weight: 800;
 }
 
-.beda-seed-picks button {
+.beda-seed-picks button,
+.beda-seed-petal-pick {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
   line-height: 1.2;
+}
+
+.beda-seed-petal-pick img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.beda-seed-petal-pick b {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.beda-seed-petal-pick[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px #e07a3d;
 }
 
 .beda-seed-picks small,

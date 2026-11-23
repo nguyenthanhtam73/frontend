@@ -3607,6 +3607,7 @@
         "tradeAsk": "Đổi {count} cánh {offer} lấy 1 cánh {want}?",
         "tradeYes": "Đổi",
         "buyTitle": "Mua cánh",
+        "buyEach": "1 cánh = {price} xu",
         "buyAsk": "Mua 1 cánh {name} với {price} xu?",
         "buyYes": "Mua",
         "cancel": "Huỷ",

@@ -3607,6 +3607,7 @@
         "tradeAsk": "Trade {count} {offer} petals for 1 {want} petal?",
         "tradeYes": "Trade",
         "buyTitle": "Buy a petal",
+        "buyEach": "1 petal = {price} coins",
         "buyAsk": "Buy 1 {name} petal for {price} coins?",
         "buyYes": "Buy",
         "cancel": "Cancel",
