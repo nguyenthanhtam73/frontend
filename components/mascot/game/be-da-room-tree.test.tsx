@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
@@ -15,9 +16,11 @@ import vi from "../../../messages/vi.json";
 
 function render(node: ReactNode) {
   return renderToStaticMarkup(
-    <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
-      {node}
-    </NextIntlClientProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
+        {node}
+      </NextIntlClientProvider>
+    </QueryClientProvider>,
   );
 }
 
