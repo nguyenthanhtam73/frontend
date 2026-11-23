@@ -125,6 +125,7 @@ export function BeDaLobby({
   const liftRef = useRef(0);
   const seenSelect = useRef<string | null>(null);
   const [pixi, setPixi] = useState(true);
+  const [roomNote, setRoomNote] = useState(false);
   const snapRef = useRef<ShellSnapshot>({ scene: "lobby", sky, sprites: [] });
   const [showHint, setShowHint] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -413,22 +414,25 @@ export function BeDaLobby({
         </div>
       </div>
       <div className="beda-lobby-chrome">
+        {activeRoom ? (
+          <RoomPill
+            label={tLobby("game.spaGoRoomShort")}
+            note={
+              activeRoom.endsAt
+                ? tLobby("game.spaOneRoom", {
+                    name: activeRoom.name || activeRoom.code,
+                    date: formatRoomEndDate(new Date(activeRoom.endsAt), locale),
+                  })
+                : tLobby("game.spaOneRoomNoDate", { name: activeRoom.name || activeRoom.code })
+            }
+            go={tLobby("game.spaGoRoom")}
+            open={roomNote}
+            onToggle={() => setRoomNote((value) => !value)}
+            onGo={() => onJoinRoom?.(activeRoom.code)}
+          />
+        ) : null}
         <div className="beda-spa-entry" data-testid="beda-spa-entry">
-          {activeRoom ? (
-            <div className="beda-one-room" data-testid="beda-one-room">
-              <p>
-                {activeRoom.endsAt
-                  ? tLobby("game.spaOneRoom", {
-                      name: activeRoom.name || activeRoom.code,
-                      date: formatRoomEndDate(new Date(activeRoom.endsAt), locale),
-                    })
-                  : tLobby("game.spaOneRoomNoDate", { name: activeRoom.name || activeRoom.code })}
-              </p>
-              <button type="button" data-testid="beda-current-room" onClick={() => onJoinRoom?.(activeRoom.code)}>
-                {tLobby("game.spaGoRoom")}
-              </button>
-            </div>
-          ) : (
+          {activeRoom ? null : (
             <>
           {myRooms.map((code) => (
             <button
@@ -631,6 +635,46 @@ function FriendButton({
           <span className="beda-tag-label">{actor.nickname}</span>
         </span>
       </button>
+    </div>
+  );
+}
+
+function RoomPill({
+  label,
+  note,
+  go,
+  open,
+  onToggle,
+  onGo,
+}: {
+  label: string;
+  note: string;
+  go: string;
+  open: boolean;
+  onToggle: () => void;
+  onGo: () => void;
+}) {
+  return (
+    <div className="beda-room-pill" data-testid="beda-one-room">
+      <button
+        type="button"
+        className="beda-room-pill-btn"
+        data-testid="beda-current-room"
+        aria-expanded={open}
+        aria-label={note}
+        onClick={onToggle}
+      >
+        <GameIcon name="door" className="beda-ico-sm" />
+        {label}
+      </button>
+      {open ? (
+        <div className="beda-room-pill-pop" role="dialog" data-testid="beda-one-room-pop">
+          <p>{note}</p>
+          <button type="button" data-testid="beda-go-room" onClick={onGo}>
+            {go}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
