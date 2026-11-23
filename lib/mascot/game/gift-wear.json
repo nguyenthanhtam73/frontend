@@ -1,0 +1,44 @@
+{
+  "root": "/mascot/gift",
+  "order": ["fx_back", "body", "bottom", "legs", "shoes", "top", "bag", "hair", "earring", "face", "cheek", "hat", "glasses", "hair_acc", "fx_front", "sleeve", "bracelet"],
+  "slots": {
+    "top": "top",
+    "bottom": "bottom",
+    "hair_acc": "toc",
+    "hat": "mu",
+    "earring": "tai",
+    "glasses": "kinh",
+    "cheek": "ma",
+    "bag": "tui",
+    "bracelet": "arms",
+    "fx": "fx",
+    "legs": "legs",
+    "shoes": "shoes"
+  },
+  "alias": {
+    "tree_clip_la_xanh": "acc_kep_toc_la_xanh"
+  },
+  "icon": "/mascot/gift/icon/{id}.svg",
+  "legs": "/mascot/gift/legs/{id}.svg",
+  "shoes": "/mascot/gift/shoes/{id}.svg",
+  "sleeve": "/mascot/gift/top/{pose}__{id}.svg",
+  "bracelet": "/mascot/gift/arms/{pose}__{id}__{length}.svg",
+  "poses": {
+    "cheer": "arms_up",
+    "wave": "arm_wave_right",
+    "poke": "arm_wave_right",
+    "default": "arm_chin"
+  },
+  "shortSleeves": ["top_la_non", "top_ao_co_la", "top_ao_dao_vuon"],
+  "fx": {
+    "top_ao_la_ngoc": {
+      "back": "/mascot/gift/fx/fx_la_ngoc_back.svg",
+      "front": "/mascot/gift/fx/fx_la_ngoc_front.svg"
+    },
+    "bottom_vay_xoe_la_ngoc": {
+      "back": "/mascot/gift/fx/fx_la_ngoc_back.svg",
+      "front": "/mascot/gift/fx/fx_la_ngoc_front.svg"
+    }
+  },
+  "items": {}
+}

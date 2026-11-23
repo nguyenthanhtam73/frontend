@@ -3623,6 +3623,24 @@
         "alreadyRoom": "Bạn đang ở một phòng rồi",
         "failed": "Chưa xong, thử lại nha"
       },
+      "gift": {
+        "got": "Bạn được 1 Hộp quà Lá xanh",
+        "gotBody": "Mở ra sẽ có 1 bộ đồ hoặc 1 phụ kiện. Đồ này chỉ cây Lá xanh mới có.",
+        "open": "Mở hộp quà",
+        "later": "Để sau",
+        "keep": "Chưa mở thì hộp nằm trong Tủ đồ, không mất",
+        "rates": "Xem tỉ lệ",
+        "each": "mỗi món {percent}%",
+        "won": "Mở được rồi!",
+        "dupeBanner": "Ra trùng rồi",
+        "dupe": "Trùng món, nhận lại {count} xu",
+        "takeCoins": "Nhận {count} xu",
+        "wear": "Mặc luôn",
+        "plus": "+{count} xu",
+        "close": "Đóng",
+        "closet": "Đồ từ hộp quà",
+        "failed": "Chưa mở được, thử lại nha"
+      },
       "toast": {
         "worn": "Bé Da đã mặc {name} ✨",
         "wearFailed": "Chưa mặc được, thử lại nha",

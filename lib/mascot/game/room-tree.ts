@@ -34,6 +34,9 @@ export type TreeReward = {
   previewOnly: boolean;
   /** Members the server paid for this rung. Absent when the reward omits `rewarded_count`. */
   rewardedCount?: number | null;
+  /** This rung pays a gift box instead of coins and an item. */
+  giftBox?: boolean;
+  boxId?: string;
 };
 
 export type RoomTree = {
@@ -178,6 +181,8 @@ function readReward(value: unknown): TreeReward | null {
     itemName: text(body.item_name, 80) || known?.name || "",
     previewOnly: body.preview_only === true || known?.previewOnly === true,
     rewardedCount: intOrNull(body.rewarded_count),
+    giftBox: body.gift_box === true,
+    boxId: text(body.box_id, 80),
   };
 }
 

@@ -3623,6 +3623,24 @@
         "alreadyRoom": "You are already in a room",
         "failed": "That did not finish. Please try again"
       },
+      "gift": {
+        "got": "You got 1 Leaf gift box",
+        "gotBody": "Opening it gives one outfit or one accessory. Only the leaf tree has these.",
+        "open": "Open the box",
+        "later": "Later",
+        "keep": "An unopened box stays in the closet",
+        "rates": "See the rates",
+        "each": "{percent}% each",
+        "won": "You got something!",
+        "dupeBanner": "You already have it",
+        "dupe": "Duplicate item, {count} coins back",
+        "takeCoins": "Take {count} coins",
+        "wear": "Wear it",
+        "plus": "+{count} coins",
+        "close": "Close",
+        "closet": "From the gift box",
+        "failed": "The box did not open. Please try again"
+      },
       "toast": {
         "worn": "Bé Da is wearing {name} ✨",
         "wearFailed": "Couldn't wear that, try again",

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { GameIcon } from "@/components/mascot/game/icons";
 import { SeedDrawDialog } from "@/components/mascot/game/be-da-seed-bag";
+import { TreeGiftBox } from "@/components/mascot/game/be-da-gift-box";
 import { Link } from "@/i18n/navigation";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { formatRoomCoins } from "@/lib/mascot/game/room-shared";
@@ -132,6 +133,7 @@ function useTreeChrome(
         toastOpacity={frame?.toast ?? (toast ? 1 : 0)}
         sparkle={shown.bloomed && shown.reason !== "room_ended" && !light}
         softGlow={shown.bloomed && shown.reason !== "room_ended" && light}
+        gift={shown.bloomed ? <TreeGiftBox tree={tree} locale={locale} /> : null}
       />
     ),
     dock: (
@@ -252,6 +254,7 @@ function TreeArt({
   toastOpacity,
   sparkle,
   softGlow,
+  gift,
 }: {
   stage: number;
   nextStage: number;
@@ -262,6 +265,7 @@ function TreeArt({
   toastOpacity: number;
   sparkle: boolean;
   softGlow: boolean;
+  gift?: ReactNode;
 }) {
   const plant = frame?.plant ?? { scaleX: 1, scaleY: 1, opacity: 1 };
   const showNext = frame != null && frame.nextPlant.opacity > 0.02 && nextStage !== stage;
@@ -336,6 +340,7 @@ function TreeArt({
           <i key={`star-${index}`} className="beda-tree-star" style={{ ["--i" as string]: String(index), opacity: star.opacity, transform: `translateY(${star.y}px)` }} />
         ))}
       </div>
+      {gift}
     </div>
   );
 }

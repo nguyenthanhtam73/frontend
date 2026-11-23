@@ -54,6 +54,16 @@ export type MascotLoadout = {
    */
   accessories: WornItem[];
   roomItems: WornItem[];
+  /** Split clothes from a tree gift box. A top or bottom replaces `outfit`. */
+  top?: string;
+  bottom?: string;
+  hairAcc?: string;
+  hat?: string;
+  earring?: string;
+  glasses?: string;
+  cheek?: string;
+  bracelet?: string;
+  bag?: string;
 };
 
 export const EXPIRY_FADE_MS = 24 * 60 * 60 * 1000;
@@ -492,6 +502,15 @@ function parseLoadout(value: unknown): MascotLoadout {
     outfit: parseWorn(row.outfit, DEFAULT_LOADOUT.outfit.id)!,
     accessories: parseAccessories(row),
     roomItems: room,
+    top: asString(row.top),
+    bottom: asString(row.bottom),
+    hairAcc: asString(row.hair_acc),
+    hat: asString(row.hat),
+    earring: asString(row.earring),
+    glasses: asString(row.glasses),
+    cheek: asString(row.cheek),
+    bracelet: asString(row.bracelet),
+    bag: asString(row.bag),
   };
 }
 

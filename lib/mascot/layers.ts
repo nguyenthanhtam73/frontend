@@ -4,7 +4,8 @@ import {
   isKnownMascotItem,
   type MascotItemLayer,
 } from "@/lib/mascot/catalog";
-import type { GameDress } from "@/lib/mascot/game/look";
+import type { GameDress, GamePose } from "@/lib/mascot/game/look";
+import { giftDraws, type GiftWearHints } from "@/lib/mascot/game/gift-wear";
 import { isGameClip, isGameHair, isGameOutfit } from "@/lib/mascot/game/look";
 import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import { accessoryUnlocked } from "@/lib/mascot/glow";
@@ -230,7 +231,8 @@ export function mascotStack(
   if (view.flies) push("fx-flies", "/mascot/fx/flies/flies.svg", 1);
 
   const dressed = options.dress ? applyGameDress(layers, options.dress) : layers;
-  const gendered = view.gender === "male" ? applyMaleArt(dressed) : dressed;
+  const gifted = applyGiftWear(dressed, view.loadout, options.dress?.pose ?? null);
+  const gendered = view.gender === "male" ? applyMaleArt(gifted) : gifted;
   return gendered.map((layer) => ({ ...layer, src: mascotAssetUrl(layer.src) }));
 }
 
@@ -335,6 +337,50 @@ export function applyGameDress(layers: StackLayer[], dress: GameDress): StackLay
         opacity: 1,
       });
     }
+  }
+  return next;
+}
+
+/**
+ * Tree-box clothes. Paths and order come from gift-wear.json.
+ * A top or bottom replaces the one-piece outfit.
+ * Legs are drawn above the bottom only when that item sets legs_above.
+ */
+export function applyGiftWear(
+  layers: StackLayer[],
+  loadout: { top?: string; bottom?: string; hairAcc?: string; hat?: string; earring?: string; glasses?: string; cheek?: string; bracelet?: string; bag?: string },
+  pose?: GamePose | null,
+  hints?: GiftWearHints,
+): StackLayer[] {
+  const draws = giftDraws(loadout, pose, hints);
+  if (draws.length === 0) return layers;
+  let next = layers.slice();
+  if (loadout.top || loadout.bottom) next = next.filter((layer) => layer.slot !== "outfit" && layer.slot !== "arms");
+  const insert = (slot: string, src: string, after: string[]) => {
+    let index = -1;
+    for (const name of after) {
+      const at = next.findIndex((layer) => layer.slot === name);
+      if (at > index) index = at;
+    }
+    next.splice(index >= 0 ? index + 1 : next.length, 0, { slot, src, opacity: 1 });
+  };
+  const anchors: Record<string, string[]> = {
+    "before-body": ["glow-back"],
+    "after-body": ["gift-shoes", "gift-legs", "gift-bottom", "body"],
+    "after-hair": ["hair"],
+    "after-face": ["gift-hair", "gift-glasses", "gift-hat", "gift-cheek", "face-mouth", "glow-front"],
+  };
+  for (const draw of draws) {
+    if (draw.at === "tail") {
+      next.push({ slot: draw.slot, src: draw.src, opacity: 1 });
+      continue;
+    }
+    if (draw.at === "before-body") {
+      const bodyAt = next.findIndex((layer) => layer.slot === "body");
+      next.splice(bodyAt >= 0 ? bodyAt : 0, 0, { slot: draw.slot, src: draw.src, opacity: 1 });
+      continue;
+    }
+    insert(draw.slot, draw.src, anchors[draw.at] ?? ["body"]);
   }
   return next;
 }
