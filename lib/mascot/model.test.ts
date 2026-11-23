@@ -205,9 +205,10 @@ describe("skin marks", () => {
     assert.deepEqual(improvedConcerns(snap.skinMarks, snap.skinMarksPrev), ["dry"]);
   });
 
-  it("fades marks as the level drops", () => {
-    assert.ok(markOpacity("light") < markOpacity("medium"));
-    assert.ok(markOpacity("medium") < markOpacity("heavy"));
+  it("draws every mark level at full strength", () => {
+    assert.equal(markOpacity("light"), 1);
+    assert.equal(markOpacity("medium"), 1);
+    assert.equal(markOpacity("heavy"), 1);
     assert.ok(markCount("light") < markCount("heavy"));
   });
 });

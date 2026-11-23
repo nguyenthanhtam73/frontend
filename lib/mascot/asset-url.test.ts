@@ -34,25 +34,25 @@ function assertVersioned(url: string): void {
 }
 
 describe("mascot asset urls", () => {
-  it("appends ?v=3, keeps a file hash as h, and skips API paths", () => {
-    assert.equal(MASCOT_ASSET_VERSION, "3");
-    assert.equal(mascotAssetUrl("/mascot/body/body_chibi.svg"), "/mascot/body/body_chibi.svg?v=3");
+  it("appends ?v=4, keeps a file hash as h, and skips API paths", () => {
+    assert.equal(MASCOT_ASSET_VERSION, "4");
+    assert.equal(mascotAssetUrl("/mascot/body/body_chibi.svg"), "/mascot/body/body_chibi.svg?v=4");
     const once = mascotAssetUrl("/mascot/body/body_chibi.svg");
     assert.equal(mascotAssetUrl(once), once);
     assert.equal(
       mascotAssetUrl("/mascot/room/walk-mask.png?v=866dc5866a"),
-      "/mascot/room/walk-mask.png?v=3&h=866dc5866a",
+      "/mascot/room/walk-mask.png?v=4&h=866dc5866a",
     );
     assert.equal(
       mascotAssetUrl('url("/mascot/rooms/spa-room.webp")'),
-      'url("/mascot/rooms/spa-room.webp?v=3")',
+      'url("/mascot/rooms/spa-room.webp?v=4")',
     );
     assert.equal(
       mascotAssetUrl('<image href="/mascot/fx/eyelids.svg"/>'),
-      '<image href="/mascot/fx/eyelids.svg?v=3"/>',
+      '<image href="/mascot/fx/eyelids.svg?v=4"/>',
     );
     assert.equal(mascotAssetUrl("/api/v1/mascot/rooms/DA7K2M/quest"), "/api/v1/mascot/rooms/DA7K2M/quest");
-    assert.equal(mascotAssetPath("/mascot/hair/hair_sleep_buns.svg?v=3"), "/mascot/hair/hair_sleep_buns.svg");
+    assert.equal(mascotAssetPath("/mascot/hair/hair_sleep_buns.svg?v=4"), "/mascot/hair/hair_sleep_buns.svg");
     assert.equal(MASCOT_CACHE_CONTROL.includes("immutable"), false);
     assert.match(MASCOT_CACHE_CONTROL, /max-age=0/);
     assert.match(MASCOT_CACHE_CONTROL, /must-revalidate/);
@@ -79,7 +79,7 @@ describe("mascot asset urls", () => {
       ...Object.values(GAME_ICONS),
       ...WARDROBE_CATALOG.map((item) => wardrobeThumbSrc(item)),
       sleeveArmSrc("/mascot/outfits/outfit_pajamas.svg"),
-      chinArmSrc("/mascot/outfits/outfit_hoodie.svg?v=3"),
+      chinArmSrc("/mascot/outfits/outfit_hoodie.svg?v=4"),
       sheetJsonUrlFromArt(art),
       mascotSheetImageUrl("outfit_pajamas__hair_sleep_buns__211451dc.png"),
       ROOM_WALK_MASK,
