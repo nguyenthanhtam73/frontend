@@ -236,6 +236,41 @@ export function SeedBagLoader({
   );
 }
 
+function PetalPick({
+  item,
+  selected,
+  disabled = false,
+  mark,
+  onClick,
+}: {
+  item: SeedCatalogItem;
+  selected: boolean;
+  disabled?: boolean;
+  mark: "offer" | "want" | "buy";
+  onClick: () => void;
+}) {
+  const t = useTranslations("mascot");
+  const src = seedPetalSrc(item.typeKey);
+  const count = `×${item.shards}`;
+  return (
+    <button
+      type="button"
+      className="beda-seed-petal-pick"
+      aria-label={`${item.nameVi}, ${t("game.seeds.haveShards", { count: item.shards })}`}
+      aria-pressed={selected}
+      disabled={disabled}
+      data-offer={mark === "offer" && selected ? "1" : undefined}
+      data-want={mark === "want" && selected ? "1" : undefined}
+      data-buy={mark === "buy" && selected ? "1" : undefined}
+      data-testid={`beda-seed-${mark}-${item.typeKey}`}
+      onClick={onClick}
+    >
+      {src ? <img src={mascotAssetUrl(src)} alt="" /> : <span className="beda-seed-petal-miss" aria-hidden />}
+      <b>{count}</b>
+    </button>
+  );
+}
+
 function MysteryBanner({
   bag,
   planting,
@@ -340,18 +375,26 @@ function TradeDialog({
       <p>{t("game.seeds.tradeHint", { count })}</p>
       <div className="beda-seed-picks">
         {commons.map((item) => (
-          <button key={item.typeKey} type="button" data-offer={offerKey === item.typeKey ? "1" : "0"} disabled={item.shards < count} onClick={() => onOffer(item.typeKey)}>
-            {item.nameVi}
-            <small>{t("game.seeds.haveShards", { count: item.shards })}</small>
-          </button>
+          <PetalPick
+            key={item.typeKey}
+            item={item}
+            selected={offerKey === item.typeKey}
+            disabled={item.shards < count}
+            mark="offer"
+            onClick={() => onOffer(item.typeKey)}
+          />
         ))}
       </div>
       <p>{t("game.seeds.tradeWant")}</p>
       <div className="beda-seed-picks">
         {commons.filter((item) => item.typeKey !== offerKey).map((item) => (
-          <button key={item.typeKey} type="button" data-want={wantKey === item.typeKey ? "1" : "0"} onClick={() => onWant(item.typeKey)}>
-            {item.nameVi}
-          </button>
+          <PetalPick
+            key={item.typeKey}
+            item={item}
+            selected={wantKey === item.typeKey}
+            mark="want"
+            onClick={() => onWant(item.typeKey)}
+          />
         ))}
       </div>
       {ready && offer && want ? (
@@ -399,9 +442,13 @@ function BuyDialog({
       <h3>{t("game.seeds.buyTitle")}</h3>
       <div className="beda-seed-picks">
         {commons.map((row) => (
-          <button key={row.typeKey} type="button" data-buy={selected === row.typeKey ? "1" : "0"} onClick={() => onSelect(row.typeKey)}>
-            {row.nameVi}
-          </button>
+          <PetalPick
+            key={row.typeKey}
+            item={row}
+            selected={selected === row.typeKey}
+            mark="buy"
+            onClick={() => onSelect(row.typeKey)}
+          />
         ))}
       </div>
       {item && petal ? <img className="beda-seed-petal" src={mascotAssetUrl(petal)} alt="" /> : null}

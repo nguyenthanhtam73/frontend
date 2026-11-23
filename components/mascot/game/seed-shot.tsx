@@ -16,7 +16,7 @@ const SAMPLE = {
   catalog: [
     { type_key: "cherry", name_vi: "Anh đào", rarity: "common", image_key: "cherry", shards: 3, seeds: 2, available: true, coming_soon: false, in_mystery_pool: true, revealed: true },
     { type_key: "sunflower", name_vi: "Hướng dương", rarity: "common", image_key: "sunflower", shards: 4, seeds: 1, available: true, coming_soon: false, in_mystery_pool: true, revealed: true },
-    { type_key: "aloe", name_vi: "Lô hội", rarity: "common", image_key: "aloe", shards: 4, seeds: 0, available: true, coming_soon: false, in_mystery_pool: true, revealed: true },
+    { type_key: "aloe", name_vi: "Lô hội", rarity: "common", image_key: "aloe", shards: 1, seeds: 0, available: true, coming_soon: false, in_mystery_pool: true, revealed: true },
     { type_key: "sen_hong", name_vi: "Sen hồng", rarity: "rare", image_key: "sen_hong", shards: 0, seeds: 0, available: false, coming_soon: true, in_mystery_pool: false, revealed: false },
   ],
   slot_count: 18,
