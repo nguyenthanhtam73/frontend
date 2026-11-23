@@ -9,6 +9,7 @@ import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
 import { TreeClosetSection } from "@/components/mascot/game/be-da-room-tree";
+import { GiftClosetSection } from "@/components/mascot/game/be-da-gift-box";
 import { SeedBagLoader } from "@/components/mascot/game/be-da-seed-bag";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
@@ -1222,6 +1223,7 @@ function Wardrobe({
         selectedId={preview.clip}
         onSelect={(clipId) => onTry({ ...preview, clip: clipId && isTreeWearClip(clipId) ? clipId : null })}
       />
+      <GiftClosetSection />
       <p className="beda-note">{t("game.tryNote")}</p>
       <div className="beda-wear-bar">
         <button

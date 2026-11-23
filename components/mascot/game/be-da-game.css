@@ -4342,6 +4342,187 @@
 }
 
 .beda-tree-plant,
+.beda-gift-spot,
+.beda-gift-info {
+  position: absolute;
+  z-index: 5;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.beda-gift-shot {
+  position: relative;
+  min-height: 100vh;
+  background: #e7f6f2;
+}
+
+.beda-gift-shot .beda-tree-spot {
+  position: relative;
+  width: 180px;
+  height: 230px;
+  margin: 80px auto;
+}
+
+.beda-gift-worn-figure {
+  width: 220px;
+  height: 280px;
+  margin: 24px auto 8px;
+}
+
+.beda-gift-spot {
+  left: 50%;
+  bottom: -8px;
+  width: 72px;
+  height: 72px;
+  transform: translateX(-50%);
+}
+
+.beda-gift-spot img,
+.beda-gift-art {
+  width: 100%;
+  height: auto;
+}
+
+.beda-gift-art {
+  display: block;
+  width: 140px;
+  margin: 8px auto;
+}
+
+.beda-gift-art.is-shake {
+  animation: beda-gift-shake 0.5s ease-in-out 2;
+}
+
+@keyframes beda-gift-shake {
+  25% { transform: rotate(-6deg); }
+  75% { transform: rotate(6deg); }
+}
+
+.beda-gift-info {
+  right: 8px;
+  bottom: 36px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  color: #2f6f74;
+  font-weight: 800;
+  box-shadow: 0 2px 0 #d7e6e4;
+}
+
+.beda-gift-card h2 {
+  margin: 6px 0;
+  font-size: 20px;
+}
+
+.beda-gift-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.beda-gift-actions button,
+.beda-gift-card .beda-tree-take {
+  min-height: 44px;
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 800;
+}
+
+.beda-gift-actions button:first-child {
+  background: #e7f6f2;
+  color: #1d6e62;
+}
+
+.beda-gift-actions button:last-child,
+.beda-gift-card .beda-tree-take {
+  background: #2f9e8f;
+  color: #fff;
+}
+
+.beda-gift-rarity {
+  margin: 0;
+  font-weight: 800;
+  color: #2f9e8f;
+}
+
+.beda-gift-items,
+.beda-gift-prizes {
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.beda-gift-items li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.beda-gift-items img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.beda-gift-prizes li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.beda-gift-card {
+  max-height: min(78vh, 640px);
+  overflow: auto;
+}
+
+.beda-gift-burst {
+  position: relative;
+  height: 72px;
+  margin: 4px auto 0;
+}
+
+.beda-gift-coin {
+  position: absolute;
+  left: calc(50% + (var(--i) - 2) * 22px);
+  bottom: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff4c2, #f6c445 55%, #e0a020);
+  box-shadow: 0 2px 0 #c48916;
+  animation: beda-coin-up 0.9s ease-out both;
+  animation-delay: calc(var(--i) * 80ms);
+}
+
+.beda-gift-coin::after {
+  content: "xu";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 8px;
+  font-weight: 800;
+  color: #8a5a10;
+}
+
+@keyframes beda-coin-up {
+  from { transform: translateY(18px) scale(0.4); opacity: 0; }
+  to { transform: translateY(-28px) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beda-gift-art.is-shake,
+  .beda-gift-coin {
+    animation: none;
+  }
+}
+
 .beda-tree-pot {
   position: absolute;
   inset: 0;
