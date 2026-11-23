@@ -440,6 +440,11 @@ function BuyDialog({
   return (
     <div className="beda-seed-dialog" role="dialog" aria-modal="true" data-testid="beda-seed-buy-dialog">
       <h3>{t("game.seeds.buyTitle")}</h3>
+      {bag.rules.shardBuyPrice != null ? (
+        <p data-testid="beda-seed-buy-each">
+          {t("game.seeds.buyEach", { price: formatRoomCoins(bag.rules.shardBuyPrice, locale) })}
+        </p>
+      ) : null}
       <div className="beda-seed-picks">
         {commons.map((row) => (
           <PetalPick
