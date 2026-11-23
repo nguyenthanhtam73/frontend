@@ -29,6 +29,8 @@ import {
   wardrobeThumbSrc,
   type WardrobeItem,
 } from "@/lib/mascot/game/wardrobe";
+import { ShopClosetTabs } from "@/components/mascot/game/be-da-xu-shop";
+import type { ShopClosetItem } from "@/lib/mascot/game/xu-shop";
 import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
@@ -150,6 +152,9 @@ export function BeDaGameView({
   onSpaRetry,
   onSpaQuit,
   onPlantSeed,
+  shopCloset = [],
+  onOpenShop,
+  onWearShop,
 }: {
   locale: string;
   tab: GameTab;
@@ -235,6 +240,10 @@ export function BeDaGameView({
   onSpaRetry?: () => void;
   onSpaQuit?: () => void;
   onPlantSeed?: (treeType: string) => Promise<void>;
+  /** Pieces bought with xu. Shown on the closet tabs when the shop can open. */
+  shopCloset?: readonly ShopClosetItem[];
+  onOpenShop?: () => void;
+  onWearShop?: (item: ShopClosetItem) => void;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -478,6 +487,9 @@ export function BeDaGameView({
             wornIds={wornIds}
             closetAdmin={closetAdmin}
             wornLook={wornLook}
+            shopCloset={shopCloset}
+            onOpenShop={onOpenShop}
+            onWearShop={onWearShop}
             preview={draft}
             onTry={(next) => {
               setDraft(next);
@@ -1065,6 +1077,9 @@ function Wardrobe({
   onWear,
   onClose,
   onOpenSeedBag,
+  shopCloset = [],
+  onOpenShop,
+  onWearShop,
 }: {
   wornIds: string[];
   closetAdmin: boolean;
@@ -1074,6 +1089,9 @@ function Wardrobe({
   onWear: () => void;
   onClose: () => void;
   onOpenSeedBag?: () => void;
+  shopCloset?: readonly ShopClosetItem[];
+  onOpenShop?: () => void;
+  onWearShop?: (item: ShopClosetItem) => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
@@ -1219,6 +1237,14 @@ function Wardrobe({
       <button type="button" className="beda-seed-open" data-testid="beda-seed-open" onClick={onOpenSeedBag}>
         {t("game.seeds.bag")}
       </button>
+      {onOpenShop ? (
+        <div data-testid="beda-shop-entry">
+          <button type="button" className="beda-seed-open" data-testid="beda-shop-open" onClick={onOpenShop}>
+            {t("game.shop.open")}
+          </button>
+          <ShopClosetTabs items={shopCloset} wearingId={null} onWear={onWearShop} />
+        </div>
+      ) : null}
       <TreeClosetSection
         selectedId={preview.clip}
         onSelect={(clipId) => onTry({ ...preview, clip: clipId && isTreeWearClip(clipId) ? clipId : null })}

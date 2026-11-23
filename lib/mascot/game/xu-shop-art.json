@@ -1,0 +1,242 @@
+{
+  "spa_01": {
+    "name": "Áo choàng tắm bông",
+    "icon": "/mascot/shop/icons/spa_01.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_spa_ao_choang.svg",
+    "set": "spa"
+  },
+  "spa_02": {
+    "name": "Khăn quấn tóc tai thỏ",
+    "icon": "/mascot/shop/icons/spa_02.png",
+    "layer": "/mascot/shop/layers/accessory/xu_spa_khan_tai_tho.svg",
+    "set": "spa"
+  },
+  "spa_02_boy": {
+    "name": "Khăn quấn tóc tai thỏ · Nam",
+    "icon": "/mascot/shop/icons/spa_02_boy.png",
+    "layer": "/mascot/shop/layers/accessory/xu_spa_khan_tai_tho_boy.svg",
+    "set": "spa"
+  },
+  "spa_03": {
+    "name": "Dép lông",
+    "icon": "/mascot/shop/icons/spa_03.png",
+    "layer": "/mascot/shop/layers/shoes/xu_spa_dep_long.svg",
+    "set": "spa"
+  },
+  "spa_04": {
+    "name": "Ly trà hoa cúc",
+    "icon": "/mascot/shop/icons/spa_04.png",
+    "layer": "/mascot/shop/layers/held/xu_spa_ly_tra_hoa_cuc.svg",
+    "set": "spa"
+  },
+  "spa_bonus": {
+    "name": "Hơi nước lấp lánh",
+    "icon": "/mascot/shop/icons/spa_bonus.png",
+    "layer": "/mascot/shop/layers/fx/xu_spa_bonus_hoi_nuoc.svg",
+    "set": "spa"
+  },
+  "lohoi_01": {
+    "name": "Yếm xanh lá",
+    "icon": "/mascot/shop/icons/lohoi_01.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_lohoi_yem.svg",
+    "set": "lohoi"
+  },
+  "lohoi_01_boy": {
+    "name": "Yếm xanh lá · Nam",
+    "icon": "/mascot/shop/icons/lohoi_01_boy.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_lohoi_yem_boy.svg",
+    "set": "lohoi"
+  },
+  "lohoi_02": {
+    "name": "Bình tưới mini",
+    "icon": "/mascot/shop/icons/lohoi_02.png",
+    "layer": "/mascot/shop/layers/held/xu_lohoi_binh_tuoi.svg",
+    "set": "lohoi"
+  },
+  "lohoi_03": {
+    "name": "Mũ lá lô hội",
+    "icon": "/mascot/shop/icons/lohoi_03.png",
+    "layer": "/mascot/shop/layers/accessory/xu_lohoi_mu_la.svg",
+    "set": "lohoi"
+  },
+  "lohoi_04": {
+    "name": "Giày búp lá",
+    "icon": "/mascot/shop/icons/lohoi_04.png",
+    "layer": "/mascot/shop/layers/shoes/xu_lohoi_giay_bup_la.svg",
+    "set": "lohoi"
+  },
+  "lohoi_bonus": {
+    "name": "Chậu lô hội trong phòng",
+    "icon": "/mascot/shop/icons/lohoi_bonus.png",
+    "layer": "/mascot/shop/layers/room/xu_lohoi_bonus_chau_lo_hoi.svg",
+    "set": "lohoi"
+  },
+  "nang_01": {
+    "name": "Áo khoác chống nắng",
+    "icon": "/mascot/shop/icons/nang_01.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_nang_ao_khoac.svg",
+    "set": "nang"
+  },
+  "nang_01_boy": {
+    "name": "Áo khoác chống nắng · Nam",
+    "icon": "/mascot/shop/icons/nang_01_boy.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_nang_ao_khoac_boy.svg",
+    "set": "nang"
+  },
+  "nang_02": {
+    "name": "Mũ rộng vành",
+    "icon": "/mascot/shop/icons/nang_02.png",
+    "layer": "/mascot/shop/layers/accessory/xu_nang_mu_rong_vanh.svg",
+    "set": "nang"
+  },
+  "nang_03": {
+    "name": "Ô nhỏ cầm tay",
+    "icon": "/mascot/shop/icons/nang_03.png",
+    "layer": "/mascot/shop/layers/held/xu_nang_o_nho.svg",
+    "set": "nang"
+  },
+  "nang_04": {
+    "name": "Kính tròn",
+    "icon": "/mascot/shop/icons/nang_04.png",
+    "layer": "/mascot/shop/layers/accessory/xu_nang_kinh_tron.svg",
+    "set": "nang"
+  },
+  "nang_bonus": {
+    "name": "Khung tên mặt trời",
+    "icon": "/mascot/shop/icons/nang_bonus.png",
+    "layer": "/mascot/shop/layers/ui/xu_nang_bonus_khung_ten.svg",
+    "set": "nang"
+  },
+  "dem_01": {
+    "name": "Đồ ngủ in sao",
+    "icon": "/mascot/shop/icons/dem_01.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_dem_do_ngu_sao.svg",
+    "set": "dem"
+  },
+  "dem_02": {
+    "name": "Gối ôm",
+    "icon": "/mascot/shop/icons/dem_02.png",
+    "layer": "/mascot/shop/layers/held/xu_dem_goi_om.svg",
+    "set": "dem"
+  },
+  "dem_03": {
+    "name": "Mũ ngủ hình trăng",
+    "icon": "/mascot/shop/icons/dem_03.png",
+    "layer": "/mascot/shop/layers/accessory/xu_dem_mu_ngu_trang.svg",
+    "set": "dem"
+  },
+  "dem_04": {
+    "name": "Bịt mắt mây",
+    "icon": "/mascot/shop/icons/dem_04.png",
+    "layer": "/mascot/shop/layers/accessory/xu_dem_bit_mat_may.svg",
+    "set": "dem"
+  },
+  "dem_bonus": {
+    "name": "Sao bay lúc đắp mặt nạ",
+    "icon": "/mascot/shop/icons/dem_bonus.png",
+    "layer": "/mascot/shop/layers/fx/xu_dem_bonus_sao_bay.svg",
+    "set": "dem"
+  },
+  "ngoctrai_01": {
+    "name": "Vương miện ngọc trai",
+    "icon": "/mascot/shop/icons/ngoctrai_01.png",
+    "layer": "/mascot/shop/layers/accessory/xu_ngoctrai_vuong_mien.svg",
+    "set": "ngoctrai"
+  },
+  "ngoctrai_02": {
+    "name": "Áo choàng ánh hồng",
+    "icon": "/mascot/shop/icons/ngoctrai_02.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_ngoctrai_ao_choang.svg",
+    "set": "ngoctrai"
+  },
+  "ngoctrai_02_boy": {
+    "name": "Áo choàng ánh hồng · Nam",
+    "icon": "/mascot/shop/icons/ngoctrai_02_boy.png",
+    "layer": "/mascot/shop/layers/outfits/outfit_xu_ngoctrai_ao_choang_boy.svg",
+    "set": "ngoctrai"
+  },
+  "ngoctrai_03": {
+    "name": "Gậy ngọc trai",
+    "icon": "/mascot/shop/icons/ngoctrai_03.png",
+    "layer": "/mascot/shop/layers/held/xu_ngoctrai_gay.svg",
+    "set": "ngoctrai"
+  },
+  "ngoctrai_04": {
+    "name": "Vòng cổ ngọc trai",
+    "icon": "/mascot/shop/icons/ngoctrai_04.png",
+    "layer": "/mascot/shop/layers/neck/xu_ngoctrai_vong_co.svg",
+    "set": "ngoctrai"
+  },
+  "ngoctrai_05": {
+    "name": "Giày ngọc trai",
+    "icon": "/mascot/shop/icons/ngoctrai_05.png",
+    "layer": "/mascot/shop/layers/shoes/xu_ngoctrai_giay.svg",
+    "set": "ngoctrai"
+  },
+  "ngoctrai_bonus": {
+    "name": "Hào quang cả phòng",
+    "icon": "/mascot/shop/icons/ngoctrai_bonus.png",
+    "layer": "/mascot/shop/layers/fx/xu_ngoctrai_bonus_hao_quang_front.svg",
+    "set": "ngoctrai"
+  },
+  "acc_kinh_mat_meo": {
+    "name": "Kính mắt mèo",
+    "icon": "/mascot/shop/icons/acc_kinh_mat_meo.png",
+    "layer": "/mascot/shop/layers/accessory/acc_kinh_mat_meo.svg",
+    "set": "phukien"
+  },
+  "acc_kinh_tim": {
+    "name": "Kính tim",
+    "icon": "/mascot/shop/icons/acc_kinh_tim.png",
+    "layer": "/mascot/shop/layers/accessory/acc_kinh_tim.svg",
+    "set": "phukien"
+  },
+  "acc_kinh_gong_vang": {
+    "name": "Kính gọng vàng dây ngọc",
+    "icon": "/mascot/shop/icons/acc_kinh_gong_vang.png",
+    "layer": "/mascot/shop/layers/accessory/acc_kinh_gong_vang.svg",
+    "set": "phukien"
+  },
+  "acc_bao_tay_ren": {
+    "name": "Bao tay ren",
+    "icon": "/mascot/shop/icons/acc_bao_tay_ren.png",
+    "layer": "",
+    "set": "phukien"
+  },
+  "acc_vong_tay_charm": {
+    "name": "Vòng tay charm",
+    "icon": "/mascot/shop/icons/acc_vong_tay_charm.png",
+    "layer": "",
+    "set": "phukien"
+  },
+  "acc_no_lua": {
+    "name": "Nơ lụa",
+    "icon": "/mascot/shop/icons/acc_no_lua.png",
+    "layer": "/mascot/shop/layers/hairclip/acc_no_lua.svg",
+    "set": "phukien"
+  },
+  "acc_kep_ngoc_trai": {
+    "name": "Kẹp ngọc trai",
+    "icon": "/mascot/shop/icons/acc_kep_ngoc_trai.png",
+    "layer": "/mascot/shop/layers/hairclip/acc_kep_ngoc_trai.svg",
+    "set": "phukien"
+  },
+  "acc_khuyen_tai_giot_ngoc": {
+    "name": "Khuyên tai giọt ngọc",
+    "icon": "/mascot/shop/icons/acc_khuyen_tai_giot_ngoc.png",
+    "layer": "/mascot/shop/layers/ears/acc_khuyen_tai_giot_ngoc.svg",
+    "set": "phukien"
+  },
+  "acc_tui_xach_mini": {
+    "name": "Túi xách mini",
+    "icon": "/mascot/shop/icons/acc_tui_xach_mini.png",
+    "layer": "/mascot/shop/layers/bag/acc_tui_xach_mini.svg",
+    "set": "phukien"
+  },
+  "acc_khan_quang_co": {
+    "name": "Khăn quàng cổ",
+    "icon": "/mascot/shop/icons/acc_khan_quang_co.png",
+    "layer": "/mascot/shop/layers/neck/acc_khan_quang_co.svg",
+    "set": "phukien"
+  }
+}

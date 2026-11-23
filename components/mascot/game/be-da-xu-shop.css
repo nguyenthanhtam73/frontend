@@ -1,0 +1,486 @@
+/* Xu shop. Light is the handoff cream. Dark follows the site theme. */
+
+.beda-shop {
+  --shop-bg: #fbf6f2;
+  --shop-ink: #3f2c26;
+  --shop-muted: #6f564c;
+  --shop-card: #ffffff;
+  --shop-line: #f0e2d8;
+  --shop-pink: #c44774;
+  --shop-pink-ink: #ffffff;
+  --shop-chip: #ffffff;
+  --shop-soft: #fff1f5;
+  --shop-green: #e5f6ea;
+  --shop-green-ink: #1f6b38;
+  --shop-gold: #9a5b12;
+  --shop-gold-bg: #fff4df;
+  --shop-lock: #6d534c;
+  --shop-shadow: 0 10px 28px rgba(90, 50, 40, 0.08);
+  --shop-try: #ffe3ee;
+  color: var(--shop-ink);
+  background: var(--shop-bg);
+  font-family: var(--font-ui-sans), "Nunito Sans", system-ui, sans-serif;
+  min-height: 100%;
+}
+
+.dark .beda-shop,
+.beda-shop[data-theme="dark"] {
+  --shop-bg: #1c161b;
+  --shop-ink: #f8efe9;
+  --shop-muted: #e4d2c9;
+  --shop-card: #2c2329;
+  --shop-line: #4a3b43;
+  --shop-pink: #ff9ebb;
+  --shop-pink-ink: #3a1020;
+  --shop-chip: #342830;
+  --shop-soft: #3a2a33;
+  --shop-green: #1a3324;
+  --shop-green-ink: #d4f5df;
+  --shop-gold: #ffd27a;
+  --shop-gold-bg: #3a2e1c;
+  --shop-lock: #f0ddd4;
+  --shop-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  --shop-try: #4a2a38;
+}
+
+.beda-shop.is-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  overflow: auto;
+  height: 100dvh;
+}
+
+.beda-shop-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--shop-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.beda-shop-icon-btn,
+.beda-shop-buy,
+.beda-shop-ghost,
+.beda-shop-chip,
+.beda-shop-tab,
+.beda-shop-own,
+.beda-shop-card button,
+.beda-shop-piece {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.beda-shop-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--shop-chip);
+  color: var(--shop-ink);
+  box-shadow: var(--shop-shadow);
+  font-size: 20px;
+}
+
+.beda-shop-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.beda-shop-pills {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.beda-shop-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--shop-chip);
+  box-shadow: var(--shop-shadow);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.beda-shop-pill b {
+  color: var(--shop-gold);
+}
+
+.beda-shop-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 12px 28px;
+}
+
+.beda-shop-stage,
+.beda-shop-group,
+.beda-shop-season,
+.beda-shop-closet {
+  background: var(--shop-card);
+  border: 1px solid var(--shop-line);
+  border-radius: 22px;
+  box-shadow: var(--shop-shadow);
+}
+
+.beda-shop-stage {
+  padding: 12px;
+}
+
+.beda-shop-stage-top,
+.beda-shop-set-head,
+.beda-shop-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.beda-shop-kicker {
+  margin: 0;
+  color: var(--shop-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.beda-shop-genders {
+  display: flex;
+  gap: 6px;
+}
+
+.beda-shop-chip {
+  border: 1px solid var(--shop-line);
+  border-radius: 999px;
+  background: var(--shop-chip);
+  color: var(--shop-ink);
+  padding: 0 14px;
+  font-weight: 700;
+}
+
+.beda-shop-chip.is-on,
+.beda-shop-tab.is-on {
+  background: var(--shop-ink);
+  color: var(--shop-bg);
+  border-color: transparent;
+}
+
+.beda-shop-hero {
+  position: relative;
+  width: min(220px, 58vw);
+  margin: 8px auto;
+}
+
+.beda-shop-wear {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.beda-shop-trying {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.beda-shop-trying img,
+.beda-shop-piece img,
+.beda-shop-own img,
+.beda-shop-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.beda-shop-trying strong,
+.beda-shop-piece-name,
+.beda-shop-card h3,
+.beda-shop-group h2,
+.beda-shop-set-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.beda-shop-actions,
+.beda-shop-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.beda-shop-buy,
+.beda-shop-ghost {
+  border: 0;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-weight: 800;
+}
+
+.beda-shop-buy {
+  background: var(--shop-pink);
+  color: var(--shop-pink-ink);
+}
+
+.beda-shop-buy:disabled,
+.beda-shop-ghost:disabled {
+  opacity: 0.55;
+}
+
+.beda-shop-ghost {
+  background: var(--shop-soft);
+  color: var(--shop-ink);
+}
+
+.beda-shop-note,
+.beda-shop-muted {
+  margin: 8px 0 0;
+  color: var(--shop-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.beda-shop-group,
+.beda-shop-season,
+.beda-shop-closet {
+  padding: 12px;
+}
+
+.beda-shop-grid,
+.beda-shop-pieces {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.beda-shop-piece-try {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.beda-shop-piece .beda-shop-buy {
+  width: 100%;
+}
+
+.beda-shop-piece,
+.beda-shop-card,
+.beda-shop-own {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 16px;
+  border: 2px solid var(--shop-line);
+  background: var(--shop-soft);
+  color: inherit;
+  text-align: left;
+}
+
+.beda-shop-piece.is-on,
+.beda-shop-card.is-on {
+  border-color: var(--shop-pink);
+  background: var(--shop-try);
+}
+
+.beda-shop-piece.is-owned,
+.beda-shop-card.is-owned,
+.beda-shop-own {
+  background: var(--shop-green);
+}
+
+.beda-shop-price {
+  color: var(--shop-gold);
+  font-weight: 800;
+  background: var(--shop-gold-bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.beda-shop-owned {
+  color: var(--shop-green-ink);
+  font-weight: 800;
+}
+
+.beda-shop-lock {
+  color: var(--shop-lock);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.beda-shop-bar-line {
+  height: 8px;
+  margin: 8px 0;
+  border-radius: 99px;
+  background: var(--shop-line);
+  overflow: hidden;
+}
+
+.beda-shop-bar-line span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f7a8c4, #c44774);
+}
+
+.beda-shop-bonus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--shop-gold-bg);
+}
+
+.beda-shop-bonus img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.beda-shop-filters,
+.beda-shop-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.beda-shop-tab {
+  border: 0;
+  border-radius: 999px;
+  background: var(--shop-soft);
+  color: var(--shop-ink);
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.beda-shop-season h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.beda-shop-problem {
+  margin: 8px 12px 0;
+  color: var(--shop-pink);
+  font-weight: 700;
+}
+
+.beda-shop-shade {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  align-items: end;
+  padding: 12px;
+  background: rgba(40, 24, 28, 0.45);
+}
+
+.beda-shop-dialog {
+  width: min(440px, 100%);
+  margin: 0 auto;
+  padding: 16px;
+  border-radius: 22px 22px 16px 16px;
+  background: var(--shop-card);
+  color: var(--shop-ink);
+  box-shadow: var(--shop-shadow);
+}
+
+.beda-shop-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.beda-shop-meter {
+  height: 10px;
+  margin: 8px 0;
+  border-radius: 99px;
+  background: var(--shop-line);
+  overflow: hidden;
+}
+
+.beda-shop-meter span {
+  display: block;
+  height: 100%;
+  background: #f0a04a;
+}
+
+.beda-shop-pop {
+  position: relative;
+}
+
+.beda-shop-pop i {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--shop-pink);
+  animation: beda-shop-pop 900ms ease-out both;
+}
+
+.beda-shop-pop i:nth-child(1) { left: 12%; background: #f7c948; }
+.beda-shop-pop i:nth-child(2) { left: 38%; animation-delay: 80ms; }
+.beda-shop-pop i:nth-child(3) { left: 62%; background: #8fd18a; animation-delay: 140ms; }
+.beda-shop-pop i:nth-child(4) { left: 84%; background: #f7c948; animation-delay: 40ms; }
+
+@keyframes beda-shop-pop {
+  from { transform: translateY(12px) scale(0.4); opacity: 0; }
+  to { transform: translateY(-28px) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beda-shop-pop i { animation: none; opacity: 1; }
+}
+
+@media (min-width: 960px) {
+  .beda-shop-layout {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .beda-shop-stage {
+    position: sticky;
+    top: 72px;
+  }
+
+  .beda-shop-main {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .beda-shop-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .beda-shop-pieces {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
