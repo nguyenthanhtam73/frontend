@@ -228,7 +228,9 @@
     "theme": {
       "label": "Theme",
       "light": "Light",
-      "dark": "Dark"
+      "dark": "Dark",
+      "lightMode": "Light mode",
+      "darkMode": "Dark mode"
     },
     "language": {
       "label": "Language",

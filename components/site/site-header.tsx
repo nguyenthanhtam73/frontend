@@ -64,15 +64,20 @@ function SignedInActions({
   return (
     <div
       data-testid="auth-signed-in"
-      className={cn("flex min-w-0 shrink items-center gap-1.5", className)}
+      className={cn(
+        "flex min-w-0 shrink items-center",
+        compact ? "gap-2" : "gap-1.5",
+        className,
+      )}
     >
       <span
         className={cn(
-          "min-w-0 truncate text-xs text-muted-foreground",
-          // Below 384px the logo-to-controls gap is 4px. That width comes off
-          // this truncating label (7.5rem → 7.5rem − 4px), not side padding or
-          // the 44px buttons. 384px and up keeps the 7.5rem cap.
-          compact ? "max-w-[7.5rem] max-[383px]:max-w-[calc(7.5rem-4px)]" : "max-w-40",
+          "min-w-0 truncate",
+          // Phone: a bit larger than the 44px logout icon, still ellipsized
+          // when the display name is long. sm+ keeps the quieter caption.
+          compact
+            ? "max-w-[9.5rem] text-sm font-medium text-foreground max-[383px]:max-w-[8rem]"
+            : "max-w-40 text-xs text-muted-foreground",
         )}
         title={email}
       >
@@ -105,20 +110,13 @@ function GuestActions({
   signInLabel: string;
   registerLabel: string;
   className?: string;
-  /** When true, only the primary Register CTA sits in the mobile header row. */
+  /** Tighter padding so Sign in and Register both fit the phone header row. */
   compact?: boolean;
 }) {
   return (
     <div
       data-testid="auth-guest"
-      className={cn(
-        "flex shrink-0 items-center gap-1.5",
-        // Below 384px the logo-to-controls gap is 4px. Guest pages have no
-        // truncating email, so recover that width from the space between
-        // Sign in and Register. 384px and up keeps gap-1.5.
-        compact && "max-[383px]:gap-0.5",
-        className,
-      )}
+      className={cn("flex shrink-0 items-center", compact ? "gap-1" : "gap-1.5", className)}
     >
       <ButtonLink
         href="/login"
@@ -127,10 +125,8 @@ function GuestActions({
         size="sm"
         data-testid="auth-sign-in"
         className={cn(
-          "min-h-9 justify-center",
-          // The phone row already holds the logo, language, theme, and Register.
-          // Sign in returns beside Register from the sm breakpoint up.
-          compact ? "hidden min-h-11 px-2.5" : "inline-flex min-w-[4.5rem]",
+          "inline-flex min-h-11 shrink-0 justify-center whitespace-nowrap!",
+          compact ? "min-w-11 px-2" : "min-w-[4.5rem]",
         )}
       >
         {signInLabel}
@@ -139,9 +135,10 @@ function GuestActions({
         href="/register"
         prefetch
         size="sm"
+        data-testid="auth-register"
         className={cn(
-          "min-h-9 justify-center",
-          compact ? "inline-flex min-h-11 px-3" : "hidden min-w-[5.5rem] sm:inline-flex",
+          "min-h-11 shrink-0 justify-center whitespace-nowrap!",
+          compact ? "inline-flex min-w-11 px-2" : "hidden min-w-[5.5rem] sm:inline-flex",
         )}
       >
         {registerLabel}
@@ -363,12 +360,12 @@ export function SiteHeader() {
           <Link
             href="/"
             prefetch
-            className="shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Logo className="max-[24rem]:gap-1" />
           </Link>
 
-          <div className="ml-auto flex min-h-9 shrink-0 items-center justify-end gap-2 self-center">
+          <div className="ml-auto flex min-h-9 min-w-0 flex-1 items-center justify-end gap-1 self-center sm:gap-2">
             <LocaleSwitcher compact className="md:hidden" />
             <LocaleSwitcher className="hidden md:inline-flex" />
             <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
