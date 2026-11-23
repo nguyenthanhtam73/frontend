@@ -3700,7 +3700,7 @@
         "shortLeft": "You still need {short} xu. Steady care is about {min}–{max} more days.",
         "shortLeftSame": "You still need {short} xu. Steady care is about {days} more days.",
         "shortGo": "Go care for skin",
-        "shortNote": "Trying on stays free. Xu comes from skin care, not from money.",
+        "shortNote": "Trying on stays free.",
         "successTitle": "It's yours!",
         "successCharged": "Spent {charged} xu. {balance} xu left.",
         "successBonus": "The set is complete, so you also got {name}.",

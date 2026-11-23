@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { BeDaXuShop, type ShopDialog, type ShopTry } from "@/components/mascot/game/be-da-xu-shop";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
+import { applyShopReceipt } from "@/lib/mascot/game/xu-shop";
 import { sampleShopCatalog } from "@/lib/mascot/game/xu-shop-sample";
 
 import "@/components/mascot/game/be-da-xu-shop.css";
@@ -48,6 +49,19 @@ export function XuShopShot() {
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
   const balance = scene === "short" ? 4120 : 5240;
+  const shelf = sampleShopCatalog(balance);
+  const catalog =
+    scene === "success"
+      ? applyShopReceipt(shelf, {
+          already: false,
+          itemId: "spa_03",
+          treeType: "",
+          charged: 5000,
+          balance: 240,
+          granted: [{ id: "spa_03", name: "Dép lông", layer: "shoes" }],
+          bonusGranted: [],
+        })
+      : shelf;
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy", gender: "female" },
     missedDays: 0,
@@ -56,7 +70,7 @@ export function XuShopShot() {
   });
   return (
     <BeDaXuShop
-      catalog={sampleShopCatalog(balance)}
+      catalog={catalog}
       locale="vi"
       gender="female"
       pending={false}

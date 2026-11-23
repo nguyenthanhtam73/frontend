@@ -323,8 +323,20 @@
 }
 
 .beda-shop-owned {
-  color: var(--shop-green-ink);
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #d8f3e0;
+  color: #14532d;
   font-weight: 800;
+}
+
+.dark .beda-shop .beda-shop-owned,
+.beda-shop[data-theme="dark"] .beda-shop-owned {
+  background: #166534;
+  color: #f0fff4;
 }
 
 .beda-shop-lock {
@@ -380,9 +392,25 @@
   font-weight: 800;
 }
 
+.beda-shop-season {
+  border-width: 2px;
+}
+
 .beda-shop-season h2 {
   margin: 0;
   font-size: 18px;
+  color: var(--shop-ink);
+}
+
+.beda-shop-season .beda-shop-note {
+  color: var(--shop-ink);
+  font-size: 15px;
+}
+
+.dark .beda-shop .beda-shop-season,
+.beda-shop[data-theme="dark"] .beda-shop-season {
+  background: #3d2c24;
+  border-color: #f0c36a;
 }
 
 .beda-shop-problem {

@@ -4,13 +4,14 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
 import { BeDaXuShop, type ShopDialog } from "@/components/mascot/game/be-da-xu-shop";
+import { applyShopReceipt, type ShopCatalog } from "@/lib/mascot/game/xu-shop";
 import { sampleShopCatalog } from "@/lib/mascot/game/xu-shop-sample";
 import vi from "../../../messages/vi.json";
 
 const noop = () => undefined;
 
-function shopHtml(extra: { dialog?: ShopDialog; balance?: number } = {}) {
-  const catalog = sampleShopCatalog(extra.balance ?? 5240);
+function shopHtml(extra: { dialog?: ShopDialog; balance?: number; catalog?: ShopCatalog } = {}) {
+  const catalog = extra.catalog ?? sampleShopCatalog(extra.balance ?? 5240);
   return renderToStaticMarkup(
     <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
       <BeDaXuShop
@@ -74,19 +75,40 @@ describe("xu shop screen", () => {
     assert.match(short, /2\.380 xu/);
     assert.match(short, /8–10 ngày/);
     assert.match(short, /Đi chăm da/);
+    assert.match(short, /Để sau/);
+    assert.match(short, /Vẫn mặc thử được miễn phí\./);
+    assert.equal(short.includes("không mua bằng tiền"), false);
+    assert.equal(/disabled[^>]*>\s*Chưa đủ xu/.test(short), false);
+    const paid = applyShopReceipt(sampleShopCatalog(5240), {
+      already: false,
+      itemId: "spa_03",
+      treeType: "",
+      charged: 5000,
+      balance: 240,
+      granted: [{ id: "spa_03", name: "Dép lông", layer: "shoes" }],
+      bonusGranted: [],
+    });
     const success = shopHtml({
+      catalog: paid,
       dialog: {
         kind: "success",
         name: "Dép lông",
         charged: 5000,
-        balance: 240,
+        balance: paid.balance,
         already: false,
         bonusName: "",
         piece: { id: "spa_03", name: "Dép lông", layer: "shoes" },
       },
     });
+    const pill = success.match(/data-testid="beda-xu-balance"[\s\S]*?<\/span>/)?.[0] ?? "";
+    assert.match(pill, /240 xu/);
+    assert.equal(pill.includes("5.240"), false);
+    const slipper = success.split('data-testid="beda-xu-card-spa_04"')[0]?.split('data-testid="beda-xu-card-spa_03"')[1] ?? "";
+    assert.match(slipper, /Đã có/);
+    assert.equal(slipper.includes("beda-xu-buy-spa_03"), false);
     assert.match(success, /data-testid="beda-xu-success"/);
     assert.match(success, /Đổi xong rồi!/);
+    assert.match(success, /Còn 240 xu/);
     assert.match(success, /data-testid="beda-xu-success-wear"/);
     assert.equal(/gacha/i.test(confirm + short + success), false);
   });

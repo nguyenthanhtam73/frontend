@@ -574,7 +574,7 @@ function ShopDialogView({
               </p>
             ) : null}
             <div className="beda-shop-dialog-actions">
-              <button type="button" className="beda-shop-ghost" disabled>{t("game.shop.shortStay")}</button>
+              <button type="button" className="beda-shop-ghost" onClick={onDismiss}>{t("game.shop.confirmNo")}</button>
               <button type="button" className="beda-shop-buy" onClick={onCare}>{t("game.shop.shortGo")}</button>
             </div>
             <p className="beda-shop-note">{t("game.shop.shortNote")}</p>
@@ -635,9 +635,14 @@ export function XuShopScreen({
   const [problem, setProblem] = useState<string | null>(null);
   const attempt = useRef<PurchaseAttempt | null>(null);
   const pendingRef = useRef(false);
+  /** Balance from the last receipt. A stale refetch must not put the old total back. */
+  const receiptBalance = useRef<number | null>(null);
 
   useEffect(() => {
-    if (query.data) setCatalog(query.data);
+    if (!query.data) return;
+    if (receiptBalance.current != null && query.data.balance !== receiptBalance.current) return;
+    receiptBalance.current = null;
+    setCatalog(query.data);
   }, [query.data]);
 
   useEffect(() => {
@@ -654,6 +659,7 @@ export function XuShopScreen({
     try {
       const receipt = await buyShopItem(itemId, treeType, next.key);
       attempt.current = null;
+      receiptBalance.current = receipt.balance;
       setCatalog((current) => (current ? applyShopReceipt(current, receipt) : current));
       void queryClient.invalidateQueries({ queryKey: XU_SHOP_QUERY_KEY });
       const piece = shopTryPiece(receipt);

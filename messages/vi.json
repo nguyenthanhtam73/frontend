@@ -3700,7 +3700,7 @@
         "shortLeft": "Còn thiếu {short} xu. Chăm da đều thêm khoảng {min}–{max} ngày nữa là đủ.",
         "shortLeftSame": "Còn thiếu {short} xu. Chăm da đều thêm khoảng {days} ngày nữa là đủ.",
         "shortGo": "Đi chăm da",
-        "shortNote": "Vẫn mặc thử được miễn phí. Xu chỉ có khi chăm da, không mua bằng tiền.",
+        "shortNote": "Vẫn mặc thử được miễn phí.",
         "successTitle": "Đổi xong rồi!",
         "successCharged": "Đã trừ {charged} xu. Còn {balance} xu.",
         "successBonus": "Đủ bộ nên có thêm {name}.",
