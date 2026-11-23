@@ -37,7 +37,10 @@ import {
   spaRoomGuests,
   spaRoomOnlineCount,
   spaRoomProblem,
+  compactSpaPlate,
   fitSpaPlate,
+  shouldCopyInviteLink,
+  spaFootScale,
   spaNamePillBoxes,
   SPA_LANDSCAPE_BOUNDS,
   SPA_LANDSCAPE_HEIGHT,
@@ -225,6 +228,21 @@ describe("spa join spots", () => {
     assert.ok(Math.abs(wide.width / wide.height - landscape) < 1e-9);
     assert.ok(wide.width <= 1024 && wide.height <= 500 + 1e-6);
     assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0, landscape: false });
+  });
+
+  it("keeps one figure size and a smaller room plate", () => {
+    assert.equal(spaFootScale(0.2), 1);
+    assert.equal(spaFootScale(0.95), 1);
+    const fitted = fitSpaPlate(390, 620);
+    const compact = compactSpaPlate(fitted);
+    assert.equal(compact.landscape, fitted.landscape);
+    assert.ok(compact.width < fitted.width);
+    assert.ok(compact.height < fitted.height);
+    assert.equal(compactSpaPlate({ width: 0, height: 0, landscape: false }).width, 0);
+    assert.equal(shouldCopyInviteLink(true, null), false);
+    assert.equal(shouldCopyInviteLink(false, "AbortError"), false);
+    assert.equal(shouldCopyInviteLink(false, null), true);
+    assert.equal(shouldCopyInviteLink(false, "failed"), true);
   });
 
   it("stands a landscape party on the CapCut slots, with Bạn on front-3", () => {

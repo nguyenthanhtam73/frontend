@@ -74,17 +74,19 @@ function panel(extra: Partial<RoomTreePanel> = {}, body: Partial<RoomTree> = {})
 }
 
 describe("room tree card", () => {
-  it("keeps a short bar by default and opens the seven stages on demand", () => {
-    const closed = render(<RoomTreePreview panel={panel()} locale="vi" />);
-    assert.match(closed, /Đã tưới 0\/3/);
+  it("keeps a short line under the tree and opens the seven stages on demand", () => {
+    const closed = render(<RoomTreePreview panel={panel()} locale="vi" daysLeft={6} />);
+    assert.match(closed, /💧 0\/3 đã tưới/);
+    assert.match(closed, /nở sau ~6 ngày/);
+    assert.match(closed, /data-testid="beda-tree-open"/);
     assert.match(closed, /data-open="0"/);
-    assert.match(closed, /data-testid="beda-tree-water"/);
-    assert.match(closed, /Tưới cây/);
+    assert.equal(closed.includes("data-testid=\"beda-tree-water\""), false);
     assert.match(closed, /layer_plant_1\.svg/);
     assert.match(closed, /layer_pot_soil\.svg/);
     assert.equal(closed.includes("AI không tưới"), false);
     assert.equal(closed.includes("data-testid=\"beda-tree-rail\""), false);
     assert.equal(closed.includes("Trồng hạt mới"), false);
+    assert.equal(closed.includes("tưới đủ mỗi ngày để kịp nở"), false);
 
     const bloom = render(
       <RoomTreePreview
@@ -92,8 +94,10 @@ describe("room tree card", () => {
         locale="vi"
       />,
     );
-    assert.match(bloom, /Cây đã nở rộ/);
+    assert.match(bloom, /data-testid="beda-tree-open"/);
+    assert.equal(bloom.includes("data-testid=\"beda-tree-status\""), false);
     assert.equal(bloom.includes("Đã tưới"), false);
+    assert.equal(bloom.includes("nở sau"), false);
     assert.equal(bloom.includes("beda-tree-water"), false);
 
     const open = render(<RoomTreePreview panel={panel()} locale="vi" startOpen />);
@@ -109,9 +113,24 @@ describe("room tree card", () => {
     assert.equal(open.includes("AI không tưới"), false);
   });
 
+  it("says the bloom will miss the room in one late phrase", () => {
+    const html = render(
+      <RoomTreePreview
+        panel={panel({}, { stage: 3, stageName: "Cây con", waters: 1, required: 2 })}
+        locale="vi"
+        daysLeft={2}
+      />,
+    );
+    assert.match(html, /💧 1\/2 đã tưới/);
+    assert.match(html, /data-testid="beda-tree-late"/);
+    assert.match(html, /tưới đủ mỗi ngày để kịp nở/);
+    assert.equal(html.includes("nở sau"), false);
+    assert.equal((html.match(/data-testid="beda-tree-status"/g) ?? []).length, 1);
+  });
+
   it("locks watering behind a skin check", () => {
     const html = render(
-      <RoomTreePreview panel={panel({}, { canWater: false, reason: "needs_skin_check" })} locale="vi" />,
+      <RoomTreePreview panel={panel({}, { canWater: false, reason: "needs_skin_check" })} locale="vi" startOpen />,
     );
     assert.match(html, /data-testid="beda-tree-skin"/);
     assert.match(html, /Soi da để tưới cây/);

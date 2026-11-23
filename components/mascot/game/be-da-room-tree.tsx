@@ -19,6 +19,8 @@ import {
   treeMotionMs,
   treePlantSrc,
   treePotSrc,
+  treeBloomMissesRoom,
+  treeDaysUntilBloom,
   treeProgressPercent,
   treeReveal,
   watersUntilLevel,
@@ -47,6 +49,7 @@ export function RoomTreeProvider({
   locale,
   startOpen = false,
   roomCode = null,
+  daysLeft = null,
   onOpenBag,
   children,
 }: {
@@ -54,10 +57,12 @@ export function RoomTreeProvider({
   locale: string;
   startOpen?: boolean;
   roomCode?: string | null;
+  /** Days until the room ends. Null when the server did not send an end. */
+  daysLeft?: number | null;
   onOpenBag?: () => void;
   children: ReactNode;
 }) {
-  const chrome = useTreeChrome(panel, locale, startOpen, roomCode, onOpenBag);
+  const chrome = useTreeChrome(panel, locale, startOpen, roomCode, onOpenBag, daysLeft);
   return <TreeChromeContext.Provider value={chrome}>{children}</TreeChromeContext.Provider>;
 }
 
@@ -74,13 +79,15 @@ export function RoomTreePreview({
   panel,
   locale,
   startOpen = false,
+  daysLeft = null,
 }: {
   panel: RoomTreePanel;
   locale: string;
   startOpen?: boolean;
+  daysLeft?: number | null;
 }) {
   return (
-    <RoomTreeProvider panel={panel} locale={locale} startOpen={startOpen}>
+    <RoomTreeProvider panel={panel} locale={locale} startOpen={startOpen} daysLeft={daysLeft}>
       <RoomTreePlant />
       <RoomTreeDock />
     </RoomTreeProvider>
@@ -92,7 +99,8 @@ function useTreeChrome(
   locale: string,
   startOpen: boolean,
   roomCode: string | null,
-  onOpenBag?: () => void,
+  onOpenBag: (() => void) | undefined,
+  daysLeft: number | null,
 ): TreeChrome {
   const t = useTranslations("mascot");
   const [open, setOpen] = useState(startOpen);
@@ -121,6 +129,9 @@ function useTreeChrome(
   const frame = motion ? treeFrame(ms, motion, panel.level, light) : null;
   const popupOn = panel.popup != null && panel.popup.length > 0 && (!motion || reveal.popup);
   const toast = panel.toastName && motion === "other" ? t("game.tree.other", { name: panel.toastName }) : "";
+  const bloomedNow = shown.bloomed || shown.reason === "bloomed";
+  const bloomDays = treeDaysUntilBloom(shown.stage, bloomedNow);
+  const bloomLate = bloomDays != null && treeBloomMissesRoom(bloomDays, daysLeft);
   return {
     plant: (
       <TreeArt
@@ -133,7 +144,25 @@ function useTreeChrome(
         toastOpacity={frame?.toast ?? (toast ? 1 : 0)}
         sparkle={shown.bloomed && shown.reason !== "room_ended" && !light}
         softGlow={shown.bloomed && shown.reason !== "room_ended" && light}
+        open={open}
+        onOpen={() => setOpen(true)}
+        openLabel={t("game.tree.title")}
         gift={shown.bloomed ? <TreeGiftBox tree={tree} locale={locale} /> : null}
+        status={
+          bloomDays == null || open ? null : (
+            <span className="beda-tree-status" data-testid="beda-tree-status" data-late={bloomLate ? "1" : "0"}>
+              {t("game.tree.statusLine", { waters: shown.waters, required: shown.required })}
+              <span className="beda-tree-status-sep"> · </span>
+              {bloomLate ? (
+                <span className="beda-tree-status-late" data-testid="beda-tree-late">
+                  {t("game.tree.bloomLate")}
+                </span>
+              ) : (
+                <span data-testid="beda-tree-bloom-in">{t("game.tree.bloomIn", { days: bloomDays })}</span>
+              )}
+            </span>
+          )
+        }
       />
     ),
     dock: (
@@ -254,6 +283,10 @@ function TreeArt({
   toastOpacity,
   sparkle,
   softGlow,
+  open,
+  onOpen,
+  openLabel,
+  status,
   gift,
 }: {
   stage: number;
@@ -265,17 +298,29 @@ function TreeArt({
   toastOpacity: number;
   sparkle: boolean;
   softGlow: boolean;
+  open: boolean;
+  onOpen: () => void;
+  openLabel: string;
+  status: ReactNode;
   gift?: ReactNode;
 }) {
   const plant = frame?.plant ?? { scaleX: 1, scaleY: 1, opacity: 1 };
   const showNext = frame != null && frame.nextPlant.opacity > 0.02 && nextStage !== stage;
   return (
-    <div className="beda-tree-spot" data-testid="beda-tree-spot" data-stage={stage} data-bloom={sparkle || softGlow ? "1" : "0"}>
+    <div className="beda-tree-spot" data-testid="beda-tree-spot" data-stage={stage} data-open={open ? "1" : "0"} data-bloom={sparkle || softGlow ? "1" : "0"}>
       {toast && toastOpacity > 0.02 ? (
         <p className="beda-tree-toast" data-testid="beda-tree-toast" style={{ opacity: toastOpacity }}>
           {toast}
         </p>
       ) : null}
+      <button
+        type="button"
+        className="beda-tree-hit"
+        data-testid="beda-tree-open"
+        aria-expanded={open}
+        aria-label={status ? undefined : openLabel}
+        onClick={onOpen}
+      >
       <div className={sparkle ? "beda-tree-art is-bloom" : "beda-tree-art"} aria-hidden>
         <span className="beda-tree-backglow" style={{ opacity: softGlow ? 0.55 : (frame?.glow ?? 0) }} />
         <img
@@ -340,6 +385,8 @@ function TreeArt({
           <i key={`star-${index}`} className="beda-tree-star" style={{ ["--i" as string]: String(index), opacity: star.opacity, transform: `translateY(${star.y}px)` }} />
         ))}
       </div>
+      {status}
+      </button>
       {gift}
     </div>
   );
@@ -362,36 +409,8 @@ function TreeDock({
   onWater: () => void;
   onToggle: () => void;
 }) {
-  const t = useTranslations("mascot");
-  const fill = treeProgressPercent(tree.progress);
-  const bloomed = tree.bloomed || tree.reason === "bloomed";
-  return (
-    <>
-      {open ? null : (
-        <div className="beda-tree-chip" data-testid="beda-tree-card" data-open="0" data-bloom={bloomed ? "1" : "0"}>
-          <button type="button" className="beda-tree-chip-main" data-testid="beda-tree-expand" aria-expanded={false} onClick={onToggle}>
-            <img src={mascotAssetUrl(treePotSrc())} alt="" />
-            <span>
-              {bloomed ? (
-                <strong data-testid="beda-tree-count">{t("game.tree.bloomed")}</strong>
-              ) : (
-                <>
-                  <strong data-testid="beda-tree-count">{t("game.tree.wateredShort", { waters: tree.waters, required: tree.required })}</strong>
-                  <span className="beda-tree-bar" data-testid="beda-tree-bar" aria-hidden>
-                    <span style={{ width: `${fill}%` }} />
-                  </span>
-                </>
-              )}
-            </span>
-          </button>
-          {bloomed ? null : <TreeWater tree={tree} watering={watering} busy={busy} onWater={onWater} />}
-        </div>
-      )}
-      {open ? (
-        <TreeDetail tree={tree} locale={locale} watering={watering} busy={busy} onWater={onWater} onClose={onToggle} />
-      ) : null}
-    </>
-  );
+  if (!open) return null;
+  return <TreeDetail tree={tree} locale={locale} watering={watering} busy={busy} onWater={onWater} onClose={onToggle} />;
 }
 
 function TreeDetail({

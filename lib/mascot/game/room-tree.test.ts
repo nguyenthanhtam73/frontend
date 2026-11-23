@@ -13,6 +13,8 @@ import {
   readTreeTick,
   readTreeTypes,
   treeArtKey,
+  treeBloomMissesRoom,
+  treeDaysUntilBloom,
   treeFrame,
   treeIsHidden,
   treeRewardsSeenPath,
@@ -59,6 +61,11 @@ describe("shared room tree", () => {
     assert.equal(tree.rewards[1]?.previewOnly, true);
     assert.equal(nextTreeReward(tree)?.itemName, "Nhãn dán lá xanh");
     assert.equal(watersUntilLevel(tree), 1);
+    assert.equal(treeDaysUntilBloom(tree.stage, tree.bloomed), 4);
+    assert.equal(treeBloomMissesRoom(4, 6), false);
+    assert.equal(treeBloomMissesRoom(4, 2), true);
+    assert.equal(treeBloomMissesRoom(4, null), false);
+    assert.equal(treeDaysUntilBloom(7, true), null);
   });
 
   it("falls back to leaf art and hides a 404 gate", () => {

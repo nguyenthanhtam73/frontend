@@ -1,3 +1,4 @@
+import { roomInviteReturnPath } from "@/lib/auth/return-path";
 import { hasSkippedOnboarding } from "@/lib/onboarding/skip";
 
 /** Keep in sync with `GUEST_CLAIM_RETURN_PATH` — avoid importing the claim module. */
@@ -77,6 +78,9 @@ export function postRegisterDestination(input: {
   user: AuthUserLike;
   returnPath: string | null | undefined;
 }): string {
+  // An invite link returns to that room, even before the first check-in.
+  const invited = roomInviteReturnPath(input.returnPath);
+  if (invited) return invited;
   // Guest routine must not divert an unclaimed D0 (or a failed guest claim).
   if (!input.claimedCheckIn) {
     if (isCheckInDestination(input.returnPath)) {

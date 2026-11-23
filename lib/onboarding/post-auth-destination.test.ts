@@ -193,6 +193,29 @@ describe("postRegisterDestination", () => {
     );
   });
 
+  it("returns an invited room even before the first check-in", () => {
+    assert.equal(
+      postRegisterDestination({
+        claimed: false,
+        hadClaimableGuest: true,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: "/be-da/phong/DA7K2M",
+      }),
+      "/be-da/phong/DA7K2M",
+    );
+    assert.equal(
+      postRegisterDestination({
+        claimed: false,
+        hadClaimableGuest: false,
+        claimedCheckIn: false,
+        user: { id: "u1", onboarding_completed: false },
+        returnPath: "https://evil.com/be-da/phong/DA7K2M",
+      }),
+      "/check-in",
+    );
+  });
+
   it("sends unclaimed D0 to /check-in instead of a gated next=", () => {
     assert.equal(
       postRegisterDestination({

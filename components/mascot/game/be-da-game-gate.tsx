@@ -4,6 +4,9 @@ import dynamic from "next/dynamic";
 import { useEffect } from "react";
 
 import { useMascotFeature } from "@/lib/hooks/use-mascot-feature";
+import { buildAuthHrefWithNext } from "@/lib/auth/return-path";
+import { getAccessToken } from "@/lib/auth-token";
+import { normalizeRoomCode, roomInvitePath } from "@/lib/mascot/game/spa-room";
 import { useRouter } from "@/i18n/navigation";
 
 const BeDaGameScreen = dynamic(
@@ -32,8 +35,13 @@ export function BeDaGameGate({ roomCode = null, embed = false }: { roomCode?: st
 
   useEffect(() => {
     if (pending || enabled) return;
+    const code = roomCode ? normalizeRoomCode(roomCode) : null;
+    if (!getAccessToken() && code) {
+      router.replace(buildAuthHrefWithNext("/register", roomInvitePath(code)));
+      return;
+    }
     router.replace("/check-in");
-  }, [enabled, pending, router]);
+  }, [enabled, pending, roomCode, router]);
 
   if (pending || !enabled) return null;
   return <BeDaGameScreen roomCode={roomCode} />;

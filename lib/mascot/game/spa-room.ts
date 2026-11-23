@@ -178,10 +178,19 @@ export function readSpaBoard(data: unknown): SpaBoardRow[] | null {
   return rankCareStreaks(rows);
 }
 
-/** Nearer feet (larger y) draw a little bigger. y is 0..1 on the stage. */
-export function spaFootScale(y: number): number {
-  const t = Math.min(1, Math.max(0, y));
-  return 0.7 + t * 0.54;
+/**
+ * One size while walking. Depth used to scale the figure (nearer feet drew
+ * bigger), which read as a zoom. y is ignored on purpose.
+ */
+export function spaFootScale(_y: number): number {
+  return 1;
+}
+
+/** Share an invite, or copy it when the sheet is missing or fails. A cancel copies nothing. */
+export function shouldCopyInviteLink(shared: boolean, errorName: string | null): boolean {
+  if (shared) return false;
+  if (errorName === "AbortError") return false;
+  return true;
 }
 
 /** Pixel size of `public/mascot/rooms/spa-room.webp`. The plate is taller than it is wide. */
@@ -241,6 +250,21 @@ export function fitSpaPlate(availWidth: number, availHeight: number, landscape?:
   const aspect = wide ? SPA_LANDSCAPE_WIDTH / SPA_LANDSCAPE_HEIGHT : SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
   const width = Math.min(availW, availH * aspect);
   return { width, height: width / aspect, landscape: wide };
+}
+
+/**
+ * The fitted plate fills the free box. This share leaves the header, the tree
+ * line, and the bottom bar on one screen at phone and iPad size.
+ */
+export const SPA_ROOM_COMPACT = 0.76;
+
+export function compactSpaPlate(fit: SpaPlateFit): SpaPlateFit {
+  if (fit.width <= 0 || fit.height <= 0) return fit;
+  return {
+    width: fit.width * SPA_ROOM_COMPACT,
+    height: fit.height * SPA_ROOM_COMPACT,
+    landscape: fit.landscape,
+  };
 }
 
 /** True when a tick adds or removes a member, so the header should reread member_count. */

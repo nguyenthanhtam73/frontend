@@ -14,7 +14,11 @@ const ALLOWED_PREFIXES = [
   "/privacy",
   "/terms",
   "/delete-account",
+  "/be-da",
 ] as const;
+
+/** Invite codes use the room alphabet, so a next path cannot sneak out of the app. */
+const ROOM_INVITE_PATH = /^\/be-da\/phong\/[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
 
 /** Normalize and allow only same-origin app paths (relative only). */
 export function sanitizeAuthReturnPath(
@@ -46,6 +50,14 @@ export function readAuthReturnPathFromSearch(
     sanitizeAuthReturnPath(searchParams.get("next")) ||
     sanitizeAuthReturnPath(searchParams.get("returnUrl"))
   );
+}
+
+/** `/be-da/phong/CODE` after login or register. Anything else is not an invite. */
+export function roomInviteReturnPath(raw: string | null | undefined): string | null {
+  const safe = sanitizeAuthReturnPath(raw);
+  if (!safe) return null;
+  const bare = safe.split("?")[0]?.split("#")[0]?.replace(/\/+$/, "") || "/";
+  return ROOM_INVITE_PATH.test(bare) ? safe : null;
 }
 
 /** `/register?next=/check-in` (and optional login twin). */

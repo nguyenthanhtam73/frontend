@@ -12,7 +12,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { apiBaseUrl } from "@/lib/api";
 import { getApiErrorMessage, type ApiEnvelope } from "@/lib/api-envelope";
 import { setAuthTokens } from "@/lib/auth-token";
-import { readAuthReturnPathFromSearch } from "@/lib/auth/return-path";
+import { readAuthReturnPathFromSearch, roomInviteReturnPath } from "@/lib/auth/return-path";
 import {
   clearLoginPrefillEmail,
   readLoginPrefillEmail,
@@ -170,11 +170,14 @@ function LoginPageInner() {
                 if (hadClaimableGuest && !claimed) {
                   toast.error(t("claimGuestFailed"));
                 }
+                const invited = roomInviteReturnPath(returnPath);
                 const nextPath = checkoutIntent
                   ? buildPricingCheckoutHref(checkoutIntent)
-                  : claimed || hadClaimableGuest
-                    ? GUEST_CLAIM_RETURN_PATH
-                    : resolveAuthReturnDestination(json.data?.user, returnPath);
+                  : invited
+                    ? invited
+                    : claimed || hadClaimableGuest
+                      ? GUEST_CLAIM_RETURN_PATH
+                      : resolveAuthReturnDestination(json.data?.user, returnPath);
                 // Keep loading until navigation replaces this screen — avoids an
                 // idle login form while Next.js still loads the next route.
                 startTransition(() => {

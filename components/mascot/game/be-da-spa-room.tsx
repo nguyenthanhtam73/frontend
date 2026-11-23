@@ -26,12 +26,11 @@ import {
   normalizeRoomCode,
   rankCareStreaks,
   roomInviteUrl,
+  shouldCopyInviteLink,
   spaRoomOnlineCount,
-  roomShareChoice,
   spaFootScale,
   spaStackZ,
   topCareStreak,
-  zaloShareUrl,
   type RoomClock,
   type SpaBoardRow,
   type SpaGuest,
@@ -157,7 +156,10 @@ export function BeDaSpaRoom({
   onOpenSeedBag?: () => void;
 }) {
   const t = useTranslations("mascot");
-  const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const inviteToastTimer = useRef(0);
+  // Sharing happens on the button. The old sheet flag no longer opens a card.
+  void inviteInitiallyOpen;
   const [localPanel, setLocalPanel] = useState<"quest" | "today" | null>(null);
   const panel = panelProp !== undefined ? panelProp : localPanel;
   const roomEnded = room.notice === "ended" || room.daysLeft === 0;
@@ -217,7 +219,7 @@ export function BeDaSpaRoom({
 
   function onBackground(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
-    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-bar, .beda-room-dock, .beda-tree-chip, .beda-tree-card, .beda-tree-shade")) return;
+    if (target.closest("button, a, input, .beda-actions, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-sheet, .beda-room-bar, .beda-room-dock, .beda-tree-spot, .beda-tree-chip, .beda-tree-card, .beda-tree-shade")) return;
     onSelect("");
   }
 
@@ -239,24 +241,28 @@ export function BeDaSpaRoom({
     );
   }
 
-  async function onCopy() {
-    if (room.code.length !== 6) return;
-    const ok = await copyText(room.code);
-    if (ok) setInviteOpen(false);
+  function showInviteCopied() {
+    setInviteCopied(true);
+    window.clearTimeout(inviteToastTimer.current);
+    inviteToastTimer.current = window.setTimeout(() => setInviteCopied(false), 2400);
   }
 
-  function onZaloShare(event: MouseEvent<HTMLAnchorElement>) {
+  async function onInvite() {
+    if (room.code.length !== 6) return;
     const invite = roomInviteUrl(room.code);
-    const popup = window.open(zaloShareUrl(invite), "_blank", "noopener,noreferrer");
-    const choice = roomShareChoice(popup != null, typeof navigator.share === "function");
-    if (choice === "zalo") {
-      event.preventDefault();
-      return;
+    let shared = false;
+    let errorName: string | null = null;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ url: invite, title: t("game.spaRoomName") });
+        shared = true;
+      } catch (err) {
+        errorName = err instanceof DOMException ? err.name : "failed";
+      }
     }
-    if (choice === "web-share") {
-      event.preventDefault();
-      void navigator.share({ url: invite, title: t("game.spaInvite") }).catch(() => undefined);
-    }
+    if (!shouldCopyInviteLink(shared, errorName)) return;
+    const ok = await copyText(invite);
+    if (ok) showInviteCopied();
   }
 
   const roomTitle = room.name && room.name !== room.code ? room.name : t("game.spaRoomName");
@@ -290,7 +296,7 @@ export function BeDaSpaRoom({
   }
 
   return (
-    <RoomTreeProvider panel={tree ?? null} locale={locale} startOpen={treeDetailOpen} roomCode={room.code} onOpenBag={onOpenSeedBag}>
+    <RoomTreeProvider panel={tree ?? null} locale={locale} startOpen={treeDetailOpen} roomCode={room.code} daysLeft={room.daysLeft ?? null} onOpenBag={onOpenSeedBag}>
     <div ref={frameRef} className={room.landscape ? "beda-spa is-landscape" : "beda-spa"} data-testid="beda-spa" onClick={onBackground}>
       {selectedGuest ? (
         <div className="beda-actions beda-card beda-friend-card" data-testid="beda-actions" role="group" aria-label={selectedGuest.nickname}>
@@ -393,7 +399,6 @@ export function BeDaSpaRoom({
             style={{
               zIndex: spaStackZ(room.you?.y ?? 0.7),
               ["--scale" as string]: String(SPA_YOU.scale),
-              ...(room.you?.foot != null ? { width: `${room.you.foot * 100}%` } : {}),
             }}
           >
             <span className="beda-spa-art">
@@ -506,7 +511,7 @@ export function BeDaSpaRoom({
           {t("game.spaLeave")}
         </button>
         {lock || room.notice === "ended" ? null : (
-          <button type="button" className="beda-invite-open" data-testid="beda-invite-open" onClick={() => setInviteOpen(true)}>
+          <button type="button" className="beda-invite-open" data-testid="beda-invite-open" onClick={() => void onInvite()}>
             {t("game.spaInviteOpen")}
           </button>
         )}
@@ -600,45 +605,10 @@ export function BeDaSpaRoom({
         </div>
       ) : null}
 
-      {inviteOpen && !lock && room.notice !== "ended" ? (
-        <>
-          <button
-            type="button"
-            className="beda-invite-back"
-            data-testid="beda-invite-back"
-            aria-label={t("game.spaBoardClose")}
-            onClick={() => setInviteOpen(false)}
-          />
-          <section className="beda-invite-card" data-testid="beda-invite-card" role="dialog" aria-modal="true" aria-label={t("game.spaInvite")}>
-            <h2>{t("game.spaInvite")}</h2>
-            <div className="beda-spa-code" data-testid="beda-spa-code">
-              {Array.from({ length: 6 }, (_, index) => (
-                <b key={index}>{room.code[index] ?? ""}</b>
-              ))}
-            </div>
-            <div className="beda-spa-share">
-              <button type="button" className="beda-spa-copy" data-testid="beda-spa-copy" onClick={() => void onCopy()}>
-                <Clipboard />
-                {t("game.spaCopy")}
-              </button>
-              {room.code.length === 6 ? (
-                <a
-                  className="beda-spa-zalo"
-                  data-testid="beda-spa-zalo"
-                  href={zaloShareUrl(roomInviteUrl(room.code))}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={onZaloShare}
-                >
-                  <ShareArrow />
-                  {t("game.spaZalo")}
-                </a>
-              ) : (
-                <span className="beda-spa-zalo is-off">{t("game.spaZalo")}</span>
-              )}
-            </div>
-          </section>
-        </>
+      {inviteCopied ? (
+        <p className="beda-invite-toast" data-testid="beda-invite-toast" role="status">
+          {t("game.spaInviteCopied")}
+        </p>
       ) : null}
       {boardOpen ? (
         <div className="beda-board-sheet" role="dialog" aria-modal="true" aria-label={t("game.spaBoard")} data-testid="beda-streak-sheet">
@@ -725,7 +695,6 @@ function SpaPerson({
           ? {
               zIndex: spaStackZ(seatY / 100),
               ["--scale" as string]: String(scale),
-              ...(guest.foot != null ? { width: `${guest.foot * 100}%` } : {}),
             }
           : {
               left: `${seatX}%`,
@@ -784,24 +753,6 @@ function LeaveArrow() {
   return (
     <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
       <path d="M19 7 10 16l9 9" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function Clipboard() {
-  return (
-    <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
-      <rect x="8" y="7" width="16" height="20" rx="3" fill="none" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M12 7.5h8v3H12z" fill="currentColor" />
-      <path d="M12 16h8M12 20h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ShareArrow() {
-  return (
-    <svg className="beda-ico-sm" viewBox="0 0 32 32" aria-hidden>
-      <path d="M8 16h12M16 10l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

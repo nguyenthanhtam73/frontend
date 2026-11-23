@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   buildAuthHrefWithNext,
   readAuthReturnPathFromSearch,
+  roomInviteReturnPath,
   sanitizeAuthReturnPath,
 } from "../auth/return-path";
 
@@ -17,6 +18,21 @@ describe("auth return-path", () => {
     assert.equal(sanitizeAuthReturnPath("https://evil.com/check-in"), null);
     assert.equal(sanitizeAuthReturnPath("//evil.com"), null);
     assert.equal(sanitizeAuthReturnPath("/admin"), null);
+    assert.equal(sanitizeAuthReturnPath("/be-da/phong/DA7K2M"), "/be-da/phong/DA7K2M");
+    assert.equal(sanitizeAuthReturnPath("https://evil.com/be-da/phong/DA7K2M"), null);
+    assert.equal(sanitizeAuthReturnPath("//evil.com/be-da/phong/DA7K2M"), null);
+  });
+
+  it("keeps only an internal room invite as the auth return", () => {
+    assert.equal(roomInviteReturnPath("/be-da/phong/DA7K2M"), "/be-da/phong/DA7K2M");
+    assert.equal(roomInviteReturnPath("/be-da/phong/da7k2m"), null);
+    assert.equal(roomInviteReturnPath("/be-da/phong/../check-in"), null);
+    assert.equal(roomInviteReturnPath("https://evil.com/be-da/phong/DA7K2M"), null);
+    assert.equal(roomInviteReturnPath("/check-in"), null);
+    assert.equal(
+      buildAuthHrefWithNext("/register", "/be-da/phong/DA7K2M"),
+      "/register?next=%2Fbe-da%2Fphong%2FDA7K2M",
+    );
   });
 
   it("reads next or returnUrl", () => {

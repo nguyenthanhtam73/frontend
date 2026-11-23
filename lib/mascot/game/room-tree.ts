@@ -404,6 +404,24 @@ export function nextTreeReward(tree: Pick<RoomTree, "stage" | "rewards" | "bloom
   return tree.rewards.find((reward) => reward.stage === tree.stage + 1) ?? null;
 }
 
+/** Stages still left until stage 7. One watered day levels at most once, so this is the day count. Null once the tree has bloomed. */
+export function treeDaysUntilBloom(stage: number, bloomed: boolean): number | null {
+  if (bloomed) return null;
+  if (!Number.isFinite(stage)) return null;
+  const current = Math.trunc(stage);
+  if (current < 1 || current >= 7) return null;
+  return 7 - current;
+}
+
+/**
+ * True when those days run past the room. A missing end (null) is not a guess:
+ * the caller keeps the day count and skips the late line.
+ */
+export function treeBloomMissesRoom(daysUntilBloom: number, daysLeft: number | null | undefined): boolean {
+  if (daysLeft == null || !Number.isFinite(daysLeft)) return false;
+  return daysUntilBloom > daysLeft;
+}
+
 /** Waters still needed today before a full day levels. Null when the day cannot level. */
 export function watersUntilLevel(tree: Pick<RoomTree, "waters" | "required" | "bloomed">): number | null {
   if (tree.bloomed || tree.required <= 0) return null;
