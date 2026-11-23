@@ -128,7 +128,9 @@ function GuestActions({
         data-testid="auth-sign-in"
         className={cn(
           "min-h-9 justify-center",
-          compact ? "inline-flex min-h-11 px-2.5" : "inline-flex min-w-[4.5rem]",
+          // The phone row already holds the logo, language, theme, and Register.
+          // Sign in returns beside Register from the sm breakpoint up.
+          compact ? "hidden min-h-11 px-2.5" : "inline-flex min-w-[4.5rem]",
         )}
       >
         {signInLabel}
@@ -357,7 +359,7 @@ export function SiteHeader() {
           hideFunnelNav ? "gap-0" : "gap-1.5 sm:gap-3 lg:gap-2",
         )}
       >
-        <div className="flex min-h-11 items-center gap-1 sm:min-h-14 sm:gap-3">
+        <div className="flex min-h-11 items-center gap-2 sm:min-h-14 sm:gap-3">
           <Link
             href="/"
             prefetch
@@ -366,7 +368,7 @@ export function SiteHeader() {
             <Logo className="max-[24rem]:gap-1" />
           </Link>
 
-          <div className="ml-auto flex min-h-9 min-w-0 items-center justify-end gap-px min-[24rem]:gap-0.5 self-center sm:gap-2">
+          <div className="ml-auto flex min-h-9 shrink-0 items-center justify-end gap-2 self-center">
             <LocaleSwitcher compact className="md:hidden" />
             <LocaleSwitcher className="hidden md:inline-flex" />
             <ThemeToggle className="theme-toggle--mobile-bar shrink-0" />
