@@ -58,12 +58,13 @@ describe("streak board", () => {
         { nickname: "Trà Sữa", careStreak: 18 },
         { nickname: "Mochi", careStreak: 11 },
         { nickname: "Lan", careStreak: 9 },
+        { nickname: "Ốc Quế", careStreak: 3 },
         { nickname: "Kẹo Dừa", careStreak: 0 },
       ],
       [guest("Mây Hồng"), guest("Trà Sữa"), guest("Mochi"), guest("Kẹo Dừa")],
       ["Mây Hồng", "Lan"],
     );
-    assert.match(html, /Hôm nay 2\/5 bạn đã tưới · xếp theo ngày chăm da/);
+    assert.match(html, /Hôm nay 2\/6 bạn đã tưới · xếp theo ngày chăm da/);
     assert.match(html, /data-testid="beda-board-me"/);
     assert.equal(html.includes("Lan"), false);
     assert.match(html, />Bạn</);
@@ -73,6 +74,7 @@ describe("streak board", () => {
     assert.equal(html.includes("👑"), false);
     assert.equal((html.match(/beda-board-medal/g) ?? []).length, 4);
     assert.match(html, /beda-board-rank">4</);
+    assert.match(html, /beda-board-rank">–</);
   });
 
   it("keeps the empty line and leaves sample friends off the board", () => {

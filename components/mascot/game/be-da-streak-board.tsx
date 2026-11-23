@@ -67,7 +67,7 @@ export function StreakBoard({
               const wet = hasWatered(row.nickname, mineName, youLabel, wateredNames);
               return (
                 <li key={`${row.nickname}-${index}`} className={mine ? "is-me" : undefined} data-testid={mine ? "beda-board-me" : undefined}>
-                  <Medal medal={medals[index] ?? null} place={plainPlace(shown, index)} />
+                  <Medal medal={medals[index] ?? null} place={row.careStreak > 0 ? plainPlace(shown, index) : null} />
                   <BoardFace
                     nickname={row.nickname}
                     mine={mine}
@@ -152,11 +152,11 @@ function BoardFace({
   );
 }
 
-function Medal({ medal, place }: { medal: BoardMedal; place: number }) {
+function Medal({ medal, place }: { medal: BoardMedal; place: number | null }) {
   if (medal === "gold") return <MedalDisc n="1" fill="#F6D15B" ring="#E0A81A" ink="#9A6A00" />;
   if (medal === "silver") return <MedalDisc n="2" fill="#D9DEE6" ring="#8E99A8" ink="#4E5968" />;
   if (medal === "bronze") return <MedalDisc n="3" fill="#E4A574" ring="#C4844A" ink="#7A4A22" />;
-  return <span className="beda-board-rank">{place}</span>;
+  return <span className="beda-board-rank">{place ?? "–"}</span>;
 }
 
 function MedalDisc({ n, fill, ring, ink }: { n: string; fill: string; ring: string; ink: string }) {

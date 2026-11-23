@@ -10,7 +10,7 @@ import { mascotQueryKey } from "@/lib/api/mascot";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import type { RoomTree, TreeReward } from "@/lib/mascot/game/room-tree";
 import { sampleSpaGuests, type SpaBoardRow, type SpaGuest } from "@/lib/mascot/game/spa-room";
-import type { GameHairId, GameOutfitId } from "@/lib/mascot/game/look";
+import type { GameClipId, GameHairId, GameOutfitId } from "@/lib/mascot/game/look";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 import "@/components/mascot/game/be-da-game.css";
 
@@ -222,7 +222,13 @@ const BOARD_8: SpaBoardRow[] = [
   { nickname: "Kẹo Dừa", careStreak: 0 },
 ];
 
-function boardGuest(id: string, nickname: string, outfit: GameOutfitId, hair: GameHairId): SpaGuest {
+function boardGuest(
+  id: string,
+  nickname: string,
+  outfit: GameOutfitId,
+  hair: GameHairId,
+  clip: GameClipId | null = null,
+): SpaGuest {
   return {
     id,
     nickname,
@@ -232,15 +238,15 @@ function boardGuest(id: string, nickname: string, outfit: GameOutfitId, hair: Ga
     facing: "right",
     outfit,
     hair,
-    clip: null,
+    clip,
     pose: null,
     sample: false,
   };
 }
 
 const BOARD_GUESTS: SpaGuest[] = [
-  boardGuest("may-hong", "Mây Hồng", "outfit_vay_hoa", "hair_sleep_buns"),
-  boardGuest("tra-sua", "Trà Sữa", "outfit_ao_dai", "hair_twin_tails"),
+  boardGuest("may-hong", "Mây Hồng", "outfit_vay_hoa", "hair_high_pony", "accessory_ribbon_bow"),
+  boardGuest("tra-sua", "Trà Sữa", "outfit_ao_dai", "hair_twin_tails", "accessory_flower_clip"),
   boardGuest("mochi", "Mochi", "outfit_hoodie", "hair_short_bob"),
   boardGuest("banh-flan", "Bánh Flan", "outfit_pajamas", "hair_twin_tails"),
   boardGuest("oc-que", "Ốc Quế", "outfit_ao_len", "hair_high_pony"),
