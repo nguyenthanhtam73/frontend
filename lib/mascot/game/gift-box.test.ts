@@ -11,6 +11,12 @@ describe("gift box", () => {
     assert.equal(bpsLabel(440, "vi"), "4,4");
     assert.equal(bpsLabel(125, "vi"), "1,25");
     assert.equal(bpsLabel(50, "vi"), "0,5");
+    assert.equal(bpsLabel(5000, "vi"), "50");
+    assert.equal(bpsLabel(4790, "vi"), "47,9");
+    assert.equal(bpsLabel(4790, "en"), "47.9");
+    assert.equal(bpsLabel(200, "vi"), "2");
+    assert.equal(bpsLabel(10, "vi"), "0,1");
+    assert.equal(bpsLabel(10, "en"), "0.1");
   });
 
   it("puts the xu rows ahead of the clothes, using the weights on the payload", () => {
