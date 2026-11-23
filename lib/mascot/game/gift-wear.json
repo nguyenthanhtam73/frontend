@@ -40,5 +40,9 @@
       "front": "/mascot/gift/fx/fx_la_ngoc_front.svg"
     }
   },
+  "allBottoms": {
+    "legs_above": false,
+    "shoes": false
+  },
   "items": {}
 }

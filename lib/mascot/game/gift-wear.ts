@@ -3,9 +3,11 @@ import catalog from "@/lib/mascot/game/gift-wear.json";
 /**
  * Gift clothes are drawn from this file, not from hardcoded paths.
  * Drop a new SVG at the slot path (`/mascot/gift/{dir}/{id}.svg`) and it is worn
- * with no code change. Set `legs_above` on an item when the legs drawing
- * must sit above that bottom. Shoes use `/mascot/gift/shoes/{id}.svg` when
- * the item sets `shoes`.
+ * with no code change. `allBottoms` applies to every bottom. Set `legs_above`
+ * there to draw `/mascot/gift/legs/{id}.svg` above the garment, and `shoes`
+ * to draw `/mascot/gift/shoes/{id}.svg` above the legs. This Lá xanh pack
+ * leaves both off: the bottoms are shortened so the body legs show, and the
+ * shoes are drawn inside the bottom file.
  */
 export type GiftItemHint = {
   legs_above?: boolean;
@@ -35,6 +37,7 @@ type Catalog = {
   poses: Record<string, string>;
   shortSleeves: string[];
   fx: Record<string, { back?: string; front?: string }>;
+  allBottoms?: GiftItemHint;
   items: Record<string, GiftItemHint>;
 };
 
@@ -43,6 +46,10 @@ const wear = catalog as Catalog;
 export function giftItemHint(id: string, hints?: GiftWearHints): GiftItemHint {
   if (!id) return {};
   return { ...(wear.items[id] ?? {}), ...(hints?.items?.[id] ?? {}) };
+}
+
+function bottomHint(id: string, hints?: GiftWearHints): GiftItemHint {
+  return { ...(wear.allBottoms ?? {}), ...giftItemHint(id, hints) };
 }
 
 export function giftFileId(id: string): string {
@@ -92,16 +99,16 @@ export function giftBraceletSrc(id: string, pose: string | null | undefined, top
 }
 
 export function legsAboveBottom(bottomId: string, hints?: GiftWearHints): boolean {
-  return giftItemHint(bottomId, hints).legs_above === true;
+  return bottomHint(bottomId, hints).legs_above === true;
 }
 
 export function legsSrc(bottomId: string, hints?: GiftWearHints): string {
-  const spec = giftItemHint(bottomId, hints);
+  const spec = bottomHint(bottomId, hints);
   return spec.legs_src || fill(wear.legs, { id: giftFileId(bottomId) });
 }
 
 export function shoesSrc(bottomId: string, hints?: GiftWearHints): string | null {
-  const spec = giftItemHint(bottomId, hints);
+  const spec = bottomHint(bottomId, hints);
   if (spec.shoes_src) return spec.shoes_src;
   if (spec.shoes === true) return fill(wear.shoes, { id: giftFileId(bottomId) });
   return null;
