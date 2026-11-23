@@ -27,6 +27,7 @@ import {
   spaRoomOnlineCount,
   roomShareChoice,
   spaFootScale,
+  spaStackZ,
   topCareStreak,
   zaloShareUrl,
   type RoomClock,
@@ -264,7 +265,7 @@ export function BeDaSpaRoom({
             <p data-testid="beda-room-loading">{t("game.spaEntering")}</p>
           ) : (
             <>
-              <p data-testid="beda-room-error">{t("game.spaEnterFailed")}</p>
+              <p data-testid="beda-room-error">{room.notice === "rate" ? t("game.spaRate") : t("game.spaEnterFailed")}</p>
               <button type="button" className="beda-room-retry" data-testid="beda-room-retry" onClick={onRetry}>
                 {t("game.spaRetry")}
               </button>
@@ -372,7 +373,7 @@ export function BeDaSpaRoom({
             data-pose={youPose ?? ""}
             data-art={lookArt(player, look, true, true).join(" ")}
             data-testid="beda-spa-you"
-            style={{ zIndex: 40, ["--scale" as string]: String(SPA_YOU.scale) }}
+            style={{ zIndex: spaStackZ(room.you?.y ?? 0.7), ["--scale" as string]: String(SPA_YOU.scale) }}
           >
             <span className="beda-spa-art">
               <Cheeks />
@@ -697,7 +698,7 @@ function SpaPerson({
       data-testid={`beda-spa-guest-${guest.id}`}
       style={
         standing
-          ? { ["--scale" as string]: String(scale) }
+          ? { zIndex: spaStackZ(seatY / 100), ["--scale" as string]: String(scale) }
           : {
               left: `${seatX}%`,
               top: `${seatY}%`,

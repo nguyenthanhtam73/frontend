@@ -36,6 +36,10 @@ import {
   spaRoomGuests,
   spaRoomOnlineCount,
   spaRoomProblem,
+  fitSpaPlate,
+  SPA_PLATE_HEIGHT,
+  SPA_PLATE_WIDTH,
+  spaStackZ,
   spreadSpaFeet,
   zaloShareUrl,
 } from "@/lib/mascot/game/spa-room";
@@ -106,12 +110,82 @@ describe("spa join spots", () => {
     assert.deepEqual(walked.get(friend), { x: 0.8, y: 0.62 });
   });
 
+  it("keeps two and three members on one row", () => {
+    for (const count of [2, 3]) {
+      const people = Array.from({ length: count }, (_, index) => ({
+        id: `p${index}`,
+        x: 0.5,
+        y: 0.7,
+      }));
+      const spots = [...spreadSpaFeet(people).values()];
+      const ys = new Set(spots.map((spot) => Number(spot.y.toFixed(3))));
+      assert.equal(ys.has(Number((0.7 - 0.08).toFixed(3))), false);
+      for (const spot of spots) {
+        assert.ok(Math.abs(spot.y - 0.7) < 0.05);
+        assert.ok(spot.x >= SPA_BOUNDS.minX && spot.x <= SPA_BOUNDS.maxX);
+      }
+    }
+  });
+
+  it("staggers four, six, and eight members into two rows that stay readable at 390px", () => {
+    const span = SPA_BOUNDS.maxX - SPA_BOUNDS.minX;
+    for (const count of [4, 6, 8]) {
+      const people = Array.from({ length: count }, (_, index) => ({
+        id: `m${String(index).padStart(2, "0")}`,
+        x: 0.5,
+        y: 0.7,
+      }));
+      const spots = spreadSpaFeet(people);
+      const again = spreadSpaFeet([...people].reverse());
+      const perRow = Math.ceil(count / 2);
+      const rowStep = Math.min(0.24, span / perRow);
+      const origin = (perRow - 1) / 2;
+      people.forEach((person, index) => {
+        const spot = spots.get(person.id)!;
+        assert.deepEqual(spot, again.get(person.id));
+        const back = index < perRow;
+        const rowIndex = back ? index : index - perRow;
+        const x = Math.min(SPA_BOUNDS.maxX, Math.max(SPA_BOUNDS.minX, 0.5 + (rowIndex - origin) * rowStep + (back ? 0 : rowStep / 2)));
+        const y = Math.min(SPA_BOUNDS.maxY, Math.max(SPA_BOUNDS.minY, back ? 0.7 - 0.08 : 0.7 + 0.03));
+        assert.ok(Math.abs(spot.x - x) < 1e-9, `${count} ${person.id} x`);
+        assert.ok(Math.abs(spot.y - y) < 1e-9, `${count} ${person.id} y`);
+      });
+      const frontY = Math.min(SPA_BOUNDS.maxY, 0.7 + 0.03);
+      const backY = Math.max(SPA_BOUNDS.minY, 0.7 - 0.08);
+      assert.ok(spaStackZ(frontY) > spaStackZ(backY));
+      // Bạn is 1.24× the 108px base. One neighbour covering one side still leaves 60%.
+      const gapPx = rowStep * 390;
+      assert.ok(gapPx / (108 * 1.24) >= 0.6, `${count} Bạn visibility ${gapPx}`);
+    }
+  });
+
+  it("fits the whole room plate inside the free rectangle", () => {
+    assert.equal(SPA_PLATE_WIDTH, 780);
+    assert.equal(SPA_PLATE_HEIGHT, 1387);
+    const aspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+    for (const [width, height] of [
+      [1024, 480],
+      [820, 930],
+      [390, 620],
+      [360, 560],
+      [1366, 700],
+    ] as const) {
+      const plate = fitSpaPlate(width, height);
+      assert.ok(plate.width <= width + 1e-6);
+      assert.ok(plate.height <= height + 1e-6);
+      assert.ok(Math.abs(plate.width / plate.height - aspect) < 1e-9);
+      assert.ok(Math.abs(plate.width - width) < 1 || Math.abs(plate.height - height) < 1);
+    }
+    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0 });
+  });
+
   it("keeps the sample cast off a real room code and times out the wait", () => {
     assert.equal(SPA_ENTRY_TIMEOUT_MS, 10_000);
     assert.equal(spaEntryPhase({ live: false, timedOut: false, notice: null }), "loading");
     assert.equal(spaEntryPhase({ live: false, timedOut: true, notice: null }), "error");
     assert.equal(spaEntryPhase({ live: false, timedOut: false, notice: "offline" }), "error");
     assert.equal(spaEntryPhase({ live: true, timedOut: true, notice: "offline" }), "room");
+    assert.equal(spaEntryPhase({ live: false, timedOut: false, notice: "rate" }), "error");
     const waiting = spaRoomGuests({
       code: "DA7K2M",
       live: false,

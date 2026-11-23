@@ -277,7 +277,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       playGameTing(soundRef.current);
     },
   });
-  const together = useRoomShared(code, code != null, user?.id ?? null);
+  const together = useRoomShared(code, code != null && spaRoom.entry === "room", user?.id ?? null);
 
   useEffect(() => {
     if (!code || !spaRoom.serverCode || spaRoom.serverCode === code) return;

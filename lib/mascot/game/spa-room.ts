@@ -182,6 +182,29 @@ export function spaFootScale(y: number): number {
   return 0.7 + t * 0.54;
 }
 
+/** Pixel size of `public/mascot/rooms/spa-room.webp`. The plate is taller than it is wide. */
+export const SPA_PLATE_WIDTH = 780;
+export const SPA_PLATE_HEIGHT = 1387;
+
+/**
+ * Largest plate that keeps the whole room (ceiling, shelves, and floor)
+ * inside the free rectangle. Neither axis is cropped.
+ */
+export function fitSpaPlate(availWidth: number, availHeight: number): { width: number; height: number } {
+  const availW = Number.isFinite(availWidth) ? Math.max(0, availWidth) : 0;
+  const availH = Number.isFinite(availHeight) ? Math.max(0, availHeight) : 0;
+  if (availW === 0 || availH === 0) return { width: 0, height: 0 };
+  const aspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+  const width = Math.min(availW, availH * aspect);
+  return { width, height: width / aspect };
+}
+
+/** Nearer feet paint in front. A 0.001 change in y separates the two spa rows. */
+export function spaStackZ(y: number): number {
+  if (!Number.isFinite(y)) return 0;
+  return Math.round(y * 1000);
+}
+
 export type SpaNotice =
   | "full"
   | "missing"
@@ -429,7 +452,7 @@ export function sampleSpaGuests(
 /** How long a real room may stay on «Đang vào phòng…» before we offer Thử lại. */
 export const SPA_ENTRY_TIMEOUT_MS = 10_000;
 
-const ENTRY_ERRORS = new Set<Exclude<SpaNotice, null>>(["offline", "missing", "bad-code", "member"]);
+const ENTRY_ERRORS = new Set<Exclude<SpaNotice, null>>(["offline", "missing", "bad-code", "member", "rate"]);
 
 /**
  * Once the room has been entered, a later socket drop or the 10s timer
@@ -481,9 +504,11 @@ function clampSpaPoint(point: { x: number; y: number }): { x: number; y: number 
 }
 
 /**
- * Members who join on the same floor point get a small, stable spread
- * so one Bé Da does not cover the next. A point that has already moved
- * (someone walked) stays put. The result stays inside the walkable floor.
+ * Members who join on the same floor point get a stable spread so one Bé Da
+ * does not cover the next. Two or three stay on one row. Four or more use two
+ * staggered rows: the back row is 0.08 above the anchor, the front row is 0.03
+ * below it and half a step to the side, so back faces sit in the gaps.
+ * A point that has already moved stays put. Every result stays inside the floor.
  */
 export function spreadSpaFeet(
   people: readonly { id: string; x: number; y: number }[],
@@ -496,6 +521,7 @@ export function spreadSpaFeet(
     else groups.push({ anchor: { x: person.x, y: person.y }, members: [person] });
   }
   const out = new Map<string, { x: number; y: number }>();
+  const span = SPA_BOUNDS.maxX - SPA_BOUNDS.minX;
   for (const group of groups) {
     if (group.members.length < 2) {
       const only = group.members[0]!;
@@ -503,14 +529,24 @@ export function spreadSpaFeet(
       continue;
     }
     const count = group.members.length;
-    const step = Math.min(0.12, (SPA_BOUNDS.maxX - SPA_BOUNDS.minX) / count);
+    if (count < 4) {
+      const step = Math.min(0.12, span / count);
+      group.members.forEach((person, index) => {
+        const shift = (index - (count - 1) / 2) * step;
+        const lift = index % 2 === 0 ? -0.03 : 0.025;
+        out.set(person.id, clampSpaPoint({ x: group.anchor.x + shift, y: group.anchor.y + lift }));
+      });
+      continue;
+    }
+    const perRow = Math.ceil(count / 2);
+    const rowStep = Math.min(0.24, span / perRow);
+    const origin = (perRow - 1) / 2;
     group.members.forEach((person, index) => {
-      const shift = (index - (count - 1) / 2) * step;
-      const lift = index % 2 === 0 ? -0.03 : 0.025;
-      out.set(
-        person.id,
-        clampSpaPoint({ x: group.anchor.x + shift, y: group.anchor.y + lift }),
-      );
+      const back = index < perRow;
+      const rowIndex = back ? index : index - perRow;
+      const shift = (rowIndex - origin) * rowStep + (back ? 0 : rowStep / 2);
+      const y = back ? group.anchor.y - 0.08 : group.anchor.y + 0.03;
+      out.set(person.id, clampSpaPoint({ x: group.anchor.x + shift, y }));
     });
   }
   return out;

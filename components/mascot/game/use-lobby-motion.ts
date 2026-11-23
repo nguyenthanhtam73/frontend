@@ -16,7 +16,7 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { spaFootScale } from "@/lib/mascot/game/spa-room";
+import { fitSpaPlate, spaFootScale, spaStackZ } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -735,13 +735,32 @@ export function useSpaMotion(input: {
     let holdTimer = 0;
     let downPoint = { x: 0, y: 0 };
 
-    const coverScale = () =>
-      Math.max(1, frame.clientWidth / (view.offsetWidth || 1), frame.clientHeight / (view.offsetHeight || 1));
+    const chrome = () => {
+      const head = frame.querySelector<HTMLElement>(".beda-spa-head");
+      const bar = frame.querySelector<HTMLElement>(".beda-room-bar");
+      const nav = Number.parseFloat(getComputedStyle(frame).getPropertyValue("--beda-nav-reserve")) || 0;
+      const top = Math.ceil((head?.getBoundingClientRect().height ?? 64) + 6);
+      const bottom = Math.ceil(nav + 8 + (bar?.getBoundingClientRect().height ?? 44) + 8);
+      return { top, right: 0, bottom, left: 0 };
+    };
+
+    const fitPlate = () => {
+      const pad = chrome();
+      const availW = Math.max(0, frame.clientWidth - pad.left - pad.right);
+      const availH = Math.max(0, frame.clientHeight - pad.top - pad.bottom);
+      const plate = fitSpaPlate(availW, availH);
+      if (plate.width > 0 && plate.height > 0) {
+        view.style.width = `${plate.width}px`;
+        view.style.height = `${plate.height}px`;
+        frame.style.setProperty("--beda-tag-max", `${Math.max(48, plate.width * 0.2)}px`);
+      }
+      return pad;
+    };
 
     const apply = () => {
-      const min = coverScale();
-      if (cam.scale < min) cam = { ...cam, scale: min };
-      cam = clampCamera(cam, frame.clientWidth, frame.clientHeight, view.offsetWidth || 1, view.offsetHeight || 1);
+      const pad = fitPlate();
+      if (cam.scale < 1) cam = { ...cam, scale: 1 };
+      cam = clampCamera(cam, frame.clientWidth, frame.clientHeight, view.offsetWidth || 1, view.offsetHeight || 1, pad);
       view.style.transform = `translate3d(${cam.x}px, ${cam.y}px, 0) scale(${cam.scale})`;
       frame.style.setProperty("--beda-zoom", String(cam.scale));
     };
@@ -800,7 +819,7 @@ export function useSpaMotion(input: {
     };
 
     api.current.zoomBy = (factor) => {
-      cam = zoomAt(cam, factor, frame.clientWidth / 2, frame.clientHeight / 2, coverScale());
+      cam = zoomAt(cam, factor, frame.clientWidth / 2, frame.clientHeight / 2, 1);
       if (cam.scale > 1.05) follow = true;
       apply();
     };
@@ -842,6 +861,7 @@ export function useSpaMotion(input: {
         }
       }
       if (!reduced && follow && cam.scale > 1.05) {
+        const pad = chrome();
         const px = (stage.offsetLeft + walker.x * stage.offsetWidth) / (view.offsetWidth || 1);
         const py = (stage.offsetTop + walker.y * stage.offsetHeight) / (view.offsetHeight || 1);
         cam = followCamera(
@@ -854,13 +874,17 @@ export function useSpaMotion(input: {
           view.offsetHeight || 1,
           dt,
           true,
+          pad,
         );
         pull = false;
       } else if (pull && !reduced) {
+        const pad = chrome();
         const px = (stage.offsetLeft + walker.x * stage.offsetWidth) / (view.offsetWidth || 1);
         const py = (stage.offsetTop + walker.y * stage.offsetHeight) / (view.offsetHeight || 1);
-        const tx = frame.clientWidth * 0.5 - px * (view.offsetWidth || 1) * cam.scale;
-        const ty = frame.clientHeight * 0.46 - py * (view.offsetHeight || 1) * cam.scale;
+        const anchorX = pad.left + (frame.clientWidth - pad.left - pad.right) * 0.5;
+        const anchorY = pad.top + (frame.clientHeight - pad.top - pad.bottom) * 0.46;
+        const tx = anchorX - px * (view.offsetWidth || 1) * cam.scale;
+        const ty = anchorY - py * (view.offsetHeight || 1) * cam.scale;
         const k = 1 - Math.exp(-3.2 * dt);
         cam = { ...cam, x: cam.x + (tx - cam.x) * k, y: cam.y + (ty - cam.y) * k };
         if (Math.hypot(tx - cam.x, ty - cam.y) < 2) pull = false;
@@ -872,7 +896,7 @@ export function useSpaMotion(input: {
         pose.style.setProperty("--mx", `${walker.x * stage.offsetWidth}px`);
         pose.style.setProperty("--my", `${walker.y * stage.offsetHeight}px`);
         pose.style.setProperty("--sy", String(walker.squash));
-        pose.style.zIndex = String(20 + Math.round(walker.y * 20));
+        pose.style.zIndex = String(spaStackZ(walker.y));
         setFacing(pose, walker.face, walker.phase, youMoving, true);
       }
       const stageW = stage.offsetWidth || 1;
@@ -891,7 +915,7 @@ export function useSpaMotion(input: {
         guestPose.style.setProperty("--mx", `${drawn.x * stageW}px`);
         guestPose.style.setProperty("--my", `${drawn.y * stageH}px`);
         guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
-        guestPose.style.zIndex = String(8 + Math.round(drawn.y * 24));
+        guestPose.style.zIndex = String(spaStackZ(drawn.y));
         setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);
       }
       frameId = window.requestAnimationFrame(tick);
@@ -902,7 +926,7 @@ export function useSpaMotion(input: {
       if (!(event.target as HTMLElement).closest(".beda-spa-view, .beda-spa-stage")) return;
       event.preventDefault();
       const box = frame.getBoundingClientRect();
-      cam = zoomAt(cam, Math.exp(-event.deltaY * 0.0016), event.clientX - box.left, event.clientY - box.top, coverScale());
+      cam = zoomAt(cam, Math.exp(-event.deltaY * 0.0016), event.clientX - box.left, event.clientY - box.top, 1);
       if (cam.scale > 1.05) follow = true;
       apply();
     };
@@ -944,7 +968,7 @@ export function useSpaMotion(input: {
         const midX = (a!.x + b!.x) / 2;
         const midY = (a!.y + b!.y) / 2;
         const box = frame.getBoundingClientRect();
-        cam = zoomAt(cam, dist / pinch.dist, midX - box.left, midY - box.top, coverScale());
+        cam = zoomAt(cam, dist / pinch.dist, midX - box.left, midY - box.top, 1);
         cam = { ...cam, x: cam.x + midX - pinch.x, y: cam.y + midY - pinch.y };
         pinch = { dist, x: midX, y: midY };
         follow = false;
