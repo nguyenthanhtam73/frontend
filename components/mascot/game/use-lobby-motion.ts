@@ -16,7 +16,7 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { compactSpaPlate, fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
+import { compactSpaPlate, fitSpaPlate, nameTagDrop, SPA_LANDSCAPE_BOUNDS, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -938,6 +938,25 @@ export function useSpaMotion(input: {
         for (const box of spaNamePillBoxes(pillPeople, stageW, stageH)) {
           pillPeople.find((person) => person.id === box.id)?.el.style.setProperty("--beda-tag-max", `${box.maxWidth}px`);
         }
+      }
+      const water = frame.querySelector<HTMLElement>(".beda-tree-status");
+      const waterBox = water?.getBoundingClientRect() ?? null;
+      for (const person of frame.querySelectorAll<HTMLElement>(".beda-spa-person")) {
+        const tag = person.querySelector<HTMLElement>(".beda-tag");
+        if (!tag) continue;
+        const current = Number.parseFloat(person.style.getPropertyValue("--beda-tag-drop")) || 0;
+        if (!waterBox) {
+          if (current !== 0) person.style.setProperty("--beda-tag-drop", "0px");
+          continue;
+        }
+        const box = tag.getBoundingClientRect();
+        const drop = nameTagDrop(
+          { top: box.top, bottom: box.bottom, left: box.left, right: box.right },
+          { top: waterBox.top, bottom: waterBox.bottom, left: waterBox.left, right: waterBox.right },
+          current,
+        );
+        if (drop !== current) person.style.setProperty("--beda-tag-drop", `${drop}px`);
+        if (drop > 0) person.style.setProperty("--beda-tag-max", "168px");
       }
       frameId = window.requestAnimationFrame(tick);
     };

@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaActorLayer } from "@/components/mascot/game/be-da-actor-layer";
+import { StreakBoard } from "@/components/mascot/game/be-da-streak-board";
 import { RoomQuestCard, RoomTodayList, RoomTogetherDock } from "@/components/mascot/game/be-da-room-shared";
 import { RoomTreeDock, RoomTreePlant, RoomTreeProvider } from "@/components/mascot/game/be-da-room-tree";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
@@ -30,7 +31,6 @@ import {
   spaRoomOnlineCount,
   spaFootScale,
   spaStackZ,
-  topCareStreak,
   type RoomClock,
   type SpaBoardRow,
   type SpaGuest,
@@ -49,6 +49,8 @@ export type SpaRoomState = {
   /** Wide viewport uses the 1600×1000 plate and its foot slots. */
   landscape?: boolean;
   youStreak?: number;
+  /** My room nickname, used to mark the «Bạn» row. Empty in the sample room. */
+  youNickname?: string;
   /** Friendly name. The header uses «Phòng bạn bè» when this is empty or just the code. */
   name?: string;
   /** Days still left in the 8-day room. Null when the end is unknown. */
@@ -113,6 +115,8 @@ export function BeDaSpaRoom({
   together = null,
   tree = null,
   treeDetailOpen = false,
+  boardInitiallyOpen = false,
+  previewBoard = null,
   panel: panelProp,
   onPanel,
   showActors = true,
@@ -145,6 +149,10 @@ export function BeDaSpaRoom({
   tree?: RoomTreePanel | null;
   /** Open the 7-stage sheet on first paint. Screenshots use this. */
   treeDetailOpen?: boolean;
+  /** Open the streak board on first paint. Screenshots use this. */
+  boardInitiallyOpen?: boolean;
+  /** Skip the board request. Screenshots pass the rows they want to show. */
+  previewBoard?: readonly SpaBoardRow[] | null;
   /** Which shared panel is open. Omit to let the room remember the tap. */
   panel?: "quest" | "today" | null;
   onPanel?: (panel: "quest" | "today" | null) => void;
@@ -170,9 +178,9 @@ export function BeDaSpaRoom({
   const [endedJoin, setEndedJoin] = useState(false);
   const [endedDraft, setEndedDraft] = useState("");
   const [endedCodeBad, setEndedCodeBad] = useState(false);
-  const [boardOpen, setBoardOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(boardInitiallyOpen);
+  const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>(previewBoard ?? []);
   const [quitAsk, setQuitAsk] = useState(false);
-  const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>([]);
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -193,8 +201,6 @@ export function BeDaSpaRoom({
   const count = Math.min(cap, Math.max(0, room.count));
   const showYou = room.notice !== "full";
   const youStreak = room.youStreak ?? 0;
-  const topStreak = topCareStreak([youStreak, ...room.guests.map((guest) => guest.careStreak)]);
-  const crowned = (streak: number | undefined) => topStreak > 0 && (streak ?? 0) === topStreak;
   const takenSeats = new Set(room.guests.map((guest) => guest.seat).filter((seat) => seat != null));
   const notice =
     room.notice === "full"
@@ -225,6 +231,10 @@ export function BeDaSpaRoom({
 
   async function openBoard() {
     setBoardOpen(true);
+    if (previewBoard) {
+      setBoardRows(previewBoard);
+      return;
+    }
     if (onLoadBoard) {
       try {
         setBoardRows(await onLoadBoard());
@@ -235,8 +245,10 @@ export function BeDaSpaRoom({
     }
     setBoardRows(
       rankCareStreaks([
-        { nickname: t("game.you"), careStreak: youStreak },
-        ...room.guests.map((guest) => ({ nickname: guest.nickname, careStreak: guest.careStreak ?? 0 })),
+        { nickname: room.youNickname || t("game.you"), careStreak: youStreak },
+        ...room.guests
+          .filter((guest) => !guest.sample)
+          .map((guest) => ({ nickname: guest.nickname, careStreak: guest.careStreak ?? 0 })),
       ]),
     );
   }
@@ -359,7 +371,6 @@ export function BeDaSpaRoom({
               seatY={seat?.y ?? 70}
               scale={seat?.scale ?? 1}
               standing={false}
-              crown={crowned(guest.careStreak)}
               onSelect={onSelect}
             />
           );
@@ -381,7 +392,6 @@ export function BeDaSpaRoom({
               seatY={y * 100}
               scale={spaFootScale(y)}
               standing
-              crown={crowned(guest.careStreak)}
               onSelect={onSelect}
             />
           );
@@ -412,11 +422,6 @@ export function BeDaSpaRoom({
             ) : null}
             <span className="beda-name">
               <span className="beda-tag beda-tag-me">
-                {crowned(youStreak) ? (
-                  <span className="beda-tag-mark" aria-hidden>
-                    👑
-                  </span>
-                ) : null}
                 <Star />
                 <span className="beda-tag-label">{t("game.you")}</span>
               </span>
@@ -437,7 +442,7 @@ export function BeDaSpaRoom({
       </div>
 
       <div className="beda-room-bar" data-testid="beda-room-bar">
-        <button type="button" className="beda-spa-board" data-testid="beda-streak-board" onClick={() => void openBoard()}>
+        <button type="button" className={boardOpen ? "beda-spa-board is-on" : "beda-spa-board"} data-testid="beda-streak-board" onClick={() => void openBoard()}>
           {t("game.spaBoard")}
         </button>
         {together?.visible ? (
@@ -611,34 +616,17 @@ export function BeDaSpaRoom({
         </p>
       ) : null}
       {boardOpen ? (
-        <div className="beda-board-sheet" role="dialog" aria-modal="true" aria-label={t("game.spaBoard")} data-testid="beda-streak-sheet">
-          <button type="button" className="beda-board-back" aria-label={t("game.spaBoardClose")} onClick={() => setBoardOpen(false)} />
-          <div className="beda-board-card">
-            <div className="beda-board-head">
-              <h2>{t("game.spaBoard")}</h2>
-              <button type="button" onClick={() => setBoardOpen(false)}>
-                {t("game.spaBoardClose")}
-              </button>
-            </div>
-            {boardRows.length === 0 ? (
-              <p className="beda-board-empty">{t("game.spaBoardEmpty")}</p>
-            ) : (
-              <ol>
-                {boardRows.map((row, index) => (
-                  <li key={`${row.nickname}-${index}`}>
-                    <span>
-                      {topCareStreak(boardRows.map((item) => item.careStreak)) === row.careStreak && row.careStreak > 0
-                        ? "👑 "
-                        : null}
-                      {row.nickname}
-                    </span>
-                    {row.careStreak > 0 ? <b>🔥{row.careStreak}</b> : null}
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-        </div>
+        <StreakBoard
+          rows={boardRows}
+          guests={room.guests}
+          youNickname={room.youNickname || ""}
+          youLabel={t("game.you")}
+          watered={tree?.visible && tree.tree ? tree.tree.watered : []}
+          player={player}
+          look={look}
+          locale={locale}
+          onClose={() => setBoardOpen(false)}
+        />
       ) : null}
     </div>
     </RoomTreeProvider>
@@ -653,7 +641,6 @@ function SpaPerson({
   seatY,
   scale,
   standing,
-  crown,
   onSelect,
 }: {
   guest: SpaGuest;
@@ -663,7 +650,6 @@ function SpaPerson({
   seatY: number;
   scale: number;
   standing: boolean;
-  crown: boolean;
   onSelect: (id: string) => void;
 }) {
   const t = useTranslations("mascot");
@@ -714,11 +700,6 @@ function SpaPerson({
         ) : null}
         <span className="beda-name">
           <span className="beda-tag">
-            {crown ? (
-              <span className="beda-tag-mark" aria-hidden>
-                👑
-              </span>
-            ) : null}
             <span className="beda-tag-label">{guest.nickname}</span>
           </span>
           <StreakFlame streak={guest.careStreak ?? 0} label={t("game.spaStreak", { count: guest.careStreak ?? 0 })} />

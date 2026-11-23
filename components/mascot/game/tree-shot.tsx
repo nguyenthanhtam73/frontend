@@ -9,7 +9,8 @@ import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import { mascotQueryKey } from "@/lib/api/mascot";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import type { RoomTree, TreeReward } from "@/lib/mascot/game/room-tree";
-import { sampleSpaGuests } from "@/lib/mascot/game/spa-room";
+import { sampleSpaGuests, type SpaBoardRow, type SpaGuest } from "@/lib/mascot/game/spa-room";
+import type { GameClipId, GameHairId, GameOutfitId } from "@/lib/mascot/game/look";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 import "@/components/mascot/game/be-da-game.css";
 
@@ -176,6 +177,11 @@ function shotPanel(scene: string, ms: number | null): RoomTreePanel {
   return { ...idle, tree: base() } as RoomTreePanel;
 }
 
+function withWatered(panel: RoomTreePanel, watered: readonly string[]): RoomTreePanel {
+  if (!panel.tree || watered.length === 0) return panel;
+  return { ...panel, tree: { ...panel.tree, watered: [...watered] } };
+}
+
 function ClosetShot() {
   const client = useQueryClient();
   const [ready, setReady] = useState(false);
@@ -200,15 +206,66 @@ function ClosetShot() {
   );
 }
 
+const BOARD_2: SpaBoardRow[] = [
+  { nickname: "Mây Hồng", careStreak: 12 },
+  { nickname: "Lan", careStreak: 7 },
+];
+
+const BOARD_8: SpaBoardRow[] = [
+  { nickname: "Mây Hồng", careStreak: 18 },
+  { nickname: "Trà Sữa", careStreak: 18 },
+  { nickname: "Mochi", careStreak: 11 },
+  { nickname: "Lan", careStreak: 9 },
+  { nickname: "Bánh Flan", careStreak: 6 },
+  { nickname: "Ốc Quế", careStreak: 4 },
+  { nickname: "Chè Thái", careStreak: 2 },
+  { nickname: "Kẹo Dừa", careStreak: 0 },
+];
+
+function boardGuest(
+  id: string,
+  nickname: string,
+  outfit: GameOutfitId,
+  hair: GameHairId,
+  clip: GameClipId | null = null,
+): SpaGuest {
+  return {
+    id,
+    nickname,
+    seat: null,
+    x: null,
+    y: null,
+    facing: "right",
+    outfit,
+    hair,
+    clip,
+    pose: null,
+    sample: false,
+  };
+}
+
+const BOARD_GUESTS: SpaGuest[] = [
+  boardGuest("may-hong", "Mây Hồng", "outfit_vay_hoa", "hair_high_pony", "accessory_ribbon_bow"),
+  boardGuest("tra-sua", "Trà Sữa", "outfit_ao_dai", "hair_twin_tails", "accessory_flower_clip"),
+  boardGuest("mochi", "Mochi", "outfit_hoodie", "hair_short_bob"),
+  boardGuest("banh-flan", "Bánh Flan", "outfit_pajamas", "hair_twin_tails"),
+  boardGuest("oc-que", "Ốc Quế", "outfit_ao_len", "hair_high_pony"),
+  boardGuest("che-thai", "Chè Thái", "outfit_ao_thun_yem", "hair_sleep_buns"),
+  boardGuest("keo-dua", "Kẹo Dừa", "outfit_hoodie", "hair_short_bob"),
+];
+
 export function TreeShot() {
   const [scene, setScene] = useState("stage1");
   const [ms, setMs] = useState<number | null>(null);
   const [landscape, setLandscape] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [daysLeft, setDaysLeft] = useState<number | null>(6);
+  const [board, setBoard] = useState<"" | "2" | "8">("");
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setScene(params.get("scene") || "stage1");
+    const asked = params.get("board");
+    setBoard(asked === "2" || asked === "8" ? asked : "");
     setDetailOpen(params.get("open") === "1");
     const days = params.get("days");
     if (days == null || days === "") setDaysLeft(6);
@@ -226,6 +283,8 @@ export function TreeShot() {
     return () => media.removeEventListener("change", apply);
   }, []);
   if (scene === "closet") return <ClosetShot />;
+  const boardRows = board === "2" ? BOARD_2 : board === "8" ? BOARD_8 : null;
+  const watered = board === "2" ? ["Mây Hồng"] : board === "8" ? ["Mây Hồng", "Trà Sữa", "Lan", "Bánh Flan", "Chè Thái"] : [];
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
     missedDays: 0,
@@ -235,6 +294,7 @@ export function TreeShot() {
   return (
     <div className="beda-game is-spa" data-testid="beda-tree-shot">
       <BeDaSpaRoom
+        key={`${board}-${scene}-${daysLeft ?? ""}`}
         locale="vi"
         player={player}
         look={DEFAULT_GAME_LOOK}
@@ -245,10 +305,13 @@ export function TreeShot() {
           code: "DA7K2M",
           count: 3,
           cap: 8,
-          guests: sampleSpaGuests(new Set()).map((guest) =>
-            guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
-          ),
+          guests: boardRows
+            ? BOARD_GUESTS
+            : sampleSpaGuests(new Set()).map((guest) =>
+                guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
+              ),
           you: { x: 0.4, y: 0.66 },
+          youNickname: boardRows ? "Lan" : "",
           notice: null,
           daysLeft,
           name: "Phòng bạn bè",
@@ -261,8 +324,10 @@ export function TreeShot() {
         onLeave={() => undefined}
         onLobby={() => undefined}
         onToggleSound={() => undefined}
-        tree={shotPanel(scene, ms)}
+        tree={withWatered(shotPanel(scene, ms), watered)}
         treeDetailOpen={detailOpen}
+        boardInitiallyOpen={boardRows != null}
+        previewBoard={boardRows}
         showActors={false}
       />
     </div>

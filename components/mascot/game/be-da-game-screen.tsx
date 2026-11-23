@@ -544,6 +544,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
               you: code ? spaRoom.you : null,
               landscape: code ? spaRoom.landscape : false,
               youStreak: code ? spaRoom.youStreak : 0,
+              youNickname: code ? spaRoom.youNickname : "",
               name: code ? spaRoom.roomName : "",
               daysLeft: code && spaRoom.endsAt ? remainingRoomDays(new Date(spaRoom.endsAt), new Date()) : null,
               lock: code ? spaRoom.conflict : null,
