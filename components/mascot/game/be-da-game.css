@@ -613,6 +613,14 @@
   color: #c45f84;
 }
 
+.beda-bubble[data-bubble]::after {
+  border-top-color: var(--bubble-tail, #fff);
+}
+
+.beda-bubble[data-bubble] .beda-bubble-nudge {
+  color: inherit;
+}
+
 .beda-pretty {
   width: 100%;
   margin-top: 8px;

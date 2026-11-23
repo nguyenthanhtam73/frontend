@@ -8,6 +8,7 @@ import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+import { BUBBLE_COLOURS, bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { formatGameCoins } from "@/lib/mascot/game/coins";
 import { wearShopPiece } from "@/lib/mascot/game/mascot-wear";
 import type { BeDaGender, BeDaView } from "@/lib/mascot/model";
@@ -203,13 +204,18 @@ export function BeDaXuShop({
             {shown ? <BeDaFigure view={shown} locale={locale} /> : null}
             {layer ? <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" /> : null}
           </div>
+          {trying && bubbleColour(trying.id) ? (
+            <p className="beda-shop-speech" style={bubbleFrameStyle(trying.id)} data-testid="beda-xu-sample-bubble">
+              {t("game.shop.bubbleHello")}
+            </p>
+          ) : null}
           {trying ? (
             <div className="beda-shop-trying">
               <img src={mascotAssetUrl(shopIconSrc(wearArt || trying.artId))} alt="" />
               <div>
                 <p className="beda-shop-kicker">{t("game.shop.trying")}</p>
                 <strong>{trying.name}</strong>
-                <p className="beda-shop-price">{xu(locale, trying.price)}</p>
+                {trying.price > 0 ? <p className="beda-shop-price">{xu(locale, trying.price)}</p> : null}
                 {trying.setName ? <p className="beda-shop-muted">{trying.setName}</p> : null}
               </div>
             </div>
@@ -323,6 +329,41 @@ export function BeDaXuShop({
               {catalog.daily.map((piece) => (
                 <PieceCard key={piece.id} piece={piece} locale={locale} trying={trying?.id === piece.id} pending={pending} onTry={() => tryPiece(piece)} onBuy={() => buyPiece(piece)} />
               ))}
+            </div>
+            <div data-testid="beda-xu-bubble-colours">
+            <h3 className="beda-shop-kicker">{t("game.shop.bubbleColours")}</h3>
+            <div className="beda-shop-grid">
+              {BUBBLE_COLOURS.map((colour) => (
+                <button
+                  key={colour.id}
+                  type="button"
+                  className={trying?.id === colour.id ? "beda-shop-piece is-on" : "beda-shop-piece"}
+                  data-testid={`beda-xu-colour-${colour.id}`}
+                  aria-pressed={trying?.id === colour.id}
+                  onClick={() =>
+                    tryPiece({
+                      id: colour.id,
+                      name: colour.name,
+                      layer: "bubble",
+                      artId: colour.id,
+                      price: 0,
+                      charge: 0,
+                      owned: false,
+                      locked: false,
+                      purchasable: false,
+                      lockReason: "",
+                      streak: null,
+                      streakRequired: null,
+                    })
+                  }
+                >
+                  <span className="beda-shop-swatch" style={bubbleFrameStyle(colour.id)}>
+                    {t("game.shop.bubbleHello")}
+                  </span>
+                  <span className="beda-shop-piece-name">{colour.name}</span>
+                </button>
+              ))}
+            </div>
             </div>
           </section>
           <section className="beda-shop-season" data-testid="beda-xu-seasonal">
@@ -448,13 +489,20 @@ function PieceCard({
 }) {
   const t = useTranslations("mascot");
   const art = shopArtId(piece.id, piece.artId);
+  const colour = bubbleColour(piece.id) ?? bubbleColour(piece.artId);
   return (
     <div
       className={["beda-shop-piece", trying ? "is-on" : "", piece.owned ? "is-owned" : ""].filter(Boolean).join(" ")}
       data-testid={`beda-xu-card-${piece.id}`}
     >
       <button type="button" className="beda-shop-piece-try" aria-pressed={trying} onClick={onTry}>
-        <img src={mascotAssetUrl(shopIconSrc(art))} alt="" />
+        {colour ? (
+          <span className="beda-shop-swatch" style={bubbleFrameStyle(colour.id)}>
+            {t("game.shop.bubbleHello")}
+          </span>
+        ) : (
+          <img src={mascotAssetUrl(shopIconSrc(art))} alt="" />
+        )}
         <span className="beda-shop-piece-name">{piece.name}</span>
         <span className="beda-shop-price">{xu(locale, piece.price)}</span>
         {trying ? <span className="beda-shop-kicker">{t("game.shop.trying")}</span> : null}

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { BeDaGlowNote } from "@/components/mascot/be-da-glow-note";
 import {
   markOpacity,
@@ -68,7 +69,13 @@ export function BeDaStage({
       <div className="min-w-0 flex-1 space-y-2 pt-1">
         {spoken ? (
           <p
-            className="rounded-2xl bg-white/85 px-3 py-2 text-sm leading-snug text-rose-950 shadow-sm"
+            className={
+              bubbleColour(view.loadout.bubble)
+                ? "rounded-2xl px-3 py-2 text-sm leading-snug shadow-sm"
+                : "rounded-2xl bg-white/85 px-3 py-2 text-sm leading-snug text-rose-950 shadow-sm"
+            }
+            style={bubbleFrameStyle(view.loadout.bubble)}
+            data-bubble={bubbleColour(view.loadout.bubble)?.id}
             data-testid="be-da-line"
           >
             {spoken}

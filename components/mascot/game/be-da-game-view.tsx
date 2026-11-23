@@ -29,6 +29,7 @@ import {
   wardrobeThumbSrc,
   type WardrobeItem,
 } from "@/lib/mascot/game/wardrobe";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { ShopClosetTabs } from "@/components/mascot/game/be-da-xu-shop";
 import type { ShopClosetItem } from "@/lib/mascot/game/xu-shop";
 import { routineSummary } from "@/lib/mascot/game/missions";
@@ -949,7 +950,7 @@ function Room({
         }
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
-        <Bubble kind={bubbleKind} />
+        <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} />
         <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
@@ -975,7 +976,7 @@ function Room({
   );
 }
 
-function Bubble({ kind }: { kind: GameBubbleKind }) {
+function Bubble({ kind, bubbleId }: { kind: GameBubbleKind; bubbleId?: string }) {
   const t = useTranslations("mascot");
   const lead =
     kind === "wash"
@@ -987,8 +988,9 @@ function Bubble({ kind }: { kind: GameBubbleKind }) {
           : t("game.bubbleDone");
   const nudge = kind === "washed" ? t("game.bubbleSpf") : kind === "wave" ? t("game.bubbleWave") : "";
   if (!lead.trim()) return null;
+  const colour = bubbleColour(bubbleId);
   return (
-    <p className="beda-bubble" data-testid="beda-bubble">
+    <p className="beda-bubble" data-testid="beda-bubble" data-bubble={colour?.id} style={bubbleFrameStyle(bubbleId)}>
       {lead}
       {nudge ? (
         <>

@@ -72,6 +72,11 @@ export type WirePerson = {
   placed?: boolean;
   /** Room only. Missing until the server sends `care_streak`. */
   careStreak?: number;
+  /**
+   * Equipped chat-bubble colour. Missing until the room payload sends `bubble`.
+   * Other people's bubbles stay the default colour without it.
+   */
+  bubble?: string;
 };
 
 export type LobbyCount = { lobby: number; count: number; cap: number };

@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
+import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaXuShop, type ShopDialog, type ShopTry } from "@/components/mascot/game/be-da-xu-shop";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 import { applyShopReceipt } from "@/lib/mascot/game/xu-shop";
 import { sampleShopCatalog } from "@/lib/mascot/game/xu-shop-sample";
@@ -37,6 +40,7 @@ function dialogFor(scene: string): ShopDialog {
 
 /** Local screenshots. The dev layout answers 404 in production. */
 export function XuShopShot() {
+  const t = useTranslations("mascot");
   const [scene, setScene] = useState("full");
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
@@ -68,6 +72,19 @@ export function XuShopShot() {
     sessionHappy: false,
     locale: "vi",
   });
+  const bubbleId = scene.startsWith("bubble-") ? scene.slice("bubble-".length) : "";
+  if (bubbleColour(bubbleId)) {
+    return (
+      <div className="beda-shop" data-theme={theme} data-testid="bubble-shot" style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
+        <div style={{ width: 220 }}>
+          <BeDaFigure view={player} locale="vi" />
+          <p className="beda-shop-speech" style={bubbleFrameStyle(bubbleId)} data-bubble={bubbleId}>
+            {t("game.bubbleWashed")}
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <BeDaXuShop
       catalog={catalog}

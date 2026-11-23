@@ -54,6 +54,9 @@ describe("xu shop screen", () => {
     assert.match(html, /Cần chuỗi 30 ngày/);
     assert.match(html, /Hoa anh đào/);
     assert.match(html, /Nhãn dán hoa/);
+    assert.match(html, /data-testid="beda-xu-colour-kem_hong"/);
+    assert.match(html, /Chào nha/);
+    assert.equal(html.includes('data-testid="beda-xu-buy-kem_hong"'), false);
     assert.equal(/gacha/i.test(html), false);
     assert.match(html, /không đổi kết quả da/);
   });

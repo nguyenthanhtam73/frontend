@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { useRouter } from "@/i18n/navigation";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import {
@@ -132,7 +133,15 @@ export function BeDaDiaryChip() {
         scrolling ? "is-scrolling" : "",
       ].filter(Boolean).join(" ")}
     >
-      {dozing ? null : <span className="be-da-diary-bubble">{t("diaryHello")}</span>}
+      {dozing ? null : (
+        <span
+          className="be-da-diary-bubble"
+          data-bubble={bubbleColour(room.loadout.bubble)?.id}
+          style={bubbleFrameStyle(room.loadout.bubble)}
+        >
+          {t("diaryHello")}
+        </span>
+      )}
       <span className="be-da-chip-wave">
         <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
       </span>
