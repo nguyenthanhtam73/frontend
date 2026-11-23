@@ -9,7 +9,7 @@
  * The query is only for the request.
  */
 
-export const MASCOT_ASSET_VERSION = "3";
+export const MASCOT_ASSET_VERSION = "4";
 
 /** Revalidate. Do not mark /mascot immutable: the file names are stable. */
 export const MASCOT_CACHE_CONTROL = "public, max-age=0, must-revalidate";

@@ -286,8 +286,8 @@ export function showFlies(missedDays: number, mood: string): boolean {
 }
 
 export function markOpacity(level: SkinLevel): number {
-  if (level === "light") return 0.42;
-  if (level === "medium") return 0.74;
+  if (level === "light") return 1;
+  if (level === "medium") return 1;
   return 1;
 }
 
