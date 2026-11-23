@@ -3201,6 +3201,22 @@
     padding-left: 8px;
     font-size: 12px;
   }
+
+  /* The presence phrase is the one that pushes «Còn n/8 ngày» into the ellipsis. */
+  .beda-spa-online,
+  .beda-spa-join {
+    display: none;
+  }
+
+  .beda-spa-meta {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: unset;
+  }
+
+  .beda-spa-days {
+    display: block;
+  }
 }
 
 .beda-spa-mute {

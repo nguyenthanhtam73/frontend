@@ -586,11 +586,15 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-spa-online"/);
     assert.equal(text.includes("1/8 người"), false);
     const bits = metaBits(html);
-    assert.deepEqual(bits, ["2/8 người · ", "1 đang ở đây · ", "Còn 5/8 ngày"]);
+    assert.deepEqual(bits, ["2/8 người", "1 đang ở đây · ", "Còn 5/8 ngày"]);
     assert.ok(bits.every((bit) => !bit.trimStart().startsWith("·")));
+    assert.match(html, /beda-spa-days/);
     const css = readFileSync(new URL("./be-da-game.css", import.meta.url), "utf8");
     assert.match(css, /\.beda-spa-bit\s*\{[^}]*white-space:\s*nowrap/);
     assert.equal(/\.beda-spa-titlecard span\s*\{[^}]*display:\s*block/.test(css), false);
+    const narrow = css.slice(css.indexOf("@media (max-width: 420px)"));
+    assert.match(narrow, /\.beda-spa-online,\s*\.beda-spa-join\s*\{[^}]*display:\s*none/);
+    assert.match(narrow, /\.beda-spa-days\s*\{[^}]*display:\s*block/);
     const equal = renderGame({
       spa: {
         code: "DA7K2M",
