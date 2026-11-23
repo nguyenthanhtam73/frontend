@@ -46,6 +46,8 @@ function tree(extra: Partial<RoomTree> = {}): RoomTree {
     already: false,
     leveled: false,
     justGranted: [],
+    unseenRewards: [],
+    rewardedCount: null,
     ...extra,
   };
 }
@@ -153,7 +155,23 @@ describe("room tree card", () => {
     assert.match(level, /\+50 xu/);
     assert.match(level, /Nhãn dán lá xanh/);
     assert.match(level, /Nhận quà/);
+    assert.equal(level.includes("Cả "), false);
     assert.equal(level.includes("Trồng hạt mới"), false);
+
+    const paid = render(
+      <RoomTreePreview
+        panel={panel(
+          {
+            popup: [
+              { stage: 4, name: "Cây nhỏ có nụ", coins: 50, itemId: "tree_sticker_la_xanh", itemName: "Nhãn dán lá xanh", previewOnly: true, recipients: 4 },
+            ],
+          },
+          { stage: 4, stageName: "Cây nhỏ có nụ", balance: 100, rewardedCount: 9 },
+        )}
+        locale="vi"
+      />,
+    );
+    assert.match(paid, /Cả 4 bạn trong phòng đều nhận/);
 
     const bloom = render(
       <RoomTreePreview

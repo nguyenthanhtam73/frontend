@@ -720,7 +720,12 @@ export function useSpaMotion(input: {
     let follow = true;
     let pull = false;
     let reduced = reducedMotion();
-    const start = youProp.current ?? { x: 0.5, y: SPA_BOUNDS.maxY };
+    const bounds = landscapeProp.current ? SPA_LANDSCAPE_BOUNDS : SPA_BOUNDS;
+    // Stand to the side of the rug so the shared tree in the middle stays visible.
+    const start = youProp.current ?? {
+      x: bounds.minX + (bounds.maxX - bounds.minX) * 0.18,
+      y: bounds.maxY,
+    };
     const walker = createWalker(start);
     let last = performance.now();
     let frameId = 0;

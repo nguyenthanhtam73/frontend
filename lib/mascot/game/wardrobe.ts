@@ -17,6 +17,7 @@ import {
   type GameLook,
   type GameOutfitId,
 } from "@/lib/mascot/game/look";
+import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 
 export type WardrobeSlot = "outfit" | "hair" | "clip";
 
@@ -67,6 +68,7 @@ export function equippedGameLook(look: GameLook | null | undefined, access?: Clo
   const clips = new Set(grantedWardrobeItems("clip", access).map((item) => item.id));
   const outfit = isGameOutfit(base.outfit) && outfits.has(base.outfit) ? base.outfit : DEFAULT_GAME_LOOK.outfit;
   const hair = isGameHair(base.hair) && hairs.has(base.hair) ? base.hair : DEFAULT_GAME_LOOK.hair;
-  const clip = base.clip && isGameClip(base.clip) && clips.has(base.clip) ? base.clip : null;
+  const clip =
+    base.clip && ((isGameClip(base.clip) && clips.has(base.clip)) || isTreeWearClip(base.clip)) ? base.clip : null;
   return { outfit, hair, clip };
 }

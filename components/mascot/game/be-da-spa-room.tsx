@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaActorLayer } from "@/components/mascot/game/be-da-actor-layer";
 import { RoomQuestCard, RoomTodayList, RoomTogetherDock } from "@/components/mascot/game/be-da-room-shared";
-import { RoomTreeDock, RoomTreePlant, RoomTreeProvider, useTreeWornClip } from "@/components/mascot/game/be-da-room-tree";
+import { RoomTreeDock, RoomTreePlant, RoomTreeProvider } from "@/components/mascot/game/be-da-room-tree";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import { useSpaMotion } from "@/components/mascot/game/use-lobby-motion";
 import { GameIcon } from "@/components/mascot/game/icons";
@@ -155,7 +155,6 @@ export function BeDaSpaRoom({
   onQuit?: () => void;
 }) {
   const t = useTranslations("mascot");
-  const treeClip = useTreeWornClip();
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
   const [localPanel, setLocalPanel] = useState<"quest" | "today" | null>(null);
   const panel = panelProp !== undefined ? panelProp : localPanel;
@@ -397,7 +396,7 @@ export function BeDaSpaRoom({
           >
             <span className="beda-spa-art">
               <Cheeks />
-              <BeDaFigure view={player} locale={locale} dress={{ ...gameDress(look, youPose), treeClipId: treeClip }} crowd marks className="w-full" />
+              <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd marks className="w-full" />
             </span>
             {youPose === "cheer" || youPose === "poke" ? (
               <span className="beda-gesture-bubble" data-testid="beda-gesture-bubble">

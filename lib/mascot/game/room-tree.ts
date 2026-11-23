@@ -32,6 +32,8 @@ export type TreeReward = {
   itemId: string;
   itemName: string;
   previewOnly: boolean;
+  /** How many real members the server paid for this rung. Null when it did not say. */
+  recipients?: number | null;
 };
 
 export type RoomTree = {
@@ -54,6 +56,10 @@ export type RoomTree = {
   already: boolean;
   leveled: boolean;
   justGranted: TreeReward[];
+  /** Stages this member was paid while they were away. Empty when the server omits it. */
+  unseenRewards: TreeReward[];
+  /** Members who actually received the latest reward. Null when the server did not say. */
+  rewardedCount: number | null;
 };
 
 export type TreeTypeInfo = {
@@ -88,10 +94,11 @@ export const TREE_CLOSET = [
 ] as const;
 
 export type TreeClosetId = (typeof TREE_CLOSET)[number]["id"];
+export type TreeWearClipId = Extract<(typeof TREE_CLOSET)[number], { previewOnly: false }>["id"];
 
 const CLOSET_IDS = new Set<string>(TREE_CLOSET.map((item) => item.id));
 
-export function isTreeWearClip(id: string): id is TreeClosetId {
+export function isTreeWearClip(id: string): id is TreeWearClipId {
   const row = TREE_CLOSET.find((item) => item.id === id);
   return row != null && !row.previewOnly;
 }
@@ -156,7 +163,13 @@ function readReward(value: unknown): TreeReward | null {
     itemId,
     itemName: text(body.item_name, 80) || known?.name || "",
     previewOnly: body.preview_only === true || known?.previewOnly === true,
+    recipients: intOrNull(body.recipients ?? body.member_count),
   };
+}
+
+function intOrNull(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.trunc(value));
 }
 
 function readRewards(value: unknown): TreeReward[] {
@@ -202,6 +215,8 @@ export function readRoomTree(data: unknown): RoomTree | null {
     already: body.already === true,
     leveled,
     justGranted,
+    unseenRewards: readRewards(body.unseen_rewards),
+    rewardedCount: intOrNull(body.rewarded_count),
   };
 }
 
@@ -285,6 +300,43 @@ export async function waterRoomTree(code: string, idempotencyKey: string): Promi
   const tree = readRoomTree(data);
   if (!tree) throw new ApiError("api", { status: 502, code: "bad_message" });
   return tree;
+}
+
+/** Vietnam civil date, `YYYY-MM-DD`. The tree's water count locks on this day. */
+export function vietnamDayKey(now: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+/**
+ * Milliseconds until the next midnight in Vietnam (Asia/Ho_Chi_Minh).
+ * The tree's daily water count locks at that moment.
+ */
+export function msUntilVietnamMidnight(now: Date): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hourCycle: "h23",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(now);
+  const pick = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? "0");
+  let hour = pick("hour");
+  if (hour === 24) hour = 0;
+  const elapsed = ((hour * 60 + pick("minute")) * 60 + pick("second")) * 1000;
+  const left = 24 * 60 * 60 * 1000 - elapsed;
+  return Math.max(1000, left);
+}
+
+/** POST /api/v1/mascot/rooms/:code/tree/seen. Clears unseen_rewards for these stages. */
+export async function markTreeSeen(code: string, stages: readonly number[]): Promise<void> {
+  const unique = [...new Set(stages.filter((stage) => stage >= 1 && stage <= 7))];
+  if (unique.length === 0) return;
+  await apiPost(`${ROOMS}/${encodeURIComponent(code)}/tree/seen`, { stages: unique }, roomCall);
 }
 
 /** Up to 80 characters. A new key for each tap. */

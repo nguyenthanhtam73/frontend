@@ -1,5 +1,7 @@
 /** Closet choices for the trial screen. Files live under public/mascot. No server round-trip. */
 
+import { isTreeWearClip, type TreeWearClipId } from "@/lib/mascot/game/room-tree";
+
 export const GAME_LOOK_KEY = "beda-game-look";
 
 /** `outfits/outfit_*.svg`. Đồ ngủ uses the same drawing as the original pajamas. */
@@ -31,7 +33,7 @@ export type GamePose = "wave" | "cheer" | "poke";
 export type GameLook = {
   outfit: GameOutfitId;
   hair: GameHairId;
-  clip: GameClipId | null;
+  clip: GameClipId | TreeWearClipId | null;
 };
 
 /** Passed into the layer stack. Pose adds the matching sleeve art. */
@@ -67,10 +69,12 @@ export function isGameClip(id: string): id is GameClipId {
 }
 
 export function gameDress(look: GameLook, pose?: GamePose | null): GameDress {
+  const treeClip = look.clip && isTreeWearClip(look.clip) ? look.clip : null;
   return {
     outfitId: look.outfit,
     hairId: look.hair,
-    clipId: look.clip,
+    clipId: look.clip && isGameClip(look.clip) ? look.clip : null,
+    treeClipId: treeClip,
     pose: pose ?? null,
   };
 }
@@ -86,7 +90,11 @@ export function readGameLook(storage: Pick<Storage, "getItem">): GameLook | null
     if (typeof parsed.outfit !== "string" || !isGameOutfit(parsed.outfit)) return null;
     if (typeof parsed.hair !== "string" || !isGameHair(parsed.hair)) return null;
     const clip =
-      parsed.clip == null ? null : typeof parsed.clip === "string" && isGameClip(parsed.clip) ? parsed.clip : null;
+      parsed.clip == null
+        ? null
+        : typeof parsed.clip === "string" && (isGameClip(parsed.clip) || isTreeWearClip(parsed.clip))
+          ? parsed.clip
+          : null;
     if (parsed.clip != null && clip == null) return null;
     return { outfit: parsed.outfit, hair: parsed.hair, clip };
   } catch {

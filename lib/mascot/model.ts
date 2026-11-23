@@ -116,6 +116,15 @@ export type MascotSnapshot = {
   levelUp: boolean;
   /** Item ids whose grant source is `shop`. */
   shopItemIds: string[];
+  /** Owned closet rows from GET /me/mascot `items` (user_mascot_items). */
+  ownedItems: OwnedMascotItem[];
+};
+
+export type OwnedMascotItem = {
+  id: string;
+  name: string;
+  layer: string;
+  previewOnly: boolean;
 };
 
 export { poseForStep, isSessionComplete, streakDotBonus, POSE_HOLD_MS, STEP_POSES } from "@/lib/mascot/pose";
@@ -345,6 +354,7 @@ export function defaultSnapshot(): MascotSnapshot {
     nearLevelUp: false,
     levelUp: false,
     shopItemIds: [],
+    ownedItems: [],
     gender: null,
     introSeen: null,
   };
@@ -530,8 +540,36 @@ export function parseMascot(value: unknown): MascotSnapshot {
     isDefault: false,
     gender: parseGender(row.gender),
     introSeen: parseIntroSeen(row.intro_seen),
+    ownedItems: readOwnedMascotItems(row),
     ...parseGlow(row, loadout),
   };
+}
+
+/** Closet rows on GET /api/v1/me/mascot. Preview-only pieces are owned but not wearable. */
+export function readOwnedMascotItems(row: Record<string, unknown>): OwnedMascotItem[] {
+  const lists = [row.items, row.owned_items, row.grants];
+  const out: OwnedMascotItem[] = [];
+  const seen = new Set<string>();
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      const rec = asRecord(item);
+      if (!rec) continue;
+      const id = asString(rec.id ?? rec.item_id);
+      if (!id || seen.has(id)) continue;
+      const layer = asString(rec.layer);
+      const previewOnly = rec.preview_only === true;
+      if (!layer && !previewOnly && rec.source == null && !id.startsWith("tree_")) continue;
+      seen.add(id);
+      out.push({
+        id,
+        name: asString(rec.name) || id,
+        layer,
+        previewOnly,
+      });
+    }
+  }
+  return out;
 }
 
 function parseGender(value: unknown): BeDaGender | null {

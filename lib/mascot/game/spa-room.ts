@@ -1,4 +1,4 @@
-import type { GameClipId, GameHairId, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
+import type { GameClipId, GameHairId, GameLook, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
 import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type WirePerson } from "@/lib/mascot/game/lobby-live";
 import { SPA_BOUNDS, clamp, type Bounds } from "@/lib/mascot/game/walk";
 
@@ -122,7 +122,7 @@ export type SpaGuest = {
   facing: LobbyFacing;
   outfit: GameOutfitId;
   hair: GameHairId;
-  clip: GameClipId | null;
+  clip: GameLook["clip"];
   /** Male visitors use the drawn boy hair and pajamas. */
   gender?: "male";
   pose: GamePose | null;

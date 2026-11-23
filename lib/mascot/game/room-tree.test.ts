@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { parseRoomMessage } from "@/lib/mascot/game/spa-room";
-import { rememberTreeGifts, readTreeGifts, wearTreeClip, wornTreeClip } from "@/lib/mascot/game/tree-closet";
+import { readOwnedMascotItems } from "@/lib/mascot/model";
+import { lobbyLook } from "@/lib/mascot/game/lobby-live";
 import {
+  msUntilVietnamMidnight,
   newTreeIdempotencyKey,
   nextTreeReward,
   prefersLightMotion,
@@ -13,6 +15,7 @@ import {
   treeArtKey,
   treeFrame,
   treeIsHidden,
+  vietnamDayKey,
   watersUntilLevel,
 } from "@/lib/mascot/game/room-tree";
 import { ApiError } from "@/lib/api-client";
@@ -114,25 +117,30 @@ describe("shared room tree", () => {
     assert.ok(key.length > 8 && key.length <= 80);
   });
 
-  it("keeps preview-only gifts out of the worn clip", () => {
-    const storage = memory();
-    rememberTreeGifts(storage, [
-      { itemId: "tree_sticker_la_xanh", itemName: "Nhãn dán lá xanh", previewOnly: true },
-      { itemId: "tree_clip_la_xanh", itemName: "Kẹp tóc lá xanh", previewOnly: false },
-    ]);
-    assert.equal(readTreeGifts(storage).length, 2);
-    assert.equal(wearTreeClip(storage, "tree_sticker_la_xanh"), false);
-    assert.equal(wearTreeClip(storage, "tree_clip_la_xanh"), true);
-    assert.equal(wornTreeClip(storage), "tree_clip_la_xanh");
+  it("reads unseen rewards and the count of members who were paid", () => {
+    const tree = readRoomTree({
+      ...SAMPLE,
+      rewarded_count: 4,
+      unseen_rewards: [
+        { stage: 4, coins: 50, item_id: "tree_sticker_la_xanh", item_name: "Nhãn dán lá xanh", preview_only: true, recipients: 4 },
+      ],
+    });
+    assert.equal(tree?.rewardedCount, 4);
+    assert.equal(tree?.unseenRewards.length, 1);
+    assert.equal(tree?.unseenRewards[0]?.recipients, 4);
+    assert.equal(tree?.unseenRewards[0]?.previewOnly, true);
+    const owned = readOwnedMascotItems({
+      items: [
+        { id: "tree_clip_la_xanh", name: "Kẹp tóc lá xanh", layer: "accessory", preview_only: false },
+        { id: "tree_sticker_la_xanh", name: "Nhãn dán lá xanh", layer: "decal", preview_only: true },
+      ],
+    });
+    assert.equal(owned.length, 2);
+    assert.equal(owned[1]?.previewOnly, true);
+    assert.equal(lobbyLook("outfit_pajamas", "hair_sleep_buns", "tree_clip_la_xanh").clip, "tree_clip_la_xanh");
+    const noon = new Date("2026-11-23T05:00:00.000Z");
+    assert.equal(vietnamDayKey(noon), "2026-11-23");
+    const wait = msUntilVietnamMidnight(noon);
+    assert.ok(wait > 60_000 && wait < 24 * 60 * 60 * 1000);
   });
 });
-
-function memory(): Pick<Storage, "getItem" | "setItem"> {
-  const data = new Map<string, string>();
-  return {
-    getItem: (key) => data.get(key) ?? null,
-    setItem: (key, value) => {
-      data.set(key, value);
-    },
-  };
-}

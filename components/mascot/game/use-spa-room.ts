@@ -120,6 +120,7 @@ export function useSpaRoom(options: {
   const retriedRef = useRef(false);
   const timers = useRef<number[]>([]);
   const genderRef = useRef(gender);
+  const sentClip = useRef<string | null>(null);
   genderRef.current = gender;
   lookRef.current = look;
   nickRef.current = nickname;
@@ -128,6 +129,28 @@ export function useSpaRoom(options: {
   liveRef.current = live;
   remoteRef.current = onRemoteEmote;
   treeRef.current = onTreeEvent;
+
+  useEffect(() => {
+    if (!live || !connRef.current) return;
+    const clip = look.clip ?? "";
+    if (sentClip.current == null) {
+      sentClip.current = clip;
+      return;
+    }
+    if (sentClip.current === clip) return;
+    sentClip.current = clip;
+    connRef.current.send(encodeRoomFrame({
+      op: "join",
+      code: code ?? "",
+      nickname: nickRef.current,
+      outfit: look.outfit,
+      hair: look.hair,
+      accessory: clip,
+      ...(genderRef.current === "male" ? { gender: "male" as const } : {}),
+      facing: "right",
+      action: "idle",
+    }), "join");
+  }, [live, look.clip, look.outfit, look.hair, code]);
 
   useEffect(() => {
     try {

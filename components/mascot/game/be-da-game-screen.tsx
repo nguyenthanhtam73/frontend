@@ -41,6 +41,8 @@ import {
 } from "@/lib/mascot/game/look";
 import { mascotFeatureEnabled } from "@/lib/mascot/feature";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
+import { wearMascotClip } from "@/lib/mascot/game/mascot-wear";
+import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import {
@@ -148,6 +150,20 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       document.body.style.overflow = prevBody;
     };
   }, [today, closetAdmin]);
+
+  useEffect(() => {
+    if (!ready || !mascotQuery.data) return;
+    const raw = mascotQuery.data.loadout.accessories.find((item) => isTreeWearClip(item.id))?.id ?? null;
+    if (!raw || !isTreeWearClip(raw)) return;
+    const server = raw;
+    setLook((current) => {
+      if (current.clip === server) return current;
+      const next = { ...current, clip: server };
+      if (!saveGameLook(localStorage, next)) return current;
+      setWornLook(next);
+      return next;
+    });
+  }, [ready, mascotQuery.data]);
 
   const morning = routineQuery.data?.morning ?? [];
   const evening = routineQuery.data?.evening ?? [];
@@ -560,6 +576,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         if (!saveGameLook(localStorage, saved)) {
           setToast({ kind: "wear-failed", name: "" });
           return false;
+        }
+        const clip = saved.clip && isTreeWearClip(saved.clip) ? saved.clip : null;
+        const hadTree = mascotQuery.data?.loadout.accessories.some((item) => isTreeWearClip(item.id)) ?? false;
+        if (clip || hadTree) {
+          void wearMascotClip(queryClient, clip).catch(() => {
+            setToast({ kind: "wear-failed", name: "" });
+          });
         }
         feedback();
         setLook(saved);

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { GameIcon } from "@/components/mascot/game/icons";
@@ -25,13 +25,9 @@ import {
   type TreeMotion,
   type TreeReward,
 } from "@/lib/mascot/game/room-tree";
-import {
-  currentTreeGifts,
-  currentWornTreeClip,
-  saveWornTreeClip,
-  subscribeTreeCloset,
-  type TreeGift,
-} from "@/lib/mascot/game/tree-closet";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMascot, mascotQueryKey } from "@/lib/api/mascot";
+import { isTreeWearClip, TREE_CLOSET } from "@/lib/mascot/game/room-tree";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 
 const CHIP_COLORS = ["#ffd1dc", "#c9f3d6", "#ffe7b8", "#d7e6ff", "#f3d4f6"];
@@ -143,7 +139,7 @@ function useTreeChrome(panel: RoomTreePanel | null, locale: string, startOpen: b
             stage={tree.stage}
             stageName={tree.stageName}
             imageKey={tree.imageKey}
-            friends={Math.max(tree.required, tree.watered.length, 1)}
+            friends={rewardRecipients(panel.popup, tree.rewardedCount)}
             locale={locale}
             light={light}
             onTake={panel.onTakeGift}
@@ -156,6 +152,14 @@ function useTreeChrome(panel: RoomTreePanel | null, locale: string, startOpen: b
 
 function noop() {
   /* The room is closed. */
+}
+
+/** Two short lines so the longest stage name fits a narrow phone. */
+function railLines(name: string): [string, string] {
+  const parts = name.split(" ");
+  if (parts.length <= 2) return [parts[0] ?? name, parts.slice(1).join(" ")];
+  const mid = Math.ceil(parts.length / 2);
+  return [parts.slice(0, mid).join(" "), parts.slice(mid).join(" ")];
 }
 
 function revealed(ms: number, motion: TreeMotion | null, level: boolean, light: boolean): { count: boolean; stage: boolean; popup: boolean } {
@@ -385,10 +389,16 @@ function TreeDetail({
         {TREE_STAGE_NAMES.slice(1).map((name, index) => {
           const stage = index + 1;
           const mark = stageMark(stage, tree.stage, tree.bloomed);
+          const [line1, line2] = railLines(name);
           return (
             <li key={name} data-mark={mark}>
               <b>{mark === "done" ? "✓" : stage}</b>
-              <span>{name}</span>
+              <span title={name}>
+                <span className="beda-tree-rail-full">{name}</span>
+                {line1}
+                {line2 ? <br /> : null}
+                {line2}
+              </span>
               {mark === "soon" ? <small>{t("game.tree.soon")}</small> : null}
               {mark === "done" && stage > 1 ? <small>{t("game.tree.got")}</small> : null}
             </li>
@@ -506,7 +516,7 @@ function TreeGiftPopup({
   stage: number;
   stageName: string;
   imageKey: string;
-  friends: number;
+  friends: number | null;
   locale: string;
   light: boolean;
   onTake: () => void;
@@ -555,9 +565,11 @@ function TreeGiftPopup({
             </div>
           ))}
         </div>
-        <p className="beda-tree-everyone" data-image={imageKey}>
-          {t("game.tree.everyone", { count: friends })}
-        </p>
+        {friends != null && friends > 0 ? (
+          <p className="beda-tree-everyone" data-image={imageKey}>
+            {t("game.tree.everyone", { count: friends })}
+          </p>
+        ) : null}
         {bloom ? <p className="beda-tree-stage">{t("game.tree.stage", { stage, name: stageName })}</p> : null}
         <button type="button" className="beda-tree-take" data-testid="beda-tree-take" onClick={onTake}>
           {t("game.tree.take")}
@@ -567,56 +579,69 @@ function TreeGiftPopup({
   );
 }
 
-export function TreeClosetSection() {
+export function TreeClosetSection({
+  selectedId = null,
+  onSelect,
+}: {
+  selectedId?: string | null;
+  onSelect?: (clipId: string | null) => void;
+}) {
   const t = useTranslations("mascot");
-  const gifts = useSyncExternalStore(subscribeTreeCloset, currentTreeGifts, emptyGifts);
-  const worn = useSyncExternalStore(subscribeTreeCloset, currentWornTreeClip, () => null);
+  const query = useQuery({ queryKey: mascotQueryKey, queryFn: fetchMascot, staleTime: 30_000 });
+  const listed = (query.data?.ownedItems ?? []).filter((item) => item.id.startsWith("tree_"));
+  const worn = (query.data?.loadout.accessories ?? []).filter((item) => isTreeWearClip(item.id));
+  const gifts = [...listed];
+  for (const item of worn) {
+    if (!gifts.some((gift) => gift.id === item.id)) {
+      gifts.push({
+        id: item.id,
+        name: TREE_CLOSET.find((row) => row.id === item.id)?.name ?? item.id,
+        layer: "accessory",
+        previewOnly: false,
+      });
+    }
+  }
   if (gifts.length === 0) return null;
   return (
     <div className="beda-tree-closet" data-testid="beda-tree-closet">
       <p>{t("game.tree.gifts")}</p>
       <div className="beda-picks">
-        {gifts.map((gift) => (
-          <TreeGiftTile key={gift.id} gift={gift} worn={worn === gift.id} />
-        ))}
+        {gifts.map((gift) => {
+          const art = <img src={mascotAssetUrl(treeClosetArt(gift.id))} alt="" />;
+          if (gift.previewOnly || !isTreeWearClip(gift.id)) {
+            return (
+              <div key={gift.id} className="beda-pick is-preview" data-testid={`beda-tree-gift-${gift.id}`} data-preview="only">
+                <span className="beda-pick-art is-clip">{art}</span>
+                {gift.name}
+                <small>{t("game.tree.preview")}</small>
+              </div>
+            );
+          }
+          const on = selectedId === gift.id;
+          return (
+            <button
+              key={gift.id}
+              type="button"
+              className={on ? "beda-pick is-on" : "beda-pick"}
+              data-testid={`beda-tree-gift-${gift.id}`}
+              aria-pressed={on}
+              onClick={() => onSelect?.(on ? null : gift.id)}
+            >
+              <span className="beda-pick-art is-clip">{art}</span>
+              {gift.name}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function TreeGiftTile({ gift, worn }: { gift: TreeGift; worn: boolean }) {
-  const t = useTranslations("mascot");
-  const art = <img src={mascotAssetUrl(treeClosetArt(gift.id))} alt="" />;
-  if (gift.previewOnly) {
-    return (
-      <div className="beda-pick is-preview" data-testid={`beda-tree-gift-${gift.id}`} data-preview="only">
-        <span className="beda-pick-art is-clip">{art}</span>
-        {gift.name}
-        <small>{t("game.tree.preview")}</small>
-      </div>
-    );
+function rewardRecipients(rewards: readonly TreeReward[] | null, fallback: number | null): number | null {
+  for (const reward of rewards ?? []) {
+    if (reward.recipients != null) return reward.recipients;
   }
-  return (
-    <button
-      type="button"
-      className={worn ? "beda-pick is-on" : "beda-pick"}
-      data-testid={`beda-tree-gift-${gift.id}`}
-      aria-pressed={worn}
-      onClick={() => saveWornTreeClip(worn ? null : gift.id)}
-    >
-      <span className="beda-pick-art is-clip">{art}</span>
-      {gift.name}
-      <small>{worn ? t("game.wearing") : t("game.wear")}</small>
-    </button>
-  );
-}
-
-export function useTreeWornClip(): string | null {
-  return useSyncExternalStore(subscribeTreeCloset, currentWornTreeClip, () => null);
-}
-
-function emptyGifts(): TreeGift[] {
-  return [];
+  return fallback ?? null;
 }
 
 function Can() {

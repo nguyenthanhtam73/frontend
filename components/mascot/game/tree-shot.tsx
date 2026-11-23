@@ -41,6 +41,8 @@ function base(extra: Partial<RoomTree> = {}): RoomTree {
     already: false,
     leveled: false,
     justGranted: [],
+    unseenRewards: [],
+    rewardedCount: null,
     ...extra,
   };
 }
@@ -77,6 +79,23 @@ function shotPanel(scene: string, ms: number | null): RoomTreePanel {
         reason: "already_watered",
         balance: 50,
       }),
+    } as RoomTreePanel;
+  }
+  if (scene === "return") {
+    const reward = { ...LADDER[3]!, recipients: 4 };
+    return {
+      ...idle,
+      tree: base({
+        stage: 4,
+        stageName: "Cây nhỏ có nụ",
+        waters: 0,
+        required: 3,
+        progress: 0,
+        balance: 100,
+        unseenRewards: [reward],
+        rewardedCount: 4,
+      }),
+      popup: [reward],
     } as RoomTreePanel;
   }
   if (scene === "level") {
@@ -132,6 +151,23 @@ function shotPanel(scene: string, ms: number | null): RoomTreePanel {
       before: base({ stage: 3, stageName: "Cây con", waters: 2, required: 3, watered: ["Mây Hồng", "Trà Sữa"], progress: 0.67 }),
       tree: base({ stage: 4, stageName: "Cây nhỏ có nụ", waters: 3, required: 3, watered: ["Mây Hồng", "Trà Sữa", "Bạn"], progress: 0, balance: 100 }),
       popup: [LADDER[3]!],
+    } as RoomTreePanel;
+  }
+  const stageOnly = /^s([1-7])$/.exec(scene);
+  if (stageOnly) {
+    const stage = Number(stageOnly[1]);
+    const reward = LADDER[stage - 1]!;
+    return {
+      ...idle,
+      tree: base({
+        stage,
+        stageName: reward.name,
+        progress: stage >= 7 ? 0 : 0.4,
+        canWater: stage < 7,
+        reason: stage >= 7 ? "bloomed" : null,
+        bloomed: stage >= 7,
+        balance: stage >= 7 ? 420 : 50,
+      }),
     } as RoomTreePanel;
   }
   return { ...idle, tree: base() } as RoomTreePanel;

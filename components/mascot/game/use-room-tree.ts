@@ -1,23 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
+import { ApiError } from "@/lib/api-client";
+import { mascotQueryKey } from "@/lib/api/mascot";
 import {
   getRoomTree,
+  markTreeSeen,
+  msUntilVietnamMidnight,
   newTreeIdempotencyKey,
   prefersLightMotion,
-  treeGrantsFrom,
   treeIsHidden,
   treeMotionMs,
   treeReasonFromError,
   treeStageName,
+  vietnamDayKey,
   waterRoomTree,
   type RoomTree,
   type RoomTreeTick,
   type TreeMotion,
   type TreeReward,
 } from "@/lib/mascot/game/room-tree";
-import { saveTreeGifts } from "@/lib/mascot/game/tree-closet";
 import type { RoomEvent } from "@/lib/mascot/game/spa-room";
 
 export type RoomTreePanel = {
@@ -103,6 +107,10 @@ export function useRoomTree(
   const ownRef = useRef<{ at: number; waters: number; stage: number } | null>(null);
   const queueRef = useRef<RoomTreeTick[]>([]);
   const busyRef = useRef(false);
+  const waterKey = useRef<string | null>(null);
+  const wateringRef = useRef(false);
+  const seenRef = useRef(new Set<number>());
+  const queryClient = useQueryClient();
   balanceRef.current = onBalance;
   nameRef.current = selfName;
   codeRef.current = code;
@@ -113,8 +121,25 @@ export function useRoomTree(
     setTree(next);
     setVisible(true);
     balanceRef.current(next.balance);
-    saveTreeGifts(treeGrantsFrom(next));
-  }, []);
+    if (next.justGranted.length > 0) {
+      void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+    }
+  }, [queryClient]);
+
+  const showUnseen = useCallback((next: RoomTree) => {
+    const fresh = next.unseenRewards.filter((reward) => !seenRef.current.has(reward.stage));
+    if (fresh.length === 0) return;
+    for (const reward of fresh) seenRef.current.add(reward.stage);
+    setPopup(fresh);
+    const room = codeRef.current;
+    if (!room) return;
+    void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+    void markTreeSeen(room, fresh.map((reward) => reward.stage)).catch((err: unknown) => {
+      const missing = err instanceof ApiError && (err.status === 404 || err.status === 405 || err.status === 501);
+      if (missing) return;
+      for (const reward of fresh) seenRef.current.delete(reward.stage);
+    });
+  }, [queryClient]);
 
   const finishMotion = useCallback(() => {
     setMotion(null);
@@ -189,10 +214,13 @@ export function useRoomTree(
       return;
     }
     let cancel = false;
+    waterKey.current = null;
+    wateringRef.current = false;
     void getRoomTree(code)
       .then((next) => {
         if (cancel) return;
         publish(next);
+        showUnseen(next);
       })
       .catch((err: unknown) => {
         if (cancel) return;
@@ -204,16 +232,57 @@ export function useRoomTree(
     return () => {
       cancel = true;
     };
-  }, [active, code, publish]);
+  }, [active, code, publish, showUnseen]);
+
+  useEffect(() => {
+    if (!active || !code) return;
+    let cancel = false;
+    let timer = 0;
+    let day = vietnamDayKey(new Date());
+    const refresh = () => {
+      void getRoomTree(code)
+        .then((next) => {
+          if (cancel) return;
+          publish(next);
+          showUnseen(next);
+        })
+        .catch(() => undefined);
+    };
+    const arm = () => {
+      timer = window.setTimeout(() => {
+        if (cancel) return;
+        day = vietnamDayKey(new Date());
+        refresh();
+        arm();
+      }, msUntilVietnamMidnight(new Date()));
+    };
+    const onShow = () => {
+      if (document.visibilityState === "hidden") return;
+      const nextDay = vietnamDayKey(new Date());
+      if (nextDay === day) return;
+      day = nextDay;
+      refresh();
+    };
+    arm();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      cancel = true;
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [active, code, publish, showUnseen]);
 
   const onWater = useCallback(() => {
     const room = code;
     const current = treeRef.current;
-    if (!room || !current || watering || !current.canWater) return;
-    const key = newTreeIdempotencyKey();
+    if (!room || !current || wateringRef.current || !current.canWater) return;
+    if (!waterKey.current) waterKey.current = newTreeIdempotencyKey();
+    const key = waterKey.current;
+    wateringRef.current = true;
     setWatering(true);
     void waterRoomTree(room, key)
       .then((next) => {
+        waterKey.current = null;
         if (!next) return;
         if (!next.already) {
           ownRef.current = { at: Date.now(), waters: next.waters, stage: next.stage };
@@ -228,6 +297,7 @@ export function useRoomTree(
       .catch((err: unknown) => {
         const reason = treeReasonFromError(err);
         if (reason) {
+          waterKey.current = null;
           setTree((prev) =>
             prev
               ? {
@@ -243,8 +313,11 @@ export function useRoomTree(
             .catch(() => undefined);
         }
       })
-      .finally(() => setWatering(false));
-  }, [code, publish, watering]);
+      .finally(() => {
+        wateringRef.current = false;
+        setWatering(false);
+      });
+  }, [code, publish]);
 
   const onTakeGift = useCallback(() => setPopup(null), []);
 
