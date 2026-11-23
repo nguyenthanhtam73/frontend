@@ -2555,18 +2555,32 @@
 /* Group spa room. A small skin-care room: mat, cucumber, jars. Not a tea table. */
 
 .beda-spa {
-  --beda-spa-friend: 108px;
+  /* Share of the plate width. Figures shrink with the contained room. */
+  --beda-spa-friend: 22.8%;
+  --beda-tag-max: 9rem;
   position: absolute;
   inset: 0;
   overflow: hidden;
-  /* The plate always covers the frame. Brown is only the color behind a missing file. */
-  background-color: #c48962;
+  /* Wall pink. The plate sits in the middle; this is never a brown box. */
+  background-color: #f6d5e6;
+  color: #3c2a30;
+  touch-action: none;
+}
+
+.beda-spa::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: -10%;
+  background-color: #f6d5e6;
   background-image: url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  color: #3c2a30;
-  touch-action: none;
+  filter: blur(26px);
+  transform: scale(1.08);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .beda-room-entry {
@@ -2579,7 +2593,7 @@
   justify-content: center;
   gap: 16px;
   padding: 24px;
-  background: #c48962 url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9") center / cover no-repeat;
+  background: #f6d5e6 url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9") center / contain no-repeat;
   text-align: center;
 }
 
@@ -2682,20 +2696,18 @@
 
 .beda-spa-view {
   position: absolute;
-  inset: 0;
-  /* At least the frame on both axes, so the plate cannot sit as a small
-     centered picture with the brown fallback showing around it. */
+  z-index: 1;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
-  min-width: 100%;
-  min-height: 100%;
   transform-origin: 0 0;
   will-change: transform;
-  background-color: #c48962;
+  background-color: transparent;
   background-image: url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9");
   background-repeat: no-repeat;
   background-position: center;
-  background-size: cover;
+  background-size: 100% 100%;
 }
 
 .beda-spa-wall {
@@ -2887,20 +2899,14 @@
 .beda-spa-stage {
   position: absolute;
   z-index: 3;
-  left: 0;
-  right: 0;
-  top: calc(78px + env(safe-area-inset-top));
-  bottom: calc(var(--beda-nav-reserve) + 12px);
+  inset: 0;
 }
 
-/* Room box for feet: full bleed, from just under the seat bar to the background bottom. */
+/* Feet use the whole plate, so y 0.46–0.70 is the floor of the picture. */
 .beda-spa-floor {
   position: absolute;
   z-index: 4;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: calc(72px + env(safe-area-inset-top));
+  inset: 0;
   pointer-events: none;
 }
 
@@ -3042,6 +3048,10 @@
   background: url("/mascot/props/cucumber_cheeks.svg?v=5&h=cac8ba93e0") center / 100% 100% no-repeat;
 }
 
+.beda-spa .beda-tag {
+  max-width: min(9rem, var(--beda-tag-max, 9rem));
+}
+
 .beda-spa .beda-tag:not(.beda-tag-me) {
   background: rgba(255, 250, 246, 0.96);
   box-shadow: 0 1px 0 #fff, 0 3px 0 #e2bcc6, 0 8px 16px rgba(40, 24, 20, 0.22);
@@ -3116,7 +3126,7 @@
   min-width: 0;
   border-radius: 18px;
   background: #f6e4d2;
-  padding: 7px 10px 8px;
+  padding: 4px 8px 5px;
   color: #3a2a24;
   text-align: center;
   box-shadow: 0 6px 16px rgba(20, 10, 20, 0.28);
@@ -3125,23 +3135,24 @@
 .beda-spa-titlecard strong {
   display: block;
   overflow: hidden;
-  font-size: 15px;
-  line-height: 1.2;
+  font-size: 13px;
+  line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .beda-spa-meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
+  display: block;
+  overflow: hidden;
   max-width: 100%;
-  margin-top: 2px;
+  margin-top: 1px;
   color: #5c463c;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .beda-spa-bit {
@@ -3158,10 +3169,25 @@
 .beda-invite-open {
   border-radius: 999px;
   background: #2f9e8f;
-  padding: 0 12px;
+  padding: 0 10px;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   box-shadow: 0 4px 0 #1d6e62;
+}
+
+@media (max-width: 420px) {
+  .beda-spa-head {
+    gap: 6px;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .beda-invite-open,
+  .beda-room-quit {
+    padding-right: 8px;
+    padding-left: 8px;
+    font-size: 12px;
+  }
 }
 
 .beda-spa-mute {
@@ -3656,13 +3682,16 @@
 }
 
 @media (min-width: 768px) {
-  .beda-spa {
-    --beda-spa-friend: 136px;
+  .beda-spa-titlecard {
+    padding: 6px 12px 7px;
   }
 
-  .beda-spa-stage {
-    top: calc(84px + env(safe-area-inset-top));
-    bottom: calc(var(--beda-nav-reserve) + 16px);
+  .beda-spa-titlecard strong {
+    font-size: 16px;
+  }
+
+  .beda-spa-meta {
+    font-size: 13px;
   }
 
   .beda-spa-invite {
@@ -3719,6 +3748,8 @@
   bottom: calc(var(--beda-nav-reserve, 120px) + 8px);
   display: flex;
   align-items: center;
+  justify-content: center;
+  justify-content: safe center;
   gap: 6px;
   overflow-x: auto;
   overscroll-behavior-x: contain;

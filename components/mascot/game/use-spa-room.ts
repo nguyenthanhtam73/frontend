@@ -190,31 +190,38 @@ export function useSpaRoom(options: {
         }
         if (shouldRetryRoomJoin(message.code, retriedRef.current)) {
           retriedRef.current = true;
-          void joinSpaRoom(code)
-            .then((room) => {
-              if (cancelled) return;
-              joinedRef.current = true;
-              setPreviewCount(room.memberCount);
-              setMembers(room.memberCount);
-              connRef.current?.send(encodeRoomFrame(joinFrame()), "join");
-            })
-            .catch((err: unknown) => {
-              if (cancelled) return;
-              setNotice(spaProblemFromError(err));
-              setLive(false);
-              stopSocket();
-            });
+          // The hub allows 2 client frames per second. A second join in that
+          // same second is what comes back as rate_limited.
+          const retryTimer = window.setTimeout(() => {
+            if (cancelled) return;
+            void joinSpaRoom(code)
+              .then((room) => {
+                if (cancelled) return;
+                joinedRef.current = true;
+                setPreviewCount(room.memberCount);
+                setMembers(room.memberCount);
+                connRef.current?.send(encodeRoomFrame(joinFrame()), "join");
+              })
+              .catch((err: unknown) => {
+                if (cancelled || enteredRef.current) return;
+                setNotice(spaProblemFromError(err));
+                setLive(false);
+                stopSocket();
+              });
+          }, 1100);
+          timers.current.push(retryTimer);
           return;
         }
         const problem = spaRoomProblem(null, message.code);
-        if (problem === "rate" && liveRef.current) {
-          setNotice("rate");
+        if (problem === "rate") {
+          // A dropped move or gesture is not a failed entry. The room stays up.
+          if (!enteredRef.current && !liveRef.current) setNotice("rate");
           return;
         }
         if (problem) {
           setNotice(problem);
           setLive(false);
-          if (problem !== "rate") stopSocket();
+          stopSocket();
           return;
         }
         setNotice("offline");
@@ -317,7 +324,13 @@ export function useSpaRoom(options: {
         }
       } catch (err) {
         const problem = spaProblemFromError(err);
-        if (problem === "missing" || problem === "bad-code" || problem === "full" || problem === "ended") {
+        if (
+          problem === "missing" ||
+          problem === "bad-code" ||
+          problem === "full" ||
+          problem === "ended" ||
+          problem === "rate"
+        ) {
           if (!cancelled) setNotice(problem);
           return;
         }
