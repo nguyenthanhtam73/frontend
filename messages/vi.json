@@ -228,7 +228,9 @@
     "theme": {
       "label": "Giao diện",
       "light": "Sáng",
-      "dark": "Tối"
+      "dark": "Tối",
+      "lightMode": "Chế độ sáng",
+      "darkMode": "Chế độ tối"
     },
     "language": {
       "label": "Ngôn ngữ",

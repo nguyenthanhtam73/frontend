@@ -11,6 +11,8 @@ type Mode = "light" | "dark";
 
 const shell = cn(
   "theme-toggle-btn inline-flex h-11 min-h-11 shrink-0 items-center rounded-lg border border-border bg-background p-0.5",
+  // Phones: sun/moon only, still a 44px target, so login and register both fit.
+  "max-sm:size-11 max-sm:min-w-11 max-sm:justify-center max-sm:p-0",
   "cursor-pointer overflow-hidden text-left",
   "[appearance:none] [-webkit-appearance:none] [-webkit-tap-highlight-color:transparent]",
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
@@ -33,7 +35,10 @@ export function ThemeToggle({ className }: { className?: string }) {
   if (!mounted) {
     return (
       <div className={cn(shell, "cursor-default", className)} aria-busy="true" aria-label={t("label")}>
-        <span className="inline-flex h-9 min-w-[4.5rem] items-center rounded-md bg-muted/60" aria-hidden />
+        <span
+          className="inline-flex h-9 min-w-[4.5rem] items-center rounded-md bg-muted/60 max-sm:size-9 max-sm:min-w-9"
+          aria-hidden
+        />
       </div>
     );
   }
@@ -42,7 +47,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   const active: Mode = explicit ?? (resolvedTheme === "dark" ? "dark" : "light");
   const isLight = active === "light";
   const modeLabel = isLight ? t("light") : t("dark");
-  const label = `${t("label")}: ${modeLabel}`;
+  const label = isLight ? t("lightMode") : t("darkMode");
   const Icon = isLight ? Sun : Moon;
 
   return (
@@ -54,9 +59,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={() => setTheme(isLight ? "dark" : "light")}
       className={cn(shell, className)}
     >
-      <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-medium leading-none text-primary-foreground sm:text-xs">
+      <span className="inline-flex max-w-full items-center justify-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-medium leading-none text-primary-foreground max-sm:size-9 max-sm:px-0 max-sm:py-0 sm:text-xs">
         <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-        <span className="whitespace-nowrap">{modeLabel}</span>
+        <span className="whitespace-nowrap max-sm:sr-only">{modeLabel}</span>
       </span>
     </button>
   );
