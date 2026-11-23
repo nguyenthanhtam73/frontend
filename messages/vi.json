@@ -3546,6 +3546,7 @@
       "tree": {
         "title": "Cây chung",
         "watered": "Đã tưới {waters}/{required} hôm nay",
+        "wateredShort": "Đã tưới {waters}/{required}",
         "stage": "Bậc {stage} · {name}",
         "soon": "Sắp tới",
         "got": "Đã nhận",

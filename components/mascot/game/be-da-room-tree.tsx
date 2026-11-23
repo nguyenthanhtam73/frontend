@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { GameIcon } from "@/components/mascot/game/icons";
@@ -36,19 +36,63 @@ import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 
 const CHIP_COLORS = ["#ffd1dc", "#c9f3d6", "#ffe7b8", "#d7e6ff", "#f3d4f6"];
 
-export function RoomTreeCard({
+type TreeChrome = {
+  plant: ReactNode;
+  dock: ReactNode;
+};
+
+const TreeChromeContext = createContext<TreeChrome>({ plant: null, dock: null });
+
+/** Shares one watering clock between the pot on the floor and the bar on the screen. */
+export function RoomTreeProvider({
   panel,
   locale,
+  startOpen = false,
+  children,
+}: {
+  panel: RoomTreePanel | null;
+  locale: string;
+  startOpen?: boolean;
+  children: ReactNode;
+}) {
+  const chrome = useTreeChrome(panel, locale, startOpen);
+  return <TreeChromeContext.Provider value={chrome}>{children}</TreeChromeContext.Provider>;
+}
+
+export function RoomTreePlant() {
+  return useContext(TreeChromeContext).plant;
+}
+
+export function RoomTreeDock() {
+  return useContext(TreeChromeContext).dock;
+}
+
+/** Markup tests render the pot and the bar together. */
+export function RoomTreePreview({
+  panel,
+  locale,
+  startOpen = false,
 }: {
   panel: RoomTreePanel;
   locale: string;
+  startOpen?: boolean;
 }) {
+  return (
+    <RoomTreeProvider panel={panel} locale={locale} startOpen={startOpen}>
+      <RoomTreePlant />
+      <RoomTreeDock />
+    </RoomTreeProvider>
+  );
+}
+
+function useTreeChrome(panel: RoomTreePanel | null, locale: string, startOpen: boolean): TreeChrome {
   const t = useTranslations("mascot");
-  const tree = panel.tree;
-  const motion = panel.motion;
-  const light = useLightMotion(panel.reduced);
-  const ms = useMotionMs(motion, panel.level, light, panel.animMs, panel.onMotionEnd);
-  if (!panel.visible || !tree) return null;
+  const [open, setOpen] = useState(startOpen);
+  const tree = panel?.visible ? panel.tree : null;
+  const motion = panel?.motion ?? null;
+  const light = useLightMotion(panel?.reduced ?? null);
+  const ms = useMotionMs(motion, panel?.level === true, light, panel?.animMs ?? null, panel?.onMotionEnd ?? noop);
+  if (!panel || !tree) return { plant: null, dock: null };
   const reveal = revealed(ms, motion, panel.level, light);
   const before = panel.before;
   const countReady = !motion || !before || reveal.count;
@@ -68,8 +112,8 @@ export function RoomTreeCard({
   const frame = motion ? treeFrame(ms, motion, panel.level, light) : null;
   const popupOn = panel.popup != null && panel.popup.length > 0 && (!motion || reveal.popup);
   const toast = panel.toastName && motion === "other" ? t("game.tree.other", { name: panel.toastName }) : "";
-  return (
-    <>
+  return {
+    plant: (
       <TreeArt
         stage={shown.stage}
         nextStage={tree.stage}
@@ -81,21 +125,37 @@ export function RoomTreeCard({
         sparkle={shown.bloomed && shown.reason !== "room_ended" && !light}
         softGlow={shown.bloomed && shown.reason !== "room_ended" && light}
       />
-      <TreeSheet tree={shown} locale={locale} watering={panel.watering} busy={motion === "water" && !countReady} onWater={panel.onWater} />
-      {popupOn && panel.popup ? (
-        <TreeGiftPopup
-          rewards={panel.popup}
-          stage={tree.stage}
-          stageName={tree.stageName}
-          imageKey={tree.imageKey}
-          friends={Math.max(tree.required, tree.watered.length, 1)}
+    ),
+    dock: (
+      <>
+        <TreeDock
+          tree={shown}
           locale={locale}
-          light={light}
-          onTake={panel.onTakeGift}
+          open={open}
+          watering={panel.watering}
+          busy={motion === "water" && !countReady}
+          onWater={panel.onWater}
+          onToggle={() => setOpen((value) => !value)}
         />
-      ) : null}
-    </>
-  );
+        {popupOn && panel.popup ? (
+          <TreeGiftPopup
+            rewards={panel.popup}
+            stage={tree.stage}
+            stageName={tree.stageName}
+            imageKey={tree.imageKey}
+            friends={Math.max(tree.required, tree.watered.length, 1)}
+            locale={locale}
+            light={light}
+            onTake={panel.onTakeGift}
+          />
+        ) : null}
+      </>
+    ),
+  };
+}
+
+function noop() {
+  /* The room is closed. */
 }
 
 function revealed(ms: number, motion: TreeMotion | null, level: boolean, light: boolean): { count: boolean; stage: boolean; popup: boolean } {
@@ -249,29 +309,78 @@ function TreeArt({
   );
 }
 
-function TreeSheet({
+function TreeDock({
+  tree,
+  locale,
+  open,
+  watering,
+  busy,
+  onWater,
+  onToggle,
+}: {
+  tree: RoomTree;
+  locale: string;
+  open: boolean;
+  watering: boolean;
+  busy: boolean;
+  onWater: () => void;
+  onToggle: () => void;
+}) {
+  const t = useTranslations("mascot");
+  const fill = treeProgressPercent(tree.progress);
+  return (
+    <>
+      {open ? null : (
+        <div className="beda-tree-chip" data-testid="beda-tree-card" data-open="0">
+          <button type="button" className="beda-tree-chip-main" data-testid="beda-tree-expand" aria-expanded={false} onClick={onToggle}>
+            <img src={mascotAssetUrl(treePotSrc())} alt="" />
+            <span>
+              <strong data-testid="beda-tree-count">{t("game.tree.wateredShort", { waters: tree.waters, required: tree.required })}</strong>
+              <span className="beda-tree-bar" data-testid="beda-tree-bar" aria-hidden>
+                <span style={{ width: `${fill}%` }} />
+              </span>
+            </span>
+          </button>
+          <TreeWater tree={tree} watering={watering} busy={busy} onWater={onWater} />
+        </div>
+      )}
+      {open ? (
+        <TreeDetail tree={tree} locale={locale} watering={watering} busy={busy} onWater={onWater} onClose={onToggle} />
+      ) : null}
+    </>
+  );
+}
+
+function TreeDetail({
   tree,
   locale,
   watering,
   busy,
   onWater,
+  onClose,
 }: {
   tree: RoomTree;
   locale: string;
   watering: boolean;
   busy: boolean;
   onWater: () => void;
+  onClose: () => void;
 }) {
   const t = useTranslations("mascot");
   const next = nextTreeReward(tree);
   const left = watersUntilLevel(tree);
   const fill = treeProgressPercent(tree.progress);
   return (
-    <section className="beda-tree-card" data-testid="beda-tree-card" aria-label={t("game.tree.title")}>
+    <section className="beda-tree-card is-open" data-testid="beda-tree-card" data-open="1" aria-label={t("game.tree.title")}>
       <div className="beda-tree-head">
         <h2 data-testid="beda-tree-count">{t("game.tree.watered", { waters: tree.waters, required: tree.required })}</h2>
-        <span data-testid="beda-tree-stage">{t("game.tree.stage", { stage: tree.stage, name: tree.stageName })}</span>
+        <button type="button" className="beda-tree-collapse" data-testid="beda-tree-collapse" onClick={onClose}>
+          {t("game.spaBoardClose")}
+        </button>
       </div>
+      <p className="beda-tree-stage" data-testid="beda-tree-stage">
+        {t("game.tree.stage", { stage: tree.stage, name: tree.stageName })}
+      </p>
       <ol className="beda-tree-rail" data-testid="beda-tree-rail">
         {TREE_STAGE_NAMES.slice(1).map((name, index) => {
           const stage = index + 1;
@@ -301,10 +410,6 @@ function TreeSheet({
             {t("game.tree.youNotYet")}
           </li>
         ) : null}
-        <li className="is-ai" data-testid="beda-tree-ai">
-          <span className="beda-tree-face">AI</span>
-          {t("game.tree.ai")}
-        </li>
       </ul>
       {left === 1 && !tree.bloomed ? (
         <p className="beda-tree-hint" data-testid="beda-tree-hint">

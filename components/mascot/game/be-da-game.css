@@ -3087,13 +3087,15 @@
 
 .beda-spa-head {
   position: absolute;
-  z-index: 6;
+  z-index: 12;
   top: 0;
   left: 0;
   right: 0;
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  box-sizing: border-box;
+  max-width: 100%;
   padding: calc(10px + env(safe-area-inset-top)) 10px 0;
   pointer-events: none;
 }
@@ -4256,15 +4258,16 @@
 
 /* Shared room tree. The pot is 112px so it sits between the friends. */
 
-.beda-tree-spot {
+.beda-spa-floor .beda-tree-spot {
   position: absolute;
-  z-index: 7;
+  z-index: 40;
   left: 50%;
-  /* Sit the pot just above the card. 63% of the screen hides it behind the card. */
-  bottom: calc(var(--beda-nav-reserve, 120px) + 56px + min(46vh, 340px) + 8px);
+  /* Pot on the low table, under the shelves and above the front row. */
+  top: 58%;
+  bottom: auto;
   width: 112px;
   height: 146px;
-  transform: translateX(-50%);
+  transform: translate(-50%, -100%);
   pointer-events: none;
 }
 
@@ -4429,13 +4432,98 @@
   50% { opacity: 0.35; }
 }
 
-.beda-tree-card {
+.beda-tree-chip {
   position: absolute;
   z-index: 8;
   right: 8px;
-  bottom: calc(var(--beda-nav-reserve, 120px) + 56px);
+  bottom: calc(var(--beda-nav-reserve, 120px) + 52px);
   left: 8px;
-  max-height: min(46vh, 340px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: auto;
+  max-width: calc(100% - 16px);
+  margin-inline: auto;
+  border-radius: 18px;
+  background: #fff8f3;
+  padding: 6px 8px 6px 6px;
+  color: #3c2a30;
+  box-shadow: 0 6px 0 rgba(180, 120, 140, 0.14), 0 12px 22px rgba(40, 20, 30, 0.12);
+}
+
+.beda-tree-chip-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+}
+
+.beda-tree-chip-main img {
+  width: 36px;
+  height: 46px;
+  flex: none;
+  object-fit: contain;
+}
+
+.beda-tree-chip-main span {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.beda-tree-chip-main strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.beda-tree-chip .beda-tree-bar {
+  width: 100%;
+}
+
+.beda-tree-chip .beda-tree-water {
+  width: auto;
+  flex: none;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.beda-tree-collapse {
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  padding: 4px 10px;
+  color: #8a5a6a;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.beda-tree-card {
+  position: absolute;
+  z-index: 11;
+  right: 8px;
+  bottom: calc(var(--beda-nav-reserve, 120px) + 8px);
+  left: 8px;
+  box-sizing: border-box;
+  width: auto;
+  max-width: calc(100% - 16px);
+  min-width: 0;
+  max-height: min(62vh, calc(100% - 88px));
+  margin-inline: auto;
   overflow: auto;
   border-radius: 22px;
   background: #fff8f3;
@@ -4809,18 +4897,14 @@
   cursor: default;
 }
 
+.beda-spa.is-landscape .beda-tree-chip,
 .beda-spa.is-landscape .beda-tree-card {
-  top: calc(72px + env(safe-area-inset-top));
-  right: 8px;
-  bottom: calc(var(--beda-nav-reserve, 120px) + 56px);
   left: auto;
-  width: min(320px, 34vw);
-  max-height: none;
+  width: min(420px, calc(100% - 16px));
+  max-width: calc(100% - 16px);
 }
 
-.beda-spa.is-landscape .beda-tree-spot {
-  top: 63%;
-  bottom: auto;
-  left: 46%;
-  transform: translate(-50%, -100%);
+.beda-spa.is-landscape .beda-spa-floor .beda-tree-spot {
+  left: 50%;
+  top: 78%;
 }

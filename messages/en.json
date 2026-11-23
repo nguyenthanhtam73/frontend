@@ -3546,6 +3546,7 @@
       "tree": {
         "title": "Shared tree",
         "watered": "Watered {waters}/{required} today",
+        "wateredShort": "Watered {waters}/{required}",
         "stage": "Stage {stage} · {name}",
         "soon": "Up next",
         "got": "Received",

@@ -141,9 +141,11 @@ export function TreeShot() {
   const [scene, setScene] = useState("stage1");
   const [ms, setMs] = useState<number | null>(null);
   const [landscape, setLandscape] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setScene(params.get("scene") || "stage1");
+    setDetailOpen(params.get("open") === "1");
     const raw = params.get("ms");
     setMs(raw == null ? null : Number(raw));
     const media = window.matchMedia("(min-aspect-ratio: 1.2)");
@@ -185,6 +187,7 @@ export function TreeShot() {
         onLobby={() => undefined}
         onToggleSound={() => undefined}
         tree={shotPanel(scene, ms)}
+        treeDetailOpen={detailOpen}
         showActors={false}
       />
     </div>

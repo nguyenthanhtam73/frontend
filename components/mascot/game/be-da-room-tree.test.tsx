@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
 import { BeDaSpaRoom } from "@/components/mascot/game/be-da-spa-room";
-import { RoomTreeCard } from "@/components/mascot/game/be-da-room-tree";
+import { RoomTreePreview } from "@/components/mascot/game/be-da-room-tree";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import type { RoomTree } from "@/lib/mascot/game/room-tree";
@@ -70,28 +70,34 @@ function panel(extra: Partial<RoomTreePanel> = {}, body: Partial<RoomTree> = {})
 }
 
 describe("room tree card", () => {
-  it("shows stage 1, the seven names, and the water button", () => {
-    const html = render(<RoomTreeCard panel={panel()} locale="vi" />);
-    assert.match(html, /Đã tưới 0\/3 hôm nay/);
-    assert.match(html, /Hạt giống/);
-    assert.match(html, /Mầm non/);
-    assert.match(html, /Cây con/);
-    assert.match(html, /Cây nhỏ có nụ/);
-    assert.match(html, /Nụ hồng hé nở/);
-    assert.match(html, /Hoa nở/);
-    assert.match(html, /Cây hoa rực rỡ/);
-    assert.match(html, /data-testid="beda-tree-water"/);
-    assert.match(html, /Tưới cây/);
-    assert.match(html, /AI không tưới/);
-    assert.match(html, /layer_plant_1\.svg/);
-    assert.match(html, /layer_pot_soil\.svg/);
-    assert.equal(html.includes("Trồng hạt mới"), false);
-    assert.equal(html.includes("width: 168"), false);
+  it("keeps a short bar by default and opens the seven stages on demand", () => {
+    const closed = render(<RoomTreePreview panel={panel()} locale="vi" />);
+    assert.match(closed, /Đã tưới 0\/3/);
+    assert.match(closed, /data-open="0"/);
+    assert.match(closed, /data-testid="beda-tree-water"/);
+    assert.match(closed, /Tưới cây/);
+    assert.match(closed, /layer_plant_1\.svg/);
+    assert.match(closed, /layer_pot_soil\.svg/);
+    assert.equal(closed.includes("AI không tưới"), false);
+    assert.equal(closed.includes("data-testid=\"beda-tree-rail\""), false);
+    assert.equal(closed.includes("Trồng hạt mới"), false);
+
+    const open = render(<RoomTreePreview panel={panel()} locale="vi" startOpen />);
+    assert.match(open, /Đã tưới 0\/3 hôm nay/);
+    assert.match(open, /data-open="1"/);
+    assert.match(open, /Hạt giống/);
+    assert.match(open, /Mầm non/);
+    assert.match(open, /Cây con/);
+    assert.match(open, /Cây nhỏ có nụ/);
+    assert.match(open, /Nụ hồng hé nở/);
+    assert.match(open, /Hoa nở/);
+    assert.match(open, /Cây hoa rực rỡ/);
+    assert.equal(open.includes("AI không tưới"), false);
   });
 
   it("locks watering behind a skin check", () => {
     const html = render(
-      <RoomTreeCard panel={panel({}, { canWater: false, reason: "needs_skin_check" })} locale="vi" />,
+      <RoomTreePreview panel={panel({}, { canWater: false, reason: "needs_skin_check" })} locale="vi" />,
     );
     assert.match(html, /data-testid="beda-tree-skin"/);
     assert.match(html, /Soi da để tưới cây/);
@@ -101,7 +107,7 @@ describe("room tree card", () => {
 
   it("shows who watered and the done state", () => {
     const html = render(
-      <RoomTreeCard
+      <RoomTreePreview
         panel={panel(
           {},
           {
@@ -117,6 +123,7 @@ describe("room tree card", () => {
           },
         )}
         locale="vi"
+        startOpen
       />,
     );
     assert.match(html, /Đã tưới 3\/3 hôm nay/);
@@ -128,7 +135,7 @@ describe("room tree card", () => {
 
   it("opens the level gift and the bloom gift without a new seed", () => {
     const level = render(
-      <RoomTreeCard
+      <RoomTreePreview
         panel={panel(
           {
             popup: [
@@ -149,7 +156,7 @@ describe("room tree card", () => {
     assert.equal(level.includes("Trồng hạt mới"), false);
 
     const bloom = render(
-      <RoomTreeCard
+      <RoomTreePreview
         panel={panel(
           {
             popup: [
@@ -172,7 +179,7 @@ describe("room tree card", () => {
 
   it("shows a friend's watering line", () => {
     const html = render(
-      <RoomTreeCard
+      <RoomTreePreview
         panel={panel({
           motion: "other",
           toastName: "Mây Hồng",
