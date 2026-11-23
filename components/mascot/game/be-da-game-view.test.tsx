@@ -325,7 +325,7 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
-  it("keeps the invite code behind Mời bạn", () => {
+  it("keeps the invite code off the room until Mời bạn shares the link", () => {
     const html = renderGame({
       spa: {
         code: "DA7K2M",
@@ -338,14 +338,13 @@ describe("Bé Da game screen", () => {
       spaInviteOpen: true,
     });
     const text = visibleText(html);
-    assert.match(html, /data-testid="beda-invite-card"/);
-    assert.match(html, /data-testid="beda-invite-back"/);
-    assert.match(text, /Mã mời vào phòng/);
-    assert.match(text, /Sao chép/);
-    assert.match(text, /Gửi qua Zalo/);
-    assert.match(html, /data-testid="beda-spa-code"/);
-    assert.match(text, /D/);
-    assert.match(html, /https:\/\/zalo\.me\/share\?url=https%3A%2F%2Fdadiary\.vn%2Fbe-da%2Fphong%2FDA7K2M/);
+    assert.match(html, /data-testid="beda-invite-open"/);
+    assert.match(text, /Mời bạn/);
+    assert.equal(html.includes("data-testid=\"beda-invite-card\""), false);
+    assert.equal(html.includes("data-testid=\"beda-spa-code\""), false);
+    assert.equal(html.includes("zalo.me"), false);
+    assert.equal(html.includes("DA7K2M"), false);
+    assert.equal(text.includes("Đã chép link mời"), false);
   });
 
   it("says the person is already in one room and hides create, join, and find", () => {

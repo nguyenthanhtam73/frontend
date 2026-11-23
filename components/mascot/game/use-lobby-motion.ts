@@ -16,7 +16,7 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaFootScale, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
+import { compactSpaPlate, fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -141,7 +141,8 @@ function setFacing(
   // Soles end at y=208 of the 250-tall viewBox. The shift is on the figure,
   // not .bd-breathe, because the breath animation owns that element's transform.
   const drop = lobby ? "16.8%" : "0px";
-  const next = `scaleX(${sign}) translate(${pose.sway * sign}px, calc(${drop} + ${pose.bob + bounce}px)) rotate(${pose.tilt}deg) scaleY(${pose.squash})`;
+  const squash = root.closest(".beda-spa") ? 1 : pose.squash;
+  const next = `scaleX(${sign}) translate(${pose.sway * sign}px, calc(${drop} + ${pose.bob + bounce}px)) rotate(${pose.tilt}deg) scaleY(${squash})`;
   if (target.dataset.pose !== next) {
     target.dataset.pose = next;
     target.dataset.plant = planted;
@@ -759,7 +760,7 @@ export function useSpaMotion(input: {
       const pad = chrome();
       const availW = Math.max(0, frame.clientWidth - pad.left - pad.right);
       const availH = Math.max(0, frame.clientHeight - pad.top - pad.bottom);
-      const plate = fitSpaPlate(availW, availH, landscapeProp.current);
+      const plate = compactSpaPlate(fitSpaPlate(availW, availH, landscapeProp.current));
       if (plate.width > 0 && plate.height > 0) {
         view.style.width = `${plate.width}px`;
         view.style.height = `${plate.height}px`;
@@ -907,7 +908,7 @@ export function useSpaMotion(input: {
       if (pose) {
         pose.style.setProperty("--mx", `${walker.x * stage.offsetWidth}px`);
         pose.style.setProperty("--my", `${walker.y * stage.offsetHeight}px`);
-        pose.style.setProperty("--sy", String(walker.squash));
+        pose.style.setProperty("--sy", "1");
         pose.style.zIndex = String(spaStackZ(walker.y));
         setFacing(pose, walker.face, walker.phase, youMoving, true);
       }
@@ -928,7 +929,7 @@ export function useSpaMotion(input: {
         const moving = !!glide && !reduced && Math.hypot(glide.toX - glide.fromX, glide.toY - glide.fromY) > 0.0008 && now < glide.t0 + Math.max(glide.dur, 1);
         guestPose.style.setProperty("--mx", `${drawn.x * stageW}px`);
         guestPose.style.setProperty("--my", `${drawn.y * stageH}px`);
-        guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
+        guestPose.style.setProperty("--sy", "1");
         guestPose.style.zIndex = String(spaStackZ(drawn.y));
         setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);
         pillPeople.push({ id: guest.id, x: drawn.x, y: drawn.y, el: guestPose });
@@ -959,7 +960,7 @@ export function useSpaMotion(input: {
 
     const down = (event: PointerEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-bar")) return;
+      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-bar, .beda-tree-spot")) return;
       if (!target.closest(".beda-spa-view")) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       downPoint = { x: event.clientX, y: event.clientY };

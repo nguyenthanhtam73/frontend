@@ -205,10 +205,18 @@ export function TreeShot() {
   const [ms, setMs] = useState<number | null>(null);
   const [landscape, setLandscape] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [daysLeft, setDaysLeft] = useState<number | null>(6);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setScene(params.get("scene") || "stage1");
     setDetailOpen(params.get("open") === "1");
+    const days = params.get("days");
+    if (days == null || days === "") setDaysLeft(6);
+    else if (days === "none") setDaysLeft(null);
+    else {
+      const parsed = Number(days);
+      setDaysLeft(Number.isFinite(parsed) ? parsed : 6);
+    }
     const raw = params.get("ms");
     setMs(raw == null ? null : Number(raw));
     const media = window.matchMedia("(min-aspect-ratio: 1.2)");
@@ -237,9 +245,12 @@ export function TreeShot() {
           code: "DA7K2M",
           count: 3,
           cap: 8,
-          guests: sampleSpaGuests(new Set()),
+          guests: sampleSpaGuests(new Set()).map((guest) =>
+            guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
+          ),
+          you: { x: 0.4, y: 0.66 },
           notice: null,
-          daysLeft: 6,
+          daysLeft,
           name: "Phòng bạn bè",
           landscape,
           onlineCount: 3,
