@@ -37,8 +37,11 @@ import {
   spaRoomOnlineCount,
   spaRoomProblem,
   fitSpaPlate,
+  SPA_CROP_TIGHT,
   SPA_PLATE_HEIGHT,
   SPA_PLATE_WIDTH,
+  spaMembershipChanged,
+  spaPlateY,
   spaStackZ,
   spreadSpaFeet,
   zaloShareUrl,
@@ -159,24 +162,37 @@ describe("spa join spots", () => {
     }
   });
 
-  it("fits the whole room plate inside the free rectangle", () => {
+  it("fits the whole plate in portrait and crops only the empty band on a wide frame", () => {
     assert.equal(SPA_PLATE_WIDTH, 780);
     assert.equal(SPA_PLATE_HEIGHT, 1387);
     const aspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
     for (const [width, height] of [
-      [1024, 480],
-      [820, 930],
       [390, 620],
       [360, 560],
-      [1366, 700],
+      [820, 930],
     ] as const) {
       const plate = fitSpaPlate(width, height);
-      assert.ok(plate.width <= width + 1e-6);
-      assert.ok(plate.height <= height + 1e-6);
+      assert.equal(plate.cropTop, 0);
+      assert.equal(plate.cropBottom, 1);
+      assert.ok(plate.width <= width + 1e-6 && plate.height <= height + 1e-6);
       assert.ok(Math.abs(plate.width / plate.height - aspect) < 1e-9);
-      assert.ok(Math.abs(plate.width - width) < 1 || Math.abs(plate.height - height) < 1);
     }
-    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0 });
+    const wide = fitSpaPlate(1024, 500, 1024 * 0.45);
+    assert.equal(wide.cropTop, SPA_CROP_TIGHT.top);
+    assert.equal(wide.cropBottom, SPA_CROP_TIGHT.bottom);
+    assert.ok(wide.cropTop <= 0.17);
+    assert.ok(wide.cropBottom >= 0.776);
+    assert.ok(wide.width <= 1024 && wide.height <= 500 + 1e-6);
+    assert.ok(wide.width > 500 * aspect, "cropped plate is wider than the full plate");
+    const feet = spaPlateY(0.7, wide.cropTop, wide.cropBottom);
+    assert.ok(feet > 0 && feet < 1);
+    assert.equal(spaMembershipChanged({ upserts: [{ id: "new" }], left: [], events: [] }, new Set(["old"])), true);
+    assert.equal(spaMembershipChanged({ upserts: [], left: ["old"], events: [] }, new Set(["old"])), true);
+    assert.equal(
+      spaMembershipChanged({ upserts: [{ id: "old" }], left: [], events: [{ op: "wave" }] }, new Set(["old"])),
+      false,
+    );
+    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0, cropTop: 0, cropBottom: 1 });
   });
 
   it("keeps the sample cast off a real room code and times out the wait", () => {

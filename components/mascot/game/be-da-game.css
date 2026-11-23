@@ -3049,7 +3049,8 @@
 }
 
 .beda-spa .beda-tag {
-  max-width: min(9rem, var(--beda-tag-max, 9rem));
+  max-width: 9.5rem;
+  font-size: 12px;
 }
 
 .beda-spa .beda-tag:not(.beda-tag-me) {
@@ -3758,6 +3759,18 @@
 
 .beda-room-bar::-webkit-scrollbar {
   display: none;
+}
+
+/* Wide frames: pills sit in the side margin so the plate can grow taller. */
+@media (min-aspect-ratio: 1/1) {
+  .beda-room-bar {
+    left: auto;
+    right: 12px;
+    width: max-content;
+    max-width: min(280px, 26vw);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
 }
 
 .beda-room-dock {

@@ -187,16 +187,67 @@ export const SPA_PLATE_WIDTH = 780;
 export const SPA_PLATE_HEIGHT = 1387;
 
 /**
- * Largest plate that keeps the whole room (ceiling, shelves, and floor)
- * inside the free rectangle. Neither axis is cropped.
+ * Wide screens crop the empty ceiling and the floor below the rug.
+ * The window still contains the string lights (from about 0.17) through the rug (to about 0.776).
+ * Portrait and phone keep the whole plate.
  */
-export function fitSpaPlate(availWidth: number, availHeight: number): { width: number; height: number } {
+export const SPA_CROP_SAFE = { top: 0.145, bottom: 0.8 } as const;
+export const SPA_CROP_TIGHT = { top: 0.163, bottom: 0.778 } as const;
+
+export type SpaPlateFit = {
+  width: number;
+  height: number;
+  cropTop: number;
+  cropBottom: number;
+};
+
+/**
+ * Largest plate that fits the free rectangle.
+ * When the free rectangle is wider than it is tall, crop the empty ceiling and
+ * the floor under the rug so the room can take more of the width. `minWidth`
+ * may tighten that crop, but never past the lights or the rug.
+ */
+export function fitSpaPlate(availWidth: number, availHeight: number, minWidth = 0): SpaPlateFit {
   const availW = Number.isFinite(availWidth) ? Math.max(0, availWidth) : 0;
   const availH = Number.isFinite(availHeight) ? Math.max(0, availHeight) : 0;
-  if (availW === 0 || availH === 0) return { width: 0, height: 0 };
-  const aspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
-  const width = Math.min(availW, availH * aspect);
-  return { width, height: width / aspect };
+  if (availW === 0 || availH === 0) return { width: 0, height: 0, cropTop: 0, cropBottom: 1 };
+  const fullAspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+  if (availW <= availH) {
+    const width = Math.min(availW, availH * fullAspect);
+    return { width, height: width / fullAspect, cropTop: 0, cropBottom: 1 };
+  }
+  const size = (top: number, bottom: number): SpaPlateFit => {
+    const span = bottom - top;
+    const aspect = fullAspect / span;
+    const width = Math.min(availW, availH * aspect);
+    return { width, height: width / aspect, cropTop: top, cropBottom: bottom };
+  };
+  const safe = size(SPA_CROP_SAFE.top, SPA_CROP_SAFE.bottom);
+  if (!Number.isFinite(minWidth) || minWidth <= safe.width + 0.5) return safe;
+  return size(SPA_CROP_TIGHT.top, SPA_CROP_TIGHT.bottom);
+}
+
+/** Map a full-plate y into the visible crop. Points outside the crop clamp in. */
+export function spaPlateY(worldY: number, cropTop: number, cropBottom: number): number {
+  const span = Math.max(1e-6, cropBottom - cropTop);
+  const y = Math.min(cropBottom, Math.max(cropTop, worldY));
+  return (y - cropTop) / span;
+}
+
+/** Inverse of `spaPlateY` for taps on the visible plate. */
+export function spaWorldY(visibleY: number, cropTop: number, cropBottom: number): number {
+  const span = Math.max(1e-6, cropBottom - cropTop);
+  return cropTop + visibleY * span;
+}
+
+/** True when a tick adds or removes a member, so the header should reread member_count. */
+export function spaMembershipChanged(
+  tick: { upserts: readonly { id: string }[]; left: readonly string[]; events: readonly { op: string }[] },
+  previousIds: ReadonlySet<string>,
+): boolean {
+  if (tick.left.length > 0) return true;
+  if (tick.events.some((event) => event.op === "join" || event.op === "leave")) return true;
+  return tick.upserts.some((person) => !previousIds.has(person.id));
 }
 
 /** Nearer feet paint in front. A 0.001 change in y separates the two spa rows. */

@@ -43,6 +43,7 @@ import {
   spreadSpaFeet,
   shouldRetryRoomJoin,
   spaHeadCount,
+  spaMembershipChanged,
   spaRoomProblem,
   type RoomClientFrame,
   type RoomClock,
@@ -155,6 +156,19 @@ export function useSpaRoom(options: {
     const entryTimer = window.setTimeout(() => {
       if (!cancelled && !enteredRef.current) setTimedOut(true);
     }, SPA_ENTRY_TIMEOUT_MS);
+    let memberTimer = 0;
+    const refreshMembers = () => {
+      window.clearTimeout(memberTimer);
+      memberTimer = window.setTimeout(() => {
+        void getSpaRoom(code)
+          .then((next) => {
+            if (cancelled) return;
+            setMembers(next.memberCount);
+            setPreviewCount(next.memberCount);
+          })
+          .catch(() => undefined);
+      }, 200);
+    };
     const markEntered = () => {
       if (cancelled || enteredRef.current) return;
       enteredRef.current = true;
@@ -241,6 +255,8 @@ export function useSpaRoom(options: {
         return;
       }
       if (message.op === "tick") {
+        const previousIds = new Set(roomRef.current.people.map((person) => person.id));
+        if (spaMembershipChanged(message, previousIds)) refreshMembers();
         const known = [...roomRef.current.people, ...message.upserts];
         for (const event of message.events) {
           if (event.op === "nudge") {
@@ -368,6 +384,7 @@ export function useSpaRoom(options: {
     return () => {
       cancelled = true;
       window.clearTimeout(entryTimer);
+      window.clearTimeout(memberTimer);
       const joined = joinedRef.current;
       joinedRef.current = false;
       connRef.current?.stop();
