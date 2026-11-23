@@ -477,7 +477,7 @@ export function BeDaSpaRoom({
           <span className="beda-spa-meta" data-testid="beda-spa-meta">
             <span className="beda-spa-bit">
               {memberLine}
-              {onlineLine || dayLine ? " · " : ""}
+              {onlineLine || dayLine ? <span className="beda-spa-join"> · </span> : null}
             </span>
             {onlineLine ? (
               <span className="beda-spa-bit beda-spa-online" data-testid="beda-spa-online">
@@ -485,7 +485,7 @@ export function BeDaSpaRoom({
                 {dayLine ? " · " : ""}
               </span>
             ) : null}
-            {dayLine ? <span className="beda-spa-bit">{dayLine}</span> : null}
+            {dayLine ? <span className="beda-spa-bit beda-spa-days">{dayLine}</span> : null}
           </span>
         </div>
         <button type="button" className="beda-room-quit" data-testid="beda-room-quit" onClick={() => setQuitAsk(true)}>
