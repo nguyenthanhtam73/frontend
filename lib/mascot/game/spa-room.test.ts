@@ -28,6 +28,7 @@ import {
   sampleSpaGuests,
   seatGuests,
   SPA_SEATS,
+  SPA_YOU,
   shouldRetryRoomJoin,
   SPA_ENTRY_TIMEOUT_MS,
   spaEntryPhase,
@@ -37,8 +38,15 @@ import {
   spaRoomOnlineCount,
   spaRoomProblem,
   fitSpaPlate,
+  spaNamePillBoxes,
+  SPA_LANDSCAPE_BOUNDS,
+  SPA_LANDSCAPE_HEIGHT,
+  SPA_LANDSCAPE_SELF_SLOT,
+  SPA_LANDSCAPE_WIDTH,
   SPA_PLATE_HEIGHT,
   SPA_PLATE_WIDTH,
+  SPA_SEATS_LANDSCAPE,
+  spaMembershipChanged,
   spaStackZ,
   spreadSpaFeet,
   zaloShareUrl,
@@ -127,8 +135,12 @@ describe("spa join spots", () => {
     }
   });
 
-  it("staggers four, six, and eight members into two rows that stay readable at 390px", () => {
-    const span = SPA_BOUNDS.maxX - SPA_BOUNDS.minX;
+  it("staggers four, six, and eight members into two rows across the safe floor", () => {
+    const line = (count: number) => {
+      if (count <= 1) return [(SPA_BOUNDS.minX + SPA_BOUNDS.maxX) / 2];
+      const step = (SPA_BOUNDS.maxX - SPA_BOUNDS.minX) / (count - 1);
+      return Array.from({ length: count }, (_, index) => SPA_BOUNDS.minX + index * step);
+    };
     for (const count of [4, 6, 8]) {
       const people = Array.from({ length: count }, (_, index) => ({
         id: `m${String(index).padStart(2, "0")}`,
@@ -138,45 +150,116 @@ describe("spa join spots", () => {
       const spots = spreadSpaFeet(people);
       const again = spreadSpaFeet([...people].reverse());
       const perRow = Math.ceil(count / 2);
-      const rowStep = Math.min(0.24, span / perRow);
-      const origin = (perRow - 1) / 2;
+      const xs = [...line(perRow), ...line(count - perRow)];
       people.forEach((person, index) => {
         const spot = spots.get(person.id)!;
         assert.deepEqual(spot, again.get(person.id));
         const back = index < perRow;
-        const rowIndex = back ? index : index - perRow;
-        const x = Math.min(SPA_BOUNDS.maxX, Math.max(SPA_BOUNDS.minX, 0.5 + (rowIndex - origin) * rowStep + (back ? 0 : rowStep / 2)));
-        const y = Math.min(SPA_BOUNDS.maxY, Math.max(SPA_BOUNDS.minY, back ? 0.7 - 0.08 : 0.7 + 0.03));
-        assert.ok(Math.abs(spot.x - x) < 1e-9, `${count} ${person.id} x`);
+        const y = back ? Math.max(SPA_BOUNDS.minY, 0.7 - 0.20) : Math.min(SPA_BOUNDS.maxY, 0.7 + 0.03);
+        assert.ok(Math.abs(spot.x - xs[index]!) < 1e-9, `${count} ${person.id} x`);
         assert.ok(Math.abs(spot.y - y) < 1e-9, `${count} ${person.id} y`);
       });
       const frontY = Math.min(SPA_BOUNDS.maxY, 0.7 + 0.03);
-      const backY = Math.max(SPA_BOUNDS.minY, 0.7 - 0.08);
+      const backY = Math.max(SPA_BOUNDS.minY, 0.7 - 0.20);
       assert.ok(spaStackZ(frontY) > spaStackZ(backY));
-      // Bạn is 1.24× the 108px base. One neighbour covering one side still leaves 60%.
-      const gapPx = rowStep * 390;
-      assert.ok(gapPx / (108 * 1.24) >= 0.6, `${count} Bạn visibility ${gapPx}`);
+      const withSelf = spreadSpaFeet(
+        people.map((person, index) => (index === count - 1 ? { ...person, id: "self" } : person)),
+        { selfId: "self" },
+      );
+      const frontXs = line(count - perRow);
+      const middle = frontXs.reduce((best, x) => (Math.abs(x - 0.5) < Math.abs(best - 0.5) ? x : best), frontXs[0]!);
+      assert.ok(Math.abs((withSelf.get("self")?.x ?? -1) - middle) < 1e-9);
     }
   });
 
-  it("fits the whole room plate inside the free rectangle", () => {
+  it("keeps portrait name pills from touching at phone and iPad widths", () => {
+    const chrome = 229;
+    const plates = [
+      [360, 780],
+      [390, 844],
+      [820, 1180],
+    ].map(([width, height]) => fitSpaPlate(width!, Math.max(1, height! - chrome)));
+    for (const plate of plates) {
+      for (const count of [4, 5, 6, 7, 8]) {
+        const people = Array.from({ length: count }, (_, index) => ({
+          id: `m${index}`,
+          x: 0.5,
+          y: 0.7,
+        }));
+        const spots = spreadSpaFeet(people, { selfId: "m0" });
+        const boxes = spaNamePillBoxes(
+          people.map((person) => ({ id: person.id, ...spots.get(person.id)! })),
+          plate.width,
+          plate.height,
+        );
+        for (let i = 0; i < boxes.length; i += 1) {
+          for (let j = i + 1; j < boxes.length; j += 1) {
+            const a = boxes[i]!;
+            const b = boxes[j]!;
+            const hit = a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+            assert.equal(hit, false, `${plate.width}x${plate.height} ${count} ${a.id} ${b.id}`);
+          }
+        }
+      }
+    }
+  });
+
+  it("uses the landscape plate only when the free frame is wide", () => {
     assert.equal(SPA_PLATE_WIDTH, 780);
     assert.equal(SPA_PLATE_HEIGHT, 1387);
-    const aspect = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+    assert.equal(SPA_LANDSCAPE_WIDTH, 1600);
+    assert.equal(SPA_LANDSCAPE_HEIGHT, 1000);
+    const portrait = SPA_PLATE_WIDTH / SPA_PLATE_HEIGHT;
+    const landscape = SPA_LANDSCAPE_WIDTH / SPA_LANDSCAPE_HEIGHT;
     for (const [width, height] of [
-      [1024, 480],
-      [820, 930],
       [390, 620],
       [360, 560],
-      [1366, 700],
+      [820, 930],
     ] as const) {
       const plate = fitSpaPlate(width, height);
-      assert.ok(plate.width <= width + 1e-6);
-      assert.ok(plate.height <= height + 1e-6);
-      assert.ok(Math.abs(plate.width / plate.height - aspect) < 1e-9);
-      assert.ok(Math.abs(plate.width - width) < 1 || Math.abs(plate.height - height) < 1);
+      assert.equal(plate.landscape, false);
+      assert.ok(Math.abs(plate.width / plate.height - portrait) < 1e-9);
     }
-    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0 });
+    const wide = fitSpaPlate(1024, 500);
+    assert.equal(wide.landscape, true);
+    assert.ok(Math.abs(wide.width / wide.height - landscape) < 1e-9);
+    assert.ok(wide.width <= 1024 && wide.height <= 500 + 1e-6);
+    assert.deepEqual(fitSpaPlate(0, 400), { width: 0, height: 0, landscape: false });
+  });
+
+  it("stands a landscape party on the CapCut slots, with Bạn on front-3", () => {
+    assert.equal(SPA_SEATS_LANDSCAPE.length, 8);
+    const self = "self-beda";
+    const people = [
+      { id: self, x: 0.5, y: 0.7 },
+      ...["f0", "f1", "f2", "f3", "f4"].map((id) => ({ id, x: 0.5, y: 0.7 })),
+    ];
+    const spots = spreadSpaFeet(people, { landscape: true, selfId: self });
+    const mine = spots.get(self)!;
+    assert.equal(mine.x, 875 / 1600);
+    assert.equal(mine.y, Math.min(0.99, (935 + 50) / 1000));
+    assert.equal(mine.foot, 264 / 1600);
+    const feet = [...spots.values()];
+    for (const spot of feet) {
+      assert.ok(spot.x >= SPA_LANDSCAPE_BOUNDS.minX && spot.x <= SPA_LANDSCAPE_BOUNDS.maxX);
+      assert.ok(spot.y <= 0.99);
+    }
+    const walked = spreadSpaFeet(
+      [
+        { id: self, x: 0.4, y: 0.8 },
+        { id: "f0", x: 0.7, y: 0.75 },
+      ],
+      { landscape: true, selfId: self },
+    );
+    assert.equal(walked.get(self)?.foot, undefined);
+    assert.ok(Math.abs((walked.get(self)?.x ?? 0) - 0.4) < 1e-9);
+    assert.equal(SPA_LANDSCAPE_SELF_SLOT, "front-3");
+    assert.equal(spaMembershipChanged({ upserts: [{ id: "new" }], left: [], events: [] }, new Set(["old"])), true);
+    assert.equal(spaMembershipChanged({ upserts: [], left: ["old"], events: [] }, new Set(["old"])), true);
+    assert.equal(
+      spaMembershipChanged({ upserts: [{ id: "old" }], left: [], events: [{ op: "wave" }] }, new Set(["old"])),
+      false,
+    );
   });
 
   it("keeps the sample cast off a real room code and times out the wait", () => {
@@ -362,9 +445,16 @@ describe("spa room seats", () => {
     const left = SPA_SEATS.find((seat) => seat.id === "left");
     assert.equal(right && right.x <= 74 && right.x >= 68, true);
     assert.equal(left && right && left.x + right.x === 100, true);
-    const xs = SPA_SEATS.map((seat) => seat.x).sort((a, b) => a - b);
-    for (let i = 1; i < xs.length; i += 1) {
-      assert.equal(xs[i]! - xs[i - 1]! >= 8, true);
+    const frontLeft = SPA_SEATS.find((seat) => seat.id === "front-left");
+    const frontRight = SPA_SEATS.find((seat) => seat.id === "front-right");
+    assert.equal(frontLeft?.x, 30);
+    assert.equal(frontRight?.x, 70);
+    assert.equal(SPA_YOU.x, 50);
+    for (const y of new Set(SPA_SEATS.map((seat) => seat.y))) {
+      const row = SPA_SEATS.filter((seat) => seat.y === y).map((seat) => seat.x).sort((a, b) => a - b);
+      for (let i = 1; i < row.length; i += 1) {
+        assert.equal(row[i]! - row[i - 1]! >= 8, true);
+      }
     }
   });
 

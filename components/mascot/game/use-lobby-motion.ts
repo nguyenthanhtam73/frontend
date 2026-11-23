@@ -16,7 +16,7 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { fitSpaPlate, spaFootScale, spaStackZ } from "@/lib/mascot/game/spa-room";
+import { fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaFootScale, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -691,13 +691,17 @@ export function useSpaMotion(input: {
   onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
   /** False while the entry card is up, so the floor loop starts once the stage exists. */
   enabled?: boolean;
+  /** 1600×1000 plate and its walk bounds. */
+  landscape?: boolean;
 }) {
   const guestsProp = useRef(input.guests ?? []);
   const youProp = useRef(input.you ?? null);
   const onWalk = useRef(input.onWalk);
+  const landscapeProp = useRef(input.landscape === true);
   guestsProp.current = input.guests ?? [];
   youProp.current = input.you ?? null;
   onWalk.current = input.onWalk;
+  landscapeProp.current = input.landscape === true;
 
   const api = useRef({
     zoomBy(factor: number) {
@@ -735,11 +739,13 @@ export function useSpaMotion(input: {
     let holdTimer = 0;
     let downPoint = { x: 0, y: 0 };
 
+    const boundsNow = () => (landscapeProp.current ? SPA_LANDSCAPE_BOUNDS : SPA_BOUNDS);
+
     const chrome = () => {
       const head = frame.querySelector<HTMLElement>(".beda-spa-head");
       const bar = frame.querySelector<HTMLElement>(".beda-room-bar");
       const nav = Number.parseFloat(getComputedStyle(frame).getPropertyValue("--beda-nav-reserve")) || 0;
-      const top = Math.ceil((head?.getBoundingClientRect().height ?? 64) + 6);
+      const top = Math.ceil((head?.getBoundingClientRect().height ?? 64) + 4);
       const bottom = Math.ceil(nav + 8 + (bar?.getBoundingClientRect().height ?? 44) + 8);
       return { top, right: 0, bottom, left: 0 };
     };
@@ -748,11 +754,12 @@ export function useSpaMotion(input: {
       const pad = chrome();
       const availW = Math.max(0, frame.clientWidth - pad.left - pad.right);
       const availH = Math.max(0, frame.clientHeight - pad.top - pad.bottom);
-      const plate = fitSpaPlate(availW, availH);
+      const plate = fitSpaPlate(availW, availH, landscapeProp.current);
       if (plate.width > 0 && plate.height > 0) {
         view.style.width = `${plate.width}px`;
         view.style.height = `${plate.height}px`;
-        frame.style.setProperty("--beda-tag-max", `${Math.max(48, plate.width * 0.2)}px`);
+        view.style.backgroundSize = "100% 100%";
+        view.style.backgroundPosition = "center";
       }
       return pad;
     };
@@ -799,7 +806,7 @@ export function useSpaMotion(input: {
           x: (local.x - stage.offsetLeft) / (stage.offsetWidth || 1),
           y: (local.y - stage.offsetTop) / (stage.offsetHeight || 1),
         },
-        SPA_BOUNDS,
+        boundsNow(),
       );
     };
 
@@ -811,7 +818,7 @@ export function useSpaMotion(input: {
         const sy = Math.sign(point.y - mat.y) || 1;
         point = clampPoint(
           { x: mat.x + sx * mat.rx * 1.08, y: mat.y + sy * mat.ry * 1.08 },
-          SPA_BOUNDS,
+          boundsNow(),
         );
       }
       walker.goal = point;
@@ -833,7 +840,7 @@ export function useSpaMotion(input: {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const speed = lobbyWorldSpeed(stage.offsetWidth || 1, 1);
-      Object.assign(walker, stepWalker(walker, dt, obstacle(now), SPA_BOUNDS, reduced, speed, true));
+      Object.assign(walker, stepWalker(walker, dt, obstacle(now), boundsNow(), reduced, speed, true));
       const server = youProp.current;
       if (server && (!seenServer || Math.hypot(server.x - seenServer.x, server.y - seenServer.y) > 0.0008)) {
         seenServer = { x: server.x, y: server.y };
@@ -901,6 +908,8 @@ export function useSpaMotion(input: {
       }
       const stageW = stage.offsetWidth || 1;
       const stageH = stage.offsetHeight || 1;
+      const pillPeople: { id: string; x: number; y: number; el: HTMLElement }[] = [];
+      if (pose) pillPeople.push({ id: "you", x: walker.x, y: walker.y, el: pose });
       for (const guest of guestsProp.current) {
         const guestPose = stage.querySelector<HTMLElement>(`[data-friend-id="${guest.id}"].beda-pose`);
         if (!guestPose) continue;
@@ -917,6 +926,12 @@ export function useSpaMotion(input: {
         guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
         guestPose.style.zIndex = String(spaStackZ(drawn.y));
         setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);
+        pillPeople.push({ id: guest.id, x: drawn.x, y: drawn.y, el: guestPose });
+      }
+      if (!landscapeProp.current) {
+        for (const box of spaNamePillBoxes(pillPeople, stageW, stageH)) {
+          pillPeople.find((person) => person.id === box.id)?.el.style.setProperty("--beda-tag-max", `${box.maxWidth}px`);
+        }
       }
       frameId = window.requestAnimationFrame(tick);
     };

@@ -2573,7 +2573,11 @@
   z-index: 0;
   inset: -10%;
   background-color: #f6d5e6;
-  background-image: url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9");
+  background-image: url("/mascot/rooms/spa-room.webp?v=5&h=1458c4b802");
+  background-image: image-set(
+    url("/mascot/rooms/spa-room.webp?v=5&h=1458c4b802") 1x,
+    url("/mascot/rooms/spa-room@2x.webp?v=5&h=9435973f95") 2x
+  );
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -2593,7 +2597,11 @@
   justify-content: center;
   gap: 16px;
   padding: 24px;
-  background: #f6d5e6 url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9") center / contain no-repeat;
+  background: #f6d5e6 url("/mascot/rooms/spa-room.webp?v=5&h=1458c4b802") center / contain no-repeat;
+  background-image: image-set(
+    url("/mascot/rooms/spa-room.webp?v=5&h=1458c4b802") 1x,
+    url("/mascot/rooms/spa-room@2x.webp?v=5&h=9435973f95") 2x
+  );
   text-align: center;
 }
 
@@ -2704,7 +2712,11 @@
   transform-origin: 0 0;
   will-change: transform;
   background-color: transparent;
-  background-image: url("/mascot/rooms/spa-room.webp?v=5&h=d8cd3aeab9");
+  background-image: url("/mascot/rooms/spa-room.webp?v=5&h=1458c4b802");
+  background-image: image-set(
+    url("/mascot/rooms/spa-room.webp?v=5&h=1458c4b802") 1x,
+    url("/mascot/rooms/spa-room@2x.webp?v=5&h=9435973f95") 2x
+  );
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
@@ -3049,7 +3061,8 @@
 }
 
 .beda-spa .beda-tag {
-  max-width: min(9rem, var(--beda-tag-max, 9rem));
+  max-width: var(--beda-tag-max, 9.5rem);
+  font-size: 12px;
 }
 
 .beda-spa .beda-tag:not(.beda-tag-me) {
@@ -3758,6 +3771,15 @@
 
 .beda-room-bar::-webkit-scrollbar {
   display: none;
+}
+
+.beda-spa.is-landscape::before,
+.beda-spa.is-landscape .beda-spa-view {
+  background-image: url("/mascot/rooms/spa-room-landscape.webp?v=5&h=cd2b64e658");
+  background-image: image-set(
+    url("/mascot/rooms/spa-room-landscape.webp?v=5&h=cd2b64e658") 1x,
+    url("/mascot/rooms/spa-room-landscape@2x.webp?v=5&h=8295fddc4c") 2x
+  );
 }
 
 .beda-room-dock {

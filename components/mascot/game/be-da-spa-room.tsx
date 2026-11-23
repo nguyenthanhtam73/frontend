@@ -43,8 +43,10 @@ export type SpaRoomState = {
   cap: number;
   guests: readonly SpaGuest[];
   notice: SpaNotice;
-  /** My last server position, when the room has sent one. */
-  you?: { x: number; y: number } | null;
+  /** My last server position, when the room has sent one. `foot` is the landscape plate fraction. */
+  you?: { x: number; y: number; foot?: number } | null;
+  /** Wide viewport uses the 1600×1000 plate and its foot slots. */
+  landscape?: boolean;
   youStreak?: number;
   /** Friendly name. The header uses «Phòng bạn bè» when this is empty or just the code. */
   name?: string;
@@ -173,6 +175,7 @@ export function BeDaSpaRoom({
     you: room.you ?? null,
     onWalk,
     enabled: room.entry !== "loading" && room.entry !== "error",
+    landscape: room.landscape === true,
   });
   const cap = room.cap || SPA_ROOM_CAP;
   const count = Math.min(cap, Math.max(0, room.count));
@@ -277,7 +280,7 @@ export function BeDaSpaRoom({
   }
 
   return (
-    <div ref={frameRef} className="beda-spa" data-testid="beda-spa" onClick={onBackground}>
+    <div ref={frameRef} className={room.landscape ? "beda-spa is-landscape" : "beda-spa"} data-testid="beda-spa" onClick={onBackground}>
       {selectedGuest ? (
         <div className="beda-actions beda-card beda-friend-card" data-testid="beda-actions" role="group" aria-label={selectedGuest.nickname}>
           <p className="beda-card-name">{selectedGuest.nickname}</p>
@@ -312,16 +315,18 @@ export function BeDaSpaRoom({
       <div ref={viewRef} className="beda-spa-view">
         {showActors ? <BeDaActorLayer /> : null}
       <div className="beda-spa-stage">
-        {SPA_SEATS.map((seat) =>
-          takenSeats.has(seat.id) ? null : (
-            <i
-              key={seat.id}
-              className={seat.id === "back" ? "beda-spa-open is-far" : "beda-spa-open"}
-              data-testid={`beda-spa-open-${seat.id}`}
-              style={{ left: `${seat.x}%`, top: `${seat.y}%` }}
-            />
-          ),
-        )}
+        {room.landscape
+          ? null
+          : SPA_SEATS.map((seat) =>
+              takenSeats.has(seat.id) ? null : (
+                <i
+                  key={seat.id}
+                  className={seat.id === "back" ? "beda-spa-open is-far" : "beda-spa-open"}
+                  data-testid={`beda-spa-open-${seat.id}`}
+                  style={{ left: `${seat.x}%`, top: `${seat.y}%` }}
+                />
+              ),
+            )}
         {room.guests.map((guest) => {
           const x = guest.x;
           const y = guest.y;
@@ -373,7 +378,11 @@ export function BeDaSpaRoom({
             data-pose={youPose ?? ""}
             data-art={lookArt(player, look, true, true).join(" ")}
             data-testid="beda-spa-you"
-            style={{ zIndex: spaStackZ(room.you?.y ?? 0.7), ["--scale" as string]: String(SPA_YOU.scale) }}
+            style={{
+              zIndex: spaStackZ(room.you?.y ?? 0.7),
+              ["--scale" as string]: String(SPA_YOU.scale),
+              ...(room.you?.foot != null ? { width: `${room.you.foot * 100}%` } : {}),
+            }}
           >
             <span className="beda-spa-art">
               <Cheeks />
@@ -698,7 +707,11 @@ function SpaPerson({
       data-testid={`beda-spa-guest-${guest.id}`}
       style={
         standing
-          ? { zIndex: spaStackZ(seatY / 100), ["--scale" as string]: String(scale) }
+          ? {
+              zIndex: spaStackZ(seatY / 100),
+              ["--scale" as string]: String(scale),
+              ...(guest.foot != null ? { width: `${guest.foot * 100}%` } : {}),
+            }
           : {
               left: `${seatX}%`,
               top: `${seatY}%`,

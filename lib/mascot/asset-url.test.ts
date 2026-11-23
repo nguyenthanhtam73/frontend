@@ -113,17 +113,44 @@ describe("mascot asset urls", () => {
     );
     const found = [...css.matchAll(/url\("(\/mascot\/[^"]+)"\)/g)].map((match) => match[1] ?? "");
     const spa = path.join(process.cwd(), "public/mascot/rooms/spa-room.webp");
+    const spa2 = path.join(process.cwd(), "public/mascot/rooms/spa-room@2x.webp");
+    const land = path.join(process.cwd(), "public/mascot/rooms/spa-room-landscape.webp");
+    const land2 = path.join(process.cwd(), "public/mascot/rooms/spa-room-landscape@2x.webp");
     const cheeks = path.join(process.cwd(), "public/mascot/props/cucumber_cheeks.svg");
     const spaDigest = createHash("sha256").update(fs.readFileSync(spa)).digest("hex").slice(0, 10);
+    const spa2Digest = createHash("sha256").update(fs.readFileSync(spa2)).digest("hex").slice(0, 10);
+    const landDigest = createHash("sha256").update(fs.readFileSync(land)).digest("hex").slice(0, 10);
+    const land2Digest = createHash("sha256").update(fs.readFileSync(land2)).digest("hex").slice(0, 10);
     const cheekDigest = createHash("sha256").update(fs.readFileSync(cheeks)).digest("hex").slice(0, 10);
     const spaUrl = mascotAssetUrl(`/mascot/rooms/spa-room.webp?v=${spaDigest}`);
+    const spa2Url = mascotAssetUrl(`/mascot/rooms/spa-room@2x.webp?v=${spa2Digest}`);
+    const landUrl = mascotAssetUrl(`/mascot/rooms/spa-room-landscape.webp?v=${landDigest}`);
+    const land2Url = mascotAssetUrl(`/mascot/rooms/spa-room-landscape@2x.webp?v=${land2Digest}`);
     const cheekUrl = mascotAssetUrl(`/mascot/props/cucumber_cheeks.svg?v=${cheekDigest}`);
-    assert.equal(spaDigest, "d8cd3aeab9");
+    assert.equal(spaDigest, "1458c4b802");
+    assert.equal(spa2Digest, "9435973f95");
+    assert.equal(landDigest, "cd2b64e658");
+    assert.equal(land2Digest, "8295fddc4c");
     assert.equal(cheekDigest, "cac8ba93e0");
-    assert.deepEqual(found, [spaUrl, spaUrl, spaUrl, cheekUrl]);
+    assert.notEqual(landDigest, spaDigest);
+    assert.deepEqual(found, [
+      spaUrl, spaUrl, spa2Url,
+      spaUrl, spaUrl, spa2Url,
+      spaUrl, spaUrl, spa2Url,
+      cheekUrl,
+      landUrl, landUrl, land2Url,
+    ]);
     for (const url of found) {
       const params = new URL(url, "https://dadiary.vn").searchParams;
-      const fileDigest = url.includes("cucumber_cheeks") ? cheekDigest : spaDigest;
+      const fileDigest = url.includes("cucumber_cheeks")
+        ? cheekDigest
+        : url.includes("landscape@2x")
+          ? land2Digest
+          : url.includes("landscape")
+            ? landDigest
+            : url.includes("spa-room@2x")
+              ? spa2Digest
+              : spaDigest;
       assert.equal(params.get("v"), MASCOT_ASSET_VERSION);
       assert.equal(params.get("h"), fileDigest);
     }

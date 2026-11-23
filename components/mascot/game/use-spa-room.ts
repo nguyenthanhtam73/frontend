@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { apiBaseUrl } from "@/lib/api";
 import { ensureFreshAccessToken, getAccessToken } from "@/lib/auth-token";
@@ -43,6 +43,7 @@ import {
   spreadSpaFeet,
   shouldRetryRoomJoin,
   spaHeadCount,
+  spaMembershipChanged,
   spaRoomProblem,
   type RoomClientFrame,
   type RoomClock,
@@ -51,6 +52,19 @@ import {
   type SpaGuest,
   type SpaNotice,
 } from "@/lib/mascot/game/spa-room";
+
+/** Viewport wider than 1.2 uses the landscape room plate. */
+export function useLandscapeRoom(): boolean {
+  const [on, setOn] = useState(false);
+  useLayoutEffect(() => {
+    const media = window.matchMedia("(min-aspect-ratio: 1.2)");
+    const apply = () => setOn(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+  return on;
+}
 
 export type SpaEmoteKind = "wave" | "heart" | "outfit" | "cheer" | "poke";
 
@@ -72,6 +86,7 @@ export function useSpaRoom(options: {
   onRemoteEmote?: (toast: SpaRemote) => void;
 }) {
   const { active, code, look, gender, onRemoteEmote } = options;
+  const landscape = useLandscapeRoom();
   const [live, setLive] = useState(false);
   const [notice, setNotice] = useState<SpaNotice>(null);
   const [room, setRoom] = useState<RoomSnapshot>(() => emptyRoom(code ?? ""));
@@ -155,6 +170,19 @@ export function useSpaRoom(options: {
     const entryTimer = window.setTimeout(() => {
       if (!cancelled && !enteredRef.current) setTimedOut(true);
     }, SPA_ENTRY_TIMEOUT_MS);
+    let memberTimer = 0;
+    const refreshMembers = () => {
+      window.clearTimeout(memberTimer);
+      memberTimer = window.setTimeout(() => {
+        void getSpaRoom(code)
+          .then((next) => {
+            if (cancelled) return;
+            setMembers(next.memberCount);
+            setPreviewCount(next.memberCount);
+          })
+          .catch(() => undefined);
+      }, 200);
+    };
     const markEntered = () => {
       if (cancelled || enteredRef.current) return;
       enteredRef.current = true;
@@ -241,6 +269,8 @@ export function useSpaRoom(options: {
         return;
       }
       if (message.op === "tick") {
+        const previousIds = new Set(roomRef.current.people.map((person) => person.id));
+        if (spaMembershipChanged(message, previousIds)) refreshMembers();
         const known = [...roomRef.current.people, ...message.upserts];
         for (const event of message.events) {
           if (event.op === "nudge") {
@@ -368,6 +398,7 @@ export function useSpaRoom(options: {
     return () => {
       cancelled = true;
       window.clearTimeout(entryTimer);
+      window.clearTimeout(memberTimer);
       const joined = joinedRef.current;
       joinedRef.current = false;
       connRef.current?.stop();
@@ -399,8 +430,9 @@ export function useSpaRoom(options: {
         selfId: notice === "full" ? null : room.sessionId,
         hidden,
         poses,
+        landscape,
       }),
-    [code, notice, live, previewCount, room.people, room.sessionId, hidden, poses],
+    [code, notice, live, previewCount, room.people, room.sessionId, hidden, poses, landscape],
   );
 
   const you = useMemo(() => {
@@ -408,9 +440,11 @@ export function useSpaRoom(options: {
     if (!self?.placed) return null;
     const spots = spreadSpaFeet(
       room.people.filter((person) => person.placed !== false).map((person) => ({ id: person.id, x: person.x, y: person.y })),
+      { landscape, selfId: self.id },
     );
-    return spots.get(self.id) ?? { x: self.x, y: self.y };
-  }, [room.people, room.sessionId]);
+    const spot = spots.get(self.id);
+    return spot ?? { x: self.x, y: self.y };
+  }, [room.people, room.sessionId, landscape]);
   const youStreak = useMemo(() => {
     const self = room.people.find((person) => person.id === room.sessionId);
     return self?.careStreak ?? 0;
@@ -503,6 +537,7 @@ export function useSpaRoom(options: {
     youPose,
     you,
     youStreak,
+    landscape,
     conflict,
     roomName,
     endsAt,
