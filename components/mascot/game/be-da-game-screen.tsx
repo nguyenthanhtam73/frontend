@@ -15,7 +15,9 @@ import { useStreak } from "@/lib/hooks/use-streak";
 import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
 import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
 import { useRoomShared } from "@/components/mascot/game/use-room-shared";
+import { useRoomTree } from "@/components/mascot/game/use-room-tree";
 import { useSpaRoom } from "@/components/mascot/game/use-spa-room";
+import type { RoomEvent } from "@/lib/mascot/game/spa-room";
 import { localePath } from "@/lib/mascot/game/path";
 import {
   GAME_CHEST_EVENING_KEY,
@@ -37,6 +39,7 @@ import {
   saveGameLook,
   type GameLook,
 } from "@/lib/mascot/game/look";
+import { mascotFeatureEnabled } from "@/lib/mascot/feature";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
@@ -265,11 +268,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       playGameTing(soundRef.current);
     },
   });
+  const treeListen = useRef<(event: RoomEvent & { tree: NonNullable<RoomEvent["tree"]> }) => void>(() => undefined);
   const spaRoom = useSpaRoom({
     active: code != null,
     code,
     look: presented,
     gender: view.gender,
+    onTreeEvent: (event) => treeListen.current(event),
     onRemoteEmote: (event) => {
       if (event.kind === "nudge") setToast({ kind: "nudge", message: event.message });
       else setToast(event);
@@ -278,6 +283,13 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     },
   });
   const together = useRoomShared(code, code != null && spaRoom.entry === "room", user?.id ?? null);
+  const tree = useRoomTree(
+    code,
+    code != null && spaRoom.entry === "room" && mascotFeatureEnabled(user),
+    "",
+    together.applyBalance,
+    treeListen,
+  );
 
   useEffect(() => {
     if (!code || !spaRoom.serverCode || spaRoom.serverCode === code) return;
@@ -518,6 +530,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       }
       youPose={spaRoom.youPose}
       together={inSpa ? together : null}
+      tree={inSpa ? tree : null}
       onCreateRoom={() => void createRoom()}
       creatingRoom={creatingRoom}
       createProblem={createProblem}

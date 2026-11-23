@@ -40,6 +40,8 @@ export type GameDress = {
   hairId: GameHairId;
   clipId: GameClipId | null;
   pose?: GamePose | null;
+  /** Tree gift clip. Drawn with the closet clip. Not a shop piece. */
+  treeClipId?: string | null;
 };
 
 export const DEFAULT_GAME_LOOK: GameLook = {

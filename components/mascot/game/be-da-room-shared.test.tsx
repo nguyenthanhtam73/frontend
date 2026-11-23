@@ -69,6 +69,7 @@ function together(extra: Partial<RoomTogether> = {}): RoomTogether {
     nudging: null,
     onClaim: () => undefined,
     onNudge: () => undefined,
+    applyBalance: () => undefined,
     ...extra,
   };
 }

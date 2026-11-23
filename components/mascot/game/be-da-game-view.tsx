@@ -8,6 +8,8 @@ import { BeDaIntroReset } from "@/components/mascot/intro/be-da-intro-reset";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
+import { TreeClosetSection, useTreeWornClip } from "@/components/mascot/game/be-da-room-tree";
+import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import type { RoomClock, SpaNotice } from "@/lib/mascot/game/spa-room";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
@@ -138,6 +140,7 @@ export function BeDaGameView({
   activeRoom = null,
   spaInviteOpen = false,
   together = null,
+  tree = null,
   roomPanel,
   showActors = true,
   onSpaRetry,
@@ -219,6 +222,7 @@ export function BeDaGameView({
   /** Opens the invite card on first paint. Used by tests and screenshots. */
   spaInviteOpen?: boolean;
   together?: RoomTogether | null;
+  tree?: RoomTreePanel | null;
   roomPanel?: "quest" | "today" | null;
   showActors?: boolean;
   onSpaRetry?: () => void;
@@ -368,6 +372,7 @@ export function BeDaGameView({
           onCreateRoom={onCreateRoom}
           creatingRoom={creatingRoom}
           together={together}
+          tree={tree}
           panel={roomPanel}
           showActors={showActors}
           onRetry={onSpaRetry}
@@ -761,6 +766,7 @@ function Room({
   onOpenMissions: () => void;
 }) {
   const t = useTranslations("mascot");
+  const treeClip = useTreeWornClip();
   const pct = progress == null ? 0 : Math.round(progress * 100);
   const { frameRef, heroRef } = useRoomWalk(showHero, hideCards || !showHero);
   const [pixi, setPixi] = useState(true);
@@ -912,7 +918,7 @@ function Room({
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
         <Bubble kind={bubbleKind} />
-        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+        <BeDaFigure view={player} locale={locale} dress={{ ...gameDress(look), treeClipId: treeClip }} className="w-full" />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
@@ -1188,6 +1194,7 @@ function Wardrobe({
           </div>
         </>
       ) : null}
+      <TreeClosetSection />
       <p className="beda-note">{t("game.tryNote")}</p>
       <div className="beda-wear-bar">
         <button
