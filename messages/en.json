@@ -3428,6 +3428,7 @@
       "spaRetry": "Try again",
       "spaInviteOpen": "Invite",
       "spaGoRoom": "Go to this room",
+      "spaGoRoomShort": "Go to room",
       "spaOneRoom": "You are in room {name}. Each person can only be in 1 room. The room ends on {date}, then you can create or join a new one.",
       "spaOneRoomNoDate": "You are in room {name}. Each person can only be in 1 room.",
       "spaEnded": "This room has ended. Create or join a new one.",

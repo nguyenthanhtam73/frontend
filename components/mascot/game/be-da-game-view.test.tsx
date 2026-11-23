@@ -355,12 +355,14 @@ describe("Bé Da game screen", () => {
       myRooms: ["DA7K2M", "BE3N9Q"],
     });
     const text = visibleText(html);
+    assert.match(text, /Vào phòng/);
+    assert.equal(text.includes("Mỗi người chỉ ở 1 phòng"), false);
     assert.match(
-      text,
-      /Bạn đang ở phòng DA7K2M\. Mỗi người chỉ ở 1 phòng thôi, phòng kết thúc ngày 15\/11\/2026 rồi bạn tạo hoặc vào phòng mới nhé\./,
+      html,
+      /aria-label="Bạn đang ở phòng DA7K2M\. Mỗi người chỉ ở 1 phòng thôi, phòng kết thúc ngày 15\/11\/2026 rồi bạn tạo hoặc vào phòng mới nhé\."/,
     );
     assert.match(html, /data-testid="beda-current-room"/);
-    assert.match(text, /Vào phòng này/);
+    assert.equal(html.includes("beda-one-room-pop"), false);
     assert.equal(html.includes("Tạo phòng"), false);
     assert.equal(html.includes("Nhập mã"), false);
     assert.equal(html.includes("Tìm phòng"), false);
@@ -376,9 +378,10 @@ describe("Bé Da game screen", () => {
       "en",
     );
     const englishText = visibleText(english);
-    assert.match(englishText, /You are in room DA7K2M/);
-    assert.match(englishText, /November 15, 2026/);
-    assert.match(englishText, /Go to this room/);
+    assert.match(englishText, /Go to room/);
+    assert.match(english, /aria-label="You are in room DA7K2M/);
+    assert.match(english, /November 15, 2026/);
+    assert.equal(englishText.includes("Go to this room"), false);
     assert.equal(english.includes("Create a room"), false);
     assert.equal(english.includes("Enter a code"), false);
   });

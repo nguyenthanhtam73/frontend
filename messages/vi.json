@@ -3428,6 +3428,7 @@
       "spaRetry": "Thử lại",
       "spaInviteOpen": "Mời bạn",
       "spaGoRoom": "Vào phòng này",
+      "spaGoRoomShort": "Vào phòng",
       "spaOneRoom": "Bạn đang ở phòng {name}. Mỗi người chỉ ở 1 phòng thôi, phòng kết thúc ngày {date} rồi bạn tạo hoặc vào phòng mới nhé.",
       "spaOneRoomNoDate": "Bạn đang ở phòng {name}. Mỗi người chỉ ở 1 phòng thôi.",
       "spaEnded": "Phòng này đã kết thúc, bạn tạo hoặc vào phòng mới nhé",
