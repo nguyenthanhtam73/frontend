@@ -119,6 +119,7 @@ export function BeDaSpaRoom({
   showActors = true,
   onRetry,
   onQuit,
+  onOpenSeedBag,
 }: {
   locale: string;
   player: BeDaView;
@@ -153,6 +154,7 @@ export function BeDaSpaRoom({
   onRetry?: () => void;
   /** Confirmed «Rời phòng». This is the only action that deletes membership. */
   onQuit?: () => void;
+  onOpenSeedBag?: () => void;
 }) {
   const t = useTranslations("mascot");
   const [inviteOpen, setInviteOpen] = useState(inviteInitiallyOpen);
@@ -288,7 +290,7 @@ export function BeDaSpaRoom({
   }
 
   return (
-    <RoomTreeProvider panel={tree ?? null} locale={locale} startOpen={treeDetailOpen}>
+    <RoomTreeProvider panel={tree ?? null} locale={locale} startOpen={treeDetailOpen} roomCode={room.code} onOpenBag={onOpenSeedBag}>
     <div ref={frameRef} className={room.landscape ? "beda-spa is-landscape" : "beda-spa"} data-testid="beda-spa" onClick={onBackground}>
       {selectedGuest ? (
         <div className="beda-actions beda-card beda-friend-card" data-testid="beda-actions" role="group" aria-label={selectedGuest.nickname}>

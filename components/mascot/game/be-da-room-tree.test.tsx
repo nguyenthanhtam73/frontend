@@ -47,6 +47,9 @@ function tree(extra: Partial<RoomTree> = {}): RoomTree {
     leveled: false,
     justGranted: [],
     unseenRewards: [],
+    canDraw: false,
+    myShard: null,
+    draws: [],
     ...extra,
   };
 }

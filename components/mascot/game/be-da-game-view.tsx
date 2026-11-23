@@ -9,6 +9,7 @@ import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
 import { TreeClosetSection } from "@/components/mascot/game/be-da-room-tree";
+import { SeedBagLoader } from "@/components/mascot/game/be-da-seed-bag";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import type { RoomClock, SpaNotice } from "@/lib/mascot/game/spa-room";
@@ -147,6 +148,7 @@ export function BeDaGameView({
   showActors = true,
   onSpaRetry,
   onSpaQuit,
+  onPlantSeed,
 }: {
   locale: string;
   tab: GameTab;
@@ -231,6 +233,7 @@ export function BeDaGameView({
   showActors?: boolean;
   onSpaRetry?: () => void;
   onSpaQuit?: () => void;
+  onPlantSeed?: (treeType: string) => Promise<void>;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -252,6 +255,7 @@ export function BeDaGameView({
   const equipped = equippedGameLook(look, { admin: closetAdmin, ownedIds: new Set(ownedClipIds) });
   const [draft, setDraft] = useState(equipped);
   const [tryFlash, setTryFlash] = useState(0);
+  const [seedBag, setSeedBag] = useState(false);
   const shownLook = wardrobeOpen ? draft : equipped;
   const wardrobeOpenRef = useRef(wardrobeOpen);
   const closingWardrobe = useRef(false);
@@ -354,6 +358,16 @@ export function BeDaGameView({
       data-sky={sky}
     >
       <h1 className="sr-only">{t("name")}</h1>
+      {seedBag ? (
+        <SeedBagLoader
+          locale={locale}
+          onClose={() => setSeedBag(false)}
+          onPlant={async (typeKey) => {
+            if (!onPlantSeed) return;
+            await onPlantSeed(typeKey);
+          }}
+        />
+      ) : null}
       {spa ? (
         <BeDaSpaRoom
           locale={locale}
@@ -381,6 +395,7 @@ export function BeDaGameView({
           showActors={showActors}
           onRetry={onSpaRetry}
           onQuit={onSpaQuit}
+          onOpenSeedBag={() => setSeedBag(true)}
         />
       ) : showLobby ? (
         <BeDaLobby
@@ -472,6 +487,7 @@ export function BeDaGameView({
               setDraft(equipped);
             }}
             onClose={dismissWardrobe}
+            onOpenSeedBag={() => setSeedBag(true)}
           />
         </>
       ) : null}
@@ -1047,6 +1063,7 @@ function Wardrobe({
   onTry,
   onWear,
   onClose,
+  onOpenSeedBag,
 }: {
   wornIds: string[];
   closetAdmin: boolean;
@@ -1055,6 +1072,7 @@ function Wardrobe({
   onTry: (look: GameLook) => void;
   onWear: () => void;
   onClose: () => void;
+  onOpenSeedBag?: () => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
@@ -1197,6 +1215,9 @@ function Wardrobe({
           </div>
         </>
       ) : null}
+      <button type="button" className="beda-seed-open" data-testid="beda-seed-open" onClick={onOpenSeedBag}>
+        {t("game.seeds.bag")}
+      </button>
       <TreeClosetSection
         selectedId={preview.clip}
         onSelect={(clipId) => onTry({ ...preview, clip: clipId && isTreeWearClip(clipId) ? clipId : null })}
