@@ -62,7 +62,7 @@ export type GiftRateCard = {
   prizes: GiftPrize[];
 };
 
-/** Basis points out of 10000, shown as a percent. 440 → 4,4 and 125 → 1,25 in vi-VN. */
+/** Basis points out of 10000, shown as a percent. 479 → 4,79 and 10 → 0,1 in vi-VN. */
 export function bpsLabel(bps: number, locale: string): string {
   const loc = locale.toLowerCase().startsWith("vi") ? "vi-VN" : "en-US";
   return new Intl.NumberFormat(loc, { maximumFractionDigits: 2 }).format(bps / 100);
