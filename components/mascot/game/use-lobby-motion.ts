@@ -16,7 +16,7 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaFootScale, spaStackZ } from "@/lib/mascot/game/spa-room";
+import { fitSpaPlate, SPA_LANDSCAPE_BOUNDS, spaFootScale, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -908,6 +908,8 @@ export function useSpaMotion(input: {
       }
       const stageW = stage.offsetWidth || 1;
       const stageH = stage.offsetHeight || 1;
+      const pillPeople: { id: string; x: number; y: number; el: HTMLElement }[] = [];
+      if (pose) pillPeople.push({ id: "you", x: walker.x, y: walker.y, el: pose });
       for (const guest of guestsProp.current) {
         const guestPose = stage.querySelector<HTMLElement>(`[data-friend-id="${guest.id}"].beda-pose`);
         if (!guestPose) continue;
@@ -924,6 +926,12 @@ export function useSpaMotion(input: {
         guestPose.style.setProperty("--scale", String(spaFootScale(drawn.y)));
         guestPose.style.zIndex = String(spaStackZ(drawn.y));
         setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);
+        pillPeople.push({ id: guest.id, x: drawn.x, y: drawn.y, el: guestPose });
+      }
+      if (!landscapeProp.current) {
+        for (const box of spaNamePillBoxes(pillPeople, stageW, stageH)) {
+          pillPeople.find((person) => person.id === box.id)?.el.style.setProperty("--beda-tag-max", `${box.maxWidth}px`);
+        }
       }
       frameId = window.requestAnimationFrame(tick);
     };

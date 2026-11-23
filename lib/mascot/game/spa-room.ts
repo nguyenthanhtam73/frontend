@@ -645,17 +645,99 @@ export function spreadSpaFeet(
       continue;
     }
     const perRow = Math.ceil(count / 2);
-    const rowStep = Math.min(0.24, span / perRow);
-    const origin = (perRow - 1) / 2;
-    group.members.forEach((person, index) => {
-      const back = index < perRow;
-      const rowIndex = back ? index : index - perRow;
-      const shift = (rowIndex - origin) * rowStep + (back ? 0 : rowStep / 2);
-      const y = back ? group.anchor.y - 0.08 : group.anchor.y + 0.03;
-      out.set(person.id, clampSpaPoint({ x: group.anchor.x + shift, y }));
-    });
+    // 0.20 clears the front-row heads, including Bạn at 1.24×, and stays inside the floor.
+    const backY = clamp(group.anchor.y - 0.20, SPA_BOUNDS.minY, SPA_BOUNDS.maxY);
+    const frontY = clamp(group.anchor.y + 0.03, SPA_BOUNDS.minY, SPA_BOUNDS.maxY);
+    const slots = [
+      ...portraitLine(perRow).map((x) => ({ x, y: backY })),
+      ...portraitLine(count - perRow).map((x) => ({ x, y: frontY })),
+    ];
+    const members = [...group.members];
+    const selfAt = options.selfId ? members.findIndex((person) => person.id === options.selfId) : -1;
+    if (selfAt >= 0) {
+      const self = members.splice(selfAt, 1)[0]!;
+      let frontSlot = perRow;
+      let nearest = Infinity;
+      for (let index = perRow; index < slots.length; index += 1) {
+        const distance = Math.abs(slots[index]!.x - 0.5);
+        if (distance < nearest) {
+          nearest = distance;
+          frontSlot = index;
+        }
+      }
+      const seated: ({ id: string } | undefined)[] = new Array(slots.length);
+      seated[frontSlot] = self;
+      let cursor = 0;
+      for (const person of members) {
+        while (seated[cursor]) cursor += 1;
+        seated[cursor] = person;
+        cursor += 1;
+      }
+      seated.forEach((person, index) => {
+        if (person) out.set(person.id, slots[index]!);
+      });
+    } else {
+      members.forEach((person, index) => {
+        const slot = slots[index];
+        if (slot) out.set(person.id, slot);
+      });
+    }
   }
   return out;
+}
+
+/** Even feet from the left safe edge to the right safe edge. One person stands in the middle. */
+function portraitLine(count: number): number[] {
+  if (count <= 1) return [(SPA_BOUNDS.minX + SPA_BOUNDS.maxX) / 2];
+  const step = (SPA_BOUNDS.maxX - SPA_BOUNDS.minX) / (count - 1);
+  return Array.from({ length: count }, (_, index) => SPA_BOUNDS.minX + index * step);
+}
+
+/** Widest a 12px name pill may be before it runs into the next person on the same row. */
+export const SPA_TAG_MAX_PX = 152;
+const SPA_TAG_ROW_EPS = 0.03;
+const SPA_TAG_GAP_PX = 6;
+
+export type SpaPillBox = {
+  id: string;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  maxWidth: number;
+};
+
+/**
+ * Maximum on-screen rect of each name pill. Width is the gap to the nearest
+ * person on the same row, capped at 9.5rem, so two pills cannot meet.
+ * `top`/`bottom` use a 22px pill whose bottom sits on the foot anchor.
+ */
+export function spaNamePillBoxes(
+  people: readonly { id: string; x: number; y: number }[],
+  plateWidth: number,
+  plateHeight: number,
+): SpaPillBox[] {
+  const width = Number.isFinite(plateWidth) ? Math.max(0, plateWidth) : 0;
+  const height = Number.isFinite(plateHeight) ? Math.max(0, plateHeight) : 0;
+  const pillHeight = 22;
+  return people.map((person) => {
+    let budget = SPA_TAG_MAX_PX;
+    for (const other of people) {
+      if (other.id === person.id || Math.abs(other.y - person.y) >= SPA_TAG_ROW_EPS) continue;
+      const distance = Math.abs(other.x - person.x) * width;
+      budget = Math.min(budget, Math.max(0, distance - SPA_TAG_GAP_PX));
+    }
+    const center = person.x * width;
+    const bottom = person.y * height;
+    return {
+      id: person.id,
+      left: center - budget / 2,
+      right: center + budget / 2,
+      top: bottom - pillHeight,
+      bottom,
+      maxWidth: budget,
+    };
+  });
 }
 
 /** Real people, skipping you and anyone you hid. A guest with x/y stands there. */

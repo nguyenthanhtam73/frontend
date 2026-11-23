@@ -3061,7 +3061,7 @@
 }
 
 .beda-spa .beda-tag {
-  max-width: 9.5rem;
+  max-width: var(--beda-tag-max, 9.5rem);
   font-size: 12px;
 }
 

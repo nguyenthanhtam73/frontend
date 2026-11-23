@@ -38,6 +38,7 @@ import {
   spaRoomOnlineCount,
   spaRoomProblem,
   fitSpaPlate,
+  spaNamePillBoxes,
   SPA_LANDSCAPE_BOUNDS,
   SPA_LANDSCAPE_HEIGHT,
   SPA_LANDSCAPE_SELF_SLOT,
@@ -134,8 +135,12 @@ describe("spa join spots", () => {
     }
   });
 
-  it("staggers four, six, and eight members into two rows that stay readable at 390px", () => {
-    const span = SPA_BOUNDS.maxX - SPA_BOUNDS.minX;
+  it("staggers four, six, and eight members into two rows across the safe floor", () => {
+    const line = (count: number) => {
+      if (count <= 1) return [(SPA_BOUNDS.minX + SPA_BOUNDS.maxX) / 2];
+      const step = (SPA_BOUNDS.maxX - SPA_BOUNDS.minX) / (count - 1);
+      return Array.from({ length: count }, (_, index) => SPA_BOUNDS.minX + index * step);
+    };
     for (const count of [4, 6, 8]) {
       const people = Array.from({ length: count }, (_, index) => ({
         id: `m${String(index).padStart(2, "0")}`,
@@ -145,24 +150,57 @@ describe("spa join spots", () => {
       const spots = spreadSpaFeet(people);
       const again = spreadSpaFeet([...people].reverse());
       const perRow = Math.ceil(count / 2);
-      const rowStep = Math.min(0.24, span / perRow);
-      const origin = (perRow - 1) / 2;
+      const xs = [...line(perRow), ...line(count - perRow)];
       people.forEach((person, index) => {
         const spot = spots.get(person.id)!;
         assert.deepEqual(spot, again.get(person.id));
         const back = index < perRow;
-        const rowIndex = back ? index : index - perRow;
-        const x = Math.min(SPA_BOUNDS.maxX, Math.max(SPA_BOUNDS.minX, 0.5 + (rowIndex - origin) * rowStep + (back ? 0 : rowStep / 2)));
-        const y = Math.min(SPA_BOUNDS.maxY, Math.max(SPA_BOUNDS.minY, back ? 0.7 - 0.08 : 0.7 + 0.03));
-        assert.ok(Math.abs(spot.x - x) < 1e-9, `${count} ${person.id} x`);
+        const y = back ? Math.max(SPA_BOUNDS.minY, 0.7 - 0.20) : Math.min(SPA_BOUNDS.maxY, 0.7 + 0.03);
+        assert.ok(Math.abs(spot.x - xs[index]!) < 1e-9, `${count} ${person.id} x`);
         assert.ok(Math.abs(spot.y - y) < 1e-9, `${count} ${person.id} y`);
       });
       const frontY = Math.min(SPA_BOUNDS.maxY, 0.7 + 0.03);
-      const backY = Math.max(SPA_BOUNDS.minY, 0.7 - 0.08);
+      const backY = Math.max(SPA_BOUNDS.minY, 0.7 - 0.20);
       assert.ok(spaStackZ(frontY) > spaStackZ(backY));
-      // Bạn is 1.24× the 108px base. One neighbour covering one side still leaves 60%.
-      const gapPx = rowStep * 390;
-      assert.ok(gapPx / (108 * 1.24) >= 0.6, `${count} Bạn visibility ${gapPx}`);
+      const withSelf = spreadSpaFeet(
+        people.map((person, index) => (index === count - 1 ? { ...person, id: "self" } : person)),
+        { selfId: "self" },
+      );
+      const frontXs = line(count - perRow);
+      const middle = frontXs.reduce((best, x) => (Math.abs(x - 0.5) < Math.abs(best - 0.5) ? x : best), frontXs[0]!);
+      assert.ok(Math.abs((withSelf.get("self")?.x ?? -1) - middle) < 1e-9);
+    }
+  });
+
+  it("keeps portrait name pills from touching at phone and iPad widths", () => {
+    const chrome = 229;
+    const plates = [
+      [360, 780],
+      [390, 844],
+      [820, 1180],
+    ].map(([width, height]) => fitSpaPlate(width!, Math.max(1, height! - chrome)));
+    for (const plate of plates) {
+      for (const count of [4, 5, 6, 7, 8]) {
+        const people = Array.from({ length: count }, (_, index) => ({
+          id: `m${index}`,
+          x: 0.5,
+          y: 0.7,
+        }));
+        const spots = spreadSpaFeet(people, { selfId: "m0" });
+        const boxes = spaNamePillBoxes(
+          people.map((person) => ({ id: person.id, ...spots.get(person.id)! })),
+          plate.width,
+          plate.height,
+        );
+        for (let i = 0; i < boxes.length; i += 1) {
+          for (let j = i + 1; j < boxes.length; j += 1) {
+            const a = boxes[i]!;
+            const b = boxes[j]!;
+            const hit = a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+            assert.equal(hit, false, `${plate.width}x${plate.height} ${count} ${a.id} ${b.id}`);
+          }
+        }
+      }
     }
   });
 
