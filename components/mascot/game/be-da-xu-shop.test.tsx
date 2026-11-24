@@ -63,6 +63,11 @@ describe("xu shop screen", () => {
     assert.equal(html.includes(">Nữ<"), false);
     assert.equal(html.includes(">Nam<"), false);
     assert.match(html, /data-testid="beda-xu-preview"/);
+    assert.match(html, /data-testid="beda-xu-wear-layer"/);
+    assert.match(html, /xu_spa_dep_long\.svg/);
+    assert.match(html, /Đang thử/);
+    assert.match(html, /Bộ Spa Sáng Sớm/);
+    assert.equal(html.includes(">Spa Sáng Sớm<"), false);
     assert.match(html, /data-testid="beda-xu-seasonal"/);
     assert.match(html, /Đồ mùa chỉ có trong hộp quà/);
     assert.equal(html.includes("Chỉ mở từ hộp quà"), false);
@@ -86,6 +91,9 @@ describe("xu shop screen", () => {
     assert.match(stickers, /Nhãn dán hoa/);
     assert.match(stickers, /data-testid="beda-xu-colour-kem_hong"/);
     assert.match(stickers, /Chào nha/);
+    assert.match(stickers, /Đồ trang trí/);
+    assert.match(stickers, /Không mặc lên người/);
+    assert.equal(stickers.includes("Đang thử"), false);
     assert.equal(stickers.includes('data-testid="beda-xu-buy-kem_hong"'), false);
     assert.equal(/gacha/i.test(html), false);
     assert.match(html, /không đổi kết quả da/);

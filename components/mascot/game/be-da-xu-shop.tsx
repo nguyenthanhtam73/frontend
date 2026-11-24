@@ -179,6 +179,25 @@ function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
   return { clothes, accessories, stickers, seeds };
 }
 
+const WORN_LAYERS = new Set([
+  "outfit",
+  "hat",
+  "shoes",
+  "glasses",
+  "hair_acc",
+  "earring",
+  "necklace",
+  "scarf",
+  "gloves",
+  "bracelet",
+  "bag",
+  "held",
+]);
+
+function wearsOnBody(card: ShelfCard | null): boolean {
+  return card != null && card.kind === "piece" && WORN_LAYERS.has(card.layer);
+}
+
 function cardCost(card: ShelfCard): number {
   if (card.charge > 0) return card.charge;
   return card.price > 0 ? card.price : 0;
@@ -346,7 +365,8 @@ export function BeDaXuShop({
     (trying ? cards.find((card) => card.id === trying.id) : null) ??
     (trying ? SHELVES.flatMap((id) => shelves[id]).find((card) => card.id === trying.id) ?? null : null);
   const wearArt = trying ? shopWearId(trying.artId, who) : "";
-  const layer = wearArt && selected?.kind === "piece" ? shopLayerSrc(wearArt) : "";
+  const wornOnBody = wearsOnBody(selected);
+  const layer = wornOnBody && wearArt ? shopLayerSrc(wearArt) : "";
   const shown = player ? { ...player, gender: who } : null;
   const wearing = selected ? wornPiece(player, selected, who) : false;
   const missing = selected ? cardShort(catalog.balance, selected) : 0;
@@ -421,7 +441,7 @@ export function BeDaXuShop({
       </div>
       <div className="beda-shop-scroll">
         <section className="beda-shop-stage" data-testid="beda-xu-preview" aria-label={t("game.shop.tryFree")}>
-          <div className="beda-shop-hero">
+          <div className={wornOnBody || !trying ? "beda-shop-hero" : "beda-shop-hero is-decor"} data-testid="beda-xu-hero">
             {shown ? (
               <BeDaFigure
                 view={shown}
@@ -431,7 +451,10 @@ export function BeDaXuShop({
                 marks
               />
             ) : null}
-            {layer ? <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" /> : null}
+            {layer ? <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" data-testid="beda-xu-wear-layer" /> : null}
+            {!wornOnBody && trying && selected?.src ? (
+              <img className="beda-shop-decor" src={mascotAssetUrl(selected.src)} alt="" data-testid="beda-xu-decor" />
+            ) : null}
           </div>
           {trying && bubbleColour(trying.id) ? (
             <p className="beda-shop-speech" style={bubbleFrameStyle(trying.id)} data-testid="beda-xu-sample-bubble">
@@ -440,14 +463,12 @@ export function BeDaXuShop({
           ) : null}
           {trying ? (
             <div className="beda-shop-trying">
-              {selected?.kind === "colour" ? null : selected?.src ? (
-                <img src={mascotAssetUrl(selected.src)} alt="" />
-              ) : null}
               <div>
-                <p className="beda-shop-kicker">{t("game.shop.trying")}</p>
+                <p className="beda-shop-kicker">{wornOnBody ? t("game.shop.trying") : t("game.shop.decor")}</p>
                 <strong>{trying.name}</strong>
                 {trying.price > 0 ? <p className="beda-shop-price">{xu(locale, trying.price)}</p> : null}
-                {trying.setName ? <p className="beda-shop-muted">{trying.setName}</p> : null}
+                {wornOnBody && trying.setName ? <p className="beda-shop-muted">{t("game.shop.setOf", { name: trying.setName })}</p> : null}
+                {wornOnBody ? null : <p className="beda-shop-note">{t("game.shop.decorNote")}</p>}
               </div>
             </div>
           ) : (
