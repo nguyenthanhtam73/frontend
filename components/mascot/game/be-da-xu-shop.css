@@ -113,8 +113,19 @@
   font-size: 14px;
 }
 
-.beda-shop-pill b {
-  color: var(--shop-gold);
+.beda-shop-pill.is-xu,
+.dark .beda-shop .beda-shop-pill.is-xu,
+.beda-shop[data-theme="dark"] .beda-shop-pill.is-xu {
+  background: linear-gradient(180deg, #ffe7a6 0%, #f5c14b 100%);
+  color: #5c3206;
+  border: 2px solid #e6be62;
+  box-shadow: 0 3px 0 #c4923a;
+}
+
+.beda-shop-xu-coin {
+  width: 22px;
+  height: 22px;
+  flex: none;
 }
 
 .beda-shop-layout {
@@ -177,80 +188,66 @@
 
 .beda-shop-hero {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 8px;
-  width: min(220px, 58vw);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  min-height: 180px;
   margin: 8px auto;
   overflow: hidden;
 }
 
 .beda-shop-hero-frame {
   position: relative;
-  width: min(180px, 48vw);
-  aspect-ratio: 220 / 250;
-  flex: none;
-}
-
-.beda-shop.is-popup .beda-shop-hero-frame {
-  width: auto;
+  grid-column: 2;
+  grid-row: 1;
   height: 100%;
+  width: auto;
+  aspect-ratio: 220 / 250;
+  justify-self: center;
 }
 
-.beda-shop-hero-frame .bd-figure {
+.beda-shop-hero-frame .bd-figure,
+.beda-shop-hero-frame .beda-shop-wear {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.beda-shop-hero.is-zoom-shoes .beda-shop-hero-frame {
-  transform: scale(1.55);
-  transform-origin: 50% 86%;
+.beda-shop-side {
+  grid-row: 1;
+  min-width: 0;
+  max-height: 100%;
+  display: flex;
+  width: 100%;
+  padding: 0 4px;
+  box-sizing: border-box;
 }
 
-.beda-shop-hero.is-zoom-head .beda-shop-hero-frame {
-  transform: scale(1.9);
-  transform-origin: 50% 20%;
+.beda-shop-side.is-start {
+  grid-column: 1;
+  align-items: center;
+  justify-content: center;
 }
 
-.beda-shop-hero.is-zoom-face .beda-shop-hero-frame {
-  transform: scale(1.95);
-  transform-origin: 50% 32%;
-}
-
-.beda-shop-hero.is-zoom-hand .beda-shop-hero-frame {
-  transform: scale(1.7);
-  transform-origin: 50% 58%;
+.beda-shop-side.is-end {
+  grid-column: 3;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding-bottom: 6px;
 }
 
 .beda-shop-wear {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
   object-fit: fill;
   pointer-events: none;
 }
 
-.beda-shop-hero.is-decor {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 12px;
-  width: min(100%, 320px);
-}
-
-.beda-shop-hero.is-decor .beda-shop-hero-frame {
-  width: min(140px, 40vw);
-}
-
 .beda-shop-decor {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   flex: none;
   object-fit: contain;
-  margin-bottom: 8px;
 }
 
 .beda-shop-trying {
@@ -376,23 +373,37 @@
 
 .beda-shop-speech {
   position: relative;
-  margin: 8px auto 0;
-  max-width: 220px;
-  border-radius: 20px;
-  padding: 10px 14px;
-  font-size: 16px;
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 0 6px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  border-radius: 16px;
+  padding: 6px 8px;
+  background: #fff8ee;
+  color: #3f2c26;
+  font-size: 12px;
   font-weight: 800;
-  text-align: center;
+  line-height: 1.25;
+  text-align: left;
+  box-shadow: 0 3px 0 #f0c9d3;
+}
+
+.dark .beda-shop .beda-shop-speech,
+.beda-shop[data-theme="dark"] .beda-shop-speech {
+  background: #fff8ee;
+  color: #3f2c26;
 }
 
 .beda-shop-speech::after {
   content: "";
   position: absolute;
-  left: 28px;
-  bottom: -9px;
-  border: 9px solid transparent;
-  border-top-color: var(--bubble-tail, #fff);
-  border-bottom: 0;
+  left: -8px;
+  top: 18px;
+  border: 8px solid transparent;
+  border-right-color: var(--bubble-tail, #fff8ee);
+  border-left: 0;
 }
 
 .beda-shop-piece,
@@ -562,13 +573,24 @@
 }
 
 .beda-shop-shade {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 40%;
+  z-index: 4;
   display: grid;
   align-items: end;
   padding: 12px;
   background: rgba(40, 24, 28, 0.45);
+}
+
+.beda-shop.is-popup {
+  position: relative;
+}
+
+.beda-shop.is-popup .beda-shop-stage {
+  z-index: 5;
 }
 
 .beda-shop-dialog {
@@ -676,6 +698,8 @@
 }
 
 .beda-shop.is-popup .beda-shop-stage {
+  position: relative;
+  z-index: 5;
   flex: 0 0 40%;
   max-height: 40%;
   min-height: 0;
@@ -687,14 +711,65 @@
 
 .beda-shop.is-popup .beda-shop-hero {
   flex: 1 1 auto;
+  height: 0;
   width: 100%;
   min-height: 0;
   margin: 0;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.beda-shop.is-popup .beda-shop-hero-frame {
+  height: 100%;
+  max-height: 100%;
+  width: auto;
+  align-self: end;
+  justify-self: center;
+}
+
+.beda-shop.is-popup .beda-shop-side {
+  max-height: 100%;
+  overflow: hidden;
+  align-self: stretch;
+}
+
+.beda-shop-stage-foot {
+  flex: none;
+}
+
+.beda-shop.is-popup .beda-shop-stage-foot {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 72px;
+  min-height: 72px;
+  max-height: 72px;
+  overflow: hidden;
+}
+
+.beda-shop.is-popup .beda-shop-caption {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .beda-shop.is-popup .beda-shop-trying {
   flex: none;
-  margin-top: 2px;
+  margin-top: 0;
+}
+
+.beda-shop.is-popup .beda-shop-trying .beda-shop-kicker {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.beda-shop.is-popup .beda-shop-trying strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
 }
 
 .beda-shop.is-popup .beda-shop-stage .beda-shop-note {
@@ -703,9 +778,8 @@
 }
 
 .beda-shop.is-popup .beda-shop-decor {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 4px;
+  width: 48px;
+  height: 48px;
 }
 
 .beda-shop.is-popup .beda-shop-art,
@@ -735,6 +809,11 @@ body[data-beda-shop="open"] .beda-nav {
   padding: 0;
   background: rgba(40, 24, 32, 0.46);
   cursor: pointer;
+}
+
+/* Leave the room's xu pill above the dim so the gold stays bright. */
+body[data-beda-shop="open"] .beda-shop-popup-backdrop {
+  top: calc(64px + env(safe-area-inset-top));
 }
 
 .beda-shop-popup-panel {
