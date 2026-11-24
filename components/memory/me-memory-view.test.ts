@@ -12,6 +12,17 @@ import {
   memoryPromptChipVisible,
 } from "./me-memory-view.tsx";
 
+function collectStrings(value: unknown, path: string, out: { path: string; text: string }[]) {
+  if (typeof value === "string") {
+    out.push({ path, text: value });
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value)) {
+    collectStrings(child, `${path}.${key}`, out);
+  }
+}
+
 describe("memory admin details", () => {
   it("hides the prompt chip, cache chip, character count, cached suffix, and monthly digest from everyone else", () => {
     assert.equal(memoryPromptChipVisible(false, 36), false);
@@ -39,13 +50,20 @@ describe("memory care sentences", () => {
   it("uses a full sentence for each level and drops an unknown token", () => {
     assert.equal(adherenceMessageKey("moderate"), "moderate");
     assert.equal(adherenceMessageKey("nope"), null);
-    assert.equal(vi.meMemory.adherence.strong, "Gần đây bạn chăm da rất đều");
-    assert.equal(vi.meMemory.adherence.moderate, "Gần đây bạn chăm da khá đều");
-    assert.equal(vi.meMemory.adherence.low, "Gần đây bạn chăm da chưa đều lắm");
-    assert.equal(vi.meMemory.adherence.none, "Chưa đủ lần ghi để thấy bạn chăm da đều đến đâu");
+    assert.equal(vi.meMemory.adherence.strong, "Gần đây mày chăm da rất đều");
+    assert.equal(vi.meMemory.adherence.moderate, "Gần đây mày chăm da khá đều");
+    assert.equal(vi.meMemory.adherence.low, "Gần đây mày chăm da chưa đều lắm");
+    assert.equal(vi.meMemory.adherence.none, "Chưa đủ lần ghi để thấy mày chăm da đều đến đâu");
     assert.equal(vi.meMemory.previewSub.includes("từng câu khuyên"), true);
-    assert.equal(vi.meMemory.previewSub.includes("câu coach"), false);
     assert.equal(vi.meMemory.feedbackCompact, "{helpful} đúng gu · {notHelpful} chưa hợp");
+    const lines: { path: string; text: string }[] = [];
+    collectStrings(vi.meMemory, "meMemory", lines);
+    collectStrings(vi.metadata.meMemory, "metadata.meMemory", lines);
+    const hits = lines.filter((line) => /\bbạn\b|\bmình\b|coach/i.test(line.text));
+    assert.deepEqual(
+      hits.map((line) => `${line.path}: ${line.text}`),
+      [],
+    );
     assert.equal(
       en.meMemory.adherence.moderate,
       "Lately you've been caring for your skin fairly steadily",

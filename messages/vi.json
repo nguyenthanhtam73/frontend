@@ -36,7 +36,7 @@
       "description": "Quản lý trí nhớ AI, thông báo, chế độ mặt/không mặt, và xóa dữ liệu của bạn."
     },
     "meMemory": {
-      "title": "Bạn đồng hành nhớ gì · DaDiary",
+      "title": "Tao đang nhớ gì · DaDiary",
       "description": "Xem khối trí nhớ AI dùng cho lời khuyên — minh bạch, có thể làm mới bất cứ lúc nào."
     },
     "login": {
@@ -1420,8 +1420,8 @@
   },
   "meMemory": {
     "sectionLabel": "Minh bạch AI",
-    "title": "Bạn đồng hành đang nhớ gì?",
-    "sub": "Đây là khối văn bản DaDiary đưa vào lời khuyên — giúp bạn hiểu vì sao gợi ý thay đổi theo thời gian.",
+    "title": "Tao đang nhớ gì?",
+    "sub": "Đây là khối văn bản DaDiary đưa vào lời khuyên — giúp mày hiểu vì sao gợi ý thay đổi theo thời gian.",
     "backSettings": "← Quay lại cài đặt & quyền riêng tư",
     "backCabinet": "← Quay lại tủ đồ chăm da",
     "previewTitle": "Trí nhớ dài hạn",
@@ -1436,25 +1436,25 @@
     "statChars": "Độ dài (ký tự)",
     "feedbackCompact": "{helpful} đúng gu · {notHelpful} chưa hợp",
     "adherence": {
-      "strong": "Gần đây bạn chăm da rất đều",
-      "moderate": "Gần đây bạn chăm da khá đều",
-      "low": "Gần đây bạn chăm da chưa đều lắm",
-      "none": "Chưa đủ lần ghi để thấy bạn chăm da đều đến đâu"
+      "strong": "Gần đây mày chăm da rất đều",
+      "moderate": "Gần đây mày chăm da khá đều",
+      "low": "Gần đây mày chăm da chưa đều lắm",
+      "none": "Chưa đủ lần ghi để thấy mày chăm da đều đến đâu"
     },
     "sections": {
       "profile": "Hồ sơ da",
       "recent_checks": "Nhật ký gần đây",
       "monthly_digest": "Tóm tắt theo tháng",
-      "feedback": "Góp ý của bạn",
+      "feedback": "Góp ý của mày",
       "routine_adherence": "Chăm da sáng/tối",
       "wardrobe": "Tủ đồ"
     },
-    "emptyMemory": "(Chưa có đủ dữ liệu — làm quen với da hoặc ghi nhật ký để bạn đồng hành bắt đầu nhớ.)",
+    "emptyMemory": "(Chưa có đủ dữ liệu — làm quen với da hoặc ghi nhật ký để tao bắt đầu nhớ.)",
     "emptySection": "(Trống)",
-    "metaPromptVersion": "Coach prompt v{v}",
+    "metaPromptVersion": "Phiên bản lời khuyên v{v}",
     "metaMonthlyDigest": "Có tóm tắt theo tháng",
     "metaCache": "Cache: {entries} mục · TTL {ttl}s",
-    "footerNote": "Dữ liệu thuộc về bạn. Xoá toàn bộ trong Cài đặt → Quyền riêng tư & dữ liệu.",
+    "footerNote": "Dữ liệu thuộc về mày. Xoá toàn bộ trong Cài đặt → Quyền riêng tư & dữ liệu.",
     "needAuth": "Đăng nhập để xem trí nhớ AI.",
     "signIn": "Đăng nhập",
     "loadError": "Không tải được trí nhớ — thử lại nhé.",
