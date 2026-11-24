@@ -18,9 +18,6 @@ export const XU_SHOP_QUERY_KEY = ["mascot", "xu-shop"] as const;
 /** A set, or any charge at this size, asks before the wallet moves. */
 export const SHOP_CONFIRM_XU = 5000;
 
-const EARN_FAST = 300;
-const EARN_SLOW = 250;
-
 const BOY_ART: Record<string, string> = {
   spa_02: "spa_02_boy",
   lohoi_01: "lohoi_01_boy",
@@ -208,14 +205,6 @@ export function xuShortfall(balance: number, charge: number): number {
   const have = Number.isFinite(balance) ? Math.max(0, Math.trunc(balance)) : 0;
   const cost = Number.isFinite(charge) ? Math.max(0, Math.trunc(charge)) : 0;
   return Math.max(0, cost - have);
-}
-
-/** Days of steady care at about 250–300 xu a day. Null when nothing is missing. */
-export function xuDaysRange(short: number): { min: number; max: number } | null {
-  if (!Number.isFinite(short) || short <= 0) return null;
-  const min = Math.ceil(short / EARN_FAST);
-  const max = Math.ceil(short / EARN_SLOW);
-  return { min, max: Math.max(min, max) };
 }
 
 export function shopAccFilter(id: string): ShopAccFilter {
