@@ -203,6 +203,11 @@ html.dark .beda-draw-wait {
   position: absolute;
   inset: 0;
   overflow: clip;
+  /* Props and Bé Da depth-sort inside this layer (z-index 36–48).
+     Sheets, toasts, the shop, and the nav are siblings of the scene, so they
+     stay above every room item without chasing those numbers. */
+  isolation: isolate;
+  z-index: 1;
 }
 
 .beda-room-wall {
@@ -1311,6 +1316,8 @@ html.dark .beda-pad-btn {
   height: auto;
   transform-origin: 0 0;
   will-change: transform;
+  /* Foot-y z-index (20–1020) stays in this layer, under lobby chrome and game overlays. */
+  isolation: isolate;
 }
 
 /* Bleed past the world box. The camera keeps a control pad, and zoom can shrink the world,
@@ -2479,13 +2486,14 @@ html.dark .beda-pad-btn {
 }
 
 /* Phone: large preview in the top half, item panel in the bottom half.
-   The sheet is z-index 7 and covers from 50vh. The preview figure has to sit above it. */
+   The preview stays above furniture (36/48) inside the scene. The sheet is a
+   sibling of the scene, so it still covers the plant and the sink. */
 .beda-game[data-tab="wardrobe"] .beda-hero-wrap {
   top: calc(58px + env(safe-area-inset-top));
   bottom: auto;
   height: calc(46vh - 58px - env(safe-area-inset-top));
   width: min(300px, 82vw);
-  z-index: 8;
+  z-index: 56;
   justify-content: center;
   overflow: hidden;
   pointer-events: none;
@@ -2842,7 +2850,7 @@ html.dark .beda-pad-btn {
     left: 28px;
     height: auto;
     width: min(320px, 36vw);
-    z-index: 8;
+    z-index: 56;
     transform: none;
     justify-content: center;
     pointer-events: none;
@@ -3255,6 +3263,8 @@ html.dark .beda-pad-btn {
   inset: 0;
   pointer-events: none;
   container-type: inline-size;
+  /* Standing guests use foot-y × 1000. That sort stays under spa sheets. */
+  isolation: isolate;
 }
 
 .beda-spa-floor .beda-spa-person {

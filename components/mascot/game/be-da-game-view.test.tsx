@@ -703,4 +703,52 @@ describe("Bé Da game screen", () => {
     assert.match(narrow, /\.beda-nav-label\s*\{[^}]*font-size:\s*12px/);
     assert.match(narrow, /\.beda-nav-label\s*\{[^}]*letter-spacing:\s*-0\.04em/);
   });
+
+  it("keeps depth-sorted room items under every overlay", () => {
+    const css = readFileSync(new URL("./be-da-game.css", import.meta.url), "utf8");
+    const shop = readFileSync(new URL("./be-da-xu-shop.css", import.meta.url), "utf8");
+    const walk = readFileSync(new URL("./use-room-walk.ts", import.meta.url), "utf8");
+    const scene = block(css, ".beda-scene");
+    assert.match(scene, /isolation:\s*isolate/);
+    const sceneZ = zIndex(scene);
+    assert.equal(sceneZ, 1);
+    // Props step to 48, above the sheet's own 7. Isolation is what keeps the sheet on top.
+    assert.match(walk, /roomPropCovers\(feet, base\) \? "48" : "36"/);
+    assert.ok(48 > sceneZ);
+    const overlays: [string, string][] = [
+      [css, ".beda-sheet"],
+      [css, ".beda-wardrobe-backdrop"],
+      [css, ".beda-care-sheet"],
+      [css, ".beda-toast"],
+      [css, ".beda-chest"],
+      [css, ".beda-hud"],
+      [css, ".beda-nav"],
+      [css, ".beda-seed-shade"],
+      [shop, ".beda-shop.is-overlay"],
+    ];
+    for (const [file, selector] of overlays) {
+      const overlayZ = zIndex(block(file, selector));
+      assert.ok(overlayZ > sceneZ, `${selector} z-index ${overlayZ} should sit above the room scene (${sceneZ})`);
+    }
+    const preview = zIndex(block(css, '.beda-game[data-tab="wardrobe"] .beda-hero-wrap'));
+    assert.ok(preview > 48, `wardrobe preview z-index ${preview} should stay above furniture inside the scene`);
+    assert.match(block(css, ".beda-lobby-world"), /isolation:\s*isolate/);
+    assert.match(block(css, ".beda-spa-floor"), /isolation:\s*isolate/);
+    const floorZ = zIndex(block(css, ".beda-spa-floor"));
+    assert.ok(floorZ < zIndex(block(css, ".beda-room-sheet")));
+    assert.ok(floorZ < zIndex(block(css, ".beda-toast")));
+  });
 });
+
+function block(css: string, selector: string): string {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const found = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`));
+  assert.ok(found, `missing ${selector}`);
+  return found[1];
+}
+
+function zIndex(rule: string): number {
+  const found = rule.match(/z-index:\s*(\d+)/);
+  assert.ok(found, `missing z-index in ${rule}`);
+  return Number(found[1]);
+}
