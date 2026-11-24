@@ -150,6 +150,7 @@ export function BeDaGameView({
   onSpaRetry,
   onSpaQuit,
   onPlantSeed,
+  plainRoom = false,
 }: {
   locale: string;
   tab: GameTab;
@@ -235,6 +236,8 @@ export function BeDaGameView({
   onSpaRetry?: () => void;
   onSpaQuit?: () => void;
   onPlantSeed?: (treeType: string) => Promise<void>;
+  /** Skip the canvas. Screenshots use this after a forced Pixi timeout. */
+  plainRoom?: boolean;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -442,6 +445,7 @@ export function BeDaGameView({
           doorCountLabel={doorCountLabel}
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
+          plainRoom={plainRoom}
           onOpenLobby={() => onTab("lobby")}
           onOpenWardrobe={() => onTab("wardrobe")}
           onOpenMissions={() => {
@@ -767,6 +771,7 @@ function Room({
   onOpenLobby,
   onOpenWardrobe,
   onOpenMissions,
+  plainRoom = false,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -785,11 +790,12 @@ function Room({
   onOpenLobby: () => void;
   onOpenWardrobe: () => void;
   onOpenMissions: () => void;
+  plainRoom?: boolean;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
   const { frameRef, heroRef } = useRoomWalk(showHero, hideCards || !showHero);
-  const [pixi, setPixi] = useState(true);
+  const [pixi, setPixi] = useState(!plainRoom);
   const roomArt = lookArt(player, look, false);
   const snapRef = useRef<ShellSnapshot>({ scene: "room", sky, sprites: [] });
   snapRef.current = {
@@ -884,10 +890,10 @@ function Room({
           <section className="beda-card beda-quest" data-testid="beda-quest" aria-label={t("game.questTitle")}>
             <h2>
               <GameIcon name="quests" className="beda-ico-sm" />
-              {t("game.questTitle")}
+              <span className="beda-quest-title">{t("game.questTitle")}</span>
               <span className="beda-gift-pill">
                 <GameIcon name={giftTaken ? "chestOpen" : "chestClosed"} className="beda-gift-ico" />
-                {giftTaken ? t("game.giftTaken") : t("game.gift")}
+                {giftTaken ? t("game.giftTaken") : t("game.gift.label")}
               </span>
             </h2>
             {(["morning", "evening"] as const).map((section) => {

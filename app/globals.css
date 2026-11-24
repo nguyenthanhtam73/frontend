@@ -919,3 +919,35 @@ body[data-game-embed="1"] [data-activation-banner] {
 body[data-game-embed="1"] {
   touch-action: none;
 }
+
+.beda-gate-wait {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: #fbf6f2;
+  color: #3f2c26;
+  font-weight: 800;
+  text-align: center;
+}
+
+html.dark .beda-gate-wait {
+  background: #1c161b;
+  color: #f8efe9;
+}
+
+.beda-gate-retry {
+  min-height: 48px;
+  min-width: 140px;
+  border: 0;
+  border-radius: 999px;
+  background: #c44774;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}

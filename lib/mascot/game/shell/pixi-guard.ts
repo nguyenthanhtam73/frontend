@@ -66,6 +66,24 @@ export function setActorReady(dataset: { actorReady?: string }, ready: boolean):
   else delete dataset.actorReady;
 }
 
+/** How long the canvas may stay blank before the plain room takes over. */
+export const PIXI_READY_MS = 4000;
+
+/**
+ * The first claim wins: the ready shell, the failure, or the timeout.
+ * A resolve that arrives after that is ignored by the caller.
+ */
+export function createPixiStartGate(): { claim: () => boolean } {
+  let settled = false;
+  return {
+    claim() {
+      if (settled) return false;
+      settled = true;
+      return true;
+    },
+  };
+}
+
 /** Drop the loading spinner. Report the failure only if the host is still on the page. */
 export function notePixiInitFailed(
   dataset: { loading?: string },

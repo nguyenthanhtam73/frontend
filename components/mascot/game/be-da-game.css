@@ -652,7 +652,7 @@
   top: calc(86px + env(safe-area-inset-top));
   left: 12px;
   box-sizing: border-box;
-  width: min(236px, calc(100vw - 154px));
+  width: min(248px, calc(100vw - 132px));
   min-width: 0;
   padding: 12px 12px 10px;
 }
@@ -660,14 +660,23 @@
 .beda-quest h2 {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
-  font-size: 15px;
+  min-width: 0;
+  font-size: 14px;
   font-weight: 800;
+  line-height: 1.15;
+}
+
+.beda-quest-title {
+  min-width: 0;
+  flex: 0 1 5.8em;
+  line-height: 1.15;
 }
 
 .beda-gift-pill {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
   margin-left: auto;
@@ -677,6 +686,7 @@
   color: #8a5a00;
   font-size: 12px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .beda-gift-ico {
