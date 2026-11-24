@@ -8,7 +8,9 @@ import { fileURLToPath } from "node:url";
 
 import {
   formatAffiliateCatalog,
+  isAcidProduct,
   parseAffiliateCsv,
+  parseCommissionPercent,
   parseFitNote,
   parseOptionalPrice,
   parseRequiredPrice,
@@ -76,7 +78,7 @@ describe("affiliate CSV import", () => {
     const csv = readFileSync(path.join(root, "data/affiliate/w20261124.csv"), "utf8");
     const catalog = parseAffiliateCsv(csv);
     assert.equal(catalog.batch, "w20261124");
-    assert.equal(catalog.items.length, 17);
+    assert.equal(catalog.items.length, 15);
 
     const foaming = catalog.items[0];
     assert.equal(foaming.step, "cleanser");
@@ -93,19 +95,15 @@ describe("affiliate CSV import", () => {
     assert.equal(blemish.originalPriceVnd, null);
     assert.equal(blemish.acid, false);
     assert.deepEqual(blemish.fit, ["acne"]);
-    assert.equal(catalog.items.find((item) => item.name.includes("AHA-BHA-PHA")).acid, true);
+    assert.equal(catalog.items.find((item) => item.name.includes("AHA-BHA-PHA")), undefined);
+    assert.equal(catalog.items.find((item) => item.name.includes("Bioderma")), undefined);
+    assert.equal(isAcidProduct("Some By Mi AHA-BHA-PHA 30 Days Serum 50ml"), true);
     assert.equal(catalog.items.find((item) => item.name.includes("Paula")).acid, true);
     assert.equal(catalog.items.find((item) => item.name.includes("Micro-Peeling")).acid, true);
+    assert.ok(catalog.items.every((item) => parseCommissionPercent(item.commission) > 8));
 
     const steps = [...new Set(catalog.items.map((item) => item.step))].sort();
-    assert.deepEqual(steps, [
-      "cleanser",
-      "makeup_remover",
-      "moisturizer",
-      "serum",
-      "sunscreen",
-      "support",
-    ]);
+    assert.deepEqual(steps, ["cleanser", "moisturizer", "serum", "sunscreen", "support"]);
     assert.ok(catalog.items.every((item) => item.affLink.startsWith("https://s.shopee.vn/")));
     assert.ok(catalog.items.every((item) => item.affLink !== item.url));
   });
@@ -152,20 +150,50 @@ describe("affiliate CSV import", () => {
     );
   });
 
-  it("rejects a batch that leaves a step empty", () => {
+  it("parses hoa_hong and rejects a row at or below 8%", () => {
+    assert.equal(parseCommissionPercent("4,5%"), 4.5);
+    assert.equal(parseCommissionPercent("7.5%"), 7.5);
+    assert.equal(parseCommissionPercent("10%"), 10);
+    assert.equal(parseCommissionPercent("8,5%"), 8.5);
+    const header =
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
+    const low =
+      'Serum,Some By Mi AHA,1000,,"4,5%",4.9,1,1,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/lowcomm1,dadiary,w20261124';
+    assert.throws(() => parseAffiliateCsv(`${header}\n${low}\n`), (error) => {
+      assert.match(error.message, /Row 2:.*above 8%/);
+      assert.match(error.message, /Some By Mi AHA/);
+      assert.match(error.message, /4,5%/);
+      return true;
+    });
+    const eight =
+      "Tẩy trang,Bioderma,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/3,https://s.shopee.vn/eightpct,dadiary,w20261124";
+    assert.throws(() => parseAffiliateCsv(`${header}\n${eight}\n`), /Row 2:.*above 8%.*8%/);
+    const seven =
+      "Tẩy trang,Bioderma H2O,1000,,7.5%,4.9,1,1,Shop,https://shopee.vn/product/1/4,https://s.shopee.vn/sevenpct,dadiary,w20261124";
+    assert.throws(() => parseAffiliateCsv(`${header}\n${seven}\n`), (error) => {
+      assert.match(error.message, /Row 2:/);
+      assert.match(error.message, /7\.5%/);
+      assert.match(error.message, /Bioderma H2O/);
+      return true;
+    });
+  });
+
+  it("keeps a batch that simply has no rows for one step", () => {
     const header =
       "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
     const row = (group, id) =>
-      `${group},Name ${id},1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/${id},https://s.shopee.vn/${id},dadiary,w20261124`;
+      `${group},Name ${id},1000,,10%,4.9,1,1,Shop,https://shopee.vn/product/1/${id},https://s.shopee.vn/${id},dadiary,w20261124`;
     const csv = [
       header,
       row("Sữa rửa mặt", "clean1"),
       row("Serum", "serum1"),
       row("Kem dưỡng", "moist1"),
       row("Chống nắng", "sun001"),
-      row("Tẩy trang", "remove1"),
     ].join("\n");
-    assert.throws(() => parseAffiliateCsv(csv), /Missing products for step support/);
+    const catalog = parseAffiliateCsv(csv);
+    assert.equal(catalog.items.some((item) => item.step === "makeup_remover"), false);
+    assert.equal(catalog.items.some((item) => item.step === "support"), false);
+    assert.equal(catalog.items.length, 4);
   });
 
   it("exits non-zero and prints the row when the CSV is invalid", () => {

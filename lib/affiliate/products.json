@@ -79,21 +79,6 @@
     },
     {
       "step": "serum",
-      "name": "Some By Mi AHA-BHA-PHA 30 Days Serum 50ml",
-      "fit": [
-        "acne"
-      ],
-      "priceVnd": 454000,
-      "originalPriceVnd": 531000,
-      "rating": 4.9,
-      "sold": "770",
-      "shop": "Guardian Official Store",
-      "affLink": "https://s.shopee.vn/5AuIAesMEs",
-      "acid": true,
-      "popularity": 1080000770
-    },
-    {
-      "step": "serum",
       "name": "Some By Mi Snail TrueCica Repair Serum 50ml",
       "fit": [
         "barrier"
@@ -203,19 +188,6 @@
       "affLink": "https://s.shopee.vn/1gKQ0DjxTm",
       "acid": false,
       "popularity": 83000040000
-    },
-    {
-      "step": "makeup_remover",
-      "name": "Bioderma Sensibio H2O 500ml x2",
-      "fit": [],
-      "priceVnd": 975000,
-      "originalPriceVnd": null,
-      "rating": 4.9,
-      "sold": "50k+",
-      "shop": "Bioderma Official Store",
-      "affLink": "https://s.shopee.vn/8pnaXPMSt5",
-      "acid": false,
-      "popularity": 11000050000
     },
     {
       "step": "support",

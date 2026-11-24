@@ -61,11 +61,7 @@ function assertCatalog(value: unknown): AffiliateCatalog {
     }
     links.add(item.affLink);
   }
-  for (const step of AFFILIATE_STEPS) {
-    if (!items.some((item) => item.step === step)) {
-      throw new Error(`Affiliate catalog is missing step ${step}`);
-    }
-  }
+  // Steps with no rows are allowed. The matcher simply has nothing to show for them.
   return { batch: record.batch, items };
 }
 

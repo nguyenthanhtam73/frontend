@@ -119,6 +119,13 @@ describe("affiliate matching", () => {
     assert.equal(reactive.some((item) => item.name.includes("Paula")), false);
   });
 
+  it("shows nothing for a step the batch does not stock", () => {
+    const picks = matchAffiliateSuggestions(input({ userId: "any", skinTypes: ["oily"], concerns: ["acne"] }));
+    assert.equal(picks.some((item) => item.step === "makeup_remover"), false);
+    assert.equal(picks.some((item) => item.name.includes("Bioderma")), false);
+    assert.equal(picks.some((item) => item.name.includes("AHA-BHA-PHA")), false);
+  });
+
   it("returns nothing for a severe case", () => {
     const picks = matchAffiliateSuggestions(
       input({

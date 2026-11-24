@@ -137,14 +137,21 @@ export function isAcidProduct(name) {
 
 const AFF_LINK_RE = /^https:\/\/s\.shopee\.vn\/[A-Za-z0-9]+$/;
 const PRODUCT_URL_PREFIX = "https://shopee.vn/product/";
-const REQUIRED_STEPS = [
-  "cleanser",
-  "serum",
-  "moisturizer",
-  "sunscreen",
-  "makeup_remover",
-  "support",
-];
+/** Shoppers only see products that pay more than this. 8% itself is rejected. */
+const MIN_COMMISSION_PERCENT = 8;
+
+/**
+ * "4,5%" / "7.5%" / "10%" → a percent number. Returns null when the cell is not a percent.
+ */
+export function parseCommissionPercent(raw) {
+  const text = String(raw ?? "")
+    .trim()
+    .replace(/\s+/g, "")
+    .replace("%", "")
+    .replace(",", ".");
+  if (!/^\d+(?:\.\d+)?$/.test(text)) return null;
+  return Number(text);
+}
 
 function failRow(rowNumber, item, problems) {
   throw new Error(`Row ${rowNumber}: ${problems.join("; ")}\n${JSON.stringify(item)}`);
@@ -230,13 +237,15 @@ export function parseAffiliateCsv(text) {
     const affLink = cell("aff_link");
     const url = cell("url");
     const subId1 = cell("sub_id1");
+    const commissionRaw = cell("hoa_hong");
+    const commissionPercent = parseCommissionPercent(commissionRaw);
     const item = {
       step: parseGroupStep(cell("nhom")),
       name: parsedName.name,
       fit: parsedName.fit,
       priceVnd: parseRequiredPrice(cell("gia_vnd"), "gia_vnd"),
       originalPriceVnd: parseOptionalPrice(cell("gia_goc_vnd")),
-      commission: cell("hoa_hong"),
+      commission: commissionRaw,
       rating: parseRating(cell("sao")),
       reviewCount: cell("danh_gia"),
       sold: cell("da_ban"),
@@ -256,6 +265,11 @@ export function parseAffiliateCsv(text) {
       problems.push(`url must start with ${PRODUCT_URL_PREFIX}`);
     }
     if (subId1 !== "dadiary") problems.push(`sub_id1 must be dadiary (got ${subId1 || "empty"})`);
+    if (commissionPercent == null) {
+      problems.push(`hoa_hong must look like 8.5% or 4,5% (got ${commissionRaw || "empty"})`);
+    } else if (commissionPercent <= MIN_COMMISSION_PERCENT) {
+      problems.push(`hoa_hong must be above 8% (got ${commissionRaw})`);
+    }
     if (seenAff.has(affLink)) problems.push(`duplicate aff_link ${affLink}`);
     if (seenUrl.has(url)) problems.push(`duplicate url ${url}`);
     if (problems.length > 0) failRow(i + 1, item, problems);
@@ -264,12 +278,8 @@ export function parseAffiliateCsv(text) {
     items.push(item);
   }
 
-  for (const step of REQUIRED_STEPS) {
-    if (!items.some((item) => item.step === step)) {
-      throw new Error(`Missing products for step ${step}`);
-    }
-  }
-
+  // A step with no rows (this batch: Tẩy trang) is omitted. The shop UI shows
+  // nothing for that step — it does not render an empty card.
   return { batch, items };
 }
 
