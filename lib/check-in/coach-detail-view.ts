@@ -62,6 +62,40 @@ export function coachZoneLabelKey(zone: unknown): CoachZoneLabelKey | null {
   return ZONE_LABEL_KEY[key as keyof typeof ZONE_LABEL_KEY];
 }
 
+const SIGN_NOTE_PREFIXES = ["trông giống", "looks like"] as const;
+
+/** Phrases the coach uses when a zone looks clear, not when it names a sign. */
+const GOOD_SKIN_PHRASES = [
+  "mịn màng",
+  "không thấy mụn",
+  "không có dấu hiệu",
+  "smooth",
+  "no sign",
+] as const;
+
+function includesPhrase(text: string, phrase: string): boolean {
+  let from = 0;
+  while (from < text.length) {
+    const at = text.indexOf(phrase, from);
+    if (at < 0) return false;
+    const after = text[at + phrase.length] ?? "";
+    if (!after || !isLetter(after)) return true;
+    from = at + phrase.length;
+  }
+  return false;
+}
+
+/**
+ * A clear-skin line has no «Trông giống» / «Looks like» opening and uses a
+ * calm phrase. A visible sign keeps its severity label.
+ */
+export function isGoodSkinNote(note: string): boolean {
+  const text = note.normalize("NFC").trim().toLocaleLowerCase("vi");
+  if (!text) return false;
+  if (SIGN_NOTE_PREFIXES.some((prefix) => text.startsWith(prefix))) return false;
+  return GOOD_SKIN_PHRASES.some((phrase) => includesPhrase(text, phrase));
+}
+
 /** Known severity → i18n key. Unknown or non-string values stay hidden. */
 export function coachSeverityLabelKey(severity: unknown): CoachSeverityLabelKey | null {
   const key = asTrimmedString(severity)?.toLowerCase() ?? "";
@@ -150,7 +184,7 @@ export function visibleZoneNotes(
       zone,
       note: shown,
       labelKey,
-      severityKey: coachSeverityLabelKey(item.severity),
+      severityKey: isGoodSkinNote(shown) ? null : coachSeverityLabelKey(item.severity),
     });
     if (out.length >= MAX_ZONE_NOTES) break;
   }
