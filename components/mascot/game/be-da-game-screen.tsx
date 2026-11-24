@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 
 import { BeDaGameView, type GameTab, type GameToast } from "@/components/mascot/game/be-da-game-view";
+import { XuShopScreen } from "@/components/mascot/game/be-da-xu-shop";
 import { useRouter } from "@/i18n/navigation";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { fetchMascot, mascotQueryKey } from "@/lib/api/mascot";
@@ -41,7 +42,10 @@ import {
 } from "@/lib/mascot/game/look";
 import { mascotFeatureEnabled } from "@/lib/mascot/feature";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
-import { wearMascotClip } from "@/lib/mascot/game/mascot-wear";
+import { wearMascotClip, wearShopPiece } from "@/lib/mascot/game/mascot-wear";
+import { pushLoiEvent } from "@/lib/mascot/loi-noi";
+import { useLoiText, useOpenLoiLine } from "@/lib/mascot/use-loi-noi";
+import { closetFromOwned, shopClosetItems, XU_SHOP_QUERY_KEY, getXuShop } from "@/lib/mascot/game/xu-shop";
 import { isTreeWearClip } from "@/lib/mascot/game/room-tree";
 import { playGameTing } from "@/lib/mascot/game/sound";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
@@ -73,6 +77,7 @@ import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
 import "@/components/mascot/game/be-da-game.css";
+import "@/components/mascot/game/be-da-xu-shop.css";
 
 const EMPTY_OWNED: readonly string[] = [];
 
@@ -101,6 +106,25 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     () => mascotQuery.data?.ownedItems.map((item) => item.id) ?? EMPTY_OWNED,
     [mascotQuery.data],
   );
+  const [shopOpen, setShopOpen] = useState(false);
+  const shopQuery = useQuery({
+    queryKey: XU_SHOP_QUERY_KEY,
+    queryFn: getXuShop,
+    enabled: hasAuth && mascotFeatureEnabled(user),
+    staleTime: 15_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+  const loiText = useLoiText();
+  useOpenLoiLine({
+    ready: !streak.isLoading && !mascotQuery.isLoading,
+    missedDays: mascotQuery.data?.missedDays ?? null,
+    streak: streak.data?.current_streak ?? null,
+  });
+  const shopCloset = useMemo(() => {
+    if (shopQuery.data) return shopClosetItems(shopQuery.data);
+    return closetFromOwned(mascotQuery.data?.ownedItems ?? []);
+  }, [shopQuery.data, mascotQuery.data]);
   const routineQuery = useQuery({
     queryKey: routineTodayQueryKey,
     queryFn: () => apiGet<RoutineDTO>("/api/v1/routines", { toastOnError: false }),
@@ -473,6 +497,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     ready && canChest && !chestDismissed && !inSpa && tab !== "lobby" && tab !== "wardrobe";
 
   return (
+    <>
     <BeDaGameView
       locale={locale}
       tab={tab}
@@ -588,6 +613,14 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       ownedClipIds={ownedClipIds}
       introResetAdmin={closetAdmin}
       onIntroReset={() => router.push(introResetHref())}
+      loiText={loiText}
+      shopCloset={shopCloset}
+      onOpenShop={() => setShopOpen(true)}
+      onWearShop={(item) => {
+        void wearShopPiece(queryClient, item.id, item.layer, mascotQuery.data?.gender).catch(() => {
+          setToast({ kind: "wear-failed", name: "" });
+        });
+      }}
       onLook={(next) => {
         const saved = equippedGameLook(next, {
           admin: closetAdmin,
@@ -608,8 +641,18 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         setLook(saved);
         setWornLook(saved);
         setToast({ kind: "worn", name: saved.outfit });
+        pushLoiEvent("mac_do_moi");
         return true;
       }}
     />
+    {shopOpen ? (
+      <XuShopScreen
+        locale={locale}
+        gender={mascotQuery.data?.gender ?? null}
+        player={view}
+        onClose={() => setShopOpen(false)}
+      />
+    ) : null}
+    </>
   );
 }

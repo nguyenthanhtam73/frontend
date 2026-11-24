@@ -30,6 +30,9 @@ import {
   wardrobeThumbSrc,
   type WardrobeItem,
 } from "@/lib/mascot/game/wardrobe";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
+import { ShopClosetTabs } from "@/components/mascot/game/be-da-xu-shop";
+import type { ShopClosetItem } from "@/lib/mascot/game/xu-shop";
 import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
@@ -151,6 +154,10 @@ export function BeDaGameView({
   onSpaRetry,
   onSpaQuit,
   onPlantSeed,
+  shopCloset = [],
+  onOpenShop,
+  onWearShop,
+  loiText = null,
   plainRoom = false,
   holdFrame = false,
 }: {
@@ -238,6 +245,12 @@ export function BeDaGameView({
   onSpaRetry?: () => void;
   onSpaQuit?: () => void;
   onPlantSeed?: (treeType: string) => Promise<void>;
+  /** Pieces bought with xu. Shown on the closet tabs when the shop can open. */
+  shopCloset?: readonly ShopClosetItem[];
+  onOpenShop?: () => void;
+  onWearShop?: (item: ShopClosetItem) => void;
+  /** A short reviewed line. Empty keeps the usual care sentence. */
+  loiText?: string | null;
   /** Skip the canvas. Screenshots use this after a forced Pixi timeout. */
   plainRoom?: boolean;
   /** Stay on the opening line. Screenshots of the draw wait. */
@@ -453,6 +466,7 @@ export function BeDaGameView({
           holdFrame={holdFrame}
           onOpenLobby={() => onTab("lobby")}
           onOpenWardrobe={() => onTab("wardrobe")}
+          loiText={loiText}
           onOpenMissions={() => {
             sheetReturn.current = tab === "quests" ? sheetReturn.current : tab;
             setCareSheet(false);
@@ -487,6 +501,9 @@ export function BeDaGameView({
             wornIds={wornIds}
             closetAdmin={closetAdmin}
             wornLook={wornLook}
+            shopCloset={shopCloset}
+            onOpenShop={onOpenShop}
+            onWearShop={onWearShop}
             preview={draft}
             onTry={(next) => {
               setDraft(next);
@@ -776,6 +793,7 @@ function Room({
   onOpenLobby,
   onOpenWardrobe,
   onOpenMissions,
+  loiText = null,
   plainRoom = false,
   holdFrame = false,
 }: {
@@ -796,6 +814,7 @@ function Room({
   onOpenLobby: () => void;
   onOpenWardrobe: () => void;
   onOpenMissions: () => void;
+  loiText?: string | null;
   plainRoom?: boolean;
   holdFrame?: boolean;
 }) {
@@ -979,7 +998,7 @@ function Room({
         }
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
-        <Bubble kind={bubbleKind} />
+        <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} loiText={loiText} />
         <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
@@ -1005,7 +1024,7 @@ function Room({
   );
 }
 
-function Bubble({ kind }: { kind: GameBubbleKind }) {
+function Bubble({ kind, bubbleId, loiText }: { kind: GameBubbleKind; bubbleId?: string; loiText?: string | null }) {
   const t = useTranslations("mascot");
   const lead =
     kind === "wash"
@@ -1016,11 +1035,12 @@ function Bubble({ kind }: { kind: GameBubbleKind }) {
           ? t("game.bubbleScreened")
           : t("game.bubbleDone");
   const nudge = kind === "washed" ? t("game.bubbleSpf") : kind === "wave" ? t("game.bubbleWave") : "";
-  if (!lead.trim()) return null;
+  if (!loiText && !lead.trim()) return null;
+  const colour = bubbleColour(bubbleId);
   return (
-    <p className="beda-bubble" data-testid="beda-bubble">
-      {lead}
-      {nudge ? (
+    <p className="beda-bubble" data-testid="beda-bubble" data-bubble={colour?.id} data-loi={loiText ? "1" : undefined} style={bubbleFrameStyle(bubbleId)}>
+      {loiText ?? lead}
+      {!loiText && nudge ? (
         <>
           <br />
           <span className="beda-bubble-nudge">{nudge}</span>
@@ -1107,6 +1127,9 @@ function Wardrobe({
   onWear,
   onClose,
   onOpenSeedBag,
+  shopCloset = [],
+  onOpenShop,
+  onWearShop,
 }: {
   wornIds: string[];
   closetAdmin: boolean;
@@ -1116,6 +1139,9 @@ function Wardrobe({
   onWear: () => void;
   onClose: () => void;
   onOpenSeedBag?: () => void;
+  shopCloset?: readonly ShopClosetItem[];
+  onOpenShop?: () => void;
+  onWearShop?: (item: ShopClosetItem) => void;
 }) {
   const t = useTranslations("mascot");
   const extras = WORN_EXTRAS.filter((id) => wornIds.includes(id));
@@ -1261,6 +1287,14 @@ function Wardrobe({
       <button type="button" className="beda-seed-open" data-testid="beda-seed-open" onClick={onOpenSeedBag}>
         {t("game.seeds.bag")}
       </button>
+      {onOpenShop ? (
+        <div data-testid="beda-shop-entry">
+          <button type="button" className="beda-seed-open" data-testid="beda-shop-open" onClick={onOpenShop}>
+            {t("game.shop.open")}
+          </button>
+          <ShopClosetTabs items={shopCloset} wearingId={null} onWear={onWearShop} />
+        </div>
+      ) : null}
       <TreeClosetSection
         selectedId={preview.clip}
         onSelect={(clipId) => onTry({ ...preview, clip: clipId && isTreeWearClip(clipId) ? clipId : null })}

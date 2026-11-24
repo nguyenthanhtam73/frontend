@@ -64,6 +64,16 @@ export type MascotLoadout = {
   cheek?: string;
   bracelet?: string;
   bag?: string;
+  /** Shop slots. Empty means nothing is worn there. */
+  shoes?: string;
+  held?: string;
+  necklace?: string;
+  scarf?: string;
+  gloves?: string;
+  nameFrame?: string;
+  sticker?: string;
+  bubble?: string;
+  fx?: string;
 };
 
 export const EXPIRY_FADE_MS = 24 * 60 * 60 * 1000;
@@ -135,6 +145,8 @@ export type OwnedMascotItem = {
   name: string;
   layer: string;
   previewOnly: boolean;
+  /** Grant source from `owned_items`, such as `shop`. */
+  source?: string;
 };
 
 export { poseForStep, isSessionComplete, streakDotBonus, POSE_HOLD_MS, STEP_POSES } from "@/lib/mascot/pose";
@@ -511,6 +523,15 @@ function parseLoadout(value: unknown): MascotLoadout {
     cheek: asString(row.cheek),
     bracelet: asString(row.bracelet),
     bag: asString(row.bag),
+    shoes: asString(row.shoes),
+    held: asString(row.held),
+    necklace: asString(row.necklace),
+    scarf: asString(row.scarf),
+    gloves: asString(row.gloves),
+    nameFrame: asString(row.name_frame),
+    sticker: asString(row.sticker),
+    bubble: asString(row.bubble),
+    fx: asString(row.fx),
   };
 }
 
@@ -576,11 +597,13 @@ export function readOwnedMascotItems(row: Record<string, unknown>): OwnedMascotI
     const id = asString(rec.item_key);
     if (!id || seen.has(id)) continue;
     seen.add(id);
+    const source = asString(rec.source).toLowerCase();
     out.push({
       id,
       name: asString(rec.name) || id,
       layer: asString(rec.layer),
       previewOnly: rec.preview_only === true,
+      ...(source ? { source } : {}),
     });
   }
   return out;

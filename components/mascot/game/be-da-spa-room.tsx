@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaActorLayer } from "@/components/mascot/game/be-da-actor-layer";
 import { StreakBoard } from "@/components/mascot/game/be-da-streak-board";
@@ -416,7 +417,12 @@ export function BeDaSpaRoom({
               <BeDaFigure view={player} locale={locale} dress={gameDress(look, youPose)} crowd marks className="w-full" />
             </span>
             {youPose === "cheer" || youPose === "poke" ? (
-              <span className="beda-gesture-bubble" data-testid="beda-gesture-bubble">
+              <span
+                className="beda-gesture-bubble"
+                data-testid="beda-gesture-bubble"
+                data-bubble={bubbleColour(player.loadout.bubble)?.id}
+                style={bubbleFrameStyle(player.loadout.bubble)}
+              >
                 {youPose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
               </span>
             ) : null}
@@ -696,7 +702,13 @@ function SpaPerson({
           <BeDaFigure view={view} locale={locale} dress={dress} imageLoading="lazy" crowd className="w-full" />
         </span>
         {guest.pose === "cheer" || guest.pose === "poke" ? (
-          <span className="beda-gesture-bubble">{guest.pose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}</span>
+          <span
+            className="beda-gesture-bubble"
+            data-bubble={bubbleColour(guest.bubble)?.id}
+            style={bubbleFrameStyle(guest.bubble)}
+          >
+            {guest.pose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
+          </span>
         ) : null}
         <span className="beda-name">
           <span className="beda-tag">

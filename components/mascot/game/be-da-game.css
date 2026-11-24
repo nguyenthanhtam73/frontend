@@ -617,6 +617,7 @@ html.dark .beda-draw-wait {
   box-sizing: border-box;
   width: min(280px, 100%);
   margin-bottom: 10px;
+  pointer-events: none;
   border-radius: 20px;
   background: #fff;
   padding: 10px 14px;
@@ -641,6 +642,14 @@ html.dark .beda-draw-wait {
 
 .beda-bubble-nudge {
   color: #c45f84;
+}
+
+.beda-bubble[data-bubble]::after {
+  border-top-color: var(--bubble-tail, #fff);
+}
+
+.beda-bubble[data-bubble] .beda-bubble-nudge {
+  color: inherit;
 }
 
 .beda-pretty {

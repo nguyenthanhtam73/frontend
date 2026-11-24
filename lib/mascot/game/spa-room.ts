@@ -1,3 +1,4 @@
+import { bubbleColour } from "@/lib/mascot/game/bubble-colour";
 import type { GameClipId, GameHairId, GameLook, GameOutfitId, GamePose } from "@/lib/mascot/game/look";
 import { lobbyCoord, lobbyLook, lobbyPose, isSessionId, type LobbyFacing, type WirePerson } from "@/lib/mascot/game/lobby-live";
 import { SPA_BOUNDS, clamp, type Bounds } from "@/lib/mascot/game/walk";
@@ -59,6 +60,7 @@ const WIRE_KEYS = new Set([
   "hide",
   "code",
   "gender",
+  "bubble",
 ]);
 
 export type SpaSeatId =
@@ -129,6 +131,8 @@ export type SpaGuest = {
   sample: boolean;
   /** Omitted or 0 means no flame. */
   careStreak?: number;
+  /** Known bubble colour from the room payload. Missing keeps the default bubble. */
+  bubble?: string;
 };
 
 export type SpaBoardRow = { nickname: string; careStreak: number };
@@ -841,6 +845,7 @@ export function seatGuests(
       pose: poses[person.id] ?? lobbyPose(person.action),
       sample: false,
       careStreak: person.careStreak,
+      ...(bubbleColour(person.bubble) ? { bubble: person.bubble } : {}),
     });
   }
   return guests;
@@ -989,6 +994,7 @@ function readPerson(value: unknown): WirePerson | null {
     facing: row.facing === "left" ? "left" : "right",
     action: typeof row.action === "string" ? row.action : "idle",
     placed,
+    ...(typeof row.bubble === "string" && bubbleColour(row.bubble) ? { bubble: row.bubble } : {}),
   };
   const careStreak = readCareStreak(row.care_streak);
   if (careStreak != null) person.careStreak = careStreak;

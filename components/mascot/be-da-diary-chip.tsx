@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { useRouter } from "@/i18n/navigation";
 import { gameRoomView } from "@/lib/mascot/game/room-view";
 import {
@@ -15,6 +16,8 @@ import {
 } from "@/lib/mascot/game/look";
 import { equippedGameLook } from "@/lib/mascot/game/wardrobe";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
+import { useStreak } from "@/lib/hooks/use-streak";
+import { useLoiText, useOpenLoiLine } from "@/lib/mascot/use-loi-noi";
 import { useAuthStore } from "@/lib/stores/auth-store";
 
 function storedLook(admin: boolean): GameLook {
@@ -43,6 +46,13 @@ export function BeDaDiaryChip() {
   const locale = useLocale();
   const router = useRouter();
   const { view, hidden } = useBeDaView();
+  const streak = useStreak();
+  const loiText = useLoiText();
+  useOpenLoiLine({
+    ready: !streak.isLoading && !hidden,
+    missedDays: view.missedDays,
+    streak: streak.data?.current_streak ?? null,
+  });
   const closetAdmin = useAuthStore((s) => s.user?.is_admin === true);
   const [look, setLook] = useState<GameLook>(DEFAULT_GAME_LOOK);
   const [quiet, setQuiet] = useState(false);
@@ -132,7 +142,15 @@ export function BeDaDiaryChip() {
         scrolling ? "is-scrolling" : "",
       ].filter(Boolean).join(" ")}
     >
-      {dozing ? null : <span className="be-da-diary-bubble">{t("diaryHello")}</span>}
+      {dozing ? null : (
+        <span
+          className="be-da-diary-bubble"
+          data-bubble={bubbleColour(room.loadout.bubble)?.id}
+          style={bubbleFrameStyle(room.loadout.bubble)}
+        >
+          {loiText ?? t("diaryHello")}
+        </span>
+      )}
       <span className="be-da-chip-wave">
         <BeDaFigure view={room} locale={locale} dress={gameDress(look)} className="w-full" />
       </span>

@@ -22,6 +22,7 @@ import {
   type TreeReward,
 } from "@/lib/mascot/game/room-tree";
 import type { RoomEvent } from "@/lib/mascot/game/spa-room";
+import { pushLoiEvent } from "@/lib/mascot/loi-noi";
 
 export type RoomTreePanel = {
   visible: boolean;
@@ -287,6 +288,7 @@ export function useRoomTree(
         if (!next) return;
         if (!next.already) {
           ownRef.current = { at: Date.now(), waters: next.waters, stage: next.stage };
+          pushLoiEvent("tuoi_cay");
           setBefore(current);
           setLevel(next.leveled);
           setToastName(null);

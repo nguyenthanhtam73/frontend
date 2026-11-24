@@ -20,6 +20,7 @@ import {
   type GiftRateCard,
 } from "@/lib/mascot/game/gift-box";
 import { wearGiftPieces } from "@/lib/mascot/game/mascot-wear";
+import { giftLoiTrigger, pushLoiEvent } from "@/lib/mascot/loi-noi";
 import type { RoomTree } from "@/lib/mascot/game/room-tree";
 
 function boxIdFromTree(tree: RoomTree): string {
@@ -178,6 +179,11 @@ function GiftResult({ result, locale, onClose }: { result: GiftOpenResult; local
   const t = useTranslations("mascot");
   const queryClient = useQueryClient();
   const [worn, setWorn] = useState(false);
+  useEffect(() => {
+    const coins = isCoinPrize(result.prize);
+    const trigger = giftLoiTrigger(result.prize.rarity, coins);
+    if (trigger) pushLoiEvent(trigger);
+  }, [result]);
   const art = giftOpenArt(result.prize.rarity);
   const label = result.prize.rarityName || result.prize.rarity;
   const coins = isCoinPrize(result.prize);

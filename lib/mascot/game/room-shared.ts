@@ -1,4 +1,5 @@
 import { ApiError, apiGet, apiPost } from "@/lib/api-client";
+import { bubbleColour } from "@/lib/mascot/game/bubble-colour";
 import { formatGameCoins } from "@/lib/mascot/game/coins";
 import {
   DEFAULT_LOADOUT,
@@ -67,6 +68,8 @@ export type RoomMascotLook = {
   accessories: string[];
   roomItems: string[];
   gender?: "male";
+  /** Equipped bubble colour. Missing until `look.bubble` is on the room payload. */
+  bubble?: string;
 };
 
 export type RoomTodayMember = {
@@ -204,6 +207,7 @@ function readLook(value: unknown): RoomMascotLook {
     accessories: stringList(body?.accessories),
     roomItems: stringList(body?.room_items),
     ...(gender ? { gender } : {}),
+    ...(bubbleColour(text(body?.bubble, 64)) ? { bubble: text(body?.bubble, 64) } : {}),
   };
 }
 
