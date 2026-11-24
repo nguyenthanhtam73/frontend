@@ -679,7 +679,7 @@ html.dark .beda-pad-btn {
   visibility: hidden;
 }
 
-@media (max-width: 370px) {
+@media (max-width: 400px) {
   .beda-hero-wrap.is-floor .beda-pretty {
     font-size: 12px;
   }

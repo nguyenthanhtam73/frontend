@@ -167,7 +167,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       const box = pad.getBoundingClientRect();
       blockRoomRect(grid, {
         x0: (box.left - gap - labelW / 2 - scene.left) / scene.width,
-        y0: (box.top - below - labelH - gap - scene.top) / scene.height,
+        y0: (box.top - below - labelH - scene.top) / scene.height,
         x1: (box.right + gap + labelW / 2 - scene.left) / scene.width,
         y1: (box.bottom - below + gap - scene.top) / scene.height,
       });
