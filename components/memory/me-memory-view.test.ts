@@ -54,7 +54,10 @@ describe("memory care sentences", () => {
     assert.equal(vi.meMemory.adherence.moderate, "Gần đây mày chăm da khá đều");
     assert.equal(vi.meMemory.adherence.low, "Gần đây mày chăm da chưa đều lắm");
     assert.equal(vi.meMemory.adherence.none, "Chưa đủ lần ghi để thấy mày chăm da đều đến đâu");
-    assert.equal(vi.meMemory.previewSub.includes("từng câu khuyên"), true);
+    assert.equal(
+      vi.meMemory.previewSub,
+      "Đây là bản tóm tắt hồ sơ da, nhật ký gần đây, góp ý và tủ đồ, không phải chép lại từng lời khuyên.",
+    );
     assert.equal(vi.meMemory.feedbackCompact, "{helpful} đúng gu · {notHelpful} chưa hợp");
     assert.equal(vi.meMemory.footerNote.startsWith("Dữ liệu này là của riêng mày"), true);
     assert.equal(vi.meMemory.sections.feedback, "Góp ý");
