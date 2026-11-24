@@ -93,7 +93,9 @@ export function plainifyGuidanceText(text: string, en: boolean): string {
 }
 
 const CERAMIDE_GLOSS = "giúp lớp ngoài da giữ nước, đỡ khô rát";
-const BARRIER_GLOSS = "lớp ngoài da (lớp giữ nước, đỡ khô rát)";
+/** ceramide, ceramides, and ceramide NP/AP/EOP are one name. */
+const CERAMIDE_NAME =
+  /(?<![\p{L}\p{N}_])ceramides?(?:\s+NP\s*\/\s*AP\s*\/\s*EOP)?(?![\p{L}\p{N}_])/giu;
 
 function capLike(sample: string, replacement: string): string {
   const first = sample.charAt(0);
@@ -104,18 +106,43 @@ function capLike(sample: string, replacement: string): string {
   return replacement;
 }
 
-/** Keep the ingredient, and say what it does. Skip a name that already has a gloss. */
-function explainKeptIngredient(text: string, pattern: RegExp, gloss: string): string {
-  return text.replace(pattern, (match: string, offset: number, whole: string) => {
+function insideParentheses(text: string, index: number): boolean {
+  let depth = 0;
+  for (let i = 0; i < index; i++) {
+    const ch = text[i];
+    if (ch === "(") depth += 1;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+  }
+  return depth > 0;
+}
+
+/**
+ * One gloss for the first ceramide name in the string.
+ * A name already inside parentheses is left alone, and so is a name that
+ * already says giúp or giữ. A colon is not an explanation.
+ */
+function explainFirstCeramide(text: string): string {
+  let explained = false;
+  return text.replace(CERAMIDE_NAME, (match: string, offset: number, whole: string) => {
+    if (explained) return match;
+    if (insideParentheses(whole, offset)) return match;
     const after = whole.slice(offset + match.length);
-    if (/^\s*(?:\([^)]{6,}\)|[—–]\s+\S|:\s+\S)/.test(after)) return match;
-    return `${match} (${gloss})`;
+    if (/^\s*(?:giúp|giữ)(?![\p{L}\p{N}_])/iu.test(after)) {
+      explained = true;
+      return match;
+    }
+    if (/^\s*\(/.test(after)) {
+      explained = true;
+      return match;
+    }
+    explained = true;
+    return `${match} (${CERAMIDE_GLOSS})`;
   });
 }
 
 /**
- * Explain «hàng rào da» in any case, including «hàng rào bảo vệ da».
- * Do not swap the words for «da», which turns «hàng rào bảo vệ da» into «da bảo vệ da».
+ * «hàng rào da» in any case, including «hàng rào bảo vệ da», becomes
+ * plain «lớp ngoài da» — no parentheses.
  */
 function explainVietnameseGuidance(text: string): string {
   let out = text.replace(/ít làm mỏng hàng rào da/giu, (match) =>
@@ -124,9 +151,8 @@ function explainVietnameseGuidance(text: string): string {
   out = out.replace(/làm mỏng hàng rào da/giu, (match) =>
     capLike(match, "làm da khô rát, dễ bị kích ứng"),
   );
-  out = out.replace(/hàng rào(?:\s+bảo vệ)?(?:\s+da)?/giu, (match) => capLike(match, BARRIER_GLOSS));
-  out = explainKeptIngredient(out, /\bceramides\b/giu, CERAMIDE_GLOSS);
-  out = explainKeptIngredient(out, /\bceramide\b/giu, CERAMIDE_GLOSS);
+  out = out.replace(/hàng rào(?:\s+bảo vệ)?(?:\s+da)?/giu, (match) => capLike(match, "lớp ngoài da"));
+  out = explainFirstCeramide(out);
   return out;
 }
 
