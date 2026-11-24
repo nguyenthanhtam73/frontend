@@ -736,6 +736,11 @@
   align-self: stretch;
 }
 
+/* The try-on line sits in this column and reaches back toward the sleeve. */
+.beda-shop.is-popup .beda-shop-side.is-end {
+  overflow: visible;
+}
+
 .beda-shop-stage-foot {
   flex: none;
 }
@@ -869,6 +874,19 @@ body[data-beda-shop="open"] .beda-shop-popup-backdrop {
   }
 }
 
+/* 360: a wider line wraps in about three lines and stays clear of the face. */
+@media (max-width: 360px) {
+  .beda-shop.is-popup .beda-shop-speech {
+    width: 140px;
+    max-width: 140px;
+    left: -46px;
+    overflow-wrap: normal;
+    word-break: normal;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+}
+
 @media (min-width: 768px) {
   .beda-shop-popup {
     align-items: center;
@@ -879,5 +897,17 @@ body[data-beda-shop="open"] .beda-shop-popup-backdrop {
     width: min(640px, calc(100vw - 48px));
     height: min(90dvh, 920px);
     border-radius: 28px;
+  }
+
+  /* Sleeve ends near 71% of the frame. Park the bubble about 14px past it. */
+  .beda-shop.is-popup .beda-shop-side.is-end {
+    container-type: size;
+  }
+
+  .beda-shop.is-popup .beda-shop-speech {
+    left: calc(14px - 25.3cqh);
+    max-width: 220px;
+    font-size: 14px;
+    line-height: 1.3;
   }
 }
