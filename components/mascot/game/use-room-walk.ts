@@ -20,13 +20,18 @@ import {
   roomWanderGoal,
   sealRoomNav,
 } from "@/lib/mascot/game/room-walk";
-import { lobbyWorldSpeed } from "@/lib/mascot/game/walk";
 import {
+  blendFeet,
   createTravel,
   directionFromKeys,
   footPose,
+  GAIT_SETTLE_S,
+  legLengthPx,
+  legSwing,
   queueTap,
+  roomCruise,
   stepTravel,
+  type FootPose,
   type KeyDirs,
   type Travel,
 } from "@/lib/mascot/game/stride";
@@ -147,29 +152,43 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       sealRoomNav(grid, (box.top - scene.top) / scene.height);
     };
 
+    let shownPose: FootPose = footPose(0, false, false, null, 1);
+    let settle = 1;
     const paint = (moving: boolean, rawDt: number) => {
       const el = heroRef.current;
       if (!el) return;
       const width = frame.clientWidth || 390;
       const height = frame.clientHeight || 844;
-      const cruise = lobbyWorldSpeed(width);
       const screenDir = travel.heading
         ? { x: travel.heading.x * width, y: travel.heading.y * height }
         : null;
-      const pose = footPose(travel.phase, moving, reduced, screenDir, travel.face < 0 ? -1 : 1);
+      const live = footPose(travel.phase, moving, reduced, screenDir, travel.face < 0 ? -1 : 1);
+      let pose = live;
+      if (moving) {
+        shownPose = live;
+        settle = 0;
+      } else if (settle < 1) {
+        settle = Math.min(1, settle + Math.min(0.05, rawDt) / GAIT_SETTLE_S);
+        const k = settle * settle * (3 - 2 * settle);
+        pose = blendFeet(shownPose, k);
+      }
+      const stride = el.querySelector<HTMLElement>(".beda-stride");
+      const legPx = legLengthPx(stride?.clientWidth || el.clientWidth || 180);
+      const left = legSwing(pose.lx, pose.ly, legPx);
+      const right = legSwing(pose.rx, pose.ry, legPx);
       el.style.setProperty("--rx", travel.x.toFixed(4));
       el.style.setProperty("--ry", travel.y.toFixed(4));
       el.style.setProperty("--bob", `${pose.bob.toFixed(2)}px`);
-      el.style.setProperty("--lx", `${pose.lx.toFixed(2)}px`);
-      el.style.setProperty("--ly", `${pose.ly.toFixed(2)}px`);
-      el.style.setProperty("--rx-foot", `${pose.rx.toFixed(2)}px`);
-      el.style.setProperty("--ry-foot", `${pose.ry.toFixed(2)}px`);
+      el.style.setProperty("--la", `${left.degrees.toFixed(2)}deg`);
+      el.style.setProperty("--ly", `${left.y.toFixed(2)}px`);
+      el.style.setProperty("--ra", `${right.degrees.toFixed(2)}deg`);
+      el.style.setProperty("--ry-foot", `${right.y.toFixed(2)}px`);
       el.style.setProperty("--arm", `${pose.arm.toFixed(2)}deg`);
       el.style.setProperty("--face-x", travel.face.toFixed(3));
       el.style.zIndex = String(roomSortIndex(travel.y));
       el.dataset.nx = travel.x.toFixed(4);
       el.dataset.ny = travel.y.toFixed(4);
-      el.dataset.stepping = moving ? "1" : "0";
+      el.dataset.stepping = moving || settle < 1 ? "1" : "0";
       el.dataset.face = travel.faceTo < 0 ? "left" : "right";
       placeBubble(el);
       placeCaption(el, moving, rawDt);
@@ -205,7 +224,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         const height = frame.clientHeight || 844;
         const dir = directionFromKeys(held);
         const before = { x: travel.x, y: travel.y };
-        travel = stepTravel(travel, dt, grid, { dir, cruise: lobbyWorldSpeed(width), width, height });
+        travel = stepTravel(travel, dt, grid, { dir, cruise: roomCruise(width), width, height });
         if (!Number.isFinite(travel.x) || !Number.isFinite(travel.y)) {
           const stand = nearestWalkable(grid, before.x, before.y);
           travel = { ...createTravel(stand), face: travel.face, faceTo: travel.faceTo };
@@ -225,7 +244,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       const moving = Boolean(directionFromKeys(held)) || Boolean(travel.goal) || travel.speed > 0.01;
       paint(moving, rawDt);
       if (dead) return;
-      if (moving && !holdRef.current) raf = requestAnimationFrame(tick);
+      if ((moving || settle < 1) && !holdRef.current) raf = requestAnimationFrame(tick);
       else
         timer = window.setTimeout(() => {
           raf = requestAnimationFrame(tick);

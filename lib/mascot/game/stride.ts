@@ -30,8 +30,19 @@ export const PACE_RAMP = 0.045;
 export const STEP_LIFT_PX = 8;
 /** Peak vertical bob. Kept under 2px so she does not rock. */
 export const BOB_PX = 1.5;
-/** Degrees added to the short hanging sleeves. The drawing itself does not change. */
-export const ARM_DEG = 5;
+/**
+ * Degrees the short sleeves leave the hang. Positive swings the right arm
+ * back (the mirrored left arm then swings forward). The drawing stays short.
+ */
+export const ARM_DEG = 10;
+/** Screen pixels per second in the private room. Slow enough that a step reads. */
+export const ROOM_SCREEN_PX_PER_SEC = 60;
+/** How long the feet and sleeves ease back to standing after she stops. */
+export const GAIT_SETTLE_S = 0.28;
+
+export function roomCruise(width: number): number {
+  return ROOM_SCREEN_PX_PER_SEC / Math.max(1, width);
+}
 const ARRIVE = 0.004;
 
 export function directionFromKeys(held: KeyDirs): { x: number; y: number } | null {
@@ -147,17 +158,64 @@ export function footPose(
   });
   const u = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
   const planted = place(half - u * STEP_PX, 0);
-  const swing = place(-half + u * STEP_PX, liftOf(u));
+  // Cosine so the swinging shoe eases out of the back plant and into the front one.
+  const swing = place(-half * Math.cos(Math.PI * u), liftOf(u));
   const left = t < 0.5 ? planted : swing;
   const right = t < 0.5 ? swing : planted;
   const bobMag = Math.abs(Math.sin(t * Math.PI * 2)) * BOB_PX;
+  // Left foot is furthest forward at t = 0. The right sleeve then swings forward
+  // (negative degrees: 110° hang minus this). The mirror sends the left sleeve back.
+  const arm = -Math.cos(t * Math.PI * 2) * ARM_DEG;
   return {
     bob: reduced || bobMag === 0 ? 0 : -bobMag,
     lx: left.x,
     ly: left.y,
     rx: right.x,
     ry: right.y,
-    arm: reduced ? 0 : Math.sin(t * Math.PI * 2) * ARM_DEG,
+    arm: reduced ? 0 : arm,
+  };
+}
+
+/** Hip-to-sole length in the 220-wide figure, in viewBox units. */
+export const LEG_VIEW_PX = 33.6;
+
+export function legLengthPx(figureWidth: number): number {
+  return (LEG_VIEW_PX / 220) * Math.max(1, figureWidth);
+}
+
+/**
+ * Turn a foot offset into a hip rotation. Positive `localX` is to the right
+ * in the facing frame. The sole lands on that offset, and `localY` (already
+ * negative while the foot is in the air) lifts it without moving the hip.
+ */
+export function legSwing(localX: number, localY: number, legPx: number): { degrees: number; y: number } {
+  const leg = Math.max(1, legPx);
+  const span = leg - 0.001;
+  const offset = Math.max(-span, Math.min(span, localX));
+  const rad = Math.asin(offset / leg);
+  const y = leg - Math.cos(rad) * leg + localY;
+  const degrees = -(rad * 180) / Math.PI;
+  return {
+    degrees: degrees === 0 ? 0 : degrees,
+    y: y === 0 ? 0 : y,
+  };
+}
+
+/** Ease a step pose back to standing. `t` is 0 at the last step and 1 when she is still. */
+export function blendFeet(from: FootPose, t: number): FootPose {
+  const x = Math.min(1, Math.max(0, t));
+  const e = x * x * (3 - 2 * x);
+  const rest = (value: number) => {
+    const next = value * (1 - e);
+    return next === 0 ? 0 : next;
+  };
+  return {
+    bob: rest(from.bob),
+    lx: rest(from.lx),
+    ly: rest(from.ly),
+    rx: rest(from.rx),
+    ry: rest(from.ry),
+    arm: rest(from.arm),
   };
 }
 

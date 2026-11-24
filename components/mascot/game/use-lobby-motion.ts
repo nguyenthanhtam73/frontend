@@ -20,6 +20,7 @@ import {
   compactSpaPlate,
   fitSpaPlate,
   nameTagDrop,
+  soloNameHug,
   SPA_LANDSCAPE_BOUNDS,
   SPA_TAG_MAX_PX,
   placeSpaNameLabels,
@@ -965,6 +966,13 @@ export function useSpaMotion(input: {
         label.style.left = `${center}px`;
         label.style.top = `${top}px`;
         heads.push({ id, label, x: center, y: top });
+      }
+      const hug = soloNameHug(heads.length);
+      if (hug > 0) {
+        for (const head of heads) {
+          head.y += hug;
+          head.label.style.top = `${head.y}px`;
+        }
       }
       const placed: { id: string; label: HTMLElement; x: number; y: number; w: number; h: number; water: number }[] = [];
       for (const head of heads) {
