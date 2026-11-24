@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 
-import { actorClip, lookFromArt, sheetJsonUrlFromArt, sheetKey, sheetKeyFromArt } from "./actor-sheet";
+import { actorClip, idleLoopIndexes, lookFromArt, sheetJsonUrlFromArt, sheetKey, sheetKeyFromArt } from "./actor-sheet";
 
 describe("actor sheet", () => {
   it("names a sheet from the outfit and hair", () => {
@@ -34,6 +34,11 @@ describe("actor sheet", () => {
       "/mascot/faces/happy/eyes.svg",
     ]);
     assert.deepEqual(look, { outfit: "outfit_vay_hoa", hair: "hair_high_pony" });
+  });
+
+  it("keeps the baked eyelid frame out of the idle loop", () => {
+    assert.deepEqual(idleLoopIndexes(4), [0, 1, 3]);
+    assert.deepEqual(idleLoopIndexes(2), [0, 1]);
   });
 
   it("plays walk while moving and wave only when still", () => {

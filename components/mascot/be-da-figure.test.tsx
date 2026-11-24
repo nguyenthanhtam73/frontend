@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { MASCOT_CATALOG } from "@/lib/mascot/catalog";
+import { DEFAULT_GAME_LOOK, gameDress, genderLook } from "@/lib/mascot/game/look";
 import { parseMascot, resolveBeDaView } from "@/lib/mascot/model";
 
 /** Shape of GET /api/v1/me/mascot from the backend mascot DTO. */
@@ -87,6 +88,36 @@ describe("Bé Da backend payload", () => {
     assert.equal(html.includes("hair_unknown"), false);
     assert.equal(html.includes("outfit_nope"), false);
     assert.equal(html.includes("room_not_real"), false);
+  });
+
+  it("hangs the short v2 sleeves on a dressed Nữ and Nam", () => {
+    const female = resolveBeDaView({
+      snapshot: { ...parseMascot(backendMascot), gender: "female", isDefault: false },
+      missedDays: 0,
+      sessionHappy: true,
+      locale: "vi",
+    });
+    const nu = renderToStaticMarkup(
+      <BeDaFigure view={female} locale="vi" dress={gameDress(genderLook(DEFAULT_GAME_LOOK, "female"))} crowd marks />,
+    );
+    assert.match(nu, /arm_wave_right__pajamas\.svg/);
+    assert.equal(nu.split('data-slot="arms"').length - 1, 2);
+    assert.equal(nu.split("rotate(110deg)").length - 1, 2);
+    assert.match(nu, /bd-sleeve-mirror/);
+    assert.equal(nu.includes("arms_up__"), false);
+    const nam = renderToStaticMarkup(
+      <BeDaFigure
+        view={{ ...female, gender: "male" }}
+        locale="vi"
+        dress={gameDress(genderLook(DEFAULT_GAME_LOOK, "male"))}
+        crowd
+        marks
+      />,
+    );
+    assert.match(nam, /arm_wave_right__pajamas_boy\.svg/);
+    assert.equal(nam.split('data-slot="arms"').length - 1, 2);
+    assert.match(nam, /hair_boy_short\.svg/);
+    assert.match(nam, /bd-lids/);
   });
 
   it("keeps the routine-tick jump on the breathing figure", () => {

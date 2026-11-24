@@ -5,7 +5,7 @@ export const BEDA_INTRO_PATH = "/goc-binh-yen/gioi-thieu";
 /** Same full-screen game the Android WebView already opens. */
 export const BEDA_GAME_PATH = "/goc-binh-yen/game";
 
-export const INTRO_LINE_VI = "Bé Da này sẽ đi cùng bạn, nhớ chăm sóc bé thật tốt nhé";
+export const INTRO_LINE_VI = "Bé Da này sẽ đi cùng mày nè, nhớ chăm bé thật tốt nha";
 
 export type IntroPageId = "hello" | "care" | "wardrobe" | "quests" | "lobby";
 

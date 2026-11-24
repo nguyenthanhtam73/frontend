@@ -18,3 +18,13 @@ export function shellArt(
 export function lookArt(view: BeDaView, look: GameLook, crowd: boolean, marks?: boolean): string[] {
   return shellArt(view, gameDress(look), crowd, marks);
 }
+
+/**
+ * The signed-in player's v2 sheet.
+ * Lobby, spa, and the private room must pass this same list so a chosen
+ * outfit, hair, and Nữ/Nam variant resolve to one spritesheet.
+ * Crowd art drops the home stickers (moon, plant, pillow) and the glow plates.
+ */
+export function playerActorArt(view: BeDaView, look: GameLook): string[] {
+  return lookArt(view, look, true, true);
+}

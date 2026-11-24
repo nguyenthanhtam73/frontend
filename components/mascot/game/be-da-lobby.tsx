@@ -18,7 +18,7 @@ import {
   type LobbySpot,
 } from "@/lib/mascot/game/lobby";
 import { type LobbyActor } from "@/lib/mascot/game/lobby-live";
-import { lookArt } from "@/lib/game/core/art";
+import { lookArt, playerActorArt } from "@/lib/game/core/art";
 import type { ShellSnapshot } from "@/lib/game/core/types";
 import { useLobbyMotion } from "@/components/mascot/game/use-lobby-motion";
 import {
@@ -181,7 +181,7 @@ export function BeDaLobby({
         x: you.x,
         y: you.y,
         facing: you.facing,
-        art: lookArt(player, look, true, true),
+        art: playerActorArt(player, look),
         local: true as const,
         motion: actorMotion(you.pose, false),
       },
@@ -408,7 +408,7 @@ export function BeDaLobby({
           data-friend-id="you"
           data-pixi-label="you"
           data-testid="beda-lobby-you"
-          data-art={lookArt(player, look, true, true).join(" ")}
+          data-art={playerActorArt(player, look).join(" ")}
           style={{ ["--ms" as string]: "1.2" }}
         >
           <button

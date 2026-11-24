@@ -41,6 +41,22 @@ const HAIRS = new Set([
 
 export type ActorClip = "idle" | "walk" | "wave";
 
+/**
+ * The sheet bake paints eyelids on this idle frame only
+ * (`scripts/build-beda-sheet.ts`). The looping clip skips it.
+ * Each actor shows that frame on its own blink clock.
+ */
+export const IDLE_BLINK_FRAME = 2;
+
+/** Open-eye idle frames. Falls back to every frame when the blink plate is missing. */
+export function idleLoopIndexes(frameCount: number): number[] {
+  const open: number[] = [];
+  for (let i = 0; i < frameCount; i += 1) {
+    if (i !== IDLE_BLINK_FRAME) open.push(i);
+  }
+  return open.length > 0 ? open : Array.from({ length: frameCount }, (_, i) => i);
+}
+
 export function sheetKey(outfit: string, hair: string): string {
   const worn = OUTFITS.has(outfit) ? outfit : "outfit_pajamas";
   const style = HAIRS.has(hair) ? hair : "hair_sleep_buns";

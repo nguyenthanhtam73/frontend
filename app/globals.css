@@ -449,13 +449,29 @@ img.be-da-flies-exit {
 /* Idle breathe + blink. Levels 1–2 are sleepy. Fly, yawn, tidy, and the routine jump stay. */
 .bd-figure {
   --bd-breath: 3.8s;
-  --bd-blink: 120ms;
+  --bd-blink: 140ms;
 }
 
 .bd-figure[data-level="1"],
 .bd-figure[data-level="2"] {
   --bd-breath: 4.8s;
-  --bd-blink: 260ms;
+}
+
+/* Short sleeves. Same pivot the v2 sheet uses (shoulder 62.7% 63.2%). */
+.bd-sleeve {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 62.7% 63.2%;
+  pointer-events: none;
+}
+
+.bd-sleeve-mirror {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(-1);
+  pointer-events: none;
 }
 
 .be-da-routine-chip {
@@ -811,8 +827,8 @@ img.be-da-flies-exit {
   0% {
     opacity: 0;
   }
-  18%,
-  72% {
+  20%,
+  80% {
     opacity: 1;
   }
   100% {

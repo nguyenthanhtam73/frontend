@@ -15,7 +15,7 @@ import { useSpaMotion } from "@/components/mascot/game/use-lobby-motion";
 import { GameIcon } from "@/components/mascot/game/icons";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import { gameDress, type GameLook, type GamePose } from "@/lib/mascot/game/look";
-import { lookArt } from "@/lib/game/core/art";
+import { lookArt, playerActorArt } from "@/lib/game/core/art";
 import { lobbyNeutralView, sampleFriendView, SAMPLE_LOBBY_FRIENDS } from "@/lib/mascot/game/lobby";
 import {
   SPA_CODE_ALPHABET,
@@ -405,7 +405,7 @@ export function BeDaSpaRoom({
             data-outfit={look.outfit}
             data-hair={look.hair}
             data-pose={youPose ?? ""}
-            data-art={lookArt(player, look, true, true).join(" ")}
+            data-art={playerActorArt(player, look).join(" ")}
             data-testid="beda-spa-you"
             style={{
               zIndex: spaStackZ(room.you?.y ?? 0.7),

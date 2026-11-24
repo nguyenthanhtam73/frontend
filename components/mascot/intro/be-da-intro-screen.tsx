@@ -123,7 +123,7 @@ export function BeDaIntroScreen({
     >
       <p className="text-center text-sm font-semibold tracking-wide text-[#a85b78]">Bé Da</p>
       <div className="mx-auto mt-2 w-[min(100%,220px)]">
-        <BeDaFigure view={view} locale={locale} dress={dress} className="w-full" />
+        <BeDaFigure view={view} locale={locale} dress={dress} crowd marks className="w-full" />
       </div>
       <div className="mt-3 flex flex-1 flex-col">
         <PageCopy id={id} copy={copy} gender={gender} onGender={onGender} />
