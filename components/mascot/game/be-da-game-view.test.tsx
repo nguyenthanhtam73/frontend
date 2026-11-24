@@ -568,10 +568,11 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
-  it("opens the gift chest without printing a level", () => {
+  it("shows a ready quest chest with a dot and a closed chest", () => {
     const html = renderGame({
       tab: "quests",
       chestOpen: true,
+      chestReady: true,
       hearts: 3,
       quests: [
         { id: "wash", done: true },
@@ -581,14 +582,24 @@ describe("Bé Da game screen", () => {
       bubbleKind: "done",
     });
     assert.match(html, /data-testid="beda-chest"/);
+    assert.match(html, /data-phase="ready"/);
     assert.match(html, /Mở rương quà!/);
-    assert.match(html, /Nhận quà/);
-    assert.match(html, /\+3 tim/);
-    assert.match(html, /Giữ chuỗi/);
+    assert.match(html, /Mở rương/);
+    assert.match(html, /chest_closed\.svg/);
+    assert.match(html, /is-wiggle/);
+    assert.match(html, /data-testid="beda-quest-dot"/);
     assert.match(html, /1\.250/);
     assert.equal(html.includes('data-testid="beda-hero"'), false);
-    assert.match(html, /bd-breathe/);
+    assert.equal(html.includes("chest_open.svg"), false);
     assertNoScores(html);
+  });
+
+  it("wiggles the gift pill when the chest is waiting and the modal is closed", () => {
+    const html = renderGame({ chestReady: true, chestOpen: false, giftTaken: false });
+    assert.match(html, /data-testid="beda-gift-ready"/);
+    assert.match(html, /beda-gift-pill is-ready/);
+    assert.match(html, /data-testid="beda-quest-dot"/);
+    assert.equal(html.includes('data-testid="beda-chest"'), false);
   });
 
   it("shows the admin Bé Da reset on the room and hides it from everyone else", () => {

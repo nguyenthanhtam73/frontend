@@ -15,7 +15,10 @@ import { SeedBagLoader } from "@/components/mascot/game/be-da-seed-bag";
 import type { RoomTreePanel } from "@/components/mascot/game/use-room-tree";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import type { RoomClock, SpaNotice } from "@/lib/mascot/game/spa-room";
+import { BeDaQuestChest, useCoinTicker } from "@/components/mascot/game/be-da-quest-chest";
 import { GameIcon, IconBack, type GameIconName } from "@/components/mascot/game/icons";
+import { formatGameCoins } from "@/lib/mascot/game/coins";
+import type { QuestChestGrant } from "@/lib/mascot/game/quest-chest";
 import { LOBBY_PLAYER_SPOT } from "@/lib/mascot/game/lobby";
 import {
   defaultLobbyNickname,
@@ -102,13 +105,15 @@ export function BeDaGameView({
   progress,
   showPrettyLine,
   chestOpen,
+  chestReady = false,
+  chestSession = "",
+  coinsValue = null,
   friendCount,
   selectedFriendId,
   toast,
   look,
   wornIds,
   hearts,
-  streakKept,
   giftTaken,
   player,
   burst,
@@ -118,6 +123,8 @@ export function BeDaGameView({
   onSelectFriend,
   onFriendAction,
   onClaim,
+  onChestClose = () => undefined,
+  onReopenChest = () => undefined,
   onLook,
   closetAdmin = false,
   ownedClipIds = [],
@@ -180,6 +187,12 @@ export function BeDaGameView({
   progress: number | null;
   showPrettyLine: boolean;
   chestOpen: boolean;
+  /** Unclaimed session chest. Keeps the dot and the wiggle after the modal is dismissed. */
+  chestReady?: boolean;
+  /** Remounts the ceremony when the next session chest opens. */
+  chestSession?: string;
+  /** Numeric xu the header pill counts up from. */
+  coinsValue?: number | null;
   friendCount: number;
   selectedFriendId: string;
   toast: GameToast;
@@ -196,7 +209,9 @@ export function BeDaGameView({
   onToggleSound: () => void;
   onSelectFriend: (id: string) => void;
   onFriendAction: (kind: "wave" | "heart" | "outfit" | "cheer" | "poke") => void;
-  onClaim: () => void;
+  onClaim: () => void | Promise<QuestChestGrant | void>;
+  onChestClose?: () => void;
+  onReopenChest?: () => void;
   onLook: (look: GameLook) => boolean;
   /** is_admin from GET /me. Reveals closet rows whose grant is "admin". */
   closetAdmin?: boolean;
@@ -275,6 +290,11 @@ export function BeDaGameView({
   };
   const rootRef = useRef<HTMLDivElement>(null);
   const [careSheet, setCareSheet] = useState(false);
+  const [coinGoal, setCoinGoal] = useState<number | null>(null);
+  const [coinGold, setCoinGold] = useState(false);
+  const ticking = useCoinTicker(coinsValue, coinGoal);
+  const coinText = ticking == null ? coinsLabel : formatGameCoins(ticking, locale);
+  const questDot = chestReady || chestOpen;
   const [missionSheet, setMissionSheet] = useState(false);
   const sheetReturn = useRef<GameTab>("care");
   const spaOpen = spa != null;
@@ -466,6 +486,8 @@ export function BeDaGameView({
           quests={quests}
           summary={summary}
           giftTaken={giftTaken}
+          chestReady={chestReady}
+          onReopenChest={onReopenChest}
           doorCountLabel={doorCountLabel}
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
@@ -484,14 +506,16 @@ export function BeDaGameView({
       )}
 
       {chestOpen ? (
-        <Chest
-          coinsLabel={coinsLabel}
-          hearts={hearts}
-          streakKept={streakKept}
-          player={player}
+        <BeDaQuestChest
+          key={chestSession || "chest"}
           locale={locale}
-          look={equipped}
+          hearts={hearts}
           onClaim={onClaim}
+          onClose={onChestClose}
+          onBalance={(balance) => {
+            setCoinGold(true);
+            setCoinGoal(balance);
+          }}
         />
       ) : null}
 
@@ -557,22 +581,23 @@ export function BeDaGameView({
             {onOpenShop ? (
               <button
                 type="button"
-                className="beda-chip"
+                className={coinGold ? "beda-chip is-gold" : "beda-chip"}
                 data-testid="beda-coins"
-                aria-label={t("game.shop.openChip", { count: coinsLabel })}
+                data-gold={coinGold ? "1" : "0"}
+                aria-label={t("game.shop.openChip", { count: coinText })}
                 onClick={onOpenShop}
               >
                 <span className="beda-chip-icon coin">
                   <GameIcon name="coin" className="beda-ico-sm" />
                 </span>
-                {coinsLabel} <small>{t("game.coinsUnit")}</small>
+                {coinText} <small>{t("game.coinsUnit")}</small>
               </button>
             ) : (
-              <div className="beda-chip" data-testid="beda-coins">
+              <div className={coinGold ? "beda-chip is-gold" : "beda-chip"} data-testid="beda-coins" data-gold={coinGold ? "1" : "0"}>
                 <span className="beda-chip-icon coin">
                   <GameIcon name="coin" className="beda-ico-sm" />
                 </span>
-                {coinsLabel} <small>{t("game.coinsUnit")}</small>
+                {coinText} <small>{t("game.coinsUnit")}</small>
               </div>
             )}
             <div className="beda-chip" data-testid="beda-streak">
@@ -787,7 +812,8 @@ export function BeDaGameView({
               <span className={burst > 0 && on ? "beda-nav-orb beda-pop" : "beda-nav-orb"}>
                 <GameIcon name={item.icon} />
               </span>
-              {item.id === "quests" && openSteps > 0 ? <span className="beda-badge">{openSteps}</span> : null}
+              {item.id === "quests" && questDot ? <span className="beda-nav-dot" data-testid="beda-quest-dot" /> : null}
+              {item.id === "quests" && !questDot && openSteps > 0 ? <span className="beda-badge">{openSteps}</span> : null}
               <span className="beda-nav-label">{t(`game.${item.label}`)}</span>
             </button>
           );
@@ -810,6 +836,8 @@ function Room({
   quests,
   summary,
   giftTaken,
+  chestReady = false,
+  onReopenChest,
   doorCountLabel,
   hideCards,
   showHero,
@@ -831,6 +859,8 @@ function Room({
   quests: GameQuest[];
   summary: ReturnType<typeof routineSummary>;
   giftTaken: boolean;
+  chestReady?: boolean;
+  onReopenChest?: () => void;
   doorCountLabel: string;
   hideCards: boolean;
   showHero: boolean;
@@ -991,14 +1021,23 @@ function Room({
       {!hideCards ? (
         <div className="beda-private-bar">
           <section className="beda-card beda-quest" data-testid="beda-quest" aria-label={t("game.questTitle")}>
-            <h2>
-              <GameIcon name="quests" className="beda-ico-sm" />
-              <span className="beda-quest-title">{t("game.questTitle")}</span>
-              <span className="beda-gift-pill">
-                <GameIcon name={giftTaken ? "chestOpen" : "chestClosed"} className="beda-gift-ico" />
-                {giftTaken ? t("game.giftTaken") : t("game.gift.label")}
-              </span>
-            </h2>
+            <div className="beda-quest-head">
+              <h2>
+                <GameIcon name="quests" className="beda-ico-sm" />
+                <span className="beda-quest-title">{t("game.questTitle")}</span>
+              </h2>
+              {chestReady && !giftTaken ? (
+                <button type="button" className="beda-gift-pill is-ready" data-testid="beda-gift-ready" onClick={onReopenChest}>
+                  <GameIcon name="chestClosed" className="beda-gift-ico" />
+                  {t("game.gift.label")}
+                </button>
+              ) : (
+                <span className="beda-gift-pill">
+                  <GameIcon name={giftTaken ? "chestOpen" : "chestClosed"} className="beda-gift-ico" />
+                  {giftTaken ? t("game.giftTaken") : t("game.gift.label")}
+                </span>
+              )}
+            </div>
             {summary.morning.total + summary.evening.total === 0 ? (
               <>
                 <p className="beda-quest-empty">{t("game.noSteps")}</p>
@@ -1117,74 +1156,6 @@ function Bubble({ kind, bubbleId, loiText }: { kind: GameBubbleKind; bubbleId?: 
         </>
       ) : null}
     </p>
-  );
-}
-
-function Chest({
-  coinsLabel,
-  hearts,
-  streakKept,
-  player,
-  locale,
-  look,
-  onClaim,
-}: {
-  coinsLabel: string;
-  hearts: number;
-  streakKept: boolean;
-  player: BeDaView;
-  locale: string;
-  look: GameLook;
-  onClaim: () => void;
-}) {
-  const t = useTranslations("mascot");
-  return (
-    <div className="beda-chest" data-testid="beda-chest">
-      <div className="beda-chest-shade" />
-      <div className="beda-chest-copy">
-        <h2>{t("game.chestTitle")}</h2>
-        <p>{t("game.chestSub")}</p>
-      </div>
-      <div className="beda-chest-stage" aria-hidden>
-        <i className="beda-coin-float" style={{ left: "8%", top: "18%" }}>
-          <GameIcon name="coin" />
-        </i>
-        <i className="beda-coin-float" style={{ left: "28%", top: "6%", animationDelay: "0.3s" }}>
-          <GameIcon name="coin" />
-        </i>
-        <i className="beda-coin-float" style={{ left: "46%", top: "0", animationDelay: "0.6s" }}>
-          <GameIcon name="coin" />
-        </i>
-        <i className="beda-coin-float" style={{ right: "28%", top: "8%", animationDelay: "0.2s" }}>
-          <GameIcon name="coin" />
-        </i>
-        <img src={mascotAssetUrl("/mascot/icons/chest_open.svg")} alt="" className="beda-chest-art" decoding="async" />
-        <div className="beda-chest-hero">
-          <BeDaFigure view={player} locale={locale} dress={gameDress(look, "cheer")} className="w-full" />
-        </div>
-      </div>
-      <div className="beda-card beda-rewards">
-        <div>
-          <strong>{coinsLabel}</strong>
-          {t("game.coinsUnit")}
-        </div>
-        <div>
-          <strong>
-            <GameIcon name="flame" className="beda-ico-sm" />
-          </strong>
-          {streakKept ? t("game.chestStreak") : t("game.chestStreakWait")}
-        </div>
-        <div>
-          <strong>
-            <GameIcon name="heart" className="beda-ico-sm" />
-          </strong>
-          {t("game.chestHearts", { count: hearts })}
-        </div>
-      </div>
-      <button type="button" className="beda-claim" onClick={onClaim}>
-        {t("game.claim")}
-      </button>
-    </div>
   );
 }
 

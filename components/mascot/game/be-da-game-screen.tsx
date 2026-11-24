@@ -14,6 +14,7 @@ import { getAccessToken } from "@/lib/auth-token";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
 import { useStreak } from "@/lib/hooks/use-streak";
 import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
+import { emptyQuestGrant, type QuestChestGrant } from "@/lib/mascot/game/quest-chest";
 import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
 import { useRoomShared } from "@/components/mascot/game/use-room-shared";
 import { useRoomTree } from "@/components/mascot/game/use-room-tree";
@@ -72,7 +73,13 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import { isSessionComplete } from "@/lib/mascot/pose";
 import { useBeDaPoseStore } from "@/lib/mascot/pose-store";
 import { keepAffiliate } from "@/lib/routine/affiliate-link";
-import { pendingChestSession, routineDayKey, sessionComplete, sessionOpen } from "@/lib/routine/session-window";
+import {
+  pendingChestSession,
+  routineDayKey,
+  sessionComplete,
+  sessionOpen,
+  type RoutineSession,
+} from "@/lib/routine/session-window";
 import { routineTickBody, routineTodayQueryKey } from "@/lib/routine/today-query";
 import type { RoutineDTO, RoutineStepDTO } from "@/lib/types/routine";
 
@@ -142,6 +149,10 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const [claimedEvening, setClaimedEvening] = useState(false);
   const [ready, setReady] = useState(false);
   const [chestDismissed, setChestDismissed] = useState(false);
+  const [holdingChest, setHoldingChest] = useState(false);
+  const [claimSession, setClaimSession] = useState<RoutineSession | null>(null);
+  const claimLock = useRef(false);
+  const claimedSession = useRef<RoutineSession | null>(null);
   const [selectedFriendId, setSelectedFriendId] = useState("");
   const [createProblem, setCreateProblem] = useState<SpaNotice>(null);
   const [creatingRoom, setCreatingRoom] = useState(false);
@@ -463,33 +474,63 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     setWaved(true);
   }
 
-  function onClaim() {
-    feedback();
-    if (pendingChest === "morning") {
-      writeDayFlag(localStorage, GAME_CHEST_MORNING_KEY, today);
-      setClaimedMorning(true);
-    } else if (pendingChest === "evening") {
-      writeDayFlag(localStorage, GAME_CHEST_EVENING_KEY, today);
-      setClaimedEvening(true);
+  async function onClaim(): Promise<QuestChestGrant> {
+    const session = pendingChest;
+    if (!session || claimLock.current || claimedSession.current === session) return emptyQuestGrant();
+    claimLock.current = true;
+    setHoldingChest(true);
+    setClaimSession(session);
+    try {
+      feedback();
+      if (session === "morning") {
+        writeDayFlag(localStorage, GAME_CHEST_MORNING_KEY, today);
+        setClaimedMorning(true);
+      } else {
+        writeDayFlag(localStorage, GAME_CHEST_EVENING_KEY, today);
+        setClaimedEvening(true);
+      }
+      claimedSession.current = session;
+      // No home-chest route exists. The grant stays empty until the backend
+      // credits xu or an item and returns the new balance.
+      return emptyQuestGrant();
+    } catch (err) {
+      claimLock.current = false;
+      setHoldingChest(false);
+      setClaimSession(null);
+      throw err;
+    }
+  }
+
+  function onChestClose() {
+    const finished = claimSession != null;
+    claimLock.current = false;
+    setHoldingChest(false);
+    setClaimSession(null);
+    if (finished && pendingChest && claimedSession.current !== pendingChest) {
+      setChestDismissed(false);
+      setTab("quests");
+      return;
     }
     setChestDismissed(true);
-    setTab("care");
+    if (finished) setTab("care");
+  }
+
+  function reopenChest() {
+    setChestDismissed(false);
+    setTab("quests");
   }
 
   const checkedIn =
     checkedInOnDay(mascotQuery.data?.lastCheckinAt, today) ||
     checkedInOnDay(streak.data?.last_check_in_date, today);
   const coinsKnown = mascotQuery.isSuccess || mascotQuery.isError;
-  const coinsLabel = coinsKnown
-    ? formatGameCoins(
-        gameCoinCount({
-          glowPoints: mascotQuery.data?.glowPoints ?? null,
-          routineTicks: countRoutineTicks(morning, evening, routineToday),
-          checkedInToday: checkedIn,
-        }),
-        locale,
-      )
-    : "…";
+  const coinCount = gameCoinCount({
+    glowPoints: mascotQuery.data?.glowPoints ?? null,
+    routineTicks: countRoutineTicks(morning, evening, routineToday),
+    checkedInToday: checkedIn,
+  });
+  const coinsLabel = coinsKnown ? formatGameCoins(coinCount, locale) : "…";
+  const coinsValue = coinsKnown ? coinCount : null;
   const streakLabel = streak.isSuccess ? String(streak.data?.current_streak ?? 0) : "…";
 
   const wornIds = useMemo(() => {
@@ -502,7 +543,7 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   }, [view]);
 
   const chestOpen =
-    ready && canChest && !chestDismissed && !inSpa && tab !== "lobby" && tab !== "wardrobe";
+    ready && (canChest || holdingChest) && !chestDismissed && !inSpa && tab !== "lobby" && tab !== "wardrobe";
 
   return (
     <>
@@ -511,6 +552,9 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       tab={tab}
       sky={skyPeriod(new Date())}
       coinsLabel={coinsLabel}
+      coinsValue={coinsValue}
+      chestReady={canChest || holdingChest}
+      chestSession={claimSession ?? pendingChest ?? ""}
       streakLabel={streakLabel}
       soundOn={soundOn}
       quests={quests}
@@ -616,6 +660,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       onSelectFriend={setSelectedFriendId}
       onFriendAction={onFriendAction}
       onClaim={onClaim}
+      onChestClose={onChestClose}
+      onReopenChest={reopenChest}
       wornLook={wornLook}
       closetAdmin={closetAdmin}
       ownedClipIds={ownedClipIds}
