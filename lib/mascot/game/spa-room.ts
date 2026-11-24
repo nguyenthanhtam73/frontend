@@ -824,19 +824,22 @@ export type SpaNameLabel = {
 
 export type SpaNameLabelShift = {
   id: string;
-  /**
-   * Pixels to move the pill down. Negative when `up` is set: the higher pill
-   * moves further up, away from the bodies.
-   */
+  /** Small vertical shift. Positive moves the pill down. Capped so a pile never becomes a column. */
   drop: number;
-  /** Pixels to move the pill sideways. Positive is right. */
+  /** Sideways shift. Positive moves the pill right. Kept near the head. */
   nudge: number;
+  /** Still touches a neighbor after the sideways pass and the small vertical nudge. */
+  crowded: boolean;
 };
 
 const SPA_LABEL_GAP = 4;
-/** A thin sideways overlap is nudged apart. A real pile is staggered downward. */
-const SPA_LABEL_SLIVER = 16;
-const SPA_LABEL_NUDGE_CAP = 28;
+/** How far a pill may slide sideways and still read as that Bé Da's name. */
+export const SPA_LABEL_MAX_NUDGE = 40;
+/** A vertical nudge stays under one line. It never stacks a column of names. */
+export const SPA_LABEL_MAX_DROP = 8;
+/** A tapped name stays up, then fades. */
+export const SPA_LABEL_REVEAL_MS = 2000;
+export const SPA_LABEL_FADE_MS = 400;
 
 function labelClearance(
   a: { x: number; y: number; w: number; h: number; drop: number; nudge: number },
@@ -852,22 +855,29 @@ function labelClearance(
   };
 }
 
+function nudgeRoom(nudge: number, dir: -1 | 1, cap: number): number {
+  return dir < 0 ? cap + nudge : cap - nudge;
+}
+
+function labelsClear(clear: { x: number; y: number }, gap: number): boolean {
+  return clear.x >= gap - 0.25 || clear.y >= gap - 0.25;
+}
+
 /**
- * Move name pills so they do not cover each other. Width and height stay as
- * given, so «★ Mày» and «Trà Sữa» stay readable. A thin sideways touch is
- * nudged apart. Anything closer is staggered. By default the pill already
- * lower on the screen moves further down. With `up`, labels sit above the
- * heads and the higher pill moves further up.
- * `bounds` pulls a pill back inside the screen when that does not undo the gap.
+ * Keep each name close above its own head. Sideways first: slide pills apart
+ * up to `maxNudge`. A vertical nudge is only a few pixels, and only when that
+ * finishes the gap. A tight pile that still touches is `crowded` — the room
+ * then shows «★ Mày» and, for a moment, the Bé Da that was tapped.
  */
-export function staggerNameLabels(
+export function placeSpaNameLabels(
   labels: readonly SpaNameLabel[],
-  options?: { gap?: number; bounds?: { left: number; right: number }; up?: boolean },
+  options?: { gap?: number; bounds?: { left: number; right: number }; maxNudge?: number; maxDrop?: number },
 ): SpaNameLabelShift[] {
   const gap = options?.gap ?? SPA_LABEL_GAP;
+  const maxNudge = options?.maxNudge ?? SPA_LABEL_MAX_NUDGE;
+  const maxDrop = options?.maxDrop ?? SPA_LABEL_MAX_DROP;
   const bounds = options?.bounds;
-  const up = options?.up === true;
-  const indexed = labels.map((label, index) => ({
+  const items = labels.map((label, index) => ({
     id: label.id,
     x: Number.isFinite(label.x) ? label.x : 0,
     y: Number.isFinite(label.y) ? label.y : 0,
@@ -877,73 +887,102 @@ export function staggerNameLabels(
     nudge: 0,
     index,
   }));
-  indexed.sort((a, b) => (up ? b.y - a.y : a.y - b.y) || a.x - b.x || a.index - b.index);
-  const placed: typeof indexed = [];
-  for (const label of indexed) {
-    if (label.w <= 0 || label.h <= 0) {
-      placed.push(label);
-      continue;
-    }
-    let nudged = false;
-    for (let guard = 0; guard < indexed.length + 2; guard += 1) {
-      let blocked = false;
-      for (const other of placed) {
-        if (other.w <= 0 || other.h <= 0) continue;
-        const clear = labelClearance(label, other);
-        if (clear.x >= gap || clear.y >= gap) continue;
-        blocked = true;
-        const needX = gap - clear.x;
-        const room = SPA_LABEL_NUDGE_CAP - Math.abs(label.nudge);
-        if (!nudged && needX <= SPA_LABEL_SLIVER && room > 0.5) {
-          const dir = label.x + label.nudge >= other.x + other.nudge ? 1 : -1;
-          label.nudge += dir * Math.min(needX, room);
-          nudged = true;
-        } else if (up) {
-          const above = other.y + other.drop - gap - label.h - label.y;
-          if (above < label.drop) label.drop = above;
-        } else {
-          const below = other.y + other.drop + other.h + gap - label.y;
-          if (below > label.drop) label.drop = below;
-        }
+
+  const separateX = () => {
+    let moved = false;
+    const order = [...items].sort((a, b) => a.x + a.nudge - (b.x + b.nudge) || a.index - b.index);
+    for (let i = 0; i < order.length; i += 1) {
+      for (let j = i + 1; j < order.length; j += 1) {
+        const a = order[i]!;
+        const b = order[j]!;
+        if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) continue;
+        const clear = labelClearance(a, b);
+        if (labelsClear(clear, gap)) continue;
+        const need = gap - clear.x;
+        const left = a.x + a.nudge <= b.x + b.nudge ? a : b;
+        const right = left === a ? b : a;
+        let takeL = Math.min(need / 2, Math.max(0, nudgeRoom(left.nudge, -1, maxNudge)));
+        const takeR = Math.min(Math.max(0, need - takeL), Math.max(0, nudgeRoom(right.nudge, 1, maxNudge)));
+        takeL = Math.min(Math.max(0, need - takeR), Math.max(0, nudgeRoom(left.nudge, -1, maxNudge)));
+        if (takeL + takeR < 0.001) continue;
+        left.nudge -= takeL;
+        right.nudge += takeR;
+        moved = true;
       }
-      if (!blocked) break;
     }
-    placed.push(label);
+    return moved;
+  };
+  for (let pass = 0; pass < 24 && separateX(); pass += 1) {
+    /* sideways until the caps hold */
   }
+
+  for (let pass = 0; pass < 8; pass += 1) {
+    let moved = false;
+    for (let i = 0; i < items.length; i += 1) {
+      for (let j = i + 1; j < items.length; j += 1) {
+        const a = items[i]!;
+        const b = items[j]!;
+        if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) continue;
+        const clear = labelClearance(a, b);
+        if (labelsClear(clear, gap)) continue;
+        const need = gap - clear.y;
+        if (need > maxDrop * 2) continue;
+        const lower = a.y + a.drop >= b.y + b.drop ? a : b;
+        const upper = lower === a ? b : a;
+        const downRoom = Math.max(0, maxDrop - lower.drop);
+        const upRoom = Math.max(0, maxDrop + upper.drop);
+        let down = Math.min(need / 2, downRoom);
+        const up = Math.min(Math.max(0, need - down), upRoom);
+        down = Math.min(Math.max(0, need - up), downRoom);
+        if (down + up + 0.01 < need) continue;
+        lower.drop += down;
+        upper.drop -= up;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+
   if (bounds && bounds.right > bounds.left) {
     const span = bounds.right - bounds.left;
-    for (const label of placed) {
+    for (const label of items) {
       if (label.w <= 0 || label.w >= span) continue;
       const left = label.x + label.nudge - label.w / 2;
       const right = left + label.w;
       if (left < bounds.left) label.nudge += bounds.left - left;
       else if (right > bounds.right) label.nudge -= right - bounds.right;
     }
-    for (let guard = 0; guard < placed.length + 2; guard += 1) {
-      let blocked = false;
-      for (let i = 0; i < placed.length; i += 1) {
-        const label = placed[i]!;
-        if (label.w <= 0 || label.h <= 0) continue;
-        for (let j = 0; j < i; j += 1) {
-          const other = placed[j]!;
-          if (other.w <= 0 || other.h <= 0) continue;
-          const clear = labelClearance(label, other);
-          if (clear.x >= gap || clear.y >= gap) continue;
-          blocked = true;
-          if (up) {
-            const above = other.y + other.drop - gap - label.h - label.y;
-            if (above < label.drop) label.drop = above;
-          } else {
-            const below = other.y + other.drop + other.h + gap - label.y;
-            if (below > label.drop) label.drop = below;
-          }
-        }
-      }
-      if (!blocked) break;
+  }
+
+  const crowded = new Set<string>();
+  for (let i = 0; i < items.length; i += 1) {
+    for (let j = i + 1; j < items.length; j += 1) {
+      const a = items[i]!;
+      const b = items[j]!;
+      if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) continue;
+      const clear = labelClearance(a, b);
+      if (labelsClear(clear, gap)) continue;
+      crowded.add(a.id);
+      crowded.add(b.id);
     }
   }
-  const byId = new Map(placed.map((label) => [label.id, { id: label.id, drop: label.drop, nudge: label.nudge }]));
-  return labels.map((label) => byId.get(label.id) ?? { id: label.id, drop: 0, nudge: 0 });
+  const byId = new Map(
+    items.map((label) => [
+      label.id,
+      { id: label.id, drop: label.drop, nudge: label.nudge, crowded: crowded.has(label.id) },
+    ]),
+  );
+  return labels.map((label) => byId.get(label.id) ?? { id: label.id, drop: 0, nudge: 0, crowded: false });
+}
+
+/** While a pile is crowded, only «★ Mày» and the tapped name stay up. */
+export function shownNameLabelIds(
+  places: readonly { id: string; crowded: boolean }[],
+  selfId: string,
+  revealedId: string | null,
+): string[] {
+  if (!places.some((place) => place.crowded)) return places.map((place) => place.id);
+  return places.map((place) => place.id).filter((id) => id === selfId || (revealedId != null && id === revealedId));
 }
 
 /** Real people, skipping you and anyone you hid. A guest with x/y stands there. */

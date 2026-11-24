@@ -44,7 +44,12 @@ import {
   shouldCopyInviteLink,
   spaFootScale,
   spaNamePillBoxes,
-  staggerNameLabels,
+  placeSpaNameLabels,
+  shownNameLabelIds,
+  SPA_LABEL_FADE_MS,
+  SPA_LABEL_MAX_DROP,
+  SPA_LABEL_MAX_NUDGE,
+  SPA_LABEL_REVEAL_MS,
   SPA_LANDSCAPE_BOUNDS,
   SPA_LANDSCAPE_HEIGHT,
   SPA_LANDSCAPE_SELF_SLOT,
@@ -210,31 +215,15 @@ describe("spa join spots", () => {
     }
   });
 
-  it("staggers close name pills without shrinking ★ Mày or Trà Sữa", () => {
-    const cluster = (width: number) => {
-      const mid = width / 2;
-      return [
-        { id: "you", x: mid - 18, y: 420, w: 68, h: 22 },
-        { id: "tra-sua", x: mid + 8, y: 426, w: 74, h: 22 },
-        { id: "may-hong", x: mid + 34, y: 414, w: 78, h: 22 },
-        { id: "oc-que", x: mid - 4, y: 438, w: 64, h: 22 },
-      ];
-    };
-    for (const width of [360, 390]) {
-      const labels = cluster(width);
-      const shifts = staggerNameLabels(labels, { bounds: { left: 2, right: width - 2 } });
-      assert.equal(shifts.length, labels.length);
+  it("slides close name pills sideways and hides a pile that still touches", () => {
+    assert.equal(SPA_LABEL_REVEAL_MS, 2000);
+    assert.equal(SPA_LABEL_FADE_MS, 400);
+    assert.ok(SPA_LABEL_MAX_DROP <= 12);
+    const clearOf = (
+      labels: { id: string; x: number; y: number; w: number; h: number }[],
+      shifts: { id: string; drop: number; nudge: number; crowded: boolean }[],
+    ) => {
       const byId = new Map(shifts.map((shift) => [shift.id, shift]));
-      for (const label of labels) {
-        const shift = byId.get(label.id)!;
-        assert.ok(shift.drop >= 0, label.id);
-        assert.ok(Math.abs(shift.nudge) <= 28, `${label.id} nudge ${shift.nudge}`);
-        const left = label.x + shift.nudge - label.w / 2;
-        const right = left + label.w;
-        assert.ok(left >= 1, `${width} ${label.id} left ${left}`);
-        assert.ok(right <= width - 1, `${width} ${label.id} right ${right}`);
-        assert.equal(right - left, label.w);
-      }
       for (let i = 0; i < labels.length; i += 1) {
         for (let j = i + 1; j < labels.length; j += 1) {
           const a = labels[i]!;
@@ -244,46 +233,60 @@ describe("spa join spots", () => {
           const aLeft = a.x + as.nudge - a.w / 2;
           const bLeft = b.x + bs.nudge - b.w / 2;
           const clearX = Math.max(aLeft, bLeft) - Math.min(aLeft + a.w, bLeft + b.w);
-          const aTop = a.y + as.drop;
-          const bTop = b.y + bs.drop;
-          const clearY = Math.max(aTop, bTop) - Math.min(aTop + a.h, bTop + b.h);
-          assert.ok(clearX >= 4 || clearY >= 4, `${width} ${a.id} ${b.id} x ${clearX} y ${clearY}`);
+          const clearY = Math.max(a.y + as.drop, b.y + bs.drop) - Math.min(a.y + as.drop + a.h, b.y + bs.drop + b.h);
+          if (clearX < 3.5 && clearY < 3.5) return false;
         }
       }
-      const you = byId.get("you")!;
-      const tea = byId.get("tra-sua")!;
-      assert.ok(you.drop !== tea.drop || you.nudge !== tea.nudge);
+      return true;
+    };
+    for (const width of [360, 390]) {
+      const mid = width / 2;
+      const near = [
+        { id: "you", x: mid - 90, y: 420, w: 64, h: 22 },
+        { id: "tra-sua", x: mid - 30, y: 424, w: 74, h: 22 },
+        { id: "may-hong", x: mid + 30, y: 418, w: 78, h: 22 },
+        { id: "oc-que", x: mid + 90, y: 422, w: 64, h: 22 },
+      ];
+      const shifts = placeSpaNameLabels(near, { bounds: { left: 2, right: width - 2 } });
+      assert.equal(shifts.every((shift) => shift.crowded === false), true, `${width} near should spread`);
+      assert.equal(clearOf(near, shifts), true, `${width} labels still touch`);
+      for (const shift of shifts) {
+        assert.ok(Math.abs(shift.nudge) <= SPA_LABEL_MAX_NUDGE, shift.id);
+        assert.ok(Math.abs(shift.drop) <= SPA_LABEL_MAX_DROP, `${shift.id} drop ${shift.drop}`);
+      }
+      assert.deepEqual(shownNameLabelIds(shifts, "you", null), ["you", "tra-sua", "may-hong", "oc-que"]);
     }
-    const apart = staggerNameLabels([
-      { id: "you", x: 40, y: 100, w: 68, h: 22 },
-      { id: "tra-sua", x: 200, y: 100, w: 74, h: 22 },
-    ]);
-    assert.deepEqual(apart, [
-      { id: "you", drop: 0, nudge: 0 },
-      { id: "tra-sua", drop: 0, nudge: 0 },
-    ]);
-    const stacked = staggerNameLabels([
-      { id: "you", x: 100, y: 80, w: 68, h: 22 },
-      { id: "tra-sua", x: 108, y: 84, w: 74, h: 22 },
-    ]);
-    const lower = stacked.find((shift) => shift.drop > 0)!;
-    assert.equal(lower.id, "tra-sua");
-    assert.ok(lower.drop >= 22);
-    assert.equal(stacked.find((shift) => shift.id === "you")?.drop, 0);
-    const lifted = staggerNameLabels(
-      [
-        { id: "you", x: 100, y: 200, w: 68, h: 22 },
-        { id: "tra-sua", x: 108, y: 194, w: 74, h: 22 },
-      ],
-      { up: true },
+    const tight = [
+      { id: "you", x: 150, y: 400, w: 64, h: 22 },
+      { id: "tra-sua", x: 168, y: 402, w: 74, h: 22 },
+      { id: "may-hong", x: 186, y: 398, w: 78, h: 22 },
+      { id: "oc-que", x: 204, y: 404, w: 64, h: 22 },
+    ];
+    const piled = placeSpaNameLabels(tight, { bounds: { left: 2, right: 358 } });
+    assert.equal(piled.some((shift) => shift.crowded), true);
+    for (const shift of piled) {
+      assert.ok(Math.abs(shift.drop) <= SPA_LABEL_MAX_DROP, `column drop ${shift.id} ${shift.drop}`);
+      assert.ok(Math.abs(shift.nudge) <= SPA_LABEL_MAX_NUDGE + 1, shift.id);
+    }
+    assert.deepEqual(shownNameLabelIds(piled, "you", null), ["you"]);
+    assert.deepEqual(shownNameLabelIds(piled, "you", "tra-sua"), ["you", "tra-sua"]);
+    const pair = tight.filter((label) => label.id === "you" || label.id === "tra-sua");
+    const shown = placeSpaNameLabels(pair);
+    assert.equal(shown.every((shift) => shift.crowded === false), true);
+    assert.equal(clearOf(pair, shown), true);
+    const far = [
+      { id: "you", x: 40, y: 200, w: 64, h: 22 },
+      { id: "tra-sua", x: 160, y: 200, w: 74, h: 22 },
+      { id: "may-hong", x: 280, y: 206, w: 78, h: 22 },
+      { id: "oc-que", x: 400, y: 198, w: 64, h: 22 },
+    ];
+    const apart = placeSpaNameLabels(far);
+    assert.deepEqual(
+      apart.map((shift) => shift.crowded),
+      [false, false, false, false],
     );
-    assert.equal(lifted.find((shift) => shift.id === "you")?.drop, 0);
-    const tea = lifted.find((shift) => shift.id === "tra-sua")!;
-    assert.ok(tea.drop < 0, `expected Trà Sữa to lift, got ${tea.drop}`);
-    const youTop = 200;
-    const teaTop = 194 + tea.drop;
-    const clearY = youTop - (teaTop + 22);
-    assert.ok(clearY >= 4, `lift gap ${clearY}`);
+    assert.ok(apart.every((shift) => shift.nudge === 0 && shift.drop === 0));
+    assert.deepEqual(shownNameLabelIds(apart, "you", "tra-sua"), ["you", "tra-sua", "may-hong", "oc-que"]);
   });
 
   it("uses the landscape plate only when the free frame is wide", () => {

@@ -261,13 +261,26 @@ export function TreeShot() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [daysLeft, setDaysLeft] = useState<number | null>(6);
   const [board, setBoard] = useState<"" | "2" | "8">("");
-  const [labels, setLabels] = useState(false);
+  const [spread, setSpread] = useState<"" | "tight" | "near" | "apart">("");
+  const [tap, setTap] = useState("");
+  const [hold, setHold] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setLabels(params.get("labels") === "1");
+    const labelMode = params.get("labels");
+    setSpread(
+      labelMode === "1" || labelMode === "tight"
+        ? "tight"
+        : labelMode === "near"
+          ? "near"
+          : labelMode === "apart"
+            ? "apart"
+            : "",
+    );
+    setTap(params.get("tap") || "");
+    setHold(params.get("hold") === "1");
     setScene(params.get("scene") || "stage1");
-    const asked = params.get("board");
-    setBoard(asked === "2" || asked === "8" ? asked : "");
+    const board = params.get("board");
+    setBoard(board === "2" || board === "8" ? board : "");
     setDetailOpen(params.get("open") === "1");
     const days = params.get("days");
     if (days == null || days === "") setDaysLeft(6);
@@ -286,14 +299,17 @@ export function TreeShot() {
   }, []);
   if (scene === "closet") return <ClosetShot />;
   const boardRows = board === "2" ? BOARD_2 : board === "8" ? BOARD_8 : null;
+  const spreadX =
+    spread === "apart" ? [0.16, 0.6, 0.82] : spread === "near" ? [0.22, 0.48, 0.74] : [0.45, 0.51, 0.57];
+  const youX = spread === "apart" ? 0.38 : spread === "near" ? 0.35 : 0.48;
   const crowd: SpaGuest[] = [
     boardGuest("tra-sua", "Trà Sữa", "outfit_ao_dai", "hair_twin_tails", "accessory_flower_clip"),
     boardGuest("may-hong", "Mây Hồng", "outfit_vay_hoa", "hair_high_pony"),
     boardGuest("oc-que", "Ốc Quế", "outfit_hoodie", "hair_short_bob"),
   ].map((guest, index) => ({
     ...guest,
-    x: 0.44 + index * 0.06,
-    y: index === 1 ? 0.65 : 0.62,
+    x: spreadX[index] ?? 0.5,
+    y: 0.62 + (index % 2) * 0.02,
   }));
   const watered = board === "2" ? ["Mây Hồng"] : board === "8" ? ["Mây Hồng", "Trà Sữa", "Lan", "Bánh Flan", "Chè Thái"] : [];
   const player = resolveBeDaView({
@@ -305,7 +321,7 @@ export function TreeShot() {
   return (
     <div className="beda-game is-spa" data-testid="beda-tree-shot">
       <BeDaSpaRoom
-        key={`${board}-${scene}-${daysLeft ?? ""}-${labels ? "labels" : ""}`}
+        key={`${board}-${scene}-${daysLeft ?? ""}-${spread}-${tap}`}
         locale="vi"
         player={player}
         look={DEFAULT_GAME_LOOK}
@@ -314,16 +330,16 @@ export function TreeShot() {
         youPose={null}
         room={{
           code: "DA7K2M",
-          count: labels ? 4 : 3,
+          count: spread ? 4 : 3,
           cap: 8,
-          guests: labels
+          guests: spread
             ? crowd
             : boardRows
               ? BOARD_GUESTS
               : sampleSpaGuests(new Set()).map((guest) =>
                   guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
                 ),
-          you: labels ? { x: 0.48, y: 0.66 } : { x: 0.4, y: 0.66 },
+          you: spread ? { x: youX, y: 0.64 } : { x: 0.4, y: 0.66 },
           youNickname: boardRows ? "Lan" : "",
           notice: null,
           daysLeft,
@@ -337,7 +353,9 @@ export function TreeShot() {
         onLeave={() => undefined}
         onLobby={() => undefined}
         onToggleSound={() => undefined}
-        tree={labels ? null : withWatered(shotPanel(scene, ms), watered)}
+        tree={spread ? null : withWatered(shotPanel(scene, ms), watered)}
+        revealGuestId={spread === "tight" && tap ? tap : null}
+        holdReveal={hold}
         treeDetailOpen={detailOpen}
         boardInitiallyOpen={boardRows != null}
         previewBoard={boardRows}

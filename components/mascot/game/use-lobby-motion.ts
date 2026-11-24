@@ -22,8 +22,9 @@ import {
   nameTagDrop,
   SPA_LANDSCAPE_BOUNDS,
   SPA_TAG_MAX_PX,
+  placeSpaNameLabels,
+  shownNameLabelIds,
   spaStackZ,
-  staggerNameLabels,
 } from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
@@ -987,10 +988,21 @@ export function useSpaMotion(input: {
           water: waterDrop,
         });
       }
-      const shifts = staggerNameLabels(
-        placed.map((item) => ({ id: item.id, x: item.x, y: item.y, w: item.w, h: item.h })),
-        { up: true, bounds: { left: frameBox.left + 2, right: frameBox.right - 2 } },
-      );
+      const labelRoot = stage.querySelector<HTMLElement>(".beda-spa-labels");
+      const revealed = labelRoot?.dataset.revealed || null;
+      const fading = labelRoot?.dataset.fading === "1";
+      const bounds = { left: frameBox.left + 2, right: frameBox.right - 2 };
+      const boxes = placed.map((item) => ({ id: item.id, x: item.x, y: item.y, w: item.w, h: item.h }));
+      let shifts = placeSpaNameLabels(boxes, { bounds });
+      const show = new Set(shownNameLabelIds(shifts, "you", revealed));
+      if (shifts.some((shift) => shift.crowded)) {
+        const again = placeSpaNameLabels(
+          boxes.filter((box) => show.has(box.id)),
+          { bounds },
+        );
+        const againById = new Map(again.map((shift) => [shift.id, shift]));
+        shifts = shifts.map((shift) => againById.get(shift.id) ?? shift);
+      }
       const byId = new Map(shifts.map((shift) => [shift.id, shift]));
       for (const item of placed) {
         const shift = byId.get(item.id);
@@ -998,7 +1010,11 @@ export function useSpaMotion(input: {
         const nudge = Math.round((shift?.nudge ?? 0) / zoom);
         item.label.style.setProperty("--beda-tag-drop", `${drop}px`);
         item.label.style.setProperty("--nudge", `${nudge}px`);
+        const visible = show.has(item.id);
         item.label.classList.add("is-placed");
+        item.label.classList.toggle("is-crowd-hidden", !visible);
+        item.label.classList.toggle("is-revealed", visible && item.id === revealed);
+        item.label.classList.toggle("is-fading", visible && item.id === revealed && fading);
       }
       frameId = window.requestAnimationFrame(tick);
     };

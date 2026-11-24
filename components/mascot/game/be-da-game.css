@@ -3326,6 +3326,23 @@ html.dark .beda-draw-wait {
   visibility: visible;
 }
 
+.beda-spa-label.is-crowd-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.beda-spa-label.is-crowd-hidden.is-revealed {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.beda-spa-label.is-revealed.is-fading {
+  opacity: 0;
+  transition: opacity 0.4s linear;
+}
+
 .beda-spa-label .beda-name {
   transform: none;
 }
