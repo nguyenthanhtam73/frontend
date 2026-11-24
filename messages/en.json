@@ -1425,7 +1425,7 @@
     "backSettings": "← Back to settings & privacy",
     "backCabinet": "← Back to skincare shelf",
     "previewTitle": "Long-term memory",
-    "previewSub": "Not a verbatim copy of every coach reply — a summary of profile, recent check-ins, votes and your shelf.",
+    "previewSub": "Not a word-for-word copy of each piece of advice — a summary of your profile, recent check-ins, feedback, and shelf.",
     "generatedAt": "Built at {when}",
     "cachedBadge": "from cache (5 min)",
     "freshBadge": "just refreshed",
@@ -1434,12 +1434,12 @@
     "statFeedback": "Feedback",
     "statVotes": "Helpful / Not for me",
     "statChars": "Length (chars)",
-    "adherenceLine": "Recent routine adherence: {tier}",
+    "feedbackCompact": "{helpful} helpful · {notHelpful} not for me",
     "adherence": {
-      "strong": "strong",
-      "moderate": "moderate",
-      "low": "low",
-      "none": "no data yet"
+      "strong": "Lately you've been caring for your skin very steadily",
+      "moderate": "Lately you've been caring for your skin fairly steadily",
+      "low": "Lately your skin care has been a bit uneven",
+      "none": "There aren't enough check-ins yet to say how steady your care has been"
     },
     "sections": {
       "profile": "Skin profile",

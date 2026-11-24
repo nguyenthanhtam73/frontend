@@ -1425,7 +1425,7 @@
     "backSettings": "← Quay lại cài đặt & quyền riêng tư",
     "backCabinet": "← Quay lại tủ đồ chăm da",
     "previewTitle": "Trí nhớ dài hạn",
-    "previewSub": "Không phải bản sao y hệt từng câu coach — là tóm tắt hồ sơ, nhật ký gần đây, góp ý và tủ đồ.",
+    "previewSub": "Không phải bản sao y hệt từng câu khuyên — là tóm tắt hồ sơ, nhật ký gần đây, góp ý và tủ đồ.",
     "generatedAt": "Tạo lúc {when}",
     "cachedBadge": "từ bộ nhớ tạm (5 phút)",
     "freshBadge": "vừa tải mới",
@@ -1434,12 +1434,12 @@
     "statFeedback": "Góp ý",
     "statVotes": "Đúng gu / Chưa hợp",
     "statChars": "Độ dài (ký tự)",
-    "adherenceLine": "Tuân thủ chăm da gần đây: {tier}",
+    "feedbackCompact": "{helpful} đúng gu · {notHelpful} chưa hợp",
     "adherence": {
-      "strong": "tốt",
-      "moderate": "khá",
-      "low": "thấp",
-      "none": "chưa có dữ liệu"
+      "strong": "Gần đây bạn chăm da rất đều",
+      "moderate": "Gần đây bạn chăm da khá đều",
+      "low": "Gần đây bạn chăm da chưa đều lắm",
+      "none": "Chưa đủ lần ghi để thấy bạn chăm da đều đến đâu"
     },
     "sections": {
       "profile": "Hồ sơ da",

@@ -22,9 +22,46 @@ import { getAccessToken } from "@/lib/auth-token";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { cn } from "@/lib/utils";
 
+const ADHERENCE_TIERS = ["strong", "moderate", "low", "none"] as const;
+
+export type AdherenceTier = (typeof ADHERENCE_TIERS)[number];
+
+/** Ops details stay with admins. Everyone else sees the plain memory screen. */
+export function memoryOpsVisible(isAdmin: boolean): boolean {
+  return isAdmin;
+}
+
 /** The coach prompt version is an admin detail. Everyone else skips the chip. */
 export function memoryPromptChipVisible(isAdmin: boolean, promptVersion: number): boolean {
-  return isAdmin && promptVersion > 0;
+  return memoryOpsVisible(isAdmin) && promptVersion > 0;
+}
+
+export function memoryCachedSuffixVisible(isAdmin: boolean, cached: boolean): boolean {
+  return memoryOpsVisible(isAdmin) && cached;
+}
+
+export function memoryCharCountVisible(isAdmin: boolean): boolean {
+  return memoryOpsVisible(isAdmin);
+}
+
+export function memoryMonthlyDigestVisible(isAdmin: boolean, hasDigest: boolean): boolean {
+  return memoryOpsVisible(isAdmin) && hasDigest;
+}
+
+export function memoryCacheChipVisible(isAdmin: boolean, ttlSeconds: number): boolean {
+  return memoryOpsVisible(isAdmin) && ttlSeconds > 0;
+}
+
+/** Known care levels only. An unknown token must not land on screen as a field name. */
+const ADHERENCE_MESSAGE_KEY = {
+  strong: "adherence.strong",
+  moderate: "adherence.moderate",
+  low: "adherence.low",
+  none: "adherence.none",
+} as const;
+
+export function adherenceMessageKey(tier: string): AdherenceTier | null {
+  return (ADHERENCE_TIERS as readonly string[]).includes(tier) ? (tier as AdherenceTier) : null;
 }
 
 export function MeMemoryView() {
@@ -33,6 +70,7 @@ export function MeMemoryView() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.is_admin === true;
   const hasAuth = !!user || !!getAccessToken();
   const [lastFetchFresh, setLastFetchFresh] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -100,7 +138,13 @@ export function MeMemoryView() {
   if (!data) return null;
 
   const stats = data.stats;
-  const sections = stats.sections_present ?? [];
+  const adherenceKey = adherenceMessageKey(stats.adherence_tier);
+  const sectionLabels = (stats.sections_present ?? [])
+    .map((key) => ({ key, label: sectionLabel(t, key) }))
+    .filter((item): item is { key: string; label: string } => item.label != null);
+  const showPromptChip = memoryPromptChipVisible(isAdmin, stats.prompt_version);
+  const showDigestChip = memoryMonthlyDigestVisible(isAdmin, stats.has_monthly_digest);
+  const showCacheChip = memoryCacheChipVisible(isAdmin, stats.cache_ttl_seconds);
 
   return (
     <div className="space-y-6">
@@ -114,7 +158,8 @@ export function MeMemoryView() {
           {generatedLabel ? (
             <p className="text-xs text-muted-foreground">
               {t("generatedAt", { when: generatedLabel })}
-              {data.cached ? ` · ${t("cachedBadge")}` : ` · ${t("freshBadge")}`}
+              {memoryCachedSuffixVisible(isAdmin, data.cached) ? ` · ${t("cachedBadge")}` : null}
+              {!data.cached ? ` · ${t("freshBadge")}` : null}
             </p>
           ) : null}
         </div>
@@ -153,46 +198,52 @@ export function MeMemoryView() {
         </Button>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <StatPill label={t("statChecks")} value={String(stats.total_checks)} />
-        <StatPill label={t("statFeedback")} value={String(stats.total_feedback)} />
         <StatPill
-          label={t("statVotes")}
-          value={`${stats.helpful_votes} / ${stats.not_helpful_votes}`}
+          label={t("statFeedback")}
+          value={t("feedbackCompact", {
+            helpful: stats.helpful_votes,
+            notHelpful: stats.not_helpful_votes,
+          })}
         />
-        <StatPill label={t("statChars")} value={formatter.number(stats.char_count)} />
-      </div>
-
-      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        {memoryPromptChipVisible(user?.is_admin === true, stats.prompt_version) ? (
-          <MetaChip label={t("metaPromptVersion", { v: stats.prompt_version })} />
-        ) : null}
-        {stats.has_monthly_digest ? <MetaChip label={t("metaMonthlyDigest")} /> : null}
-        {stats.cache_ttl_seconds > 0 ? (
-          <MetaChip
-            label={t("metaCache", {
-              entries: stats.cache_entries,
-              ttl: Math.round(stats.cache_ttl_seconds),
-            })}
-          />
+        {memoryCharCountVisible(isAdmin) ? (
+          <StatPill label={t("statChars")} value={formatter.number(stats.char_count)} />
         ) : null}
       </div>
 
-      {stats.adherence_tier ? (
+      {showPromptChip || showDigestChip || showCacheChip ? (
+        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {showPromptChip ? (
+            <MetaChip label={t("metaPromptVersion", { v: stats.prompt_version })} />
+          ) : null}
+          {showDigestChip ? <MetaChip label={t("metaMonthlyDigest")} /> : null}
+          {showCacheChip ? (
+            <MetaChip
+              label={t("metaCache", {
+                entries: stats.cache_entries,
+                ttl: Math.round(stats.cache_ttl_seconds),
+              })}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      {adherenceKey ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="size-4 text-primary" aria-hidden />
-          {t("adherenceLine", { tier: adherenceTierLabel(t, stats.adherence_tier) })}
+          {t(ADHERENCE_MESSAGE_KEY[adherenceKey])}
         </p>
       ) : null}
 
-      {sections.length > 0 ? (
+      {sectionLabels.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
-          {sections.map((s) => (
+          {sectionLabels.map((item) => (
             <span
-              key={s}
+              key={item.key}
               className="rounded-full border border-border bg-muted/40 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
             >
-              {sectionLabel(t, s)}
+              {item.label}
             </span>
           ))}
         </div>
@@ -213,30 +264,30 @@ export function MeMemoryView() {
                   aria-hidden
                 />
               </summary>
-              <pre
+              <p
                 className={cn(
                   "border-t border-border/60 px-4 py-3",
-                  "whitespace-pre-wrap break-words font-mono text-xs leading-relaxed",
+                  "whitespace-pre-wrap break-words font-sans text-sm leading-relaxed",
                   "text-foreground/90",
                 )}
               >
                 {block.body.trim() || t("emptySection")}
-              </pre>
+              </p>
             </details>
           ))}
         </div>
       ) : (
         <Card>
           <CardContent className="p-0 sm:p-0">
-            <pre
+            <p
               className={cn(
                 "max-h-[min(70vh,32rem)] overflow-auto rounded-xl p-4 sm:p-5",
-                "whitespace-pre-wrap break-words font-mono text-xs leading-relaxed",
+                "whitespace-pre-wrap break-words font-sans text-sm leading-relaxed",
                 "bg-muted/40 text-foreground/90",
               )}
             >
               {data.memory_text.trim() || t("emptyMemory")}
-            </pre>
+            </p>
           </CardContent>
         </Card>
       )}
@@ -275,7 +326,6 @@ function splitMemorySections(text: string): MemoryBlock[] {
   return blocks.filter((b) => b.title || b.body.trim());
 }
 
-const ADHERENCE_TIERS = ["strong", "moderate", "low", "none"] as const;
 const MEMORY_SECTIONS = [
   "profile",
   "recent_checks",
@@ -285,21 +335,14 @@ const MEMORY_SECTIONS = [
   "wardrobe",
 ] as const;
 
-function adherenceTierLabel(
+function sectionLabel(
   t: ReturnType<typeof useTranslations<"meMemory">>,
-  tier: string,
-) {
-  if ((ADHERENCE_TIERS as readonly string[]).includes(tier)) {
-    return t(`adherence.${tier}` as "adherence.strong");
-  }
-  return tier;
-}
-
-function sectionLabel(t: ReturnType<typeof useTranslations<"meMemory">>, key: string) {
+  key: string,
+): string | null {
   if ((MEMORY_SECTIONS as readonly string[]).includes(key)) {
     return t(`sections.${key}` as "sections.profile");
   }
-  return key;
+  return null;
 }
 
 function StatPill({ label, value }: { label: string; value: string }) {
