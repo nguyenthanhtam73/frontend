@@ -10,7 +10,7 @@ import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, segmentStaysWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
 import { clamp } from "@/lib/mascot/game/walk";
 
-export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=5a7ea152cc");
+export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=34a92b8496");
 export const ROOM_MASK_PX = 256;
 /** Logical room used only to size the path grid (~20px cells). */
 export const ROOM_WORLD = 1000;
@@ -42,7 +42,9 @@ export const ROOM_BLOCKS: readonly { x0: number; y0: number; x1: number; y1: num
   { name: "left", x0: 0, y0: 0, x1: 0.14, y1: 1 },
   { name: "right", x0: 0.88, y0: 0, x1: 1, y1: 1 },
   { name: "bed", x0: 0, y0: 0.56, x1: 0.28, y1: 0.68 },
-  { name: "closet", x0: 0.2, y0: 0.56, x1: 0.4, y1: 0.68 },
+  // The wardrobe art ends near x=0.35. The extra pad used to reach 0.40, which
+  // met the name-label block on a 360px phone and sealed the floor beside the pad.
+  { name: "closet", x0: 0.2, y0: 0.56, x1: 0.36, y1: 0.68 },
   { name: "plant", x0: 0.55, y0: 0.56, x1: 0.72, y1: 0.66 },
   { name: "sink", x0: 0.8, y0: 0.56, x1: 1, y1: 0.67 },
 ];

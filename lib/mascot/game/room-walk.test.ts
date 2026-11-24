@@ -185,6 +185,22 @@ describe("personal room floor", () => {
     assert.equal(roomBlockName(walker.x, walker.y), null);
   });
 
+  it("steps around the wardrobe onto the floor beside the pad", () => {
+    assert.equal(isWalkable(grid, 0.37, 0.67), true);
+    assert.equal(roomBlockName(0.3, 0.65), "closet");
+    const route = roomRoute(grid, { x: 0.5, y: 0.67 }, { x: 0.22, y: 0.78 });
+    assert.ok(route.length > 0);
+    let prev = { x: 0.5, y: 0.67 };
+    for (const point of route) {
+      assert.equal(roomBlockName(point.x, point.y), null);
+      assert.equal(segmentStaysWalkable(grid, prev, point), true);
+      prev = point;
+    }
+    const end = route[route.length - 1]!;
+    assert.ok(end.x < 0.3);
+    assert.ok(end.y > 0.74);
+  });
+
   it("keeps the arrow pad off the walkable floor", () => {
     const blocked = roomWalkGrid();
     blockRoomRect(blocked, { x0: 0.58, y0: 0.74, x1: 1, y1: 0.86 });
