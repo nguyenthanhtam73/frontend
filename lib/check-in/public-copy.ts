@@ -1,25 +1,41 @@
 /**
  * Defense in depth for coach copy that still arrives with leaked internals.
- * Strips gauge decimals and snake_case field names. Does not rewrite voice.
+ * Strips a gauge decimal only when it sits next to "score", a snake_case
+ * field name, or a "label:" prefix. Dose lines, strengths, and URLs stay.
  */
 
-const SNAKE_CASE =
-  /(?<![\p{L}\p{N}_])[A-Za-z]+_[A-Za-z_]+(?![\p{L}\p{N}_])/gu;
+/** http(s) URLs and emails — snake_case inside them is not a field name. */
+const PROTECTED =
+  /(?:https?:\/\/[^\s<>"')\]]+|www\.[^\s<>"')\]]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/gi;
 
 /**
- * "score" only when a 0–1 gauge number follows, so English like
- * "your skin score looks steady" stays intact.
- * Gauge forms: 0.xx / 0,xx, 1.0 / 1,00, or a bare 1 after the word score.
+ * A leaked 0–1 gauge: 0.xx / 0,xx or 1.0 / 1,00.
+ * Not a dose (ml, g, …), a percent, or one side of a range.
  */
-const SCORE_WITH_GAUGE =
-  /(?<![\p{L}\p{N}_])score(?![\p{L}\p{N}_])\s*[:：]?\s*(?:0[.,]\d+(?![\p{L}\p{N}%])|1[.,]0{1,2}(?![\p{L}\p{N}%.,])|1(?![\p{L}\p{N}%.,]))\s*(?:vì(?![\p{L}\p{N}_])\s*|,\s*|:\s*)?/giu;
+const BARE_GAUGE =
+  /(?:0[.,]\d+|1[.,]0{1,2})(?![\p{L}\p{N}%])(?!\s*(?:ml|mg|mm|cm|lít|giọt|g|%)(?![\p{L}\p{N}]))(?!\s*(?:[–\-~]|đến\b))/iu;
 
-/** Standalone gauge decimals. Bare integers, SPF50, dates, and 78% stay. */
-const GAUGE_DECIMAL =
-  /(?<![\p{L}\p{N}_])(?:0[.,]\d+(?![\p{L}\p{N}%])|1[.,]0{1,2}(?![\p{L}\p{N}%.,]))\s*(?:vì(?![\p{L}\p{N}_])\s*|,\s*|:\s*)?/gu;
+const GAUGE_TAIL = String.raw`\s*(?:vì(?![\p{L}\p{N}_])\s*|,\s*|:\s*)?`;
+
+const SCORE_WITH_GAUGE = new RegExp(
+  String.raw`(?<![\p{L}\p{N}_])score(?![\p{L}\p{N}_])\s*[:：]?\s*${BARE_GAUGE.source}${GAUGE_TAIL}`,
+  "giu",
+);
+
+/** Field name, and a gauge sitting on that same label. */
+const SNAKE_CASE = new RegExp(
+  String.raw`(?<![\p{L}\p{N}_])[A-Za-z]+_[A-Za-z_]+(?![\p{L}\p{N}_])(?:\s*[:：]\s*${BARE_GAUGE.source}${GAUGE_TAIL})?`,
+  "gu",
+);
+
+/** "Sáng:" / "hydration:" then a bare gauge — the label itself stays. */
+const LABEL_GAUGE = new RegExp(
+  String.raw`(?<=[\p{L}\p{N}_][:：]\s*)${BARE_GAUGE.source}${GAUGE_TAIL}`,
+  "gu",
+);
 
 const LEADING_LEAK =
-  /^\s*(?:[A-Za-z]+_[A-Za-z_]+|score(?![\p{L}\p{N}_])\s*[:：]?\s*(?:0[.,]\d+|1[.,]0{1,2}|1(?![\p{L}\p{N}]))|0[.,]\d+|1[.,]0{1,2})/iu;
+  /^\s*(?:[A-Za-z]+_[A-Za-z_]+|score(?![\p{L}\p{N}_])\s*[:：]?\s*(?:0[.,]\d+|1[.,]0{1,2}))/iu;
 
 function tidy(value: string): string {
   let s = value.replace(/[ \t]{2,}/g, " ");
@@ -57,21 +73,36 @@ function capitalizeFirst(value: string): string {
   return chars.join("");
 }
 
+function maskProtected(input: string): { text: string; slots: string[] } {
+  const slots: string[] = [];
+  const text = input.replace(PROTECTED, (found) => {
+    const token = `\uE000${slots.length}\uE001`;
+    slots.push(found);
+    return token;
+  });
+  return { text, slots };
+}
+
+function unmask(text: string, slots: string[]): string {
+  return text.replace(/\uE000(\d+)\uE001/g, (_, index: string) => slots[Number(index)] ?? "");
+}
+
 /**
  * Clean one coach string for display.
  * «score 0.78 vì da vẫn khỏe mạnh» → «Da vẫn khỏe mạnh».
- * Field names like situation_analysis are removed. Counts, SPF50, dates,
- * «ngày 7», and percentages stay.
+ * «Lấy 0,5 ml serum» and «https://dadiary.vn/a_b_c» stay intact.
  */
 export function toPublicCopy(text: string): string {
   if (!text) return "";
   const input = text.normalize("NFC");
-  const lead = LEADING_LEAK.test(input);
-  let s = input.replace(SNAKE_CASE, " ");
+  const { text: masked, slots } = maskProtected(input);
+  const lead = LEADING_LEAK.test(masked);
+  let s = masked.replace(SNAKE_CASE, " ");
   s = replaceLeak(SCORE_WITH_GAUGE, s);
-  s = replaceLeak(GAUGE_DECIMAL, s);
+  s = replaceLeak(LABEL_GAUGE, s);
   s = s.replace(/\u0000\s*(\p{L})/gu, (_, ch: string) => ch.toLocaleUpperCase("vi"));
   s = s.replace(/\u0000/g, "");
+  s = unmask(s, slots);
   s = tidy(s);
   if (!s) return "";
   return lead ? capitalizeFirst(s) : s;

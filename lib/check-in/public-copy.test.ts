@@ -18,7 +18,14 @@ describe("toPublicCopy", () => {
       "Da vẫn khỏe mạnh",
     );
     assert.equal(toPublicCopy("score 0.78, da vẫn khỏe"), "Da vẫn khỏe");
-    assert.equal(toPublicCopy("0.78 vì da vẫn khỏe mạnh"), "Da vẫn khỏe mạnh");
+    assert.equal(
+      toPublicCopy("hydration: 0.78 vì da vẫn khỏe mạnh"),
+      "hydration: Da vẫn khỏe mạnh",
+    );
+    assert.equal(
+      toPublicCopy("skin_score_notes: 0.78 vì da vẫn khỏe mạnh"),
+      "Da vẫn khỏe mạnh",
+    );
     assert.equal(
       toPublicCopy("Sáng: score 0.78 vì thoa kem chống nắng SPF50"),
       "Sáng: Thoa kem chống nắng SPF50",
@@ -41,6 +48,35 @@ describe("toPublicCopy", () => {
       "Hẹn 2026-09-01 hoặc 7/11.",
     );
     assert.equal(toPublicCopy("Nồng độ 0.5% và 10%."), "Nồng độ 0.5% và 10%.");
+  });
+
+  it("keeps doses, strengths, and ranges", () => {
+    assert.equal(toPublicCopy("Lấy 0,5 ml serum"), "Lấy 0,5 ml serum");
+    assert.equal(toPublicCopy("BHA 0.5–2%"), "BHA 0.5–2%");
+    assert.equal(toPublicCopy("Retinol 0.025 hoặc 0.05"), "Retinol 0.025 hoặc 0.05");
+    assert.equal(toPublicCopy("Gel 0.5g"), "Gel 0.5g");
+    assert.equal(toPublicCopy("Bôi 1,0 lớp"), "Bôi 1,0 lớp");
+    assert.equal(toPublicCopy("Khoảng 0,5 đến 1 ml"), "Khoảng 0,5 đến 1 ml");
+    assert.equal(toPublicCopy("Dùng 0.3~0.5 g"), "Dùng 0.3~0.5 g");
+  });
+
+  it("does not strip snake_case inside a URL or email", () => {
+    assert.equal(
+      toPublicCopy("https://dadiary.vn/a_b_c"),
+      "https://dadiary.vn/a_b_c",
+    );
+    assert.equal(
+      toPublicCopy("Xem https://dadiary.vn/a_b_c hôm nay."),
+      "Xem https://dadiary.vn/a_b_c hôm nay.",
+    );
+    assert.equal(
+      toPublicCopy("Gửi skin_coach@dadiary.vn giúp mình."),
+      "Gửi skin_coach@dadiary.vn giúp mình.",
+    );
+    assert.equal(
+      toPublicCopy("Xem skin_score_notes tại https://dadiary.vn/a_b_c."),
+      "Xem tại https://dadiary.vn/a_b_c.",
+    );
   });
 
   it("removes snake_case field names", () => {
