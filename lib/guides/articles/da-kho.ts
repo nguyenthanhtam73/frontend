@@ -7,7 +7,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     {
       vi: {
         alt: "Hai biểu tượng mặt: bên trái da căng sau rửa mạnh, bên phải da êm sau dưỡng khi còn ẩm.",
-        caption: "Căng sau rửa chưa chắc ‘da sạch’. Thường là hàng rào đang khô.",
+        caption: "Căng sau rửa chưa chắc là da sạch. Thường là lớp ngoài da đang khô.",
       },
       en: {
         alt: "Two face icons: tight skin after a harsh wash on the left, calmer skin after moisturizing on damp skin on the right.",
@@ -59,7 +59,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           heading: "Da khô ở khí hậu này hay như thế nào",
           paragraphs: [
             "Khô không phải da ‘thiếu dầu nên phải rửa sạch hơn’. Hay gặp: căng sau rửa, bong nhẹ khóe miệng, ngứa khi điều hòa.",
-            "Nóng ẩm bên ngoài không tự dưỡng da. Mồ hôi rồi chà, hoặc rửa đến kít, làm hàng rào dễ nứt hơn.",
+            "Nóng ẩm bên ngoài không tự dưỡng da. Mồ hôi rồi chà, hoặc rửa đến kít, làm lớp ngoài da dễ nứt hơn.",
           ],
           subsections: [
             {
@@ -194,7 +194,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           question: "Da vừa khô vừa nổi mụn thì sao?",
           answer:
-            "Hay gặp khi hàng rào yếu. Đừng trị mụn bằng cách bỏ dưỡng. Giữ nền dịu + SPF; một hoạt chất chậm, sau khi da bớt nẻ. Đau, mủ, sẹo — gặp bác sĩ, đừng tự chồng acid.",
+            "Hay gặp khi lớp ngoài da yếu. Đừng trị mụn bằng cách bỏ dưỡng. Giữ nền dịu + SPF; một hoạt chất chậm, sau khi da bớt nẻ. Đau, mủ, sẹo — gặp bác sĩ, đừng tự chồng acid.",
         },
       ],
     };

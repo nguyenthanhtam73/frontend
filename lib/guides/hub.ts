@@ -108,7 +108,7 @@ const HUB: Record<
     heading: "Chăm da nóng ẩm ở Việt Nam",
     kicker: "Nắng ẩm Việt Nam",
     lede:
-      "Da sống nắng ẩm hay gặp dầu, khô, dễ đỏ, mụn, thâm, hoặc rát sau chai mới. Các bài dưới đây nói từng việc: kem chống nắng, routine ngắn, retinol chậm, mụn ẩn, thâm khác nám, và khi hàng rào đang kêu. Đọc xong, chụp một ảnh để nhận routine khởi đầu. Đăng ký sau khi thấy gợi ý. DaDiary đang Beta: tham khảo, không phải phòng khám.",
+      "Da sống nắng ẩm hay gặp dầu, khô, dễ đỏ, mụn, thâm, hoặc rát sau chai mới. Các bài dưới đây nói từng việc: kem chống nắng, routine ngắn, retinol chậm, mụn ẩn, thâm khác nám, và khi da đang khô rát, đỏ hơn. Đọc xong, chụp một ảnh để nhận routine khởi đầu. Đăng ký sau khi thấy gợi ý. DaDiary đang Beta: tham khảo, không phải phòng khám.",
     climateHeading: "Một ngày có thể đủ ba khí hậu",
     climateParagraphs: [
       "Sáng: mũ, nắng, kem chống nắng. Trưa: vài phút ra đường. Chiều: máy lạnh, T-zone bóng hoặc má căng. Tối: muốn ‘tẩy sạch cả ngày’ nên rửa mạnh.",

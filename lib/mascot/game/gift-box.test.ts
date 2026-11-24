@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { applyGiftWear } from "@/lib/mascot/layers";
 import { bpsLabel, giftRateGroups, isCoinPrize, readOpen } from "@/lib/mascot/game/gift-box";
+import { giftSleeveSrc, giftSrc } from "@/lib/mascot/game/gift-wear";
 import { readRoomTree } from "@/lib/mascot/game/room-tree";
 
 describe("gift box", () => {
@@ -190,5 +193,31 @@ describe("gift box", () => {
       layers.find((layer) => layer.slot === "gift-shoes")?.src,
       "/mascot/gift/shoes/bottom_vay_xep_ly_ma_non.svg",
     );
+  });
+
+  it("wears the fixed dandelion sleeves, not the missing gradient", () => {
+    const tops = ["top_ao_cau_bong_anh_sao", "top_ao_choang_bong_may"] as const;
+    const poses = [null, "wave", "cheer"] as const;
+    for (const id of tops) {
+      assert.match(giftSrc("top", id) ?? "", new RegExp(`/${id}_v2\\.svg$`));
+      for (const pose of poses) {
+        const src = giftSleeveSrc(id, pose);
+        assert.match(src, new RegExp(`${id}_v2\\.svg$`));
+        assert.equal(src.includes(`${id}.svg`), false);
+      }
+    }
+    const dir = fileURLToPath(new URL("../../../public/mascot/gift/top/", import.meta.url));
+    const files = readdirSync(dir).filter((name) => name.includes("cau_bong_anh_sao") || name.includes("choang_bong_may"));
+    assert.deepEqual(
+      files.filter((name) => !name.endsWith("_v2.svg")),
+      [],
+    );
+    for (const name of files) {
+      const text = readFileSync(`${dir}${name}`, "utf8");
+      assert.equal(text.includes("url(#b8ss)"), false, name);
+      for (const ref of text.matchAll(/url\(#([^)]+)\)/g)) {
+        assert.match(text, new RegExp(`id="${ref[1]}"`));
+      }
+    }
   });
 });

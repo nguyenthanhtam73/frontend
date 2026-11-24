@@ -9,22 +9,13 @@ import { cn } from "@/lib/utils";
 
 type Mode = "light" | "dark";
 
-/** Snappy eased orbit — avoids feeling “sticky” vs linear ease */
-const EASE_SPRING = "cubic-bezier(0.34, 1.35, 0.64, 1)";
-const ICON_T_MS = 260;
-
-/** Crisp SVG on mobile; desktop keeps orbit animation */
-const iconBase = cn(
-  "theme-toggle-icon absolute z-[5] shrink-0 stroke-[2]",
-  "h-[20px] w-[20px] md:h-4 md:w-4",
-  "max-md:motion-safe:transition-opacity max-md:motion-safe:duration-[260ms] max-md:motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)]",
-  "md:motion-safe:transition-[opacity,transform,filter] md:motion-safe:duration-[260ms] md:motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)]",
-  "motion-reduce:transition-none",
-);
-
-const iconShellClass = cn(
-  "theme-toggle-icon-shell relative grid size-7 shrink-0 place-items-center rounded-full md:size-6",
-  "bg-linear-to-br from-muted/50 to-transparent motion-reduce:from-muted/35 motion-reduce:to-transparent",
+const shell = cn(
+  "theme-toggle-btn inline-flex h-11 min-h-11 shrink-0 items-center rounded-lg border border-border bg-background p-0.5",
+  // Phones: sun/moon only, still a 44px target, so login and register both fit.
+  "max-sm:size-11 max-sm:min-w-11 max-sm:justify-center max-sm:p-0",
+  "cursor-pointer overflow-hidden text-left",
+  "[appearance:none] [-webkit-appearance:none] [-webkit-tap-highlight-color:transparent]",
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
 );
 
 export function ThemeToggle({ className }: { className?: string }) {
@@ -43,135 +34,35 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   if (!mounted) {
     return (
-      <div
-        className={cn(
-          "inline-flex h-11 min-h-11 min-w-11 shrink-0 cursor-default items-center gap-1 rounded-lg border border-border bg-background px-1.5 md:h-8 md:min-h-8 md:min-w-[5rem]",
-          className,
-        )}
-        aria-busy="true"
-        aria-label={t("label")}
-      >
-        <span className={cn(iconShellClass, "cursor-default")} aria-hidden>
-          <span className="absolute inset-[15%] rounded-full bg-muted/70" />
-        </span>
-        <span className="hidden min-h-3 min-w-[2.5rem] rounded-sm bg-muted/60 md:block" aria-hidden />
+      <div className={cn(shell, "cursor-default", className)} aria-busy="true" aria-label={t("label")}>
+        <span
+          className="inline-flex h-9 min-w-[4.5rem] items-center rounded-md bg-muted/60 max-sm:size-9 max-sm:min-w-9"
+          aria-hidden
+        />
       </div>
     );
   }
 
   const explicit: Mode | null = theme === "light" || theme === "dark" ? theme : null;
   const active: Mode = explicit ?? (resolvedTheme === "dark" ? "dark" : "light");
-
   const isLight = active === "light";
-
-  const label = `${t("label")}: ${t(active)}`;
-
-  const labelMotionIdle = cn(
-    "motion-safe:transition-[opacity,transform] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none motion-reduce:duration-0",
-  );
+  const modeLabel = isLight ? t("light") : t("dark");
+  const label = isLight ? t("lightMode") : t("darkMode");
+  const Icon = isLight ? Sun : Moon;
 
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
-      onClick={() => setTheme(active === "light" ? "dark" : "light")}
-      className={cn(
-        "theme-toggle-btn group/theme-toggle relative isolate inline-flex h-11 min-h-11 min-w-11 shrink-0 cursor-pointer items-center gap-1 overflow-visible rounded-lg border border-border bg-background px-1.5 text-[11px] font-medium text-muted-foreground transition-[color,background-color,border-color,box-shadow] duration-200 hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 md:h-8 md:min-h-8 md:min-w-[5rem] md:text-xs",
-        className,
-      )}
+      aria-pressed={active === "dark"}
+      onClick={() => setTheme(isLight ? "dark" : "light")}
+      className={cn(shell, className)}
     >
-      <span className={iconShellClass} aria-hidden>
-        {/* Ambient halo: warm day → cool night (desktop only) */}
-        <span
-          className={cn(
-            "theme-toggle-halo pointer-events-none absolute inset-0 rounded-full blur-[8px]",
-            "motion-safe:transition-[opacity,transform,background-color] motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
-            isLight ? "scale-100 bg-amber-400/55 opacity-90" : "scale-125 bg-indigo-500/45 opacity-100 dark:bg-sky-600/38",
-          )}
-        />
-
-        <Sun
-          strokeWidth={2}
-          vectorEffect="non-scaling-stroke"
-          className={cn(
-            iconBase,
-            "text-amber-500 max-md:drop-shadow-none drop-shadow-[0_0_8px_oklab(82%_0.12_95/0.35)] motion-reduce:drop-shadow-none",
-            isLight
-              ? "theme-toggle-icon--active rotate-0 scale-100 opacity-100 blur-none"
-              : cn(
-                  "theme-toggle-icon--inactive opacity-0",
-                  "max-md:rotate-0 max-md:scale-100 max-md:blur-none",
-                  "md:rotate-[-110deg] md:scale-[0.35] md:blur-[1.5px]",
-                  "motion-reduce:blur-none motion-reduce:opacity-0",
-                ),
-          )}
-        />
-
-        <Moon
-          strokeWidth={2}
-          vectorEffect="non-scaling-stroke"
-          className={cn(
-            iconBase,
-            "text-sky-300 max-md:drop-shadow-none drop-shadow-[0_0_7px_oklab(78%_0.09_260/0.42)] motion-reduce:drop-shadow-none dark:text-sky-200",
-            "md:h-[0.9375rem] md:w-[0.9375rem]",
-            isLight
-              ? cn(
-                  "theme-toggle-icon--inactive opacity-0",
-                  "max-md:rotate-0 max-md:scale-100 max-md:blur-none",
-                  "md:rotate-110 md:scale-[0.35] md:blur-[1.5px]",
-                  "motion-reduce:blur-none motion-reduce:opacity-0",
-                )
-              : "theme-toggle-icon--active rotate-0 scale-100 opacity-100 blur-none",
-          )}
-        />
-
-        <span
-          className={cn(
-            "theme-toggle-stars pointer-events-none absolute inset-0 z-[6]",
-            "motion-safe:transition-opacity motion-safe:duration-[260ms] motion-safe:ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none",
-            isLight ? "opacity-0" : "opacity-100",
-          )}
-        >
-          <span className="theme-toggle-star-a absolute left-px top-0.5 size-[3px] rounded-full bg-white/95 shadow-[0_0_4px_rgb(226,232,240)] dark:bg-white/90" />
-          <span className="theme-toggle-star-b absolute top-[5px] right-1 size-0.5 rounded-full bg-sky-50/95 shadow-[0_0_3px_rgb(147,197,253)] dark:bg-white/88" />
-          <span className="theme-toggle-star-c absolute bottom-1 left-2 size-[2.5px] rounded-full bg-sky-100/95 shadow-[0_0_3px_rgb(186,230,253)] dark:bg-white/82" />
-        </span>
+      <span className="inline-flex max-w-full items-center justify-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-medium leading-none text-primary-foreground max-sm:size-9 max-sm:px-0 max-sm:py-0 sm:text-xs">
+        <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+        <span className="whitespace-nowrap max-sm:sr-only">{modeLabel}</span>
       </span>
-
-      <span className="relative hidden h-5 min-w-10 overflow-hidden md:inline-flex md:items-center">
-        <span
-          className={cn(
-            "block whitespace-nowrap",
-            labelMotionIdle,
-            isLight
-              ? "translate-y-0 opacity-100 motion-reduce:translate-y-0 motion-reduce:opacity-100"
-              : "pointer-events-none absolute inset-0 translate-y-[110%] opacity-0 motion-reduce:pointer-events-none motion-reduce:opacity-0",
-          )}
-          style={{ transitionDuration: `${ICON_T_MS}ms`, transitionTimingFunction: EASE_SPRING }}
-          aria-hidden
-        >
-          {t("light")}
-        </span>
-        <span
-          className={cn(
-            "block whitespace-nowrap",
-            labelMotionIdle,
-            isLight
-              ? "pointer-events-none absolute inset-0 translate-y-[-110%] opacity-0 motion-reduce:pointer-events-none motion-reduce:opacity-0"
-              : "translate-y-0 opacity-100 motion-reduce:translate-y-0 motion-reduce:opacity-100",
-          )}
-          style={{ transitionDuration: `${ICON_T_MS}ms`, transitionTimingFunction: EASE_SPRING }}
-          aria-hidden
-        >
-          {t("dark")}
-        </span>
-      </span>
-
-      <span
-        className="pointer-events-none absolute inset-0 rounded-lg bg-linear-to-r from-transparent via-primary/10 to-transparent opacity-0 transition-opacity duration-[420ms] group-hover/theme-toggle:opacity-100 motion-reduce:hidden motion-reduce:opacity-0"
-        aria-hidden
-      />
     </button>
   );
 }

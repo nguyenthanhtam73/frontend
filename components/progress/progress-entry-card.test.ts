@@ -32,6 +32,12 @@ describe("ProgressEntryCard reanalyze CTA", () => {
     assert.match(src, /t\("reanalyzeCta"\)/);
   });
 
+  it("labels the photo with a feel word, not a percent", () => {
+    assert.match(src, /tJournal\(feelKey\)/);
+    assert.equal(src.includes("Tổng"), false);
+    assert.equal(src.includes("%"), false);
+  });
+
   it("disables and marks busy while POST+poll is in flight", () => {
     assert.match(src, /disabled=\{inFlight\}/);
     assert.match(src, /aria-busy=\{inFlight\}/);

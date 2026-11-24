@@ -26,6 +26,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { fetchSkinCheck } from "@/lib/api/skin-check";
 import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import { ApiError, apiGet } from "@/lib/api-client";
 import { getAccessToken, getRefreshToken } from "@/lib/auth-token";
 import type { RoutineStepDTO } from "@/lib/types/routine";
@@ -187,7 +188,7 @@ export function CheckInContextCard({
       checkDateLabel: dateInfo.label,
       tags: entry.tags ?? [],
       symptoms: entry.symptoms ?? [],
-      snippet: entry.snippet,
+      snippet: entry.snippet ? toPublicCopy(entry.snippet).trim() : undefined,
       userNote: entry.user_note,
       maintenance,
       routineHints: cachedHints ?? undefined,
@@ -322,7 +323,8 @@ export function CheckInContextCard({
   const symptoms = (e.symptoms ?? []).slice(0, 4);
   const showApplyButton =
     hintsReady === true && !!onApplyHints && e.status === "completed";
-  const snippetLong = (e.snippet?.length ?? 0) > 140;
+  const snippet = e.snippet ? toPublicCopy(e.snippet).trim() : "";
+  const snippetLong = snippet.length > 140;
 
   return (
     <>
@@ -380,9 +382,9 @@ export function CheckInContextCard({
             </div>
           ) : null}
 
-          {!maintenance && e.snippet ? (
+          {!maintenance && snippet ? (
             <div className="space-y-1.5 rounded-xl border border-border/60 bg-background/80 px-3.5 py-3 shadow-sm">
-              <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{e.snippet}</p>
+              <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3">{snippet}</p>
               {snippetLong ? (
                 <button
                   type="button"

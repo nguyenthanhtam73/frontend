@@ -65,7 +65,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Tín hiệu thường gặp — chưa phải chẩn đoán",
               paragraphs: [
-                "Rát khi thoa, đỏ lan sau chai mới, ngứa dọc má khi máy lạnh. Cũng có thể chỉ là hàng rào đang khô — xem [da khô](/guides/da-kho) trước khi mua ‘serum phục hồi’.",
+                "Rát khi thoa, đỏ lan sau chai mới, ngứa dọc má khi máy lạnh. Cũng có thể chỉ là lớp ngoài da đang khô — xem [da khô](/guides/da-kho) trước khi mua ‘serum phục hồi’.",
               ],
               checklist: [
                 "Viết ra chai mới trong 2 tuần (kể cả sunscreen).",

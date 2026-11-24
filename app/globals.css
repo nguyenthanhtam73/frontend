@@ -296,82 +296,19 @@
   }
 }
 
-@keyframes theme-toggle-twinkle {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(0.92);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .theme-toggle-star-a {
-    animation: theme-toggle-twinkle 2.5s ease-in-out infinite;
-  }
-
-  .theme-toggle-star-b {
-    animation: theme-toggle-twinkle 2.15s ease-in-out infinite 0.45s;
-  }
-
-  .theme-toggle-star-c {
-    animation: theme-toggle-twinkle 2.85s ease-in-out infinite 0.2s;
-  }
+/* Theme toggle — keep the chip inside the pill. Safari paints a colored
+   tap blob and a default button face unless both are turned off. */
+.theme-toggle-btn {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
 }
 
-/* Theme toggle — crisp Sun/Moon on mobile (retina + backdrop-blur headers) */
-@media (max-width: 767px) {
-  .theme-toggle-btn {
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    will-change: transform;
-  }
-
-  .theme-toggle-icon-shell {
-    contain: layout style paint;
-    isolation: isolate;
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-
-  .theme-toggle-icon {
-    shape-rendering: geometricPrecision;
-    vector-effect: non-scaling-stroke;
-    -webkit-font-smoothing: antialiased;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    filter: none !important;
-    width: 20px;
-    height: 20px;
-    stroke-width: 2;
-  }
-
-  .theme-toggle-icon--active {
-    opacity: 1;
-    transform: none !important;
-  }
-
-  .theme-toggle-icon--inactive {
-    opacity: 0;
-    transform: none !important;
-    pointer-events: none;
-  }
-
-  .theme-toggle-halo,
-  .theme-toggle-stars {
-    display: none;
-  }
-
-  .theme-toggle-mobile-bar .theme-toggle-btn {
-    position: relative;
-    z-index: 1;
-  }
+.theme-toggle-btn svg {
+  display: block;
+  flex: none;
+  overflow: visible;
 }
 
 /* Top progress bar shown by `app/[locale]/loading.tsx` during navigation. */
@@ -981,4 +918,36 @@ body[data-game-embed="1"] [data-activation-banner] {
 
 body[data-game-embed="1"] {
   touch-action: none;
+}
+
+.beda-gate-wait {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  background: #fbf6f2;
+  color: #3f2c26;
+  font-weight: 800;
+  text-align: center;
+}
+
+html.dark .beda-gate-wait {
+  background: #1c161b;
+  color: #f8efe9;
+}
+
+.beda-gate-retry {
+  min-height: 48px;
+  min-width: 140px;
+  border: 0;
+  border-radius: 999px;
+  background: #c44774;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }

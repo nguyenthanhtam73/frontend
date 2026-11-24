@@ -45,6 +45,7 @@ export const APP_CLIENT_MESSAGE_NAMESPACES = [
   "coachWelcome",
   "coachProductGuidance",
   "productSuggestions",
+  "affiliateSuggestions",
   "cabinet",
   "progress",
   "routine",

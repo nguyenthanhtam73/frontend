@@ -5,9 +5,10 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
 import vi from "../../messages/vi.json";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
-import { DailyCoachFeedback } from "./daily-coach-feedback";
+import { DailyCoachFeedback, coachVersionLineVisible } from "./daily-coach-feedback";
 
 function renderFeedback(payload: CreateSkinCheckResponseDTO) {
   const client = new QueryClient({
@@ -54,7 +55,7 @@ describe("DailyCoachFeedback maintenance", () => {
       analysis: { ...oldCheck.analysis, status: "pending", coach: undefined },
     });
     assert.match(html, /Hệ thống đang bảo trì/);
-    assert.match(html, /Ảnh của bạn đã được lưu an toàn/);
+    assert.match(html, /Ảnh tao giữ rồi, an toàn/);
     assert.equal(html.includes("Hôm nay da ổn"), false);
   });
 
@@ -68,7 +69,7 @@ describe("DailyCoachFeedback maintenance", () => {
       },
     });
     assert.equal(html.includes("Hệ thống đang bảo trì"), false);
-    assert.match(html, /Chưa tạo được lời khuyên/);
+    assert.match(html, /Tao chưa soạn được/);
   });
 
   it("shows the note for a failed analysis only when analysis_pending is set", () => {
@@ -100,5 +101,74 @@ describe("DailyCoachFeedback old checks", () => {
     assert.equal(html.includes('data-testid="coach-zone-notes"'), false);
     assert.equal(html.includes('data-testid="coach-clarify"'), false);
     assert.equal(html.includes('data-testid="coach-score-note"'), false);
+  });
+
+  it("shows the cleaned score note instead of a raw gauge", () => {
+    const html = renderFeedback({
+      ...oldCheck,
+      analysis: {
+        ...oldCheck.analysis,
+        coach: {
+          ...oldCheck.analysis.coach!,
+          skin_score_gauges: { overall: 0.78, hydration: 0.72 },
+          skin_score_notes: {
+            overall: "score 0.78 vì da vẫn khỏe mạnh",
+            hydration: "score 0.72 vì mụn ẩn vẫn còn",
+          },
+          situation_summary: "Mày ghi mụn ẩn, và ảnh hôm nay tao thấy đúng vậy",
+          care_suggestions: [
+            { slot: "morning", step: "Thoa SPF50", why: "score 0.78 vì da vẫn khỏe mạnh" },
+          ],
+        },
+      },
+    });
+    assert.match(html, /Da vẫn khỏe mạnh/);
+    assert.match(html, /Mụn ẩn vẫn còn/);
+    assert.match(html, /Mày ghi mụn ẩn, và ảnh hôm nay tao thấy đúng vậy/);
+    assert.match(html, /SPF50/);
+    assert.equal(html.includes("score 0.78"), false);
+    assert.equal(html.includes("score 0.72"), false);
+    assert.equal(html.includes("0.78"), false);
+    assert.equal(html.includes("0.72"), false);
+    assert.match(html, /data-testid="coach-score-note"/);
+  });
+
+  it("hides the advice version from people who are not admins", () => {
+    useAuthStore.setState({ user: null, loading: false });
+    const withMeta: CreateSkinCheckResponseDTO = {
+      ...oldCheck,
+      analysis: {
+        ...oldCheck.analysis,
+        model_version: "gpt-test",
+        prompt_version: 36,
+        coach: {
+          ...oldCheck.analysis.coach!,
+          zone_notes: [
+            { zone: "forehead", note: "Da mịn màng, không thấy mụn.", severity: "mild" },
+            { zone: "left_cheek", note: "Trông giống vài nốt nhỏ.", severity: "mild" },
+          ],
+        },
+      },
+    };
+    const hidden = renderFeedback(withMeta);
+    assert.match(hidden, /Da mịn màng, không thấy mụn\./);
+    assert.match(hidden, /Trông giống vài nốt nhỏ\./);
+    assert.match(hidden, /Má trái/);
+    assert.equal(hidden.includes("Nhẹ"), true);
+    assert.equal((hidden.match(/Nhẹ/g) ?? []).length, 1);
+    assert.equal(hidden.includes("Phiên bản lời khuyên"), false);
+    assert.equal(hidden.includes("Pipeline:"), false);
+    assert.equal(hidden.includes("gpt-test"), false);
+    assert.equal(hidden.includes('data-testid="coach-model-line"'), false);
+    assert.equal(
+      coachVersionLineVisible(false, { model_version: "gpt-test", prompt_version: 36 }),
+      false,
+    );
+    assert.equal(
+      coachVersionLineVisible(true, { model_version: "gpt-test", prompt_version: 36 }),
+      true,
+    );
+    assert.equal(coachVersionLineVisible(true, {}), false);
+    useAuthStore.setState({ user: null, loading: false });
   });
 });

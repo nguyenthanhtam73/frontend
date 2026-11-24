@@ -23,7 +23,7 @@ describe("AnalysisMaintenanceNote", () => {
     assert.match(html, /Hệ thống đang bảo trì/);
     assert.match(
       html,
-      /Ảnh của bạn đã được lưu an toàn\. Kết quả sẽ có sau ít phút, bạn quay lại xem nhé\./,
+      /Ảnh tao giữ rồi, an toàn\. Kết quả có sau ít phút, quay lại xem là được\./,
     );
     assert.match(html, /data-testid="analysis-maintenance-note"/);
     assert.equal(html.includes("role=\"alert\""), false);

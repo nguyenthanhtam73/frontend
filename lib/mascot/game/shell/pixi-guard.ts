@@ -66,6 +66,66 @@ export function setActorReady(dataset: { actorReady?: string }, ready: boolean):
   else delete dataset.actorReady;
 }
 
+/** How long the canvas may stay blank before the plain room takes over. */
+export const PIXI_READY_MS = 4000;
+
+/**
+ * The first claim wins: the ready shell, the failure, or the timeout.
+ * A resolve that arrives after that is ignored by the caller.
+ */
+export function createPixiStartGate(): { claim: () => boolean } {
+  let settled = false;
+  return {
+    claim() {
+      if (settled) return false;
+      settled = true;
+      return true;
+    },
+  };
+}
+
+/**
+ * The watchdog stays armed after `app.init` resolves.
+ * Only a confirmed frame disarms it. Context loss still fails the canvas.
+ */
+export function createFrameWatch(): {
+  readonly armed: boolean;
+  readonly inited: boolean;
+  readonly failed: boolean;
+  noteInit: () => void;
+  noteFrame: () => boolean;
+  fail: (force?: boolean) => boolean;
+} {
+  let inited = false;
+  let framed = false;
+  let failed = false;
+  return {
+    get armed() {
+      return !framed && !failed;
+    },
+    get inited() {
+      return inited;
+    },
+    get failed() {
+      return failed;
+    },
+    noteInit() {
+      inited = true;
+    },
+    noteFrame() {
+      if (framed || failed) return false;
+      framed = true;
+      return true;
+    },
+    fail(force = false) {
+      if (failed) return false;
+      if (framed && !force) return false;
+      failed = true;
+      return true;
+    },
+  };
+}
+
 /** Drop the loading spinner. Report the failure only if the host is still on the page. */
 export function notePixiInitFailed(
   dataset: { loading?: string },

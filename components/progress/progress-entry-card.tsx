@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock3, Loader2, ScanSearch, Sparkles, Tag } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { ProgressPhoto } from "@/components/progress/progress-photo";
@@ -9,7 +9,9 @@ import { useProgressReanalyze } from "@/components/progress/use-progress-reanaly
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
-import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
+import { softGaugeFeel } from "@/lib/check-in/soft-gauge-feel";
+import { formatCheckDate } from "@/lib/progress/format-check-date";
 import { canShowReanalyzeCta } from "@/lib/progress/reanalyze";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
 import { cn } from "@/lib/utils";
@@ -32,10 +34,15 @@ export function ProgressEntryCard({
   onEntryChange: (next: ProgressEntryDTO) => void;
 }) {
   const t = useTranslations("progress.entry");
-  const tFeel = useTranslations("progress.summary");
+  const locale = useLocale();
+  const when = formatCheckDate(entry.check_date, locale);
+  const tJournal = useTranslations("routine.checkInContext");
   const thumb = entry.image_urls?.[0];
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
+  const snippet = entry.snippet ? toPublicCopy(entry.snippet).trim() : "";
+  const feel = overall == null ? null : softGaugeFeel(overall);
+  const feelKey = feel === "low" ? "feelLow" : feel === "mid" ? "feelMid" : feel === "ok" ? "feelOk" : null;
   const { inFlight, run } = useProgressReanalyze(entry, onEntryChange);
   const maintenance = showsAnalysisMaintenance({
     analysisPending: entry.analysis_pending,
@@ -59,7 +66,7 @@ export function ProgressEntryCard({
           {thumb ? (
             <ProgressPhoto
               url={thumb}
-              alt={`${entry.title?.trim() || t("untitled")} — ${entry.check_date}`}
+              alt={`${entry.title?.trim() || t("untitled")} — ${when}`}
               source="skin-check"
               checkId={entry.id}
             />
@@ -71,9 +78,9 @@ export function ProgressEntryCard({
               {t("photoCount", { n: photoCount })}
             </span>
           ) : null}
-          {overall != null ? (
+          {feelKey ? (
             <span className="absolute right-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-[9px] font-semibold text-foreground shadow-sm backdrop-blur">
-              {tFeel(softGaugeFeelKey(overall))}
+              {tJournal(feelKey)}
             </span>
           ) : null}
         </div>
@@ -85,14 +92,14 @@ export function ProgressEntryCard({
             </p>
             <span className="inline-flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
               <Clock3 className="size-3" aria-hidden />
-              {entry.check_date}
+              {when}
             </span>
           </div>
 
-          {maintenance ? null : entry.snippet ? (
+          {maintenance ? null : snippet ? (
             <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
               <Sparkles className="mr-1 inline size-3 text-primary" aria-hidden />
-              {entry.snippet}
+              {snippet}
             </p>
           ) : entry.status === "pending" || entry.status === "processing" ? (
             <p className="text-xs italic text-muted-foreground">{t("processing")}</p>

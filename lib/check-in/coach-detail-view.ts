@@ -1,4 +1,5 @@
 import type { CoachPhotoEvidenceKind } from "@/lib/check-in/coach-evidence";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import type { CoachZoneNoteDTO } from "@/lib/types/skin-check";
 
 /** Zone ids the photo check-in coach actually emits (backend checkInZones). */
@@ -48,11 +49,101 @@ function asTrimmedString(value: unknown): string | undefined {
   return text ? text : undefined;
 }
 
+/** Coach prose with leaked gauges and field names removed. Blank → omit. */
+function publicLine(value: string): string | undefined {
+  const text = toPublicCopy(value).trim();
+  return text ? text : undefined;
+}
+
 /** Known zone → i18n key. Unknown, blank, or non-string zones hide the label. */
 export function coachZoneLabelKey(zone: unknown): CoachZoneLabelKey | null {
   const key = asTrimmedString(zone)?.toLowerCase() ?? "";
   if (!key || !(key in ZONE_LABEL_KEY)) return null;
   return ZONE_LABEL_KEY[key as keyof typeof ZONE_LABEL_KEY];
+}
+
+const SIGN_NOTE_PREFIXES = ["trông giống", "looks like"] as const;
+
+/** Longest first, so a shorter acne denial does not leave the longer one behind. */
+const ACNE_DENIALS = [
+  "không có dấu hiệu mụn",
+  "không thấy dấu hiệu mụn",
+  "không thấy mụn",
+  "không có mụn",
+  "chưa thấy mụn",
+  "chưa có mụn",
+  "no sign of acne",
+  "don't see acne",
+  "do not see acne",
+  "haven't seen acne",
+  "no acne",
+  "no pimples",
+] as const;
+
+/** Calm wording. «không có dấu hiệu» alone is not enough — it can introduce a problem. */
+const GOOD_SKIN_PHRASES = ["mịn màng", "smooth", "no sign"] as const;
+
+/** If any of these remain after the acne denials are removed, the note still names a problem. */
+const PROBLEM_WORDS = [
+  "lỗ chân lông",
+  "kích ứng",
+  "nốt",
+  "mụn",
+  "đỏ",
+  "thâm",
+  "sưng",
+  "khô",
+  "bong",
+  "dầu",
+  "sần",
+  "chấm",
+  "ửng",
+  "hạt",
+  "nhưng",
+  "bump",
+  "red",
+  "pore",
+  "acne",
+] as const;
+
+function includesPhrase(text: string, phrase: string): boolean {
+  let from = 0;
+  while (from < text.length) {
+    const at = text.indexOf(phrase, from);
+    if (at < 0) return false;
+    const after = text[at + phrase.length] ?? "";
+    if (!after || !isLetter(after)) return true;
+    from = at + phrase.length;
+  }
+  return false;
+}
+
+function withoutAcneDenials(text: string): { rest: string; stripped: boolean } {
+  let rest = text;
+  let stripped = false;
+  for (const phrase of ACNE_DENIALS) {
+    if (!rest.includes(phrase)) continue;
+    rest = rest.split(phrase).join(" ");
+    stripped = true;
+  }
+  return { rest, stripped };
+}
+
+/**
+ * A clear-skin line does not open with «Trông giống» / «Looks like».
+ * Acne denials are removed first. If a problem word is still there, the
+ * severity chip stays.
+ */
+export function isGoodSkinNote(note: string): boolean {
+  const text = note.normalize("NFC").trim().toLocaleLowerCase("vi");
+  if (!text) return false;
+  if (SIGN_NOTE_PREFIXES.some((prefix) => text.startsWith(prefix))) return false;
+  const { rest, stripped } = withoutAcneDenials(text);
+  if (PROBLEM_WORDS.some((word) => rest.includes(word))) return false;
+  if (GOOD_SKIN_PHRASES.some((phrase) => includesPhrase(rest, phrase) || includesPhrase(text, phrase))) {
+    return true;
+  }
+  return stripped;
 }
 
 /** Known severity → i18n key. Unknown or non-string values stay hidden. */
@@ -136,13 +227,14 @@ export function visibleZoneNotes(
     const zone = asTrimmedString(item.zone) ?? "";
     const labelKey = coachZoneLabelKey(zone);
     const label = labelKey ? asTrimmedString(labels?.[labelKey]) : undefined;
-    const shown = label ? stripLeadingZoneLabel(note, label) : note;
+    const stripped = label ? stripLeadingZoneLabel(note, label) : note;
+    const shown = publicLine(stripped);
     if (!shown) continue;
     out.push({
       zone,
       note: shown,
       labelKey,
-      severityKey: coachSeverityLabelKey(item.severity),
+      severityKey: isGoodSkinNote(shown) ? null : coachSeverityLabelKey(item.severity),
     });
     if (out.length >= MAX_ZONE_NOTES) break;
   }
@@ -152,7 +244,8 @@ export function visibleZoneNotes(
 /** Sentence under one gauge. Blank, missing, or non-string → omit the line. */
 export function scoreNoteText(notes: unknown, key: ScoreNoteKey): string | undefined {
   if (!notes || typeof notes !== "object" || Array.isArray(notes)) return undefined;
-  return asTrimmedString((notes as Partial<Record<ScoreNoteKey, unknown>>)[key]);
+  const raw = asTrimmedString((notes as Partial<Record<ScoreNoteKey, unknown>>)[key]);
+  return raw ? publicLine(raw) : undefined;
 }
 
 /**
@@ -172,7 +265,9 @@ export function clarifyBox(input: {
   for (const raw of input.clarify_questions) {
     const text = asTrimmedString(raw);
     if (!text) continue;
-    items.push(text);
+    const cleaned = publicLine(text);
+    if (!cleaned) continue;
+    items.push(cleaned);
     if (items.length >= MAX_CLARIFY_ITEMS) break;
   }
   if (items.length === 0) return null;

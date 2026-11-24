@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { Heart, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,7 +73,7 @@ export function ProgressSummaryCard({
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <StatTile
-            icon={<TrendIcon trend={trend} />}
+            icon={<Heart className="size-3.5" aria-hidden />}
             label={t("overall")}
             value={feelOrDash(summary.current_month?.overall_avg, t)}
           />
@@ -88,7 +88,9 @@ export function ProgressSummaryCard({
           <div className="space-y-1.5 rounded-xl bg-background/60 p-3 shadow-sm ring-1 ring-border/60">
             <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
               <span>{t("sparklineLabel")}</span>
-              <span className="tabular-nums">{sparklinePoints.length} pts</span>
+              <span className="normal-case tabular-nums">
+                {t("sparklineCount", { n: sparklinePoints.length })}
+              </span>
             </div>
             <ProgressSparkline
               points={sparklinePoints}
@@ -145,41 +147,20 @@ function StatTile({
   );
 }
 
-/** Renders the 4 small gauge deltas (overall / hydration / clarity / barrier). */
+/** One plain sentence for how skin compares. No gauge number. */
 function GaugeDeltaGrid({ cmp }: { cmp: MonthlyComparisonDTO }) {
   const t = useTranslations("progress.summary");
-  const items = [
-    { key: "overall", label: t("gaugeOverall"), delta: cmp.overall_delta },
-    { key: "hydration", label: t("gaugeHydration"), delta: cmp.hydration_delta },
-    { key: "clarity", label: t("gaugeClarity"), delta: cmp.clarity_delta },
-    { key: "barrier", label: t("gaugeBarrier"), delta: cmp.barrier_delta },
-  ] as const;
-  const visible = items.filter((it) => it.delta != null);
-  if (visible.length === 0) return null;
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {visible.map((it) => (
-        <DeltaChip key={it.key} label={it.label} delta={it.delta ?? 0} />
-      ))}
-    </div>
-  );
-}
-
-function DeltaChip({ label, delta }: { label: string; delta: number }) {
+  const delta =
+    cmp.overall_delta ?? cmp.hydration_delta ?? cmp.clarity_delta ?? cmp.barrier_delta;
+  if (delta == null) return null;
   const trend: "up" | "flat" | "down" =
     delta > 0.03 ? "up" : delta < -0.03 ? "down" : "flat";
-  const sign = delta > 0 ? "+" : "";
-  const display = `${sign}${Math.round(delta * 100)}`;
+  const key = trend === "up" ? "deltaUp" : trend === "down" ? "deltaDown" : "deltaFlat";
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-background/70 px-2.5 py-1.5">
-      <span className="truncate text-[11px] text-muted-foreground">{label}</span>
-      <span
-        className={`inline-flex items-center gap-1 text-xs font-semibold tabular-nums ${trendColorClass(trend)}`}
-      >
-        <TrendIcon trend={trend} />
-        {display}
-      </span>
-    </div>
+    <p className={`inline-flex items-center gap-1.5 text-sm font-medium ${trendColorClass(trend)}`}>
+      <TrendIcon trend={trend} />
+      {t(key)}
+    </p>
   );
 }
 

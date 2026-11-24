@@ -48,7 +48,7 @@ const CHROME: Record<GuideLocale, GuideChrome> = {
       "Bài cho da dầu, da khô, da nhạy, mụn ẩn, thâm và nám, kích ứng sau adapalene hoặc BHA, SPF, routine người mới, retinol chậm, và ngày văn phòng — rồi chụp ảnh để nhận routine khởi đầu từ AI Coach.",
     indexHeading: "Hướng dẫn chăm da cho khí hậu nóng ẩm",
     indexSub:
-      "Bài cho da Việt: dầu, khô, nhạy cảm, mụn, mụn ẩn, thâm, nám, kích ứng hàng rào, SPF, routine ngắn, retinol người mới, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",
+      "Bài cho da Việt: dầu, khô, nhạy cảm, mụn, mụn ẩn, thâm, nám, kích ứng lớp ngoài da, SPF, routine ngắn, retinol người mới, và ngày máy lạnh. Đọc xong, chụp một ảnh để nhận routine khởi đầu — đăng ký sau khi thấy gợi ý.",
     ctaPhoto: "Chụp ảnh nhận routine",
     ctaHint: "Không cần tạo tài khoản trước. Xem routine rồi hãy lưu.",
     relatedHeading: "Đọc tiếp",

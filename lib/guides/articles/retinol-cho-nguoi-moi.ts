@@ -133,7 +133,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           heading: "Bong da, ‘purge’, và kích ứng",
           paragraphs: [
             "Bong nhẹ có thể gặp. Rát cả ngày, ban, sưng, mụn hàng loạt đau — đó không phải lúc ‘cố thêm’. Dừng. DaDiary không phân biệt purge và kích từ một bài hay một ảnh.",
-            "Tự gọi là purge rồi tăng lượng là cách hay gặp để làm hàng rào hỏng. Ảnh cùng cửa sổ giúp bạn (và gợi ý sau này) đọc thật hơn cảm giác 2 giờ sáng.",
+            "Tự gọi là purge rồi tăng lượng là cách hay gặp khiến da khô rát, đỏ hơn. Ảnh cùng cửa sổ giúp bạn (và gợi ý sau này) đọc thật hơn cảm giác 2 giờ sáng.",
           ],
         },
         {
