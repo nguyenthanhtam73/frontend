@@ -1,6 +1,7 @@
 /** Progress 「Soi lại da」 helpers — CTA gate, 422/429 mapping, poll cadence. */
 
 import { ApiError } from "@/lib/api-client";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import {
   isAnalysisSettled,
   type FetchSkinCheckResult,
@@ -74,7 +75,7 @@ export function classifyReanalyzeError(err: unknown): ReanalyzeErrorKind {
 }
 
 export function clipProgressSnippet(notes: string): string {
-  const s = notes.trim();
+  const s = toPublicCopy(notes).trim();
   if (s.length <= SNIPPET_MAX) return s;
   return `${s.slice(0, SNIPPET_MAX - 1).trimEnd()}…`;
 }
@@ -103,7 +104,8 @@ export function applySkinCheckToProgressEntry(
 
   if (status === "completed") {
     const notes = data.analysis.coach?.summary_notes?.trim();
-    if (notes) next.snippet = clipProgressSnippet(notes);
+    const clipped = notes ? clipProgressSnippet(notes) : "";
+    if (clipped) next.snippet = clipped;
     else delete next.snippet;
     delete next.analysis_pending;
   } else {

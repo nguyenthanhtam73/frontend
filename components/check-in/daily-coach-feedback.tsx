@@ -52,12 +52,24 @@ import {
   isUncertainPhotoEvidence,
   resolveCoachPhotoEvidence,
 } from "@/lib/check-in/coach-evidence";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
 import { useWardrobeQuery } from "@/lib/hooks/use-wardrobe";
 import type {
   CoachCareSuggestionDTO,
   CreateSkinCheckResponseDTO,
 } from "@/lib/types/skin-check";
+
+/** Coach prose with leaked gauges and field names removed. */
+function showCoach(text: string | null | undefined): string {
+  if (!text) return "";
+  return toPublicCopy(text).trim();
+}
+
+function showCoachList(lines: string[] | undefined): string[] {
+  if (!lines?.length) return [];
+  return lines.map((line) => showCoach(line)).filter(Boolean);
+}
 
 /** Strip "Sáng:" / "PM:" style prefixes when the card header already shows AM/PM. */
 function stripRoutinePrefix(line: string): string {
@@ -121,7 +133,12 @@ export function DailyCoachFeedback({
     );
   }
 
+  const summary = showCoach(c.situation_summary);
+  const alignment = showCoach(c.concern_alignment);
   const split = splitRoutineHints(c.routine_hints);
+  const avoidLines = showCoachList(c.avoid_or_patch);
+  const safetyLines = showCoachList(c.safety_reminders);
+  const disclaimer = showCoach(c.medical_disclaimer);
   const g = c.skin_score_gauges;
   const scoreNotes = c.skin_score_notes;
   const zoneNotes = visibleZoneNotes(c.zone_notes, zoneLabelMap((key) => t(key)));
@@ -180,27 +197,27 @@ export function DailyCoachFeedback({
         <CoachPhotoEvidenceBanner kind={evidence.kind} chips={evidence.chips} />
       ) : null}
 
-      {c.situation_summary ? (
+      {summary ? (
         <Card>
           <CardContent className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {t("todaySummary")}
             </p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {c.situation_summary}
+              {summary}
             </p>
           </CardContent>
         </Card>
       ) : null}
 
-      {c.concern_alignment ? (
+      {alignment ? (
         <Card className="border-blue-500/15 bg-blue-500/[0.03]">
           <CardContent className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-blue-900/80 dark:text-blue-200/90">
               {t("alignment")}
             </p>
             <p className="text-sm leading-relaxed text-foreground/90">
-              {c.concern_alignment}
+              {alignment}
             </p>
           </CardContent>
         </Card>
@@ -389,22 +406,27 @@ export function DailyCoachFeedback({
               {t("careSuggestions")}
             </div>
             <ul className="space-y-3">
-              {c.improvements!.map((im, idx) => (
+              {c.improvements!.map((im, idx) => {
+                const tip = showCoach(im.tip);
+                const why = showCoach(im.why);
+                if (!tip && !why) return null;
+                return (
                 <li
-                  key={`tip-${idx}-${im.tip.slice(0, 24)}`}
+                  key={`tip-${idx}-${tip.slice(0, 24)}`}
                   className="rounded-xl border bg-muted p-3 text-sm transition-colors hover:bg-muted"
                 >
-                  <p className="font-medium leading-snug">{im.tip}</p>
-                  {im.why ? (
+                  {tip ? <p className="font-medium leading-snug">{tip}</p> : null}
+                  {why ? (
                     <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                       <span className="font-semibold uppercase tracking-wider text-foreground/80">
                         {t("why")}
                       </span>{" "}
-                      {im.why}
+                      {why}
                     </p>
                   ) : null}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </CardContent>
         </Card>
@@ -438,7 +460,7 @@ export function DailyCoachFeedback({
         />
       ) : null}
 
-      {c.avoid_or_patch && c.avoid_or_patch.length > 0 ? (
+      {avoidLines.length > 0 ? (
         <Card className="border-orange-500/20">
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-orange-800 dark:text-orange-200">
@@ -446,7 +468,7 @@ export function DailyCoachFeedback({
               {t("avoid")}
             </div>
             <ul className="list-inside list-disc space-y-1 text-sm">
-              {c.avoid_or_patch.map((line, i) => (
+              {avoidLines.map((line, i) => (
                 <li key={`b-${i}`}>{line}</li>
               ))}
             </ul>
@@ -454,24 +476,23 @@ export function DailyCoachFeedback({
         </Card>
       ) : null}
 
-      {(c.safety_reminders && c.safety_reminders.length > 0) ||
-      c.medical_disclaimer ? (
+      {safetyLines.length > 0 || disclaimer ? (
         <Card className="border-emerald-500/20 bg-emerald-500/5">
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
               <ShieldCheck className="size-4 shrink-0" aria-hidden />
               {t("safety")}
             </div>
-            {c.safety_reminders && c.safety_reminders.length > 0 ? (
+            {safetyLines.length > 0 ? (
               <ul className="list-inside list-disc space-y-1 text-sm">
-                {c.safety_reminders.map((line, i) => (
+                {safetyLines.map((line, i) => (
                   <li key={`s-${i}`}>{line}</li>
                 ))}
               </ul>
             ) : null}
-            {c.medical_disclaimer ? (
+            {disclaimer ? (
               <p className="rounded-md bg-muted px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                {c.medical_disclaimer}
+                {disclaimer}
               </p>
             ) : null}
           </CardContent>
@@ -505,13 +526,13 @@ function groupCareSuggestions(items: CoachCareSuggestionDTO[] | undefined) {
   const evening: CoachCareSuggestionDTO[] = [];
   const today: CoachCareSuggestionDTO[] = [];
   for (const raw of items ?? []) {
-    const step = raw.step?.trim();
+    const step = showCoach(raw.step);
     if (!step) continue;
     const item: CoachCareSuggestionDTO = {
       slot: raw.slot,
       step,
-      why: raw.why?.trim() || undefined,
-      safety_note: raw.safety_note?.trim() || undefined,
+      why: showCoach(raw.why) || undefined,
+      safety_note: showCoach(raw.safety_note) || undefined,
     };
     const slot = (raw.slot || "today").toLowerCase();
     if (slot === "morning" || slot === "am") morning.push(item);

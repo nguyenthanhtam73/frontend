@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { CalendarDays, Loader2, Lock, Moon, Sun, WandSparkles, X } from "lucide-react";
 
 import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -219,7 +220,7 @@ export function CheckInDetailSheet({
           {!entry.maintenance && entry.snippet ? (
             <DetailSection title={labels.snippet}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
-                {entry.snippet}
+                {toPublicCopy(entry.snippet)}
               </p>
             </DetailSection>
           ) : null}

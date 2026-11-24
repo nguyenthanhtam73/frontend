@@ -101,4 +101,34 @@ describe("DailyCoachFeedback old checks", () => {
     assert.equal(html.includes('data-testid="coach-clarify"'), false);
     assert.equal(html.includes('data-testid="coach-score-note"'), false);
   });
+
+  it("shows the cleaned score note instead of a raw gauge", () => {
+    const html = renderFeedback({
+      ...oldCheck,
+      analysis: {
+        ...oldCheck.analysis,
+        coach: {
+          ...oldCheck.analysis.coach!,
+          skin_score_gauges: { overall: 0.78, hydration: 0.72 },
+          skin_score_notes: {
+            overall: "score 0.78 vì da vẫn khỏe mạnh",
+            hydration: "score 0.72 vì mụn ẩn vẫn còn",
+          },
+          situation_summary: "Mày ghi mụn ẩn, và ảnh hôm nay tao thấy đúng vậy",
+          care_suggestions: [
+            { slot: "morning", step: "Thoa SPF50", why: "score 0.78 vì da vẫn khỏe mạnh" },
+          ],
+        },
+      },
+    });
+    assert.match(html, /Da vẫn khỏe mạnh/);
+    assert.match(html, /Mụn ẩn vẫn còn/);
+    assert.match(html, /Mày ghi mụn ẩn, và ảnh hôm nay tao thấy đúng vậy/);
+    assert.match(html, /SPF50/);
+    assert.equal(html.includes("score 0.78"), false);
+    assert.equal(html.includes("score 0.72"), false);
+    assert.equal(html.includes("0.78"), false);
+    assert.equal(html.includes("0.72"), false);
+    assert.match(html, /data-testid="coach-score-note"/);
+  });
 });

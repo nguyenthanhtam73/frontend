@@ -140,6 +140,17 @@ describe("score notes", () => {
     );
     assert.equal(scoreNoteText(["not", "an", "object"], "overall"), undefined);
   });
+
+  it("strips a leaked gauge sentence down to the reason", () => {
+    assert.equal(
+      scoreNoteText({ overall: "score 0.78 vì da vẫn khỏe mạnh" }, "overall"),
+      "Da vẫn khỏe mạnh",
+    );
+    assert.equal(
+      scoreNoteText({ hydration: "score 0.72 vì mụn ẩn vẫn còn" }, "hydration"),
+      "Mụn ẩn vẫn còn",
+    );
+  });
 });
 
 describe("clarifyBox", () => {
