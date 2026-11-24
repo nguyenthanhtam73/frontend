@@ -1497,7 +1497,7 @@
       "daysSuffix": "days",
       "overall": "Today's feel",
       "total": "Total",
-      "sparklineLabel": "How today has felt",
+      "sparklineLabel": "This month's trend",
       "sparklineCount": "{n} pts",
       "gaugeOverall": "Overall",
       "gaugeHydration": "Hydration",

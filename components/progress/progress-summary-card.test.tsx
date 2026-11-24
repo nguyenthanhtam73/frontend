@@ -33,7 +33,7 @@ function renderCard(locale: "vi" | "en") {
 describe("ProgressSummaryCard sparkline count", () => {
   it("uses lần soi da có ảnh on the Vietnamese progress card", () => {
     const html = renderCard("vi");
-    assert.match(html, /Xu hướng cảm nhận hôm nay/);
+    assert.match(html, /Xu hướng tháng này/);
     assert.match(html, /2 lần soi da có ảnh/);
     assert.equal(/\bpts\b/i.test(html), false);
   });
