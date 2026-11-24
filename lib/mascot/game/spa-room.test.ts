@@ -44,6 +44,12 @@ import {
   shouldCopyInviteLink,
   spaFootScale,
   spaNamePillBoxes,
+  placeSpaNameLabels,
+  shownNameLabelIds,
+  SPA_LABEL_FADE_MS,
+  SPA_LABEL_MAX_DROP,
+  SPA_LABEL_MAX_NUDGE,
+  SPA_LABEL_REVEAL_MS,
   SPA_LANDSCAPE_BOUNDS,
   SPA_LANDSCAPE_HEIGHT,
   SPA_LANDSCAPE_SELF_SLOT,
@@ -207,6 +213,80 @@ describe("spa join spots", () => {
         }
       }
     }
+  });
+
+  it("slides close name pills sideways and hides a pile that still touches", () => {
+    assert.equal(SPA_LABEL_REVEAL_MS, 2000);
+    assert.equal(SPA_LABEL_FADE_MS, 400);
+    assert.ok(SPA_LABEL_MAX_DROP <= 12);
+    const clearOf = (
+      labels: { id: string; x: number; y: number; w: number; h: number }[],
+      shifts: { id: string; drop: number; nudge: number; crowded: boolean }[],
+    ) => {
+      const byId = new Map(shifts.map((shift) => [shift.id, shift]));
+      for (let i = 0; i < labels.length; i += 1) {
+        for (let j = i + 1; j < labels.length; j += 1) {
+          const a = labels[i]!;
+          const b = labels[j]!;
+          const as = byId.get(a.id)!;
+          const bs = byId.get(b.id)!;
+          const aLeft = a.x + as.nudge - a.w / 2;
+          const bLeft = b.x + bs.nudge - b.w / 2;
+          const clearX = Math.max(aLeft, bLeft) - Math.min(aLeft + a.w, bLeft + b.w);
+          const clearY = Math.max(a.y + as.drop, b.y + bs.drop) - Math.min(a.y + as.drop + a.h, b.y + bs.drop + b.h);
+          if (clearX < 3.5 && clearY < 3.5) return false;
+        }
+      }
+      return true;
+    };
+    for (const width of [360, 390]) {
+      const mid = width / 2;
+      const near = [
+        { id: "you", x: mid - 90, y: 420, w: 64, h: 22 },
+        { id: "tra-sua", x: mid - 30, y: 424, w: 74, h: 22 },
+        { id: "may-hong", x: mid + 30, y: 418, w: 78, h: 22 },
+        { id: "oc-que", x: mid + 90, y: 422, w: 64, h: 22 },
+      ];
+      const shifts = placeSpaNameLabels(near, { bounds: { left: 2, right: width - 2 } });
+      assert.equal(shifts.every((shift) => shift.crowded === false), true, `${width} near should spread`);
+      assert.equal(clearOf(near, shifts), true, `${width} labels still touch`);
+      for (const shift of shifts) {
+        assert.ok(Math.abs(shift.nudge) <= SPA_LABEL_MAX_NUDGE, shift.id);
+        assert.ok(Math.abs(shift.drop) <= SPA_LABEL_MAX_DROP, `${shift.id} drop ${shift.drop}`);
+      }
+      assert.deepEqual(shownNameLabelIds(shifts, "you", null), ["you", "tra-sua", "may-hong", "oc-que"]);
+    }
+    const tight = [
+      { id: "you", x: 150, y: 400, w: 64, h: 22 },
+      { id: "tra-sua", x: 168, y: 402, w: 74, h: 22 },
+      { id: "may-hong", x: 186, y: 398, w: 78, h: 22 },
+      { id: "oc-que", x: 204, y: 404, w: 64, h: 22 },
+    ];
+    const piled = placeSpaNameLabels(tight, { bounds: { left: 2, right: 358 } });
+    assert.equal(piled.some((shift) => shift.crowded), true);
+    for (const shift of piled) {
+      assert.ok(Math.abs(shift.drop) <= SPA_LABEL_MAX_DROP, `column drop ${shift.id} ${shift.drop}`);
+      assert.ok(Math.abs(shift.nudge) <= SPA_LABEL_MAX_NUDGE + 1, shift.id);
+    }
+    assert.deepEqual(shownNameLabelIds(piled, "you", null), ["you"]);
+    assert.deepEqual(shownNameLabelIds(piled, "you", "tra-sua"), ["you", "tra-sua"]);
+    const pair = tight.filter((label) => label.id === "you" || label.id === "tra-sua");
+    const shown = placeSpaNameLabels(pair);
+    assert.equal(shown.every((shift) => shift.crowded === false), true);
+    assert.equal(clearOf(pair, shown), true);
+    const far = [
+      { id: "you", x: 40, y: 200, w: 64, h: 22 },
+      { id: "tra-sua", x: 160, y: 200, w: 74, h: 22 },
+      { id: "may-hong", x: 280, y: 206, w: 78, h: 22 },
+      { id: "oc-que", x: 400, y: 198, w: 64, h: 22 },
+    ];
+    const apart = placeSpaNameLabels(far);
+    assert.deepEqual(
+      apart.map((shift) => shift.crowded),
+      [false, false, false, false],
+    );
+    assert.ok(apart.every((shift) => shift.nudge === 0 && shift.drop === 0));
+    assert.deepEqual(shownNameLabelIds(apart, "you", "tra-sua"), ["you", "tra-sua", "may-hong", "oc-que"]);
   });
 
   it("uses the landscape plate only when the free frame is wide", () => {

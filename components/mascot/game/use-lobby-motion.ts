@@ -16,7 +16,16 @@ import {
   type LobbySeatInput,
   type ScreenBox,
 } from "@/lib/mascot/game/lobby";
-import { compactSpaPlate, fitSpaPlate, nameTagDrop, SPA_LANDSCAPE_BOUNDS, spaNamePillBoxes, spaStackZ } from "@/lib/mascot/game/spa-room";
+import {
+  compactSpaPlate,
+  fitSpaPlate,
+  nameTagDrop,
+  SPA_LANDSCAPE_BOUNDS,
+  SPA_TAG_MAX_PX,
+  placeSpaNameLabels,
+  shownNameLabelIds,
+  spaStackZ,
+} from "@/lib/mascot/game/spa-room";
 import {
   LOBBY_BOUNDS,
   LOBBY_FOUNTAIN,
@@ -914,8 +923,6 @@ export function useSpaMotion(input: {
       }
       const stageW = stage.offsetWidth || 1;
       const stageH = stage.offsetHeight || 1;
-      const pillPeople: { id: string; x: number; y: number; el: HTMLElement }[] = [];
-      if (pose) pillPeople.push({ id: "you", x: walker.x, y: walker.y, el: pose });
       for (const guest of guestsProp.current) {
         const guestPose = stage.querySelector<HTMLElement>(`[data-friend-id="${guest.id}"].beda-pose`);
         if (!guestPose) continue;
@@ -932,31 +939,82 @@ export function useSpaMotion(input: {
         guestPose.style.setProperty("--sy", "1");
         guestPose.style.zIndex = String(spaStackZ(drawn.y));
         setFacing(guestPose, moving ? glide!.face : guest.facing === "left" ? -1 : 1, moving ? now / 159 : 0, moving, true);
-        pillPeople.push({ id: guest.id, x: drawn.x, y: drawn.y, el: guestPose });
       }
-      if (!landscapeProp.current) {
-        for (const box of spaNamePillBoxes(pillPeople, stageW, stageH)) {
-          pillPeople.find((person) => person.id === box.id)?.el.style.setProperty("--beda-tag-max", `${box.maxWidth}px`);
-        }
-      }
+      const zoom = cam.scale || 1;
+      const frameBox = frame.getBoundingClientRect();
+      const stageBox = stage.getBoundingClientRect();
       const water = frame.querySelector<HTMLElement>(".beda-tree-status");
       const waterBox = water?.getBoundingClientRect() ?? null;
-      for (const person of frame.querySelectorAll<HTMLElement>(".beda-spa-person")) {
-        const tag = person.querySelector<HTMLElement>(".beda-tag");
-        if (!tag) continue;
-        const current = Number.parseFloat(person.style.getPropertyValue("--beda-tag-drop")) || 0;
-        if (!waterBox) {
-          if (current !== 0) person.style.setProperty("--beda-tag-drop", "0px");
-          continue;
-        }
-        const box = tag.getBoundingClientRect();
-        const drop = nameTagDrop(
+      const heads: { id: string; label: HTMLElement; x: number; y: number }[] = [];
+      for (const label of stage.querySelectorAll<HTMLElement>(".beda-spa-label")) {
+        const id = label.dataset.labelFor;
+        if (!id) continue;
+        const person =
+          id === "you"
+            ? stage.querySelector<HTMLElement>("[data-spa-you]")
+            : stage.querySelector<HTMLElement>(`[data-friend-id="${id}"]`);
+        const art = person?.querySelector<HTMLElement>(".beda-spa-art");
+        if (!art) continue;
+        label.style.setProperty("--beda-tag-max", `${SPA_TAG_MAX_PX}px`);
+        label.style.setProperty("--beda-tag-drop", "0px");
+        label.style.setProperty("--nudge", "0px");
+        const artBox = art.getBoundingClientRect();
+        const height = label.offsetHeight || 22;
+        const center = (artBox.left + artBox.width / 2 - stageBox.left) / zoom;
+        const top = (artBox.top - stageBox.top) / zoom - 4 - height;
+        label.style.left = `${center}px`;
+        label.style.top = `${top}px`;
+        heads.push({ id, label, x: center, y: top });
+      }
+      const placed: { id: string; label: HTMLElement; x: number; y: number; w: number; h: number; water: number }[] = [];
+      for (const head of heads) {
+        const tag = head.label.querySelector<HTMLElement>(".beda-tag");
+        const box = tag?.getBoundingClientRect() ?? head.label.getBoundingClientRect();
+        if (box.width < 8 || box.height < 8) continue;
+        const waterDrop = nameTagDrop(
           { top: box.top, bottom: box.bottom, left: box.left, right: box.right },
-          { top: waterBox.top, bottom: waterBox.bottom, left: waterBox.left, right: waterBox.right },
-          current,
+          waterBox
+            ? { top: waterBox.top, bottom: waterBox.bottom, left: waterBox.left, right: waterBox.right }
+            : null,
+          0,
         );
-        if (drop !== current) person.style.setProperty("--beda-tag-drop", `${drop}px`);
-        if (drop > 0) person.style.setProperty("--beda-tag-max", "168px");
+        placed.push({
+          id: head.id,
+          label: head.label,
+          x: box.left + box.width / 2,
+          y: box.top + waterDrop,
+          w: box.width,
+          h: box.height,
+          water: waterDrop,
+        });
+      }
+      const labelRoot = stage.querySelector<HTMLElement>(".beda-spa-labels");
+      const revealed = labelRoot?.dataset.revealed || null;
+      const fading = labelRoot?.dataset.fading === "1";
+      const bounds = { left: frameBox.left + 2, right: frameBox.right - 2 };
+      const boxes = placed.map((item) => ({ id: item.id, x: item.x, y: item.y, w: item.w, h: item.h }));
+      let shifts = placeSpaNameLabels(boxes, { bounds });
+      const show = new Set(shownNameLabelIds(shifts, "you", revealed));
+      if (shifts.some((shift) => shift.crowded)) {
+        const again = placeSpaNameLabels(
+          boxes.filter((box) => show.has(box.id)),
+          { bounds },
+        );
+        const againById = new Map(again.map((shift) => [shift.id, shift]));
+        shifts = shifts.map((shift) => againById.get(shift.id) ?? shift);
+      }
+      const byId = new Map(shifts.map((shift) => [shift.id, shift]));
+      for (const item of placed) {
+        const shift = byId.get(item.id);
+        const drop = Math.round((item.water + (shift?.drop ?? 0)) / zoom);
+        const nudge = Math.round((shift?.nudge ?? 0) / zoom);
+        item.label.style.setProperty("--beda-tag-drop", `${drop}px`);
+        item.label.style.setProperty("--nudge", `${nudge}px`);
+        const visible = show.has(item.id);
+        item.label.classList.add("is-placed");
+        item.label.classList.toggle("is-crowd-hidden", !visible);
+        item.label.classList.toggle("is-revealed", visible && item.id === revealed);
+        item.label.classList.toggle("is-fading", visible && item.id === revealed && fading);
       }
       frameId = window.requestAnimationFrame(tick);
     };
@@ -979,7 +1037,7 @@ export function useSpaMotion(input: {
 
     const down = (event: PointerEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-bar, .beda-tree-spot")) return;
+      if (target.closest("button, a, .beda-actions, .beda-zoom, .beda-invite-card, .beda-spa-head, .beda-room-lock, .beda-room-bar, .beda-tree-spot, .beda-spa-labels")) return;
       if (!target.closest(".beda-spa-view")) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
       downPoint = { x: event.clientX, y: event.clientY };

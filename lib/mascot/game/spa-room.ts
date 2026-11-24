@@ -812,6 +812,179 @@ export function spaNamePillBoxes(
   });
 }
 
+export type SpaNameLabel = {
+  id: string;
+  /** Pill center, px. */
+  x: number;
+  /** Pill top before any shift, px. */
+  y: number;
+  w: number;
+  h: number;
+};
+
+export type SpaNameLabelShift = {
+  id: string;
+  /** Small vertical shift. Positive moves the pill down. Capped so a pile never becomes a column. */
+  drop: number;
+  /** Sideways shift. Positive moves the pill right. Kept near the head. */
+  nudge: number;
+  /** Still touches a neighbor after the sideways pass and the small vertical nudge. */
+  crowded: boolean;
+};
+
+const SPA_LABEL_GAP = 4;
+/** How far a pill may slide sideways and still read as that Bé Da's name. */
+export const SPA_LABEL_MAX_NUDGE = 40;
+/** A vertical nudge stays under one line. It never stacks a column of names. */
+export const SPA_LABEL_MAX_DROP = 8;
+/** A tapped name stays up, then fades. */
+export const SPA_LABEL_REVEAL_MS = 2000;
+export const SPA_LABEL_FADE_MS = 400;
+
+function labelClearance(
+  a: { x: number; y: number; w: number; h: number; drop: number; nudge: number },
+  b: { x: number; y: number; w: number; h: number; drop: number; nudge: number },
+): { x: number; y: number } {
+  const aLeft = a.x + a.nudge - a.w / 2;
+  const bLeft = b.x + b.nudge - b.w / 2;
+  const aTop = a.y + a.drop;
+  const bTop = b.y + b.drop;
+  return {
+    x: Math.max(aLeft, bLeft) - Math.min(aLeft + a.w, bLeft + b.w),
+    y: Math.max(aTop, bTop) - Math.min(aTop + a.h, bTop + b.h),
+  };
+}
+
+function nudgeRoom(nudge: number, dir: -1 | 1, cap: number): number {
+  return dir < 0 ? cap + nudge : cap - nudge;
+}
+
+function labelsClear(clear: { x: number; y: number }, gap: number): boolean {
+  return clear.x >= gap - 0.25 || clear.y >= gap - 0.25;
+}
+
+/**
+ * Keep each name close above its own head. Sideways first: slide pills apart
+ * up to `maxNudge`. A vertical nudge is only a few pixels, and only when that
+ * finishes the gap. A tight pile that still touches is `crowded` — the room
+ * then shows «★ Mày» and, for a moment, the Bé Da that was tapped.
+ */
+export function placeSpaNameLabels(
+  labels: readonly SpaNameLabel[],
+  options?: { gap?: number; bounds?: { left: number; right: number }; maxNudge?: number; maxDrop?: number },
+): SpaNameLabelShift[] {
+  const gap = options?.gap ?? SPA_LABEL_GAP;
+  const maxNudge = options?.maxNudge ?? SPA_LABEL_MAX_NUDGE;
+  const maxDrop = options?.maxDrop ?? SPA_LABEL_MAX_DROP;
+  const bounds = options?.bounds;
+  const items = labels.map((label, index) => ({
+    id: label.id,
+    x: Number.isFinite(label.x) ? label.x : 0,
+    y: Number.isFinite(label.y) ? label.y : 0,
+    w: Number.isFinite(label.w) ? Math.max(0, label.w) : 0,
+    h: Number.isFinite(label.h) ? Math.max(0, label.h) : 0,
+    drop: 0,
+    nudge: 0,
+    index,
+  }));
+
+  const separateX = () => {
+    let moved = false;
+    const order = [...items].sort((a, b) => a.x + a.nudge - (b.x + b.nudge) || a.index - b.index);
+    for (let i = 0; i < order.length; i += 1) {
+      for (let j = i + 1; j < order.length; j += 1) {
+        const a = order[i]!;
+        const b = order[j]!;
+        if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) continue;
+        const clear = labelClearance(a, b);
+        if (labelsClear(clear, gap)) continue;
+        const need = gap - clear.x;
+        const left = a.x + a.nudge <= b.x + b.nudge ? a : b;
+        const right = left === a ? b : a;
+        let takeL = Math.min(need / 2, Math.max(0, nudgeRoom(left.nudge, -1, maxNudge)));
+        const takeR = Math.min(Math.max(0, need - takeL), Math.max(0, nudgeRoom(right.nudge, 1, maxNudge)));
+        takeL = Math.min(Math.max(0, need - takeR), Math.max(0, nudgeRoom(left.nudge, -1, maxNudge)));
+        if (takeL + takeR < 0.001) continue;
+        left.nudge -= takeL;
+        right.nudge += takeR;
+        moved = true;
+      }
+    }
+    return moved;
+  };
+  for (let pass = 0; pass < 24 && separateX(); pass += 1) {
+    /* sideways until the caps hold */
+  }
+
+  for (let pass = 0; pass < 8; pass += 1) {
+    let moved = false;
+    for (let i = 0; i < items.length; i += 1) {
+      for (let j = i + 1; j < items.length; j += 1) {
+        const a = items[i]!;
+        const b = items[j]!;
+        if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) continue;
+        const clear = labelClearance(a, b);
+        if (labelsClear(clear, gap)) continue;
+        const need = gap - clear.y;
+        if (need > maxDrop * 2) continue;
+        const lower = a.y + a.drop >= b.y + b.drop ? a : b;
+        const upper = lower === a ? b : a;
+        const downRoom = Math.max(0, maxDrop - lower.drop);
+        const upRoom = Math.max(0, maxDrop + upper.drop);
+        let down = Math.min(need / 2, downRoom);
+        const up = Math.min(Math.max(0, need - down), upRoom);
+        down = Math.min(Math.max(0, need - up), downRoom);
+        if (down + up + 0.01 < need) continue;
+        lower.drop += down;
+        upper.drop -= up;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+
+  if (bounds && bounds.right > bounds.left) {
+    const span = bounds.right - bounds.left;
+    for (const label of items) {
+      if (label.w <= 0 || label.w >= span) continue;
+      const left = label.x + label.nudge - label.w / 2;
+      const right = left + label.w;
+      if (left < bounds.left) label.nudge += bounds.left - left;
+      else if (right > bounds.right) label.nudge -= right - bounds.right;
+    }
+  }
+
+  const crowded = new Set<string>();
+  for (let i = 0; i < items.length; i += 1) {
+    for (let j = i + 1; j < items.length; j += 1) {
+      const a = items[i]!;
+      const b = items[j]!;
+      if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0) continue;
+      const clear = labelClearance(a, b);
+      if (labelsClear(clear, gap)) continue;
+      crowded.add(a.id);
+      crowded.add(b.id);
+    }
+  }
+  const byId = new Map(
+    items.map((label) => [
+      label.id,
+      { id: label.id, drop: label.drop, nudge: label.nudge, crowded: crowded.has(label.id) },
+    ]),
+  );
+  return labels.map((label) => byId.get(label.id) ?? { id: label.id, drop: 0, nudge: 0, crowded: false });
+}
+
+/** While a pile is crowded, only «★ Mày» and the tapped name stay up. */
+export function shownNameLabelIds(
+  places: readonly { id: string; crowded: boolean }[],
+  selfId: string,
+  revealedId: string | null,
+): string[] {
+  if (!places.some((place) => place.crowded)) return places.map((place) => place.id);
+  return places.map((place) => place.id).filter((id) => id === selfId || (revealedId != null && id === revealedId));
+}
+
 /** Real people, skipping you and anyone you hid. A guest with x/y stands there. */
 export function seatGuests(
   people: readonly WirePerson[],

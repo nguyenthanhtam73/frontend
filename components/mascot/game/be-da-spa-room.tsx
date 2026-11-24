@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
@@ -23,6 +23,8 @@ import {
   SPA_ROOM_CODE_LENGTH,
   SPA_ROOM_LIFE_DAYS,
   SPA_SEATS,
+  SPA_LABEL_FADE_MS,
+  SPA_LABEL_REVEAL_MS,
   SPA_YOU,
   formatRoomEndDate,
   normalizeRoomCode,
@@ -50,7 +52,7 @@ export type SpaRoomState = {
   /** Wide viewport uses the 1600×1000 plate and its foot slots. */
   landscape?: boolean;
   youStreak?: number;
-  /** My room nickname, used to mark the «Bạn» row. Empty in the sample room. */
+  /** My room nickname, used to mark the «Mày» row. Empty in the sample room. */
   youNickname?: string;
   /** Friendly name. The header uses «Phòng bạn bè» when this is empty or just the code. */
   name?: string;
@@ -124,6 +126,8 @@ export function BeDaSpaRoom({
   onRetry,
   onQuit,
   onOpenSeedBag,
+  revealGuestId = null,
+  holdReveal = false,
 }: {
   locale: string;
   player: BeDaView;
@@ -163,6 +167,10 @@ export function BeDaSpaRoom({
   /** Confirmed «Rời phòng». This is the only action that deletes membership. */
   onQuit?: () => void;
   onOpenSeedBag?: () => void;
+  /** Screenshot hook: show this guest's name without waiting for a tap. */
+  revealGuestId?: string | null;
+  /** Screenshot hook: keep the tapped name up instead of fading it. */
+  holdReveal?: boolean;
 }) {
   const t = useTranslations("mascot");
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -182,6 +190,38 @@ export function BeDaSpaRoom({
   const [boardOpen, setBoardOpen] = useState(boardInitiallyOpen);
   const [boardRows, setBoardRows] = useState<readonly SpaBoardRow[]>(previewBoard ?? []);
   const [quitAsk, setQuitAsk] = useState(false);
+  const [shownGuest, setShownGuest] = useState<string | null>(holdReveal ? revealGuestId : null);
+  const [labelFading, setLabelFading] = useState(false);
+  const revealTimer = useRef(0);
+  const fadeTimer = useRef(0);
+  const seenSelect = useRef(holdReveal ? revealGuestId ?? "" : "");
+  const armReveal = useCallback((id: string) => {
+    if (!id || id === "you") return;
+    window.clearTimeout(revealTimer.current);
+    window.clearTimeout(fadeTimer.current);
+    setLabelFading(false);
+    setShownGuest(id);
+    if (holdReveal && id === revealGuestId) return;
+    revealTimer.current = window.setTimeout(() => {
+      setLabelFading(true);
+      fadeTimer.current = window.setTimeout(() => {
+        setShownGuest(null);
+        setLabelFading(false);
+      }, SPA_LABEL_FADE_MS);
+    }, SPA_LABEL_REVEAL_MS);
+  }, [holdReveal, revealGuestId]);
+  useEffect(() => {
+    if (revealGuestId) armReveal(revealGuestId);
+    return () => {
+      window.clearTimeout(revealTimer.current);
+      window.clearTimeout(fadeTimer.current);
+    };
+  }, [armReveal, revealGuestId]);
+  useEffect(() => {
+    if (!selectedId || selectedId === seenSelect.current) return;
+    seenSelect.current = selectedId;
+    armReveal(selectedId);
+  }, [armReveal, selectedId]);
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -393,7 +433,11 @@ export function BeDaSpaRoom({
               seatY={y * 100}
               scale={spaFootScale(y)}
               standing
-              onSelect={onSelect}
+              onSelect={(id) => {
+                seenSelect.current = id;
+                onSelect(id);
+                armReveal(id);
+              }}
             />
           );
         })}
@@ -426,15 +470,39 @@ export function BeDaSpaRoom({
                 {youPose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
               </span>
             ) : null}
-            <span className="beda-name">
-              <span className="beda-tag beda-tag-me">
-                <Star />
-                <span className="beda-tag-label">{t("game.you")}</span>
-              </span>
-              <StreakFlame streak={youStreak} label={t("game.spaStreak", { count: youStreak })} />
-            </span>
+            <span className="beda-name-slot" aria-hidden />
           </div>
         ) : null}
+        <div
+          className="beda-spa-labels"
+          data-testid="beda-spa-labels"
+          data-revealed={shownGuest ?? ""}
+          data-fading={labelFading ? "1" : "0"}
+        >
+          {room.guests.map((guest) => {
+            if (guest.x == null || guest.y == null) return null;
+            return (
+              <button
+                key={guest.id}
+                type="button"
+                className="beda-spa-label"
+                data-label-for={guest.id}
+                onClick={() => {
+                  seenSelect.current = guest.id;
+                  onSelect(guest.id);
+                  armReveal(guest.id);
+                }}
+              >
+                <NamePill nickname={guest.nickname} streak={guest.careStreak ?? 0} />
+              </button>
+            );
+          })}
+          {showYou ? (
+            <div className="beda-spa-label" data-label-for="you">
+              <NamePill nickname={t("game.you")} streak={youStreak} mine />
+            </div>
+          ) : null}
+        </div>
       </div>
       </div>
 
@@ -710,14 +778,26 @@ function SpaPerson({
             {guest.pose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
           </span>
         ) : null}
-        <span className="beda-name">
-          <span className="beda-tag">
-            <span className="beda-tag-label">{guest.nickname}</span>
-          </span>
-          <StreakFlame streak={guest.careStreak ?? 0} label={t("game.spaStreak", { count: guest.careStreak ?? 0 })} />
-        </span>
+        {standing ? (
+          <span className="beda-name-slot" aria-hidden />
+        ) : (
+          <NamePill nickname={guest.nickname} streak={guest.careStreak ?? 0} />
+        )}
       </button>
     </div>
+  );
+}
+
+function NamePill({ nickname, streak, mine = false }: { nickname: string; streak: number; mine?: boolean }) {
+  const t = useTranslations("mascot");
+  return (
+    <span className="beda-name">
+      <span className={mine ? "beda-tag beda-tag-me" : "beda-tag"}>
+        {mine ? <Star /> : null}
+        <span className="beda-tag-label">{nickname}</span>
+      </span>
+      <StreakFlame streak={streak} label={t("game.spaStreak", { count: streak })} />
+    </span>
   );
 }
 
