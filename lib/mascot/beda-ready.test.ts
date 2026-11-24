@@ -11,11 +11,33 @@ describe("Bé Da ready signal", () => {
     const scope = { DaDiarySession: { postMessage: (message: string) => sent.push(message) } };
     assert.equal(noteBedaReady("pixi", scope, body, sentFlag), true);
     assert.equal(body.dataset.bedaReady, "pixi");
-    assert.deepEqual(sent, [bedaReadyMessage("pixi")]);
-    assert.equal(sent[0], JSON.stringify({ type: "beda_ready", engine: "pixi" }));
+    assert.equal(typeof sent[0], "string");
+    assert.equal(sent[0], '{"type":"beda_ready","engine":"pixi"}');
     assert.equal(noteBedaReady("dom", scope, body, sentFlag), false);
     assert.equal(sent.length, 1);
     assert.equal(body.dataset.bedaReady, "pixi");
+  });
+
+  it("posts a JSON string whose only fields are type and engine", () => {
+    for (const engine of ["pixi", "dom"] as const) {
+      const sent: unknown[] = [];
+      const body = { dataset: {} as { bedaReady?: string } };
+      noteBedaReady(
+        engine,
+        { DaDiarySession: { postMessage: (message: string) => sent.push(message) } },
+        body,
+        { current: false },
+      );
+      assert.equal(sent.length, 1);
+      assert.equal(typeof sent[0], "string");
+      assert.equal(sent[0], `{"type":"beda_ready","engine":"${engine}"}`);
+      const parsed = JSON.parse(sent[0] as string) as Record<string, unknown>;
+      assert.deepEqual(Object.keys(parsed).sort(), ["engine", "type"]);
+      assert.deepEqual(parsed, { type: "beda_ready", engine });
+      assert.equal(body.dataset.bedaReady, engine);
+    }
+    assert.equal(bedaReadyMessage("pixi"), '{"type":"beda_ready","engine":"pixi"}');
+    assert.equal(bedaReadyMessage("dom"), '{"type":"beda_ready","engine":"dom"}');
   });
 
   it("posts the dom engine when the plain room is showing, and skips a missing bridge", () => {
