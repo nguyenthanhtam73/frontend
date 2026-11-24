@@ -606,12 +606,12 @@ html.dark .beda-draw-wait {
   border-bottom: 10px solid #fff;
 }
 
-/* Above the nav, clear of the task card. Each key is a 44px target. */
+/* Bottom-right floor, just above the nav. Each key is a 44px target. */
 .beda-pad {
   position: absolute;
   z-index: 72;
   right: 8px;
-  bottom: calc(var(--beda-nav-reserve) + 136px);
+  bottom: calc(var(--beda-nav-reserve) + 10px);
   display: grid;
   grid-template-columns: 44px 44px 44px;
   grid-template-rows: 44px 44px;

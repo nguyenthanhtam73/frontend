@@ -13,6 +13,7 @@ import {
   ROOM_SPAWN,
   ROOM_WALK_MASK,
   paintRoomMask,
+  blockRoomRect,
   roomBlockName,
   roomBlocked,
   roomDepthScale,
@@ -182,6 +183,16 @@ describe("personal room floor", () => {
     assert.equal(walker.goal, null);
     assert.ok(walker.y >= 0.6);
     assert.equal(roomBlockName(walker.x, walker.y), null);
+  });
+
+  it("keeps the arrow pad off the walkable floor", () => {
+    const blocked = roomWalkGrid();
+    blockRoomRect(blocked, { x0: 0.58, y0: 0.74, x1: 1, y1: 0.86 });
+    assert.equal(isWalkable(blocked, 0.7, 0.78), false);
+    assert.equal(isWalkable(blocked, 0.5, 0.78), true);
+    const stopped = roomStepTo(blocked, { x: 0.5, y: 0.78 }, { x: 0.8, y: 0.78 });
+    assert.equal(isWalkable(blocked, stopped.x, stopped.y), true);
+    assert.ok(stopped.x < 0.58);
   });
 
   it("wanders only onto a walkable cell", () => {

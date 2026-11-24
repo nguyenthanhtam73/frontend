@@ -47,6 +47,22 @@ export const ROOM_BLOCKS: readonly { x0: number; y0: number; x1: number; y1: num
   { name: "sink", x0: 0.8, y0: 0.56, x1: 1, y1: 0.67 },
 ];
 
+/** Mark every cell that touches a normalized rectangle. Used for the arrow pad. */
+export function blockRoomRect(
+  grid: WalkGrid,
+  rect: { x0: number; y0: number; x1: number; y1: number },
+): void {
+  for (let r = 0; r < grid.rows; r += 1) {
+    const y0 = r / grid.rows;
+    const y1 = (r + 1) / grid.rows;
+    for (let c = 0; c < grid.cols; c += 1) {
+      const x0 = c / grid.cols;
+      const x1 = (c + 1) / grid.cols;
+      if (x1 > rect.x0 && x0 < rect.x1 && y1 > rect.y0 && y0 < rect.y1) grid.walk[r * grid.cols + c] = 0;
+    }
+  }
+}
+
 export function roomBlocked(x: number, y: number): boolean {
   for (const block of ROOM_BLOCKS) {
     if (x >= block.x0 && x < block.x1 && y >= block.y0 && y < block.y1) return true;

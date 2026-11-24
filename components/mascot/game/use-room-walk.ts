@@ -16,6 +16,7 @@ import {
   ROOM_SPAWN,
   ROOM_WALK_MASK,
   ROOM_WORLD,
+  blockRoomRect,
   roomDepthScale,
   roomNudge,
   roomRoute,
@@ -132,19 +133,20 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       pretty.style.opacity = "1";
       const scene = frame.getBoundingClientRect();
       const hero = el.getBoundingClientRect();
-      const width = pretty.offsetWidth || 160;
+      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      const padBox = pad?.getBoundingClientRect();
+      const labelTop = hero.bottom + 26;
+      const besidePad = padBox ? labelTop + 28 > padBox.top && labelTop < padBox.bottom : false;
+      const maxWidth = besidePad && padBox
+        ? Math.max(128, Math.min(220, padBox.left - scene.left - 16))
+        : Math.min(220, scene.width * 0.64);
+      pretty.style.width = `${Math.round(maxWidth)}px`;
+      const width = pretty.offsetWidth || maxWidth;
       const center = hero.left + hero.width / 2;
       const half = width / 2;
       const minCenter = scene.left + 8 + half;
       let maxCenter = scene.right - 8 - half;
-      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
-      if (pad) {
-        const padBox = pad.getBoundingClientRect();
-        const labelTop = hero.bottom + 8;
-        const labelBottom = labelTop + (pretty.offsetHeight || 24);
-        const overlapsPad = labelBottom > padBox.top && labelTop < padBox.bottom;
-        if (overlapsPad) maxCenter = Math.min(maxCenter, padBox.left - 8 - half);
-      }
+      if (besidePad && padBox) maxCenter = Math.min(maxCenter, padBox.left - 8 - half);
       const clamped = Math.max(minCenter, Math.min(center, maxCenter));
       pretty.style.setProperty("--pretty-x", `${Math.round(clamped - center)}px`);
     };
@@ -161,6 +163,22 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       }
     };
 
+    const sealPad = () => {
+      if (!grid) return;
+      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      if (!pad) return;
+      const scene = frame.getBoundingClientRect();
+      if (scene.width < 1 || scene.height < 1) return;
+      const box = pad.getBoundingClientRect();
+      const margin = 10;
+      blockRoomRect(grid, {
+        x0: (box.left - margin - scene.left) / scene.width,
+        y0: (box.top - margin - scene.top) / scene.height,
+        x1: (box.right + margin - scene.left) / scene.width,
+        y1: (box.bottom + margin - scene.top) / scene.height,
+      });
+    };
+
     const ripple = (x: number, y: number) => {
       const mark = frame.querySelector<HTMLElement>(".beda-tap");
       if (!mark) return;
@@ -173,6 +191,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
 
     const aim = (x: number, y: number) => {
       if (!grid || holdRef.current) return;
+      sealPad();
       ripple(x, y);
       route = roomRoute(grid, walker, { x, y });
       walker.goal = route.shift() ?? null;
@@ -242,7 +261,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       pointers += 1;
       if (event.button !== 0 || holdRef.current) return;
       const target = event.target;
-      if (target instanceof Element && target.closest("button, a, input, textarea, select")) return;
+      if (target instanceof Element && target.closest("button, a, input, textarea, select, .beda-pad")) return;
       start = { x: event.clientX, y: event.clientY, t: performance.now(), id: event.pointerId };
     };
     const onUp = (event: PointerEvent) => {
@@ -318,6 +337,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const size = gridSize(ROOM_WORLD, ROOM_WORLD);
         grid = gridFromMask(imageData.data, canvas.width, canvas.height, size.cols, size.rows);
+        sealPad();
         const stand = nearestWalkable(grid, walker.x, walker.y);
         walker.x = stand.x;
         walker.y = stand.y;
@@ -326,6 +346,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       .catch(() => {
         if (dead) return;
         grid = roomWalkGrid();
+        sealPad();
       });
 
     paint(false);
