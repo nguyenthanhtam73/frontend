@@ -9,6 +9,7 @@ import { useProgressReanalyze } from "@/components/progress/use-progress-reanaly
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
 import { canShowReanalyzeCta } from "@/lib/progress/reanalyze";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
@@ -36,6 +37,7 @@ export function ProgressEntryCard({
   const thumb = entry.image_urls?.[0];
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
+  const snippet = entry.snippet ? toPublicCopy(entry.snippet).trim() : "";
   const { inFlight, run } = useProgressReanalyze(entry, onEntryChange);
   const maintenance = showsAnalysisMaintenance({
     analysisPending: entry.analysis_pending,
@@ -89,10 +91,10 @@ export function ProgressEntryCard({
             </span>
           </div>
 
-          {maintenance ? null : entry.snippet ? (
+          {maintenance ? null : snippet ? (
             <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:text-sm">
               <Sparkles className="mr-1 inline size-3 text-primary" aria-hidden />
-              {entry.snippet}
+              {snippet}
             </p>
           ) : entry.status === "pending" || entry.status === "processing" ? (
             <p className="text-xs italic text-muted-foreground">{t("processing")}</p>

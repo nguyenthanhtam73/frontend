@@ -1,4 +1,5 @@
 import type { CoachPhotoEvidenceKind } from "@/lib/check-in/coach-evidence";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import type { CoachZoneNoteDTO } from "@/lib/types/skin-check";
 
 /** Zone ids the photo check-in coach actually emits (backend checkInZones). */
@@ -45,6 +46,12 @@ export type ClarifyBox =
 function asTrimmedString(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const text = value.trim();
+  return text ? text : undefined;
+}
+
+/** Coach prose with leaked gauges and field names removed. Blank → omit. */
+function publicLine(value: string): string | undefined {
+  const text = toPublicCopy(value).trim();
   return text ? text : undefined;
 }
 
@@ -136,7 +143,8 @@ export function visibleZoneNotes(
     const zone = asTrimmedString(item.zone) ?? "";
     const labelKey = coachZoneLabelKey(zone);
     const label = labelKey ? asTrimmedString(labels?.[labelKey]) : undefined;
-    const shown = label ? stripLeadingZoneLabel(note, label) : note;
+    const stripped = label ? stripLeadingZoneLabel(note, label) : note;
+    const shown = publicLine(stripped);
     if (!shown) continue;
     out.push({
       zone,
@@ -152,7 +160,8 @@ export function visibleZoneNotes(
 /** Sentence under one gauge. Blank, missing, or non-string → omit the line. */
 export function scoreNoteText(notes: unknown, key: ScoreNoteKey): string | undefined {
   if (!notes || typeof notes !== "object" || Array.isArray(notes)) return undefined;
-  return asTrimmedString((notes as Partial<Record<ScoreNoteKey, unknown>>)[key]);
+  const raw = asTrimmedString((notes as Partial<Record<ScoreNoteKey, unknown>>)[key]);
+  return raw ? publicLine(raw) : undefined;
 }
 
 /**
@@ -172,7 +181,9 @@ export function clarifyBox(input: {
   for (const raw of input.clarify_questions) {
     const text = asTrimmedString(raw);
     if (!text) continue;
-    items.push(text);
+    const cleaned = publicLine(text);
+    if (!cleaned) continue;
+    items.push(cleaned);
     if (items.length >= MAX_CLARIFY_ITEMS) break;
   }
   if (items.length === 0) return null;

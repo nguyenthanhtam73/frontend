@@ -12,6 +12,7 @@
  */
 
 import { localId } from "@/components/routine/routine-helpers";
+import { toPublicCopy } from "@/lib/check-in/public-copy";
 import {
   ROUTINE_CATEGORIES,
   type RoutineCategory,
@@ -135,7 +136,8 @@ export function splitRoutineHints(hints: string[] | undefined): {
   const evening: string[] = [];
   const other: string[] = [];
   for (const h of hints) {
-    const s = h.trim();
+    const s = toPublicCopy(h).trim();
+    if (!s) continue;
     const low = s.toLowerCase();
     if (
       low.startsWith("am:") ||
