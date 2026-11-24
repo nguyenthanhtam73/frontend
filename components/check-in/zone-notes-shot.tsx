@@ -37,6 +37,7 @@ const payload: CreateSkinCheckResponseDTO = {
       ],
     },
   },
+  image_urls: [],
 };
 
 /** Local screenshots of zone cards. The dev layout answers 404 in production. */
