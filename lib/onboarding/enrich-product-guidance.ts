@@ -91,7 +91,19 @@ export function plainifyGuidanceText(text: string, en: boolean, state?: ExplainS
     if (out.includes(from)) out = out.split(from).join(to);
   }
   if (!en) out = explainVietnameseGuidance(out, state ?? { ceramide: false });
-  return out.replace(/\s{2,}/g, " ").trim();
+  return ensureSentenceEnd(out.replace(/\s{2,}/g, " ").trim());
+}
+
+/** Add a final period when a guidance sentence has none. Leave lists, emoji, and closers. */
+function ensureSentenceEnd(text: string): string {
+  const s = text.trim();
+  if (!s) return s;
+  if (/[.!?…。！？]$/u.test(s)) return s;
+  if (/["'”’»»)\]}]$/u.test(s)) return s;
+  if (/[,:;•·–—-]$/u.test(s)) return s;
+  if (/\p{Extended_Pictographic}$/u.test(s)) return s;
+  if (/\n\s*(?:[-•*]|\d+[.)])/u.test(s)) return s;
+  return `${s}.`;
 }
 
 const CERAMIDE_GLOSS = "giúp lớp ngoài da giữ nước, đỡ khô rát";
