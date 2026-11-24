@@ -491,6 +491,15 @@ function eveningHintKey(phase: StarterCarePhase):
   return "step2.eveningHint";
 }
 
+function welcomeEveningHintKey(phase: StarterCarePhase):
+  | "periodEveningHint"
+  | "periodEveningHintCalm"
+  | "periodEveningHintActive" {
+  if (phase === "calm_first" || phase === "manual") return "periodEveningHintCalm";
+  if (phase === "can_add_active") return "periodEveningHintActive";
+  return "periodEveningHint";
+}
+
 export function OnboardingRoutinePeriodSection({
   period,
   steps,
@@ -523,6 +532,7 @@ export function OnboardingRoutinePeriodSection({
   morningProductTips?: (RoutineStepProductTip | null)[];
 }) {
   const t = useTranslations("onboarding");
+  const tWelcome = useTranslations("coachWelcome");
   const ob = useOnboardingStore();
   const isMorning = period === "morning";
   const morningKeys = useMemo(() => {
@@ -571,7 +581,13 @@ export function OnboardingRoutinePeriodSection({
               emphasize ? "text-lg sm:text-xl" : "text-sm sm:text-base",
             )}
           >
-            {isMorning ? t("routineStep.morning") : t("routineStep.evening")}
+            {emphasize
+              ? isMorning
+                ? tWelcome("periodMorning")
+                : tWelcome("periodEvening")
+              : isMorning
+                ? t("routineStep.morning")
+                : t("routineStep.evening")}
           </h3>
           {!compactTips ? (
             <p
@@ -580,9 +596,13 @@ export function OnboardingRoutinePeriodSection({
                 emphasize ? "text-sm leading-relaxed sm:text-base" : "text-xs",
               )}
             >
-              {isMorning
-                ? t("step2.morningHint")
-                : t(eveningHintKey(carePhase))}
+              {emphasize
+                ? isMorning
+                  ? tWelcome("periodMorningHint")
+                  : tWelcome(welcomeEveningHintKey(carePhase))
+                : isMorning
+                  ? t("step2.morningHint")
+                  : t(eveningHintKey(carePhase))}
             </p>
           ) : null}
         </div>

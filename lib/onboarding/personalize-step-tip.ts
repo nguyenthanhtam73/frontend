@@ -47,7 +47,7 @@ function skinOpener(ctx: TipCtx, en: boolean): string {
   if (concern) {
     return en ? `For skin with ${concern}` : `Với da đang ${concern}`;
   }
-  return en ? "For your skin right now" : "Với da hiện tại của bạn";
+  return en ? "For your skin right now" : "Với da mày lúc này";
 }
 
 /** Known catalog fit notes (ingredients / why this SKU). */

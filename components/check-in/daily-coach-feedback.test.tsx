@@ -54,7 +54,7 @@ describe("DailyCoachFeedback maintenance", () => {
       analysis: { ...oldCheck.analysis, status: "pending", coach: undefined },
     });
     assert.match(html, /Hệ thống đang bảo trì/);
-    assert.match(html, /Ảnh của bạn đã được lưu an toàn/);
+    assert.match(html, /Ảnh tao giữ rồi, an toàn/);
     assert.equal(html.includes("Hôm nay da ổn"), false);
   });
 
@@ -68,7 +68,7 @@ describe("DailyCoachFeedback maintenance", () => {
       },
     });
     assert.equal(html.includes("Hệ thống đang bảo trì"), false);
-    assert.match(html, /Chưa tạo được lời khuyên/);
+    assert.match(html, /Tao chưa soạn được/);
   });
 
   it("shows the note for a failed analysis only when analysis_pending is set", () => {
