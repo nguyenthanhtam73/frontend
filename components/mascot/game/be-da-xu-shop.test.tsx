@@ -45,6 +45,8 @@ describe("xu shop screen", () => {
     assert.match(html, /data-testid="beda-xu-group-daily"/);
     assert.match(html, /data-testid="beda-xu-seasonal"/);
     assert.match(html, /Đồ mùa chỉ có trong hộp quà/);
+    assert.match(html, /Chỉ mở từ hộp quà/);
+    assert.match(html, /Không mua bằng xu/);
     assert.match(html, /Bộ sưu tầm/);
     assert.match(html, /Đồ của mình/);
     assert.match(html, /5\.240 xu/);

@@ -91,9 +91,9 @@ export function XuShopShot() {
       locale="vi"
       gender="female"
       pending={false}
-      trying={scene === "card" ? null : TRY}
+      trying={scene === "card" || scene === "gift" || scene === "full" ? null : TRY}
       dialog={dialogFor(scene)}
-      problem={null}
+      problem={scene === "owned" ? t("game.shop.successAlready") : null}
       player={player}
       theme={theme}
       onClose={() => undefined}
