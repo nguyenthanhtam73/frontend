@@ -52,14 +52,14 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_app_sang",
-      "text": "Sáng rồi đó! Rửa mặt nhẹ nhẹ cái đã, rồi mình tính tiếp nha."
+      "text": "Sáng rồi đó! Mày rửa mặt nhẹ nhẹ chưa, rồi tao tính tiếp nha."
     },
     {
       "id": "be_da.mo_app_sang.2",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_app_sang",
-      "text": "Chào buổi sáng. Bé Da chờ bạn từ nãy rồi đó."
+      "text": "Chào buổi sáng. Tao chờ mày từ nãy rồi đó."
     },
     {
       "id": "be_da.mo_app_sang.3",
@@ -80,7 +80,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_app_sang",
-      "text": "Ôi, bạn dậy sớm thế! Nể đó, nhớ mang kem chống nắng theo nha."
+      "text": "Ôi, mày dậy sớm thế! Tao mừng. Mày thoa kem chống nắng chưa?"
     },
     {
       "id": "be_da.mo_app_sang.6",
@@ -136,7 +136,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "chup_da_xong",
-      "text": "Chụp xong rồi nè! Bé Da ghi vào nhật ký, bạn giỏi lắm."
+      "text": "Chụp xong rồi nè! Tao ghi vào nhật ký, mày giỏi lắm."
     },
     {
       "id": "be_da.chup_da_xong.2",
@@ -150,7 +150,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "chup_da_xong",
-      "text": "Bé Da thích nhất lúc này: bạn chụp xong, mình được ngồi cạnh khen."
+      "text": "Tao thích nhất lúc này: mày chụp xong, tao được ngồi cạnh."
     },
     {
       "id": "be_da.chup_da_xong.4",
@@ -171,7 +171,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "chup_da_xong",
-      "text": "Nhật ký da lại thêm một ngày. Bạn làm được đó, Bé Da thấy hết."
+      "text": "Nhật ký da lại thêm một ngày. Mày làm được đó, tao thấy hết."
     },
     {
       "id": "be_da.chup_da_tien_bo.1",
@@ -199,7 +199,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "chup_da_tien_bo",
-      "text": "Bạn chăm đều nên mới thế này. Bé Da muốn khoe với cả vườn."
+      "text": "Mày chăm đều nên mới thế này. Tao muốn khoe với cả vườn."
     },
     {
       "id": "be_da.chup_da_tien_bo.5",
@@ -255,7 +255,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_1_ngay",
-      "text": "Nhật ký hôm qua trống một ô. Bé Da để sẵn chỗ, bạn chỉ việc chụp."
+      "text": "Nhật ký hôm qua trống một ô. Tao để sẵn chỗ, mày chụp một tấm được không?"
     },
     {
       "id": "be_da.bo_3_ngay_tro_len.1",
@@ -269,21 +269,21 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Ba ngày không gặp, Bé Da hờn đó. Chụp một tấm ảnh da, mình làm lành."
+      "text": "Ba ngày không gặp, tao nhớ mày. Mày chụp một tấm ảnh da cho tao xem nha?"
     },
     {
       "id": "be_da.bo_3_ngay_tro_len.3",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Bé Da tưởng bạn đi tu luôn rồi. Chụp 1 tấm ảnh da là hết hờn."
+      "text": "Tao nhớ mày mấy ngày nay. Mày chụp 1 tấm ảnh da được không?"
     },
     {
       "id": "be_da.bo_3_ngay_tro_len.4",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Ngồi chờ 3 ngày, Bé Da mỏi lắm. Chụp ảnh da cái, rồi mình nói chuyện lại."
+      "text": "Ngồi chờ 3 ngày, tao nhớ mày. Hôm nay da mày sao, chụp tao xem được không?"
     },
     {
       "id": "be_da.bo_3_ngay_tro_len.5",
@@ -297,14 +297,14 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Nhật ký trống 3 ngày, Bé Da buồn thật. Chụp một tấm ảnh da, mình hết dỗi."
+      "text": "Nhật ký trống 3 ngày, tao nhớ mày. Mày chụp một tấm ảnh da được không?"
     },
     {
       "id": "be_da.quay_lai_sau_nghi.1",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "quay_lai_sau_nghi",
-      "text": "Bạn về rồi hả! Bé Da nhớ muốn xỉu luôn á 🥹"
+      "text": "Mày về rồi hả! Tao nhớ muốn xỉu luôn á 🥹"
     },
     {
       "id": "be_da.quay_lai_sau_nghi.2",
@@ -325,21 +325,21 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "quay_lai_sau_nghi",
-      "text": "Bé Da giữ chỗ này suốt. Giờ bạn về, mình bắt đầu lại từ hôm nay nha."
+      "text": "Tao giữ chỗ này suốt. Giờ mày về, tao bắt đầu lại từ hôm nay nha."
     },
     {
       "id": "be_da.quay_lai_sau_nghi.5",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "quay_lai_sau_nghi",
-      "text": "Nhớ bạn lắm đó. Không cần xin lỗi, chỉ cần chụp ảnh da là đủ."
+      "text": "Tao nhớ mày lắm. Không cần xin lỗi, chụp ảnh da là đủ."
     },
     {
       "id": "be_da.quay_lai_sau_nghi.6",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "quay_lai_sau_nghi",
-      "text": "Hờn hôm trước hết rồi. Hôm nay có bạn là Bé Da vui rồi."
+      "text": "Hôm nay có mày là tao vui rồi."
     },
     {
       "id": "be_da.tuoi_cay.1",
@@ -360,7 +360,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "tuoi_cay",
-      "text": "Hôm nay không quên tưới, Bé Da ghi công cho bạn đây."
+      "text": "Hôm nay không quên tưới, tao ghi công cho mày đây."
     },
     {
       "id": "be_da.tuoi_cay.4",
@@ -374,14 +374,14 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "tuoi_cay",
-      "text": "Bé Da thích nhìn bạn tưới cây. Chăm cây với chăm da, cùng một nhịp."
+      "text": "Tao thích nhìn mày tưới cây. Chăm cây với chăm da, cùng một nhịp."
     },
     {
       "id": "be_da.tuoi_cay.6",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "tuoi_cay",
-      "text": "Tưới rồi nha! Mai mà quên là Bé Da khịa nhẹ đó."
+      "text": "Tưới rồi nha! Mai mày tưới tiếp được không? Tao chờ đó."
     },
     {
       "id": "be_da.mo_hop_thuong.1",
@@ -444,7 +444,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_hop_hiem",
-      "text": "Món này không phải lúc nào cũng ra. Bạn có duyên, Bé Da ghen tị xíu."
+      "text": "Món này không phải lúc nào cũng ra. Mày may đó, tao vui theo."
     },
     {
       "id": "be_da.mo_hop_hiem.4",
@@ -458,7 +458,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_hop_hiem",
-      "text": "Bé Da nhảy lên nhìn: đúng hàng Hiếm. Bạn may quá trời."
+      "text": "Tao nhảy lên nhìn: đúng hàng Hiếm. Mày may quá trời."
     },
     {
       "id": "be_da.mo_hop_hiem.6",
@@ -479,7 +479,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_hop_sieu_hiem",
-      "text": "Trời ơi món này hiếm muốn xỉu. Bé Da ghen tị, nhưng vui giúp bạn."
+      "text": "Trời ơi món này hiếm muốn xỉu. Tao vui giúp mày."
     },
     {
       "id": "be_da.mo_hop_sieu_hiem.3",
@@ -493,14 +493,14 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_hop_sieu_hiem",
-      "text": "Cả vườn phải biết chuyện này. Bạn vừa mở được món Siêu hiếm đó!"
+      "text": "Cả vườn phải biết chuyện này. Mày vừa mở được món Siêu hiếm đó!"
     },
     {
       "id": "be_da.mo_hop_sieu_hiem.5",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mo_hop_sieu_hiem",
-      "text": "Bé Da thấy món này là muốn ôm bạn. Thôi, ôm cái hộp cũng được."
+      "text": "Tao thấy món này là muốn ôm mày. Thôi, ôm cái hộp cũng được."
     },
     {
       "id": "be_da.mo_hop_sieu_hiem.6",
@@ -542,7 +542,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "mac_do_moi",
-      "text": "Khen một câu không đã. Đồ này hợp bạn, Bé Da không nói lấy lệ."
+      "text": "Khen một câu không đã. Đồ này hợp mày, tao không nói lấy lệ."
     },
     {
       "id": "be_da.mac_do_moi.6",
@@ -556,7 +556,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "ngau_nhien",
-      "text": "Kem chống nắng nằm trong tủ cũng buồn lắm, cho nó ra nắng với bạn đi."
+      "text": "Kem chống nắng nằm trong tủ cũng buồn lắm. Mày cho nó đi theo ra nắng được không?"
     },
     {
       "id": "be_da.ngau_nhien.2",
@@ -570,7 +570,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "ngau_nhien",
-      "text": "Uống ngụm nước đi, Bé Da nhìn bạn làm việc cũng thấy khát."
+      "text": "Mày uống ngụm nước chưa? Tao nhìn mày làm việc cũng thấy khát."
     },
     {
       "id": "be_da.ngau_nhien.4",
@@ -584,7 +584,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "ngau_nhien",
-      "text": "Bạn làm tốt rồi đó. Bé Da không phải lúc nào cũng khịa đâu."
+      "text": "Mày làm tốt rồi đó. Tao ở đây cổ vũ, không phải để chê."
     },
     {
       "id": "be_da.ngau_nhien.6",
@@ -605,14 +605,14 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "ngau_nhien",
-      "text": "Bé Da khen bạn siêng, dù hôm qua có hơi lười một chút."
+      "text": "Tao khen mày siêng. Hôm qua nghỉ một chút cũng không sao."
     },
     {
       "id": "be_da.ngau_nhien.9",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "ngau_nhien",
-      "text": "Đi ngủ sớm hôm nay đi. Mai dậy, Bé Da cười với bạn trước."
+      "text": "Hôm nay mày ngủ sớm được không? Mai dậy, tao cười với mày trước."
     },
     {
       "id": "be_da.ngau_nhien.10",
@@ -633,7 +633,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "ngau_nhien",
-      "text": "Bạn không cần hoàn hảo. Chăm một chút mỗi ngày, Bé Da đủ vui rồi."
+      "text": "Mày không cần hoàn hảo. Chăm một chút mỗi ngày, tao đủ vui rồi."
     },
     {
       "id": "be_da.thuc_khuya.1",
@@ -654,14 +654,14 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "thuc_khuya",
-      "text": "Bé Da buồn ngủ rồi, bạn còn tỉnh. Thương Bé Da thì đi nằm đi."
+      "text": "Tao buồn ngủ rồi, mày còn tỉnh. Thương tao thì nằm nghỉ được không?"
     },
     {
       "id": "be_da.thuc_khuya.4",
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "thuc_khuya",
-      "text": "Thức khuya thì Bé Da khịa nhẹ đây. Mai nhớ dậy rửa mặt nha."
+      "text": "Thức khuya thì tao lo. Mai mày dậy rửa mặt được không?"
     },
     {
       "id": "be_da.thuc_khuya.5",
@@ -706,7 +706,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "streak_moc",
-      "text": "30 ngày! Bé Da hết chỗ khen. Bạn làm được chuyện ít người làm nổi.",
+      "text": "30 ngày! Tao hết chỗ khen. Mày làm được chuyện ít người làm nổi.",
       "moc": 30
     },
     {
@@ -722,7 +722,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "streak_moc",
-      "text": "Mốc 30 ngày rồi đó. Ôm cái đã, rồi mình đi tưới cây ăn mừng.",
+      "text": "Mốc 30 ngày rồi đó. Ôm cái đã, rồi tao với mày đi tưới cây ăn mừng.",
       "moc": 30
     },
     {
