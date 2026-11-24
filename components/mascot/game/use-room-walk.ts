@@ -20,6 +20,7 @@ import {
   roomDepthScale,
   roomNudge,
   roomRoute,
+  roomPropCovers,
   roomSortIndex,
   roomStepTo,
   roomWalkGrid,
@@ -60,8 +61,10 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduced = media.matches;
 
-    const overlaps = (a: DOMRect, b: DOMRect) =>
-      a.left < b.right - 4 && a.right > b.left + 4 && a.top < b.bottom - 4 && a.bottom > b.top + 4;
+    const overlaps = (
+      a: { left: number; right: number; top: number; bottom: number },
+      b: { left: number; right: number; top: number; bottom: number },
+    ) => a.left < b.right - 4 && a.right > b.left + 4 && a.top < b.bottom - 4 && a.bottom > b.top + 4;
 
     const placeBubble = (el: HTMLElement) => {
       const bubble = el.querySelector<HTMLElement>(".beda-bubble");
@@ -72,23 +75,47 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         el.dataset.bubbleSide = side;
         el.style.setProperty("--bubble-x", `${dx}px`);
       };
-      place("above", 0);
       const frameBox = frame.getBoundingClientRect();
-      let box = bubble.getBoundingClientRect();
+      place("above", 0);
+      el.style.setProperty("--bubble-y", "0px");
+      const box = bubble.getBoundingClientRect();
       const side = box.top < frameBox.top + pad ? "below" : "above";
       place(side, 0);
-      box = bubble.getBoundingClientRect();
-      let dx = 0;
-      if (box.left < frameBox.left + pad) dx += frameBox.left + pad - box.left;
-      if (box.right > frameBox.right - pad) dx -= box.right - (frameBox.right - pad);
-      place(side, Math.round(dx));
-      if (!padEl) return;
-      box = bubble.getBoundingClientRect();
-      const padBox = padEl.getBoundingClientRect();
-      if (overlaps(box, padBox)) {
-        dx += padBox.left - 8 - box.right;
-        place(side, Math.round(dx));
+      el.style.setProperty("--bubble-y", "0px");
+      const base = bubble.getBoundingClientRect();
+      const props = [...frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")].map(
+        (item) => item.getBoundingClientRect(),
+      );
+      const figure = el.querySelector(".bd-figure")?.getBoundingClientRect() ?? null;
+      const label = el.querySelector(".beda-pretty")?.getBoundingClientRect() ?? null;
+      const padBox = padEl?.getBoundingClientRect() ?? null;
+      const shifted = (dx: number, dy: number) => ({
+        left: base.left + dx,
+        right: base.right + dx,
+        top: base.top + dy,
+        bottom: base.bottom + dy,
+      });
+      const onScreen = (rect: { left: number; right: number; top: number; bottom: number }) =>
+        rect.left >= frameBox.left + pad &&
+        rect.right <= frameBox.right - pad &&
+        rect.top >= frameBox.top + pad &&
+        rect.bottom <= frameBox.bottom - pad;
+      const hitsFurniture = (rect: { left: number; right: number; top: number; bottom: number }) =>
+        props.some((item) => overlaps(rect, item)) ||
+        (padBox != null && overlaps(rect, padBox)) ||
+        (figure != null && overlaps(rect, figure)) ||
+        (label != null && overlaps(rect, label));
+      let best: { dx: number; dy: number; score: number } | null = null;
+      for (const dy of [0, -36, -72, 64, 108, -108, 148]) {
+        for (const dx of [0, 48, -48, 96, -96, 144, -144, 192, -192]) {
+          const rect = shifted(dx, dy);
+          if (!onScreen(rect) || hitsFurniture(rect)) continue;
+          const score = Math.abs(dx) + Math.abs(dy);
+          if (!best || score < best.score) best = { dx, dy, score };
+        }
       }
+      place(side, best?.dx ?? 0);
+      el.style.setProperty("--bubble-y", `${best?.dy ?? 0}px`);
     };
 
     const paint = (moving: boolean) => {
@@ -138,10 +165,8 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       const host = frame.querySelector<HTMLElement>(".beda-pixi-host");
       if (host) host.style.zIndex = "42";
       for (const item of frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")) {
-        const box = item.getBoundingClientRect();
-        // The box sits on the back of the floor. Its front edge is further down the planks.
-        const base = box.bottom + 80;
-        item.style.zIndex = feet < base ? "48" : "36";
+        const base = item.getBoundingClientRect().bottom;
+        item.style.zIndex = roomPropCovers(feet, base) ? "48" : "36";
       }
     };
 

@@ -588,7 +588,7 @@ html.dark .beda-draw-wait {
   width: min(210px, calc(100vw - 40px));
   max-width: calc(100vw - 24px);
   margin: 0;
-  transform: translateX(calc(-50% + var(--bubble-x, 0px)));
+  transform: translate(calc(-50% + var(--bubble-x, 0px)), var(--bubble-y, 0px));
   white-space: normal;
   overflow-wrap: break-word;
   pointer-events: none;

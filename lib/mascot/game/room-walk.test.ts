@@ -163,8 +163,10 @@ describe("personal room floor", () => {
     }
     assert.equal(roomNudge(grid, { x: 0.5, y: 0.65 }, "up"), null);
     assert.ok(roomDepthScale(0.76) > roomDepthScale(0.62));
-    assert.ok(roomSortIndex(0.76) > 42);
-    assert.ok(roomSortIndex(0.62) < 42);
+    assert.equal(roomSortIndex(0.76), 42);
+    assert.equal(roomSortIndex(0.62), 42);
+    assert.equal(roomBlockName(0.76, 0.66), "sink");
+    assert.equal(roomBlocked(0.7, 0.72), false);
     const intoBed = roomStepTo(grid, ROOM_SPAWN, { x: 0.18, y: 0.62 });
     assert.equal(roomBlocked(intoBed.x, intoBed.y), false);
     let walker = createWalker(ROOM_SPAWN);

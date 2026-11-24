@@ -10,7 +10,7 @@ import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, segmentStaysWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
 import { clamp } from "@/lib/mascot/game/walk";
 
-export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=34a92b8496");
+export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=d9934e9706");
 export const ROOM_MASK_PX = 256;
 /** Logical room used only to size the path grid (~20px cells). */
 export const ROOM_WORLD = 1000;
@@ -22,11 +22,13 @@ export const ROOM_WORLD = 1000;
  */
 export const ROOM_BOUNDS = { minX: 0.14, maxX: 0.88, minY: 0.64, maxY: 0.82 } as const;
 
-/** Feet at or above this line are behind the furniture (the props paint over her). */
-export const ROOM_BEHIND_Y = 0.66;
-
-/** Furniture shares this z-index. Her sort index crosses it as she walks down. */
+/** She stays on this layer. Each prop moves above or below it from its own base. */
 export const ROOM_PROP_Z = 42;
+
+/** A prop paints over her only while her feet are above that prop's own base. */
+export function roomPropCovers(feetY: number, baseY: number): boolean {
+  return feetY < baseY;
+}
 
 export const ROOM_SPAWN: WalkPoint = { x: 0.5, y: 0.72 };
 
@@ -46,7 +48,8 @@ export const ROOM_BLOCKS: readonly { x0: number; y0: number; x1: number; y1: num
   // met the name-label block on a 360px phone and sealed the floor beside the pad.
   { name: "closet", x0: 0.2, y0: 0.56, x1: 0.36, y1: 0.68 },
   { name: "plant", x0: 0.55, y0: 0.56, x1: 0.72, y1: 0.66 },
-  { name: "sink", x0: 0.8, y0: 0.56, x1: 1, y1: 0.67 },
+  // The sink art starts near x=0.77. A short pad keeps her feet off the cabinet.
+  { name: "sink", x0: 0.74, y0: 0.56, x1: 1, y1: 0.68 },
 ];
 
 /** Mark cells whose centers sit inside a normalized rectangle. */
@@ -157,11 +160,13 @@ export function roomDepthScale(y: number): number {
 }
 
 /**
- * Floor stacking. Behind the props at the back of the room, in front of them
- * when she walks down. Stays under the task card (60) and the nav (80).
+ * Her layer. Props compare their own base to her feet and step above or below
+ * this, so one piece can cover her while another stays behind. Stays under
+ * the task card (60) and the nav (80).
  */
 export function roomSortIndex(y: number): number {
-  return y < ROOM_BEHIND_Y ? 30 : 55;
+  void y;
+  return ROOM_PROP_Z;
 }
 
 /** A short stroll while she has been still. Null when the roll stays on furniture. */
