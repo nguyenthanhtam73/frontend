@@ -1139,6 +1139,14 @@ html.dark .beda-draw-wait {
   box-shadow: 0 4px 0 #0c1d21;
 }
 
+button.beda-chip {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+}
+
 .beda-chip {
   display: flex;
   height: 40px;

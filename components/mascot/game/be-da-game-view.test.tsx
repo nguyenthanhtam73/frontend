@@ -140,6 +140,9 @@ describe("Bé Da game screen", () => {
     assert.equal(bubble.includes("text-foreground"), false);
     assertNoScores(html);
     assert.equal(html.includes('data-testid="beda-lobby"'), false);
+    const opener = renderGame({ onOpenShop: () => undefined });
+    assert.match(opener, /<button[^>]*data-testid="beda-coins"/);
+    assert.match(opener, /Mở cửa hàng, đang có 1\.250 xu/);
   });
 
   it("draws the chosen Nam variant with the same v2 stack as the lobby", () => {
@@ -747,6 +750,7 @@ describe("Bé Da game screen", () => {
       [css, ".beda-nav"],
       [css, ".beda-seed-shade"],
       [shop, ".beda-shop.is-overlay"],
+      [shop, ".beda-shop-popup"],
     ];
     for (const [file, selector] of overlays) {
       const overlayZ = zIndex(block(file, selector));

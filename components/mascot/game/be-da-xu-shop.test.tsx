@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
-import { BeDaXuShop, type ShopDialog } from "@/components/mascot/game/be-da-xu-shop";
+import { BeDaXuShop, XuShopPopup, type ShopDialog, type ShopShelf } from "@/components/mascot/game/be-da-xu-shop";
 import { applyShopReceipt, type ShopCatalog } from "@/lib/mascot/game/xu-shop";
 import { sampleShopCatalog } from "@/lib/mascot/game/xu-shop-sample";
 import vi from "../../../messages/vi.json";
@@ -19,8 +19,12 @@ function collectShopStrings(value: unknown, out: string[]) {
   for (const child of Object.values(value)) collectShopStrings(child, out);
 }
 
-function shopHtml(extra: { dialog?: ShopDialog; balance?: number; catalog?: ShopCatalog } = {}) {
+function shopHtml(extra: { dialog?: ShopDialog; balance?: number; catalog?: ShopCatalog; shelf?: ShopShelf; tryingId?: string } = {}) {
   const catalog = extra.catalog ?? sampleShopCatalog(extra.balance ?? 5240);
+  const trying =
+    extra.tryingId === ""
+      ? null
+      : { id: extra.tryingId ?? "spa_03", artId: extra.tryingId ?? "spa_03", name: "Dép lông", price: 5000, setName: "Spa Sáng Sớm", layer: "shoes" };
   return renderToStaticMarkup(
     <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
       <BeDaXuShop
@@ -28,13 +32,12 @@ function shopHtml(extra: { dialog?: ShopDialog; balance?: number; catalog?: Shop
         locale="vi"
         gender="female"
         pending={false}
-        trying={{ id: "spa_03", artId: "spa_03", name: "Dép lông", price: 5000, setName: "Spa Sáng Sớm", layer: "shoes" }}
+        trying={trying}
         dialog={extra.dialog ?? null}
         problem={null}
+        shelf={extra.shelf}
         onClose={noop}
-        onGender={noop}
         onTry={noop}
-        onClearTry={noop}
         onBuy={noop}
         onConfirm={noop}
         onDismiss={noop}
@@ -48,16 +51,30 @@ function shopHtml(extra: { dialog?: ShopDialog; balance?: number; catalog?: Shop
 describe("xu shop screen", () => {
   it("shows every group, the season note, prices, and owned pieces", () => {
     const html = shopHtml();
-    assert.match(html, /data-testid="beda-xu-group-sets"/);
-    assert.match(html, /data-testid="beda-xu-group-accessories"/);
-    assert.match(html, /data-testid="beda-xu-group-seeds"/);
-    assert.match(html, /data-testid="beda-xu-group-daily"/);
+    assert.match(html, /data-testid="beda-xu-tab-clothes"/);
+    assert.match(html, /data-testid="beda-xu-tab-accessories"/);
+    assert.match(html, /data-testid="beda-xu-tab-stickers"/);
+    assert.match(html, /data-testid="beda-xu-tab-seeds"/);
+    assert.match(html, /Quần áo/);
+    assert.match(html, /Phụ kiện/);
+    assert.match(html, /Nhãn dán/);
+    assert.match(html, /Hạt giống/);
+    assert.equal(html.includes("beda-shop-genders"), false);
+    assert.equal(html.includes(">Nữ<"), false);
+    assert.equal(html.includes(">Nam<"), false);
+    assert.match(html, /data-testid="beda-xu-preview"/);
+    assert.match(html, /data-testid="beda-xu-wear-layer"/);
+    assert.match(html, /xu_spa_dep_long\.svg/);
+    assert.match(html, /Đang thử/);
+    assert.match(html, /data-zoom="shoes"/);
+    assert.match(html, /data-testid="beda-xu-decor"/);
+    assert.equal(html.includes("Bộ Spa Sáng Sớm"), false);
+    assert.equal(html.includes("Ly trà hoa cúc"), false);
+    assert.equal(html.includes("Bình tưới mini"), false);
     assert.match(html, /data-testid="beda-xu-seasonal"/);
     assert.match(html, /Đồ mùa chỉ có trong hộp quà/);
     assert.equal(html.includes("Chỉ mở từ hộp quà"), false);
     assert.match(html, /Không mua bằng xu/);
-    assert.match(html, /Bộ sưu tầm/);
-    assert.match(html, /Đồ trong tủ/);
     const shopLines: string[] = [];
     collectShopStrings(vi.mascot.game.shop, shopLines);
     assert.deepEqual(
@@ -70,13 +87,23 @@ describe("xu shop screen", () => {
     assert.equal(html.includes('data-testid="beda-xu-buy-spa_01"'), false);
     assert.match(html, /data-testid="beda-xu-buy-spa_03"/);
     assert.match(html, /Cần chuỗi 30 ngày/);
-    assert.match(html, /Hoa anh đào/);
-    assert.match(html, /Nhãn dán hoa/);
-    assert.match(html, /data-testid="beda-xu-colour-kem_hong"/);
-    assert.match(html, /Chào nha/);
-    assert.equal(html.includes('data-testid="beda-xu-buy-kem_hong"'), false);
+    const seeds = shopHtml({ shelf: "seeds", tryingId: "" });
+    assert.match(seeds, /Hoa anh đào/);
+    assert.match(seeds, /data-testid="beda-xu-card-seed_cherry"/);
+    const stickers = shopHtml({ shelf: "stickers", tryingId: "kem_hong" });
+    assert.match(stickers, /Nhãn dán hoa/);
+    assert.match(stickers, /data-testid="beda-xu-colour-kem_hong"/);
+    assert.match(stickers, /Chào nha/);
+    assert.match(stickers, /Đồ trang trí/);
+    assert.match(stickers, /Không mặc lên người/);
+    assert.equal(stickers.includes("Đang thử"), false);
+    assert.equal(stickers.includes('data-testid="beda-xu-buy-kem_hong"'), false);
+    const accessories = shopHtml({ shelf: "accessories", tryingId: "" });
+    assert.match(accessories, /Ly trà hoa cúc/);
+    assert.match(accessories, /Bình tưới mini/);
+    assert.match(accessories, /Kính tròn/);
     assert.equal(/gacha/i.test(html), false);
-    assert.match(html, /không đổi kết quả da/);
+    assert.match(html, /không ảnh hưởng nhật ký da của mày đâu/);
   });
 
   it("asks before a big debit and says how many xu are missing", () => {
@@ -140,5 +167,24 @@ describe("xu shop screen", () => {
     assert.match(success, /data-testid="beda-xu-success-wear"/);
     assert.match(success, /Mặc luôn/);
     assert.equal(/gacha/i.test(confirm + short + success), false);
+    assert.match(short, /data-testid="beda-xu-miss-spa_03"/);
+    assert.match(short, /Còn thiếu 880 xu/);
+  });
+
+  it("draws the shop as a dialog the room can close", () => {
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
+        <XuShopPopup title="Cửa hàng xu" closeLabel="Đóng cửa hàng" onClose={noop}>
+          <p>Cửa hàng</p>
+        </XuShopPopup>
+      </NextIntlClientProvider>,
+    );
+    assert.match(html, /data-testid="beda-xu-popup"/);
+    assert.match(html, /data-testid="beda-xu-backdrop"/);
+    assert.match(html, /data-testid="beda-xu-close"/);
+    assert.match(html, /role="dialog"/);
+    assert.match(html, /aria-modal="true"/);
+    assert.match(html, /aria-label="Đóng cửa hàng"/);
+    assert.equal(/gacha/i.test(html), false);
   });
 });
