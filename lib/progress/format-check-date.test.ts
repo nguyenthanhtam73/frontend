@@ -14,7 +14,7 @@ describe("formatCheckDate", () => {
 
   it("uses a month name in English", () => {
     assert.equal(formatCheckDate("2026-11-24", "en", now), "Nov 24");
-    assert.equal(formatCheckDate("2026-01-03", "en", now), "Jan 03");
+    assert.equal(formatCheckDate("2026-01-03", "en", now), "Jan 3");
     assert.equal(formatCheckDate("2025-11-24", "en", now), "Nov 24, 2025");
   });
 });
