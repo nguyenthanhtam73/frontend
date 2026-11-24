@@ -665,9 +665,11 @@ html.dark .beda-pad-btn {
   position: absolute;
   top: calc(100% + 26px);
   left: 50%;
-  width: min(220px, 64vw);
+  width: max-content;
+  max-width: calc(100vw - 16px);
   margin: 0;
-  transform: translateX(calc(-50% + var(--pretty-x, 0px)));
+  transform: translateX(-50%);
+  white-space: nowrap;
   opacity: 1;
 }
 
@@ -675,6 +677,12 @@ html.dark .beda-pad-btn {
 .beda-hero-wrap.is-floor[data-stepping="1"] .beda-pretty {
   opacity: 0;
   visibility: hidden;
+}
+
+@media (max-width: 370px) {
+  .beda-hero-wrap.is-floor .beda-pretty {
+    font-size: 12px;
+  }
 }
 
 .beda-hero-wrap.is-floor .bd-breathe {

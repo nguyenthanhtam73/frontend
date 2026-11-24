@@ -131,24 +131,6 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       }
       pretty.style.visibility = "visible";
       pretty.style.opacity = "1";
-      const scene = frame.getBoundingClientRect();
-      const hero = el.getBoundingClientRect();
-      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
-      const padBox = pad?.getBoundingClientRect();
-      const labelTop = hero.bottom + 26;
-      const besidePad = padBox ? labelTop + 28 > padBox.top && labelTop < padBox.bottom : false;
-      const maxWidth = besidePad && padBox
-        ? Math.max(128, Math.min(220, padBox.left - scene.left - 16))
-        : Math.min(220, scene.width * 0.64);
-      pretty.style.width = `${Math.round(maxWidth)}px`;
-      const width = pretty.offsetWidth || maxWidth;
-      const center = hero.left + hero.width / 2;
-      const half = width / 2;
-      const minCenter = scene.left + 8 + half;
-      let maxCenter = scene.right - 8 - half;
-      if (besidePad && padBox) maxCenter = Math.min(maxCenter, padBox.left - 8 - half);
-      const clamped = Math.max(minCenter, Math.min(center, maxCenter));
-      pretty.style.setProperty("--pretty-x", `${Math.round(clamped - center)}px`);
     };
 
     const placeDepth = (el: HTMLElement) => {
@@ -165,17 +147,35 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
 
     const sealPad = () => {
       if (!grid) return;
-      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
-      if (!pad) return;
       const scene = frame.getBoundingClientRect();
       if (scene.width < 1 || scene.height < 1) return;
+      const pretty = frame.querySelector<HTMLElement>(".beda-pretty");
+      const labelW = pretty?.offsetWidth || 160;
+      const labelH = pretty?.offsetHeight || 20;
+      const gap = 8;
+      const below = 26;
+      const half = labelW / 2 + gap;
+      blockRoomRect(grid, { x0: 0, y0: 0, x1: half / scene.width, y1: 1 });
+      blockRoomRect(grid, { x0: (scene.width - half) / scene.width, y0: 0, x1: 1, y1: 1 });
+      const nav = frame.querySelector<HTMLElement>(".beda-nav");
+      if (nav) {
+        const maxFeet = nav.getBoundingClientRect().top - gap - below - labelH;
+        blockRoomRect(grid, { x0: 0, y0: (maxFeet - scene.top) / scene.height, x1: 1, y1: 1 });
+      }
+      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      if (!pad) return;
       const box = pad.getBoundingClientRect();
-      const margin = 10;
       blockRoomRect(grid, {
-        x0: (box.left - margin - scene.left) / scene.width,
-        y0: (box.top - margin - scene.top) / scene.height,
-        x1: (box.right + margin - scene.left) / scene.width,
-        y1: (box.bottom + margin - scene.top) / scene.height,
+        x0: (box.left - gap - labelW / 2 - scene.left) / scene.width,
+        y0: (box.top - below - labelH - gap - scene.top) / scene.height,
+        x1: (box.right + gap + labelW / 2 - scene.left) / scene.width,
+        y1: (box.bottom - below + gap - scene.top) / scene.height,
+      });
+      blockRoomRect(grid, {
+        x0: (box.left - 10 - scene.left) / scene.width,
+        y0: (box.top - 10 - scene.top) / scene.height,
+        x1: (box.right + 10 - scene.left) / scene.width,
+        y1: (box.bottom + 10 - scene.top) / scene.height,
       });
     };
 
