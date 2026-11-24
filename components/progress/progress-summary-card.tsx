@@ -88,7 +88,9 @@ export function ProgressSummaryCard({
           <div className="space-y-1.5 rounded-xl bg-background/60 p-3 shadow-sm ring-1 ring-border/60">
             <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
               <span>{t("sparklineLabel")}</span>
-              <span className="tabular-nums">{sparklinePoints.length} pts</span>
+              <span className="normal-case tabular-nums">
+                {t("sparklineCount", { n: sparklinePoints.length })}
+              </span>
             </div>
             <ProgressSparkline
               points={sparklinePoints}

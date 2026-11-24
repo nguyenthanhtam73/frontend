@@ -1498,6 +1498,7 @@
       "overall": "Today's feel",
       "total": "Total",
       "sparklineLabel": "How today has felt",
+      "sparklineCount": "{n} pts",
       "gaugeOverall": "Overall",
       "gaugeHydration": "Hydration",
       "gaugeClarity": "Clarity",

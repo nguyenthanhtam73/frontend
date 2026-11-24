@@ -148,4 +148,22 @@ describe("result and starter-routine voice", () => {
       [],
     );
   });
+
+  it("does not leave an English pts unit on the Vietnamese progress trend", () => {
+    const messages = JSON.parse(fs.readFileSync(path.join(ROOT, "messages/vi.json"), "utf8")) as {
+      progress: { summary: { sparklineCount: string } };
+    };
+    const enMessages = JSON.parse(fs.readFileSync(path.join(ROOT, "messages/en.json"), "utf8")) as {
+      progress: { summary: { sparklineCount: string } };
+    };
+    assert.equal(messages.progress.summary.sparklineCount, "{n} điểm");
+    assert.equal(/\bpts\b/i.test(messages.progress.summary.sparklineCount), false);
+    assert.equal(enMessages.progress.summary.sparklineCount, "{n} pts");
+    const card = fs.readFileSync(
+      path.join(ROOT, "components/progress/progress-summary-card.tsx"),
+      "utf8",
+    );
+    assert.match(card, /t\("sparklineCount"/);
+    assert.equal(/\bpts\b/.test(card), false);
+  });
 });
