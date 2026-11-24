@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaIntroReset } from "@/components/mascot/intro/be-da-intro-reset";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
-import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
+import { BeDaDrawWait, BeDaPixiStage, useDrawRetry } from "@/components/mascot/game/be-da-pixi-stage";
+import { clearBedaReady, noteBedaReady } from "@/lib/mascot/beda-ready";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
 import { TreeClosetSection } from "@/components/mascot/game/be-da-room-tree";
 import { GiftClosetSection } from "@/components/mascot/game/be-da-gift-box";
@@ -150,6 +151,8 @@ export function BeDaGameView({
   onSpaRetry,
   onSpaQuit,
   onPlantSeed,
+  plainRoom = false,
+  holdFrame = false,
 }: {
   locale: string;
   tab: GameTab;
@@ -235,6 +238,10 @@ export function BeDaGameView({
   onSpaRetry?: () => void;
   onSpaQuit?: () => void;
   onPlantSeed?: (treeType: string) => Promise<void>;
+  /** Skip the canvas. Screenshots use this after a forced Pixi timeout. */
+  plainRoom?: boolean;
+  /** Stay on the opening line. Screenshots of the draw wait. */
+  holdFrame?: boolean;
 }) {
   const t = useTranslations("mascot");
   const sessionNote = (section: "morning" | "evening") => {
@@ -442,6 +449,8 @@ export function BeDaGameView({
           doorCountLabel={doorCountLabel}
           hideCards={chestOpen || tab === "wardrobe"}
           showHero={!chestOpen}
+          plainRoom={plainRoom}
+          holdFrame={holdFrame}
           onOpenLobby={() => onTab("lobby")}
           onOpenWardrobe={() => onTab("wardrobe")}
           onOpenMissions={() => {
@@ -767,6 +776,8 @@ function Room({
   onOpenLobby,
   onOpenWardrobe,
   onOpenMissions,
+  plainRoom = false,
+  holdFrame = false,
 }: {
   sky: SkyPeriod;
   player: BeDaView;
@@ -785,11 +796,27 @@ function Room({
   onOpenLobby: () => void;
   onOpenWardrobe: () => void;
   onOpenMissions: () => void;
+  plainRoom?: boolean;
+  holdFrame?: boolean;
 }) {
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
   const { frameRef, heroRef } = useRoomWalk(showHero, hideCards || !showHero);
-  const [pixi, setPixi] = useState(true);
+  const [pixi, setPixi] = useState(!plainRoom);
+  const [framed, setFramed] = useState(false);
+  const told = useRef(false);
+  const drawRetry = useDrawRetry(pixi && !framed);
+  function tell(engine: "pixi" | "dom") {
+    noteBedaReady(engine, window, document.body, told);
+  }
+  useEffect(() => {
+    if (plainRoom) tell("dom");
+  }, [plainRoom]);
+  useEffect(() => {
+    return () => {
+      clearBedaReady(document.body);
+    };
+  }, []);
   const roomArt = lookArt(player, look, false);
   const snapRef = useRef<ShellSnapshot>({ scene: "room", sky, sprites: [] });
   snapRef.current = {
@@ -823,9 +850,24 @@ function Room({
           art={roomArt.join(" ")}
           snapshot={() => snapRef.current}
           labels={frameRef}
-          onError={() => setPixi(false)}
+          readyTimeoutMs={holdFrame ? 120_000 : undefined}
+          startShell={holdFrame ? async () => ({ destroy() {} }) : undefined}
+          onReady={() => {
+            setFramed(true);
+            tell("pixi");
+          }}
+          onError={() => {
+            setPixi(false);
+            setFramed(true);
+            tell("dom");
+          }}
         />
       ) : null}
+      {pixi && !framed ? <BeDaDrawWait retry={drawRetry} onRetry={() => {
+        setPixi(false);
+        setFramed(true);
+        tell("dom");
+      }} /> : null}
       <div className="beda-room-wall" />
       <div className="beda-room-stripes" />
       <div className="beda-room-floor" />
@@ -884,10 +926,10 @@ function Room({
           <section className="beda-card beda-quest" data-testid="beda-quest" aria-label={t("game.questTitle")}>
             <h2>
               <GameIcon name="quests" className="beda-ico-sm" />
-              {t("game.questTitle")}
+              <span className="beda-quest-title">{t("game.questTitle")}</span>
               <span className="beda-gift-pill">
                 <GameIcon name={giftTaken ? "chestOpen" : "chestClosed"} className="beda-gift-ico" />
-                {giftTaken ? t("game.giftTaken") : t("game.gift")}
+                {giftTaken ? t("game.giftTaken") : t("game.gift.label")}
               </span>
             </h2>
             {(["morning", "evening"] as const).map((section) => {

@@ -125,6 +125,8 @@ describe("Bé Da game screen", () => {
     assert.match(html, /\/mascot\/icons\/nav_cham_da\.svg/);
     assert.match(html, /\/mascot\/icons\/nav_tu_do\.svg/);
     assert.equal(html.includes("hue-rotate"), false);
+    assert.match(html, /Có quà/);
+    assert.equal(html.includes("mascot.game.gift"), false);
     assert.match(html, /Mình rửa mặt rồi nè!/);
     assert.match(html, /Thoa kem chống nắng nha\?/);
     const bubble = html.match(/<p\b[^>]*data-testid="beda-bubble"[^>]*>/)?.[0] ?? "";

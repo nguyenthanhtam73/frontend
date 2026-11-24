@@ -52,6 +52,36 @@
   visibility: hidden;
 }
 
+.beda-draw-wait {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  top: 34%;
+  display: flex;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border-radius: 18px;
+  background: rgba(255, 250, 245, 0.94);
+  padding: 16px 18px;
+  color: #3c2a30;
+  font-weight: 800;
+  text-align: center;
+  pointer-events: none;
+}
+
+.beda-draw-wait button {
+  pointer-events: auto;
+}
+
+html.dark .beda-draw-wait {
+  background: rgba(28, 22, 27, 0.94);
+  color: #f8efe9;
+}
+
 .beda-pixi-host[data-loading="1"]::after,
 .beda-actor-host[data-loading="1"]::after {
   content: "";
@@ -652,7 +682,7 @@
   top: calc(86px + env(safe-area-inset-top));
   left: 12px;
   box-sizing: border-box;
-  width: min(236px, calc(100vw - 154px));
+  width: min(248px, calc(100vw - 132px));
   min-width: 0;
   padding: 12px 12px 10px;
 }
@@ -660,14 +690,23 @@
 .beda-quest h2 {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
-  font-size: 15px;
+  min-width: 0;
+  font-size: 14px;
   font-weight: 800;
+  line-height: 1.15;
+}
+
+.beda-quest-title {
+  min-width: 0;
+  flex: 0 1 5.8em;
+  line-height: 1.15;
 }
 
 .beda-gift-pill {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
   margin-left: auto;
@@ -677,6 +716,7 @@
   color: #8a5a00;
   font-size: 12px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .beda-gift-ico {
@@ -697,6 +737,7 @@
   margin-top: 8px;
   border: 0;
   background: transparent;
+  min-height: 44px;
   padding: 0;
   color: inherit;
   font: inherit;

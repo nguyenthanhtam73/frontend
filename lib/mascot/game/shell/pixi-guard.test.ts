@@ -12,6 +12,8 @@ import {
   notePixiInitFailed,
   scheduleRecenterResume,
   attachIfMounted,
+  createPixiStartGate,
+  createFrameWatch,
 } from "./pixi-guard";
 
 describe("pixi shell lifetime", () => {
@@ -115,6 +117,54 @@ describe("pixi shell lifetime", () => {
     );
     const rule = css.match(/data-depth="back"\] \.beda-pixi-host \{[^}]*z-index:\s*(\d+)/);
     assert.equal(rule?.[1], "1");
+  });
+
+  it("calls onError once when the shell is late, and ignores that resolve", () => {
+    const gate = createPixiStartGate();
+    const errors: string[] = [];
+    const destroyed: string[] = [];
+    let dead = false;
+    const destroy = () => destroyed.push("canvas");
+    if (gate.claim()) {
+      dead = true;
+      destroy();
+      errors.push("error");
+    }
+    const handle = { destroy: () => destroyed.push("stage") };
+    if (dead || !gate.claim()) handle.destroy();
+    else errors.push("ready");
+    assert.deepEqual(errors, ["error"]);
+    assert.deepEqual(destroyed, ["canvas", "stage"]);
+    assert.equal(gate.claim(), false);
+  });
+
+  it("keeps the watchdog armed after init until a frame is confirmed", () => {
+    const watch = createFrameWatch();
+    watch.noteInit();
+    assert.equal(watch.inited, true);
+    assert.equal(watch.armed, true);
+    assert.equal(watch.noteFrame(), true);
+    assert.equal(watch.armed, false);
+    assert.equal(watch.noteFrame(), false);
+  });
+
+  it("treats a lost WebGL context as the DOM fallback and ignores a late frame", () => {
+    const watch = createFrameWatch();
+    const destroyed: string[] = [];
+    watch.noteInit();
+    const handle = { destroy: () => destroyed.push("app") };
+    assert.equal(watch.armed, true);
+    assert.equal(watch.fail(true), true);
+    handle.destroy();
+    assert.equal(watch.noteFrame(), false);
+    assert.equal(watch.fail(true), false);
+    assert.deepEqual(destroyed, ["app"]);
+  });
+
+  it("lets a ready shell win and ignores the timeout", () => {
+    const gate = createPixiStartGate();
+    assert.equal(gate.claim(), true);
+    assert.equal(gate.claim(), false);
   });
 
   it("does not draw a second shadow ellipse on top of the sheet", () => {

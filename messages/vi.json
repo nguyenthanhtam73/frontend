@@ -3528,6 +3528,8 @@
       "roomNudged": "Đã nhắc",
       "questTitle": "Nhiệm vụ hôm nay",
       "gift": "Có quà",
+      "opening": "Đang mở Bé Da…",
+      "tryAgain": "Thử lại",
       "giftTaken": "Đã nhận",
       "routineLink": "Đánh dấu trong routine",
       "allDone": "Xong hết rồi",
@@ -3666,6 +3668,7 @@
         "failed": "Chưa xong, thử lại nha"
       },
       "gift": {
+        "label": "Có quà",
         "got": "Bạn được 1 Hộp quà Lá xanh",
         "gotBody": "Mở ra sẽ có 1 bộ đồ hoặc 1 phụ kiện. Đồ này chỉ cây Lá xanh mới có.",
         "open": "Mở hộp quà",
