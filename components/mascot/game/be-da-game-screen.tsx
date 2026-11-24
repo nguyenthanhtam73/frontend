@@ -13,7 +13,7 @@ import { introResetHref } from "@/lib/mascot/intro";
 import { getAccessToken } from "@/lib/auth-token";
 import { useBeDaView } from "@/lib/hooks/use-mascot";
 import { useStreak } from "@/lib/hooks/use-streak";
-import { countRoutineTicks, formatGameCoins, gameCoinCount } from "@/lib/mascot/game/coins";
+import { formatGameCoins, walletXu } from "@/lib/mascot/game/coins";
 import { useLobbyPresence } from "@/components/mascot/game/use-lobby-presence";
 import { useRoomShared } from "@/components/mascot/game/use-room-shared";
 import { useRoomTree } from "@/components/mascot/game/use-room-tree";
@@ -479,17 +479,8 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
   const checkedIn =
     checkedInOnDay(mascotQuery.data?.lastCheckinAt, today) ||
     checkedInOnDay(streak.data?.last_check_in_date, today);
-  const coinsKnown = mascotQuery.isSuccess || mascotQuery.isError;
-  const coinsLabel = coinsKnown
-    ? formatGameCoins(
-        gameCoinCount({
-          glowPoints: mascotQuery.data?.glowPoints ?? null,
-          routineTicks: countRoutineTicks(morning, evening, routineToday),
-          checkedInToday: checkedIn,
-        }),
-        locale,
-      )
-    : "…";
+  const wallet = walletXu(shopQuery.data?.balance);
+  const coinsLabel = shopQuery.isSuccess && wallet != null ? formatGameCoins(wallet, locale) : "…";
   const streakLabel = streak.isSuccess ? String(streak.data?.current_streak ?? 0) : "…";
 
   const wornIds = useMemo(() => {

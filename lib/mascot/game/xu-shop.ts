@@ -7,6 +7,7 @@
  */
 
 import { ApiError, apiGet, apiPost } from "@/lib/api-client";
+import { bubbleColour } from "@/lib/mascot/game/bubble-colour";
 import { newTreeIdempotencyKey } from "@/lib/mascot/game/room-tree";
 import artMap from "@/lib/mascot/game/xu-shop-art.json";
 
@@ -223,8 +224,54 @@ export function shopArtId(id: string, artId?: string): string {
   return id;
 }
 
+/** Seed thumbnails. Keys match the shop tree types. */
+export const SHOP_SEED_ART: Record<string, string> = {
+  cherry: "/mascot/seeds/petal_anh_dao.svg",
+  aloe: "/mascot/seeds/petal_lo_hoi.svg",
+  sunflower: "/mascot/seeds/petal_huong_duong.svg",
+};
+
+/**
+ * Names the API still sends without marks. `shop_bubble_la` is the only
+ * shop row whose Vietnamese was missing diacritics ("Bong bóng chat lá").
+ */
+const SHOP_NAME_FIX: Record<string, string> = {
+  shop_bubble_la: "Bóng chat lá",
+};
+
+export function shopItemName(id: string, name: string): string {
+  const fixed = SHOP_NAME_FIX[id];
+  if (fixed) return fixed;
+  const trimmed = name.trim();
+  if (/^bong(?:\s+b[oó]ng)?\s+chat\s+l[aá]$/i.test(trimmed)) return "Bóng chat lá";
+  return trimmed;
+}
+
+/** Unaccented tokens that are not a real shop word. "Bong" is the known miss. */
+export function shopNameAccentGaps(name: string): string[] {
+  const gaps: string[] = [];
+  for (const token of name.split(/\s+/)) {
+    const bare = token.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
+    if (bare.toLowerCase() === "bong") gaps.push(bare);
+  }
+  if (/chat la\b/i.test(name)) gaps.push("chat la");
+  return gaps;
+}
+
+export type ShopThumb =
+  | { kind: "bubble"; colourId: string }
+  | { kind: "image"; src: string };
+
+/** Card art. Bubble colours are drawn in CSS. Everything else is a file. */
+export function shopThumb(id: string, artId?: string): ShopThumb {
+  const resolved = shopArtId(id, artId);
+  const colour = bubbleColour(resolved) ?? bubbleColour(id);
+  if (colour) return { kind: "bubble", colourId: colour.id };
+  return { kind: "image", src: shopIconSrc(resolved) };
+}
+
 export function shopIconSrc(artId: string): string {
-  if (!artId) return "";
+  if (!artId || bubbleColour(artId)) return "";
   if (artId.startsWith("daily_")) return `/mascot/shop/icons/${artId}.svg`;
   const row = ART[artId];
   if (row?.icon) return row.icon;
@@ -464,7 +511,7 @@ function readPiece(value: unknown): ShopPiece | null {
   const rec = row(value);
   if (!rec) return null;
   const id = text(rec.id, 64);
-  const name = text(rec.name, 80);
+  const name = shopItemName(id, text(rec.name, 80));
   if (!id || !name) return null;
   return {
     id,

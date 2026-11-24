@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { ApiError } from "@/lib/api-client";
 import {
@@ -8,15 +11,25 @@ import {
   readShopError,
   readShopReceipt,
   reusePurchaseAttempt,
+  SHOP_SEED_ART,
   shopClosetItems,
+  shopIconSrc,
+  shopItemName,
+  shopLayerSrc,
+  shopNameAccentGaps,
   shopNeedsConfirm,
   shopNextStep,
   shopRetrySameKey,
+  shopThumb,
   xuShortfall,
   type ShopCatalog,
+  type ShopPiece,
   type ShopReceipt,
 } from "@/lib/mascot/game/xu-shop";
 import { sampleShopCatalog } from "@/lib/mascot/game/xu-shop-sample";
+import artMap from "@/lib/mascot/game/xu-shop-art.json";
+
+const PUBLIC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../public");
 
 const RAW = {
   balance: 4120,
@@ -239,3 +252,75 @@ describe("xu shop purchase rules", () => {
     assert.equal(closet.some((item) => item.id === "spa_03"), false);
   });
 });
+
+describe("xu shop art and names", () => {
+  it("rewrites the unaccented leaf bubble and keeps every other name marked", () => {
+    assert.equal(shopItemName("shop_bubble_la", "Bong bóng chat lá"), "Bóng chat lá");
+    assert.equal(shopItemName("shop_bubble_kem_hong", "Bóng kem hồng"), "Bóng kem hồng");
+    const catalog = sampleShopCatalog();
+    const names = catalogNames(catalog);
+    assert.equal(names.filter((name) => name === "Bóng kem hồng").length, 1);
+    assert.equal(names.filter((name) => name === "Bóng chat lá").length, 1);
+    assert.equal(names.some((name) => name.includes("Bong")), false);
+    assert.deepEqual(names.flatMap((name) => shopNameAccentGaps(name)), []);
+    const ids = catalogIds(catalog);
+    assert.equal(new Set(ids).size, ids.length);
+    const read = readShopCatalog({
+      balance: 6,
+      groups: [
+        { id: "sets", items: [] },
+        { id: "accessories", items: [] },
+        { id: "seeds", item_id: "seed_piece", price: 5000, purchasable: false, tree_types: [] },
+        {
+          id: "daily",
+          items: [
+            { id: "shop_bubble_la", name: "Bong bóng chat lá", layer: "bubble", art_id: "bubble_la", price: 1000, charge: 1000, owned: false, locked: false, purchasable: true },
+          ],
+        },
+      ],
+    });
+    assert.equal(read?.daily[0]?.name, "Bóng chat lá");
+  });
+
+  it("points every catalog thumbnail at a file, or a drawn bubble", () => {
+    const catalog = sampleShopCatalog();
+    const pieces = [...catalog.sets.flatMap((set) => set.pieces), ...catalog.accessories, ...catalog.daily];
+    assert.ok(pieces.length > 0);
+    for (const piece of pieces) {
+      const thumb = shopThumb(piece.id, piece.artId);
+      if (thumb.kind === "bubble") {
+        assert.equal(shopIconSrc(thumb.colourId), "", piece.id);
+        continue;
+      }
+      assert.ok(thumb.src, piece.id);
+      assertFile(thumb.src);
+      const layer = shopLayerSrc(piece.artId);
+      if (layer) assertFile(layer);
+    }
+    for (const tree of catalog.seeds.trees) assertFile(SHOP_SEED_ART[tree.key] ?? "");
+    for (const [id, row] of Object.entries(artMap as Record<string, { icon?: string; layer?: string }>)) {
+      if (row.icon) assertFile(row.icon);
+      if (row.layer) assertFile(row.layer);
+      assert.ok(id);
+    }
+  });
+});
+
+function catalogNames(catalog: ShopCatalog): string[] {
+  return catalogIds(catalog, true) as string[];
+}
+
+function catalogIds(catalog: ShopCatalog, names = false): string[] {
+  const rows: ShopPiece[] = [
+    ...catalog.sets.flatMap((set) => set.pieces),
+    ...catalog.accessories,
+    ...catalog.daily,
+  ];
+  return rows.map((row) => (names ? row.name : row.id));
+}
+
+function assertFile(src: string) {
+  assert.ok(src.startsWith("/"), src);
+  const file = path.join(PUBLIC, src.replace(/^\//, ""));
+  assert.equal(fs.existsSync(file), true, src);
+}

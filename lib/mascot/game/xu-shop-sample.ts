@@ -1,13 +1,13 @@
 import type { ShopCatalog, ShopPiece, ShopSet } from "@/lib/mascot/game/xu-shop";
 
-type Seed = { id: string; name: string; layer: string; price: number };
+type Seed = { id: string; name: string; layer: string; price: number; artId?: string };
 
 function piece(seed: Seed, owned: boolean, locked = false): ShopPiece {
   return {
     id: seed.id,
     name: seed.name,
     layer: seed.layer,
-    artId: seed.id,
+    artId: seed.artId || seed.id,
     price: seed.price,
     charge: owned || locked || seed.price <= 0 ? 0 : seed.price,
     owned,
@@ -136,7 +136,11 @@ export function sampleShopCatalog(balance = 5240): ShopCatalog {
       piece({ id: "shop_sticker_hoa", name: "Nhãn dán hoa", layer: "sticker", price: 300 }, false),
       piece({ id: "shop_sticker_may", name: "Nhãn dán mây", layer: "sticker", price: 500 }, false),
       piece({ id: "shop_frame_tron", name: "Khung tên tròn", layer: "name_frame", price: 800 }, false),
-      piece({ id: "shop_bubble_la", name: "Bong bóng chat lá", layer: "bubble", price: 1000 }, false),
+      piece({ id: "shop_bubble_la", name: "Bóng chat lá", layer: "bubble", price: 1000, artId: "bubble_la" }, false),
+      piece({ id: "shop_bubble_kem_hong", name: "Bóng kem hồng", layer: "bubble", price: 400, artId: "kem_hong" }, false),
+      piece({ id: "shop_bubble_mint_mat", name: "Bóng mint mát", layer: "bubble", price: 400, artId: "mint_mat" }, false),
+      piece({ id: "shop_bubble_vang_mat", name: "Bóng vàng mật", layer: "bubble", price: 450, artId: "vang_mat" }, false),
+      piece({ id: "shop_bubble_dao_cam", name: "Bóng đào cam", layer: "bubble", price: 450, artId: "dao_cam" }, false),
     ],
     seasonal: {
       purchasable: false,
