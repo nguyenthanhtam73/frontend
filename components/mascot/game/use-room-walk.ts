@@ -26,6 +26,8 @@ import {
   directionFromKeys,
   footPose,
   GAIT_SETTLE_S,
+  legLengthPx,
+  legSwing,
   queueTap,
   roomCruise,
   stepTravel,
@@ -170,13 +172,17 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         const k = settle * settle * (3 - 2 * settle);
         pose = blendFeet(shownPose, k);
       }
+      const stride = el.querySelector<HTMLElement>(".beda-stride");
+      const legPx = legLengthPx(stride?.clientWidth || el.clientWidth || 180);
+      const left = legSwing(pose.lx, pose.ly, legPx);
+      const right = legSwing(pose.rx, pose.ry, legPx);
       el.style.setProperty("--rx", travel.x.toFixed(4));
       el.style.setProperty("--ry", travel.y.toFixed(4));
       el.style.setProperty("--bob", `${pose.bob.toFixed(2)}px`);
-      el.style.setProperty("--lx", `${pose.lx.toFixed(2)}px`);
-      el.style.setProperty("--ly", `${pose.ly.toFixed(2)}px`);
-      el.style.setProperty("--rx-foot", `${pose.rx.toFixed(2)}px`);
-      el.style.setProperty("--ry-foot", `${pose.ry.toFixed(2)}px`);
+      el.style.setProperty("--la", `${left.degrees.toFixed(2)}deg`);
+      el.style.setProperty("--ly", `${left.y.toFixed(2)}px`);
+      el.style.setProperty("--ra", `${right.degrees.toFixed(2)}deg`);
+      el.style.setProperty("--ry-foot", `${right.y.toFixed(2)}px`);
       el.style.setProperty("--arm", `${pose.arm.toFixed(2)}deg`);
       el.style.setProperty("--face-x", travel.face.toFixed(3));
       el.style.zIndex = String(roomSortIndex(travel.y));

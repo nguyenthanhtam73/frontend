@@ -176,6 +176,31 @@ export function footPose(
   };
 }
 
+/** Hip-to-sole length in the 220-wide figure, in viewBox units. */
+export const LEG_VIEW_PX = 33.6;
+
+export function legLengthPx(figureWidth: number): number {
+  return (LEG_VIEW_PX / 220) * Math.max(1, figureWidth);
+}
+
+/**
+ * Turn a foot offset into a hip rotation. Positive `localX` is to the right
+ * in the facing frame. The sole lands on that offset, and `localY` (already
+ * negative while the foot is in the air) lifts it without moving the hip.
+ */
+export function legSwing(localX: number, localY: number, legPx: number): { degrees: number; y: number } {
+  const leg = Math.max(1, legPx);
+  const span = leg - 0.001;
+  const offset = Math.max(-span, Math.min(span, localX));
+  const rad = Math.asin(offset / leg);
+  const y = leg - Math.cos(rad) * leg + localY;
+  const degrees = -(rad * 180) / Math.PI;
+  return {
+    degrees: degrees === 0 ? 0 : degrees,
+    y: y === 0 ? 0 : y,
+  };
+}
+
 /** Ease a step pose back to standing. `t` is 0 at the last step and 1 when she is still. */
 export function blendFeet(from: FootPose, t: number): FootPose {
   const x = Math.min(1, Math.max(0, t));

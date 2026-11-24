@@ -9,6 +9,7 @@ import {
   directionFromKeys,
   blendFeet,
   footPose,
+  legSwing,
   paceFactor,
   queueTap,
   STEP_PX,
@@ -169,5 +170,21 @@ describe("room stride", () => {
     const mid = blendFeet(leftForward, 0.5);
     assert.ok(Math.abs(mid.lx) < Math.abs(leftForward.lx));
     assert.ok(Math.abs(mid.arm) < Math.abs(leftForward.arm));
+  });
+
+  it("plants the sole by rotating from the hip", () => {
+    const leg = 33.6;
+    for (const x of [-10, -4, 0, 6, 10]) {
+      for (const y of [0, -8]) {
+        const draw = legSwing(x, y, leg);
+        const theta = (draw.degrees * Math.PI) / 180;
+        const shoeX = -leg * Math.sin(theta);
+        const shoeY = leg * Math.cos(theta) + draw.y;
+        assert.ok(Math.abs(shoeX - x) < 0.05, `shoe x ${shoeX} vs ${x}`);
+        assert.ok(Math.abs(shoeY - (leg + y)) < 0.05, `shoe y ${shoeY} vs ${leg + y}`);
+      }
+    }
+    assert.equal(legSwing(0, 0, leg).degrees, 0);
+    assert.ok(legSwing(10, 0, leg).degrees < 0);
   });
 });
