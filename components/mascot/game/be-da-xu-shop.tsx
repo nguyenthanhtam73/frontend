@@ -225,15 +225,6 @@ function wearsOnBody(card: ShelfCard | null): boolean {
   return card != null && card.kind === "piece" && WORN_LAYERS.has(card.layer);
 }
 
-/** Small pieces keep a thumbnail beside Bé Da. The preview itself never zooms. */
-function focusZone(card: ShelfCard | null): "shoes" | "head" | "face" | "hand" | null {
-  if (!card || !wearsOnBody(card) || card.layer === "outfit") return null;
-  if (card.layer === "shoes") return "shoes";
-  if (card.layer === "hat" || card.layer === "hair_acc") return "head";
-  if (card.layer === "glasses" || card.layer === "earring") return "face";
-  return "hand";
-}
-
 /** Line beside Bé Da. Purchase wins, then a coloured chat bubble, then a try-on. */
 function shopSpeech(
   t: (key: "game.shop.successWarm" | "game.shop.successAlready" | "game.shop.bubbleHello" | "game.shop.trySay") => string,
@@ -420,10 +411,10 @@ export function BeDaXuShop({
     (trying ? SHELVES.flatMap((id) => shelves[id]).find((card) => card.id === trying.id) ?? null : null);
   const wearArt = trying ? shopWearId(trying.artId, who) : "";
   const wornOnBody = wearsOnBody(selected);
-  const focus = focusZone(selected);
   const layer = wornOnBody && wearArt ? shopLayerSrc(wearArt) : "";
   const speech = shopSpeech(t, trying, dialog, Boolean(trying && bubbleColour(trying.id)));
-  const thumb = (focus || (!wornOnBody && trying)) && selected?.src ? selected.src : "";
+  // A worn piece is only the layer on her body. The shelf icon stays off the stage.
+  const thumb = !layer && trying && selected?.src ? selected.src : "";
   const shown = player ? { ...player, gender: who } : null;
   const wearing = selected ? wornPiece(player, selected, who) : false;
   const missing = selected ? cardShort(catalog.balance, selected) : 0;

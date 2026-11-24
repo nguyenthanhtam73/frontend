@@ -75,7 +75,7 @@ describe("xu shop screen", () => {
     const speechAt = html.indexOf('data-testid="beda-xu-speech"');
     const footAt = html.indexOf("beda-shop-stage-foot");
     assert.ok(heroAt >= 0 && speechAt > heroAt && footAt > speechAt);
-    assert.match(html, /data-testid="beda-xu-decor"/);
+    assert.equal(html.includes('data-testid="beda-xu-decor"'), false);
     assert.match(html, /beda-shop-pill is-xu/);
     assert.match(html, /xu_coin\.svg/);
     assert.equal(html.includes(">●<"), false);
