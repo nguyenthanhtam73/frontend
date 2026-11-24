@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -89,7 +91,11 @@ describe("affiliate CSV import", () => {
 
     const blemish = catalog.items.find((item) => item.name.includes("Blemish"));
     assert.equal(blemish.originalPriceVnd, null);
+    assert.equal(blemish.acid, false);
     assert.deepEqual(blemish.fit, ["acne"]);
+    assert.equal(catalog.items.find((item) => item.name.includes("AHA-BHA-PHA")).acid, true);
+    assert.equal(catalog.items.find((item) => item.name.includes("Paula")).acid, true);
+    assert.equal(catalog.items.find((item) => item.name.includes("Micro-Peeling")).acid, true);
 
     const steps = [...new Set(catalog.items.map((item) => item.step))].sort();
     assert.deepEqual(steps, [
@@ -108,5 +114,73 @@ describe("affiliate CSV import", () => {
     const csv = readFileSync(path.join(root, "data/affiliate/w20261124.csv"), "utf8");
     const committed = readFileSync(path.join(root, "lib/affiliate/products.json"), "utf8");
     assert.equal(committed, formatAffiliateCatalog(parseAffiliateCsv(csv)));
+    assert.equal(committed.includes("commission"), false);
+    assert.equal(committed.includes("reviewCount"), false);
+    assert.equal(committed.includes("subId1"), false);
+    assert.equal(committed.includes("shopee.vn/product"), false);
+  });
+
+  it("rejects a bad link, a bad url, a wrong sub_id1, and a duplicate, naming the row", () => {
+    const header =
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
+    const good =
+      "Sữa rửa mặt,CeraVe Foaming,333000,,8.5%,4.9,31k,2tr+,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/abcDEF12,dadiary,w20261124";
+    assert.throws(
+      () =>
+        parseAffiliateCsv(
+          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://shopee.vn/nope,dadiary,w20261124\n`,
+        ),
+      /Row 2:.*aff_link/,
+    );
+    assert.throws(
+      () =>
+        parseAffiliateCsv(
+          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://example.com/nope,https://s.shopee.vn/abc,dadiary,w20261124\n`,
+        ),
+      /Row 2:.*url must start/,
+    );
+    assert.throws(
+      () =>
+        parseAffiliateCsv(
+          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/abc,other,w20261124\n`,
+        ),
+      /Row 2:.*sub_id1/,
+    );
+    assert.throws(
+      () => parseAffiliateCsv(`${header}\n${good}\n${good}\n`),
+      /Row 3:.*duplicate aff_link/,
+    );
+  });
+
+  it("rejects a batch that leaves a step empty", () => {
+    const header =
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
+    const row = (group, id) =>
+      `${group},Name ${id},1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/${id},https://s.shopee.vn/${id},dadiary,w20261124`;
+    const csv = [
+      header,
+      row("Sữa rửa mặt", "clean1"),
+      row("Serum", "serum1"),
+      row("Kem dưỡng", "moist1"),
+      row("Chống nắng", "sun001"),
+      row("Tẩy trang", "remove1"),
+    ].join("\n");
+    assert.throws(() => parseAffiliateCsv(csv), /Missing products for step support/);
+  });
+
+  it("exits non-zero and prints the row when the CSV is invalid", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "aff-"));
+    const csvPath = path.join(dir, "bad.csv");
+    writeFileSync(
+      csvPath,
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2\n" +
+        "Sữa rửa mặt,Bad link,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://shopee.vn/nope,dadiary,w20261124\n",
+    );
+    const result = spawnSync(process.execPath, [path.join(root, "scripts/affiliate-import.mjs"), csvPath], {
+      encoding: "utf8",
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Row 2:/);
+    assert.match(result.stderr, /https:\/\/shopee\.vn\/nope/);
   });
 });

@@ -88,6 +88,7 @@ function pickInStep(
   input: AffiliateMatchInput,
 ): { item: AffiliateProduct; fit: FitClass } | null {
   const usable = items
+    .filter((item) => !(input.avoidAcid && item.acid))
     .map((item) => ({ item, fit: classify(item, input) }))
     .filter((row) => row.fit.kind !== "mismatch");
   if (usable.length === 0) return null;
@@ -96,6 +97,8 @@ function pickInStep(
     const otherRank = b.fit.kind === "match" ? 0 : 1;
     if (kindRank !== otherRank) return kindRank - otherRank;
     if (a.fit.score !== b.fit.score) return b.fit.score - a.fit.score;
+    const popularity = b.item.popularity - a.item.popularity;
+    if (popularity !== 0) return popularity;
     const discount = Number(isDiscounted(b.item)) - Number(isDiscounted(a.item));
     if (discount !== 0) return discount;
     return tieBreak(input, a.item) - tieBreak(input, b.item);

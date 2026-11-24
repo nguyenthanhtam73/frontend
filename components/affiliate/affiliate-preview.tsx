@@ -13,6 +13,7 @@ const OILY: AffiliateMatchInput = {
   concerns: ["acne", "oil"],
   ownedSteps: [],
   severe: false,
+  avoidAcid: false,
   cabinetKnown: true,
 };
 
@@ -23,6 +24,7 @@ const DRY: AffiliateMatchInput = {
   concerns: ["dryness", "hydration"],
   ownedSteps: [],
   severe: false,
+  avoidAcid: false,
   cabinetKnown: true,
 };
 

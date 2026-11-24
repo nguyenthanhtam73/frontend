@@ -9,15 +9,12 @@
       ],
       "priceVnd": 333000,
       "originalPriceVnd": 350000,
-      "commission": "8.5%",
       "rating": 4.9,
-      "reviewCount": "31k",
       "sold": "2tr+",
       "shop": "CeraVe Official Store",
-      "url": "https://shopee.vn/product/812449960/18432326715",
       "affLink": "https://s.shopee.vn/8KrJwSODJy",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 310002000000
     },
     {
       "step": "cleanser",
@@ -28,15 +25,12 @@
       ],
       "priceVnd": 456000,
       "originalPriceVnd": 480000,
-      "commission": "8.5%",
       "rating": 4.9,
-      "reviewCount": "16.8k",
       "sold": "1tr+",
       "shop": "CeraVe Official Store",
-      "url": "https://shopee.vn/product/812449960/20832327452",
       "affLink": "https://s.shopee.vn/8VAk8lNZz1",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 168001000000
     },
     {
       "step": "cleanser",
@@ -46,15 +40,12 @@
       ],
       "priceVnd": 497000,
       "originalPriceVnd": null,
-      "commission": "8.5%",
       "rating": 4.8,
-      "reviewCount": "1.4k",
       "sold": "200k+",
       "shop": "CeraVe Official Store",
-      "url": "https://shopee.vn/product/812449960/29735199142",
       "affLink": "https://s.shopee.vn/8fUAL4Mwe4",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 14000200000
     },
     {
       "step": "cleanser",
@@ -64,15 +55,12 @@
       ],
       "priceVnd": 576000,
       "originalPriceVnd": 655000,
-      "commission": "8.5%",
       "rating": 4.7,
-      "reviewCount": "2.5k",
       "sold": "50k+",
       "shop": "La Roche-Posay Chính Hãng",
-      "url": "https://shopee.vn/product/37251700/29501708475",
       "affLink": "https://s.shopee.vn/8pnaXNMJJ7",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": true,
+      "popularity": 25000050000
     },
     {
       "step": "cleanser",
@@ -82,15 +70,12 @@
       ],
       "priceVnd": 107000,
       "originalPriceVnd": 140000,
-      "commission": "9.5%",
       "rating": 4.9,
-      "reviewCount": "58.7k",
       "sold": "100k+",
       "shop": "Senka by FT Official Store",
-      "url": "https://shopee.vn/product/27495213/2041024285",
       "affLink": "https://s.shopee.vn/9070jgLfyA",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 587000100000
     },
     {
       "step": "serum",
@@ -100,15 +85,12 @@
       ],
       "priceVnd": 454000,
       "originalPriceVnd": 531000,
-      "commission": "4.5%",
       "rating": 4.9,
-      "reviewCount": "108",
       "sold": "770",
       "shop": "Guardian Official Store",
-      "url": "https://shopee.vn/product/152872415/4416950779",
       "affLink": "https://s.shopee.vn/5AuIAesMEs",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": true,
+      "popularity": 1080000770
     },
     {
       "step": "serum",
@@ -118,15 +100,12 @@
       ],
       "priceVnd": 388800,
       "originalPriceVnd": 594000,
-      "commission": "10.5%",
       "rating": 4.9,
-      "reviewCount": "1.8k",
       "sold": "6k+",
       "shop": "Some By Mi Official Store",
-      "url": "https://shopee.vn/product/853507050/20641375403",
       "affLink": "https://s.shopee.vn/50aryLszZr",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 18000006000
     },
     {
       "step": "serum",
@@ -137,15 +116,12 @@
       ],
       "priceVnd": 425000,
       "originalPriceVnd": 545000,
-      "commission": "12.5%",
       "rating": 5,
-      "reviewCount": "4.8k",
       "sold": "10k+",
       "shop": "skin1004_official",
-      "url": "https://shopee.vn/product/251295945/7573128022",
       "affLink": "https://s.shopee.vn/4B1kyowAGi",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 48000010000
     },
     {
       "step": "serum",
@@ -156,15 +132,12 @@
       ],
       "priceVnd": 435000,
       "originalPriceVnd": null,
-      "commission": "8.5%",
       "rating": 5,
-      "reviewCount": "52.6k",
       "sold": "300k+",
       "shop": "Paula's Choice Official Store",
-      "url": "https://shopee.vn/product/212004800/4317253529",
       "affLink": "https://s.shopee.vn/40iKmVwnbh",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": true,
+      "popularity": 526000300000
     },
     {
       "step": "moisturizer",
@@ -172,15 +145,12 @@
       "fit": [],
       "priceVnd": 175000,
       "originalPriceVnd": 185000,
-      "commission": "8.5%",
       "rating": 4.9,
-      "reviewCount": "36.1k",
       "sold": "300k+",
       "shop": "CeraVe Official Store",
-      "url": "https://shopee.vn/product/812449960/21732934778",
       "affLink": "https://s.shopee.vn/114jCzmUpa",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 361000300000
     },
     {
       "step": "moisturizer",
@@ -188,15 +158,12 @@
       "fit": [],
       "priceVnd": 494000,
       "originalPriceVnd": null,
-      "commission": "8.5%",
       "rating": 4.8,
-      "reviewCount": "2.3k",
       "sold": "100k+",
       "shop": "CeraVe Official Store",
-      "url": "https://shopee.vn/product/812449960/21532544326",
       "affLink": "https://s.shopee.vn/1BO9PIlrUd",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 23000100000
     },
     {
       "step": "moisturizer",
@@ -204,15 +171,12 @@
       "fit": [],
       "priceVnd": 204800,
       "originalPriceVnd": null,
-      "commission": "8.5%",
       "rating": 4.9,
-      "reviewCount": "1.5k",
       "sold": "10k+",
       "shop": "Cetaphil Official Store",
-      "url": "https://shopee.vn/product/518445856/6697768946",
       "affLink": "https://s.shopee.vn/1LhZbblE9g",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 15000010000
     },
     {
       "step": "sunscreen",
@@ -220,15 +184,12 @@
       "fit": [],
       "priceVnd": 549000,
       "originalPriceVnd": 610000,
-      "commission": "8.5%",
       "rating": 4.8,
-      "reviewCount": "78k",
       "sold": "500k+",
       "shop": "La Roche-Posay Chính Hãng",
-      "url": "https://shopee.vn/product/37251700/580590480",
       "affLink": "https://s.shopee.vn/1W0znukaoj",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 780000500000
     },
     {
       "step": "sunscreen",
@@ -236,15 +197,12 @@
       "fit": [],
       "priceVnd": 594000,
       "originalPriceVnd": 660000,
-      "commission": "8.5%",
       "rating": 4.8,
-      "reviewCount": "8.3k",
       "sold": "40k+",
       "shop": "La Roche-Posay Chính Hãng",
-      "url": "https://shopee.vn/product/37251700/17061960863",
       "affLink": "https://s.shopee.vn/1gKQ0DjxTm",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 83000040000
     },
     {
       "step": "makeup_remover",
@@ -252,15 +210,12 @@
       "fit": [],
       "priceVnd": 975000,
       "originalPriceVnd": null,
-      "commission": "7.5%",
       "rating": 4.9,
-      "reviewCount": "1.1k",
       "sold": "50k+",
       "shop": "Bioderma Official Store",
-      "url": "https://shopee.vn/product/233692311/44163150098",
       "affLink": "https://s.shopee.vn/8pnaXPMSt5",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 11000050000
     },
     {
       "step": "support",
@@ -268,15 +223,12 @@
       "fit": [],
       "priceVnd": 33000,
       "originalPriceVnd": null,
-      "commission": "11.5%",
       "rating": 4.9,
-      "reviewCount": "929",
       "sold": "6k+",
       "shop": "TopGia HCM",
-      "url": "https://shopee.vn/product/729014007/54663499839",
       "affLink": "https://s.shopee.vn/9fMhWwJICG",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 9290006000
     },
     {
       "step": "support",
@@ -284,15 +236,12 @@
       "fit": [],
       "priceVnd": 44100,
       "originalPriceVnd": null,
-      "commission": "11.5%",
       "rating": 4.9,
-      "reviewCount": "103",
       "sold": "1k+",
       "shop": "MNS Việt Nam Store",
-      "url": "https://shopee.vn/product/1561722484/46861664626",
       "affLink": "https://s.shopee.vn/9pg7jFIerJ",
-      "subId1": "dadiary",
-      "subId2": "w20261124"
+      "acid": false,
+      "popularity": 1030001000
     }
   ]
 }

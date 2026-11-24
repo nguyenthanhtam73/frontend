@@ -13,7 +13,12 @@ import {
   Sun,
 } from "lucide-react";
 
-import { CheckInAffiliateSuggestions } from "@/components/affiliate/affiliate-suggestions";
+import {
+  AffiliateSuggestionSection,
+  SEVERE_AFFILIATE_INPUT,
+  checkSignals,
+  useAffiliateMatchInput,
+} from "@/components/affiliate/affiliate-suggestions";
 import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { CabinetFirstCare } from "@/components/check-in/cabinet-first-care";
 import { CheckInBeforeAfterShare } from "@/components/check-in/check-in-before-after-share";
@@ -27,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { getAccessToken } from "@/lib/auth-token";
+import { matchAffiliateSuggestions } from "@/lib/affiliate/match";
 import { isCurrentCheckSevere } from "@/lib/affiliate/signals";
 import {
   cabinetCoveredRoles,
@@ -77,6 +83,9 @@ export function DailyCoachFeedback({
 }) {
   const t = useTranslations("checkIn.coach");
   const wardrobe = useWardrobeQuery();
+  const affiliate = useAffiliateMatchInput({
+    check: payload.analysis?.coach ? checkSignals(payload) : null,
+  });
 
   const a = payload.analysis;
   const c = a.coach;
@@ -153,7 +162,12 @@ export function DailyCoachFeedback({
     c.product_suggestions?.filter(
       (item) => !isAffiliateRoleCovered({ step: item.step, name_or_category: item.product_name }, coveredRoles),
     ) ?? [];
-  const severeCase = isCurrentCheckSevere({ coach: c });
+  const severeCase = isCurrentCheckSevere({ coach: c, symptoms: payload.check.symptoms });
+  const affiliatePicks =
+    !severeCase && affiliate.input && !affiliate.input.severe
+      ? matchAffiliateSuggestions(affiliate.input)
+      : [];
+  const showAffiliateBlock = severeCase || affiliate.input?.severe === true || affiliatePicks.length > 0;
 
   return (
     <div
@@ -398,9 +412,17 @@ export function DailyCoachFeedback({
 
       {cabinetMatches.length > 0 ? <CabinetFirstCare items={cabinetMatches} /> : null}
 
-      <CheckInAffiliateSuggestions payload={payload} />
+      {showAffiliateBlock ? (
+        <AffiliateSuggestionSection
+          input={
+            severeCase || affiliate.input?.severe
+              ? SEVERE_AFFILIATE_INPUT
+              : affiliate.input!
+          }
+        />
+      ) : null}
 
-      {!severeCase && guidanceForBuy.length > 0 ? (
+      {!showAffiliateBlock && !affiliate.pending && guidanceForBuy.length > 0 ? (
         <ProductGuidanceSection
           items={guidanceForBuy}
           contextId={a.id}
@@ -408,7 +430,7 @@ export function DailyCoachFeedback({
           variant="coach"
           maxBenefits={2}
         />
-      ) : !severeCase ? (
+      ) : !showAffiliateBlock && !affiliate.pending ? (
         <ProductSuggestionsCard
           suggestions={suggestionsForBuy}
           source="daily_feedback"

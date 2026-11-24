@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { affiliateCatalog } from "./catalog";
 import { isDiscounted, matchAffiliateSuggestions } from "./match";
 import type { AffiliateCatalog, AffiliateMatchInput, AffiliateProduct } from "./types";
 import { allWhySentences } from "./why-copy";
@@ -16,6 +15,7 @@ function input(partial: Partial<AffiliateMatchInput>): AffiliateMatchInput {
     concerns: [],
     ownedSteps: [],
     severe: false,
+    avoidAcid: false,
     cabinetKnown: true,
     ...partial,
   };
@@ -39,21 +39,18 @@ describe("affiliate matching", () => {
       picks.map((item) => item.step),
       ["sunscreen", "cleanser", "serum"],
     );
+    assert.match(picks[0]!.name, /Anthelios XL/);
     assert.equal(picks[1]!.name, "CeraVe Foaming Cleanser 236ml");
-    assert.equal(picks[2]!.name, "Some By Mi AHA-BHA-PHA 30 Days Serum 50ml");
+    assert.equal(picks[2]!.name, "Paula's Choice 2% BHA Liquid Exfoliant 30ml");
     assert.equal(
       picks[1]!.why,
-      "Da bạn hay đổ dầu, sữa rửa mặt tạo bọt giúp sạch dầu mà không khô căng.",
+      "Da bạn hay đổ dầu, sữa rửa mặt tạo bọt là kiểu hay dùng cho da dầu.",
     );
-    assert.match(picks[0]!.why, /Tủ đồ của bạn chưa có kem chống nắng/);
-    assert.equal(picks[0]!.affLink.startsWith("https://s.shopee.vn/"), true);
-    for (const pick of picks) {
-      const source = affiliateCatalog.items.find((item) => item.affLink === pick.affLink)!;
-      assert.notEqual(pick.affLink, source.url);
-    }
+    assert.match(picks[0]!.why, /giúp bảo vệ da khỏi nắng mỗi ngày/);
+    assert.match(picks[0]!.affLink, /^https:\/\/s\.shopee\.vn\/[A-Za-z0-9]+$/);
     const again = names({ userId: "oily-acne", skinTypes: ["oily"], concerns: ["acne", "oil"] });
     assert.deepEqual(again, picks.map((item) => item.name));
-    assert.equal(again.some((name) => /Hydrating|Mela B3|Centella|Paula/.test(name)), false);
+    assert.equal(again.some((name) => /Hydrating|Mela B3|Centella|AHA-BHA-PHA/.test(name)), false);
   });
 
   it("picks a hydrating cleanser and a moisture serum for a dry user", () => {
@@ -69,7 +66,7 @@ describe("affiliate matching", () => {
     assert.equal(picks[1]!.name, "CeraVe Hydrating Cleanser 473ml");
     assert.equal(picks[2]!.name, "Skin1004 Centella Hyalu-Cica Serum 50ml");
     assert.equal(picks[0]!.step, "sunscreen");
-    assert.equal(picks[1]!.why, "Da bạn thiên khô, sữa rửa mặt dịu giúp sạch mà không kéo căng.");
+    assert.equal(picks[1]!.why, "Da bạn thiên khô, sữa rửa mặt dịu là kiểu hay dùng cho da khô.");
     assert.match(picks[2]!.why, /thiếu ẩm/);
     assert.equal(
       picks.some((item) => /Foaming|Blemish|AHA-BHA-PHA|Paula/.test(item.name)),
@@ -96,6 +93,32 @@ describe("affiliate matching", () => {
     assert.equal(picks[2]!.name, "CeraVe Moisturising Cream 50ml");
   });
 
+  it("skips acid products when the routine is calm-first or the skin is reactive", () => {
+    const calm = matchAffiliateSuggestions(
+      input({
+        userId: "calm",
+        skinTypes: ["oily"],
+        concerns: ["acne", "oil"],
+        avoidAcid: true,
+      }),
+    );
+    assert.equal(calm.some((item) => /AHA|BHA|Mela B3|Peeling/.test(item.name)), false);
+    assert.deepEqual(
+      calm.map((item) => item.step),
+      ["sunscreen", "cleanser", "moisturizer"],
+    );
+
+    const reactive = matchAffiliateSuggestions(
+      input({
+        userId: "red",
+        skinTypes: ["oily"],
+        concerns: ["acne", "oil", "redness"],
+        avoidAcid: true,
+      }),
+    );
+    assert.equal(reactive.some((item) => item.name.includes("Paula")), false);
+  });
+
   it("returns nothing for a severe case", () => {
     const picks = matchAffiliateSuggestions(
       input({
@@ -113,17 +136,14 @@ describe("affiliate matching", () => {
       step: "serum",
       fit: ["acne"],
       priceVnd: 100000,
-      commission: "8%",
       rating: 4.9,
-      reviewCount: "10",
       sold: "1k+",
       shop: "Shop",
-      url: "https://shopee.vn/product/1/2",
-      subId1: "dadiary",
-      subId2: "t",
+      acid: false,
+      popularity: 50,
     };
     const catalog: AffiliateCatalog = {
-      batch: "t",
+      batch: "w20261124",
       items: [
         { ...base, name: "Full price", originalPriceVnd: null, affLink: "https://s.shopee.vn/full" },
         { ...base, name: "On sale", originalPriceVnd: 120000, affLink: "https://s.shopee.vn/sale" },
@@ -135,9 +155,45 @@ describe("affiliate matching", () => {
     assert.equal(isDiscounted(catalog.items[1]!), true);
   });
 
+  it("prefers more reviews and sold before a discount", () => {
+    const base: Omit<AffiliateProduct, "name" | "popularity" | "originalPriceVnd" | "affLink"> = {
+      step: "serum",
+      fit: ["acne"],
+      priceVnd: 100000,
+      rating: 4.9,
+      sold: "1k+",
+      shop: "Shop",
+      acid: false,
+    };
+    const catalog: AffiliateCatalog = {
+      batch: "w20261124",
+      items: [
+        {
+          ...base,
+          name: "Quiet sale",
+          popularity: 10,
+          originalPriceVnd: 200000,
+          affLink: "https://s.shopee.vn/quiet",
+        },
+        {
+          ...base,
+          name: "Popular full",
+          popularity: 90,
+          originalPriceVnd: null,
+          affLink: "https://s.shopee.vn/popular",
+        },
+      ],
+    };
+    const [only] = matchAffiliateSuggestions(input({ concerns: ["acne"] }), catalog);
+    assert.equal(only!.name, "Popular full");
+  });
+
   it("does not promise a cure in any why-line", () => {
     for (const line of allWhySentences()) {
-      assert.doesNotMatch(line, /trị khỏi|hết mụn|trắng da|hết thâm|cures|whitening/i);
+      assert.doesNotMatch(
+        line,
+        /trị khỏi|hết mụn|trắng da|hết thâm|không thâm thêm|đều màu hơn|thông thoáng hơn|cures|whitening|getting darker|more even|feel clearer/i,
+      );
     }
   });
 });

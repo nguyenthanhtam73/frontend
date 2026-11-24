@@ -24,22 +24,23 @@ export const AFFILIATE_FIT_TAGS = [
 
 export type AffiliateFitTag = (typeof AFFILIATE_FIT_TAGS)[number];
 
-/** One row of a weekly batch. `url` is the catalog record — never a user-facing href. */
+/**
+ * Public catalog row. Commission, the product-page url, sub ids, and raw
+ * review counts stay in the CSV. `popularity` is the precomputed tie-break.
+ */
 export type AffiliateProduct = {
   step: AffiliateStep;
   name: string;
   fit: AffiliateFitTag[];
   priceVnd: number;
   originalPriceVnd: number | null;
-  commission: string;
   rating: number;
-  reviewCount: string;
   sold: string;
   shop: string;
-  url: string;
   affLink: string;
-  subId1: string;
-  subId2: string;
+  /** AHA / BHA / PHA / peeling. Hidden when the skin is calm-first or reactive. */
+  acid: boolean;
+  popularity: number;
 };
 
 export type AffiliateCatalog = {
@@ -68,6 +69,8 @@ export type AffiliateMatchInput = {
   concerns: AffiliateConcern[];
   ownedSteps: AffiliateStep[];
   severe: boolean;
+  /** True for calm_first, or when the skin reads red, inflamed, or sensitive. */
+  avoidAcid: boolean;
   /**
    * False when the cabinet request has not succeeded.
    * Why-lines must not claim a step is missing from the shelf.

@@ -110,6 +110,15 @@ describe("affiliate skin signals", () => {
       false,
     );
     assert.equal(textAdvisesDermatologist("Nên gặp bác sĩ da liễu vì da đau và sưng."), true);
+    for (const sentence of [
+      "Bạn nên đến gặp bác sĩ da liễu sớm.",
+      "Sưng, chảy dịch hoặc sốt: đến gặp bác sĩ da liễu sớm.",
+      "Bạn nên đi khám da liễu",
+      "Nên khám bác sĩ da liễu sớm.",
+      "Mụn viêm dày khiến da đau, bạn nên đi khám bác sĩ da liễu.",
+    ]) {
+      assert.equal(textAdvisesDermatologist(sentence), true, sentence);
+    }
     assert.equal(
       isCurrentCheckSevere({
         coach: { zone_notes: [{ zone: "cheeks", note: "Khá rõ.", severity: "pronounced" }] },
@@ -118,8 +127,38 @@ describe("affiliate skin signals", () => {
     );
     assert.equal(
       isCurrentCheckSevere({
+        coach: {
+          zone_notes: [{ zone: "cheeks", note: "Má có mụn viêm và hơi sưng.", severity: "pronounced" }],
+        },
+      }),
+      true,
+    );
+    assert.equal(isCurrentCheckSevere({ symptoms: ["sưng", "chảy dịch"] }), true);
+    assert.equal(isCurrentCheckSevere({ symptoms: ["sốt"] }), true);
+    assert.equal(isCurrentCheckSevere({ symptoms: ["mủ"] }), true);
+    assert.equal(
+      isCurrentCheckSevere({
         coach: { safety_reminders: ["Nên gặp bác sĩ da liễu vì vùng này đau."] },
       }),
+      true,
+    );
+    assert.equal(
+      buildAffiliateMatchInput({
+        dayKey: "2026-11-24",
+        cabinetKnown: true,
+        check: {
+          conditions: ["oily", "breakout"],
+          coach: { care_phase: "calm_first", situation_summary: "Da dầu, đang có mụn." },
+        },
+      }).avoidAcid,
+      true,
+    );
+    assert.equal(
+      buildAffiliateMatchInput({
+        dayKey: "2026-11-24",
+        cabinetKnown: true,
+        check: { conditions: ["redness", "inflammation"] },
+      }).avoidAcid,
       true,
     );
 

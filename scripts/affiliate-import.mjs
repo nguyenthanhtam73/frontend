@@ -109,6 +109,47 @@ export function parseRating(raw) {
   return Number(text);
 }
 
+/** "31k" → 31000, "2tr+" → 2000000, "770" → 770. Used only to precompute a rank. */
+export function parseSocialCount(raw) {
+  const text = String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\+$/u, "")
+    .replace(",", ".");
+  if (!text) return 0;
+  const match = text.match(/^(\d+(?:\.\d+)?)(tr|k)?$/u);
+  if (!match) return 0;
+  const value = Number(match[1]);
+  if (match[2] === "tr") return Math.round(value * 1_000_000);
+  if (match[2] === "k") return Math.round(value * 1_000);
+  return Math.round(value);
+}
+
+/** Reviews dominate, then units sold. One integer so the client never sees the raw counts. */
+export function popularityRank(reviewCount, sold) {
+  return parseSocialCount(reviewCount) * 10_000_000 + parseSocialCount(sold);
+}
+
+/** Acids and peels. Weekly names that match this stay out of a calm or reactive routine. */
+export function isAcidProduct(name) {
+  return /aha|bha|pha|micro-peeling|peeling/iu.test(String(name ?? ""));
+}
+
+const AFF_LINK_RE = /^https:\/\/s\.shopee\.vn\/[A-Za-z0-9]+$/;
+const PRODUCT_URL_PREFIX = "https://shopee.vn/product/";
+const REQUIRED_STEPS = [
+  "cleanser",
+  "serum",
+  "moisturizer",
+  "sunscreen",
+  "makeup_remover",
+  "support",
+];
+
+function failRow(rowNumber, item, problems) {
+  throw new Error(`Row ${rowNumber}: ${problems.join("; ")}\n${JSON.stringify(item)}`);
+}
+
 /** RFC-style CSV: commas, quotes, and "" escapes. */
 export function parseCsv(text) {
   const src = String(text ?? "").replace(/^\uFEFF/, "");
@@ -174,6 +215,8 @@ export function parseAffiliateCsv(text) {
 
   const items = [];
   let batch = "";
+  const seenAff = new Set();
+  const seenUrl = new Set();
   for (let i = 1; i < rows.length; i += 1) {
     const row = rows[i];
     const cell = (column) => requireCell(row, header, column).trim();
@@ -186,11 +229,8 @@ export function parseAffiliateCsv(text) {
     const parsedName = parseFitNote(cell("ten"));
     const affLink = cell("aff_link");
     const url = cell("url");
-    if (!affLink) throw new Error(`Row ${i + 1} is missing aff_link`);
-    if (affLink === url) {
-      throw new Error(`Row ${i + 1} aff_link must be the short affiliate link, not the product url`);
-    }
-    items.push({
+    const subId1 = cell("sub_id1");
+    const item = {
       step: parseGroupStep(cell("nhom")),
       name: parsedName.name,
       fit: parsedName.fit,
@@ -203,16 +243,58 @@ export function parseAffiliateCsv(text) {
       shop: cell("shop"),
       url,
       affLink,
-      subId1: cell("sub_id1"),
+      subId1,
       subId2,
-    });
+      acid: isAcidProduct(parsedName.name),
+      popularity: popularityRank(cell("danh_gia"), cell("da_ban")),
+    };
+    const problems = [];
+    if (!AFF_LINK_RE.test(affLink)) {
+      problems.push(`aff_link must match ^https://s\\.shopee\\.vn/[A-Za-z0-9]+$ (got ${affLink || "empty"})`);
+    }
+    if (!url.startsWith(PRODUCT_URL_PREFIX)) {
+      problems.push(`url must start with ${PRODUCT_URL_PREFIX}`);
+    }
+    if (subId1 !== "dadiary") problems.push(`sub_id1 must be dadiary (got ${subId1 || "empty"})`);
+    if (seenAff.has(affLink)) problems.push(`duplicate aff_link ${affLink}`);
+    if (seenUrl.has(url)) problems.push(`duplicate url ${url}`);
+    if (problems.length > 0) failRow(i + 1, item, problems);
+    seenAff.add(affLink);
+    seenUrl.add(url);
+    items.push(item);
+  }
+
+  for (const step of REQUIRED_STEPS) {
+    if (!items.some((item) => item.step === step)) {
+      throw new Error(`Missing products for step ${step}`);
+    }
   }
 
   return { batch, items };
 }
 
+/** Fields the browser is allowed to ship. Commission, product url, sub ids, and raw counts stay out. */
+export function toPublicCatalog(catalog) {
+  return {
+    batch: catalog.batch,
+    items: catalog.items.map((item) => ({
+      step: item.step,
+      name: item.name,
+      fit: item.fit,
+      priceVnd: item.priceVnd,
+      originalPriceVnd: item.originalPriceVnd,
+      rating: item.rating,
+      sold: item.sold,
+      shop: item.shop,
+      affLink: item.affLink,
+      acid: item.acid,
+      popularity: item.popularity,
+    })),
+  };
+}
+
 export function formatAffiliateCatalog(catalog) {
-  return `${JSON.stringify(catalog, null, 2)}\n`;
+  return `${JSON.stringify(toPublicCatalog(catalog), null, 2)}\n`;
 }
 
 function isDirectRun() {
@@ -230,8 +312,13 @@ if (isDirectRun()) {
   const outPath = process.argv[3]
     ? path.resolve(process.argv[3])
     : DEFAULT_OUT;
-  const catalog = parseAffiliateCsv(readFileSync(path.resolve(csvPath), "utf8"));
-  mkdirSync(path.dirname(outPath), { recursive: true });
-  writeFileSync(outPath, formatAffiliateCatalog(catalog));
-  console.log(`Wrote ${catalog.items.length} items, batch ${catalog.batch}\n  ${outPath}`);
+  try {
+    const catalog = parseAffiliateCsv(readFileSync(path.resolve(csvPath), "utf8"));
+    mkdirSync(path.dirname(outPath), { recursive: true });
+    writeFileSync(outPath, formatAffiliateCatalog(catalog));
+    console.log(`Wrote ${catalog.items.length} items, batch ${catalog.batch}\n  ${outPath}`);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
 }

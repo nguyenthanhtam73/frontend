@@ -30,21 +30,32 @@ const SKIN_TYPES: Record<string, AffiliateSkinType> = {
   "da nhay cam": "sensitive",
 };
 
-const VISIT_ADVICE: RegExp[] = [
-  /nên\s+(gặp|đi khám|nhờ)\s+bác sĩ/iu,
-  /cần\s+(gặp|đi khám|nhờ)\s+bác sĩ/iu,
-  /hãy\s+(đến\s+)?gặp\s+(bác sĩ|chuyên gia)/iu,
-  /nhờ\s+bác sĩ\s+da/iu,
-  /see\s+a\s+(doctor|dermatologist|clinician)/iu,
-  /seek\s+medical\s+(care|advice|attention)/iu,
+/**
+ * Direct “go see a dermatologist” wording, including the backend phrase
+ * “đến gặp bác sĩ da liễu”. `\b` is ASCII-only, so these patterns do not use it.
+ */
+const DIRECT_VISIT: RegExp[] = [
+  /(đến|đi)\s*(gặp|khám)\s*(bác sĩ|da liễu)/iu,
+  /khám\s+da\s+liễu/iu,
+  /khám\s+bác\s+sĩ(?:\s+da\s+liễu)?/iu,
+  /nên\s+(?:đến\s+)?gặp\s+bác\s+sĩ/iu,
+  /cần\s+(?:đến\s+)?gặp\s+bác\s+sĩ/iu,
+  /hãy\s+(?:đến\s+)?gặp\s+(?:bác sĩ|chuyên gia)/iu,
+  /nhờ\s+bác\s+sĩ\s+da/iu,
 ];
+
+/** Whitespace or start/end. “khi” must not match inside “khiến”. */
+const CONDITIONAL_WORD = /(?:^|\s)(?:if|khi|nếu)(?:\s|$)/iu;
+
+const CLINICAL_SYMPTOM = /sưng|sung|mủ|sốt|sot|chảy\s*dịch|chay\s*dich/iu;
+const CLINICAL_ZONE = /mụn|mun|mủ|sưng|sung/iu;
 
 export type AffiliateCheckSignals = {
   conditions?: string[];
   symptoms?: string[];
   coach?: Pick<
     SkinCoachDetailDTO,
-    "medical_disclaimer" | "safety_reminders" | "situation_summary" | "zone_notes"
+    "medical_disclaimer" | "safety_reminders" | "situation_summary" | "zone_notes" | "care_phase"
   > | null;
 };
 
@@ -58,10 +69,24 @@ function fold(value: string): string {
   return value.normalize("NFC").trim().toLocaleLowerCase("vi");
 }
 
-/** dense / severe on the analysis the result page already shows. "Khá rõ" (pronounced) is not a referral. */
+/** Legacy dense/severe tokens. The live coach only sends mild | moderate | pronounced. */
 export function isSevereLevel(value: string | null | undefined): boolean {
   const key = fold(value ?? "");
   return key === "dense" || key === "severe" || key === "nặng" || key === "nang";
+}
+
+function symptomNeedsClinician(raw: string | null | undefined): boolean {
+  return CLINICAL_SYMPTOM.test(raw ?? "");
+}
+
+/**
+ * Pronounced (“Khá rõ”) is only a referral when the note itself mentions
+ * acne, pus, or swelling. A plain “Khá rõ.” is not.
+ */
+export function zoneNoteNeedsClinician(note: Pick<CoachZoneNoteDTO, "severity" | "note">): boolean {
+  if (isSevereLevel(note.severity)) return true;
+  if (fold(note.severity ?? "") !== "pronounced") return false;
+  return CLINICAL_ZONE.test(note.note ?? "");
 }
 
 /**
@@ -71,25 +96,25 @@ export function isSevereLevel(value: string | null | undefined): boolean {
 export function textAdvisesDermatologist(text: string | null | undefined): boolean {
   const value = text?.normalize("NFC").trim() ?? "";
   if (!value) return false;
+  const direct = DIRECT_VISIT.some((pattern) => pattern.test(value));
   const generic =
     /không thay thế|không thay cho|not a substitute|does not replace|reference only|chỉ là gợi ý/iu.test(
       value,
     );
-  if (generic && !/nên gặp bác sĩ|cần gặp bác sĩ|hãy đến gặp|nhờ bác sĩ da/iu.test(value)) {
-    return false;
-  }
-  if (/\bif\b|\bkhi\b|nếu/iu.test(value) && !/nên gặp bác sĩ|cần gặp bác sĩ|hãy đến gặp/iu.test(value)) {
-    return false;
-  }
-  return VISIT_ADVICE.some((pattern) => pattern.test(value));
+  if (generic && !direct) return false;
+  if (CONDITIONAL_WORD.test(value) && !direct) return false;
+  if (direct) return true;
+  if (/see\s+a\s+(doctor|dermatologist|clinician)/iu.test(value)) return true;
+  return /seek\s+medical\s+(care|advice|attention)/iu.test(value);
 }
 
-export function isCurrentCheckSevere(check: { coach?: AffiliateCheckSignals["coach"] } | null | undefined): boolean {
+export function isCurrentCheckSevere(
+  check: Pick<AffiliateCheckSignals, "coach" | "symptoms"> | null | undefined,
+): boolean {
+  if ((check?.symptoms ?? []).some((symptom) => symptomNeedsClinician(symptom))) return true;
   const coach = check?.coach;
   if (!coach) return false;
-  if ((coach.zone_notes ?? []).some((note: CoachZoneNoteDTO) => isSevereLevel(note.severity))) {
-    return true;
-  }
+  if ((coach.zone_notes ?? []).some((note) => zoneNoteNeedsClinician(note))) return true;
   if (textAdvisesDermatologist(coach.medical_disclaimer)) return true;
   if (textAdvisesDermatologist(coach.situation_summary)) return true;
   return (coach.safety_reminders ?? []).some((line) => textAdvisesDermatologist(line));
@@ -232,6 +257,15 @@ export function buildAffiliateMatchInput(opts: {
 
   const concerns = checkConcerns.size > 0 ? checkConcerns : profileConcerns;
   const skinTypes = fromCheck.size > 0 ? fromCheck : fromProfile;
+  const carePhase = opts.check
+    ? opts.check.coach?.care_phase
+    : typeof analysis?.phase === "string"
+      ? analysis.phase
+      : undefined;
+  const avoidAcid =
+    fold(carePhase ?? "") === "calm_first" ||
+    skinTypes.has("sensitive") ||
+    concerns.has("redness");
 
   return {
     userId: opts.userId?.trim() || "guest",
@@ -240,6 +274,7 @@ export function buildAffiliateMatchInput(opts: {
     concerns: [...concerns],
     ownedSteps: opts.cabinetKnown ? ownedAffiliateSteps(opts.products ?? []) : [],
     severe: opts.check ? isCurrentCheckSevere(opts.check) : isOnboardingSevere(opts.profile),
+    avoidAcid,
     cabinetKnown: opts.cabinetKnown,
   };
 }

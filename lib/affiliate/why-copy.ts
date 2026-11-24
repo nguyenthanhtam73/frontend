@@ -5,25 +5,23 @@ type WhyLocale = "vi" | "en";
 const COPY: Record<WhyLocale, Record<string, string>> = {
   vi: {
     sunscreenMissing:
-      "Tủ đồ của bạn chưa có kem chống nắng — bước này giúp da không thâm thêm.",
+      "Tủ đồ của bạn chưa có kem chống nắng — bước này giúp bảo vệ da khỏi nắng mỗi ngày.",
     sunscreenGeneral:
       "Kem chống nắng là bước hữu ích cho mọi loại da, kể cả ngày ở trong nhà.",
-    oilyCleanser:
-      "Da bạn hay đổ dầu, sữa rửa mặt tạo bọt giúp sạch dầu mà không khô căng.",
-    acneCleanser:
-      "Da bạn hay có mụn, sữa rửa mặt dịu giúp lỗ chân lông thông thoáng hơn.",
-    dryCleanser: "Da bạn thiên khô, sữa rửa mặt dịu giúp sạch mà không kéo căng.",
-    acneSerum: "Da bạn hay có mụn, serum này hỗ trợ da thông thoáng hơn mỗi ngày.",
-    oilyDefault: "Da bạn hay đổ dầu, sản phẩm này giúp sạch dầu mà vẫn dễ chịu.",
+    oilyCleanser: "Da bạn hay đổ dầu, sữa rửa mặt tạo bọt là kiểu hay dùng cho da dầu.",
+    acneCleanser: "Da bạn hay có mụn, sữa rửa mặt dịu là kiểu hay dùng khi da hay có mụn.",
+    dryCleanser: "Da bạn thiên khô, sữa rửa mặt dịu là kiểu hay dùng cho da khô.",
+    acneSerum: "Da bạn hay có mụn, serum này là kiểu hay được chọn khi da hay có mụn.",
+    oilyDefault: "Da bạn hay đổ dầu, sản phẩm này là kiểu hay dùng cho da dầu.",
     hydrationSensitive:
-      "Da bạn cần cấp ẩm và dễ kích, serum dịu giúp da mềm mà không nặng mặt.",
-    hydration: "Da bạn đang thiếu ẩm, bước này giúp da mềm hơn.",
-    pores: "Lỗ chân lông bạn dễ bí, sản phẩm này giúp da trông thông thoáng hơn.",
-    darkSpots: "Da bạn hay thâm sạm, dùng đều bước này giúp da đều màu hơn.",
-    barrier: "Da bạn đang cần phục hồi, lớp dưỡng dịu giúp da bớt căng.",
-    sensitive: "Da bạn dễ kích, sản phẩm dịu giúp chăm da mà không chà sát.",
-    dryMoisturizer: "Da bạn thiên khô, kem dưỡng giúp giữ lớp ẩm lâu hơn.",
-    dryDefault: "Da bạn thiên khô, bước này giúp da mềm và đỡ căng.",
+      "Da bạn cần cấp ẩm và dễ kích, serum dịu là kiểu hay được chọn cho da đó.",
+    hydration: "Da bạn đang thiếu ẩm, bước này là kiểu hay được chọn khi da thiếu ẩm.",
+    pores: "Lỗ chân lông bạn dễ bí, sản phẩm này là kiểu hay được chọn cho da dễ bí.",
+    darkSpots: "Da bạn hay thâm sạm, sản phẩm này hay được chọn cho da có vết thâm.",
+    barrier: "Da bạn đang cần phục hồi, lớp dưỡng dịu là kiểu hay được chọn lúc da cần nghỉ.",
+    sensitive: "Da bạn dễ kích, sản phẩm dịu là kiểu hay được chọn cho da dễ kích.",
+    dryMoisturizer: "Da bạn thiên khô, kem dưỡng là kiểu hay dùng cho da khô.",
+    dryDefault: "Da bạn thiên khô, bước này là kiểu hay dùng cho da khô.",
     normal: "Da bạn thiên thường, sản phẩm này giữ nhịp chăm da nhẹ nhàng.",
     budget: "Mức giá dễ thử, vẫn là bước chăm da cơ bản hợp nhiều loại da.",
     cleanserKnown:
@@ -42,24 +40,22 @@ const COPY: Record<WhyLocale, Record<string, string>> = {
   },
   en: {
     sunscreenMissing:
-      "Your shelf has no sunscreen yet — this step helps keep marks from getting darker.",
+      "Your shelf has no sunscreen yet — this step helps shield skin from the sun each day.",
     sunscreenGeneral: "Sunscreen helps every skin type, including days spent indoors.",
-    oilyCleanser:
-      "Your skin gets oily, and a foaming cleanser can lift oil without leaving it tight.",
-    acneCleanser:
-      "Breakouts show up for you, and a gentle cleanser can keep pores feeling clearer.",
-    dryCleanser: "Your skin runs dry, and a gentle cleanser can clean without that tight feel.",
-    acneSerum: "Breakouts show up for you, and this serum can help skin feel clearer day to day.",
-    oilyDefault: "Your skin gets oily, and this can lift oil while staying comfortable.",
+    oilyCleanser: "Your skin gets oily, and a foaming cleanser is a common pick for oily skin.",
+    acneCleanser: "Breakouts show up for you, and a gentle cleanser is a common pick for that.",
+    dryCleanser: "Your skin runs dry, and a gentle cleanser is a common pick for dry skin.",
+    acneSerum: "Breakouts show up for you, and this serum is a common pick for that.",
+    oilyDefault: "Your skin gets oily, and this is a common pick for oily skin.",
     hydrationSensitive:
-      "Your skin wants moisture and reacts easily, so a gentle serum can soften it without feeling heavy.",
-    hydration: "Your skin is running low on moisture, and this step can help it feel softer.",
-    pores: "Pores clog easily for you, and this can help skin look less congested.",
-    darkSpots: "Dark marks show up for you, and steady use of this step can help tone look more even.",
-    barrier: "Your skin could use some recovery, and a gentle layer can ease that tight feel.",
-    sensitive: "Your skin reacts easily, and a gentle product can care for it without rubbing.",
-    dryMoisturizer: "Your skin runs dry, and a moisturizer can help hold water in longer.",
-    dryDefault: "Your skin runs dry, and this step can help it feel softer and less tight.",
+      "Your skin wants moisture and reacts easily, and a gentle serum is a common pick for that.",
+    hydration: "Your skin is running low on moisture, and this step is a common pick for that.",
+    pores: "Pores clog easily for you, and this is a common pick for congested skin.",
+    darkSpots: "Dark marks show up for you, and this is often chosen for skin with dark marks.",
+    barrier: "Your skin could use some recovery, and a gentle layer is a common pick while it rests.",
+    sensitive: "Your skin reacts easily, and a gentle product is a common pick for that.",
+    dryMoisturizer: "Your skin runs dry, and a moisturizer is a common pick for dry skin.",
+    dryDefault: "Your skin runs dry, and this step is a common pick for dry skin.",
     normal: "Your skin is closer to balanced, and this keeps a light routine going.",
     budget: "An easy price to try, and still a basic step that suits many skin types.",
     cleanserKnown: "Your shelf has no cleanser yet — this step cleans skin before moisturizer.",
