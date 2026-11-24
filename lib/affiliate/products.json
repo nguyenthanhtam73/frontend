@@ -1,0 +1,219 @@
+{
+  "batch": "w20261124",
+  "items": [
+    {
+      "step": "cleanser",
+      "name": "CeraVe Foaming Cleanser 236ml",
+      "fit": [
+        "oily"
+      ],
+      "priceVnd": 333000,
+      "originalPriceVnd": 350000,
+      "rating": 4.9,
+      "sold": "2tr+",
+      "shop": "CeraVe Official Store",
+      "affLink": "https://s.shopee.vn/8KrJwSODJy",
+      "acid": false,
+      "popularity": 310002000000
+    },
+    {
+      "step": "cleanser",
+      "name": "CeraVe Hydrating Cleanser 473ml",
+      "fit": [
+        "dry",
+        "normal"
+      ],
+      "priceVnd": 456000,
+      "originalPriceVnd": 480000,
+      "rating": 4.9,
+      "sold": "1tr+",
+      "shop": "CeraVe Official Store",
+      "affLink": "https://s.shopee.vn/8VAk8lNZz1",
+      "acid": false,
+      "popularity": 168001000000
+    },
+    {
+      "step": "cleanser",
+      "name": "CeraVe Blemish Control Cleanser 473ml",
+      "fit": [
+        "acne"
+      ],
+      "priceVnd": 497000,
+      "originalPriceVnd": null,
+      "rating": 4.8,
+      "sold": "200k+",
+      "shop": "CeraVe Official Store",
+      "affLink": "https://s.shopee.vn/8fUAL4Mwe4",
+      "acid": false,
+      "popularity": 14000200000
+    },
+    {
+      "step": "cleanser",
+      "name": "La Roche-Posay Mela B3 Micro-Peeling Gel 200ml",
+      "fit": [
+        "dark_spots"
+      ],
+      "priceVnd": 576000,
+      "originalPriceVnd": 655000,
+      "rating": 4.7,
+      "sold": "50k+",
+      "shop": "La Roche-Posay Chính Hãng",
+      "affLink": "https://s.shopee.vn/8pnaXNMJJ7",
+      "acid": true,
+      "popularity": 25000050000
+    },
+    {
+      "step": "cleanser",
+      "name": "Senka Perfect Whip 120g",
+      "fit": [
+        "budget"
+      ],
+      "priceVnd": 107000,
+      "originalPriceVnd": 140000,
+      "rating": 4.9,
+      "sold": "100k+",
+      "shop": "Senka by FT Official Store",
+      "affLink": "https://s.shopee.vn/9070jgLfyA",
+      "acid": false,
+      "popularity": 587000100000
+    },
+    {
+      "step": "serum",
+      "name": "Some By Mi Snail TrueCica Repair Serum 50ml",
+      "fit": [
+        "barrier"
+      ],
+      "priceVnd": 388800,
+      "originalPriceVnd": 594000,
+      "rating": 4.9,
+      "sold": "6k+",
+      "shop": "Some By Mi Official Store",
+      "affLink": "https://s.shopee.vn/50aryLszZr",
+      "acid": false,
+      "popularity": 18000006000
+    },
+    {
+      "step": "serum",
+      "name": "Skin1004 Centella Hyalu-Cica Serum 50ml",
+      "fit": [
+        "hydration",
+        "sensitive"
+      ],
+      "priceVnd": 425000,
+      "originalPriceVnd": 545000,
+      "rating": 5,
+      "sold": "10k+",
+      "shop": "skin1004_official",
+      "affLink": "https://s.shopee.vn/4B1kyowAGi",
+      "acid": false,
+      "popularity": 48000010000
+    },
+    {
+      "step": "serum",
+      "name": "Paula's Choice 2% BHA Liquid Exfoliant 30ml",
+      "fit": [
+        "pores",
+        "acne"
+      ],
+      "priceVnd": 435000,
+      "originalPriceVnd": null,
+      "rating": 5,
+      "sold": "300k+",
+      "shop": "Paula's Choice Official Store",
+      "affLink": "https://s.shopee.vn/40iKmVwnbh",
+      "acid": true,
+      "popularity": 526000300000
+    },
+    {
+      "step": "moisturizer",
+      "name": "CeraVe Moisturising Cream 50ml",
+      "fit": [],
+      "priceVnd": 175000,
+      "originalPriceVnd": 185000,
+      "rating": 4.9,
+      "sold": "300k+",
+      "shop": "CeraVe Official Store",
+      "affLink": "https://s.shopee.vn/114jCzmUpa",
+      "acid": false,
+      "popularity": 361000300000
+    },
+    {
+      "step": "moisturizer",
+      "name": "CeraVe Moisturising Cream 454g",
+      "fit": [],
+      "priceVnd": 494000,
+      "originalPriceVnd": null,
+      "rating": 4.8,
+      "sold": "100k+",
+      "shop": "CeraVe Official Store",
+      "affLink": "https://s.shopee.vn/1BO9PIlrUd",
+      "acid": false,
+      "popularity": 23000100000
+    },
+    {
+      "step": "moisturizer",
+      "name": "Cetaphil Moisturising Cream 50g",
+      "fit": [],
+      "priceVnd": 204800,
+      "originalPriceVnd": null,
+      "rating": 4.9,
+      "sold": "10k+",
+      "shop": "Cetaphil Official Store",
+      "affLink": "https://s.shopee.vn/1LhZbblE9g",
+      "acid": false,
+      "popularity": 15000010000
+    },
+    {
+      "step": "sunscreen",
+      "name": "La Roche-Posay Anthelios XL SPF50+ nâng tone 50ml",
+      "fit": [],
+      "priceVnd": 549000,
+      "originalPriceVnd": 610000,
+      "rating": 4.8,
+      "sold": "500k+",
+      "shop": "La Roche-Posay Chính Hãng",
+      "affLink": "https://s.shopee.vn/1W0znukaoj",
+      "acid": false,
+      "popularity": 780000500000
+    },
+    {
+      "step": "sunscreen",
+      "name": "La Roche-Posay Anthelios UV Mune 400",
+      "fit": [],
+      "priceVnd": 594000,
+      "originalPriceVnd": 660000,
+      "rating": 4.8,
+      "sold": "40k+",
+      "shop": "La Roche-Posay Chính Hãng",
+      "affLink": "https://s.shopee.vn/1gKQ0DjxTm",
+      "acid": false,
+      "popularity": 83000040000
+    },
+    {
+      "step": "support",
+      "name": "Khăn mặt khô dùng 1 lần TopGia",
+      "fit": [],
+      "priceVnd": 33000,
+      "originalPriceVnd": null,
+      "rating": 4.9,
+      "sold": "6k+",
+      "shop": "TopGia HCM",
+      "affLink": "https://s.shopee.vn/9fMhWwJICG",
+      "acid": false,
+      "popularity": 9290006000
+    },
+    {
+      "step": "support",
+      "name": "Khăn mặt khô dùng 1 lần MNS",
+      "fit": [],
+      "priceVnd": 44100,
+      "originalPriceVnd": null,
+      "rating": 4.9,
+      "sold": "1k+",
+      "shop": "MNS Việt Nam Store",
+      "affLink": "https://s.shopee.vn/9pg7jFIerJ",
+      "acid": false,
+      "popularity": 1030001000
+    }
+  ]
+}
