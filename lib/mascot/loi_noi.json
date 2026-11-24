@@ -269,7 +269,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Ba ngày không gặp, tao nhớ mày. Chụp một tấm ảnh da thì tao làm lành nha."
+      "text": "Ba ngày không gặp, tao nhớ mày. Mày chụp một tấm ảnh da cho tao xem nha?"
     },
     {
       "id": "be_da.bo_3_ngay_tro_len.3",
@@ -283,7 +283,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Ngồi chờ 3 ngày, tao nhớ mày. Chụp ảnh da xong, tao nói chuyện lại nha."
+      "text": "Ngồi chờ 3 ngày, tao nhớ mày. Hôm nay da mày sao, chụp tao xem được không?"
     },
     {
       "id": "be_da.bo_3_ngay_tro_len.5",
@@ -297,7 +297,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "bo_3_ngay_tro_len",
-      "text": "Nhật ký trống 3 ngày, tao nhớ mày. Chụp một tấm ảnh da, tao hết dỗi."
+      "text": "Nhật ký trống 3 ngày, tao nhớ mày. Mày chụp một tấm ảnh da được không?"
     },
     {
       "id": "be_da.quay_lai_sau_nghi.1",
@@ -339,7 +339,7 @@
       "speaker": "be_da",
       "personality": "be_da",
       "trigger": "quay_lai_sau_nghi",
-      "text": "Hờn hôm trước hết rồi. Hôm nay có mày là tao vui rồi."
+      "text": "Hôm nay có mày là tao vui rồi."
     },
     {
       "id": "be_da.tuoi_cay.1",
