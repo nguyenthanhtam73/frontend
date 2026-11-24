@@ -56,6 +56,8 @@ describe("memory care sentences", () => {
     assert.equal(vi.meMemory.adherence.none, "Chưa đủ lần ghi để thấy mày chăm da đều đến đâu");
     assert.equal(vi.meMemory.previewSub.includes("từng câu khuyên"), true);
     assert.equal(vi.meMemory.feedbackCompact, "{helpful} đúng gu · {notHelpful} chưa hợp");
+    assert.equal(vi.meMemory.footerNote.startsWith("Dữ liệu này là của riêng mày"), true);
+    assert.equal(vi.meMemory.sections.feedback, "Góp ý");
     const lines: { path: string; text: string }[] = [];
     collectStrings(vi.meMemory, "meMemory", lines);
     collectStrings(vi.metadata.meMemory, "metadata.meMemory", lines);
@@ -64,6 +66,19 @@ describe("memory care sentences", () => {
       hits.map((line) => `${line.path}: ${line.text}`),
       [],
     );
+    const shared = [
+      vi.meMemory.title,
+      vi.meMemory.sub,
+      vi.meMemory.previewTitle,
+      vi.meMemory.previewSub,
+      vi.meMemory.footerNote,
+      vi.meMemory.sections.feedback,
+      vi.meMemory.emptyMemory,
+    ].join("\n");
+    const may = (text: string) => text.match(/mày/gi)?.length ?? 0;
+    for (const line of Object.values(vi.meMemory.adherence)) {
+      assert.ok(may(`${shared}\n${line}`) <= 2, line);
+    }
     assert.equal(
       en.meMemory.adherence.moderate,
       "Lately you've been caring for your skin fairly steadily",

@@ -1421,7 +1421,7 @@
   "meMemory": {
     "sectionLabel": "Minh bạch AI",
     "title": "Tao đang nhớ gì?",
-    "sub": "Đây là khối văn bản DaDiary đưa vào lời khuyên — giúp mày hiểu vì sao gợi ý thay đổi theo thời gian.",
+    "sub": "Tao giữ những gì quan trọng để viết lời khuyên, và nói vì sao gợi ý đổi theo thời gian.",
     "backSettings": "← Quay lại cài đặt & quyền riêng tư",
     "backCabinet": "← Quay lại tủ đồ chăm da",
     "previewTitle": "Trí nhớ dài hạn",
@@ -1445,7 +1445,7 @@
       "profile": "Hồ sơ da",
       "recent_checks": "Nhật ký gần đây",
       "monthly_digest": "Tóm tắt theo tháng",
-      "feedback": "Góp ý của mày",
+      "feedback": "Góp ý",
       "routine_adherence": "Chăm da sáng/tối",
       "wardrobe": "Tủ đồ"
     },
@@ -1454,7 +1454,7 @@
     "metaPromptVersion": "Phiên bản lời khuyên v{v}",
     "metaMonthlyDigest": "Có tóm tắt theo tháng",
     "metaCache": "Cache: {entries} mục · TTL {ttl}s",
-    "footerNote": "Dữ liệu thuộc về mày. Xoá toàn bộ trong Cài đặt → Quyền riêng tư & dữ liệu.",
+    "footerNote": "Dữ liệu này là của riêng mày. Xoá hết trong Cài đặt → Quyền riêng tư & dữ liệu.",
     "needAuth": "Đăng nhập để xem trí nhớ AI.",
     "signIn": "Đăng nhập",
     "loadError": "Không tải được trí nhớ — thử lại nhé.",
