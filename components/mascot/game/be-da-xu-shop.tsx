@@ -28,7 +28,6 @@ import {
   shopRetrySameKey,
   shopTryPiece,
   shopWearId,
-  xuDaysRange,
   xuShortfall,
   XU_SHOP_QUERY_KEY,
   type PurchaseAttempt,
@@ -590,7 +589,6 @@ function ShopDialogView({
             ? t("game.shop.successAlready")
             : t("game.shop.locked");
   const short = dialog.kind === "short" ? xuShortfall(dialog.balance, dialog.charge) : 0;
-  const days = xuDaysRange(short);
   const fill = dialog.kind === "short" && dialog.charge > 0 ? Math.min(100, (dialog.balance / dialog.charge) * 100) : 0;
   return (
     <div className="beda-shop-shade" role="presentation">
@@ -619,12 +617,8 @@ function ShopDialogView({
             <p>{t("game.shop.shortHave", { balance: formatGameCoins(dialog.balance, locale) })}</p>
             <p>{t("game.shop.shortNeed", { charge: formatGameCoins(dialog.charge, locale) })}</p>
             <div className="beda-shop-meter" aria-hidden><span style={{ width: `${fill}%` }} /></div>
-            {days ? (
-              <p>
-                {days.min === days.max
-                  ? t("game.shop.shortLeftSame", { short: formatGameCoins(short, locale), days: days.min })
-                  : t("game.shop.shortLeft", { short: formatGameCoins(short, locale), min: days.min, max: days.max })}
-              </p>
+            {short > 0 ? (
+              <p>{t("game.shop.shortLeft", { short: formatGameCoins(short, locale) })}</p>
             ) : null}
             <div className="beda-shop-dialog-actions">
               <button type="button" className="beda-shop-ghost" onClick={onDismiss}>{t("game.shop.confirmNo")}</button>

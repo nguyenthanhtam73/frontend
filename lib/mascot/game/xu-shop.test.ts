@@ -12,7 +12,6 @@ import {
   shopNeedsConfirm,
   shopNextStep,
   shopRetrySameKey,
-  xuDaysRange,
   xuShortfall,
   type ShopCatalog,
   type ShopReceipt,
@@ -156,8 +155,7 @@ describe("xu shop purchase rules", () => {
     assert.equal(shopNeedsConfirm("shop_sticker_hoa", 300), false);
     assert.equal(shopNeedsConfirm("spa_04", 0), false);
     assert.equal(xuShortfall(4120, 6500), 2380);
-    assert.deepEqual(xuDaysRange(2380), { min: 8, max: 10 });
-    assert.equal(xuDaysRange(0), null);
+    assert.equal(xuShortfall(0, 300), 300);
     const short = shopNextStep({
       itemId: "dem_02",
       charge: 6500,

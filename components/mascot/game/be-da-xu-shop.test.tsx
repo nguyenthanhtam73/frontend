@@ -95,8 +95,13 @@ describe("xu shop screen", () => {
     assert.equal(short.includes("Bạn đang có"), false);
     assert.match(short, /4\.120 xu/);
     assert.match(short, /6\.500 xu/);
-    assert.match(short, /2\.380 xu/);
-    assert.match(short, /8–10 ngày/);
+    assert.match(short, /Còn thiếu 2\.380 xu\. Chăm da và tưới cây mỗi ngày để góp thêm xu nha\./);
+    assert.equal(/ngày nữa/.test(short), false);
+    const tiny = shopHtml({
+      balance: 0,
+      dialog: { kind: "short", name: "Nhãn dán hoa", charge: 300, balance: 0 },
+    });
+    assert.match(tiny, /Còn thiếu 300 xu\. Chăm da và tưới cây mỗi ngày để góp thêm xu nha\./);
     assert.match(short, /Đi chăm da/);
     assert.match(short, /Để sau/);
     assert.match(short, /Vẫn mặc thử được miễn phí\./);
