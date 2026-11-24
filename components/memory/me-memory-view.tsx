@@ -64,6 +64,40 @@ export function adherenceMessageKey(tier: string): AdherenceTier | null {
   return (ADHERENCE_TIERS as readonly string[]).includes(tier) ? (tier as AdherenceTier) : null;
 }
 
+const MEMORY_LEAK_PHRASES = ["user_memory", "today", "no saved memory", "paraphrase"] as const;
+
+/** A short ASCII shout, the shape of a prompt label such as USER_MEMORY. */
+export function isAllCapsPromptLabel(text: string): boolean {
+  const raw = text.normalize("NFC").trim();
+  if (!raw || raw.length > 40) return false;
+  if (raw.split(/\s+/).length > 6) return false;
+  return /^[A-Z0-9][A-Z0-9 _:-]*$/.test(raw) && /[A-Z]/.test(raw);
+}
+
+export function isMemoryPromptLeak(text: string): boolean {
+  const raw = text.normalize("NFC").trim();
+  if (!raw) return false;
+  const lower = raw.toLocaleLowerCase("en");
+  if (MEMORY_LEAK_PHRASES.some((phrase) => lower.includes(phrase))) return true;
+  return isAllCapsPromptLabel(raw);
+}
+
+/** Drop prompt leftovers. An empty result means the page should show the fresh-user note. */
+export function displayMemoryText(text: string): string {
+  const raw = text.normalize("NFC").replace(/^\uFEFF/, "").trim();
+  if (!raw || isMemoryPromptLeak(raw)) return "";
+  const headed = raw.startsWith("## ") || raw.includes("\n## ");
+  if (!headed) return raw;
+  const kept = splitMemorySections(raw).filter(
+    (block) => !isMemoryPromptLeak(block.title) && !isMemoryPromptLeak(block.body),
+  );
+  if (kept.length === 0) return "";
+  return kept
+    .map((block) => `## ${block.title}\n${block.body.trim()}`)
+    .join("\n\n")
+    .trim();
+}
+
 export function MeMemoryView() {
   const t = useTranslations("meMemory");
   const formatter = useFormatter();
@@ -90,9 +124,13 @@ export function MeMemoryView() {
     return formatter.dateTime(d, { dateStyle: "medium", timeStyle: "short" });
   }, [data?.generated_at, formatter]);
 
-  const memorySections = useMemo(
-    () => (data?.memory_text ? splitMemorySections(data.memory_text) : []),
+  const shownMemory = useMemo(
+    () => displayMemoryText(data?.memory_text ?? ""),
     [data?.memory_text],
+  );
+  const memorySections = useMemo(
+    () => (shownMemory ? splitMemorySections(shownMemory) : []),
+    [shownMemory],
   );
 
   if (!hasAuth) {
@@ -229,7 +267,7 @@ export function MeMemoryView() {
         </div>
       ) : null}
 
-      {adherenceKey ? (
+      {shownMemory && adherenceKey ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Sparkles className="size-4 text-primary" aria-hidden />
           {t(ADHERENCE_MESSAGE_KEY[adherenceKey])}
@@ -249,7 +287,14 @@ export function MeMemoryView() {
         </div>
       ) : null}
 
-      {memorySections.length > 1 ? (
+      {!shownMemory ? (
+        <div className="space-y-4 rounded-xl border border-border/70 bg-card p-5">
+          <p className="text-sm leading-relaxed text-foreground/90">{t("emptyMemory")}</p>
+          <Link href="/check-in" className={cn(buttonVariants({ size: "lg" }), "min-h-11 px-5")}>
+            {t("emptyCta")}
+          </Link>
+        </div>
+      ) : memorySections.length > 1 ? (
         <div className="space-y-2">
           {memorySections.map((block) => (
             <details
@@ -286,7 +331,7 @@ export function MeMemoryView() {
                 "bg-muted/40 text-foreground/90",
               )}
             >
-              {data.memory_text.trim() || t("emptyMemory")}
+              {shownMemory}
             </p>
           </CardContent>
         </Card>
