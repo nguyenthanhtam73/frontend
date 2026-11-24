@@ -1449,7 +1449,8 @@
       "routine_adherence": "Chăm da sáng/tối",
       "wardrobe": "Tủ đồ"
     },
-    "emptyMemory": "(Chưa có đủ dữ liệu — làm quen với da hoặc ghi nhật ký để tao bắt đầu nhớ.)",
+    "emptyMemory": "Tao chưa nhớ gì về mày hết. Soi da vài lần là tao bắt đầu nhớ nha.",
+    "emptyCta": "Soi da ngay",
     "emptySection": "(Trống)",
     "metaPromptVersion": "Phiên bản lời khuyên v{v}",
     "metaMonthlyDigest": "Có tóm tắt theo tháng",

@@ -5,6 +5,7 @@ import en from "../../messages/en.json";
 import vi from "../../messages/vi.json";
 import {
   adherenceMessageKey,
+  displayMemoryText,
   memoryCacheChipVisible,
   memoryCachedSuffixVisible,
   memoryCharCountVisible,
@@ -69,22 +70,44 @@ describe("memory care sentences", () => {
       hits.map((line) => `${line.path}: ${line.text}`),
       [],
     );
-    const shared = [
+    assert.equal(
+      vi.meMemory.emptyMemory,
+      "Tao chưa nhớ gì về mày hết. Soi da vài lần là tao bắt đầu nhớ nha.",
+    );
+    assert.equal(vi.meMemory.emptyCta, "Soi da ngay");
+    const chrome = [
       vi.meMemory.title,
       vi.meMemory.sub,
       vi.meMemory.previewTitle,
       vi.meMemory.previewSub,
       vi.meMemory.footerNote,
       vi.meMemory.sections.feedback,
-      vi.meMemory.emptyMemory,
     ].join("\n");
     const may = (text: string) => text.match(/mày/gi)?.length ?? 0;
     for (const line of Object.values(vi.meMemory.adherence)) {
-      assert.ok(may(`${shared}\n${line}`) <= 2, line);
+      assert.ok(may(`${chrome}\n${line}`) <= 2, line);
     }
+    assert.ok(may(`${chrome}\n${vi.meMemory.emptyMemory}\n${vi.meMemory.emptyCta}`) <= 2);
     assert.equal(
       en.meMemory.adherence.moderate,
       "Lately you've been caring for your skin fairly steadily",
     );
+  });
+});
+
+describe("memory prompt guard", () => {
+  it("hides prompt leftovers and keeps a real note", () => {
+    assert.equal(displayMemoryText("## Da\nDa nhìn chung ổn."), "## Da\nDa nhìn chung ổn.");
+    assert.equal(displayMemoryText(""), "");
+    assert.equal(displayMemoryText("   "), "");
+    assert.equal(displayMemoryText("USER_MEMORY\n## Da\nDa ổn."), "");
+    assert.equal(displayMemoryText("No Saved Memory"), "");
+    assert.equal(displayMemoryText("Please paraphrase this profile."), "");
+    assert.equal(displayMemoryText("TODAY the skin looks calm."), "");
+    assert.equal(displayMemoryText("PROFILE"), "");
+    assert.equal(displayMemoryText("SKIN PROFILE"), "");
+    const mixed = "## PROFILE\nDa ổn.\n\n## Thói quen\nRửa mặt sáng và tối.";
+    assert.equal(displayMemoryText(mixed), "## Thói quen\nRửa mặt sáng và tối.");
+    assert.equal(displayMemoryText("## Da\nDa nhìn chung ổn, không còn đỏ.").includes("USER_MEMORY"), false);
   });
 });

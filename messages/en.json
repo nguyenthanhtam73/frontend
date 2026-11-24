@@ -1449,7 +1449,8 @@
       "routine_adherence": "Routine adherence",
       "wardrobe": "Shelf"
     },
-    "emptyMemory": "(Not enough data yet — complete getting-to-know-your-skin or check in so the buddy can remember.)",
+    "emptyMemory": "Nothing saved yet. Check your skin a few times and this page will start to remember.",
+    "emptyCta": "Check skin now",
     "emptySection": "(Empty)",
     "metaPromptVersion": "Coach prompt v{v}",
     "metaMonthlyDigest": "Monthly digest included",
