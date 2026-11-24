@@ -135,7 +135,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       const width = pretty.offsetWidth || 160;
       const center = hero.left + hero.width / 2;
       const half = width / 2;
-      let minCenter = scene.left + 8 + half;
+      const minCenter = scene.left + 8 + half;
       let maxCenter = scene.right - 8 - half;
       const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
       if (pad) {
