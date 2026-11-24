@@ -10,6 +10,17 @@ import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, segmentStaysWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
 import { clamp } from "@/lib/mascot/game/walk";
 
+/** Shown once, the first time she can walk the private room. */
+export const ROOM_HINT_KEY = "beda-floor-hint";
+
+export function roomHintFresh(read: (key: string) => string | null): boolean {
+  return read(ROOM_HINT_KEY) !== "1";
+}
+
+export function rememberRoomHint(write: (key: string, value: string) => void): void {
+  write(ROOM_HINT_KEY, "1");
+}
+
 export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=d9934e9706");
 export const ROOM_MASK_PX = 256;
 /** Logical room used only to size the path grid (~20px cells). */
@@ -51,6 +62,16 @@ export const ROOM_BLOCKS: readonly { x0: number; y0: number; x1: number; y1: num
   // The sink art starts near x=0.77. A short pad keeps her feet off the cabinet.
   { name: "sink", x0: 0.74, y0: 0.56, x1: 1, y1: 0.68 },
 ];
+
+/**
+ * Block the floor the bottom nav covers. `navTop` is that bar's top edge in
+ * room space. A nonsense measure (the nav was not laid out) is ignored so a
+ * tap on the open floor is never sealed by accident.
+ */
+export function sealRoomNav(grid: WalkGrid, navTop: number): void {
+  if (!Number.isFinite(navTop) || navTop < 0.55 || navTop >= 1) return;
+  blockRoomRect(grid, { x0: 0, y0: navTop, x1: 1, y1: 1 });
+}
 
 /** Mark cells whose centers sit inside a normalized rectangle. */
 export function blockRoomRect(

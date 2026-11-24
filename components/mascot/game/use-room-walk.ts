@@ -9,32 +9,37 @@ import {
   gridSize,
   nearestWalkable,
   type WalkGrid,
-  type WalkPoint,
 } from "@/lib/mascot/game/lobby-walk";
 import {
-  ROOM_BOUNDS,
   ROOM_SPAWN,
   ROOM_WALK_MASK,
   ROOM_WORLD,
-  blockRoomRect,
-  roomDepthScale,
-  roomNudge,
-  roomRoute,
   roomPropCovers,
   roomSortIndex,
-  roomStepTo,
   roomWalkGrid,
   roomWanderGoal,
-  type RoomDir,
+  sealRoomNav,
 } from "@/lib/mascot/game/room-walk";
-import { createWalker, lobbyWorldSpeed, stepWalker, walkPose, type Walker } from "@/lib/mascot/game/walk";
+import { lobbyWorldSpeed } from "@/lib/mascot/game/walk";
+import {
+  createTravel,
+  directionFromKeys,
+  footPose,
+  queueTap,
+  stepTravel,
+  type KeyDirs,
+  type Travel,
+} from "@/lib/mascot/game/stride";
 
 const WANDER_AFTER_S = 5.5;
 
+function cloneGrid(grid: WalkGrid): WalkGrid {
+  return { cols: grid.cols, rows: grid.rows, walk: grid.walk.slice() };
+}
+
 /**
- * Tap the personal-room floor. The mask is read once. A* runs on that tap,
- * then a short animation frame loop eases her along the route. Idle time
- * uses a slow timer so the iPad is not repainting an empty stroll.
+ * Tap the personal-room floor. The mask is read once. She eases along the
+ * route, and arrow keys (no on-screen pad) do the same walk while held.
  */
 export function useRoomWalk(enabled: boolean, hold: boolean) {
   const frameRef = useRef<HTMLDivElement>(null);
@@ -47,10 +52,10 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     const frame = frameRef.current;
     if (!frame) return;
 
+    let base: WalkGrid | null = null;
     let grid: WalkGrid | null = null;
-    let walker: Walker = createWalker(ROOM_SPAWN);
-    let route: WalkPoint[] = [];
-    let held: RoomDir | null = null;
+    let travel: Travel = createTravel(ROOM_SPAWN);
+    const held: KeyDirs = { up: false, down: false, left: false, right: false };
     let idleFor = 0;
     let last = performance.now();
     let raf = 0;
@@ -70,7 +75,6 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       const bubble = el.querySelector<HTMLElement>(".beda-bubble");
       if (!bubble) return;
       const pad = 8;
-      const padEl = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
       const place = (side: "above" | "below", dx: number) => {
         el.dataset.bubbleSide = side;
         el.style.setProperty("--bubble-x", `${dx}px`);
@@ -82,18 +86,17 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       const side = box.top < frameBox.top + pad ? "below" : "above";
       place(side, 0);
       el.style.setProperty("--bubble-y", "0px");
-      const base = bubble.getBoundingClientRect();
+      const baseBox = bubble.getBoundingClientRect();
       const props = [...frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")].map(
         (item) => item.getBoundingClientRect(),
       );
       const figure = el.querySelector(".bd-figure")?.getBoundingClientRect() ?? null;
       const label = el.querySelector(".beda-pretty")?.getBoundingClientRect() ?? null;
-      const padBox = padEl?.getBoundingClientRect() ?? null;
       const shifted = (dx: number, dy: number) => ({
-        left: base.left + dx,
-        right: base.right + dx,
-        top: base.top + dy,
-        bottom: base.bottom + dy,
+        left: baseBox.left + dx,
+        right: baseBox.right + dx,
+        top: baseBox.top + dy,
+        bottom: baseBox.bottom + dy,
       });
       const onScreen = (rect: { left: number; right: number; top: number; bottom: number }) =>
         rect.left >= frameBox.left + pad &&
@@ -102,7 +105,6 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         rect.bottom <= frameBox.bottom - pad;
       const hitsFurniture = (rect: { left: number; right: number; top: number; bottom: number }) =>
         props.some((item) => overlaps(rect, item)) ||
-        (padBox != null && overlaps(rect, padBox)) ||
         (figure != null && overlaps(rect, figure)) ||
         (label != null && overlaps(rect, label));
       let best: { dx: number; dy: number; score: number } | null = null;
@@ -118,90 +120,60 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       el.style.setProperty("--bubble-y", `${best?.dy ?? 0}px`);
     };
 
-    const paint = (moving: boolean) => {
-      const el = heroRef.current;
-      if (!el) return;
-      const pose = walkPose(walker.phase, moving && !reduced);
-      const depth = roomDepthScale(walker.y);
-      // Room-only: the lobby bob is a few pixels. On this larger figure a
-      // stronger lift and lean is what reads as a step and a turn.
-      const sort = String(roomSortIndex(walker.y));
-      el.style.setProperty("--rx", walker.x.toFixed(4));
-      el.style.setProperty("--ry", walker.y.toFixed(4));
-      el.style.setProperty("--bob", (pose.bob * 2.4).toFixed(2));
-      el.style.setProperty("--sway", (pose.sway * 1.6).toFixed(2));
-      el.style.setProperty("--tilt", (pose.tilt * 1.8).toFixed(2));
-      el.style.setProperty("--squash", pose.squash.toFixed(3));
-      el.style.setProperty("--face", walker.face < 0 ? "-1" : "1");
-      el.style.setProperty("--shadow-x", pose.shadowX.toFixed(3));
-      el.style.setProperty("--shadow-y", pose.shadowY.toFixed(3));
-      el.style.setProperty("--depth", depth.toFixed(3));
-      el.style.zIndex = sort;
-      el.dataset.nx = walker.x.toFixed(4);
-      el.dataset.ny = walker.y.toFixed(4);
-      const stepping = moving && !reduced;
-      el.dataset.stepping = stepping ? "1" : "0";
-      el.dataset.face = walker.face < 0 ? "left" : "right";
-      el.dataset.depth = depth.toFixed(3);
-      placeBubble(el);
-      placeCaption(el, stepping);
-      placeDepth(el);
-    };
-
-    const placeCaption = (el: HTMLElement, moving: boolean) => {
-      const pretty = el.querySelector<HTMLElement>(".beda-pretty");
-      if (!pretty) return;
-      if (moving) {
-        pretty.style.opacity = "0";
-        pretty.style.visibility = "hidden";
-        return;
-      }
-      pretty.style.visibility = "visible";
-      pretty.style.opacity = "1";
+    let stillFor = 0;
+    const placeCaption = (el: HTMLElement, moving: boolean, rawDt: number) => {
+      if (moving) stillFor = 0;
+      else stillFor += rawDt;
+      el.dataset.caption = !moving && stillFor > 1 ? "in" : "out";
     };
 
     const placeDepth = (el: HTMLElement) => {
       const feet = el.getBoundingClientRect().bottom;
-      const host = frame.querySelector<HTMLElement>(".beda-pixi-host");
-      if (host) host.style.zIndex = "42";
       for (const item of frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")) {
         const base = item.getBoundingClientRect().bottom;
         item.style.zIndex = roomPropCovers(feet, base) ? "48" : "36";
       }
     };
 
-    const sealPad = () => {
-      if (!grid) return;
+    const applySeal = () => {
+      if (!base) return;
+      grid = cloneGrid(base);
+      const root = frame.closest(".beda-game") ?? frame.parentElement;
+      const nav = root?.querySelector<HTMLElement>(".beda-nav");
+      if (!nav) return;
       const scene = frame.getBoundingClientRect();
-      if (scene.width < 1 || scene.height < 1) return;
-      const pretty = frame.querySelector<HTMLElement>(".beda-pretty");
-      const labelW = pretty?.offsetWidth || 160;
-      const labelH = pretty?.offsetHeight || 20;
-      const gap = 8;
-      const below = 26;
-      const half = labelW / 2 + gap;
-      blockRoomRect(grid, { x0: 0, y0: 0, x1: half / scene.width, y1: 1 });
-      blockRoomRect(grid, { x0: (scene.width - half) / scene.width, y0: 0, x1: 1, y1: 1 });
-      const nav = frame.querySelector<HTMLElement>(".beda-nav");
-      if (nav) {
-        const maxFeet = nav.getBoundingClientRect().top - gap - below - labelH;
-        blockRoomRect(grid, { x0: 0, y0: (maxFeet - scene.top) / scene.height, x1: 1, y1: 1 });
-      }
-      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
-      if (!pad) return;
-      const box = pad.getBoundingClientRect();
-      blockRoomRect(grid, {
-        x0: (box.left - gap - labelW / 2 - scene.left) / scene.width,
-        y0: (box.top - below - labelH - scene.top) / scene.height,
-        x1: (box.right + gap + labelW / 2 - scene.left) / scene.width,
-        y1: (box.bottom - below + gap - scene.top) / scene.height,
-      });
-      blockRoomRect(grid, {
-        x0: (box.left - 10 - scene.left) / scene.width,
-        y0: (box.top - 10 - scene.top) / scene.height,
-        x1: (box.right + 10 - scene.left) / scene.width,
-        y1: (box.bottom + 10 - scene.top) / scene.height,
-      });
+      const box = nav.getBoundingClientRect();
+      if (scene.height < 1) return;
+      sealRoomNav(grid, (box.top - scene.top) / scene.height);
+    };
+
+    const paint = (moving: boolean, rawDt: number) => {
+      const el = heroRef.current;
+      if (!el) return;
+      const width = frame.clientWidth || 390;
+      const height = frame.clientHeight || 844;
+      const cruise = lobbyWorldSpeed(width);
+      const screenDir = travel.heading
+        ? { x: travel.heading.x * width, y: travel.heading.y * height }
+        : null;
+      const pose = footPose(travel.phase, moving, reduced, screenDir, travel.face < 0 ? -1 : 1);
+      el.style.setProperty("--rx", travel.x.toFixed(4));
+      el.style.setProperty("--ry", travel.y.toFixed(4));
+      el.style.setProperty("--bob", `${pose.bob.toFixed(2)}px`);
+      el.style.setProperty("--lx", `${pose.lx.toFixed(2)}px`);
+      el.style.setProperty("--ly", `${pose.ly.toFixed(2)}px`);
+      el.style.setProperty("--rx-foot", `${pose.rx.toFixed(2)}px`);
+      el.style.setProperty("--ry-foot", `${pose.ry.toFixed(2)}px`);
+      el.style.setProperty("--arm", `${pose.arm.toFixed(2)}deg`);
+      el.style.setProperty("--face-x", travel.face.toFixed(3));
+      el.style.zIndex = String(roomSortIndex(travel.y));
+      el.dataset.nx = travel.x.toFixed(4);
+      el.dataset.ny = travel.y.toFixed(4);
+      el.dataset.stepping = moving ? "1" : "0";
+      el.dataset.face = travel.faceTo < 0 ? "left" : "right";
+      placeBubble(el);
+      placeCaption(el, moving, rawDt);
+      placeDepth(el);
     };
 
     const ripple = (x: number, y: number) => {
@@ -216,57 +188,48 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
 
     const aim = (x: number, y: number) => {
       if (!grid || holdRef.current) return;
-      sealPad();
+      applySeal();
       ripple(x, y);
-      route = roomRoute(grid, walker, { x, y });
-      walker.goal = route.shift() ?? null;
+      travel = queueTap(travel, grid, { x, y });
       idleFor = 0;
       kick();
     };
 
     const tick = (now: number) => {
       raf = 0;
-      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+      const rawDt = Math.max(0, (now - last) / 1000);
+      const dt = Math.min(0.05, rawDt);
       last = now;
       if (grid && !holdRef.current) {
         const width = frame.clientWidth || 390;
-        if (held) {
-          const next = roomNudge(grid, walker, held);
-          route = [];
-          walker.goal = next;
-          if (held === "left") walker.face = -1;
-          if (held === "right") walker.face = 1;
-          idleFor = 0;
+        const height = frame.clientHeight || 844;
+        const dir = directionFromKeys(held);
+        const before = { x: travel.x, y: travel.y };
+        travel = stepTravel(travel, dt, grid, { dir, cruise: lobbyWorldSpeed(width), width, height });
+        if (!Number.isFinite(travel.x) || !Number.isFinite(travel.y)) {
+          const stand = nearestWalkable(grid, before.x, before.y);
+          travel = { ...createTravel(stand), face: travel.face, faceTo: travel.faceTo };
         }
-        const before = { x: walker.x, y: walker.y };
-        walker = stepWalker(walker, dt, null, ROOM_BOUNDS, false, lobbyWorldSpeed(width), true);
-        if (!walker.goal && route.length > 0) walker.goal = route.shift() ?? null;
-        const stepped = roomStepTo(grid, before, walker);
-        if (Math.hypot(stepped.x - walker.x, stepped.y - walker.y) > 0.0001) {
-          walker = { ...walker, x: stepped.x, y: stepped.y, vx: 0, vy: 0, goal: null };
-          route = [];
-        }
-        if (!held && !walker.goal && route.length === 0) {
+        const going = Boolean(dir) || Boolean(travel.goal) || travel.speed > 0;
+        if (!going) {
           idleFor += dt;
           if (!reduced && idleFor > WANDER_AFTER_S) {
             idleFor = 0;
-            const goal = roomWanderGoal(grid, walker);
-            if (goal) {
-              route = roomRoute(grid, walker, goal);
-              walker.goal = route.shift() ?? null;
-            }
+            const goal = roomWanderGoal(grid, travel);
+            if (goal) travel = queueTap(travel, grid, goal);
           }
         } else {
           idleFor = 0;
         }
       }
-      const moving = Boolean(walker.goal) || route.length > 0;
-      paint(moving);
+      const moving = Boolean(directionFromKeys(held)) || Boolean(travel.goal) || travel.speed > 0.01;
+      paint(moving, rawDt);
       if (dead) return;
-      if ((moving || held) && !holdRef.current) raf = requestAnimationFrame(tick);
-      else timer = window.setTimeout(() => {
-        raf = requestAnimationFrame(tick);
-      }, 250);
+      if (moving && !holdRef.current) raf = requestAnimationFrame(tick);
+      else
+        timer = window.setTimeout(() => {
+          raf = requestAnimationFrame(tick);
+        }, 250);
     };
 
     const kick = () => {
@@ -286,7 +249,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       pointers += 1;
       if (event.button !== 0 || holdRef.current) return;
       const target = event.target;
-      if (target instanceof Element && target.closest("button, a, input, textarea, select, .beda-pad")) return;
+      if (target instanceof Element && target.closest("button, a, input, textarea, select")) return;
       start = { x: event.clientX, y: event.clientY, t: performance.now(), id: event.pointerId };
     };
     const onUp = (event: PointerEvent) => {
@@ -304,48 +267,35 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     frame.addEventListener("pointerup", onUp);
     frame.addEventListener("pointercancel", onUp);
 
-    const padButtons = [...frame.querySelectorAll<HTMLButtonElement>("[data-room-dir]")];
-    const onPadDown = (event: PointerEvent) => {
-      if (holdRef.current || event.button !== 0) return;
-      const button = event.currentTarget;
-      if (!(button instanceof HTMLButtonElement)) return;
-      const dir = button.dataset.roomDir;
-      if (dir !== "up" && dir !== "down" && dir !== "left" && dir !== "right") return;
-      held = dir;
-      button.setPointerCapture(event.pointerId);
-      event.preventDefault();
-      event.stopPropagation();
-      kick();
-    };
-    const onPadUp = (event: PointerEvent) => {
-      const button = event.currentTarget;
-      if (button instanceof HTMLButtonElement && button.hasPointerCapture(event.pointerId)) {
-        button.releasePointerCapture(event.pointerId);
-      }
-      held = null;
-    };
-    for (const button of padButtons) {
-      button.addEventListener("pointerdown", onPadDown);
-      button.addEventListener("pointerup", onPadUp);
-      button.addEventListener("pointercancel", onPadUp);
-    }
+    const keyDir = (key: string): keyof KeyDirs | null =>
+      key === "ArrowUp" ? "up" : key === "ArrowDown" ? "down" : key === "ArrowLeft" ? "left" : key === "ArrowRight" ? "right" : null;
     const onKeyDown = (event: KeyboardEvent) => {
       if (holdRef.current) return;
-      if ((event.target as HTMLElement | null)?.closest("input, textarea")) return;
-      const dir =
-        event.key === "ArrowUp" ? "up" : event.key === "ArrowDown" ? "down" : event.key === "ArrowLeft" ? "left" : event.key === "ArrowRight" ? "right" : null;
-      if (!dir || event.repeat) return;
-      held = dir;
+      const target = event.target;
+      if (target instanceof Element && target.closest("input, textarea, select")) return;
+      const dir = keyDir(event.key);
+      if (!dir) return;
+      held[dir] = true;
       event.preventDefault();
+      idleFor = 0;
       kick();
     };
     const onKeyUp = (event: KeyboardEvent) => {
-      const dir =
-        event.key === "ArrowUp" ? "up" : event.key === "ArrowDown" ? "down" : event.key === "ArrowLeft" ? "left" : event.key === "ArrowRight" ? "right" : null;
-      if (dir && held === dir) held = null;
+      const dir = keyDir(event.key);
+      if (!dir) return;
+      held[dir] = false;
+      kick();
+    };
+    const onBlur = () => {
+      held.up = false;
+      held.down = false;
+      held.left = false;
+      held.right = false;
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("resize", applySeal);
 
     const image = new Image();
     image.src = mascotAssetUrl(ROOM_WALK_MASK);
@@ -361,20 +311,21 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         ctx.drawImage(image, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const size = gridSize(ROOM_WORLD, ROOM_WORLD);
-        grid = gridFromMask(imageData.data, canvas.width, canvas.height, size.cols, size.rows);
-        sealPad();
-        const stand = nearestWalkable(grid, walker.x, walker.y);
-        walker.x = stand.x;
-        walker.y = stand.y;
-        paint(false);
+        base = gridFromMask(imageData.data, canvas.width, canvas.height, size.cols, size.rows);
+        applySeal();
+        if (grid) {
+          const stand = nearestWalkable(grid, travel.x, travel.y);
+          travel = { ...travel, x: stand.x, y: stand.y };
+        }
+        paint(false, 0);
       })
       .catch(() => {
         if (dead) return;
-        grid = roomWalkGrid();
-        sealPad();
+        base = roomWalkGrid();
+        applySeal();
       });
 
-    paint(false);
+    paint(false, 0);
     kick();
 
     return () => {
@@ -385,13 +336,10 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       frame.removeEventListener("pointerdown", onDown);
       frame.removeEventListener("pointerup", onUp);
       frame.removeEventListener("pointercancel", onUp);
-      for (const button of padButtons) {
-        button.removeEventListener("pointerdown", onPadDown);
-        button.removeEventListener("pointerup", onPadUp);
-        button.removeEventListener("pointercancel", onPadUp);
-      }
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("resize", applySeal);
     };
   }, [enabled]);
 

@@ -38,7 +38,9 @@ import { routineSummary } from "@/lib/mascot/game/missions";
 import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { sessionGate } from "@/lib/routine/session-window";
+import { RoomStride } from "@/components/mascot/game/room-stride";
 import { useRoomWalk } from "@/components/mascot/game/use-room-walk";
+import { rememberRoomHint, roomHintFresh } from "@/lib/mascot/game/room-walk";
 import { lookArt, playerActorArt } from "@/lib/game/core/art";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { localePath } from "@/lib/mascot/game/path";
@@ -823,6 +825,28 @@ function Room({
   const t = useTranslations("mascot");
   const pct = progress == null ? 0 : Math.round(progress * 100);
   const { frameRef, heroRef } = useRoomWalk(showHero, hideCards || !showHero);
+  const [floorHint, setFloorHint] = useState(false);
+  useEffect(() => {
+    if (hideCards || !showHero) return;
+    try {
+      if (!roomHintFresh((key) => localStorage.getItem(key))) return;
+      rememberRoomHint((key, value) => localStorage.setItem(key, value));
+      setFloorHint(true);
+    } catch {
+      /* private mode can refuse storage; the walk still works */
+    }
+  }, [hideCards, showHero]);
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame || !floorHint) return;
+    const hide = () => setFloorHint(false);
+    frame.addEventListener("pointerdown", hide);
+    window.addEventListener("keydown", hide);
+    return () => {
+      frame.removeEventListener("pointerdown", hide);
+      window.removeEventListener("keydown", hide);
+    };
+  }, [floorHint, frameRef]);
   const [pixi, setPixi] = useState(!plainRoom);
   const [framed, setFramed] = useState(false);
   const told = useRef(false);
@@ -1011,14 +1035,17 @@ function Room({
             : ({
                 "--rx": String(ROOM_SPAWN.x),
                 "--ry": String(ROOM_SPAWN.y),
-                "--face": "1",
-                "--depth": "1",
+                "--face-x": "1",
               } as CSSProperties)
         }
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
         <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} loiText={loiText} />
-        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} crowd={!roomSleepy} marks className="w-full" />
+        {hideCards || roomSleepy ? (
+          <BeDaFigure view={player} locale={locale} dress={gameDress(look)} crowd={!roomSleepy} marks className="w-full" />
+        ) : (
+          <RoomStride view={player} locale={locale} dress={gameDress(look)} />
+        )}
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
@@ -1039,25 +1066,11 @@ function Room({
         </div>
       </div>
       ) : null}
-      <div
-        className={hideCards || !showHero ? "beda-pad is-hidden" : "beda-pad"}
-        data-testid="beda-walk-pad"
-        role="group"
-        aria-label={t("game.walkPad")}
-      >
-        <button type="button" className="beda-pad-btn is-up" data-room-dir="up" aria-label={t("game.walkUp")}>
-          <span aria-hidden="true">▲</span>
-        </button>
-        <button type="button" className="beda-pad-btn is-left" data-room-dir="left" aria-label={t("game.walkLeft")}>
-          <span aria-hidden="true">◀</span>
-        </button>
-        <button type="button" className="beda-pad-btn is-down" data-room-dir="down" aria-label={t("game.walkDown")}>
-          <span aria-hidden="true">▼</span>
-        </button>
-        <button type="button" className="beda-pad-btn is-right" data-room-dir="right" aria-label={t("game.walkRight")}>
-          <span aria-hidden="true">▶</span>
-        </button>
-      </div>
+      {floorHint && !hideCards && showHero ? (
+        <p className="beda-floor-hint" data-testid="beda-floor-hint">
+          {t("game.floorHint")}
+        </p>
+      ) : null}
     </div>
   );
 }

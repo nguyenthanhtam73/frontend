@@ -539,17 +539,12 @@ html.dark .beda-draw-wait {
 /* Feet sit on the plank the mask picked. The art has empty space under the
    shoes, so the figure's margin pulls that padding below the anchor. */
 .beda-hero-wrap.is-floor {
-  --face: 1;
-  --bob: 0;
-  --sway: 0;
-  --tilt: 0;
-  --squash: 1;
-  --shadow-x: 1;
-  --shadow-y: 1;
+  --face-x: 1;
+  --bob: 0px;
   bottom: auto;
   left: calc(var(--rx, 0.48) * 100%);
   top: calc(var(--ry, 0.76) * 100%);
-  width: calc(clamp(168px, 44vw, 220px) * var(--depth, 1));
+  width: clamp(168px, 44vw, 220px);
   transform: translate(-50%, -100%);
 }
 
@@ -569,7 +564,7 @@ html.dark .beda-draw-wait {
   background: rgba(92, 54, 46, 0.38);
   filter: blur(1.5px);
   pointer-events: none;
-  transform: translateY(35%) scaleX(var(--shadow-x, 1)) scaleY(var(--shadow-y, 1));
+  transform: translateY(35%);
 }
 
 .beda-hero-wrap.is-floor .bd-figure {
@@ -611,59 +606,24 @@ html.dark .beda-draw-wait {
   border-bottom: 10px solid #fff;
 }
 
-/* Bottom-right floor, just above the nav. Each key is a 44px target. */
-.beda-pad {
+.beda-floor-hint {
   position: absolute;
-  z-index: 72;
-  right: 8px;
-  bottom: calc(var(--beda-nav-reserve) + 10px);
-  display: grid;
-  grid-template-columns: 44px 44px 44px;
-  grid-template-rows: 44px 44px;
-  gap: 6px;
-  width: 144px;
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.beda-pad.is-hidden {
-  display: none;
-}
-
-.beda-pad-btn {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 2px solid #fff;
-  border-radius: 14px;
-  background: rgba(255, 250, 245, 0.94);
+  z-index: 70;
+  left: 50%;
+  bottom: calc(var(--beda-nav-reserve) + 16px);
+  max-width: calc(100% - 24px);
+  margin: 0;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(255, 250, 245, 0.96);
+  padding: 8px 14px;
   color: #3c2a30;
-  font-size: 16px;
-  line-height: 1;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
   box-shadow: 0 3px 0 #e7cfc6;
-  cursor: pointer;
-  touch-action: none;
-}
-
-.beda-pad-btn.is-up { grid-column: 2; grid-row: 1; }
-.beda-pad-btn.is-left { grid-column: 1; grid-row: 2; }
-.beda-pad-btn.is-down { grid-column: 2; grid-row: 2; }
-.beda-pad-btn.is-right { grid-column: 3; grid-row: 2; }
-
-.beda-pad-btn:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #e7cfc6;
-}
-
-html.dark .beda-pad-btn {
-  background: rgba(28, 22, 27, 0.92);
-  color: #f8efe9;
-  border-color: #5c4450;
-  box-shadow: 0 3px 0 #3a2a32;
+  pointer-events: none;
 }
 
 .beda-hero-wrap.is-floor .beda-pretty {
@@ -675,13 +635,17 @@ html.dark .beda-pad-btn {
   margin: 0;
   transform: translateX(-50%);
   white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.beda-hero-wrap.is-floor[data-caption="in"] .beda-pretty {
   opacity: 1;
 }
 
-.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"],
-.beda-hero-wrap.is-floor[data-stepping="1"] .beda-pretty {
+.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"] {
   opacity: 0;
-  visibility: hidden;
 }
 
 @media (max-width: 400px) {
@@ -691,8 +655,73 @@ html.dark .beda-pad-btn {
 }
 
 .beda-hero-wrap.is-floor .bd-breathe {
+  animation: none;
+  transform: none;
+}
+
+.beda-stride {
+  position: relative;
+  width: 100%;
+  margin-bottom: -16.8%;
+  aspect-ratio: 220 / 250;
+  transform-origin: 50% 100%;
+  animation: beda-breath-y 3.8s ease-in-out infinite;
+}
+
+.beda-hero-wrap.is-floor[data-stepping="1"] .beda-stride {
+  animation: none;
+}
+
+.beda-turn {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(var(--face-x, 1));
   transform-origin: 50% 83.2%;
-  animation-name: beda-room-breath;
+}
+
+.beda-stride-leg,
+.beda-stride-body,
+.beda-stride-arms {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.beda-stride-leg.is-l {
+  clip-path: inset(73% 50% 0 0);
+  transform: translate(var(--lx, 0px), var(--ly, 0px));
+}
+
+.beda-stride-leg.is-r {
+  clip-path: inset(73% 0 0 50%);
+  transform: translate(var(--rx-foot, 0px), var(--ry-foot, 0px));
+}
+
+.beda-stride-body {
+  z-index: 1;
+  clip-path: inset(0 0 27% 0);
+  transform: translateY(var(--bob, 0px));
+}
+
+.beda-stride-arms {
+  z-index: 2;
+  transform: translateY(var(--bob, 0px));
+  pointer-events: none;
+}
+
+/* The short sleeve file stays the same. Only this layer adds a few degrees. */
+.beda-stride-arms .bd-sleeve {
+  transform: rotate(calc(110deg + var(--arm, 0deg))) !important;
+}
+
+.beda-hero-wrap.is-floor .beda-stride .bd-figure {
+  margin-bottom: 0;
+}
+
+@keyframes beda-breath-y {
+  0%,
+  100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.01); }
 }
 
 .beda-tap {
@@ -719,10 +748,6 @@ html.dark .beda-pad-btn {
   100% { transform: scale(1.8); opacity: 0; }
 }
 
-.beda-hero-wrap.is-floor[data-stepping="1"] .bd-breathe {
-  animation: none;
-  transform: translate(calc(var(--sway, 0) * 1px), calc(var(--bob, 0) * 1px)) rotate(calc(var(--tilt, 0) * 1deg)) scaleX(var(--face, 1)) scaleY(var(--squash, 1));
-}
 
 .beda-bubble {
   position: relative;
@@ -2739,7 +2764,8 @@ html.dark .beda-pad-btn {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .beda-hero-wrap.is-floor .bd-breathe {
+  .beda-hero-wrap.is-floor .bd-breathe,
+  .beda-stride {
     animation: none;
   }
 }
@@ -2761,7 +2787,7 @@ html.dark .beda-pad-btn {
   }
 
   .beda-hero-wrap.is-floor {
-    width: calc(clamp(180px, 20vw, 240px) * var(--depth, 1));
+    width: clamp(180px, 20vw, 240px);
   }
 
   .beda-hero-wrap.is-floor .beda-bubble {

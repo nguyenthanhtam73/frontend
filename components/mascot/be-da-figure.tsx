@@ -28,6 +28,13 @@ export function BeDaFigure({
   crowd = false,
   /** Skin marks on a crowd figure. The local player uses this in the lobby. */
   marks = false,
+  /**
+   * Room walk splits one figure into feet and a body so the legs can step.
+   * `arms` is only the short sleeves. Home Bé Da leaves this unset.
+   */
+  parts = "all",
+  /** Leg copies skip the blink clock. The body copy keeps it. */
+  blink = true,
   className,
 }: {
   view: BeDaView;
@@ -48,6 +55,8 @@ export function BeDaFigure({
   crowd?: boolean;
   /** Draw skin marks on a crowd figure. */
   marks?: boolean;
+  parts?: "all" | "body" | "arms";
+  blink?: boolean;
   className?: string;
 }) {
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -70,7 +79,7 @@ export function BeDaFigure({
   const setRoot = useCallback((node: HTMLElement | null) => {
     rootRef.current = node;
   }, []);
-  useBeDaIdleBlink(rootRef, view.glowLevel, showFace, interactive);
+  useBeDaIdleBlink(rootRef, view.glowLevel, blink && showFace && parts !== "arms", interactive);
 
   function tap() {
     if (!interactive) return;
@@ -102,7 +111,7 @@ export function BeDaFigure({
               tidy={layer.slot === "messy" && tidy}
               loading={imageLoading}
             />
-            {hangingSleeves && layer.slot === "outfit" ? <IdleSleeves outfitSrc={hangingSleeves} /> : null}
+            {hangingSleeves && parts !== "body" && layer.slot === "outfit" ? <IdleSleeves outfitSrc={hangingSleeves} /> : null}
           </Fragment>
         ))}
         {showFace && !hasLids ? (
@@ -124,6 +133,22 @@ export function BeDaFigure({
       </span>
     </>
   );
+
+  if (parts === "arms") {
+    return (
+      <span
+        ref={setRoot}
+        className={cn("bd-figure relative block aspect-[220/250]", className)}
+        data-testid="be-da-figure"
+        data-mood={view.mood}
+        data-gender={view.gender}
+        data-art="drawn"
+        aria-hidden
+      >
+        {hangingSleeves ? <IdleSleeves outfitSrc={hangingSleeves} /> : null}
+      </span>
+    );
+  }
 
   if (!interactive) {
     return (
