@@ -20,7 +20,7 @@ describe("toPublicCopy", () => {
     assert.equal(toPublicCopy("score 0.78, da vẫn khỏe"), "Da vẫn khỏe");
     assert.equal(
       toPublicCopy("hydration: 0.78 vì da vẫn khỏe mạnh"),
-      "hydration: Da vẫn khỏe mạnh",
+      "Da vẫn khỏe mạnh",
     );
     assert.equal(
       toPublicCopy("skin_score_notes: 0.78 vì da vẫn khỏe mạnh"),
@@ -34,6 +34,19 @@ describe("toPublicCopy", () => {
       toPublicCopy("Tối: score 0.72 vì dưỡng ẩm, ngày 7 nhớ nhẹ tay"),
       "Tối: Dưỡng ẩm, ngày 7 nhớ nhẹ tay",
     );
+  });
+
+  it("drops a gauge key and keeps an ingredient strength", () => {
+    assert.equal(toPublicCopy("hydration: 0.78 vì da khô"), "Da khô");
+    assert.equal(toPublicCopy("Hydration: 0.78 vì da khô"), "Da khô");
+    assert.equal(toPublicCopy("overall: 0.78"), "");
+    assert.equal(toPublicCopy("Da ổn. Clarity: 0.55 vì có nốt"), "Da ổn. Có nốt");
+    assert.equal(toPublicCopy("BARRIER: 0,40 vì lớp ngoài yếu"), "Lớp ngoài yếu");
+    assert.equal(toPublicCopy("Retinol: 0.025"), "Retinol: 0.025");
+    assert.equal(toPublicCopy("Vitamin C: 0.025"), "Vitamin C: 0.025");
+    assert.equal(toPublicCopy("BHA: 0.5"), "BHA: 0.5");
+    assert.equal(toPublicCopy("niacinamide: 0.10"), "niacinamide: 0.10");
+    assert.equal(toPublicCopy("ghi chú: 0.78 vì da ổn"), "ghi chú: Da ổn");
   });
 
   it("keeps counts, SPF, dates, ngày 7, and percentages", () => {

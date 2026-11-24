@@ -28,11 +28,66 @@ const SNAKE_CASE = new RegExp(
   "gu",
 );
 
-/** "Sáng:" / "hydration:" then a bare gauge — the label itself stays. */
-const LABEL_GAUGE = new RegExp(
-  String.raw`(?<=[\p{L}\p{N}_][:：]\s*)${BARE_GAUGE.source}${GAUGE_TAIL}`,
-  "gu",
+/**
+ * A word label, then a bare gauge. Gauge keys lose the label too.
+ * Ingredient strengths ("Retinol: 0.025") are not a match we rewrite.
+ */
+const LABELLED_GAUGE = new RegExp(
+  String.raw`(?<![\p{L}\p{N}_])([\p{L}][\p{L}\p{N}]*(?:\s+[\p{L}][\p{L}\p{N}]*)?)\s*([:：])\s*${BARE_GAUGE.source}(\s*,\s*|\s*:\s*|\s+vì(?![\p{L}\p{N}_])(?:\s+|$))?`,
+  "giu",
 );
+
+const GAUGE_KEYS = new Set(["overall", "hydration", "clarity", "barrier", "score", "scores"]);
+
+const INGREDIENT_WORDS = new Set([
+  "retinol",
+  "retinoid",
+  "retinoids",
+  "tretinoin",
+  "adapalene",
+  "bha",
+  "aha",
+  "pha",
+  "niacinamide",
+  "ceramide",
+  "ceramides",
+  "azelaic",
+  "benzoyl",
+  "salicylic",
+  "vitamin",
+]);
+
+function isGaugeKey(label: string): boolean {
+  return GAUGE_KEYS.has(label.trim().toLowerCase());
+}
+
+function isIngredientLabel(label: string): boolean {
+  const words = label.trim().toLowerCase().split(/\s+/);
+  if (words.length === 2 && words[0] === "vitamin" && words[1] === "c") return true;
+  return words.some((word) => INGREDIENT_WORDS.has(word));
+}
+
+/**
+ * Gauge keys ("hydration: 0.78 vì …") drop the label, colon, and number.
+ * A following «vì» drops only when that leaves the start of a sentence.
+ * Other labels keep their name. Ingredient labels keep the strength.
+ */
+function stripLabelledGauges(value: string): string {
+  return value.replace(
+    LABELLED_GAUGE,
+    (match: string, label: string, colon: string, tail: string | undefined, offset: number, whole: string) => {
+      if (isIngredientLabel(label)) return match;
+      if (isGaugeKey(label)) {
+        const atSentenceStart = shouldCapitalizeReason(whole.slice(0, offset));
+        if (atSentenceStart) return "\u0000";
+        if (tail && /vì/i.test(tail)) return tail;
+        return " ";
+      }
+      const kept = `${label}${colon} `;
+      return shouldCapitalizeReason(whole.slice(0, offset) + kept) ? `${kept}\u0000` : kept;
+    },
+  );
+}
 
 const LEADING_LEAK =
   /^\s*(?:[A-Za-z]+_[A-Za-z_]+|score(?![\p{L}\p{N}_])\s*[:：]?\s*(?:0[.,]\d+|1[.,]0{1,2}))/iu;
@@ -99,7 +154,7 @@ export function toPublicCopy(text: string): string {
   const lead = LEADING_LEAK.test(masked);
   let s = masked.replace(SNAKE_CASE, " ");
   s = replaceLeak(SCORE_WITH_GAUGE, s);
-  s = replaceLeak(LABEL_GAUGE, s);
+  s = stripLabelledGauges(s);
   s = s.replace(/\u0000\s*(\p{L})/gu, (_, ch: string) => ch.toLocaleUpperCase("vi"));
   s = s.replace(/\u0000/g, "");
   s = unmask(s, slots);
