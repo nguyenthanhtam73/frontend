@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { ALL_CLIENT_MESSAGE_NAMESPACES } from "./client-messages";
+import vi from "../../messages/vi.json";
 
 const USE_TRANSLATIONS_RE = /useTranslations\(\s*["']([A-Za-z][\w]*)["']/g;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -63,6 +64,88 @@ describe("client message namespaces", () => {
       `Missing client i18n pick-list entries:\n${lines.join("\n")}\n\n` +
         `Shell → SHELL_MESSAGE_NAMESPACES; home → HOME_; pricing/payment → PRICING_/PAYMENT_; ` +
         `share → SHARE_; authenticated app → APP_CLIENT_MESSAGE_NAMESPACES.`,
+    );
+  });
+});
+
+const VOICE_ROOTS = [
+  "checkIn.coach",
+  "checkIn.feedbackLoading",
+  "checkIn.maintenance",
+  "checkIn.routineBridge",
+  "checkIn.beforeAfterShare",
+  "checkIn.pushNudge",
+  "coachWelcome",
+] as const;
+
+/** Standalone slang. Word boundaries so a longer word is not flagged. */
+const PROFANITY = [
+  "đm",
+  "đcm",
+  "dcm",
+  "dkm",
+  "đkm",
+  "đmm",
+  "vl",
+  "vcl",
+  "vkl",
+  "vcc",
+  "clgt",
+  "cmm",
+  "cmn",
+  "cmnr",
+  "địt",
+  "đụ",
+  "đéo",
+  "lồn",
+  "cặc",
+  "buồi",
+  "cứt",
+  "vãi",
+];
+
+function collectStrings(value: unknown, prefix: string, out: { path: string; text: string }[]) {
+  if (typeof value === "string") {
+    out.push({ path: prefix, text: value });
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value)) {
+    collectStrings(child, prefix ? `${prefix}.${key}` : key, out);
+  }
+}
+
+function at(root: unknown, dotted: string): unknown {
+  return dotted.split(".").reduce<unknown>((cur, key) => {
+    if (!cur || typeof cur !== "object") return undefined;
+    return (cur as Record<string, unknown>)[key];
+  }, root);
+}
+
+describe("result and starter-routine voice", () => {
+  const lines = VOICE_ROOTS.flatMap((root) => {
+    const found: { path: string; text: string }[] = [];
+    collectStrings(at(vi, root), root, found);
+    return found;
+  });
+
+  it("has no profanity in Vietnamese result or starter-routine copy", () => {
+    const pattern = new RegExp(
+      `(?<![\\p{L}\\p{N}])(?:${PROFANITY.join("|")})(?![\\p{L}\\p{N}])`,
+      "iu",
+    );
+    const hits = lines.filter((line) => pattern.test(line.text));
+    assert.deepEqual(
+      hits.map((line) => `${line.path}: ${line.text}`),
+      [],
+    );
+  });
+
+  it("does not claim a streak or progress chart in static copy", () => {
+    const hits = lines.filter((line) => /streak|tiến trình/i.test(line.text));
+    assert.deepEqual(
+      hits.map((line) => `${line.path}: ${line.text}`),
+      [],
     );
   });
 });
