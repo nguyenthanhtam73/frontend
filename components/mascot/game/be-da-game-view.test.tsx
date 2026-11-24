@@ -310,7 +310,11 @@ describe("Bé Da game screen", () => {
     assert.match(text, /5\/8 người/);
     assert.match(text, /Còn 5\/8 ngày/);
     assert.equal(text.includes("đang ở đây"), false);
-    assert.match(text, /Mời bạn/);
+    assert.match(text, /Rủ bạn/);
+    assert.match(html, /beda-tag beda-tag-me[\s\S]*?beda-spa-star[\s\S]*?beda-tag-label[^>]*>Mày</);
+    assert.equal(text.includes("Mời bạn"), false);
+    const roomCss = readFileSync(new URL("./be-da-game.css", import.meta.url), "utf8");
+    assert.match(roomCss, /\.beda-invite-open\s*\{[^}]*white-space:\s*nowrap/);
     assert.equal(html.includes('data-testid="beda-spa-code"'), false);
     assert.equal(html.includes("DA7K2M"), false);
     assert.equal(html.includes("Mã mời vào phòng"), false);
@@ -341,7 +345,7 @@ describe("Bé Da game screen", () => {
     assertNoScores(html);
   });
 
-  it("keeps the invite code off the room until Mời bạn shares the link", () => {
+  it("keeps the invite code off the room until Rủ bạn shares the link", () => {
     const html = renderGame({
       spa: {
         code: "DA7K2M",
@@ -355,7 +359,9 @@ describe("Bé Da game screen", () => {
     });
     const text = visibleText(html);
     assert.match(html, /data-testid="beda-invite-open"/);
-    assert.match(text, /Mời bạn/);
+    assert.match(text, /Rủ bạn/);
+    assert.match(html, /beda-tag-me[\s\S]*beda-tag-label[^>]*>Mày</);
+    assert.equal(text.includes("Mời bạn"), false);
     assert.equal(html.includes("data-testid=\"beda-invite-card\""), false);
     assert.equal(html.includes("data-testid=\"beda-spa-code\""), false);
     assert.equal(html.includes("zalo.me"), false);
@@ -441,6 +447,7 @@ describe("Bé Da game screen", () => {
     assert.match(text, /Tạo phòng/);
     assert.match(html, /data-testid="beda-ended-join"/);
     assert.match(text, /Nhập mã/);
+    assert.equal(html.includes("Rủ bạn"), false);
     assert.equal(html.includes("Mời bạn"), false);
     assert.equal(html.includes('data-testid="beda-spa-code"'), false);
     const english = renderGame(

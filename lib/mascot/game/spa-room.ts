@@ -812,6 +812,140 @@ export function spaNamePillBoxes(
   });
 }
 
+export type SpaNameLabel = {
+  id: string;
+  /** Pill center, px. */
+  x: number;
+  /** Pill top before any shift, px. */
+  y: number;
+  w: number;
+  h: number;
+};
+
+export type SpaNameLabelShift = {
+  id: string;
+  /**
+   * Pixels to move the pill down. Negative when `up` is set: the higher pill
+   * moves further up, away from the bodies.
+   */
+  drop: number;
+  /** Pixels to move the pill sideways. Positive is right. */
+  nudge: number;
+};
+
+const SPA_LABEL_GAP = 4;
+/** A thin sideways overlap is nudged apart. A real pile is staggered downward. */
+const SPA_LABEL_SLIVER = 16;
+const SPA_LABEL_NUDGE_CAP = 28;
+
+function labelClearance(
+  a: { x: number; y: number; w: number; h: number; drop: number; nudge: number },
+  b: { x: number; y: number; w: number; h: number; drop: number; nudge: number },
+): { x: number; y: number } {
+  const aLeft = a.x + a.nudge - a.w / 2;
+  const bLeft = b.x + b.nudge - b.w / 2;
+  const aTop = a.y + a.drop;
+  const bTop = b.y + b.drop;
+  return {
+    x: Math.max(aLeft, bLeft) - Math.min(aLeft + a.w, bLeft + b.w),
+    y: Math.max(aTop, bTop) - Math.min(aTop + a.h, bTop + b.h),
+  };
+}
+
+/**
+ * Move name pills so they do not cover each other. Width and height stay as
+ * given, so «★ Mày» and «Trà Sữa» stay readable. A thin sideways touch is
+ * nudged apart. Anything closer is staggered. By default the pill already
+ * lower on the screen moves further down. With `up`, labels sit above the
+ * heads and the higher pill moves further up.
+ * `bounds` pulls a pill back inside the screen when that does not undo the gap.
+ */
+export function staggerNameLabels(
+  labels: readonly SpaNameLabel[],
+  options?: { gap?: number; bounds?: { left: number; right: number }; up?: boolean },
+): SpaNameLabelShift[] {
+  const gap = options?.gap ?? SPA_LABEL_GAP;
+  const bounds = options?.bounds;
+  const up = options?.up === true;
+  const indexed = labels.map((label, index) => ({
+    id: label.id,
+    x: Number.isFinite(label.x) ? label.x : 0,
+    y: Number.isFinite(label.y) ? label.y : 0,
+    w: Number.isFinite(label.w) ? Math.max(0, label.w) : 0,
+    h: Number.isFinite(label.h) ? Math.max(0, label.h) : 0,
+    drop: 0,
+    nudge: 0,
+    index,
+  }));
+  indexed.sort((a, b) => (up ? b.y - a.y : a.y - b.y) || a.x - b.x || a.index - b.index);
+  const placed: typeof indexed = [];
+  for (const label of indexed) {
+    if (label.w <= 0 || label.h <= 0) {
+      placed.push(label);
+      continue;
+    }
+    let nudged = false;
+    for (let guard = 0; guard < indexed.length + 2; guard += 1) {
+      let blocked = false;
+      for (const other of placed) {
+        if (other.w <= 0 || other.h <= 0) continue;
+        const clear = labelClearance(label, other);
+        if (clear.x >= gap || clear.y >= gap) continue;
+        blocked = true;
+        const needX = gap - clear.x;
+        const room = SPA_LABEL_NUDGE_CAP - Math.abs(label.nudge);
+        if (!nudged && needX <= SPA_LABEL_SLIVER && room > 0.5) {
+          const dir = label.x + label.nudge >= other.x + other.nudge ? 1 : -1;
+          label.nudge += dir * Math.min(needX, room);
+          nudged = true;
+        } else if (up) {
+          const above = other.y + other.drop - gap - label.h - label.y;
+          if (above < label.drop) label.drop = above;
+        } else {
+          const below = other.y + other.drop + other.h + gap - label.y;
+          if (below > label.drop) label.drop = below;
+        }
+      }
+      if (!blocked) break;
+    }
+    placed.push(label);
+  }
+  if (bounds && bounds.right > bounds.left) {
+    const span = bounds.right - bounds.left;
+    for (const label of placed) {
+      if (label.w <= 0 || label.w >= span) continue;
+      const left = label.x + label.nudge - label.w / 2;
+      const right = left + label.w;
+      if (left < bounds.left) label.nudge += bounds.left - left;
+      else if (right > bounds.right) label.nudge -= right - bounds.right;
+    }
+    for (let guard = 0; guard < placed.length + 2; guard += 1) {
+      let blocked = false;
+      for (let i = 0; i < placed.length; i += 1) {
+        const label = placed[i]!;
+        if (label.w <= 0 || label.h <= 0) continue;
+        for (let j = 0; j < i; j += 1) {
+          const other = placed[j]!;
+          if (other.w <= 0 || other.h <= 0) continue;
+          const clear = labelClearance(label, other);
+          if (clear.x >= gap || clear.y >= gap) continue;
+          blocked = true;
+          if (up) {
+            const above = other.y + other.drop - gap - label.h - label.y;
+            if (above < label.drop) label.drop = above;
+          } else {
+            const below = other.y + other.drop + other.h + gap - label.y;
+            if (below > label.drop) label.drop = below;
+          }
+        }
+      }
+      if (!blocked) break;
+    }
+  }
+  const byId = new Map(placed.map((label) => [label.id, { id: label.id, drop: label.drop, nudge: label.nudge }]));
+  return labels.map((label) => byId.get(label.id) ?? { id: label.id, drop: 0, nudge: 0 });
+}
+
 /** Real people, skipping you and anyone you hid. A guest with x/y stands there. */
 export function seatGuests(
   people: readonly WirePerson[],

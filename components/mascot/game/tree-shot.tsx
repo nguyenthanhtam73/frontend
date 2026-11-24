@@ -261,8 +261,10 @@ export function TreeShot() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [daysLeft, setDaysLeft] = useState<number | null>(6);
   const [board, setBoard] = useState<"" | "2" | "8">("");
+  const [labels, setLabels] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    setLabels(params.get("labels") === "1");
     setScene(params.get("scene") || "stage1");
     const asked = params.get("board");
     setBoard(asked === "2" || asked === "8" ? asked : "");
@@ -284,6 +286,15 @@ export function TreeShot() {
   }, []);
   if (scene === "closet") return <ClosetShot />;
   const boardRows = board === "2" ? BOARD_2 : board === "8" ? BOARD_8 : null;
+  const crowd: SpaGuest[] = [
+    boardGuest("tra-sua", "Trà Sữa", "outfit_ao_dai", "hair_twin_tails", "accessory_flower_clip"),
+    boardGuest("may-hong", "Mây Hồng", "outfit_vay_hoa", "hair_high_pony"),
+    boardGuest("oc-que", "Ốc Quế", "outfit_hoodie", "hair_short_bob"),
+  ].map((guest, index) => ({
+    ...guest,
+    x: 0.44 + index * 0.06,
+    y: index === 1 ? 0.65 : 0.62,
+  }));
   const watered = board === "2" ? ["Mây Hồng"] : board === "8" ? ["Mây Hồng", "Trà Sữa", "Lan", "Bánh Flan", "Chè Thái"] : [];
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
@@ -294,7 +305,7 @@ export function TreeShot() {
   return (
     <div className="beda-game is-spa" data-testid="beda-tree-shot">
       <BeDaSpaRoom
-        key={`${board}-${scene}-${daysLeft ?? ""}`}
+        key={`${board}-${scene}-${daysLeft ?? ""}-${labels ? "labels" : ""}`}
         locale="vi"
         player={player}
         look={DEFAULT_GAME_LOOK}
@@ -303,14 +314,16 @@ export function TreeShot() {
         youPose={null}
         room={{
           code: "DA7K2M",
-          count: 3,
+          count: labels ? 4 : 3,
           cap: 8,
-          guests: boardRows
-            ? BOARD_GUESTS
-            : sampleSpaGuests(new Set()).map((guest) =>
-                guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
-              ),
-          you: { x: 0.4, y: 0.66 },
+          guests: labels
+            ? crowd
+            : boardRows
+              ? BOARD_GUESTS
+              : sampleSpaGuests(new Set()).map((guest) =>
+                  guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
+                ),
+          you: labels ? { x: 0.48, y: 0.66 } : { x: 0.4, y: 0.66 },
           youNickname: boardRows ? "Lan" : "",
           notice: null,
           daysLeft,
@@ -324,7 +337,7 @@ export function TreeShot() {
         onLeave={() => undefined}
         onLobby={() => undefined}
         onToggleSound={() => undefined}
-        tree={withWatered(shotPanel(scene, ms), watered)}
+        tree={labels ? null : withWatered(shotPanel(scene, ms), watered)}
         treeDetailOpen={detailOpen}
         boardInitiallyOpen={boardRows != null}
         previewBoard={boardRows}

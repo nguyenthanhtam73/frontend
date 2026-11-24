@@ -44,6 +44,7 @@ import {
   shouldCopyInviteLink,
   spaFootScale,
   spaNamePillBoxes,
+  staggerNameLabels,
   SPA_LANDSCAPE_BOUNDS,
   SPA_LANDSCAPE_HEIGHT,
   SPA_LANDSCAPE_SELF_SLOT,
@@ -207,6 +208,82 @@ describe("spa join spots", () => {
         }
       }
     }
+  });
+
+  it("staggers close name pills without shrinking ★ Mày or Trà Sữa", () => {
+    const cluster = (width: number) => {
+      const mid = width / 2;
+      return [
+        { id: "you", x: mid - 18, y: 420, w: 68, h: 22 },
+        { id: "tra-sua", x: mid + 8, y: 426, w: 74, h: 22 },
+        { id: "may-hong", x: mid + 34, y: 414, w: 78, h: 22 },
+        { id: "oc-que", x: mid - 4, y: 438, w: 64, h: 22 },
+      ];
+    };
+    for (const width of [360, 390]) {
+      const labels = cluster(width);
+      const shifts = staggerNameLabels(labels, { bounds: { left: 2, right: width - 2 } });
+      assert.equal(shifts.length, labels.length);
+      const byId = new Map(shifts.map((shift) => [shift.id, shift]));
+      for (const label of labels) {
+        const shift = byId.get(label.id)!;
+        assert.ok(shift.drop >= 0, label.id);
+        assert.ok(Math.abs(shift.nudge) <= 28, `${label.id} nudge ${shift.nudge}`);
+        const left = label.x + shift.nudge - label.w / 2;
+        const right = left + label.w;
+        assert.ok(left >= 1, `${width} ${label.id} left ${left}`);
+        assert.ok(right <= width - 1, `${width} ${label.id} right ${right}`);
+        assert.equal(right - left, label.w);
+      }
+      for (let i = 0; i < labels.length; i += 1) {
+        for (let j = i + 1; j < labels.length; j += 1) {
+          const a = labels[i]!;
+          const b = labels[j]!;
+          const as = byId.get(a.id)!;
+          const bs = byId.get(b.id)!;
+          const aLeft = a.x + as.nudge - a.w / 2;
+          const bLeft = b.x + bs.nudge - b.w / 2;
+          const clearX = Math.max(aLeft, bLeft) - Math.min(aLeft + a.w, bLeft + b.w);
+          const aTop = a.y + as.drop;
+          const bTop = b.y + bs.drop;
+          const clearY = Math.max(aTop, bTop) - Math.min(aTop + a.h, bTop + b.h);
+          assert.ok(clearX >= 4 || clearY >= 4, `${width} ${a.id} ${b.id} x ${clearX} y ${clearY}`);
+        }
+      }
+      const you = byId.get("you")!;
+      const tea = byId.get("tra-sua")!;
+      assert.ok(you.drop !== tea.drop || you.nudge !== tea.nudge);
+    }
+    const apart = staggerNameLabels([
+      { id: "you", x: 40, y: 100, w: 68, h: 22 },
+      { id: "tra-sua", x: 200, y: 100, w: 74, h: 22 },
+    ]);
+    assert.deepEqual(apart, [
+      { id: "you", drop: 0, nudge: 0 },
+      { id: "tra-sua", drop: 0, nudge: 0 },
+    ]);
+    const stacked = staggerNameLabels([
+      { id: "you", x: 100, y: 80, w: 68, h: 22 },
+      { id: "tra-sua", x: 108, y: 84, w: 74, h: 22 },
+    ]);
+    const lower = stacked.find((shift) => shift.drop > 0)!;
+    assert.equal(lower.id, "tra-sua");
+    assert.ok(lower.drop >= 22);
+    assert.equal(stacked.find((shift) => shift.id === "you")?.drop, 0);
+    const lifted = staggerNameLabels(
+      [
+        { id: "you", x: 100, y: 200, w: 68, h: 22 },
+        { id: "tra-sua", x: 108, y: 194, w: 74, h: 22 },
+      ],
+      { up: true },
+    );
+    assert.equal(lifted.find((shift) => shift.id === "you")?.drop, 0);
+    const tea = lifted.find((shift) => shift.id === "tra-sua")!;
+    assert.ok(tea.drop < 0, `expected Trà Sữa to lift, got ${tea.drop}`);
+    const youTop = 200;
+    const teaTop = 194 + tea.drop;
+    const clearY = youTop - (teaTop + 22);
+    assert.ok(clearY >= 4, `lift gap ${clearY}`);
   });
 
   it("uses the landscape plate only when the free frame is wide", () => {

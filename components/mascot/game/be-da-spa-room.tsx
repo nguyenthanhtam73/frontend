@@ -50,7 +50,7 @@ export type SpaRoomState = {
   /** Wide viewport uses the 1600×1000 plate and its foot slots. */
   landscape?: boolean;
   youStreak?: number;
-  /** My room nickname, used to mark the «Bạn» row. Empty in the sample room. */
+  /** My room nickname, used to mark the «Mày» row. Empty in the sample room. */
   youNickname?: string;
   /** Friendly name. The header uses «Phòng bạn bè» when this is empty or just the code. */
   name?: string;
@@ -426,15 +426,30 @@ export function BeDaSpaRoom({
                 {youPose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
               </span>
             ) : null}
-            <span className="beda-name">
-              <span className="beda-tag beda-tag-me">
-                <Star />
-                <span className="beda-tag-label">{t("game.you")}</span>
-              </span>
-              <StreakFlame streak={youStreak} label={t("game.spaStreak", { count: youStreak })} />
-            </span>
+            <span className="beda-name-slot" aria-hidden />
           </div>
         ) : null}
+        <div className="beda-spa-labels" data-testid="beda-spa-labels">
+          {room.guests.map((guest) => {
+            if (guest.x == null || guest.y == null) return null;
+            return (
+              <button
+                key={guest.id}
+                type="button"
+                className="beda-spa-label"
+                data-label-for={guest.id}
+                onClick={() => onSelect(guest.id)}
+              >
+                <NamePill nickname={guest.nickname} streak={guest.careStreak ?? 0} />
+              </button>
+            );
+          })}
+          {showYou ? (
+            <div className="beda-spa-label" data-label-for="you">
+              <NamePill nickname={t("game.you")} streak={youStreak} mine />
+            </div>
+          ) : null}
+        </div>
       </div>
       </div>
 
@@ -710,14 +725,26 @@ function SpaPerson({
             {guest.pose === "cheer" ? t("game.cheerBubble") : t("game.pokeBubble")}
           </span>
         ) : null}
-        <span className="beda-name">
-          <span className="beda-tag">
-            <span className="beda-tag-label">{guest.nickname}</span>
-          </span>
-          <StreakFlame streak={guest.careStreak ?? 0} label={t("game.spaStreak", { count: guest.careStreak ?? 0 })} />
-        </span>
+        {standing ? (
+          <span className="beda-name-slot" aria-hidden />
+        ) : (
+          <NamePill nickname={guest.nickname} streak={guest.careStreak ?? 0} />
+        )}
       </button>
     </div>
+  );
+}
+
+function NamePill({ nickname, streak, mine = false }: { nickname: string; streak: number; mine?: boolean }) {
+  const t = useTranslations("mascot");
+  return (
+    <span className="beda-name">
+      <span className={mine ? "beda-tag beda-tag-me" : "beda-tag"}>
+        {mine ? <Star /> : null}
+        <span className="beda-tag-label">{nickname}</span>
+      </span>
+      <StreakFlame streak={streak} label={t("game.spaStreak", { count: streak })} />
+    </span>
   );
 }
 
