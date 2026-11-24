@@ -1,0 +1,161 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import type { ProductGuidanceItemDTO } from "@/lib/types/product-guidance";
+
+import { enrichProductGuidanceItems, plainifyGuidanceText } from "./enrich-product-guidance";
+
+describe("plainifyGuidanceText", () => {
+  it("keeps ceramide and says what it does", () => {
+    assert.equal(
+      plainifyGuidanceText("Kem dưỡng ceramide", false),
+      "Kem dưỡng ceramide (giúp lớp ngoài da giữ nước, đỡ khô rát)",
+    );
+  });
+
+  it("explains hàng rào bảo vệ da as plain lớp ngoài da", () => {
+    assert.equal(
+      plainifyGuidanceText("Phục hồi hàng rào bảo vệ da", false),
+      "Phục hồi lớp ngoài da.",
+    );
+    assert.equal(plainifyGuidanceText("Giữ hàng rào da khoẻ, đỡ khô rát", false), "Giữ lớp ngoài da khoẻ, đỡ khô rát.");
+  });
+
+  it("explains hàng rào da in any case without parentheses", () => {
+    assert.equal(plainifyGuidanceText("Hàng rào da đang yếu", false), "Lớp ngoài da đang yếu.");
+    assert.equal(plainifyGuidanceText("HÀNG RÀO DA đang yếu", false), "Lớp ngoài da đang yếu.");
+  });
+
+  it("does not nest or stack parentheses", () => {
+    assert.equal(plainifyGuidanceText("CeraVe (ceramide)", false), "CeraVe (ceramide)");
+    assert.equal(
+      plainifyGuidanceText("Củng cố hàng rào da (lớp ngoài cùng)", false),
+      "Củng cố lớp ngoài da.",
+    );
+    assert.equal((plainifyGuidanceText("CeraVe (ceramide)", false).match(/\(/g) ?? []).length, 1);
+    assert.equal(
+      (plainifyGuidanceText("Củng cố hàng rào da (lớp ngoài cùng)", false).match(/\(/g) ?? []).length,
+      0,
+    );
+  });
+
+  it("keeps a ceramide subtype list as one name", () => {
+    const gloss = "(giúp lớp ngoài da giữ nước, đỡ khô rát)";
+    assert.equal(
+      plainifyGuidanceText("Có ceramide NP và cholesterol", false),
+      `Có ceramide NP ${gloss} và cholesterol.`,
+    );
+    assert.equal(
+      plainifyGuidanceText("ceramide NP, AP, EOP", false),
+      `ceramide NP, AP, EOP ${gloss}`,
+    );
+    assert.equal(plainifyGuidanceText("ceramide NP/AP", false), `ceramide NP/AP ${gloss}`);
+    assert.equal(plainifyGuidanceText("ceramide NS", false), `ceramide NS ${gloss}`);
+  });
+
+  it("leaves a dashed explanation alone and closes the sentence", () => {
+    assert.equal(plainifyGuidanceText("Ceramide — giữ ẩm", false), "Ceramide — giữ ẩm.");
+    assert.equal(plainifyGuidanceText("Ceramide – giữ ẩm", false), "Ceramide – giữ ẩm.");
+  });
+
+  it("explains only the first ceramide name, and skips giúp or giữ", () => {
+    const twice = plainifyGuidanceText("ceramide buổi sáng và ceramide buổi tối", false);
+    assert.equal(
+      twice,
+      "ceramide (giúp lớp ngoài da giữ nước, đỡ khô rát) buổi sáng và ceramide buổi tối.",
+    );
+    assert.equal(plainifyGuidanceText("ceramide giúp da giữ nước", false), "ceramide giúp da giữ nước.");
+    assert.equal(plainifyGuidanceText("ceramide giữ ẩm", false), "ceramide giữ ẩm.");
+  });
+
+  it("treats ceramide NP/AP/EOP and ceramides as one name", () => {
+    assert.equal(
+      plainifyGuidanceText("ceramide NP/AP/EOP", false),
+      "ceramide NP/AP/EOP (giúp lớp ngoài da giữ nước, đỡ khô rát)",
+    );
+    assert.equal(
+      plainifyGuidanceText("ceramides", false),
+      "ceramides (giúp lớp ngoài da giữ nước, đỡ khô rát)",
+    );
+    assert.equal(plainifyGuidanceText("ceramides", false).includes("ceramide ("), false);
+  });
+
+  it("still explains a name when a colon follows", () => {
+    assert.equal(
+      plainifyGuidanceText("Có ceramides: sạch nhẹ", false),
+      "Có ceramides (giúp lớp ngoài da giữ nước, đỡ khô rát): sạch nhẹ.",
+    );
+  });
+
+  it("adds a final period without touching lists, emoji, or closers", () => {
+    assert.equal(plainifyGuidanceText("Da ổn.", false), "Da ổn.");
+    assert.equal(plainifyGuidanceText("Da ổn!", false), "Da ổn!");
+    assert.equal(plainifyGuidanceText("Da ổn?", false), "Da ổn?");
+    assert.equal(plainifyGuidanceText("xong)", false), "xong)");
+    assert.equal(plainifyGuidanceText("«xong»", false), "«xong»");
+    assert.equal(plainifyGuidanceText("tuyệt 😊", false), "tuyệt 😊");
+    assert.equal(plainifyGuidanceText("- rửa mặt\n- dưỡng", false), "- rửa mặt\n- dưỡng");
+  });
+
+  it("leaves amounts and links without a period", () => {
+    assert.equal(plainifyGuidanceText("SPF 50", false), "SPF 50");
+    assert.equal(plainifyGuidanceText("BHA 2%", false), "BHA 2%");
+    assert.equal(plainifyGuidanceText("Retinol 0.3", false), "Retinol 0.3");
+    assert.equal(
+      plainifyGuidanceText("Xem https://dadiary.vn/a", false),
+      "Xem https://dadiary.vn/a",
+    );
+  });
+});
+
+describe("enrichProductGuidanceItems", () => {
+  it("does not rename the product", () => {
+    const item: ProductGuidanceItemDTO = {
+      step: "moisturize",
+      phase: "calm_first",
+      category: "moisturizer",
+      name_or_category: "Kem dưỡng ceramide",
+      why: "Phục hồi hàng rào bảo vệ da",
+      benefits: ["Giữ ẩm"],
+      how_to_use: "Thoa một lớp.",
+    };
+    const [enriched] = enrichProductGuidanceItems([item], { locale: "vi" });
+    assert.equal(enriched?.name_or_category, "Kem dưỡng ceramide");
+    assert.equal(enriched?.why, "Phục hồi lớp ngoài da.");
+  });
+
+  it("explains ceramide once across why, benefits, and how", () => {
+    const item: ProductGuidanceItemDTO = {
+      step: "moisturize",
+      phase: "calm_first",
+      category: "moisturizer",
+      name_or_category: "Kem dưỡng ceramide",
+      why: "Kem dưỡng ceramide",
+      benefits: ["Có ceramides: sạch nhẹ"],
+      how_to_use: "Thoa ceramide NP",
+    };
+    const [enriched] = enrichProductGuidanceItems([item], { locale: "vi" });
+    const gloss = "(giúp lớp ngoài da giữ nước, đỡ khô rát)";
+    assert.equal(enriched?.why, `Kem dưỡng ceramide ${gloss}`);
+    assert.equal(enriched?.benefits[0], "Có ceramides: sạch nhẹ");
+    assert.equal(enriched?.how_to_use, "Thoa ceramide NP.");
+    const joined = `${enriched?.why} ${enriched?.benefits.join(" ")} ${enriched?.how_to_use}`;
+    assert.equal(joined.split(gloss).length - 1, 1);
+  });
+
+  it("does not punctuate benefits, so a matching default is not added twice", () => {
+    const item: ProductGuidanceItemDTO = {
+      step: "cleanse",
+      phase: "calm_first",
+      category: "cleanser",
+      name_or_category: "Sữa rửa mặt",
+      why: "Rửa nhẹ",
+      benefits: ["Làm sạch nhẹ"],
+      how_to_use: "Nước ấm",
+    };
+    const [enriched] = enrichProductGuidanceItems([item], { locale: "vi" });
+    assert.equal(enriched?.benefits.filter((line) => line === "Làm sạch nhẹ").length, 1);
+    assert.equal(enriched?.benefits.some((line) => line.endsWith(".")), false);
+    assert.equal(enriched?.why, "Rửa nhẹ.");
+  });
+});

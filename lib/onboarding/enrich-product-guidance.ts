@@ -36,8 +36,15 @@ export function stripRepeatedContextPrefix(why: string, en: boolean): string {
   return trimmed;
 }
 
+type ExplainState = { ceramide: boolean };
+
 /** Soften skincare jargon so Step 2 copy stays readable for beginners. */
-export function plainifyGuidanceText(text: string, en: boolean): string {
+export function plainifyGuidanceText(
+  text: string,
+  en: boolean,
+  state?: ExplainState,
+  sentenceEnd = true,
+): string {
   let out = text.trim();
   if (!out) return out;
   const pairs = en
@@ -88,7 +95,96 @@ export function plainifyGuidanceText(text: string, en: boolean): string {
   for (const [from, to] of pairs) {
     if (out.includes(from)) out = out.split(from).join(to);
   }
-  return out.replace(/\s{2,}/g, " ").trim();
+  if (!en) out = explainVietnameseGuidance(out, state ?? { ceramide: false });
+  const cleaned = out.replace(/\s{2,}/g, " ").trim();
+  return sentenceEnd ? ensureSentenceEnd(cleaned) : cleaned;
+}
+
+/** Add a final period when a guidance sentence has none. Leave lists, emoji, closers, amounts, and links. */
+function ensureSentenceEnd(text: string): string {
+  const s = text.trim();
+  if (!s) return s;
+  if (/[.!?…。！？]$/u.test(s)) return s;
+  if (/["'”’»»)\]}]$/u.test(s)) return s;
+  if (/[,:;•·–—-]$/u.test(s)) return s;
+  if (/\p{Extended_Pictographic}$/u.test(s)) return s;
+  if (/\n\s*(?:[-•*]|\d+[.)])/u.test(s)) return s;
+  if (/\d$/.test(s) || /%$/.test(s)) return s;
+  if (/(?:https?:\/\/|www\.)\S+$/i.test(s)) return s;
+  return `${s}.`;
+}
+
+const CERAMIDE_GLOSS = "giúp lớp ngoài da giữ nước, đỡ khô rát";
+const CERAMIDE_SUBTYPE = "NP|AP|EOP|NS|AS";
+/** ceramide(s) plus NP/AP/EOP/NS/AS, alone or as a slash or comma list, is one name. */
+const CERAMIDE_NAME = new RegExp(
+  String.raw`(?<![\p{L}\p{N}_])ceramides?(?:\s+(?:${CERAMIDE_SUBTYPE})(?:\s*(?:\/|,|và)\s*(?:${CERAMIDE_SUBTYPE}))*)?(?![\p{L}\p{N}_])`,
+  "giu",
+);
+
+function capLike(sample: string, replacement: string): string {
+  const first = sample.charAt(0);
+  const upper = first.toLocaleUpperCase("vi");
+  if (first === upper && first !== first.toLocaleLowerCase("vi")) {
+    return replacement.charAt(0).toLocaleUpperCase("vi") + replacement.slice(1);
+  }
+  return replacement;
+}
+
+function insideParentheses(text: string, index: number): boolean {
+  let depth = 0;
+  for (let i = 0; i < index; i++) {
+    const ch = text[i];
+    if (ch === "(") depth += 1;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+  }
+  return depth > 0;
+}
+
+/**
+ * One gloss for the first ceramide name in the string.
+ * A name already inside parentheses is left alone, and so is a name that
+ * already says giúp or giữ. A colon is not an explanation.
+ */
+function explainFirstCeramide(text: string, state: ExplainState): string {
+  return text.replace(CERAMIDE_NAME, (match: string, offset: number, whole: string) => {
+    if (state.ceramide) return match;
+    if (insideParentheses(whole, offset)) return match;
+    const after = whole.slice(offset + match.length);
+    if (/^\s*(?:giúp|giữ)(?![\p{L}\p{N}_])/iu.test(after)) {
+      state.ceramide = true;
+      return match;
+    }
+    if (/^\s*[—–]\s/.test(after)) {
+      state.ceramide = true;
+      return match;
+    }
+    if (/^\s*\(/.test(after)) {
+      state.ceramide = true;
+      return match;
+    }
+    state.ceramide = true;
+    return `${match} (${CERAMIDE_GLOSS})`;
+  });
+}
+
+/**
+ * «hàng rào da» in any case, including «hàng rào bảo vệ da», becomes
+ * plain «lớp ngoài da» — no parentheses.
+ */
+function explainVietnameseGuidance(text: string, state: ExplainState): string {
+  let out = text.replace(/ít làm mỏng hàng rào da/giu, (match) =>
+    capLike(match, "ít làm da khô rát, dễ bị kích ứng"),
+  );
+  out = out.replace(/làm mỏng hàng rào da/giu, (match) =>
+    capLike(match, "làm da khô rát, dễ bị kích ứng"),
+  );
+  out = out.replace(/hàng rào(?:\s+bảo vệ)?(?:\s+da)?/giu, (match) => capLike(match, "lớp ngoài da"));
+  out = out.replace(/lớp ngoài da\s*\(lớp ngoài cùng\)/giu, (match) =>
+    match.startsWith("L") ? "Lớp ngoài da" : "lớp ngoài da",
+  );
+  out = explainFirstCeramide(out, state);
+  return out;
 }
 
 /** Client-side safety net when analyze payload is thin — never invents affiliate links. */
@@ -100,13 +196,15 @@ export function enrichProductGuidanceItems(
   const en = isEn(ctx.locale);
   const phase = String(ctx.phase || "").toLowerCase() || "calm_first";
   return items.map((item) => {
+    const explained: ExplainState = { ceramide: false };
     const rawWhy = item.why?.trim() || "";
     const why = plainifyGuidanceText(
       rawWhy ? stripRepeatedContextPrefix(rawWhy, en) : defaultWhy(item.step, phase, en),
       en,
+      explained,
     );
     let benefits = (item.benefits ?? [])
-      .map((b) => plainifyGuidanceText(b, en))
+      .map((b) => plainifyGuidanceText(b, en, explained, false))
       .filter(Boolean);
     if (benefits.length < 2) {
       benefits = mergeBenefits(benefits, defaultBenefits(item.step, phase, en));
@@ -114,15 +212,16 @@ export function enrichProductGuidanceItems(
     const how_to_use = plainifyGuidanceText(
       item.how_to_use?.trim() || defaultHow(item.step, en),
       en,
+      explained,
     );
     const caution = plainifyGuidanceText(
       item.caution?.trim() || defaultCaution(item.step, phase, en),
       en,
+      explained,
     );
-    const name = plainifyGuidanceText(item.name_or_category?.trim() || "", en);
     return {
       ...item,
-      name_or_category: name || item.name_or_category,
+      name_or_category: item.name_or_category,
       why,
       benefits: benefits.slice(0, 4),
       how_to_use,

@@ -176,8 +176,8 @@ function eveningCanAddActive(locale: string): string[] {
     : [
         step("Rửa mặt", "gỡ kem chống nắng nhẹ nhàng"),
         step(
-          "Tuỳ chọn: tối đa 1 BHA hoặc retinoid",
-          "không dùng chung một đêm — bỏ qua nếu da rát",
+          "Tuỳ chọn: tối đa 1 hoạt chất nhẹ",
+          "tẩy da chết nhẹ hoặc làm mới da — không dùng chung một đêm, bỏ qua nếu da rát",
         ),
         step("Kem dưỡng ẩm", "khóa ẩm sau bước trị"),
       ];
@@ -328,7 +328,7 @@ function eveningForProfile(
         step("Kem dưỡng ẩm", "đủ êm qua đêm"),
         step(
           "Tuỳ chọn: tối đa 1 hoạt chất",
-          "BHA hoặc retinoid — không dùng chung một đêm",
+          "tẩy da chết nhẹ hoặc làm mới da — không dùng chung một đêm",
         ),
       ];
 }
@@ -383,7 +383,7 @@ function weekNoteForPhase(
   if (skillMode === "advanced") {
     return en
       ? "When you use acids or retinol, go slow and note how skin feels the next day."
-      : "Khi xen kẽ acid/retinol, đi chậm và ghi lại cảm giác da hôm sau.";
+      : "Khi dùng chất tẩy da chết hoặc chất làm mới da, đi chậm và ghi lại cảm giác da hôm sau.";
   }
   return en
     ? "Journal 5–7 days before changing multiple products."
