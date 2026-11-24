@@ -13,6 +13,7 @@ import {
   Sun,
 } from "lucide-react";
 
+import { CheckInAffiliateSuggestions } from "@/components/affiliate/affiliate-suggestions";
 import { AnalysisMaintenanceNote } from "@/components/check-in/analysis-maintenance-note";
 import { CabinetFirstCare } from "@/components/check-in/cabinet-first-care";
 import { CheckInBeforeAfterShare } from "@/components/check-in/check-in-before-after-share";
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { getAccessToken } from "@/lib/auth-token";
+import { isCurrentCheckSevere } from "@/lib/affiliate/signals";
 import {
   cabinetCoveredRoles,
   isAffiliateRoleCovered,
@@ -151,6 +153,7 @@ export function DailyCoachFeedback({
     c.product_suggestions?.filter(
       (item) => !isAffiliateRoleCovered({ step: item.step, name_or_category: item.product_name }, coveredRoles),
     ) ?? [];
+  const severeCase = isCurrentCheckSevere({ coach: c });
 
   return (
     <div
@@ -395,7 +398,9 @@ export function DailyCoachFeedback({
 
       {cabinetMatches.length > 0 ? <CabinetFirstCare items={cabinetMatches} /> : null}
 
-      {guidanceForBuy.length > 0 ? (
+      <CheckInAffiliateSuggestions payload={payload} />
+
+      {!severeCase && guidanceForBuy.length > 0 ? (
         <ProductGuidanceSection
           items={guidanceForBuy}
           contextId={a.id}
@@ -403,13 +408,13 @@ export function DailyCoachFeedback({
           variant="coach"
           maxBenefits={2}
         />
-      ) : (
+      ) : !severeCase ? (
         <ProductSuggestionsCard
           suggestions={suggestionsForBuy}
           source="daily_feedback"
           contextId={a.id}
         />
-      )}
+      ) : null}
 
       {c.avoid_or_patch && c.avoid_or_patch.length > 0 ? (
         <Card className="border-orange-500/20">

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Settings2 } from "lucide-react";
 
+import { CabinetAffiliateSuggestions } from "@/components/affiliate/affiliate-suggestions";
 import { CabinetStarterPack } from "@/components/cabinet/cabinet-starter-pack";
 import { WardrobeProductForm } from "@/components/cabinet/wardrobe-product-form";
 import { WardrobeProductList } from "@/components/cabinet/wardrobe-product-list";
@@ -41,6 +42,8 @@ export function SkincareCabinetOverview() {
           />
           <WardrobeProductForm formId="wardrobe-add-form" />
         </div>
+
+        <CabinetAffiliateSuggestions />
 
         <CabinetStarterPack />
       </WardrobeProvider>

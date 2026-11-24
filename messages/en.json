@@ -914,6 +914,25 @@
     "showMore": "Show {count} more",
     "showLess": "Show less"
   },
+  "affiliateSuggestions": {
+    "title": "Picks for your skin",
+    "disclosureLabel": "Affiliate link",
+    "disclosure": "DaDiary may earn a small commission if you buy through this link. The price you pay stays the same.",
+    "officialBadge": "Official shop",
+    "whyLabel": "Why this fits you",
+    "price": "Reference price: {price}",
+    "soldLine": "{rating}★ · {sold} sold",
+    "cta": "View on Shopee",
+    "severe": "Today's signs are worth showing a dermatologist in person. No product picks for now.",
+    "steps": {
+      "cleanser": "Cleanser",
+      "serum": "Serum",
+      "moisturizer": "Moisturizer",
+      "sunscreen": "Sunscreen",
+      "makeup_remover": "Makeup remover",
+      "support": "Support"
+    }
+  },
   "coachProductGuidance": {
     "title": "Optional picks",
     "affiliateBadge": "Affiliate",

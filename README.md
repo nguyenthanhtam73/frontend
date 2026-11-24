@@ -13,6 +13,16 @@ npm run dev
 
 Copy env vars from the project root `.env.example` into `.env.local` as needed.
 
+## Weekly Shopee affiliate batch
+
+Drop the new CSV in `data/affiliate/`, then convert it and commit both files:
+
+```bash
+npm run import:affiliate -- data/affiliate/w20261124.csv
+```
+
+That rewrites `lib/affiliate/products.json`. `batch` is the CSV `sub_id2` value. Shoppers only open `affLink`.
+
 ## Production checks
 
 ```powershell

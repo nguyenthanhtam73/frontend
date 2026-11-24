@@ -1,0 +1,237 @@
+/**
+ * Turn a weekly Shopee affiliate CSV into lib/affiliate/products.json.
+ *
+ *   npm run import:affiliate -- data/affiliate/w20261124.csv
+ *
+ * `batch` is the CSV sub_id2 value. Commit the CSV and the JSON together.
+ * The product-page `url` is kept for the batch record and must never be
+ * rendered as a link — shoppers only open `affLink`.
+ */
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const DEFAULT_OUT = path.join(ROOT, "lib", "affiliate", "products.json");
+
+const STEP_BY_GROUP = {
+  "sữa rửa mặt": "cleanser",
+  serum: "serum",
+  "kem dưỡng": "moisturizer",
+  "chống nắng": "sunscreen",
+  "tẩy trang": "makeup_remover",
+  "hỗ trợ": "support",
+};
+
+/** Longer notes first so "da mụn" is not read as the shorter "mụn" note. */
+const FIT_NOTES = [
+  { note: "lỗ chân lông/mụn", tags: ["pores", "acne"] },
+  { note: "da khô/thường", tags: ["dry", "normal"] },
+  { note: "cấp ẩm/dịu da", tags: ["hydration", "sensitive"] },
+  { note: "da dầu", tags: ["oily"] },
+  { note: "da mụn", tags: ["acne"] },
+  { note: "thâm sạm", tags: ["dark_spots"] },
+  { note: "phục hồi", tags: ["barrier"] },
+  { note: "giá mềm", tags: ["budget"] },
+  { note: "mụn", tags: ["acne"] },
+];
+
+const REQUIRED_COLUMNS = [
+  "nhom",
+  "ten",
+  "gia_vnd",
+  "gia_goc_vnd",
+  "hoa_hong",
+  "sao",
+  "danh_gia",
+  "da_ban",
+  "shop",
+  "url",
+  "aff_link",
+  "sub_id1",
+  "sub_id2",
+];
+
+function normalizeNote(value) {
+  return value.normalize("NFC").trim().toLocaleLowerCase("vi");
+}
+
+/** Parenthetical at the end of `ten` → fit tags. No note → general item. */
+export function parseFitNote(ten) {
+  const raw = String(ten ?? "").normalize("NFC").trim();
+  const match = raw.match(/^(.*)\s+\(([^)]+)\)\s*$/u);
+  if (!match) {
+    return { name: raw, fit: [] };
+  }
+  const note = normalizeNote(match[2]);
+  const known = FIT_NOTES.find((entry) => entry.note === note);
+  if (!known) {
+    const allowed = FIT_NOTES.map((entry) => entry.note).join(", ");
+    throw new Error(`Unknown fit note "(${match[2].trim()})" on "${raw}". Known notes: ${allowed}`);
+  }
+  return { name: match[1].trim(), fit: [...known.tags] };
+}
+
+export function parseGroupStep(nhom) {
+  const key = normalizeNote(String(nhom ?? ""));
+  const step = STEP_BY_GROUP[key];
+  if (!step) {
+    throw new Error(
+      `Unknown nhom "${nhom}". Known groups: ${Object.keys(STEP_BY_GROUP).join(", ")}`,
+    );
+  }
+  return step;
+}
+
+/** Empty gia_goc_vnd → null. Other amounts must be whole VND. */
+export function parseOptionalPrice(raw) {
+  const text = String(raw ?? "").trim();
+  if (!text) return null;
+  if (!/^\d+$/.test(text)) {
+    throw new Error(`Invalid VND amount "${text}"`);
+  }
+  return Number(text);
+}
+
+export function parseRequiredPrice(raw, column) {
+  const price = parseOptionalPrice(raw);
+  if (price == null) {
+    throw new Error(`Missing ${column}`);
+  }
+  return price;
+}
+
+export function parseRating(raw) {
+  const text = String(raw ?? "").trim();
+  if (!/^\d+(?:\.\d+)?$/.test(text)) {
+    throw new Error(`Invalid sao "${text}"`);
+  }
+  return Number(text);
+}
+
+/** RFC-style CSV: commas, quotes, and "" escapes. */
+export function parseCsv(text) {
+  const src = String(text ?? "").replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < src.length; i += 1) {
+    const ch = src[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (src[i + 1] === '"') {
+          cell += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cell += ch;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (ch === ",") {
+      row.push(cell);
+      cell = "";
+      continue;
+    }
+    if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && src[i + 1] === "\n") i += 1;
+      row.push(cell);
+      cell = "";
+      if (row.some((value) => value.trim() !== "")) rows.push(row);
+      row = [];
+      continue;
+    }
+    cell += ch;
+  }
+  if (cell.length > 0 || row.length > 0) {
+    row.push(cell);
+    if (row.some((value) => value.trim() !== "")) rows.push(row);
+  }
+  return rows;
+}
+
+function requireCell(row, header, column) {
+  const index = header.indexOf(column);
+  if (index < 0) throw new Error(`Missing column ${column}`);
+  return row[index] ?? "";
+}
+
+export function parseAffiliateCsv(text) {
+  const rows = parseCsv(text);
+  if (rows.length < 2) throw new Error("CSV has no product rows");
+  const header = rows[0].map((column) => column.trim());
+  for (const column of REQUIRED_COLUMNS) {
+    if (!header.includes(column)) throw new Error(`Missing column ${column}`);
+  }
+
+  const items = [];
+  let batch = "";
+  for (let i = 1; i < rows.length; i += 1) {
+    const row = rows[i];
+    const cell = (column) => requireCell(row, header, column).trim();
+    const subId2 = cell("sub_id2");
+    if (!subId2) throw new Error(`Row ${i + 1} is missing sub_id2`);
+    if (!batch) batch = subId2;
+    if (subId2 !== batch) {
+      throw new Error(`Mixed sub_id2 values (${batch} and ${subId2}). One CSV is one batch.`);
+    }
+    const parsedName = parseFitNote(cell("ten"));
+    const affLink = cell("aff_link");
+    const url = cell("url");
+    if (!affLink) throw new Error(`Row ${i + 1} is missing aff_link`);
+    if (affLink === url) {
+      throw new Error(`Row ${i + 1} aff_link must be the short affiliate link, not the product url`);
+    }
+    items.push({
+      step: parseGroupStep(cell("nhom")),
+      name: parsedName.name,
+      fit: parsedName.fit,
+      priceVnd: parseRequiredPrice(cell("gia_vnd"), "gia_vnd"),
+      originalPriceVnd: parseOptionalPrice(cell("gia_goc_vnd")),
+      commission: cell("hoa_hong"),
+      rating: parseRating(cell("sao")),
+      reviewCount: cell("danh_gia"),
+      sold: cell("da_ban"),
+      shop: cell("shop"),
+      url,
+      affLink,
+      subId1: cell("sub_id1"),
+      subId2,
+    });
+  }
+
+  return { batch, items };
+}
+
+export function formatAffiliateCatalog(catalog) {
+  return `${JSON.stringify(catalog, null, 2)}\n`;
+}
+
+function isDirectRun() {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  return path.resolve(entry) === fileURLToPath(import.meta.url);
+}
+
+if (isDirectRun()) {
+  const csvPath = process.argv[2];
+  if (!csvPath) {
+    console.error("Usage: node scripts/affiliate-import.mjs <csv> [out.json]");
+    process.exit(1);
+  }
+  const outPath = process.argv[3]
+    ? path.resolve(process.argv[3])
+    : DEFAULT_OUT;
+  const catalog = parseAffiliateCsv(readFileSync(path.resolve(csvPath), "utf8"));
+  mkdirSync(path.dirname(outPath), { recursive: true });
+  writeFileSync(outPath, formatAffiliateCatalog(catalog));
+  console.log(`Wrote ${catalog.items.length} items, batch ${catalog.batch}\n  ${outPath}`);
+}
