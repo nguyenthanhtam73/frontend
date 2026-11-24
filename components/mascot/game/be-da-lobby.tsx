@@ -5,7 +5,8 @@ import type { KeyboardEvent, MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
-import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
+import { BeDaDrawWait, BeDaPixiStage, useDrawRetry } from "@/components/mascot/game/be-da-pixi-stage";
+import { noteBedaReady } from "@/lib/mascot/beda-ready";
 import { SpaProblemLine } from "@/components/mascot/game/be-da-spa-room";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook } from "@/lib/mascot/game/look";
@@ -125,6 +126,12 @@ export function BeDaLobby({
   const liftRef = useRef(0);
   const seenSelect = useRef<string | null>(null);
   const [pixi, setPixi] = useState(true);
+  const [framed, setFramed] = useState(false);
+  const told = useRef(false);
+  const drawRetry = useDrawRetry(pixi && !framed);
+  function tell(engine: "pixi" | "dom") {
+    noteBedaReady(engine, window, document.body, told);
+  }
   const [roomNote, setRoomNote] = useState(false);
   const snapRef = useRef<ShellSnapshot>({ scene: "lobby", sky, sprites: [] });
   const [showHint, setShowHint] = useState(true);
@@ -300,9 +307,22 @@ export function BeDaLobby({
             onSelect("");
           }}
           api={motion}
-          onError={() => setPixi(false)}
+          onReady={() => {
+            setFramed(true);
+            tell("pixi");
+          }}
+          onError={() => {
+            setPixi(false);
+            setFramed(true);
+            tell("dom");
+          }}
         />
       ) : null}
+      {pixi && !framed ? <BeDaDrawWait retry={drawRetry} onRetry={() => {
+        setPixi(false);
+        setFramed(true);
+        tell("dom");
+      }} /> : null}
       <div ref={worldRef} className="beda-lobby-world">
         <div className={`beda-lobby-sky beda-sky beda-sky-${sky}`} />
         <div

@@ -13,6 +13,7 @@ import {
   scheduleRecenterResume,
   attachIfMounted,
   createPixiStartGate,
+  createFrameWatch,
 } from "./pixi-guard";
 
 describe("pixi shell lifetime", () => {
@@ -135,6 +136,29 @@ describe("pixi shell lifetime", () => {
     assert.deepEqual(errors, ["error"]);
     assert.deepEqual(destroyed, ["canvas", "stage"]);
     assert.equal(gate.claim(), false);
+  });
+
+  it("keeps the watchdog armed after init until a frame is confirmed", () => {
+    const watch = createFrameWatch();
+    watch.noteInit();
+    assert.equal(watch.inited, true);
+    assert.equal(watch.armed, true);
+    assert.equal(watch.noteFrame(), true);
+    assert.equal(watch.armed, false);
+    assert.equal(watch.noteFrame(), false);
+  });
+
+  it("treats a lost WebGL context as the DOM fallback and ignores a late frame", () => {
+    const watch = createFrameWatch();
+    const destroyed: string[] = [];
+    watch.noteInit();
+    const handle = { destroy: () => destroyed.push("app") };
+    assert.equal(watch.armed, true);
+    assert.equal(watch.fail(true), true);
+    handle.destroy();
+    assert.equal(watch.noteFrame(), false);
+    assert.equal(watch.fail(true), false);
+    assert.deepEqual(destroyed, ["app"]);
   });
 
   it("lets a ready shell win and ignores the timeout", () => {

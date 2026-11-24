@@ -1,4 +1,4 @@
-import { Application, Assets, Container, Graphics, Rectangle, RenderTexture, Sprite, Texture, type Ticker } from "pixi.js";
+import { Application, Assets, Container, Graphics, Rectangle, RenderTexture, Sprite, Texture, UPDATE_PRIORITY, type Ticker } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
@@ -72,6 +72,8 @@ export async function startPixiShell(options: {
   onWalk?: (x: number, y: number, pace?: "walk" | "idle") => void;
   onEmptyTap?: () => void;
   api?: { current: ShellApi };
+  /** Fires once, after the ticker's render pass, not when `app.init` resolves. */
+  onFirstFrame?: () => void;
 }): Promise<{ destroy: () => void }> {
   const parent = options.canvas.parentElement ?? options.canvas;
   const app = new Application();
@@ -817,6 +819,14 @@ export async function startPixiShell(options: {
   app.ticker.add((ticker) => {
     onTick(ticker);
   });
+  let framed = false;
+  const onPainted = () => {
+    if (framed || life.destroyed) return;
+    framed = true;
+    options.onFirstFrame?.();
+  };
+  // UTILITY runs after the render listener (LOW), so this is a completed pass.
+  app.ticker.add(onPainted, undefined, UPDATE_PRIORITY.UTILITY);
 
   const onGesture = (event: Event) => {
     event.preventDefault();
@@ -860,6 +870,7 @@ export async function startPixiShell(options: {
   return {
     destroy() {
       destroyShellLife(life, (id) => window.clearTimeout(id));
+      app.ticker.remove(onPainted);
       app.ticker.stop();
       viewObserver.disconnect();
       window.removeEventListener("keydown", onKey);

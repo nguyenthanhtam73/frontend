@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import type { ShellApi, ShellSnapshot } from "@/lib/game/core/types";
-import { PIXI_READY_MS, createPixiStartGate, notePixiInitFailed } from "@/lib/mascot/game/shell/pixi-guard";
+import { GAME_GATE_RETRY_MS } from "@/components/mascot/game/be-da-game-gate";
+import { PIXI_READY_MS, createFrameWatch, notePixiInitFailed } from "@/lib/mascot/game/shell/pixi-guard";
 
 type PixiHandle = { destroy: () => void };
 
@@ -36,7 +38,7 @@ export function BeDaPixiStage({
   /** Tests can shorten the wait. The live room uses four seconds. */
   readyTimeoutMs?: number;
   /** Tests can hold the shell open. The live room loads Pixi. */
-  startShell?: (canvas: HTMLCanvasElement) => Promise<PixiHandle>;
+  startShell?: (canvas: HTMLCanvasElement, hooks: { onFirstFrame: () => void }) => Promise<PixiHandle>;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const snapshotRef = useRef(snapshot);
@@ -54,17 +56,38 @@ export function BeDaPixiStage({
     host.dataset.loading = "1";
     host.appendChild(canvas);
     let dead = false;
-    let destroy = () => canvas.remove();
-    const gate = createPixiStartGate();
-    const timer = window.setTimeout(() => {
-      if (!gate.claim()) return;
+    let torn = false;
+    let handle: PixiHandle | null = null;
+    const watch = createFrameWatch();
+    const teardown = () => {
+      if (torn) return;
+      torn = true;
+      window.clearTimeout(timer);
+      canvas.removeEventListener("webglcontextlost", onLost);
+      try {
+        handle?.destroy();
+      } catch {
+        /* already destroyed */
+      }
+      handle = null;
+      canvas.remove();
+    };
+    const fail = (force = false) => {
+      if (dead) return;
+      if (!watch.fail(force)) return;
       dead = true;
-      destroy();
+      teardown();
       notePixiInitFailed(host.dataset, false, onError);
-    }, readyTimeoutMs);
+    };
+    const timer = window.setTimeout(() => fail(false), readyTimeoutMs);
+    const onLost = (event: Event) => {
+      event.preventDefault();
+      fail(true);
+    };
+    canvas.addEventListener("webglcontextlost", onLost);
     const begin =
       startShell ??
-      ((node: HTMLCanvasElement) =>
+      ((node: HTMLCanvasElement, hooks: { onFirstFrame: () => void }) =>
         import("@/lib/mascot/game/shell/pixi-runtime").then((mod) =>
           mod.startPixiShell({
             canvas: node,
@@ -73,34 +96,32 @@ export function BeDaPixiStage({
             onWalk: (x, y, pace) => walkRef.current?.(x, y, pace),
             onEmptyTap: () => emptyRef.current?.(),
             api,
+            onFirstFrame: hooks.onFirstFrame,
           }),
         ));
-    void begin(canvas)
-      .then((handle) => {
-        if (dead || !gate.claim()) {
-          handle.destroy();
-          canvas.remove();
-          return;
-        }
+    void begin(canvas, {
+      onFirstFrame: () => {
+        if (dead || !watch.noteFrame()) return;
         window.clearTimeout(timer);
-        destroy = () => {
-          handle.destroy();
-          canvas.remove();
-        };
         delete host.dataset.loading;
         onReady?.();
+      },
+    })
+      .then((next) => {
+        watch.noteInit();
+        handle = next;
+        if (dead || watch.failed) {
+          next.destroy();
+          handle = null;
+          canvas.remove();
+        }
       })
       .catch(() => {
-        window.clearTimeout(timer);
-        canvas.remove();
-        if (!gate.claim()) return;
-        notePixiInitFailed(host.dataset, dead, onError);
+        fail(false);
       });
     return () => {
       dead = true;
-      gate.claim();
-      window.clearTimeout(timer);
-      destroy();
+      teardown();
     };
     // The snapshot is read from a ref so a position tick does not rebuild the canvas.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,4 +130,32 @@ export function BeDaPixiStage({
   return (
     <div ref={hostRef} className="beda-pixi-host" data-testid="beda-pixi" data-scene={scene} data-art={art} />
   );
+}
+
+/** Opening line over the room while the first frame is still missing. */
+export function BeDaDrawWait({ retry, onRetry }: { retry: boolean; onRetry: () => void }) {
+  const t = useTranslations("mascot");
+  return (
+    <div className="beda-draw-wait" data-testid="beda-draw-wait" data-retry={retry ? "1" : "0"}>
+      <p>{t("game.opening")}</p>
+      {retry ? (
+        <button type="button" className="beda-gate-retry" data-testid="beda-draw-retry" onClick={onRetry}>
+          {t("game.tryAgain")}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+export function useDrawRetry(active: boolean): boolean {
+  const [retry, setRetry] = useState(false);
+  useEffect(() => {
+    if (!active) {
+      setRetry(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setRetry(true), GAME_GATE_RETRY_MS);
+    return () => window.clearTimeout(timer);
+  }, [active]);
+  return retry;
 }

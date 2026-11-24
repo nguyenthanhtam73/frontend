@@ -39,13 +39,14 @@ export function BlankShot() {
       <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
         {scene === "retry" ? <BeDaGameWait initialRetry /> : null}
         {scene === "load" ? <BeDaGameWait /> : null}
+        {scene === "draw" ? <ForcedRoom sky={sky} hold /> : null}
         {scene === "room" || scene === "card" ? <ForcedRoom sky={sky} /> : null}
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
 }
 
-function ForcedRoom({ sky }: { sky: "morning" | "night" }) {
+function ForcedRoom({ sky, hold = false }: { sky: "morning" | "night"; hold?: boolean }) {
   const [fell, setFell] = useState(false);
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
@@ -53,6 +54,42 @@ function ForcedRoom({ sky }: { sky: "morning" | "night" }) {
     sessionHappy: false,
     locale: "vi",
   });
+  if (hold) {
+    return (
+      <BeDaGameView
+        locale="vi"
+        tab="care"
+        sky={sky}
+        coinsLabel="1.250"
+        streakLabel="7"
+        soundOn
+        quests={[]}
+        bubbleKind="washed"
+        progress={null}
+        showPrettyLine={false}
+        chestOpen={false}
+        friendCount={4}
+        selectedFriendId=""
+        toast={null}
+        wavingId={null}
+        look={DEFAULT_GAME_LOOK}
+        wornIds={[]}
+        hearts={0}
+        streakKept
+        giftTaken={false}
+        player={player}
+        burst={0}
+        homeHref="/check-in"
+        onTab={() => undefined}
+        onToggleSound={() => undefined}
+        onSelectFriend={() => undefined}
+        onFriendAction={() => undefined}
+        onClaim={() => undefined}
+        onLook={() => true}
+        holdFrame
+      />
+    );
+  }
   if (!fell) {
     const snapshot = (): ShellSnapshot => ({ scene: "room", sky, sprites: [] });
     return (
