@@ -1508,7 +1508,7 @@
       "gaugeFeelOk": "Comfortable",
       "deltaUp": "Skin feels better than last time",
       "deltaFlat": "Skin is holding steady",
-      "deltaDown": "Skin feels a bit worse"
+      "deltaDown": "Skin feels a bit more tired"
     },
     "streak": {
       "ariaLabel": "Check-in streak",

@@ -38,7 +38,11 @@ describe("progress comparison copy", () => {
     assert.match(flat, /Da giữ ổn/);
 
     const down = renderCard("vi", -0.05);
-    assert.match(down, /Da hơi kém hơn/);
+    assert.match(down, /Da hơi mệt hơn/);
+    assert.equal(down.includes("kém"), false);
+    assert.match(down, /lucide-heart/);
+    const feelAt = down.indexOf("Dễ chịu");
+    assert.equal(down.slice(Math.max(0, feelAt - 500), feelAt).includes("trending-down"), false);
   });
 
   it("talks about this month without a score or mình", () => {

@@ -37,4 +37,22 @@ describe("guide barrier wording", () => {
     assert.match(read("articles/mun.ts"), /Da mụn vẫn cần dưỡng để lớp ngoài da đỡ khô rát/);
     assert.match(read("articles/da-kho.ts"), /Thường là lớp ngoài da đang khô/);
   });
+
+  it("does not put math symbols in guide pictures", () => {
+    const dir = path.resolve(GUIDES, "../../public/guides");
+    const hits: string[] = [];
+    const walk = (folder: string) => {
+      for (const name of fs.readdirSync(folder)) {
+        const full = path.join(folder, name);
+        if (fs.statSync(full).isDirectory()) walk(full);
+        else if (/[≠≤≥≈]/.test(fs.readFileSync(full, "utf8"))) {
+          hits.push(path.relative(dir, full));
+        }
+      }
+    };
+    walk(dir);
+    assert.deepEqual(hits, []);
+    const hero = fs.readFileSync(path.join(dir, "da-kho/hero.svg"), "utf8");
+    assert.match(hero, /Căng sau rửa chưa chắc là da sạch/);
+  });
 });

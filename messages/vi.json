@@ -1508,7 +1508,7 @@
       "gaugeFeelOk": "Dễ chịu",
       "deltaUp": "Da khá lên so với lần trước",
       "deltaFlat": "Da giữ ổn",
-      "deltaDown": "Da hơi kém hơn"
+      "deltaDown": "Da hơi mệt hơn"
     },
     "streak": {
       "ariaLabel": "Chuỗi ngày check-in",

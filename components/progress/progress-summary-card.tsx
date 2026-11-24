@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { Heart, Minus, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,7 +73,7 @@ export function ProgressSummaryCard({
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <StatTile
-            icon={<TrendIcon trend={trend} />}
+            icon={<Heart className="size-3.5" aria-hidden />}
             label={t("overall")}
             value={feelOrDash(summary.current_month?.overall_avg, t)}
           />
