@@ -1505,7 +1505,10 @@
       "gaugeBarrier": "Lớp bảo vệ da",
       "gaugeFeelLow": "Hơi kém",
       "gaugeFeelMid": "Ổn",
-      "gaugeFeelOk": "Dễ chịu"
+      "gaugeFeelOk": "Dễ chịu",
+      "deltaUp": "Da khá lên so với lần trước",
+      "deltaFlat": "Da giữ ổn",
+      "deltaDown": "Da hơi kém hơn"
     },
     "streak": {
       "ariaLabel": "Chuỗi ngày check-in",

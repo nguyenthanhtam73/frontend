@@ -1505,7 +1505,10 @@
       "gaugeBarrier": "Barrier",
       "gaugeFeelLow": "A bit off",
       "gaugeFeelMid": "Okay",
-      "gaugeFeelOk": "Comfortable"
+      "gaugeFeelOk": "Comfortable",
+      "deltaUp": "Skin feels better than last time",
+      "deltaFlat": "Skin is holding steady",
+      "deltaDown": "Skin feels a bit worse"
     },
     "streak": {
       "ariaLabel": "Check-in streak",
