@@ -906,7 +906,7 @@ function Room({
               {t("game.questTitle")}
               <span className="beda-gift-pill">
                 <GameIcon name={giftTaken ? "chestOpen" : "chestClosed"} className="beda-gift-ico" />
-                {giftTaken ? t("game.giftTaken") : t("game.gift")}
+                {giftTaken ? t("game.giftTaken") : t("game.gift.label")}
               </span>
             </h2>
             {(["morning", "evening"] as const).map((section) => {

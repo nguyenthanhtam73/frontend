@@ -3493,7 +3493,6 @@
       "roomNudge": "Nudge",
       "roomNudged": "Nudged",
       "questTitle": "Today's tasks",
-      "gift": "A gift",
       "giftTaken": "Taken",
       "routineLink": "Tick this in your routine",
       "allDone": "All done now",
@@ -3632,6 +3631,7 @@
         "failed": "That did not finish. Please try again"
       },
       "gift": {
+        "label": "A gift",
         "got": "You got 1 Leaf gift box",
         "gotBody": "Opening it gives one outfit or one accessory. Only the leaf tree has these.",
         "open": "Open the box",

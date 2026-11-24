@@ -14,9 +14,18 @@ const client = new QueryClient();
 
 export function LobbyShot() {
   const [open, setOpen] = useState(false);
+  const [card, setCard] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
-    setOpen(new URLSearchParams(window.location.search).get("open") === "1");
+    const params = new URLSearchParams(window.location.search);
+    setOpen(params.get("open") === "1");
+    setCard(params.get("card") === "1");
+    setTheme(params.get("theme") === "dark" ? "dark" : "light");
   }, []);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
     missedDays: 0,
@@ -28,8 +37,8 @@ export function LobbyShot() {
       <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
         <BeDaGameView
           locale="vi"
-          tab="lobby"
-          sky="morning"
+          tab={card ? "care" : "lobby"}
+          sky={theme === "dark" ? "night" : "morning"}
           coinsLabel="1.250"
           streakLabel="7"
           soundOn
@@ -46,7 +55,7 @@ export function LobbyShot() {
           wornIds={[]}
           hearts={0}
           streakKept
-          giftTaken
+          giftTaken={!card}
           player={player}
           burst={0}
           homeHref="/check-in"
