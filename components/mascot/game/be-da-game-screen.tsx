@@ -323,7 +323,15 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
     gender: view.gender,
     onTreeEvent: (event) => treeListen.current(event),
     onRemoteEmote: (event) => {
-      if (event.kind === "nudge") setToast({ kind: "nudge", message: event.message });
+      if (event.kind === "nudge") {
+        setToast({
+          kind: "nudge",
+          message: event.message,
+          variant: event.variant,
+          type: event.type,
+          nudgeType: event.nudgeType,
+        });
+      }
       else setToast(event);
       setBurst((n) => n + 1);
       playGameTing(soundRef.current);

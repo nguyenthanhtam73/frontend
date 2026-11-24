@@ -686,6 +686,23 @@ describe("Bé Da game screen", () => {
     assert.equal(text.includes("Trà Sữa"), false);
   });
 
+  it("shows the web nudge line on the room instead of the server sentence", () => {
+    const html = renderGame({
+      spa: {
+        code: "DA7K2M",
+        count: 5,
+        cap: 8,
+        guests: sampleSpaGuests(new Set()),
+        notice: null,
+        daysLeft: 5,
+      },
+      toast: { kind: "nudge", message: "Lan đang chờ bạn chăm da hôm nay đó 💕" },
+    });
+    assert.match(html, /data-testid="beda-toast"/);
+    assert.match(html, /Lan đang chờ mày chăm da hôm nay đó 💕/);
+    assert.equal(html.includes("đang chờ bạn chăm da"), false);
+  });
+
   it("keeps the streak unit and lobby tab on one line at phone width", () => {
     const html = renderGame();
     assert.match(html, /class="beda-nav-label"/);
