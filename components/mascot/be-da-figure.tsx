@@ -35,6 +35,11 @@ export function BeDaFigure({
   parts = "all",
   /** Leg copies skip the blink clock. The body copy keeps it. */
   blink = true,
+  /**
+   * Shop try-on layer. Same 220×250 viewBox as the body, drawn inside the
+   * breathe box so it shares the wardrobe anchors and does not shift her.
+   */
+  wearSrc = null,
   className,
 }: {
   view: BeDaView;
@@ -57,6 +62,7 @@ export function BeDaFigure({
   marks?: boolean;
   parts?: "all" | "body" | "arms";
   blink?: boolean;
+  wearSrc?: string | null;
   className?: string;
 }) {
   const [reaction, setReaction] = useState<Reaction | null>(null);
@@ -130,6 +136,16 @@ export function BeDaFigure({
           <img src={mascotAssetUrl("/mascot/fx/hearts.svg")} alt="" decoding="async" className="pointer-events-none absolute inset-0 h-full w-full" data-testid="be-da-hearts" />
         ) : null}
         {glowCelebrate ? <GlowBurst /> : null}
+        {wearSrc ? (
+          <img
+            src={mascotAssetUrl(wearSrc)}
+            alt=""
+            data-testid="beda-xu-wear-layer"
+            data-slot="shop-wear"
+            decoding="async"
+            className="pointer-events-none absolute inset-0 z-[3] h-full w-full"
+          />
+        ) : null}
       </span>
     </>
   );

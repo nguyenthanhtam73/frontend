@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { GameIcon } from "@/components/mascot/game/icons";
 import { DEFAULT_GAME_LOOK, gameDress, genderLook } from "@/lib/mascot/game/look";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
@@ -224,13 +225,18 @@ function wearsOnBody(card: ShelfCard | null): boolean {
   return card != null && card.kind === "piece" && WORN_LAYERS.has(card.layer);
 }
 
-/** Where a small piece sits, so the preview can lean in. Outfits stay full-body. */
-function focusZone(card: ShelfCard | null): "shoes" | "head" | "face" | "hand" | null {
-  if (!card || !wearsOnBody(card) || card.layer === "outfit") return null;
-  if (card.layer === "shoes") return "shoes";
-  if (card.layer === "hat" || card.layer === "hair_acc") return "head";
-  if (card.layer === "glasses" || card.layer === "earring") return "face";
-  return "hand";
+/** Line beside Bé Da. Purchase wins, then a coloured chat bubble, then a try-on. */
+function shopSpeech(
+  t: (key: "game.shop.successWarm" | "game.shop.successAlready" | "game.shop.bubbleHello" | "game.shop.trySay") => string,
+  trying: ShopTry | null,
+  dialog: ShopDialog,
+  colour: boolean,
+): { text: string; bubbleId: string } | null {
+  if (dialog?.kind === "success") return { text: t("game.shop.successWarm"), bubbleId: "" };
+  if (dialog?.kind === "owned") return { text: t("game.shop.successAlready"), bubbleId: "" };
+  if (trying && colour) return { text: t("game.shop.bubbleHello"), bubbleId: trying.id };
+  if (trying) return { text: t("game.shop.trySay"), bubbleId: "" };
+  return null;
 }
 
 function cardCost(card: ShelfCard): number {
@@ -405,8 +411,10 @@ export function BeDaXuShop({
     (trying ? SHELVES.flatMap((id) => shelves[id]).find((card) => card.id === trying.id) ?? null : null);
   const wearArt = trying ? shopWearId(trying.artId, who) : "";
   const wornOnBody = wearsOnBody(selected);
-  const focus = focusZone(selected);
   const layer = wornOnBody && wearArt ? shopLayerSrc(wearArt) : "";
+  const speech = shopSpeech(t, trying, dialog, Boolean(trying && bubbleColour(trying.id)));
+  // A worn piece is only the layer on her body. The shelf icon stays off the stage.
+  const thumb = !layer && trying && selected?.src ? selected.src : "";
   const shown = player ? { ...player, gender: who } : null;
   const wearing = selected ? wornPiece(player, selected, who) : false;
   const missing = selected ? cardShort(catalog.balance, selected) : 0;
@@ -453,8 +461,8 @@ export function BeDaXuShop({
         )}
         <h1 className="beda-shop-title">{t("game.shop.title")}</h1>
         <div className="beda-shop-pills">
-          <span className="beda-shop-pill" data-testid="beda-xu-balance" aria-live="polite">
-            <b aria-hidden>●</b>
+          <span className="beda-shop-pill is-xu" data-testid="beda-xu-balance" aria-live="polite">
+            <GameIcon name="coin" className="beda-shop-xu-coin" />
             {xu(locale, catalog.balance)}
           </span>
         </div>
@@ -480,11 +488,10 @@ export function BeDaXuShop({
         ))}
       </div>
       <section className="beda-shop-stage" data-testid="beda-xu-preview" aria-label={t("game.shop.tryFree")}>
-        <div
-          className={["beda-shop-hero", focus ? `is-zoom is-zoom-${focus}` : "", !wornOnBody && trying ? "is-decor" : ""].filter(Boolean).join(" ")}
-          data-testid="beda-xu-hero"
-          data-zoom={focus ?? ""}
-        >
+        <div className="beda-shop-hero" data-testid="beda-xu-hero" data-zoom="off">
+          <div className="beda-shop-side is-start">
+            {thumb ? <img className="beda-shop-decor" src={mascotAssetUrl(thumb)} alt="" data-testid="beda-xu-decor" /> : null}
+          </div>
           <div className="beda-shop-hero-frame">
             {shown ? (
               <BeDaFigure
@@ -493,32 +500,43 @@ export function BeDaXuShop({
                 dress={gameDress(genderLook(DEFAULT_GAME_LOOK, who))}
                 crowd
                 marks
+                wearSrc={layer || null}
               />
+            ) : layer ? (
+              <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" data-testid="beda-xu-wear-layer" />
             ) : null}
-            {layer ? <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" data-testid="beda-xu-wear-layer" /> : null}
           </div>
-          {(focus || (!wornOnBody && trying)) && selected?.src ? (
-            <img className="beda-shop-decor" src={mascotAssetUrl(selected.src)} alt="" data-testid="beda-xu-decor" />
-          ) : null}
+          <div className="beda-shop-side is-end">
+            {speech ? (
+              <p
+                className="beda-shop-speech"
+                style={bubbleFrameStyle(speech.bubbleId)}
+                data-testid={speech.bubbleId ? "beda-xu-sample-bubble" : "beda-xu-speech"}
+                data-side="end"
+                data-bubble={speech.bubbleId || undefined}
+              >
+                {speech.text}
+              </p>
+            ) : null}
+          </div>
         </div>
-        {trying && bubbleColour(trying.id) ? (
-          <p className="beda-shop-speech" style={bubbleFrameStyle(trying.id)} data-testid="beda-xu-sample-bubble">
-            {t("game.shop.bubbleHello")}
-          </p>
-        ) : null}
-        {trying ? (
-          <div className="beda-shop-trying">
-            <div>
-              <p className="beda-shop-kicker">{wornOnBody ? t("game.shop.trying") : t("game.shop.decor")}</p>
-              <strong>{trying.name}</strong>
-              {trying.price > 0 ? <p className="beda-shop-price">{xu(locale, trying.price)}</p> : null}
-              {wornOnBody ? null : <p className="beda-shop-note">{t("game.shop.decorNote")}</p>}
-            </div>
+        <div className="beda-shop-stage-foot">
+          <div className="beda-shop-caption">
+            {trying ? (
+              <div className="beda-shop-trying">
+                <p className="beda-shop-kicker">
+                  {wornOnBody ? t("game.shop.trying") : t("game.shop.decor")}
+                  <strong>{trying.name}</strong>
+                  {trying.price > 0 ? <span className="beda-shop-price">{xu(locale, trying.price)}</span> : null}
+                </p>
+                {wornOnBody ? null : <p className="beda-shop-note">{t("game.shop.decorNote")}</p>}
+              </div>
+            ) : (
+              <p className="beda-shop-note">{t("game.shop.previewEmpty")}</p>
+            )}
           </div>
-        ) : (
-          <p className="beda-shop-note">{t("game.shop.previewEmpty")}</p>
-        )}
-        {dialog ? null : <p className="beda-shop-note">{t("game.shop.skinNote")}</p>}
+          <p className="beda-shop-note beda-shop-disclaimer">{t("game.shop.skinNote")}</p>
+        </div>
       </section>
       <div className="beda-shop-scroll">
         <div className="beda-shop-grid" data-testid="beda-xu-grid" data-shelf={tab}>
@@ -758,7 +776,6 @@ function ShopDialogView({
         {dialog.kind === "success" ? (
           <>
             <p>{dialog.name}</p>
-            <p>{t("game.shop.successWarm")}</p>
             <p>
               {dialog.already
                 ? t("game.shop.successAlready")

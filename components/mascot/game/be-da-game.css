@@ -1206,6 +1206,32 @@ button.beda-chip {
   background: transparent;
 }
 
+/* Xu stays the bright coin pill in light and dark, even under a dimmed room. */
+.beda-chip[data-testid="beda-coins"],
+button.beda-chip[data-testid="beda-coins"],
+.dark .beda-chip[data-testid="beda-coins"],
+.dark button.beda-chip[data-testid="beda-coins"] {
+  background: linear-gradient(180deg, #ffe7a6 0%, #f5c14b 100%);
+  color: #5c3206;
+  border-color: #e6be62;
+  box-shadow: 0 4px 0 #c4923a;
+}
+
+.beda-chip[data-testid="beda-coins"] small,
+.dark .beda-chip[data-testid="beda-coins"] small {
+  color: #5c3206;
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .beda-chip[data-testid="beda-coins"],
+  button.beda-chip[data-testid="beda-coins"],
+  .beda-shop-pill.is-xu {
+    background: linear-gradient(180deg, #ffe7a6 0%, #f5c14b 100%);
+    color: #5c3206;
+  }
+}
+
 .beda-mute {
   margin-left: auto;
 }
