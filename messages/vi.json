@@ -3714,7 +3714,7 @@
         "setPrice": "Trọn bộ",
         "collected": "Đã sưu tầm {have}/{total}",
         "locked": "Cần chuỗi 30 ngày",
-        "lockedBody": "Giữ chuỗi chăm da {need} ngày để mở quyền đổi bằng xu. Bạn đang có chuỗi {streak}/{need} ngày. Mở rồi thì giữ luôn.",
+        "lockedBody": "Giữ chuỗi chăm da {need} ngày để mở quyền đổi bằng xu. Đang có chuỗi {streak}/{need} ngày. Mở rồi thì giữ luôn.",
         "bonus": "Đủ {total} món được thêm",
         "bonusLeft": "Còn {count} món",
         "setBuy": "Đổi cả bộ · {charge} xu",
@@ -3730,11 +3730,11 @@
         "seasonalBody": "Chỉ mở từ hộp quà. Không mua bằng xu. Đổi đồ không đổi kết quả da.",
         "closetEmpty": "Chưa có món nào đổi bằng xu.",
         "confirmTitle": "Đổi món này?",
-        "confirmBody": "Sẽ trừ {charge} xu. Bạn đang có {balance} xu.",
+        "confirmBody": "Sẽ trừ {charge} xu. Đang có {balance} xu.",
         "confirmYes": "Đổi {charge} xu",
         "confirmNo": "Để sau",
         "shortStay": "Chưa đủ xu",
-        "shortHave": "Bạn đang có {balance} xu",
+        "shortHave": "Đang có {balance} xu",
         "shortNeed": "Cần {charge} xu",
         "shortLeft": "Còn thiếu {short} xu. Chăm da đều thêm khoảng {min}–{max} ngày nữa là đủ.",
         "shortLeftSame": "Còn thiếu {short} xu. Chăm da đều thêm khoảng {days} ngày nữa là đủ.",
@@ -3770,7 +3770,7 @@
         "tabs": {
           "sets": "Bộ sưu tầm",
           "accessories": "Phụ kiện",
-          "mine": "Đồ của mình"
+          "mine": "Đồ trong tủ"
         }
       }
     }

@@ -10,6 +10,15 @@ import vi from "../../../messages/vi.json";
 
 const noop = () => undefined;
 
+function collectShopStrings(value: unknown, out: string[]) {
+  if (typeof value === "string") {
+    out.push(value);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const child of Object.values(value)) collectShopStrings(child, out);
+}
+
 function shopHtml(extra: { dialog?: ShopDialog; balance?: number; catalog?: ShopCatalog } = {}) {
   const catalog = extra.catalog ?? sampleShopCatalog(extra.balance ?? 5240);
   return renderToStaticMarkup(
@@ -48,7 +57,14 @@ describe("xu shop screen", () => {
     assert.match(html, /Chỉ mở từ hộp quà/);
     assert.match(html, /Không mua bằng xu/);
     assert.match(html, /Bộ sưu tầm/);
-    assert.match(html, /Đồ của mình/);
+    assert.match(html, /Đồ trong tủ/);
+    const shopLines: string[] = [];
+    collectShopStrings(vi.mascot.game.shop, shopLines);
+    assert.deepEqual(
+      shopLines.filter((line) => /\bbạn\b|\bmình\b/i.test(line)),
+      [],
+    );
+    assert.ok((shopLines.join("\n").match(/mày/gi)?.length ?? 0) <= 2);
     assert.match(html, /5\.240 xu/);
     assert.match(html, /data-testid="beda-xu-card-spa_01"[\s\S]*Đã có/);
     assert.equal(html.includes('data-testid="beda-xu-buy-spa_01"'), false);
