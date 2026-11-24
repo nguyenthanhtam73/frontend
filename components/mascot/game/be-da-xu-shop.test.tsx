@@ -54,7 +54,7 @@ describe("xu shop screen", () => {
     assert.match(html, /data-testid="beda-xu-group-daily"/);
     assert.match(html, /data-testid="beda-xu-seasonal"/);
     assert.match(html, /Đồ mùa chỉ có trong hộp quà/);
-    assert.match(html, /Chỉ mở từ hộp quà/);
+    assert.equal(html.includes("Chỉ mở từ hộp quà"), false);
     assert.match(html, /Không mua bằng xu/);
     assert.match(html, /Bộ sưu tầm/);
     assert.match(html, /Đồ trong tủ/);
@@ -91,6 +91,8 @@ describe("xu shop screen", () => {
       dialog: { kind: "short", name: "Gối ôm", charge: 6500, balance: 4120 },
     });
     assert.match(short, /data-testid="beda-xu-short"/);
+    assert.match(short, /Đang có 4\.120 xu/);
+    assert.equal(short.includes("Bạn đang có"), false);
     assert.match(short, /4\.120 xu/);
     assert.match(short, /6\.500 xu/);
     assert.match(short, /2\.380 xu/);
@@ -131,6 +133,7 @@ describe("xu shop screen", () => {
     assert.match(success, /Đổi xong rồi!/);
     assert.match(success, /Còn 240 xu/);
     assert.match(success, /data-testid="beda-xu-success-wear"/);
+    assert.match(success, /Mặc luôn/);
     assert.equal(/gacha/i.test(confirm + short + success), false);
   });
 });

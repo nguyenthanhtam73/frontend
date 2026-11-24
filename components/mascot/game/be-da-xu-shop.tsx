@@ -61,7 +61,8 @@ export type ShopDialog =
       bonusName: string;
       piece: { id: string; name: string; layer: string } | null;
     }
-  | { kind: "locked"; streak: number; need: number };
+  | { kind: "locked"; streak: number; need: number }
+  | { kind: "owned"; name: string; piece: { id: string; name: string; layer: string } | null };
 
 type BuyAsk = {
   itemId: string;
@@ -149,7 +150,8 @@ export function BeDaXuShop({
     });
   }
 
-  function buyPiece(piece: ShopPiece) {
+  function buyPiece(piece: ShopPiece, setName = "") {
+    tryPiece(piece, setName);
     onBuy({
       itemId: piece.id,
       treeType: "",
@@ -248,7 +250,7 @@ export function BeDaXuShop({
                 tryingId={trying?.id ?? ""}
                 pending={pending}
                 onPiece={(piece) => tryPiece(piece, set.name)}
-                onBuyPiece={buyPiece}
+                onBuyPiece={(piece) => buyPiece(piece, set.name)}
                 onSet={() =>
                   onBuy({
                     itemId: set.id,
@@ -584,7 +586,9 @@ function ShopDialogView({
         ? t("game.shop.shortStay")
         : dialog.kind === "success"
           ? t("game.shop.successTitle")
-          : t("game.shop.locked");
+          : dialog.kind === "owned"
+            ? t("game.shop.successAlready")
+            : t("game.shop.locked");
   const short = dialog.kind === "short" ? xuShortfall(dialog.balance, dialog.charge) : 0;
   const days = xuDaysRange(short);
   const fill = dialog.kind === "short" && dialog.charge > 0 ? Math.min(100, (dialog.balance / dialog.charge) * 100) : 0;
@@ -596,7 +600,7 @@ function ShopDialogView({
             <i /><i /><i /><i />
           </div>
         ) : null}
-        <h2>{title}</h2>
+        {dialog.kind === "owned" ? null : <h2>{title}</h2>}
         {dialog.kind === "confirm" ? (
           <>
             <p>{dialog.name}</p>
@@ -642,9 +646,20 @@ function ShopDialogView({
               <button type="button" className="beda-shop-ghost" onClick={onDismiss}>{t("game.shop.successClose")}</button>
               {dialog.piece ? (
                 <button type="button" className="beda-shop-buy" data-testid="beda-xu-success-wear" disabled={pending} onClick={onWear}>
-                  {t("game.shop.tryOn")}
+                  {t("game.shop.wearNow")}
                 </button>
               ) : null}
+            </div>
+          </>
+        ) : null}
+        {dialog.kind === "owned" ? (
+          <>
+            <p>{t("game.shop.successAlready")}</p>
+            <div className="beda-shop-dialog-actions">
+              <button type="button" className="beda-shop-ghost" onClick={onDismiss}>{t("game.shop.successClose")}</button>
+              <button type="button" className="beda-shop-buy" data-testid="beda-xu-owned-wear" disabled={pending || !dialog.piece} onClick={onWear}>
+                {t("game.shop.wearNow")}
+              </button>
             </div>
           </>
         ) : null}
@@ -742,7 +757,11 @@ export function XuShopScreen({
       } else if (info.code === "streak_locked") {
         setDialog({ kind: "locked", streak: info.streak ?? 0, need: info.streakRequired ?? 30 });
       } else if (info.code === "already_owned") {
-        setProblem(t("game.shop.successAlready"));
+        setDialog({
+          kind: "owned",
+          name: trying?.name ?? "",
+          piece: trying ? { id: trying.id, name: trying.name, layer: trying.layer } : null,
+        });
         void query.refetch();
       } else if (info.code === "idempotency_conflict" || info.code === "bad_idempotency_key") {
         setProblem(t("game.shop.conflict"));
@@ -786,7 +805,8 @@ export function XuShopScreen({
   }
 
   async function wear() {
-    const piece = dialog?.kind === "success" ? dialog.piece : trying;
+    const piece =
+      dialog?.kind === "success" || dialog?.kind === "owned" ? dialog.piece : trying;
     if (!piece) return;
     setPending(true);
     try {

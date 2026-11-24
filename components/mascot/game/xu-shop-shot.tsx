@@ -21,9 +21,41 @@ const TRY: ShopTry = {
   layer: "shoes",
 };
 
+const PILLOW: ShopTry = {
+  id: "dem_02",
+  artId: "dem_02",
+  name: "Gối ôm",
+  price: 6500,
+  setName: "Đêm Ngủ Ngon",
+  layer: "held",
+};
+
+const ROBE: ShopTry = {
+  id: "spa_01",
+  artId: "spa_01",
+  name: "Áo choàng tắm bông",
+  price: 9000,
+  setName: "Spa Sáng Sớm",
+  layer: "outfit",
+};
+
+function tryingFor(scene: string): ShopTry | null {
+  if (scene === "short") return PILLOW;
+  if (scene === "owned") return ROBE;
+  if (scene === "card" || scene === "gift" || scene === "full") return null;
+  return TRY;
+}
+
 function dialogFor(scene: string): ShopDialog {
   if (scene === "confirm") return { kind: "confirm", itemId: "spa_03", treeType: "", name: "Dép lông", charge: 5000 };
   if (scene === "short") return { kind: "short", name: "Gối ôm", charge: 6500, balance: 4120 };
+  if (scene === "owned") {
+    return {
+      kind: "owned",
+      name: ROBE.name,
+      piece: { id: ROBE.id, name: ROBE.name, layer: ROBE.layer },
+    };
+  }
   if (scene === "success") {
     return {
       kind: "success",
@@ -91,9 +123,9 @@ export function XuShopShot() {
       locale="vi"
       gender="female"
       pending={false}
-      trying={scene === "card" || scene === "gift" || scene === "full" ? null : TRY}
+      trying={tryingFor(scene)}
       dialog={dialogFor(scene)}
-      problem={scene === "owned" ? t("game.shop.successAlready") : null}
+      problem={null}
       player={player}
       theme={theme}
       onClose={() => undefined}
