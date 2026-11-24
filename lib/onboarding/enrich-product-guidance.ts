@@ -39,7 +39,12 @@ export function stripRepeatedContextPrefix(why: string, en: boolean): string {
 type ExplainState = { ceramide: boolean };
 
 /** Soften skincare jargon so Step 2 copy stays readable for beginners. */
-export function plainifyGuidanceText(text: string, en: boolean, state?: ExplainState): string {
+export function plainifyGuidanceText(
+  text: string,
+  en: boolean,
+  state?: ExplainState,
+  sentenceEnd = true,
+): string {
   let out = text.trim();
   if (!out) return out;
   const pairs = en
@@ -91,10 +96,11 @@ export function plainifyGuidanceText(text: string, en: boolean, state?: ExplainS
     if (out.includes(from)) out = out.split(from).join(to);
   }
   if (!en) out = explainVietnameseGuidance(out, state ?? { ceramide: false });
-  return ensureSentenceEnd(out.replace(/\s{2,}/g, " ").trim());
+  const cleaned = out.replace(/\s{2,}/g, " ").trim();
+  return sentenceEnd ? ensureSentenceEnd(cleaned) : cleaned;
 }
 
-/** Add a final period when a guidance sentence has none. Leave lists, emoji, and closers. */
+/** Add a final period when a guidance sentence has none. Leave lists, emoji, closers, amounts, and links. */
 function ensureSentenceEnd(text: string): string {
   const s = text.trim();
   if (!s) return s;
@@ -103,6 +109,8 @@ function ensureSentenceEnd(text: string): string {
   if (/[,:;•·–—-]$/u.test(s)) return s;
   if (/\p{Extended_Pictographic}$/u.test(s)) return s;
   if (/\n\s*(?:[-•*]|\d+[.)])/u.test(s)) return s;
+  if (/\d$/.test(s) || /%$/.test(s)) return s;
+  if (/(?:https?:\/\/|www\.)\S+$/i.test(s)) return s;
   return `${s}.`;
 }
 
@@ -196,7 +204,7 @@ export function enrichProductGuidanceItems(
       explained,
     );
     let benefits = (item.benefits ?? [])
-      .map((b) => plainifyGuidanceText(b, en, explained))
+      .map((b) => plainifyGuidanceText(b, en, explained, false))
       .filter(Boolean);
     if (benefits.length < 2) {
       benefits = mergeBenefits(benefits, defaultBenefits(item.step, phase, en));

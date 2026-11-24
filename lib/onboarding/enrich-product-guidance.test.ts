@@ -96,6 +96,16 @@ describe("plainifyGuidanceText", () => {
     assert.equal(plainifyGuidanceText("tuyệt 😊", false), "tuyệt 😊");
     assert.equal(plainifyGuidanceText("- rửa mặt\n- dưỡng", false), "- rửa mặt\n- dưỡng");
   });
+
+  it("leaves amounts and links without a period", () => {
+    assert.equal(plainifyGuidanceText("SPF 50", false), "SPF 50");
+    assert.equal(plainifyGuidanceText("BHA 2%", false), "BHA 2%");
+    assert.equal(plainifyGuidanceText("Retinol 0.3", false), "Retinol 0.3");
+    assert.equal(
+      plainifyGuidanceText("Xem https://dadiary.vn/a", false),
+      "Xem https://dadiary.vn/a",
+    );
+  });
 });
 
 describe("enrichProductGuidanceItems", () => {
@@ -127,9 +137,25 @@ describe("enrichProductGuidanceItems", () => {
     const [enriched] = enrichProductGuidanceItems([item], { locale: "vi" });
     const gloss = "(giúp lớp ngoài da giữ nước, đỡ khô rát)";
     assert.equal(enriched?.why, `Kem dưỡng ceramide ${gloss}`);
-    assert.equal(enriched?.benefits[0], "Có ceramides: sạch nhẹ.");
+    assert.equal(enriched?.benefits[0], "Có ceramides: sạch nhẹ");
     assert.equal(enriched?.how_to_use, "Thoa ceramide NP.");
     const joined = `${enriched?.why} ${enriched?.benefits.join(" ")} ${enriched?.how_to_use}`;
     assert.equal(joined.split(gloss).length - 1, 1);
+  });
+
+  it("does not punctuate benefits, so a matching default is not added twice", () => {
+    const item: ProductGuidanceItemDTO = {
+      step: "cleanse",
+      phase: "calm_first",
+      category: "cleanser",
+      name_or_category: "Sữa rửa mặt",
+      why: "Rửa nhẹ",
+      benefits: ["Làm sạch nhẹ"],
+      how_to_use: "Nước ấm",
+    };
+    const [enriched] = enrichProductGuidanceItems([item], { locale: "vi" });
+    assert.equal(enriched?.benefits.filter((line) => line === "Làm sạch nhẹ").length, 1);
+    assert.equal(enriched?.benefits.some((line) => line.endsWith(".")), false);
+    assert.equal(enriched?.why, "Rửa nhẹ.");
   });
 });
