@@ -123,8 +123,8 @@ html.dark .beda-draw-wait {
 }
 
 .beda-scene.is-pixi .beda-cabinet {
-  /* Above Bé Da so a walk that passes the closet still hits the button. */
-  z-index: 7;
+  /* Same depth as the other props. The canvas does not take taps, so the button still hits. */
+  z-index: 42;
 }
 
 .beda-game:has(.beda-lobby[data-engine="pixi"]),
@@ -363,7 +363,7 @@ html.dark .beda-draw-wait {
 
 .beda-bed {
   position: absolute;
-  z-index: 1;
+  z-index: 42;
   left: 8px;
   bottom: 41.6%;
   width: clamp(74px, 16vw, 148px);
@@ -431,7 +431,7 @@ html.dark .beda-draw-wait {
 
 .beda-sink {
   position: absolute;
-  z-index: 2;
+  z-index: 42;
   right: 5%;
   bottom: 41.6%;
   width: min(18vw, 86px);
@@ -441,6 +441,7 @@ html.dark .beda-draw-wait {
 
 .beda-plant {
   position: absolute;
+  z-index: 42;
   right: 27%;
   bottom: 42%;
   width: 54px;
@@ -468,10 +469,10 @@ html.dark .beda-draw-wait {
 }
 
 /* Private room only. About 1.4× the v2 closet, on the floor just right of the bed.
-   Under Bé Da and her rug, over the wall. */
+   She sorts in front of it when she walks down. */
 .beda-cabinet {
   position: absolute;
-  z-index: 2;
+  z-index: 42;
   left: 22.5%;
   bottom: 41.6%;
   width: 12%;
@@ -543,7 +544,7 @@ html.dark .beda-draw-wait {
   bottom: auto;
   left: calc(var(--rx, 0.48) * 100%);
   top: calc(var(--ry, 0.76) * 100%);
-  width: clamp(168px, 44vw, 220px);
+  width: calc(clamp(168px, 44vw, 220px) * var(--depth, 1));
   transform: translate(-50%, -100%);
 }
 
@@ -575,8 +576,8 @@ html.dark .beda-draw-wait {
 }
 
 .beda-hero-wrap.is-floor {
-  /* Above the closet so the sentence is not hidden behind it. Clicks pass through. */
-  z-index: 8;
+  /* JS sets this from her feet. The fallback stays under the task card and the nav. */
+  z-index: 40;
 }
 
 .beda-hero-wrap.is-floor .beda-bubble {
@@ -587,10 +588,77 @@ html.dark .beda-draw-wait {
   width: min(210px, calc(100vw - 40px));
   max-width: calc(100vw - 24px);
   margin: 0;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--bubble-x, 0px)));
   white-space: normal;
   overflow-wrap: break-word;
   pointer-events: none;
+}
+
+.beda-hero-wrap.is-floor[data-bubble-side="below"] .beda-bubble {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.beda-hero-wrap.is-floor[data-bubble-side="below"] .beda-bubble::after {
+  bottom: auto;
+  top: -10px;
+  border-top: 0;
+  border-bottom: 10px solid #fff;
+}
+
+/* Above the nav, clear of the task card. Each key is a 44px target. */
+.beda-pad {
+  position: absolute;
+  z-index: 72;
+  right: 8px;
+  bottom: calc(var(--beda-nav-reserve) + 136px);
+  display: grid;
+  grid-template-columns: 44px 44px 44px;
+  grid-template-rows: 44px 44px;
+  gap: 6px;
+  width: 144px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.beda-pad.is-hidden {
+  display: none;
+}
+
+.beda-pad-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 14px;
+  background: rgba(255, 250, 245, 0.94);
+  color: #3c2a30;
+  font-size: 16px;
+  line-height: 1;
+  box-shadow: 0 3px 0 #e7cfc6;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.beda-pad-btn.is-up { grid-column: 2; grid-row: 1; }
+.beda-pad-btn.is-left { grid-column: 1; grid-row: 2; }
+.beda-pad-btn.is-down { grid-column: 2; grid-row: 2; }
+.beda-pad-btn.is-right { grid-column: 3; grid-row: 2; }
+
+.beda-pad-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #e7cfc6;
+}
+
+html.dark .beda-pad-btn {
+  background: rgba(28, 22, 27, 0.92);
+  color: #f8efe9;
+  border-color: #5c4450;
+  box-shadow: 0 3px 0 #3a2a32;
 }
 
 .beda-hero-wrap.is-floor .beda-pretty {
@@ -687,7 +755,7 @@ html.dark .beda-draw-wait {
 
 .beda-quest {
   position: absolute;
-  z-index: 6;
+  z-index: 60;
   top: calc(86px + env(safe-area-inset-top));
   left: 12px;
   box-sizing: border-box;
@@ -893,7 +961,7 @@ html.dark .beda-draw-wait {
 
 .beda-door {
   position: absolute;
-  z-index: 6;
+  z-index: 60;
   top: calc(86px + env(safe-area-inset-top));
   right: 12px;
   display: flex;
@@ -1005,7 +1073,7 @@ html.dark .beda-draw-wait {
 
 .beda-nav {
   position: absolute;
-  z-index: 8;
+  z-index: 80;
   left: 0;
   right: 0;
   bottom: 0;
@@ -2592,7 +2660,7 @@ html.dark .beda-draw-wait {
   }
 
   .beda-hero-wrap.is-floor {
-    width: clamp(180px, 20vw, 240px);
+    width: calc(clamp(180px, 20vw, 240px) * var(--depth, 1));
   }
 
   .beda-hero-wrap.is-floor .beda-bubble {

@@ -38,7 +38,7 @@ import type { GameBubbleKind, GameQuest } from "@/lib/mascot/game/quests";
 import { routineAffiliateLink } from "@/lib/routine/affiliate-link";
 import { sessionGate } from "@/lib/routine/session-window";
 import { useRoomWalk } from "@/components/mascot/game/use-room-walk";
-import { lookArt } from "@/lib/game/core/art";
+import { lookArt, playerActorArt } from "@/lib/game/core/art";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { ROOM_SPAWN, ROOM_WALK_MASK } from "@/lib/mascot/game/room-walk";
 import type { ShellSnapshot } from "@/lib/game/core/types";
@@ -836,7 +836,9 @@ function Room({
       clearBedaReady(document.body);
     };
   }, []);
-  const roomArt = lookArt(player, look, false);
+  // Neglect stays a standing sleepy Bé Da. Every other mood uses the lobby's v2 sheet.
+  const roomSleepy = player.mood === "sleepy" || player.disheveled > 0;
+  const roomArt = roomSleepy ? lookArt(player, look, false) : playerActorArt(player, look);
   const snapRef = useRef<ShellSnapshot>({ scene: "room", sky, sprites: [] });
   snapRef.current = {
     scene: "room",
@@ -994,19 +996,13 @@ function Room({
                 "--rx": String(ROOM_SPAWN.x),
                 "--ry": String(ROOM_SPAWN.y),
                 "--face": "1",
+                "--depth": "1",
               } as CSSProperties)
         }
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
         <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} loiText={loiText} />
-        <BeDaFigure
-          view={player}
-          locale={locale}
-          dress={gameDress(look)}
-          crowd={hideCards}
-          marks={hideCards ? true : undefined}
-          className="w-full"
-        />
+        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} crowd={!roomSleepy} marks className="w-full" />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">
@@ -1027,6 +1023,25 @@ function Room({
         </div>
       </div>
       ) : null}
+      <div
+        className={hideCards || !showHero ? "beda-pad is-hidden" : "beda-pad"}
+        data-testid="beda-walk-pad"
+        role="group"
+        aria-label={t("game.walkPad")}
+      >
+        <button type="button" className="beda-pad-btn is-up" data-room-dir="up" aria-label={t("game.walkUp")}>
+          <span aria-hidden="true">▲</span>
+        </button>
+        <button type="button" className="beda-pad-btn is-left" data-room-dir="left" aria-label={t("game.walkLeft")}>
+          <span aria-hidden="true">◀</span>
+        </button>
+        <button type="button" className="beda-pad-btn is-down" data-room-dir="down" aria-label={t("game.walkDown")}>
+          <span aria-hidden="true">▼</span>
+        </button>
+        <button type="button" className="beda-pad-btn is-right" data-room-dir="right" aria-label={t("game.walkRight")}>
+          <span aria-hidden="true">▶</span>
+        </button>
+      </div>
     </div>
   );
 }

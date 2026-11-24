@@ -111,6 +111,14 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-streak"/);
     assert.match(html, /7/);
     assert.match(html, /chuỗi ngày/);
+    assert.match(html, /data-testid="beda-walk-pad"/);
+    assert.match(html, /data-room-dir="up"/);
+    assert.match(html, /data-room-dir="down"/);
+    assert.match(html, /data-room-dir="left"/);
+    assert.match(html, /data-room-dir="right"/);
+    assert.match(html, /aria-label="Đi lên"/);
+    assert.equal(html.includes("room_moon"), false);
+    assert.equal(html.includes("/mascot/glow/"), false);
     assert.match(html, /data-testid="beda-hero"/);
     assert.match(html, /beda-hero-wrap is-floor/);
     assert.match(html, /data-floor="on"/);
@@ -134,6 +142,14 @@ describe("Bé Da game screen", () => {
     assert.equal(bubble.includes("text-foreground"), false);
     assertNoScores(html);
     assert.equal(html.includes('data-testid="beda-lobby"'), false);
+  });
+
+  it("draws the chosen Nam variant with the same v2 stack as the lobby", () => {
+    const html = renderGame({ player: { ...player(), gender: "male" } });
+    assert.match(html, /outfit_pajamas_boy\.svg/);
+    assert.match(html, /hair_boy_short\.svg/);
+    assert.equal(html.includes("room_moon"), false);
+    assert.equal(html.includes("hair_sleep_buns"), false);
   });
 
   it("speaks English without a score", () => {
