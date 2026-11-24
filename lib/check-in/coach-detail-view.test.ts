@@ -86,6 +86,20 @@ describe("visibleZoneNotes", () => {
     assert.equal(isGoodSkinNote("Looks like smooth, clear skin."), false);
     assert.equal(isGoodSkinNote("Hơi khô ở mép."), false);
     assert.equal(isGoodSkinNote("No significant change today."), false);
+    for (const note of [
+      "Da mịn màng, hơi sần.",
+      "Da mịn màng, có vài chấm li ti.",
+      "Da mịn màng, không thấy mụn nhưng hơi ửng.",
+      "Không có dấu hiệu viêm nhưng lỗ chân lông to.",
+      "Không thấy mụn viêm, chỉ vài nốt mụn ẩn.",
+      "Không thấy mụn nhưng da kích ứng.",
+      "Smooth overall but a few red bumps.",
+    ]) {
+      assert.equal(isGoodSkinNote(note), false, note);
+      const [row] = visibleZoneNotes([{ zone: "chin", note, severity: "mild" }]);
+      assert.equal(row?.note, note, note);
+      assert.equal(row?.severityKey, "severityMild", note);
+    }
 
     const notes = visibleZoneNotes([
       {
