@@ -177,8 +177,50 @@
 
 .beda-shop-hero {
   position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
   width: min(220px, 58vw);
   margin: 8px auto;
+  overflow: hidden;
+}
+
+.beda-shop-hero-frame {
+  position: relative;
+  width: min(180px, 48vw);
+  aspect-ratio: 220 / 250;
+  flex: none;
+}
+
+.beda-shop.is-popup .beda-shop-hero-frame {
+  width: auto;
+  height: 100%;
+}
+
+.beda-shop-hero-frame .bd-figure {
+  width: 100%;
+  height: 100%;
+}
+
+.beda-shop-hero.is-zoom-shoes .beda-shop-hero-frame {
+  transform: scale(1.55);
+  transform-origin: 50% 86%;
+}
+
+.beda-shop-hero.is-zoom-head .beda-shop-hero-frame {
+  transform: scale(1.9);
+  transform-origin: 50% 20%;
+}
+
+.beda-shop-hero.is-zoom-face .beda-shop-hero-frame {
+  transform: scale(1.95);
+  transform-origin: 50% 32%;
+}
+
+.beda-shop-hero.is-zoom-hand .beda-shop-hero-frame {
+  transform: scale(1.7);
+  transform-origin: 50% 58%;
 }
 
 .beda-shop-wear {
@@ -199,17 +241,16 @@
   width: min(100%, 320px);
 }
 
-.beda-shop-hero.is-decor .bd-figure {
-  width: min(150px, 42vw);
-  flex: none;
+.beda-shop-hero.is-decor .beda-shop-hero-frame {
+  width: min(140px, 40vw);
 }
 
 .beda-shop-decor {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   flex: none;
   object-fit: contain;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 
 .beda-shop-trying {
@@ -467,9 +508,9 @@
 .beda-shop-tabs {
   display: flex;
   flex: none;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 0 12px 8px;
+  gap: 4px;
+  overflow: hidden;
+  padding: 0 8px 6px;
 }
 
 .beda-shop-scroll > * {
@@ -477,15 +518,19 @@
 }
 
 .beda-shop-tab {
-  flex: none;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 44px;
+  min-height: 44px;
   border: 0;
   border-radius: 999px;
   background: var(--shop-soft);
   color: var(--shop-ink);
-  padding: 0 14px;
+  padding: 0 2px;
   font: inherit;
   font-size: 14px;
   font-weight: 800;
+  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 
@@ -630,43 +675,54 @@
   padding-right: 60px;
 }
 
-.beda-shop.is-popup .beda-shop-hero {
-  width: min(220px, 72vw);
-  margin: 0 auto;
-}
-
-.beda-shop.is-popup .beda-shop-hero.is-decor {
-  width: min(100%, 320px);
-}
-
 .beda-shop.is-popup .beda-shop-stage {
-  padding: 8px 10px 6px;
+  flex: 0 0 40%;
+  max-height: 40%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 2px 10px 4px;
 }
 
-@media (min-width: 768px) {
-  .beda-shop.is-popup .beda-shop-hero {
-    width: 240px;
-  }
-
-  .beda-shop.is-popup .beda-shop-hero.is-decor {
-    width: min(100%, 420px);
-  }
-
-  .beda-shop-hero.is-decor .bd-figure {
-    width: 180px;
-  }
-
-  .beda-shop-decor {
-    width: 120px;
-    height: 120px;
-  }
+.beda-shop.is-popup .beda-shop-hero {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
 }
 
-/* Popup sits above the room (scene z-index 1, nav 80, room shades 1300). */
+.beda-shop.is-popup .beda-shop-trying {
+  flex: none;
+  margin-top: 2px;
+}
+
+.beda-shop.is-popup .beda-shop-stage .beda-shop-note {
+  flex: none;
+  margin: 2px 0 0;
+}
+
+.beda-shop.is-popup .beda-shop-decor {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+}
+
+.beda-shop.is-popup .beda-shop-art,
+.beda-shop.is-popup .beda-shop-piece img.beda-shop-art,
+.beda-shop.is-popup .beda-shop-swatch.beda-shop-art {
+  height: 80px;
+}
+
+body[data-beda-shop="open"] .beda-nav {
+  visibility: hidden;
+}
+
+/* Portaled onto the document so it covers the room nav (the game itself is z-index 80). */
 .beda-shop-popup {
   position: fixed;
   inset: 0;
-  z-index: 1600;
+  z-index: 4000;
   display: flex;
   align-items: flex-end;
   justify-content: center;

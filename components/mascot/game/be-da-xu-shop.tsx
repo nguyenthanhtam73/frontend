@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -134,12 +135,35 @@ function cardFromPiece(piece: ShopPiece, setName = ""): ShelfCard {
   };
 }
 
+/** Clothes you actually wear. Held props and jewellery stay out of this shelf. */
+const CLOTHES_LAYERS = new Set(["outfit", "shoes", "hat"]);
+const STICKER_LAYERS = new Set(["sticker", "name_frame", "bubble"]);
+
+function shelfFor(card: Pick<ShelfCard, "kind" | "layer">): ShopShelf {
+  if (card.kind === "seed" || card.layer === "seed") return "seeds";
+  if (card.kind === "colour" || STICKER_LAYERS.has(card.layer)) return "stickers";
+  if (CLOTHES_LAYERS.has(card.layer)) return "clothes";
+  return "accessories";
+}
+
 function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
-  const clothes = catalog.sets.flatMap((set) => set.pieces.map((piece) => cardFromPiece(piece, set.name)));
-  const accessories = catalog.accessories.map((piece) => cardFromPiece(piece));
-  const stickers = [
-    ...catalog.daily.map((piece) => cardFromPiece(piece)),
-    ...BUBBLE_COLOURS.map((colour) => ({
+  const shelves: Record<ShopShelf, ShelfCard[]> = { clothes: [], accessories: [], stickers: [], seeds: [] };
+  for (const set of catalog.sets) {
+    for (const piece of set.pieces) {
+      const card = cardFromPiece(piece, set.name);
+      shelves[shelfFor(card)].push(card);
+    }
+  }
+  for (const piece of catalog.accessories) {
+    const card = cardFromPiece(piece);
+    shelves[shelfFor(card)].push(card);
+  }
+  for (const piece of catalog.daily) {
+    const card = cardFromPiece(piece);
+    shelves[shelfFor(card)].push(card);
+  }
+  for (const colour of BUBBLE_COLOURS) {
+    shelves.stickers.push({
       id: colour.id,
       itemId: colour.id,
       treeType: "",
@@ -156,9 +180,10 @@ function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
       streakRequired: null,
       setName: "",
       kind: "colour" as const,
-    })),
-  ];
-  const seeds = catalog.seeds.trees.map((tree) => ({
+    });
+  }
+  for (const tree of catalog.seeds.trees) {
+    shelves.seeds.push({
     id: `seed_${tree.key}`,
     itemId: catalog.seeds.itemId,
     treeType: tree.key,
@@ -175,8 +200,9 @@ function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
     streakRequired: null,
     setName: "",
     kind: "seed" as const,
-  }));
-  return { clothes, accessories, stickers, seeds };
+    });
+  }
+  return shelves;
 }
 
 const WORN_LAYERS = new Set([
@@ -196,6 +222,15 @@ const WORN_LAYERS = new Set([
 
 function wearsOnBody(card: ShelfCard | null): boolean {
   return card != null && card.kind === "piece" && WORN_LAYERS.has(card.layer);
+}
+
+/** Where a small piece sits, so the preview can lean in. Outfits stay full-body. */
+function focusZone(card: ShelfCard | null): "shoes" | "head" | "face" | "hand" | null {
+  if (!card || !wearsOnBody(card) || card.layer === "outfit") return null;
+  if (card.layer === "shoes") return "shoes";
+  if (card.layer === "hat" || card.layer === "hair_acc") return "head";
+  if (card.layer === "glasses" || card.layer === "earring") return "face";
+  return "hand";
 }
 
 function cardCost(card: ShelfCard): number {
@@ -257,6 +292,7 @@ export function XuShopPopup({
   useEffect(() => {
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.dataset.bedaShop = "open";
     let closed = false;
     const finish = () => {
       if (closed) return;
@@ -282,12 +318,13 @@ export function XuShopPopup({
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previous;
+      delete document.body.dataset.bedaShop;
       window.removeEventListener("popstate", onPop);
       window.removeEventListener("keydown", onKey);
     };
   }, []);
 
-  return (
+  const popup = (
     <div className="beda-shop-popup" data-testid="beda-xu-popup">
       <button
         type="button"
@@ -312,6 +349,8 @@ export function XuShopPopup({
       </div>
     </div>
   );
+  if (typeof document === "undefined") return popup;
+  return createPortal(popup, document.body);
 }
 
 export function BeDaXuShop({
@@ -366,6 +405,7 @@ export function BeDaXuShop({
     (trying ? SHELVES.flatMap((id) => shelves[id]).find((card) => card.id === trying.id) ?? null : null);
   const wearArt = trying ? shopWearId(trying.artId, who) : "";
   const wornOnBody = wearsOnBody(selected);
+  const focus = focusZone(selected);
   const layer = wornOnBody && wearArt ? shopLayerSrc(wearArt) : "";
   const shown = player ? { ...player, gender: who } : null;
   const wearing = selected ? wornPiece(player, selected, who) : false;
@@ -439,9 +479,13 @@ export function BeDaXuShop({
           </button>
         ))}
       </div>
-      <div className="beda-shop-scroll">
-        <section className="beda-shop-stage" data-testid="beda-xu-preview" aria-label={t("game.shop.tryFree")}>
-          <div className={wornOnBody || !trying ? "beda-shop-hero" : "beda-shop-hero is-decor"} data-testid="beda-xu-hero">
+      <section className="beda-shop-stage" data-testid="beda-xu-preview" aria-label={t("game.shop.tryFree")}>
+        <div
+          className={["beda-shop-hero", focus ? `is-zoom is-zoom-${focus}` : "", !wornOnBody && trying ? "is-decor" : ""].filter(Boolean).join(" ")}
+          data-testid="beda-xu-hero"
+          data-zoom={focus ?? ""}
+        >
+          <div className="beda-shop-hero-frame">
             {shown ? (
               <BeDaFigure
                 view={shown}
@@ -452,30 +496,31 @@ export function BeDaXuShop({
               />
             ) : null}
             {layer ? <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" data-testid="beda-xu-wear-layer" /> : null}
-            {!wornOnBody && trying && selected?.src ? (
-              <img className="beda-shop-decor" src={mascotAssetUrl(selected.src)} alt="" data-testid="beda-xu-decor" />
-            ) : null}
           </div>
-          {trying && bubbleColour(trying.id) ? (
-            <p className="beda-shop-speech" style={bubbleFrameStyle(trying.id)} data-testid="beda-xu-sample-bubble">
-              {t("game.shop.bubbleHello")}
-            </p>
+          {(focus || (!wornOnBody && trying)) && selected?.src ? (
+            <img className="beda-shop-decor" src={mascotAssetUrl(selected.src)} alt="" data-testid="beda-xu-decor" />
           ) : null}
-          {trying ? (
-            <div className="beda-shop-trying">
-              <div>
-                <p className="beda-shop-kicker">{wornOnBody ? t("game.shop.trying") : t("game.shop.decor")}</p>
-                <strong>{trying.name}</strong>
-                {trying.price > 0 ? <p className="beda-shop-price">{xu(locale, trying.price)}</p> : null}
-                {wornOnBody && trying.setName ? <p className="beda-shop-muted">{t("game.shop.setOf", { name: trying.setName })}</p> : null}
-                {wornOnBody ? null : <p className="beda-shop-note">{t("game.shop.decorNote")}</p>}
-              </div>
+        </div>
+        {trying && bubbleColour(trying.id) ? (
+          <p className="beda-shop-speech" style={bubbleFrameStyle(trying.id)} data-testid="beda-xu-sample-bubble">
+            {t("game.shop.bubbleHello")}
+          </p>
+        ) : null}
+        {trying ? (
+          <div className="beda-shop-trying">
+            <div>
+              <p className="beda-shop-kicker">{wornOnBody ? t("game.shop.trying") : t("game.shop.decor")}</p>
+              <strong>{trying.name}</strong>
+              {trying.price > 0 ? <p className="beda-shop-price">{xu(locale, trying.price)}</p> : null}
+              {wornOnBody ? null : <p className="beda-shop-note">{t("game.shop.decorNote")}</p>}
             </div>
-          ) : (
-            <p className="beda-shop-note">{t("game.shop.previewEmpty")}</p>
-          )}
-          <p className="beda-shop-note">{t("game.shop.skinNote")}</p>
-        </section>
+          </div>
+        ) : (
+          <p className="beda-shop-note">{t("game.shop.previewEmpty")}</p>
+        )}
+        {dialog ? null : <p className="beda-shop-note">{t("game.shop.skinNote")}</p>}
+      </section>
+      <div className="beda-shop-scroll">
         <div className="beda-shop-grid" data-testid="beda-xu-grid" data-shelf={tab}>
           {cards.map((card) => (
             <ShelfButton

@@ -66,8 +66,11 @@ describe("xu shop screen", () => {
     assert.match(html, /data-testid="beda-xu-wear-layer"/);
     assert.match(html, /xu_spa_dep_long\.svg/);
     assert.match(html, /Đang thử/);
-    assert.match(html, /Bộ Spa Sáng Sớm/);
-    assert.equal(html.includes(">Spa Sáng Sớm<"), false);
+    assert.match(html, /data-zoom="shoes"/);
+    assert.match(html, /data-testid="beda-xu-decor"/);
+    assert.equal(html.includes("Bộ Spa Sáng Sớm"), false);
+    assert.equal(html.includes("Ly trà hoa cúc"), false);
+    assert.equal(html.includes("Bình tưới mini"), false);
     assert.match(html, /data-testid="beda-xu-seasonal"/);
     assert.match(html, /Đồ mùa chỉ có trong hộp quà/);
     assert.equal(html.includes("Chỉ mở từ hộp quà"), false);
@@ -95,8 +98,12 @@ describe("xu shop screen", () => {
     assert.match(stickers, /Không mặc lên người/);
     assert.equal(stickers.includes("Đang thử"), false);
     assert.equal(stickers.includes('data-testid="beda-xu-buy-kem_hong"'), false);
+    const accessories = shopHtml({ shelf: "accessories", tryingId: "" });
+    assert.match(accessories, /Ly trà hoa cúc/);
+    assert.match(accessories, /Bình tưới mini/);
+    assert.match(accessories, /Kính tròn/);
     assert.equal(/gacha/i.test(html), false);
-    assert.match(html, /không đổi kết quả da/);
+    assert.match(html, /không ảnh hưởng nhật ký da của mày đâu/);
   });
 
   it("asks before a big debit and says how many xu are missing", () => {
