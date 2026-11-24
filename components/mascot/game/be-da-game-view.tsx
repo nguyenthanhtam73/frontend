@@ -944,7 +944,7 @@ function Room({
       ) : null}
 
       {!hideCards ? (
-        <>
+        <div className="beda-private-bar">
           <section className="beda-card beda-quest" data-testid="beda-quest" aria-label={t("game.questTitle")}>
             <h2>
               <GameIcon name="quests" className="beda-ico-sm" />
@@ -989,7 +989,7 @@ function Room({
               <strong>{doorCountLabel}</strong>
             </span>
           </button>
-        </>
+        </div>
       ) : null}
 
       {showHero ? (
