@@ -3705,6 +3705,7 @@
       },
       "shop": {
         "open": "Spend xu",
+        "openChip": "Open the shop, {count} coins",
         "title": "Xu shop",
         "back": "Close shop",
         "streak": "{count} days",
@@ -3718,6 +3719,7 @@
         "previewEmpty": "Pick a piece to see Bé Da try it.",
         "skinNote": "Clothes do not change skin results.",
         "buy": "Get it",
+        "dockBuy": "Get it · {charge} xu",
         "owned": "Already have",
         "wearing": "Wearing",
         "setPrice": "Whole set",
@@ -3743,12 +3745,14 @@
         "confirmYes": "Spend {charge} xu",
         "confirmNo": "Not now",
         "shortStay": "Not enough xu",
+        "shortCard": "Still need {count} xu",
         "shortHave": "You have {balance} xu",
         "shortNeed": "Needs {charge} xu",
         "shortLeft": "You still need {short} xu. Care for your skin and water the tree each day to add more xu.",
         "shortGo": "Go care for skin",
         "shortNote": "Trying on stays free.",
         "successTitle": "It's yours!",
+        "successWarm": "It's on Bé Da now.",
         "successCharged": "Spent {charged} xu. {balance} xu left.",
         "successBonus": "The set is complete, so you also got {name}.",
         "successAlready": "This is already in the closet. No extra xu spent.",
@@ -3776,6 +3780,9 @@
           "tui": "Bag"
         },
         "tabs": {
+          "clothes": "Clothes",
+          "stickers": "Stickers",
+          "seeds": "Seeds",
           "sets": "Collections",
           "accessories": "Accessories",
           "mine": "Mine"

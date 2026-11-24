@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
@@ -158,6 +158,7 @@ export function BeDaGameView({
   shopCloset = [],
   onOpenShop,
   onWearShop,
+  shopSlot = null,
   loiText = null,
   plainRoom = false,
   holdFrame = false,
@@ -250,6 +251,8 @@ export function BeDaGameView({
   shopCloset?: readonly ShopClosetItem[];
   onOpenShop?: () => void;
   onWearShop?: (item: ShopClosetItem) => void;
+  /** Xu shop popup. A sibling of the scene, above the nav. */
+  shopSlot?: ReactNode;
   /** A short reviewed line. Empty keeps the usual care sentence. */
   loiText?: string | null;
   /** Skip the canvas. Screenshots use this after a forced Pixi timeout. */
@@ -548,12 +551,27 @@ export function BeDaGameView({
           </div>
         ) : (
           <>
-            <div className="beda-chip" data-testid="beda-coins">
-              <span className="beda-chip-icon coin">
-                <GameIcon name="coin" className="beda-ico-sm" />
-              </span>
-              {coinsLabel} <small>{t("game.coinsUnit")}</small>
-            </div>
+            {onOpenShop ? (
+              <button
+                type="button"
+                className="beda-chip"
+                data-testid="beda-coins"
+                aria-label={t("game.shop.openChip", { count: coinsLabel })}
+                onClick={onOpenShop}
+              >
+                <span className="beda-chip-icon coin">
+                  <GameIcon name="coin" className="beda-ico-sm" />
+                </span>
+                {coinsLabel} <small>{t("game.coinsUnit")}</small>
+              </button>
+            ) : (
+              <div className="beda-chip" data-testid="beda-coins">
+                <span className="beda-chip-icon coin">
+                  <GameIcon name="coin" className="beda-ico-sm" />
+                </span>
+                {coinsLabel} <small>{t("game.coinsUnit")}</small>
+              </div>
+            )}
             <div className="beda-chip" data-testid="beda-streak">
               <span className="beda-chip-icon flame">
                 <GameIcon name="flame" className="beda-ico-sm" />
@@ -772,6 +790,7 @@ export function BeDaGameView({
           );
         })}
       </nav>
+      {shopSlot}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -20,9 +20,7 @@ import {
   getXuShop,
   readShopError,
   reusePurchaseAttempt,
-  shopAccFilter,
   shopArtId,
-  shopClosetItems,
   shopIconSrc,
   shopLayerSrc,
   shopNextStep,
@@ -32,11 +30,9 @@ import {
   xuShortfall,
   XU_SHOP_QUERY_KEY,
   type PurchaseAttempt,
-  type ShopAccFilter,
   type ShopCatalog,
   type ShopClosetItem,
   type ShopPiece,
-  type ShopSet,
 } from "@/lib/mascot/game/xu-shop";
 
 export type ShopTry = {
@@ -75,7 +71,34 @@ type BuyAsk = {
   streakRequired: number | null;
 };
 
-const FILTERS: ShopAccFilter[] = ["all", "kinh", "toc", "tay", "co", "tai", "tui"];
+export type ShopShelf = "clothes" | "accessories" | "stickers" | "seeds";
+
+const SHELVES: readonly ShopShelf[] = ["clothes", "accessories", "stickers", "seeds"];
+
+const SEED_ART: Record<string, string> = {
+  cherry: "/mascot/seeds/petal_anh_dao.svg",
+  aloe: "/mascot/seeds/petal_lo_hoi.svg",
+  sunflower: "/mascot/seeds/petal_huong_duong.svg",
+};
+
+type ShelfCard = {
+  id: string;
+  itemId: string;
+  treeType: string;
+  name: string;
+  artId: string;
+  src: string;
+  layer: string;
+  price: number;
+  charge: number;
+  owned: boolean;
+  locked: boolean;
+  purchasable: boolean;
+  streak: number | null;
+  streakRequired: number | null;
+  setName: string;
+  kind: "piece" | "colour" | "seed";
+};
 
 function pieceOwned(catalog: ShopCatalog, id: string): boolean {
   for (const set of catalog.sets) {
@@ -89,6 +112,189 @@ function xu(locale: string, amount: number): string {
   return `${formatGameCoins(amount, locale)} xu`;
 }
 
+function cardFromPiece(piece: ShopPiece, setName = ""): ShelfCard {
+  const artId = shopArtId(piece.id, piece.artId);
+  return {
+    id: piece.id,
+    itemId: piece.id,
+    treeType: "",
+    name: piece.name,
+    artId,
+    src: shopIconSrc(artId),
+    layer: piece.layer,
+    price: piece.price,
+    charge: piece.charge,
+    owned: piece.owned,
+    locked: piece.locked,
+    purchasable: piece.purchasable,
+    streak: piece.streak,
+    streakRequired: piece.streakRequired,
+    setName,
+    kind: "piece",
+  };
+}
+
+function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
+  const clothes = catalog.sets.flatMap((set) => set.pieces.map((piece) => cardFromPiece(piece, set.name)));
+  const accessories = catalog.accessories.map((piece) => cardFromPiece(piece));
+  const stickers = [
+    ...catalog.daily.map((piece) => cardFromPiece(piece)),
+    ...BUBBLE_COLOURS.map((colour) => ({
+      id: colour.id,
+      itemId: colour.id,
+      treeType: "",
+      name: colour.name,
+      artId: colour.id,
+      src: "",
+      layer: "bubble",
+      price: 0,
+      charge: 0,
+      owned: false,
+      locked: false,
+      purchasable: false,
+      streak: null,
+      streakRequired: null,
+      setName: "",
+      kind: "colour" as const,
+    })),
+  ];
+  const seeds = catalog.seeds.trees.map((tree) => ({
+    id: `seed_${tree.key}`,
+    itemId: catalog.seeds.itemId,
+    treeType: tree.key,
+    name: tree.name,
+    artId: tree.key,
+    src: SEED_ART[tree.key] ?? "",
+    layer: "seed",
+    price: tree.price,
+    charge: tree.purchasable && catalog.seeds.purchasable ? tree.price : 0,
+    owned: false,
+    locked: false,
+    purchasable: tree.purchasable && catalog.seeds.purchasable,
+    streak: null,
+    streakRequired: null,
+    setName: "",
+    kind: "seed" as const,
+  }));
+  return { clothes, accessories, stickers, seeds };
+}
+
+function cardCost(card: ShelfCard): number {
+  if (card.charge > 0) return card.charge;
+  return card.price > 0 ? card.price : 0;
+}
+
+function cardShort(balance: number, card: ShelfCard): number {
+  if (card.owned || card.locked || card.kind === "colour" || !card.purchasable) return 0;
+  return xuShortfall(balance, cardCost(card));
+}
+
+function wornPiece(player: BeDaView | null, card: ShelfCard, gender: BeDaGender): boolean {
+  if (!player || card.kind === "colour" || card.kind === "seed") return false;
+  const wear = shopWearId(card.artId || card.id, gender);
+  const loadout = player.loadout;
+  if (card.layer === "outfit") return loadout.outfit.id === wear || loadout.outfit.id === card.id;
+  if (card.layer === "room") return loadout.roomItems.some((item) => item.id === wear || item.id === card.id);
+  const field = {
+    hat: loadout.hat,
+    shoes: loadout.shoes,
+    held: loadout.held,
+    glasses: loadout.glasses,
+    necklace: loadout.necklace,
+    scarf: loadout.scarf,
+    hair_acc: loadout.hairAcc,
+    earring: loadout.earring,
+    bag: loadout.bag,
+    gloves: loadout.gloves,
+    bracelet: loadout.bracelet,
+    name_frame: loadout.nameFrame,
+    sticker: loadout.sticker,
+    bubble: loadout.bubble,
+    fx: loadout.fx,
+  }[card.layer];
+  return field === wear || field === card.id;
+}
+
+export function XuShopPopup({
+  title,
+  closeLabel,
+  onClose,
+  onEscape,
+  children,
+}: {
+  title: string;
+  closeLabel: string;
+  onClose: () => void;
+  /** Return true when Escape should stay inside the shop (a confirm sheet, for example). */
+  onEscape?: () => boolean;
+  children: ReactNode;
+}) {
+  const closeRef = useRef(onClose);
+  const escapeRef = useRef(onEscape);
+  closeRef.current = onClose;
+  escapeRef.current = onEscape;
+  const requestClose = useRef<() => void>(() => undefined);
+
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    let closed = false;
+    const finish = () => {
+      if (closed) return;
+      closed = true;
+      closeRef.current();
+    };
+    const prior = history.state as { bedaShop?: boolean } | null;
+    if (!prior?.bedaShop) history.pushState({ ...(history.state as object | null), bedaShop: true }, "");
+    requestClose.current = () => {
+      if (closed) return;
+      const marked = (history.state as { bedaShop?: boolean } | null)?.bedaShop === true;
+      if (marked) history.back();
+      else finish();
+    };
+    const onPop = () => finish();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (escapeRef.current?.()) return;
+      requestClose.current();
+    };
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  return (
+    <div className="beda-shop-popup" data-testid="beda-xu-popup">
+      <button
+        type="button"
+        className="beda-shop-popup-backdrop"
+        data-testid="beda-xu-backdrop"
+        aria-label={closeLabel}
+        onClick={() => requestClose.current()}
+      />
+      <div className="beda-shop-popup-panel" role="dialog" aria-modal="true" aria-label={title}>
+        <button
+          type="button"
+          className="beda-shop-popup-x"
+          data-testid="beda-xu-close"
+          aria-label={closeLabel}
+          onClick={() => requestClose.current()}
+        >
+          <svg viewBox="0 0 32 32" aria-hidden>
+            <path d="M9 9l14 14M23 9 9 23" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+          </svg>
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function BeDaXuShop({
   catalog,
   locale,
@@ -100,10 +306,10 @@ export function BeDaXuShop({
   player = null,
   theme = "light",
   overlay = false,
+  popup = false,
+  shelf,
   onClose,
-  onGender,
   onTry,
-  onClearTry,
   onBuy,
   onConfirm,
   onDismiss,
@@ -120,10 +326,10 @@ export function BeDaXuShop({
   player?: BeDaView | null;
   theme?: "light" | "dark";
   overlay?: boolean;
+  popup?: boolean;
+  shelf?: ShopShelf;
   onClose: () => void;
-  onGender: (gender: BeDaGender) => void;
   onTry: (next: ShopTry) => void;
-  onClearTry: () => void;
   onBuy: (ask: BuyAsk) => void;
   onConfirm: () => void;
   onDismiss: () => void;
@@ -131,57 +337,65 @@ export function BeDaXuShop({
   onCare: () => void;
 }) {
   const t = useTranslations("mascot");
-  const [filter, setFilter] = useState<ShopAccFilter>("all");
-  const [tree, setTree] = useState(catalog.seeds.trees.find((row) => row.purchasable)?.key ?? "");
-  const wearArt = trying ? shopWearId(trying.artId, gender) : "";
-  const tryingOwned = trying ? pieceOwned(catalog, trying.id) : false;
-  const layer = wearArt ? shopLayerSrc(wearArt) : "";
-  const shown = player ? { ...player, gender } : null;
-  const accessories = catalog.accessories.filter((item) => filter === "all" || shopAccFilter(item.id) === filter);
+  const shelves = shelfCards(catalog);
+  const openShelves = SHELVES.filter((id) => shelves[id].length > 0);
+  const [tab, setTab] = useState<ShopShelf>(shelf && openShelves.includes(shelf) ? shelf : (openShelves[0] ?? "clothes"));
+  const who: BeDaGender = (player?.gender ?? gender) === "male" ? "male" : "female";
+  const cards = shelves[tab] ?? [];
+  const selected =
+    (trying ? cards.find((card) => card.id === trying.id) : null) ??
+    (trying ? SHELVES.flatMap((id) => shelves[id]).find((card) => card.id === trying.id) ?? null : null);
+  const wearArt = trying ? shopWearId(trying.artId, who) : "";
+  const layer = wearArt && selected?.kind === "piece" ? shopLayerSrc(wearArt) : "";
+  const shown = player ? { ...player, gender: who } : null;
+  const wearing = selected ? wornPiece(player, selected, who) : false;
+  const missing = selected ? cardShort(catalog.balance, selected) : 0;
+  const cost = selected ? cardCost(selected) : 0;
 
-  function tryPiece(piece: ShopPiece, setName = "") {
+  function choose(card: ShelfCard) {
     onTry({
-      id: piece.id,
-      artId: shopArtId(piece.id, piece.artId),
-      name: piece.name,
-      price: piece.price,
-      setName,
-      layer: piece.layer,
+      id: card.id,
+      artId: card.kind === "piece" ? card.artId : card.id,
+      name: card.name,
+      price: card.price,
+      setName: card.setName,
+      layer: card.layer,
     });
   }
 
-  function buyPiece(piece: ShopPiece, setName = "") {
-    tryPiece(piece, setName);
+  function buySelected() {
+    if (!selected || pending) return;
     onBuy({
-      itemId: piece.id,
-      treeType: "",
-      name: piece.name,
-      charge: piece.charge,
-      locked: piece.locked,
-      purchasable: piece.purchasable,
-      streak: piece.streak ?? catalog.streak,
-      streakRequired: piece.streakRequired,
+      itemId: selected.itemId,
+      treeType: selected.treeType,
+      name: selected.name,
+      charge: cost,
+      locked: selected.locked,
+      purchasable: selected.purchasable,
+      streak: selected.streak ?? catalog.streak,
+      streakRequired: selected.streakRequired,
     });
   }
+
+  const frame = popup ? "beda-shop is-popup" : overlay ? "beda-shop is-overlay" : "beda-shop";
+  const ownedTrying = trying ? pieceOwned(catalog, trying.id) || selected?.owned === true : false;
+  const showWear = Boolean(selected && (selected.owned || ownedTrying) && selected.kind === "piece");
+  const showBuy = Boolean(selected && selected.purchasable && !selected.owned && !selected.locked && missing <= 0 && selected.kind !== "colour");
+  const showBlock = Boolean(selected && !showWear && !showBuy && selected.kind !== "colour");
 
   return (
-    <div
-      className={overlay ? "beda-shop is-overlay" : "beda-shop"}
-      data-theme={theme}
-      data-testid="beda-xu-shop"
-    >
+    <div className={frame} data-theme={theme} data-testid="beda-xu-shop" data-popup={popup ? "1" : "0"}>
       <header className="beda-shop-bar">
-        <button type="button" className="beda-shop-icon-btn" onClick={onClose} aria-label={t("game.shop.back")}>
-          ‹
-        </button>
+        {popup ? null : (
+          <button type="button" className="beda-shop-icon-btn" onClick={onClose} aria-label={t("game.shop.back")}>
+            ‹
+          </button>
+        )}
         <h1 className="beda-shop-title">{t("game.shop.title")}</h1>
         <div className="beda-shop-pills">
           <span className="beda-shop-pill" data-testid="beda-xu-balance" aria-live="polite">
             <b aria-hidden>●</b>
             {xu(locale, catalog.balance)}
-          </span>
-          <span className="beda-shop-pill" data-testid="beda-xu-streak">
-            {t("game.shop.streak", { count: catalog.streak })}
           </span>
         </div>
       </header>
@@ -190,25 +404,29 @@ export function BeDaXuShop({
           {problem}
         </p>
       ) : null}
-      <div className="beda-shop-layout">
-        <section className="beda-shop-stage" aria-label={t("game.shop.tryFree")}>
-          <div className="beda-shop-stage-top">
-            <p className="beda-shop-kicker">{t("game.shop.tryFree")}</p>
-            <div className="beda-shop-genders" role="group" aria-label={t("game.shop.tryFree")}>
-              <button type="button" className={gender === "female" ? "beda-shop-chip is-on" : "beda-shop-chip"} aria-pressed={gender === "female"} onClick={() => onGender("female")}>
-                {t("game.shop.female")}
-              </button>
-              <button type="button" className={gender === "male" ? "beda-shop-chip is-on" : "beda-shop-chip"} aria-pressed={gender === "male"} onClick={() => onGender("male")}>
-                {t("game.shop.male")}
-              </button>
-            </div>
-          </div>
+      <div className="beda-shop-tabs" role="tablist" aria-label={t("game.shop.title")}>
+        {openShelves.map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            className={tab === id ? "beda-shop-tab is-on" : "beda-shop-tab"}
+            aria-selected={tab === id}
+            data-testid={`beda-xu-tab-${id}`}
+            onClick={() => setTab(id)}
+          >
+            {t(`game.shop.tabs.${id}`)}
+          </button>
+        ))}
+      </div>
+      <div className="beda-shop-scroll">
+        <section className="beda-shop-stage" data-testid="beda-xu-preview" aria-label={t("game.shop.tryFree")}>
           <div className="beda-shop-hero">
             {shown ? (
               <BeDaFigure
                 view={shown}
                 locale={locale}
-                dress={gameDress(genderLook(DEFAULT_GAME_LOOK, gender))}
+                dress={gameDress(genderLook(DEFAULT_GAME_LOOK, who))}
                 crowd
                 marks
               />
@@ -222,7 +440,9 @@ export function BeDaXuShop({
           ) : null}
           {trying ? (
             <div className="beda-shop-trying">
-              <img src={mascotAssetUrl(shopIconSrc(wearArt || trying.artId))} alt="" />
+              {selected?.kind === "colour" ? null : selected?.src ? (
+                <img src={mascotAssetUrl(selected.src)} alt="" />
+              ) : null}
               <div>
                 <p className="beda-shop-kicker">{t("game.shop.trying")}</p>
                 <strong>{trying.name}</strong>
@@ -233,176 +453,66 @@ export function BeDaXuShop({
           ) : (
             <p className="beda-shop-note">{t("game.shop.previewEmpty")}</p>
           )}
-          <div className="beda-shop-actions">
-            <button type="button" className="beda-shop-ghost" onClick={onClearTry} disabled={!trying}>
-              {t("game.shop.clearTry")}
-            </button>
-            {trying && tryingOwned ? (
-              <button type="button" className="beda-shop-buy" data-testid="beda-xu-wear" disabled={pending} onClick={onWear}>
-                {t("game.shop.tryOn")}
-              </button>
-            ) : null}
-          </div>
           <p className="beda-shop-note">{t("game.shop.skinNote")}</p>
         </section>
-        <div className="beda-shop-main">
-          <section className="beda-shop-group" data-testid="beda-xu-group-sets" aria-label={t("game.shop.groups.sets")}>
-            <div className="beda-shop-group-head">
-              <h2>{t("game.shop.groups.sets")}</h2>
-            </div>
-            {catalog.sets.map((set) => (
-              <SetBlock
-                key={set.id}
-                set={set}
-                locale={locale}
-                tryingId={trying?.id ?? ""}
-                pending={pending}
-                onPiece={(piece) => tryPiece(piece, set.name)}
-                onBuyPiece={(piece) => buyPiece(piece, set.name)}
-                onSet={() =>
-                  onBuy({
-                    itemId: set.id,
-                    treeType: "",
-                    name: set.name,
-                    charge: set.charge,
-                    locked: set.locked,
-                    purchasable: set.purchasable,
-                    streak: set.streak ?? catalog.streak,
-                    streakRequired: set.streakRequired,
-                  })
-                }
-              />
-            ))}
-          </section>
-          <section className="beda-shop-group" data-testid="beda-xu-group-accessories" aria-label={t("game.shop.groups.accessories")}>
-            <div className="beda-shop-group-head">
-              <h2>{t("game.shop.groups.accessories")}</h2>
-            </div>
-            <p className="beda-shop-note">{t("game.shop.accNote")}</p>
-            <div className="beda-shop-filters" role="group" aria-label={t("game.shop.groups.accessories")}>
-              {FILTERS.map((id) => (
-                <button key={id} type="button" className={filter === id ? "beda-shop-chip is-on" : "beda-shop-chip"} aria-pressed={filter === id} onClick={() => setFilter(id)}>
-                  {t(`game.shop.filters.${id}`)}
-                </button>
-              ))}
-            </div>
-            <p className="beda-shop-muted">{t("game.shop.withAny")}</p>
-            <div className="beda-shop-grid">
-              {accessories.map((piece) => (
-                <PieceCard key={piece.id} piece={piece} locale={locale} trying={trying?.id === piece.id} pending={pending} onTry={() => tryPiece(piece)} onBuy={() => buyPiece(piece)} />
-              ))}
-            </div>
-          </section>
-          <section className="beda-shop-group" data-testid="beda-xu-group-seeds" aria-label={t("game.shop.groups.seeds")}>
-            <div className="beda-shop-group-head">
-              <h2>{t("game.shop.groups.seeds")}</h2>
-              <span className="beda-shop-price">{xu(locale, catalog.seeds.price)}</span>
-            </div>
-            <p className="beda-shop-note">{t("game.shop.seedNote")}</p>
-            <div className="beda-shop-filters" role="group" aria-label={t("game.shop.seedPick")}>
-              {catalog.seeds.trees.map((row) => (
-                <button key={row.key} type="button" className={tree === row.key ? "beda-shop-chip is-on" : "beda-shop-chip"} aria-pressed={tree === row.key} onClick={() => setTree(row.key)}>
-                  {row.name}
-                </button>
-              ))}
-            </div>
-            <div className="beda-shop-actions">
-              <button
-                type="button"
-                className="beda-shop-buy"
-                data-testid="beda-xu-seed-buy"
-                disabled={pending || !tree || !catalog.seeds.purchasable}
-                onClick={() => {
-                  const picked = catalog.seeds.trees.find((row) => row.key === tree);
-                  if (!picked) return;
-                  onBuy({
-                    itemId: catalog.seeds.itemId,
-                    treeType: picked.key,
-                    name: picked.name,
-                    charge: picked.price,
-                    locked: false,
-                    purchasable: picked.purchasable && catalog.seeds.purchasable,
-                    streak: catalog.streak,
-                    streakRequired: null,
-                  });
-                }}
-              >
-                {t("game.shop.buy")} {xu(locale, catalog.seeds.price)}
-              </button>
-            </div>
-          </section>
-          <section className="beda-shop-group" data-testid="beda-xu-group-daily" aria-label={t("game.shop.groups.daily")}>
-            <div className="beda-shop-group-head">
-              <h2>{t("game.shop.groups.daily")}</h2>
-            </div>
-            <p className="beda-shop-note">{t("game.shop.dailyNote")}</p>
-            <div className="beda-shop-grid">
-              {catalog.daily.map((piece) => (
-                <PieceCard key={piece.id} piece={piece} locale={locale} trying={trying?.id === piece.id} pending={pending} onTry={() => tryPiece(piece)} onBuy={() => buyPiece(piece)} />
-              ))}
-            </div>
-            <div data-testid="beda-xu-bubble-colours">
-            <h3 className="beda-shop-kicker">{t("game.shop.bubbleColours")}</h3>
-            <div className="beda-shop-grid">
-              {BUBBLE_COLOURS.map((colour) => (
-                <button
-                  key={colour.id}
-                  type="button"
-                  className={trying?.id === colour.id ? "beda-shop-piece is-on" : "beda-shop-piece"}
-                  data-testid={`beda-xu-colour-${colour.id}`}
-                  aria-pressed={trying?.id === colour.id}
-                  onClick={() =>
-                    tryPiece({
-                      id: colour.id,
-                      name: colour.name,
-                      layer: "bubble",
-                      artId: colour.id,
-                      price: 0,
-                      charge: 0,
-                      owned: false,
-                      locked: false,
-                      purchasable: false,
-                      lockReason: "",
-                      streak: null,
-                      streakRequired: null,
-                    })
-                  }
-                >
-                  <span className="beda-shop-swatch" style={bubbleFrameStyle(colour.id)}>
-                    {t("game.shop.bubbleHello")}
-                  </span>
-                  <span className="beda-shop-piece-name">{colour.name}</span>
-                </button>
-              ))}
-            </div>
-            </div>
-          </section>
-          <section className="beda-shop-season" data-testid="beda-xu-seasonal">
-            <h2>{t("game.shop.seasonalTitle")}</h2>
-            <p className="beda-shop-note">{t("game.shop.seasonalBody")}</p>
-          </section>
-          <ShopClosetTabs
-            items={shopClosetItems(catalog)}
-            wearingId={null}
-            onWear={(item) =>
-              tryPiece({
-                id: item.id,
-                name: item.name,
-                layer: item.layer,
-                artId: item.artId,
-                price: 0,
-                charge: 0,
-                owned: true,
-                locked: false,
-                purchasable: false,
-                lockReason: "",
-                streak: null,
-                streakRequired: null,
-              })
-            }
-          />
+        <div className="beda-shop-grid" data-testid="beda-xu-grid" data-shelf={tab}>
+          {cards.map((card) => (
+            <ShelfButton
+              key={card.id}
+              card={card}
+              locale={locale}
+              balance={catalog.balance}
+              picked={trying?.id === card.id}
+              wearing={wornPiece(player, card, who)}
+              onChoose={() => choose(card)}
+            />
+          ))}
         </div>
+        <section className="beda-shop-season" data-testid="beda-xu-seasonal">
+          <h2>{t("game.shop.seasonalTitle")}</h2>
+          <p className="beda-shop-note">{t("game.shop.seasonalBody")}</p>
+        </section>
       </div>
+      {selected && selected.kind !== "colour" ? (
+        <div className="beda-shop-dock" data-testid="beda-xu-dock">
+          {showWear ? (
+            <button
+              type="button"
+              className="beda-shop-buy"
+              data-testid="beda-xu-wear"
+              disabled={pending || wearing}
+              onClick={onWear}
+            >
+              {wearing ? t("game.shop.wearing") : t("game.shop.wearNow")}
+            </button>
+          ) : null}
+          {showBuy ? (
+            <button
+              type="button"
+              className="beda-shop-buy"
+              data-testid={`beda-xu-buy-${selected.id}`}
+              disabled={pending}
+              onClick={buySelected}
+            >
+              {t("game.shop.dockBuy", { charge: formatGameCoins(cost, locale) })}
+            </button>
+          ) : null}
+          {showBlock ? (
+            <button
+              type="button"
+              className="beda-shop-buy"
+              data-testid={selected.locked ? "beda-xu-locked" : `beda-xu-buy-${selected.id}`}
+              disabled
+            >
+              {selected.locked
+                ? t("game.shop.locked")
+                : missing > 0
+                  ? t("game.shop.shortCard", { count: formatGameCoins(missing, locale) })
+                  : t("game.shop.notForSale")}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {dialog ? (
         <ShopDialogView
           dialog={dialog}
@@ -419,113 +529,56 @@ export function BeDaXuShop({
   );
 }
 
-function SetBlock({
-  set,
+function ShelfButton({
+  card,
   locale,
-  tryingId,
-  pending,
-  onPiece,
-  onBuyPiece,
-  onSet,
+  balance,
+  picked,
+  wearing,
+  onChoose,
 }: {
-  set: ShopSet;
+  card: ShelfCard;
   locale: string;
-  tryingId: string;
-  pending: boolean;
-  onPiece: (piece: ShopPiece) => void;
-  onBuyPiece: (piece: ShopPiece) => void;
-  onSet: () => void;
+  balance: number;
+  picked: boolean;
+  wearing: boolean;
+  onChoose: () => void;
 }) {
   const t = useTranslations("mascot");
-  const have = set.pieces.filter((piece) => piece.owned).length;
-  const total = set.pieces.length;
-  const left = total - have;
+  const colour = card.kind === "colour" ? bubbleColour(card.id) : null;
+  const missing = cardShort(balance, card);
+  const faded = card.locked || missing > 0;
   return (
-    <article className="beda-shop-set" data-testid={`beda-xu-set-${set.id}`}>
-      <div className="beda-shop-set-head">
-        <h3>{set.name}</h3>
-        <span className="beda-shop-price">
-          {t("game.shop.setPrice")} {xu(locale, set.price)}
-        </span>
-      </div>
-      <p className="beda-shop-muted">{t("game.shop.collected", { have, total })}</p>
-      <div className="beda-shop-bar-line" aria-hidden>
-        <span style={{ width: total === 0 ? "0%" : `${(have / total) * 100}%` }} />
-      </div>
-      {set.locked ? <p className="beda-shop-lock">{t("game.shop.locked")}</p> : null}
-      <div className="beda-shop-pieces">
-        {set.pieces.map((piece) => (
-          <PieceCard key={piece.id} piece={piece} locale={locale} trying={tryingId === piece.id} pending={pending} onTry={() => onPiece(piece)} onBuy={() => onBuyPiece(piece)} />
-        ))}
-      </div>
-      {set.bonus ? (
-        <div className="beda-shop-bonus">
-          <img src={mascotAssetUrl(shopIconSrc(shopArtId(set.bonus.id, set.bonus.artId)))} alt="" />
-          <div>
-            <p className="beda-shop-muted">{t("game.shop.bonus", { total })}</p>
-            <strong>{set.bonus.name}</strong>
-            {set.bonus.owned ? <p className="beda-shop-owned">{t("game.shop.owned")}</p> : <p className="beda-shop-muted">{t("game.shop.bonusLeft", { count: left })}</p>}
-          </div>
-        </div>
-      ) : null}
-      {set.locked ? (
-        <p className="beda-shop-note">{t("game.shop.lockedBody", { need: set.streakRequired ?? 30, streak: set.streak ?? 0 })}</p>
-      ) : set.purchasable ? (
-        <div className="beda-shop-actions">
-          <button type="button" className="beda-shop-buy" data-testid={`beda-xu-buy-${set.id}`} disabled={pending} onClick={onSet}>
-            {have > 0 ? t("game.shop.setRest", { charge: formatGameCoins(set.charge, locale) }) : t("game.shop.setBuy", { charge: formatGameCoins(set.charge, locale) })}
-          </button>
-        </div>
-      ) : (
-        <p className="beda-shop-owned">{t("game.shop.owned")}</p>
-      )}
-    </article>
-  );
-}
-
-function PieceCard({
-  piece,
-  locale,
-  trying,
-  pending,
-  onTry,
-  onBuy,
-}: {
-  piece: ShopPiece;
-  locale: string;
-  trying: boolean;
-  pending: boolean;
-  onTry: () => void;
-  onBuy: () => void;
-}) {
-  const t = useTranslations("mascot");
-  const art = shopArtId(piece.id, piece.artId);
-  const colour = bubbleColour(piece.id) ?? bubbleColour(piece.artId);
-  return (
-    <div
-      className={["beda-shop-piece", trying ? "is-on" : "", piece.owned ? "is-owned" : ""].filter(Boolean).join(" ")}
-      data-testid={`beda-xu-card-${piece.id}`}
+    <button
+      type="button"
+      className={["beda-shop-piece", picked ? "is-on" : "", card.owned || wearing ? "is-owned" : "", faded ? "is-short" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      data-testid={card.kind === "colour" ? `beda-xu-colour-${card.id}` : `beda-xu-card-${card.id}`}
+      data-short={missing > 0 ? "1" : "0"}
+      aria-pressed={picked}
+      onClick={onChoose}
     >
-      <button type="button" className="beda-shop-piece-try" aria-pressed={trying} onClick={onTry}>
-        {colour ? (
-          <span className="beda-shop-swatch" style={bubbleFrameStyle(colour.id)}>
-            {t("game.shop.bubbleHello")}
-          </span>
-        ) : (
-          <img src={mascotAssetUrl(shopIconSrc(art))} alt="" />
-        )}
-        <span className="beda-shop-piece-name">{piece.name}</span>
-        <span className="beda-shop-price">{xu(locale, piece.price)}</span>
-        {trying ? <span className="beda-shop-kicker">{t("game.shop.trying")}</span> : null}
-      </button>
-      {piece.owned ? <span className="beda-shop-owned">{t("game.shop.owned")}</span> : null}
-      {piece.locked ? <span className="beda-shop-lock">{t("game.shop.locked")}</span> : null}
-      {piece.purchasable && !piece.locked ? (
-        <button type="button" className="beda-shop-buy" data-testid={`beda-xu-buy-${piece.id}`} disabled={pending} onClick={onBuy}>
-          {t("game.shop.buy")}
-        </button>
+      {colour ? (
+        <span className="beda-shop-swatch beda-shop-art" style={bubbleFrameStyle(colour.id)}>
+          {t("game.shop.bubbleHello")}
+        </span>
+      ) : card.src ? (
+        <img className="beda-shop-art" src={mascotAssetUrl(card.src)} alt="" />
+      ) : (
+        <span className="beda-shop-art beda-shop-art-empty" aria-hidden />
+      )}
+      <span className="beda-shop-piece-name">{card.name}</span>
+      {card.price > 0 ? <span className="beda-shop-price">{xu(locale, card.price)}</span> : null}
+      {wearing ? <span className="beda-shop-owned">{t("game.shop.wearing")}</span> : null}
+      {card.owned && !wearing ? <span className="beda-shop-owned">{t("game.shop.owned")}</span> : null}
+      {card.locked ? <span className="beda-shop-lock">{t("game.shop.locked")}</span> : null}
+      {missing > 0 ? (
+        <span className="beda-shop-miss" data-testid={`beda-xu-miss-${card.id}`}>
+          {t("game.shop.shortCard", { count: formatGameCoins(missing, locale) })}
+        </span>
       ) : null}
-    </div>
+    </button>
   );
 }
 
@@ -639,6 +692,7 @@ function ShopDialogView({
         {dialog.kind === "success" ? (
           <>
             <p>{dialog.name}</p>
+            <p>{t("game.shop.successWarm")}</p>
             <p>
               {dialog.already
                 ? t("game.shop.successAlready")
@@ -684,18 +738,21 @@ export function XuShopScreen({
   gender,
   player,
   onClose,
+  presentation = "popup",
 }: {
   locale: string;
   gender: BeDaGender | null;
   player: BeDaView | null;
   onClose: () => void;
+  /** Popup over the room. `page` keeps the full-page shop. */
+  presentation?: "popup" | "page";
 }) {
   const t = useTranslations("mascot");
   const router = useRouter();
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: XU_SHOP_QUERY_KEY, queryFn: getXuShop, staleTime: 15_000 });
   const [catalog, setCatalog] = useState<ShopCatalog | null>(null);
-  const [who, setWho] = useState<BeDaGender>(gender === "male" ? "male" : "female");
+  const who: BeDaGender = (player?.gender ?? gender) === "male" ? "male" : "female";
   const [trying, setTrying] = useState<ShopTry | null>(null);
   const [dialog, setDialog] = useState<ShopDialog>(null);
   const [pending, setPending] = useState(false);
@@ -711,10 +768,6 @@ export function XuShopScreen({
     receiptBalance.current = null;
     setCatalog(query.data);
   }, [query.data]);
-
-  useEffect(() => {
-    if (gender === "male" || gender === "female") setWho(gender);
-  }, [gender]);
 
   async function purchase(itemId: string, treeType: string) {
     if (pendingRef.current) return;
@@ -823,22 +876,22 @@ export function XuShopScreen({
     }
   }
 
-  if (!catalog) {
-    return (
-      <div className="beda-shop is-overlay" data-testid="beda-xu-shop">
-        <header className="beda-shop-bar">
+  const popup = presentation === "popup";
+  const loading = (
+    <div className={popup ? "beda-shop is-popup" : "beda-shop is-overlay"} data-testid="beda-xu-shop">
+      <header className="beda-shop-bar">
+        {popup ? null : (
           <button type="button" className="beda-shop-icon-btn" onClick={onClose} aria-label={t("game.shop.back")}>‹</button>
-          <h1 className="beda-shop-title">{t("game.shop.title")}</h1>
-        </header>
-        <p className="beda-shop-note" role="status">{query.isError ? t("game.shop.loadFailed") : t("game.shop.loading")}</p>
-        {query.isError ? (
-          <button type="button" className="beda-shop-buy" onClick={() => void query.refetch()}>{t("game.shop.retry")}</button>
-        ) : null}
-      </div>
-    );
-  }
-
-  return (
+        )}
+        <h1 className="beda-shop-title">{t("game.shop.title")}</h1>
+      </header>
+      <p className="beda-shop-note" role="status">{query.isError ? t("game.shop.loadFailed") : t("game.shop.loading")}</p>
+      {query.isError ? (
+        <button type="button" className="beda-shop-buy" onClick={() => void query.refetch()}>{t("game.shop.retry")}</button>
+      ) : null}
+    </div>
+  );
+  const body = catalog ? (
     <BeDaXuShop
       catalog={catalog}
       locale={locale}
@@ -848,11 +901,10 @@ export function XuShopScreen({
       dialog={dialog}
       problem={problem}
       player={player}
-      overlay
+      overlay={!popup}
+      popup={popup}
       onClose={onClose}
-      onGender={setWho}
       onTry={setTrying}
-      onClearTry={() => setTrying(null)}
       onBuy={onBuy}
       onConfirm={() => {
         if (dialog?.kind === "confirm") void purchase(dialog.itemId, dialog.treeType);
@@ -861,5 +913,20 @@ export function XuShopScreen({
       onWear={() => void wear()}
       onCare={() => router.push("/check-in")}
     />
+  ) : loading;
+  if (!popup) return body;
+  return (
+    <XuShopPopup
+      title={t("game.shop.title")}
+      closeLabel={t("game.shop.back")}
+      onClose={onClose}
+      onEscape={() => {
+        if (!dialog) return false;
+        setDialog(null);
+        return true;
+      }}
+    >
+      {body}
+    </XuShopPopup>
   );
 }

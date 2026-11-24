@@ -616,6 +616,16 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
       loiText={loiText}
       shopCloset={shopCloset}
       onOpenShop={() => setShopOpen(true)}
+      shopSlot={
+        shopOpen ? (
+          <XuShopScreen
+            locale={locale}
+            gender={mascotQuery.data?.gender ?? null}
+            player={view}
+            onClose={() => setShopOpen(false)}
+          />
+        ) : null
+      }
       onWearShop={(item) => {
         void wearShopPiece(queryClient, item.id, item.layer, mascotQuery.data?.gender).catch(() => {
           setToast({ kind: "wear-failed", name: "" });
@@ -645,14 +655,6 @@ export function BeDaGameScreen({ roomCode = null }: { roomCode?: string | null }
         return true;
       }}
     />
-    {shopOpen ? (
-      <XuShopScreen
-        locale={locale}
-        gender={mascotQuery.data?.gender ?? null}
-        player={view}
-        onClose={() => setShopOpen(false)}
-      />
-    ) : null}
     </>
   );
 }
