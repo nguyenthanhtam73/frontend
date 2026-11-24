@@ -62,6 +62,90 @@ export function coachZoneLabelKey(zone: unknown): CoachZoneLabelKey | null {
   return ZONE_LABEL_KEY[key as keyof typeof ZONE_LABEL_KEY];
 }
 
+const SIGN_NOTE_PREFIXES = ["trông giống", "looks like"] as const;
+
+/** Longest first, so a shorter acne denial does not leave the longer one behind. */
+const ACNE_DENIALS = [
+  "không có dấu hiệu mụn",
+  "không thấy dấu hiệu mụn",
+  "không thấy mụn",
+  "không có mụn",
+  "chưa thấy mụn",
+  "chưa có mụn",
+  "no sign of acne",
+  "don't see acne",
+  "do not see acne",
+  "haven't seen acne",
+  "no acne",
+  "no pimples",
+] as const;
+
+/** Calm wording. «không có dấu hiệu» alone is not enough — it can introduce a problem. */
+const GOOD_SKIN_PHRASES = ["mịn màng", "smooth", "no sign"] as const;
+
+/** If any of these remain after the acne denials are removed, the note still names a problem. */
+const PROBLEM_WORDS = [
+  "lỗ chân lông",
+  "kích ứng",
+  "nốt",
+  "mụn",
+  "đỏ",
+  "thâm",
+  "sưng",
+  "khô",
+  "bong",
+  "dầu",
+  "sần",
+  "chấm",
+  "ửng",
+  "hạt",
+  "nhưng",
+  "bump",
+  "red",
+  "pore",
+  "acne",
+] as const;
+
+function includesPhrase(text: string, phrase: string): boolean {
+  let from = 0;
+  while (from < text.length) {
+    const at = text.indexOf(phrase, from);
+    if (at < 0) return false;
+    const after = text[at + phrase.length] ?? "";
+    if (!after || !isLetter(after)) return true;
+    from = at + phrase.length;
+  }
+  return false;
+}
+
+function withoutAcneDenials(text: string): { rest: string; stripped: boolean } {
+  let rest = text;
+  let stripped = false;
+  for (const phrase of ACNE_DENIALS) {
+    if (!rest.includes(phrase)) continue;
+    rest = rest.split(phrase).join(" ");
+    stripped = true;
+  }
+  return { rest, stripped };
+}
+
+/**
+ * A clear-skin line does not open with «Trông giống» / «Looks like».
+ * Acne denials are removed first. If a problem word is still there, the
+ * severity chip stays.
+ */
+export function isGoodSkinNote(note: string): boolean {
+  const text = note.normalize("NFC").trim().toLocaleLowerCase("vi");
+  if (!text) return false;
+  if (SIGN_NOTE_PREFIXES.some((prefix) => text.startsWith(prefix))) return false;
+  const { rest, stripped } = withoutAcneDenials(text);
+  if (PROBLEM_WORDS.some((word) => rest.includes(word))) return false;
+  if (GOOD_SKIN_PHRASES.some((phrase) => includesPhrase(rest, phrase) || includesPhrase(text, phrase))) {
+    return true;
+  }
+  return stripped;
+}
+
 /** Known severity → i18n key. Unknown or non-string values stay hidden. */
 export function coachSeverityLabelKey(severity: unknown): CoachSeverityLabelKey | null {
   const key = asTrimmedString(severity)?.toLowerCase() ?? "";
@@ -150,7 +234,7 @@ export function visibleZoneNotes(
       zone,
       note: shown,
       labelKey,
-      severityKey: coachSeverityLabelKey(item.severity),
+      severityKey: isGoodSkinNote(shown) ? null : coachSeverityLabelKey(item.severity),
     });
     if (out.length >= MAX_ZONE_NOTES) break;
   }

@@ -22,6 +22,11 @@ import { getAccessToken } from "@/lib/auth-token";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { cn } from "@/lib/utils";
 
+/** The coach prompt version is an admin detail. Everyone else skips the chip. */
+export function memoryPromptChipVisible(isAdmin: boolean, promptVersion: number): boolean {
+  return isAdmin && promptVersion > 0;
+}
+
 export function MeMemoryView() {
   const t = useTranslations("meMemory");
   const formatter = useFormatter();
@@ -159,7 +164,7 @@ export function MeMemoryView() {
       </div>
 
       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        {stats.prompt_version > 0 ? (
+        {memoryPromptChipVisible(user?.is_admin === true, stats.prompt_version) ? (
           <MetaChip label={t("metaPromptVersion", { v: stats.prompt_version })} />
         ) : null}
         {stats.has_monthly_digest ? <MetaChip label={t("metaMonthlyDigest")} /> : null}

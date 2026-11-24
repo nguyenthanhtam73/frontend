@@ -5,9 +5,10 @@ import { NextIntlClientProvider } from "next-intl";
 import { describe, it } from "node:test";
 
 import vi from "../../messages/vi.json";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import type { CreateSkinCheckResponseDTO } from "@/lib/types/skin-check";
 
-import { DailyCoachFeedback } from "./daily-coach-feedback";
+import { DailyCoachFeedback, coachVersionLineVisible } from "./daily-coach-feedback";
 
 function renderFeedback(payload: CreateSkinCheckResponseDTO) {
   const client = new QueryClient({
@@ -130,5 +131,44 @@ describe("DailyCoachFeedback old checks", () => {
     assert.equal(html.includes("0.78"), false);
     assert.equal(html.includes("0.72"), false);
     assert.match(html, /data-testid="coach-score-note"/);
+  });
+
+  it("hides the advice version from people who are not admins", () => {
+    useAuthStore.setState({ user: null, loading: false });
+    const withMeta: CreateSkinCheckResponseDTO = {
+      ...oldCheck,
+      analysis: {
+        ...oldCheck.analysis,
+        model_version: "gpt-test",
+        prompt_version: 36,
+        coach: {
+          ...oldCheck.analysis.coach!,
+          zone_notes: [
+            { zone: "forehead", note: "Da mịn màng, không thấy mụn.", severity: "mild" },
+            { zone: "left_cheek", note: "Trông giống vài nốt nhỏ.", severity: "mild" },
+          ],
+        },
+      },
+    };
+    const hidden = renderFeedback(withMeta);
+    assert.match(hidden, /Da mịn màng, không thấy mụn\./);
+    assert.match(hidden, /Trông giống vài nốt nhỏ\./);
+    assert.match(hidden, /Má trái/);
+    assert.equal(hidden.includes("Nhẹ"), true);
+    assert.equal((hidden.match(/Nhẹ/g) ?? []).length, 1);
+    assert.equal(hidden.includes("Phiên bản lời khuyên"), false);
+    assert.equal(hidden.includes("Pipeline:"), false);
+    assert.equal(hidden.includes("gpt-test"), false);
+    assert.equal(hidden.includes('data-testid="coach-model-line"'), false);
+    assert.equal(
+      coachVersionLineVisible(false, { model_version: "gpt-test", prompt_version: 36 }),
+      false,
+    );
+    assert.equal(
+      coachVersionLineVisible(true, { model_version: "gpt-test", prompt_version: 36 }),
+      true,
+    );
+    assert.equal(coachVersionLineVisible(true, {}), false);
+    useAuthStore.setState({ user: null, loading: false });
   });
 });

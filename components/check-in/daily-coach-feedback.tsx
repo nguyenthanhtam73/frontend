@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FeedbackButtons } from "@/components/ui/feedback-buttons";
 import { getAccessToken } from "@/lib/auth-token";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { matchAffiliateSuggestions } from "@/lib/affiliate/match";
 import { isCurrentCheckSevere } from "@/lib/affiliate/signals";
 import {
@@ -59,6 +60,15 @@ import type {
   CoachCareSuggestionDTO,
   CreateSkinCheckResponseDTO,
 } from "@/lib/types/skin-check";
+
+/** The model name and advice version are for admins only. */
+export function coachVersionLineVisible(
+  isAdmin: boolean,
+  analysis: { model_version?: string | null; prompt_version?: number | null },
+): boolean {
+  if (!isAdmin) return false;
+  return Boolean(analysis.model_version) || (analysis.prompt_version != null && analysis.prompt_version > 0);
+}
 
 /** Coach prose with leaked gauges and field names removed. */
 function showCoach(text: string | null | undefined): string {
@@ -94,6 +104,7 @@ export function DailyCoachFeedback({
   onRetry?: () => void;
 }) {
   const t = useTranslations("checkIn.coach");
+  const isAdmin = useAuthStore((s) => s.user?.is_admin === true);
   const wardrobe = useWardrobeQuery();
   const affiliate = useAffiliateMatchInput({
     check: payload.analysis?.coach ? checkSignals(payload) : null,
@@ -101,6 +112,7 @@ export function DailyCoachFeedback({
 
   const a = payload.analysis;
   const c = a.coach;
+  const showCoachMeta = coachVersionLineVisible(isAdmin, a);
 
   if (
     showsAnalysisMaintenance({
@@ -499,8 +511,8 @@ export function DailyCoachFeedback({
         </Card>
       ) : null}
 
-      {a.model_version || (a.prompt_version != null && a.prompt_version > 0) ? (
-        <p className="text-center text-[10px] text-muted-foreground">
+      {showCoachMeta && (a.model_version || (a.prompt_version != null && a.prompt_version > 0)) ? (
+        <p className="text-center text-[10px] text-muted-foreground" data-testid="coach-model-line">
           {a.model_version ? t("modelLine", { model: a.model_version }) : null}
           {a.model_version && a.prompt_version != null && a.prompt_version > 0 ? " · " : null}
           {a.prompt_version != null && a.prompt_version > 0
