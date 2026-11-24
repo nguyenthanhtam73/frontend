@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { affiliateCatalog } from "@/lib/affiliate/catalog";
 import { logAffiliateSuggestionClick } from "@/lib/affiliate/click";
-import { batchDateLabel, formatRating, formatVnd } from "@/lib/affiliate/format";
+import { batchDateLabel, formatRating, formatSoldCount, formatVnd } from "@/lib/affiliate/format";
 import { fetchLatestSkinCheck, latestSkinCheckQueryKey } from "@/lib/affiliate/latest-skin-check";
 import { matchAffiliateSuggestions } from "@/lib/affiliate/match";
 import {
@@ -193,7 +193,7 @@ function SuggestionRow({ item, lang }: { item: AffiliateSuggestion; lang: "vi" |
         <p className="text-xs leading-snug text-muted-foreground">
           {t("soldLine", {
             rating: formatRating(item.rating, lang),
-            sold: item.sold,
+            sold: formatSoldCount(item.sold, lang),
           })}
         </p>
         <p className="text-sm font-medium leading-snug text-foreground">

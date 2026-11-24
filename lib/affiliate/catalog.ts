@@ -14,7 +14,14 @@ const AFF_LINK_RE = /^https:\/\/s\.shopee\.vn\/[A-Za-z0-9]+$/;
 
 function isProduct(value: unknown): value is AffiliateProduct {
   if (!value || typeof value !== "object") return false;
-  const item = value as AffiliateProduct & { url?: unknown; commission?: unknown; reviewCount?: unknown; subId1?: unknown };
+  const item = value as AffiliateProduct & {
+    url?: unknown;
+    commission?: unknown;
+    reviewCount?: unknown;
+    subId1?: unknown;
+    banChay?: unknown;
+    ban_chay?: unknown;
+  };
   return (
     STEPS.has(item.step) &&
     typeof item.name === "string" &&
@@ -35,7 +42,9 @@ function isProduct(value: unknown): value is AffiliateProduct {
     item.url === undefined &&
     item.commission === undefined &&
     item.reviewCount === undefined &&
-    item.subId1 === undefined
+    item.subId1 === undefined &&
+    item.banChay === undefined &&
+    item.ban_chay === undefined
   );
 }
 

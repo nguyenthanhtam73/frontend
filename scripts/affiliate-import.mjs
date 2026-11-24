@@ -50,6 +50,7 @@ const REQUIRED_COLUMNS = [
   "aff_link",
   "sub_id1",
   "sub_id2",
+  "ban_chay",
 ];
 
 function normalizeNote(value) {
@@ -153,6 +154,16 @@ export function parseCommissionPercent(raw) {
   return Number(text);
 }
 
+/** Empty, 0, or false is unflagged. 1 or true is a bestseller exception. */
+export function parseBanChay(raw) {
+  const text = String(raw ?? "").trim().toLowerCase();
+  if (!text || text === "0" || text === "false" || text === "no") return false;
+  if (text === "1" || text === "true" || text === "yes") return true;
+  return null;
+}
+
+const MAX_BAN_CHAY = 15;
+
 function failRow(rowNumber, item, problems) {
   throw new Error(`Row ${rowNumber}: ${problems.join("; ")}\n${JSON.stringify(item)}`);
 }
@@ -239,6 +250,7 @@ export function parseAffiliateCsv(text) {
     const subId1 = cell("sub_id1");
     const commissionRaw = cell("hoa_hong");
     const commissionPercent = parseCommissionPercent(commissionRaw);
+    const banChay = parseBanChay(cell("ban_chay"));
     const item = {
       step: parseGroupStep(cell("nhom")),
       name: parsedName.name,
@@ -256,6 +268,7 @@ export function parseAffiliateCsv(text) {
       subId2,
       acid: isAcidProduct(parsedName.name),
       popularity: popularityRank(cell("danh_gia"), cell("da_ban")),
+      banChay: banChay === true,
     };
     const problems = [];
     if (!AFF_LINK_RE.test(affLink)) {
@@ -265,10 +278,13 @@ export function parseAffiliateCsv(text) {
       problems.push(`url must start with ${PRODUCT_URL_PREFIX}`);
     }
     if (subId1 !== "dadiary") problems.push(`sub_id1 must be dadiary (got ${subId1 || "empty"})`);
+    if (banChay == null) {
+      problems.push(`ban_chay must be empty, 0, 1, true, or false (got ${cell("ban_chay") || "empty"})`);
+    }
     if (commissionPercent == null) {
       problems.push(`hoa_hong must look like 8.5% or 4,5% (got ${commissionRaw || "empty"})`);
-    } else if (commissionPercent <= MIN_COMMISSION_PERCENT) {
-      problems.push(`hoa_hong must be above 8% (got ${commissionRaw})`);
+    } else if (commissionPercent <= MIN_COMMISSION_PERCENT && banChay !== true) {
+      problems.push(`hoa_hong must be above 8% unless ban_chay is true (got ${commissionRaw})`);
     }
     if (seenAff.has(affLink)) problems.push(`duplicate aff_link ${affLink}`);
     if (seenUrl.has(url)) problems.push(`duplicate url ${url}`);
@@ -276,6 +292,13 @@ export function parseAffiliateCsv(text) {
     seenAff.add(affLink);
     seenUrl.add(url);
     items.push(item);
+  }
+
+  const flagged = items.filter((item) => item.banChay).length;
+  if (flagged > MAX_BAN_CHAY) {
+    throw new Error(
+      `Too many ban_chay rows: ${flagged}. At most ${MAX_BAN_CHAY} products may be flagged ban_chay.`,
+    );
   }
 
   // A step with no rows (this batch: Tẩy trang) is omitted. The shop UI shows
