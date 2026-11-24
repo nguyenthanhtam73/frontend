@@ -26,7 +26,6 @@ import {
   directionFromKeys,
   footPose,
   queueTap,
-  stepPixels,
   stepTravel,
   type KeyDirs,
   type Travel,
@@ -121,23 +120,18 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       el.style.setProperty("--bubble-y", `${best?.dy ?? 0}px`);
     };
 
-    const placeCaption = (el: HTMLElement, moving: boolean) => {
-      const pretty = el.querySelector<HTMLElement>(".beda-pretty");
-      if (!pretty) return;
-      if (moving) {
-        pretty.style.opacity = "0";
-        pretty.style.visibility = "hidden";
-        return;
-      }
-      pretty.style.visibility = "visible";
-      pretty.style.opacity = "1";
+    let stillFor = 0;
+    const placeCaption = (el: HTMLElement, moving: boolean, rawDt: number) => {
+      if (moving) stillFor = 0;
+      else stillFor += rawDt;
+      el.dataset.caption = !moving && stillFor > 1 ? "in" : "out";
     };
 
     const placeDepth = (el: HTMLElement) => {
       const feet = el.getBoundingClientRect().bottom;
       for (const item of frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")) {
-        const baseLine = item.getBoundingClientRect().bottom;
-        item.style.zIndex = roomPropCovers(feet, baseLine) ? "48" : "36";
+        const base = item.getBoundingClientRect().bottom;
+        item.style.zIndex = roomPropCovers(feet, base) ? "48" : "36";
       }
     };
 
@@ -153,12 +147,16 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       sealRoomNav(grid, (box.top - scene.top) / scene.height);
     };
 
-    const paint = (moving: boolean) => {
+    const paint = (moving: boolean, rawDt: number) => {
       const el = heroRef.current;
       if (!el) return;
       const width = frame.clientWidth || 390;
+      const height = frame.clientHeight || 844;
       const cruise = lobbyWorldSpeed(width);
-      const pose = footPose(travel.phase, moving, stepPixels(cruise, width), reduced);
+      const screenDir = travel.heading
+        ? { x: travel.heading.x * width, y: travel.heading.y * height }
+        : null;
+      const pose = footPose(travel.phase, moving, reduced, screenDir, travel.face < 0 ? -1 : 1);
       el.style.setProperty("--rx", travel.x.toFixed(4));
       el.style.setProperty("--ry", travel.y.toFixed(4));
       el.style.setProperty("--bob", `${pose.bob.toFixed(2)}px`);
@@ -174,7 +172,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       el.dataset.stepping = moving ? "1" : "0";
       el.dataset.face = travel.faceTo < 0 ? "left" : "right";
       placeBubble(el);
-      placeCaption(el, moving);
+      placeCaption(el, moving, rawDt);
       placeDepth(el);
     };
 
@@ -199,13 +197,15 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
 
     const tick = (now: number) => {
       raf = 0;
-      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+      const rawDt = Math.max(0, (now - last) / 1000);
+      const dt = Math.min(0.05, rawDt);
       last = now;
       if (grid && !holdRef.current) {
         const width = frame.clientWidth || 390;
+        const height = frame.clientHeight || 844;
         const dir = directionFromKeys(held);
         const before = { x: travel.x, y: travel.y };
-        travel = stepTravel(travel, dt, grid, { dir, cruise: lobbyWorldSpeed(width) });
+        travel = stepTravel(travel, dt, grid, { dir, cruise: lobbyWorldSpeed(width), width, height });
         if (!Number.isFinite(travel.x) || !Number.isFinite(travel.y)) {
           const stand = nearestWalkable(grid, before.x, before.y);
           travel = { ...createTravel(stand), face: travel.face, faceTo: travel.faceTo };
@@ -223,7 +223,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         }
       }
       const moving = Boolean(directionFromKeys(held)) || Boolean(travel.goal) || travel.speed > 0.01;
-      paint(moving);
+      paint(moving, rawDt);
       if (dead) return;
       if (moving && !holdRef.current) raf = requestAnimationFrame(tick);
       else
@@ -317,7 +317,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
           const stand = nearestWalkable(grid, travel.x, travel.y);
           travel = { ...travel, x: stand.x, y: stand.y };
         }
-        paint(false);
+        paint(false, 0);
       })
       .catch(() => {
         if (dead) return;
@@ -325,7 +325,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         applySeal();
       });
 
-    paint(false);
+    paint(false, 0);
     kick();
 
     return () => {

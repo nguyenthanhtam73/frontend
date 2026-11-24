@@ -1,7 +1,7 @@
 /**
  * Private-room gait. She walks in a straight line, a little slower at the
- * start and the stop. Feet stay with the distance she covers, the body stays
- * upright, and a left/right turn eases through a narrow scale instead of flipping.
+ * start and the stop. One footfall is a fixed screen distance, so the planted
+ * foot stays on the ground. The body stays upright. Facing flips in one frame.
  */
 
 import type { WalkGrid, WalkPoint } from "@/lib/mascot/game/lobby-walk";
@@ -14,7 +14,7 @@ export type Travel = {
   y: number;
   speed: number;
   phase: number;
-  /** Displayed facing. -1 is left, 1 is right. Passes through 0 on a turn. */
+  /** Displayed facing. -1 is left, 1 is right. Flips in one frame. */
   face: number;
   faceTo: -1 | 1;
   goal: WalkPoint | null;
@@ -23,12 +23,8 @@ export type Travel = {
   gone: number;
 };
 
-/**
- * One step covers this many seconds of cruise speed.
- * Short legs take short steps (~14px at the room's walk speed) so the
- * planted foot stays down without the pants flying apart.
- */
-export const STEP_SEC = 0.16;
+/** One footfall per this many screen pixels. Same on a phone, an iPad, and a close-up. */
+export const STEP_PX = 20;
 /** World units over which speed eases in and out. */
 export const PACE_RAMP = 0.045;
 export const STEP_LIFT_PX = 8;
@@ -36,7 +32,6 @@ export const STEP_LIFT_PX = 8;
 export const BOB_PX = 1.5;
 /** Degrees added to the short hanging sleeves. The drawing itself does not change. */
 export const ARM_DEG = 5;
-const TURN_HALF_S = 0.075;
 const ARRIVE = 0.004;
 
 export function directionFromKeys(held: KeyDirs): { x: number; y: number } | null {
@@ -54,14 +49,15 @@ export function paceFactor(gone: number, left: number): number {
   return 0.38 + 0.62 * Math.min(start, stop);
 }
 
-/** Full left-then-right cycle, in world units, at cruise speed. */
-export function strideNorm(cruise: number): number {
-  return Math.max(0.02, cruise) * STEP_SEC * 2;
+/** Screen pixels the body just moved. X uses the room width, Y the room height. */
+export function screenTravel(dx: number, dy: number, width: number, height: number): number {
+  return Math.hypot(dx * Math.max(1, width), dy * Math.max(1, height));
 }
 
-/** Screen pixels one planted foot travels before the other one takes over. */
-export function stepPixels(cruise: number, width: number): number {
-  return (strideNorm(cruise) / 2) * Math.max(1, width);
+/** Half a cycle (one footfall) per STEP_PX. */
+export function phaseForPixels(screenPx: number): number {
+  if (screenPx <= 0) return 0;
+  return (screenPx / STEP_PX) * Math.PI;
 }
 
 export function createTravel(at: WalkPoint): Travel {
@@ -103,19 +99,9 @@ export function queueTap(travel: Travel, grid: WalkGrid, tap: WalkPoint): Travel
   };
 }
 
-/**
- * ScaleX eases to 0, then out to the new side. A single frame never flips the sign
- * while the old facing is still wide.
- */
-export function stepFace(shown: number, target: -1 | 1, dt: number): number {
-  const delta = Math.max(0, dt) / TURN_HALF_S;
-  const sign = shown < -0.001 ? -1 : shown > 0.001 ? 1 : 0;
-  if (sign === 0 || sign === target) {
-    const next = shown + Math.sign(target - shown || target) * Math.min(Math.abs(target - shown), delta);
-    return Math.abs(next - target) < 0.02 ? target : next;
-  }
-  const next = shown - sign * Math.min(Math.abs(shown), delta);
-  return Math.abs(next) < 0.02 ? 0 : next;
+/** Her face is nearly symmetric, so a turn is one frame. No horizontal squeeze. */
+export function stepFace(_shown: number, target: -1 | 1): -1 | 1 {
+  return target;
 }
 
 export type FootPose = {
@@ -135,38 +121,42 @@ function liftOf(u: number): number {
 }
 
 /**
- * Offsets are in character pixels. A planted foot moves backward with the body
- * so it stays on the ground. The other foot lifts and swings forward.
+ * Offsets are inside the facing flip: screen X is local X times `face`.
+ * `dir` is the screen direction she is moving (not normalized). A planted foot
+ * travels STEP_PX backward along that line, so it stays on the ground.
  * Idle is feet together, no bob, no arm swing.
  */
-export function footPose(phase: number, moving: boolean, stepPx: number, reduced: boolean): FootPose {
-  if (!moving) return STILL;
+export function footPose(
+  phase: number,
+  moving: boolean,
+  reduced: boolean,
+  dir: { x: number; y: number } | null,
+  face: -1 | 1,
+): FootPose {
+  if (!moving || !dir) return STILL;
+  const len = Math.hypot(dir.x, dir.y);
+  if (len < 1e-6) return STILL;
+  const ux = dir.x / len;
+  const uy = dir.y / len;
   const turn = (phase / (Math.PI * 2)) % 1;
   const t = turn < 0 ? turn + 1 : turn;
-  const half = stepPx / 2;
-  const span = stepPx;
-  let lx = 0;
-  let ly = 0;
-  let rx = 0;
-  let ry = 0;
-  if (t < 0.5) {
-    const u = t / 0.5;
-    lx = half - u * span;
-    rx = -half + u * span;
-    ry = liftOf(u);
-  } else {
-    const u = (t - 0.5) / 0.5;
-    rx = half - u * span;
-    lx = -half + u * span;
-    ly = liftOf(u);
-  }
+  const half = STEP_PX / 2;
+  const place = (along: number, lift: number) => ({
+    x: (ux * along) / face,
+    y: uy * along + lift,
+  });
+  const u = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
+  const planted = place(half - u * STEP_PX, 0);
+  const swing = place(-half + u * STEP_PX, liftOf(u));
+  const left = t < 0.5 ? planted : swing;
+  const right = t < 0.5 ? swing : planted;
   const bobMag = Math.abs(Math.sin(t * Math.PI * 2)) * BOB_PX;
   return {
     bob: reduced || bobMag === 0 ? 0 : -bobMag,
-    lx,
-    ly,
-    rx,
-    ry,
+    lx: left.x,
+    ly: left.y,
+    rx: right.x,
+    ry: right.y,
     arm: reduced ? 0 : Math.sin(t * Math.PI * 2) * ARM_DEG,
   };
 }
@@ -194,7 +184,7 @@ export function stepTravel(
   travel: Travel,
   dt: number,
   grid: WalkGrid,
-  input: { dir: { x: number; y: number } | null; cruise: number },
+  input: { dir: { x: number; y: number } | null; cruise: number; width: number; height: number },
 ): Travel {
   const safe = Math.min(0.05, Math.max(0, dt));
   const next: Travel = { ...travel, route: travel.route.slice() };
@@ -224,7 +214,7 @@ export function stepTravel(
   if (!next.heading || next.speed <= 0) {
     next.speed = 0;
     next.heading = next.goal ? next.heading : null;
-    next.face = stepFace(next.face, next.faceTo, safe);
+    next.face = stepFace(next.face, next.faceTo);
     return next;
   }
 
@@ -243,12 +233,13 @@ export function stepTravel(
   next.x = placed.x;
   next.y = placed.y;
   next.gone += moved;
-  if (moved > 0) next.phase += (moved / strideNorm(cruise)) * Math.PI * 2;
+  const pixels = screenTravel(placed.x - from.x, placed.y - from.y, input.width, input.height);
+  if (pixels > 0) next.phase += phaseForPixels(pixels);
 
   if (Math.abs(next.heading.x) > Math.abs(next.heading.y) * 0.45 && Math.abs(next.heading.x) > 0.001) {
     next.faceTo = next.heading.x < 0 ? -1 : 1;
   }
-  next.face = stepFace(next.face, next.faceTo, safe);
+  next.face = stepFace(next.face, next.faceTo);
 
   if (next.goal && Math.hypot(next.goal.x - next.x, next.goal.y - next.y) <= ARRIVE) {
     next.x = next.goal.x;

@@ -10,6 +10,9 @@ import {
   footPose,
   paceFactor,
   queueTap,
+  STEP_PX,
+  phaseForPixels,
+  screenTravel,
   stepFace,
   stepTravel,
 } from "@/lib/mascot/game/stride";
@@ -32,8 +35,8 @@ describe("room stride", () => {
     let cardinal = createTravel({ x: 0.42, y: 0.76 });
     let angled = createTravel({ x: 0.42, y: 0.76 });
     for (let i = 0; i < 24; i += 1) {
-      cardinal = stepTravel(cardinal, 1 / 60, grid, { dir: right, cruise: 0.28 });
-      angled = stepTravel(angled, 1 / 60, grid, { dir: diagonal, cruise: 0.28 });
+      cardinal = stepTravel(cardinal, 1 / 60, grid, { dir: right, cruise: 0.28, width: 390, height: 844 });
+      angled = stepTravel(angled, 1 / 60, grid, { dir: diagonal, cruise: 0.28, width: 390, height: 844 });
     }
     const straight = Math.hypot(cardinal.x - 0.42, cardinal.y - 0.76);
     const both = Math.hypot(angled.x - 0.42, angled.y - 0.76);
@@ -48,21 +51,21 @@ describe("room stride", () => {
     let early = 0;
     for (let i = 0; i < 6; i += 1) {
       const prev = travel.x;
-      travel = stepTravel(travel, 1 / 60, grid, { dir, cruise: 0.3 });
+      travel = stepTravel(travel, 1 / 60, grid, { dir, cruise: 0.3, width: 390, height: 844 });
       early += travel.x - prev;
     }
-    for (let i = 0; i < 30; i += 1) travel = stepTravel(travel, 1 / 60, grid, { dir, cruise: 0.3 });
+    for (let i = 0; i < 30; i += 1) travel = stepTravel(travel, 1 / 60, grid, { dir, cruise: 0.3, width: 390, height: 844 });
     let mid = 0;
     for (let i = 0; i < 6; i += 1) {
       const prev = travel.x;
-      travel = stepTravel(travel, 1 / 60, grid, { dir, cruise: 0.3 });
+      travel = stepTravel(travel, 1 / 60, grid, { dir, cruise: 0.3, width: 390, height: 844 });
       mid += travel.x - prev;
     }
     assert.ok(early < mid * 0.85, `early ${early} mid ${mid}`);
     const coasting = travel.speed;
-    travel = stepTravel(travel, 1 / 60, grid, { dir: null, cruise: 0.3 });
+    travel = stepTravel(travel, 1 / 60, grid, { dir: null, cruise: 0.3, width: 390, height: 844 });
     assert.ok(travel.speed > 0 && travel.speed < coasting);
-    for (let i = 0; i < 40; i += 1) travel = stepTravel(travel, 1 / 60, grid, { dir: null, cruise: 0.3 });
+    for (let i = 0; i < 40; i += 1) travel = stepTravel(travel, 1 / 60, grid, { dir: null, cruise: 0.3, width: 390, height: 844 });
     assert.equal(travel.speed, 0);
     assert.equal(travel.goal, null);
     assert.equal(paceFactor(0, 0.2), 0.38);
@@ -70,32 +73,60 @@ describe("room stride", () => {
     assert.ok(paceFactor(0.2, 0.01) < 0.7);
   });
 
-  it("turns through a narrow scale instead of flipping in one frame", () => {
-    let face = 1;
-    const first = stepFace(face, -1, 1 / 60);
-    assert.ok(first > 0.5, `flipped too soon ${first}`);
-    face = first;
-    for (let i = 0; i < 5; i += 1) face = stepFace(face, -1, 1 / 60);
-    assert.ok(Math.abs(face) < 0.35, `not narrow yet ${face}`);
-    for (let i = 0; i < 8; i += 1) face = stepFace(face, -1, 1 / 60);
-    assert.equal(face, -1);
+  it("flips facing in one frame without a horizontal squeeze", () => {
+    assert.equal(stepFace(1, -1), -1);
+    assert.equal(stepFace(-1, 1), 1);
+    let travel = createTravel({ x: 0.5, y: 0.74 });
+    travel = stepTravel(travel, 1 / 60, grid, { dir: { x: -1, y: 0 }, cruise: 0.3, width: 390, height: 844 });
+    assert.equal(travel.face, -1);
   });
 
   it("plants a foot with the distance and stands still with no bob", () => {
-    const moving = footPose(Math.PI / 2, true, 24, false);
+    const right = { x: 1, y: 0 };
+    const moving = footPose(Math.PI / 2, true, false, right, 1);
     assert.ok(moving.bob <= 0 && moving.bob >= -BOB_PX);
     assert.ok(moving.ly < 0 || moving.ry < 0);
     assert.ok(Math.abs(moving.arm) <= 5);
-    const planted = footPose(0, true, 24, false);
+    const planted = footPose(0, true, false, right, 1);
     assert.equal(planted.bob, 0);
     assert.equal(planted.ly, 0);
     assert.equal(planted.ry, 0);
-    const idle = footPose(Math.PI / 2, false, 24, false);
+    assert.equal(planted.lx, STEP_PX / 2);
+    const idle = footPose(Math.PI / 2, false, false, right, 1);
     assert.deepEqual(idle, { bob: 0, lx: 0, ly: 0, rx: 0, ry: 0, arm: 0 });
-    const calm = footPose(Math.PI / 2, true, 24, true);
+    const calm = footPose(Math.PI / 2, true, true, right, 1);
     assert.equal(calm.bob, 0);
     assert.equal(calm.arm, 0);
     assert.ok(calm.ly < 0 || calm.ry < 0);
+  });
+
+  it("takes one step per 20 screen pixels, across and up", () => {
+    assert.equal(phaseForPixels(STEP_PX), Math.PI);
+    assert.equal(phaseForPixels(0), 0);
+    const width = 400;
+    const height = 800;
+    let across = createTravel({ x: 0.2, y: 0.74 });
+    let px = 0;
+    for (let i = 0; i < 40; i += 1) {
+      const prev = across.x;
+      across = stepTravel(across, 1 / 60, grid, { dir: { x: 1, y: 0 }, cruise: 0.4, width, height });
+      px += screenTravel(across.x - prev, 0, width, height);
+    }
+    const steps = across.phase / Math.PI;
+    assert.ok(steps > 1, `steps ${steps}`);
+    assert.ok(Math.abs(px / steps - STEP_PX) < 0.6, `${px}px over ${steps} steps`);
+
+    let up = createTravel({ x: 0.5, y: 0.78 });
+    let upPx = 0;
+    for (let i = 0; i < 20; i += 1) {
+      const prev = up.y;
+      up = stepTravel(up, 1 / 60, grid, { dir: { x: 0, y: -1 }, cruise: 0.25, width, height });
+      upPx += screenTravel(0, up.y - prev, width, height);
+    }
+    const upSteps = up.phase / Math.PI;
+    assert.ok(upSteps > 0.4, `up steps ${upSteps}`);
+    assert.ok(Math.abs(upPx / upSteps - STEP_PX) < 0.6, `up ${upPx}px over ${upSteps}`);
+    assert.ok(STEP_PX >= 18 && STEP_PX <= 22);
   });
 
   it("walks a floor tap from 0.40, 0.69 to 0.70, 0.65", () => {
@@ -104,12 +135,12 @@ describe("room stride", () => {
     assert.ok(travel.goal, "route");
     const landed = nearestWalkable(grid, tap.x, tap.y);
     for (let i = 0; i < 700 && (travel.goal || travel.route.length > 0); i += 1) {
-      travel = stepTravel(travel, 1 / 60, grid, { dir: null, cruise: 0.32 });
+      travel = stepTravel(travel, 1 / 60, grid, { dir: null, cruise: 0.32, width: 390, height: 844 });
     }
     assert.equal(travel.goal, null);
     assert.ok(Math.hypot(travel.x - landed.x, travel.y - landed.y) < 0.02, `${travel.x},${travel.y} vs ${landed.x},${landed.y}`);
     assert.ok(Math.hypot(travel.x - tap.x, travel.y - tap.y) < 0.04, `${travel.x},${travel.y}`);
     assert.ok(travel.x > 0.6);
-    assert.equal(footPose(travel.phase, false, 20, false).bob, 0);
+    assert.equal(footPose(travel.phase, false, false, null, 1).bob, 0);
   });
 });

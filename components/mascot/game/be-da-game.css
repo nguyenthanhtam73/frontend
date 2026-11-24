@@ -539,13 +539,8 @@ html.dark .beda-draw-wait {
 /* Feet sit on the plank the mask picked. The art has empty space under the
    shoes, so the figure's margin pulls that padding below the anchor. */
 .beda-hero-wrap.is-floor {
-  --face: 1;
-  --bob: 0;
-  --sway: 0;
-  --tilt: 0;
-  --squash: 1;
-  --shadow-x: 1;
-  --shadow-y: 1;
+  --face-x: 1;
+  --bob: 0px;
   bottom: auto;
   left: calc(var(--rx, 0.48) * 100%);
   top: calc(var(--ry, 0.76) * 100%);
@@ -640,13 +635,17 @@ html.dark .beda-draw-wait {
   margin: 0;
   transform: translateX(-50%);
   white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.beda-hero-wrap.is-floor[data-caption="in"] .beda-pretty {
   opacity: 1;
 }
 
-.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"],
-.beda-hero-wrap.is-floor[data-stepping="1"] .beda-pretty {
+.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"] {
   opacity: 0;
-  visibility: hidden;
 }
 
 @media (max-width: 400px) {
