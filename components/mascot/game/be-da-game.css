@@ -1031,6 +1031,10 @@ html.dark .beda-draw-wait {
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
 }
 
+.beda-nav-label {
+  white-space: nowrap;
+}
+
 .beda-nav-orb {
   display: grid;
   width: clamp(58px, 16vw, 72px);
@@ -1076,6 +1080,44 @@ html.dark .beda-draw-wait {
 .beda-ico-sm {
   width: 22px;
   height: 22px;
+}
+
+/* 360–390px: «chuỗi ngày» and «Sảnh chung» stay on one line. Type stays ≥12px. */
+@media (max-width: 390px) {
+  .beda-hud {
+    gap: 6px;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .beda-chip {
+    gap: 4px;
+    padding: 0 8px 0 4px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .beda-chip small {
+    font-size: 12px;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  .beda-chip-icon {
+    width: 28px;
+    height: 28px;
+    flex: none;
+  }
+
+  .beda-nav-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .beda-nav-label {
+    font-size: 12px;
+    letter-spacing: -0.04em;
+  }
 }
 
 .beda-lobby {
