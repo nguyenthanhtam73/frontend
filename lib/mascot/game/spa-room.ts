@@ -354,8 +354,12 @@ export type RoomEvent = {
   id?: string;
   from?: string;
   target?: string;
-  /** Server sentence on a nudge. Gestures never carry text. */
+  /** Server sentence on a nudge. Gestures never carry text. The web does not show it. */
   message?: string;
+  /** Optional nudge variant. The server does not send one today. */
+  variant?: unknown;
+  type?: unknown;
+  nudgeType?: unknown;
   /** Set on tree_watered and tree_level_up. Display name, no account id. */
   tree?: {
     name: string;
@@ -1061,6 +1065,9 @@ function readEvents(value: unknown): RoomEvent[] {
       from: typeof row.from === "string" ? row.from : undefined,
       target: typeof row.target === "string" ? row.target : undefined,
       ...(message ? { message } : {}),
+      ...(op === "nudge" && "variant" in row ? { variant: row.variant } : {}),
+      ...(op === "nudge" && "type" in row ? { type: row.type } : {}),
+      ...(op === "nudge" && "nudge_type" in row ? { nudgeType: row.nudge_type } : {}),
     });
   }
   return out;

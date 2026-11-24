@@ -166,7 +166,7 @@ describe("Hôm nay and nudge", () => {
         events: [
           { op: "cheer", from: "abc123def456", text: "hello" },
           { op: "poke", from: "abc123def456", target: "k3m8p2q9w4xn", message: "free text" },
-          { op: "nudge", from: "abc123def456", target: "k3m8p2q9w4xn", message: "Lan đang chờ bạn chăm da hôm nay đó 💕" },
+          { op: "nudge", from: "abc123def456", target: "k3m8p2q9w4xn", variant: 2, message: "Lan đang chờ bạn chăm da hôm nay đó 💕" },
         ],
       }),
     );
@@ -177,6 +177,7 @@ describe("Hôm nay and nudge", () => {
     assert.equal(tick.events[1]?.op, "poke");
     assert.equal(tick.events[1]?.message, undefined);
     assert.equal(tick.events[2]?.message, "Lan đang chờ bạn chăm da hôm nay đó 💕");
+    assert.equal(tick.events[2]?.variant, 2);
   });
 });
 

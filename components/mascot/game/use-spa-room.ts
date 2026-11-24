@@ -71,7 +71,7 @@ export type SpaEmoteKind = "wave" | "heart" | "outfit" | "cheer" | "poke";
 
 export type SpaRemote =
   | { name: string; kind: SpaEmoteKind }
-  | { kind: "nudge"; message: string };
+  | { kind: "nudge"; message: string; variant?: unknown; type?: unknown; nudgeType?: unknown };
 
 /**
  * REST join first, then one socket `join` on channel "room".
@@ -305,8 +305,14 @@ export function useSpaRoom(options: {
             continue;
           }
           if (event.op === "nudge") {
-            if (event.target && event.target === roomRef.current.sessionId && event.message) {
-              remoteRef.current?.({ kind: "nudge", message: event.message });
+            if (event.target && event.target === roomRef.current.sessionId) {
+              remoteRef.current?.({
+                kind: "nudge",
+                message: event.message ?? "",
+                variant: event.variant,
+                type: event.type,
+                nudgeType: event.nudgeType,
+              });
             }
             continue;
           }

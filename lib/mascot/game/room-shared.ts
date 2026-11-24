@@ -90,6 +90,10 @@ export type RoomNudge = {
   message: string;
   vnDate: string;
   push: string;
+  /** Present only when the server adds one. The sentence is still the source today. */
+  variant?: unknown;
+  type?: unknown;
+  nudgeType?: unknown;
 };
 
 const TIERS = new Set<string>(["small", "medium", "big"]);
@@ -244,6 +248,9 @@ export function readRoomNudge(data: unknown): RoomNudge | null {
     message: text(body.message, 240),
     vnDate: text(body.vn_date, 10),
     push: text(body.push, 16),
+    ...("variant" in body ? { variant: body.variant } : {}),
+    ...("type" in body ? { type: body.type } : {}),
+    ...("nudge_type" in body ? { nudgeType: body.nudge_type } : {}),
   };
 }
 

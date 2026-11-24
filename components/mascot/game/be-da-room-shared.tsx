@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { GameIcon } from "@/components/mascot/game/icons";
 import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
+import { webNudgeNote, type NudgeVoiceIndex } from "@/lib/mascot/game/nudge-voice";
 import {
   canNudgeMember,
   formatRoomCoins,
@@ -157,12 +158,23 @@ export function RoomTodayList({
   roomEnded?: boolean;
 }) {
   const t = useTranslations("mascot");
+  const note = together.todayMessage
+    ? webNudgeNote(together.todayMessage, (index: NudgeVoiceIndex, name) =>
+        index === 1
+          ? t("game.nudge.v1", { name })
+          : index === 2
+            ? t("game.nudge.v2", { name })
+            : index === 3
+              ? t("game.nudge.v3", { name })
+              : t("game.nudge.v4", { name }),
+      )
+    : null;
   return (
     <section className="beda-today" data-testid="beda-today" aria-label={t("game.roomTodayTitle")}>
       <h2>{t("game.roomTodayTitle")}</h2>
-      {together.todayMessage ? (
+      {note ? (
         <p className="beda-quest-alert" role="status" data-testid="beda-today-message">
-          {together.todayMessage}
+          {note}
         </p>
       ) : null}
       {together.loading && together.today.length === 0 ? <p className="beda-quest-count">{t("game.roomQuestLoading")}</p> : null}

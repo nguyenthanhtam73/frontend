@@ -31,6 +31,7 @@ import {
   type WardrobeItem,
 } from "@/lib/mascot/game/wardrobe";
 import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
+import { pickNudgeVoice } from "@/lib/mascot/game/nudge-voice";
 import { ShopClosetTabs } from "@/components/mascot/game/be-da-xu-shop";
 import type { ShopClosetItem } from "@/lib/mascot/game/xu-shop";
 import { routineSummary } from "@/lib/mascot/game/missions";
@@ -61,7 +62,7 @@ export type CareStep = {
 export type GameToast =
   | { name: string; kind: "wave" | "heart" | "outfit" | "worn" | "cheer" | "poke" }
   | { name: ""; kind: "wear-failed" }
-  | { kind: "nudge"; message: string }
+  | { kind: "nudge"; message: string; variant?: unknown; type?: unknown; nudgeType?: unknown }
   | null;
 
 const NAV: { id: GameTab; icon: GameIconName; label: "care" | "wardrobe" | "quests" | "lobby" }[] = [
@@ -1456,9 +1457,18 @@ function Toast({ toast }: { toast: Exclude<GameToast, null> }) {
     );
   }
   if (toast.kind === "nudge") {
+    const voice = pickNudgeVoice(toast);
+    const line =
+      voice.index === 1
+        ? t("game.nudge.v1", { name: voice.name })
+        : voice.index === 2
+          ? t("game.nudge.v2", { name: voice.name })
+          : voice.index === 3
+            ? t("game.nudge.v3", { name: voice.name })
+            : t("game.nudge.v4", { name: voice.name });
     return (
       <div className="beda-toast is-note" role="status" data-testid="beda-toast">
-        {toast.message}
+        {line}
       </div>
     );
   }

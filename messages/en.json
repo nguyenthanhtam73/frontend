@@ -3694,6 +3694,12 @@
         "closet": "From the gift box",
         "failed": "The box did not open. Please try again"
       },
+      "nudge": {
+        "v1": "{name} is waiting for you to care for your skin today 💕",
+        "v2": "{name} says gently: let's care for our skin together today ✨",
+        "v3": "{name}'s Bé Da is waving you over to care for your skin today 💗",
+        "v4": "{name} saved you a spot on today's board 🌸"
+      },
       "toast": {
         "worn": "Bé Da is wearing {name} ✨",
         "wearFailed": "Couldn't wear that, try again",

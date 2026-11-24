@@ -3694,6 +3694,12 @@
         "closet": "Đồ từ hộp quà",
         "failed": "Chưa mở được, thử lại nha"
       },
+      "nudge": {
+        "v1": "{name} đang chờ mày chăm da hôm nay đó 💕",
+        "v2": "{name} nhắc nhẹ: hôm nay tao với mày cùng chăm da nha ✨",
+        "v3": "Bé Da của {name} đang vẫy mày, vào chăm da hôm nay đi 💗",
+        "v4": "{name} giữ một chỗ trên bảng hôm nay cho mày đó 🌸"
+      },
       "toast": {
         "worn": "Bé Da đã mặc {name} ✨",
         "wearFailed": "Chưa mặc được, thử lại nha",
