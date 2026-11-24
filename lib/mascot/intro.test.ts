@@ -4,8 +4,9 @@ import { describe, it } from "node:test";
 import { readFileSync } from "node:fs";
 
 import { INTRO_RESET_CONFIRM_VI, INTRO_RESET_ERROR_VI } from "@/components/mascot/intro/be-da-intro-reset";
+import { lookArt, playerActorArt } from "@/lib/game/core/art";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
-import { genderLook } from "@/lib/mascot/game/look";
+import { DEFAULT_GAME_LOOK, genderLook } from "@/lib/mascot/game/look";
 import { applyMaleArt, facePartSrc } from "@/lib/mascot/layers";
 import { defaultSnapshot, parseMascot, resolveBeDaView } from "@/lib/mascot/model";
 import { mascotStack } from "@/lib/mascot/layers";
@@ -24,7 +25,7 @@ import {
 
 describe("Bé Da intro", () => {
   it("defaults the pick to Nữ and keeps the warm line", () => {
-    assert.equal(INTRO_LINE_VI, "Bé Da này sẽ đi cùng bạn, nhớ chăm sóc bé thật tốt nhé");
+    assert.equal(INTRO_LINE_VI, "Bé Da này sẽ đi cùng mày nè, nhớ chăm bé thật tốt nha");
     const view = resolveBeDaView({
       snapshot: defaultSnapshot(),
       missedDays: 0,
@@ -108,6 +109,24 @@ describe("Bé Da intro", () => {
     assert.equal(snap.gender, "male");
     assert.equal(snap.introSeen, true);
     assert.equal(parseMascot({ mood: "happy" }).introSeen, null);
+  });
+
+  it("picks the same v2 stack the lobby uses for Nữ and Nam", () => {
+    const female = resolveBeDaView({
+      snapshot: { ...defaultSnapshot(), gender: "female", isDefault: false, mood: "happy" },
+      missedDays: 0,
+      sessionHappy: true,
+      locale: "vi",
+    });
+    const male = { ...female, gender: "male" as const };
+    const nu = genderLook(DEFAULT_GAME_LOOK, "female");
+    const nam = genderLook(DEFAULT_GAME_LOOK, "male");
+    assert.deepEqual(playerActorArt(female, nu), lookArt(female, nu, true, true));
+    assert.deepEqual(playerActorArt(male, nam), lookArt(male, nam, true, true));
+    assert.equal(playerActorArt(female, nu).some((src) => src.includes("room_moon")), false);
+    assert.equal(playerActorArt(female, nu).some((src) => src.includes("/glow/")), false);
+    assert.equal(playerActorArt(male, nam).some((src) => src.includes("outfit_pajamas_boy.svg")), true);
+    assert.equal(playerActorArt(male, nam).some((src) => src.includes("hair_boy_short.svg")), true);
   });
 
   it("draws the boy hair and blue pajamas for Nam, and leaves Nữ unchanged", () => {

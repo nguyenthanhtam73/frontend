@@ -60,6 +60,15 @@ function armImg(src: string, deg: number, side: "r" | "l"): string {
   return side === "l" ? `<div class="arm-mirror">${img}</div>` : img;
 }
 
+/**
+ * The hanging sleeves the v2 sheet bakes for idle.
+ * Same file and 110° hang as the spritesheet. The left arm is the mirror.
+ */
+export function idleSleeves(outfitSrc: string): { src: string; right: number; left: number } {
+  const pose = armPose("idle", 0);
+  return { src: sleeveArmSrc(outfitSrc), right: pose.right, left: pose.left };
+}
+
 /** Two short sleeves. Idle uses the hanging arm on both sides (left is mirrored). */
 export function armMarkup(outfitSrc: string, clip: ArmClip, index: number): string {
   const pose = armPose(clip, index);

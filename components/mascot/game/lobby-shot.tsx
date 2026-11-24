@@ -11,15 +11,18 @@ import vi from "../../../messages/vi.json";
 import "@/components/mascot/game/be-da-game.css";
 
 const client = new QueryClient();
+const NO_CLIPS: readonly string[] = [];
 
 export function LobbyShot() {
   const [open, setOpen] = useState(false);
-  const [card, setCard] = useState(false);
+  const [tab, setTab] = useState<"lobby" | "care" | "wardrobe" | "quests">("lobby");
   const [theme, setTheme] = useState<"light" | "dark">("light");
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setOpen(params.get("open") === "1");
-    setCard(params.get("card") === "1");
+    const asked = params.get("tab");
+    if (asked === "care" || asked === "wardrobe" || asked === "quests" || asked === "lobby") setTab(asked);
+    else if (params.get("card") === "1") setTab("care");
     setTheme(params.get("theme") === "dark" ? "dark" : "light");
   }, []);
   useEffect(() => {
@@ -37,7 +40,7 @@ export function LobbyShot() {
       <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
         <BeDaGameView
           locale="vi"
-          tab={card ? "care" : "lobby"}
+          tab={tab}
           sky={theme === "dark" ? "night" : "morning"}
           coinsLabel="1.250"
           streakLabel="7"
@@ -53,9 +56,10 @@ export function LobbyShot() {
           wavingId={null}
           look={DEFAULT_GAME_LOOK}
           wornIds={[]}
+          ownedClipIds={NO_CLIPS}
           hearts={0}
           streakKept
-          giftTaken={!card}
+          giftTaken={tab !== "care"}
           player={player}
           burst={0}
           homeHref="/check-in"

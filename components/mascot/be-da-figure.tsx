@@ -1,10 +1,11 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react";
 
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { mascotStack } from "@/lib/mascot/layers";
 import type { GameDress } from "@/lib/mascot/game/look";
+import { idleSleeves } from "@/lib/mascot/game/sheet-arms";
 import { startBeDaBlinkLoop } from "@/lib/mascot/idle";
 import type { BeDaView, StepPose } from "@/lib/mascot/model";
 import { cn } from "@/lib/utils";
@@ -57,13 +58,19 @@ export function BeDaFigure({
 
   const layers = mascotStack(view, { reaction, stepPose, locale, dress, crowd, marks: marks || undefined });
   const showExitFlies = fliesExit && !view.flies && !crowd;
+  const showFace = layers.some((layer) => layer.slot === "face-eyes");
   const hasLids = layers.some((layer) => layer.slot === "fx-eyelids");
+  const outfit = layers.find((layer) => layer.slot === "outfit");
+  const hangingSleeves =
+    outfit && /\/outfits\/outfit_/.test(outfit.src) && !layers.some((layer) => layer.slot === "arms")
+      ? outfit.src
+      : null;
   const floorSrc = !crowd && view.glowLevel >= 5 ? mascotAssetUrl(`/mascot/glow/level_${view.glowLevel}_floor.svg`) : null;
   const rootRef = useRef<HTMLElement | null>(null);
   const setRoot = useCallback((node: HTMLElement | null) => {
     rootRef.current = node;
   }, []);
-  useBeDaIdleBlink(rootRef, view.glowLevel, hasLids, interactive);
+  useBeDaIdleBlink(rootRef, view.glowLevel, showFace, interactive);
 
   function tap() {
     if (!interactive) return;
@@ -87,15 +94,26 @@ export function BeDaFigure({
       ) : null}
       <span className={cn("bd-breathe absolute inset-0", celebrate && "be-da-jump")}>
         {layers.map((layer) => (
-          <LayerImage
-            key={`${layer.slot}:${layer.src}`}
-            src={layer.src}
-            slot={layer.slot}
-            opacity={layer.opacity}
-            tidy={layer.slot === "messy" && tidy}
-            loading={imageLoading}
-          />
+          <Fragment key={`${layer.slot}:${layer.src}`}>
+            <LayerImage
+              src={layer.src}
+              slot={layer.slot}
+              opacity={layer.opacity}
+              tidy={layer.slot === "messy" && tidy}
+              loading={imageLoading}
+            />
+            {hangingSleeves && layer.slot === "outfit" ? <IdleSleeves outfitSrc={hangingSleeves} /> : null}
+          </Fragment>
         ))}
+        {showFace && !hasLids ? (
+          <img
+            src={mascotAssetUrl("/mascot/fx/eyelids.svg")}
+            alt=""
+            data-slot="fx-eyelids"
+            decoding="async"
+            className="bd-lids pointer-events-none absolute inset-0 h-full w-full"
+          />
+        ) : null}
         {showExitFlies ? (
           <img src={mascotAssetUrl("/mascot/fx/flies/flies.svg")} alt="" decoding="async" className="be-da-flies-exit absolute inset-0 h-full w-full" />
         ) : null}
@@ -144,7 +162,7 @@ export function BeDaFigure({
   );
 }
 
-/** Random eyelid fades. Levels 1–2 use the sleepy interval. Reduced motion schedules nothing. */
+/** One soft blink on this figure's own clock. Reduced motion leaves the eyes open. */
 function useBeDaIdleBlink(
   rootRef: { readonly current: HTMLElement | null },
   level: number,
@@ -163,9 +181,10 @@ function useBeDaIdleBlink(
       stop = startBeDaBlinkLoop({
         level,
         reducedMotion: media?.matches === true,
-        blink() {
+        blink(closedMs) {
           const lids = root.querySelector<HTMLElement>(".bd-lids");
           if (!lids) return;
+          lids.style.setProperty("--bd-blink", `${closedMs}ms`);
           lids.classList.remove("bd-blink-run");
           // A reflow is required or the browser will not restart the opacity fade.
           void lids.offsetWidth;
@@ -181,6 +200,33 @@ function useBeDaIdleBlink(
       root.querySelector(".bd-lids")?.classList.remove("bd-blink-run");
     };
   }, [enabled, interactive, level, rootRef]);
+}
+
+/** Short hanging sleeves from the v2 sheet. Left is the same file, mirrored. */
+function IdleSleeves({ outfitSrc }: { outfitSrc: string }) {
+  const sleeves = idleSleeves(outfitSrc);
+  return (
+    <>
+      <img
+        alt=""
+        src={sleeves.src}
+        data-slot="arms"
+        decoding="async"
+        className="bd-sleeve"
+        style={{ transform: `rotate(${sleeves.right}deg)` }}
+      />
+      <span className="bd-sleeve-mirror">
+        <img
+          alt=""
+          src={sleeves.src}
+          data-slot="arms"
+          decoding="async"
+          className="bd-sleeve"
+          style={{ transform: `rotate(${sleeves.left}deg)` }}
+        />
+      </span>
+    </>
+  );
 }
 
 const LayerImage = memo(function LayerImage({

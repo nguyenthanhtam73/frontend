@@ -1,11 +1,14 @@
-import { AnimatedSprite, Application, Assets, Container, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
+import { AnimatedSprite, Application, Assets, Container, Sprite, Spritesheet, TextureStyle, type Ticker } from "pixi.js";
 
 import { rendererResolution } from "@/lib/game/core/dpr";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+import { createBlinkClock, stepBlinkClock, type BlinkClock } from "@/lib/mascot/idle";
 import { actorSheetPlan, attachIfMounted, createShellLife, destroyShellLife, setActorReady } from "@/lib/mascot/game/shell/pixi-guard";
 import {
+  IDLE_BLINK_FRAME,
   SHEET_ANCHOR_Y,
   actorClip,
+  idleLoopIndexes,
   sheetJsonUrlFromArt,
   sheetKeyFromArt,
   type ActorClip,
@@ -56,13 +59,28 @@ export type ActorNodes = {
   anim: AnimatedSprite;
   clip: ActorClip;
   height: number;
+  /** Closed-eye idle frame. Alpha is this character's own blink. */
+  blink: Sprite | null;
+  clock: BlinkClock;
 };
+
+function clipFrames(sheet: Spritesheet, clip: ActorClip) {
+  const frames = sheet.animations[clip] ?? [];
+  if (clip !== "idle" || frames.length === 0) return frames;
+  const open = idleLoopIndexes(frames.length).map((index) => frames[index]).filter((frame) => frame != null);
+  return open.length > 0 ? open : frames;
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+}
 
 export function createActor(sheet: Spritesheet, key: string): ActorNodes {
   const root = new Container();
   root.eventMode = "none";
-  const frames = sheet.animations.idle ?? sheet.animations.walk ?? [];
-  const anim = new AnimatedSprite(frames);
+  const idle = sheet.animations.idle ?? [];
+  const frames = clipFrames(sheet, "idle");
+  const anim = new AnimatedSprite(frames.length > 0 ? frames : (sheet.animations.walk ?? idle));
   anim.anchor.set(0.5, SHEET_ANCHOR_Y);
   anim.animationSpeed = 0.08;
   anim.loop = true;
@@ -71,30 +89,52 @@ export function createActor(sheet: Spritesheet, key: string): ActorNodes {
   anim.eventMode = "none";
   anim.play();
   root.addChild(anim);
-  return { key, root, anim, clip: "idle", height: 0 };
+  const blinkTexture = idle[IDLE_BLINK_FRAME];
+  let blink: Sprite | null = null;
+  if (blinkTexture && frames.length > 0 && frames.length < idle.length) {
+    blink = new Sprite(blinkTexture);
+    blink.anchor.set(0.5, SHEET_ANCHOR_Y);
+    blink.alpha = 0;
+    blink.roundPixels = true;
+    blink.eventMode = "none";
+    root.addChild(blink);
+  }
+  return { key, root, anim, clip: "idle", height: 0, blink, clock: createBlinkClock(Math.random()) };
 }
 
 export function setActorClip(actor: ActorNodes, sheet: Spritesheet, clip: ActorClip): void {
   if (actor.clip === clip) return;
-  const frames = sheet.animations[clip];
+  const frames = clipFrames(sheet, clip);
   if (!frames?.length) return;
   actor.clip = clip;
   actor.anim.textures = frames;
   actor.anim.animationSpeed = clip === "walk" ? 0.2 : clip === "wave" ? 0.16 : 0.07;
   actor.anim.gotoAndPlay(0);
+  if (clip !== "idle" && actor.blink) actor.blink.alpha = 0;
 }
 
 export function layoutActor(actor: ActorNodes, height: number): void {
   const next = Math.max(48, Math.round(height));
-  if (actor.height === next) return;
-  actor.height = next;
-  const anim = actor.anim;
-  anim.height = next;
-  anim.width = next * (220 / 250);
+  const width = next * (220 / 250);
+  if (actor.height !== next) {
+    actor.height = next;
+    actor.anim.height = next;
+    actor.anim.width = width;
+  }
+  if (actor.blink && (actor.blink.height !== next || actor.blink.width !== width)) {
+    actor.blink.height = next;
+    actor.blink.width = width;
+  }
 }
 
 export function stepActors(actors: Iterable<ActorNodes>, ticker: Ticker): void {
-  for (const actor of actors) actor.anim.update(ticker);
+  const reduced = prefersReducedMotion();
+  for (const actor of actors) {
+    actor.anim.update(ticker);
+    if (!actor.blink) continue;
+    const alpha = stepBlinkClock(actor.clock, Math.min(ticker.deltaMS || 0, 100), Math.random, reduced);
+    actor.blink.alpha = actor.clip === "idle" ? alpha : 0;
+  }
 }
 
 export function destroyActor(actor: ActorNodes): void {

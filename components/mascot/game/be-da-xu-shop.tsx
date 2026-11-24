@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
+import { DEFAULT_GAME_LOOK, gameDress, genderLook } from "@/lib/mascot/game/look";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
@@ -204,7 +205,15 @@ export function BeDaXuShop({
             </div>
           </div>
           <div className="beda-shop-hero">
-            {shown ? <BeDaFigure view={shown} locale={locale} /> : null}
+            {shown ? (
+              <BeDaFigure
+                view={shown}
+                locale={locale}
+                dress={gameDress(genderLook(DEFAULT_GAME_LOOK, gender))}
+                crowd
+                marks
+              />
+            ) : null}
             {layer ? <img className="beda-shop-wear" src={mascotAssetUrl(layer)} alt="" /> : null}
           </div>
           {trying && bubbleColour(trying.id) ? (

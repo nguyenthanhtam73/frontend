@@ -999,7 +999,14 @@ function Room({
       >
         <span className="beda-room-shadow" data-testid="beda-room-shadow" aria-hidden />
         <Bubble kind={bubbleKind} bubbleId={player.loadout.bubble} loiText={loiText} />
-        <BeDaFigure view={player} locale={locale} dress={gameDress(look)} className="w-full" />
+        <BeDaFigure
+          view={player}
+          locale={locale}
+          dress={gameDress(look)}
+          crowd={hideCards}
+          marks={hideCards ? true : undefined}
+          className="w-full"
+        />
         {tryFlash > 0 ? <span key={tryFlash} className="beda-try-glow" aria-hidden /> : null}
         <div className="beda-rug" aria-hidden />
         <div className="beda-pretty">

@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { afterEach, describe, it, mock } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { beDaIdleTiming, startBeDaBlinkLoop } from "@/lib/mascot/idle";
+import { beDaIdleTiming, createBlinkClock, startBeDaBlinkLoop, stepBlinkClock } from "@/lib/mascot/idle";
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../app/globals.css"), "utf8");
 
@@ -22,8 +22,9 @@ describe("Bé Da idle timing", () => {
   });
 
   it("fades eyelids with opacity and keeps fly, yawn, tidy, and the routine jump", () => {
-    assert.match(css, /--bd-blink:\s*120ms/);
-    assert.match(css, /--bd-blink:\s*260ms/);
+    assert.match(css, /--bd-blink:\s*140ms/);
+    assert.equal(css.includes("--bd-blink: 260ms"), false);
+    assert.equal(css.includes("--bd-blink: 120ms"), false);
     assert.match(css, /@keyframes bd-blink/);
     assert.equal(css.includes("scaleY"), false);
     assert.match(css, /\.be-da-fly\b/);
@@ -41,24 +42,23 @@ describe("Bé Da idle timing", () => {
     assert.match(reduced, /\.be-da-tidy/);
   });
 
-  it("waits 2.5–6s with an 18% double blink, and 3–6s / 8% when sleepy", () => {
+  it("waits 6–8s, closes for 120–150ms, and uses one timing for sleepy and awake", () => {
     const awake = beDaIdleTiming(3);
     assert.equal(awake.sleepy, false);
-    assert.equal(awake.blinkMs, 120);
-    assert.equal(awake.waitMs(0), 2500);
-    assert.equal(awake.waitMs(1), 6000);
-    assert.equal(awake.doubleBlinkGapMs(0), 260);
-    assert.equal(awake.doubleBlinkGapMs(0.179), 260);
-    assert.equal(awake.doubleBlinkGapMs(0.18), null);
+    assert.equal(awake.blinkMs(0), 120);
+    assert.equal(awake.blinkMs(1), 150);
+    assert.equal(awake.waitMs(0), 6000);
+    assert.equal(awake.waitMs(1), 8000);
+    assert.equal(awake.offsetMs(0), 0);
+    assert.equal(awake.offsetMs(1), 8000);
 
     for (const level of [1, 2]) {
       const sleepy = beDaIdleTiming(level);
       assert.equal(sleepy.sleepy, true);
-      assert.equal(sleepy.blinkMs, 260);
-      assert.equal(sleepy.waitMs(0), 3000);
-      assert.equal(sleepy.waitMs(1), 6000);
-      assert.equal(sleepy.doubleBlinkGapMs(0.079), 420);
-      assert.equal(sleepy.doubleBlinkGapMs(0.08), null);
+      assert.equal(sleepy.blinkMs(0), 120);
+      assert.equal(sleepy.blinkMs(1), 150);
+      assert.equal(sleepy.waitMs(0), 6000);
+      assert.equal(sleepy.waitMs(1), 8000);
     }
 
     assert.equal(beDaIdleTiming(6).sleepy, false);
@@ -70,44 +70,51 @@ describe("Bé Da blink loop", () => {
     mock.timers.reset();
   });
 
-  it("blinks, then double-blinks, on the awake schedule", () => {
+  it("blinks once on its own offset, then waits a full 6–8s", () => {
     mock.timers.enable({ apis: ["setTimeout"] });
     const blinks: number[] = [];
     const stop = startBeDaBlinkLoop({
       level: 4,
       reducedMotion: false,
-      blink: () => blinks.push(blinks.length + 1),
-      random: scripted([0, 0, 0]),
+      blink: (ms) => blinks.push(ms),
+      random: scripted([0, 0.5, 1, 0]),
     });
-    mock.timers.tick(2499);
-    assert.deepEqual(blinks, []);
-    mock.timers.tick(1);
-    assert.deepEqual(blinks, [1]);
-    mock.timers.tick(259);
-    assert.deepEqual(blinks, [1]);
-    mock.timers.tick(1);
-    assert.deepEqual(blinks, [1, 2]);
+    mock.timers.tick(0);
+    assert.deepEqual(blinks, [135]);
+    mock.timers.tick(7739);
+    assert.deepEqual(blinks, [135]);
+    mock.timers.tick(261);
+    assert.equal(blinks.length, 2);
+    assert.equal(blinks[1], 120);
     stop();
   });
 
-  it("uses the sleepy gap on levels 1 and 2", () => {
+  it("uses the same 6s gap on levels 1 and 2", () => {
     mock.timers.enable({ apis: ["setTimeout"] });
     const blinks: number[] = [];
     const stop = startBeDaBlinkLoop({
       level: 2,
       reducedMotion: false,
       blink: () => blinks.push(1),
-      random: scripted([0, 0]),
+      random: scripted([0, 0, 0]),
     });
-    mock.timers.tick(2999);
-    assert.equal(blinks.length, 0);
-    mock.timers.tick(1);
+    mock.timers.tick(0);
     assert.equal(blinks.length, 1);
-    mock.timers.tick(419);
+    mock.timers.tick(5999);
     assert.equal(blinks.length, 1);
     mock.timers.tick(1);
     assert.equal(blinks.length, 2);
     stop();
+  });
+
+  it("does not blink two clocks on the same beat", () => {
+    const early = createBlinkClock(0);
+    const late = createBlinkClock(1);
+    assert.ok(stepBlinkClock(early, 16, () => 0, false) > 0);
+    assert.equal(stepBlinkClock(late, 16, () => 0, false), 0);
+    assert.ok(late.waitLeft > 7000);
+    assert.equal(stepBlinkClock(early, 20, () => 0, true), 0);
+    assert.equal(early.active, 0);
   });
 
   it("does not schedule when reduced motion is on", () => {
