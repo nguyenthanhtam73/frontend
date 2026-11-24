@@ -84,17 +84,50 @@ export function plainifyGuidanceText(text: string, en: boolean): string {
         ["Không phải kê đơn", "Đây không phải đơn thuốc"],
         ["không stack", "không dùng chung"],
         ["stack", "dùng chung"],
-        ["ít làm mỏng hàng rào da", "ít làm da khô rát, dễ bị kích ứng"],
-        ["làm mỏng hàng rào da", "làm da khô rát, dễ bị kích ứng"],
-        ["hàng rào da", "da"],
-        ["hàng rào", "da"],
-        ["ceramides", "chất giữ nước trong da"],
-        ["ceramide", "chất giữ nước trong da"],
       ] as const);
   for (const [from, to] of pairs) {
     if (out.includes(from)) out = out.split(from).join(to);
   }
+  if (!en) out = explainVietnameseGuidance(out);
   return out.replace(/\s{2,}/g, " ").trim();
+}
+
+const CERAMIDE_GLOSS = "giúp lớp ngoài da giữ nước, đỡ khô rát";
+const BARRIER_GLOSS = "lớp ngoài da (lớp giữ nước, đỡ khô rát)";
+
+function capLike(sample: string, replacement: string): string {
+  const first = sample.charAt(0);
+  const upper = first.toLocaleUpperCase("vi");
+  if (first === upper && first !== first.toLocaleLowerCase("vi")) {
+    return replacement.charAt(0).toLocaleUpperCase("vi") + replacement.slice(1);
+  }
+  return replacement;
+}
+
+/** Keep the ingredient, and say what it does. Skip a name that already has a gloss. */
+function explainKeptIngredient(text: string, pattern: RegExp, gloss: string): string {
+  return text.replace(pattern, (match: string, offset: number, whole: string) => {
+    const after = whole.slice(offset + match.length);
+    if (/^\s*(?:\([^)]{6,}\)|[—–]\s+\S|:\s+\S)/.test(after)) return match;
+    return `${match} (${gloss})`;
+  });
+}
+
+/**
+ * Explain «hàng rào da» in any case, including «hàng rào bảo vệ da».
+ * Do not swap the words for «da», which turns «hàng rào bảo vệ da» into «da bảo vệ da».
+ */
+function explainVietnameseGuidance(text: string): string {
+  let out = text.replace(/ít làm mỏng hàng rào da/giu, (match) =>
+    capLike(match, "ít làm da khô rát, dễ bị kích ứng"),
+  );
+  out = out.replace(/làm mỏng hàng rào da/giu, (match) =>
+    capLike(match, "làm da khô rát, dễ bị kích ứng"),
+  );
+  out = out.replace(/hàng rào(?:\s+bảo vệ)?(?:\s+da)?/giu, (match) => capLike(match, BARRIER_GLOSS));
+  out = explainKeptIngredient(out, /\bceramides\b/giu, CERAMIDE_GLOSS);
+  out = explainKeptIngredient(out, /\bceramide\b/giu, CERAMIDE_GLOSS);
+  return out;
 }
 
 /** Client-side safety net when analyze payload is thin — never invents affiliate links. */
@@ -125,10 +158,9 @@ export function enrichProductGuidanceItems(
       item.caution?.trim() || defaultCaution(item.step, phase, en),
       en,
     );
-    const name = plainifyGuidanceText(item.name_or_category?.trim() || "", en);
     return {
       ...item,
-      name_or_category: name || item.name_or_category,
+      name_or_category: item.name_or_category,
       why,
       benefits: benefits.slice(0, 4),
       how_to_use,
