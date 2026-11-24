@@ -13,7 +13,9 @@ import {
   parseCommissionPercent,
   parseFitNote,
   parseOptionalPrice,
+  parseBanChay,
   parseRequiredPrice,
+  toPublicCatalog,
 } from "./affiliate-import.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -115,25 +117,27 @@ describe("affiliate CSV import", () => {
     assert.equal(committed.includes("commission"), false);
     assert.equal(committed.includes("reviewCount"), false);
     assert.equal(committed.includes("subId1"), false);
+    assert.equal(committed.includes("ban_chay"), false);
+    assert.equal(committed.includes("banChay"), false);
     assert.equal(committed.includes("shopee.vn/product"), false);
   });
 
   it("rejects a bad link, a bad url, a wrong sub_id1, and a duplicate, naming the row", () => {
     const header =
-      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2,ban_chay";
     const good =
-      "Sữa rửa mặt,CeraVe Foaming,333000,,8.5%,4.9,31k,2tr+,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/abcDEF12,dadiary,w20261124";
+      "Sữa rửa mặt,CeraVe Foaming,333000,,8.5%,4.9,31k,2tr+,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/abcDEF12,dadiary,w20261124,0";
     assert.throws(
       () =>
         parseAffiliateCsv(
-          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://shopee.vn/nope,dadiary,w20261124\n`,
+          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://shopee.vn/nope,dadiary,w20261124,0\n`,
         ),
       /Row 2:.*aff_link/,
     );
     assert.throws(
       () =>
         parseAffiliateCsv(
-          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://example.com/nope,https://s.shopee.vn/abc,dadiary,w20261124\n`,
+          `${header}\nSữa rửa mặt,Bad,1000,,8%,4.9,1,1,Shop,https://example.com/nope,https://s.shopee.vn/abc,dadiary,w20261124,0\n`,
         ),
       /Row 2:.*url must start/,
     );
@@ -156,9 +160,9 @@ describe("affiliate CSV import", () => {
     assert.equal(parseCommissionPercent("10%"), 10);
     assert.equal(parseCommissionPercent("8,5%"), 8.5);
     const header =
-      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2,ban_chay";
     const low =
-      'Serum,Some By Mi AHA,1000,,"4,5%",4.9,1,1,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/lowcomm1,dadiary,w20261124';
+      'Serum,Some By Mi AHA,1000,,"4,5%",4.9,1,1,Shop,https://shopee.vn/product/1/2,https://s.shopee.vn/lowcomm1,dadiary,w20261124,0';
     assert.throws(() => parseAffiliateCsv(`${header}\n${low}\n`), (error) => {
       assert.match(error.message, /Row 2:.*above 8%/);
       assert.match(error.message, /Some By Mi AHA/);
@@ -166,10 +170,10 @@ describe("affiliate CSV import", () => {
       return true;
     });
     const eight =
-      "Tẩy trang,Bioderma,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/3,https://s.shopee.vn/eightpct,dadiary,w20261124";
+      "Tẩy trang,Bioderma,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/3,https://s.shopee.vn/eightpct,dadiary,w20261124,0";
     assert.throws(() => parseAffiliateCsv(`${header}\n${eight}\n`), /Row 2:.*above 8%.*8%/);
     const seven =
-      "Tẩy trang,Bioderma H2O,1000,,7.5%,4.9,1,1,Shop,https://shopee.vn/product/1/4,https://s.shopee.vn/sevenpct,dadiary,w20261124";
+      "Tẩy trang,Bioderma H2O,1000,,7.5%,4.9,1,1,Shop,https://shopee.vn/product/1/4,https://s.shopee.vn/sevenpct,dadiary,w20261124,0";
     assert.throws(() => parseAffiliateCsv(`${header}\n${seven}\n`), (error) => {
       assert.match(error.message, /Row 2:/);
       assert.match(error.message, /7\.5%/);
@@ -178,11 +182,41 @@ describe("affiliate CSV import", () => {
     });
   });
 
+  it("keeps a low-commission row only when ban_chay is set, and caps the flag at 15", () => {
+    assert.equal(parseBanChay(""), false);
+    assert.equal(parseBanChay("0"), false);
+    assert.equal(parseBanChay("false"), false);
+    assert.equal(parseBanChay("1"), true);
+    assert.equal(parseBanChay("true"), true);
+    const header =
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2,ban_chay";
+    const flagged =
+      'Serum,Best seller,1000,,"4,5%",4.9,10,2tr+,Shop,https://shopee.vn/product/1/9,https://s.shopee.vn/bestsell,dadiary,w20261124,1';
+    const plain =
+      "Sữa rửa mặt,Full rate,1000,,10%,4.9,10,2tr+,Shop,https://shopee.vn/product/1/8,https://s.shopee.vn/fullrate,dadiary,w20261124,0";
+    const catalog = parseAffiliateCsv(`${header}\n${flagged}\n${plain}\n`);
+    assert.equal(catalog.items.length, 2);
+    assert.equal(catalog.items[0].banChay, true);
+    const published = JSON.stringify(toPublicCatalog(catalog));
+    assert.equal(published.includes("ban_chay"), false);
+    assert.equal(published.includes("banChay"), false);
+    assert.equal(published.includes("commission"), false);
+    assert.equal(catalog.items[0].popularity, catalog.items[1].popularity);
+
+    const many = [header];
+    for (let i = 0; i < 16; i += 1) {
+      many.push(
+        `Sữa rửa mặt,Flag ${i},1000,,4%,4.9,1,1,Shop,https://shopee.vn/product/9/${i},https://s.shopee.vn/flag${i},dadiary,w20261124,1`,
+      );
+    }
+    assert.throws(() => parseAffiliateCsv(many.join("\n")), /Too many ban_chay rows: 16/);
+  });
+
   it("keeps a batch that simply has no rows for one step", () => {
     const header =
-      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2";
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2,ban_chay";
     const row = (group, id) =>
-      `${group},Name ${id},1000,,10%,4.9,1,1,Shop,https://shopee.vn/product/1/${id},https://s.shopee.vn/${id},dadiary,w20261124`;
+      `${group},Name ${id},1000,,10%,4.9,1,1,Shop,https://shopee.vn/product/1/${id},https://s.shopee.vn/${id},dadiary,w20261124,0`;
     const csv = [
       header,
       row("Sữa rửa mặt", "clean1"),
@@ -201,8 +235,8 @@ describe("affiliate CSV import", () => {
     const csvPath = path.join(dir, "bad.csv");
     writeFileSync(
       csvPath,
-      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2\n" +
-        "Sữa rửa mặt,Bad link,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://shopee.vn/nope,dadiary,w20261124\n",
+      "nhom,ten,gia_vnd,gia_goc_vnd,hoa_hong,sao,danh_gia,da_ban,shop,url,aff_link,sub_id1,sub_id2,ban_chay\n" +
+        "Sữa rửa mặt,Bad link,1000,,8%,4.9,1,1,Shop,https://shopee.vn/product/1/2,https://shopee.vn/nope,dadiary,w20261124,0\n",
     );
     const result = spawnSync(process.execPath, [path.join(root, "scripts/affiliate-import.mjs"), csvPath], {
       encoding: "utf8",

@@ -38,7 +38,10 @@ describe("AffiliateSuggestionSection", () => {
     assert.match(html, /Xem trên Shopee/);
     assert.match(html, /Xem thêm/);
     assert.match(html, /Giá tham khảo \(24\/11\): 333\.000đ/);
-    assert.match(html, /4,9★ · đã bán 2tr\+/);
+    assert.match(html, /4,9★ · đã bán 2 triệu\+/);
+    assert.match(html, /đã bán 500 nghìn\+/);
+    assert.equal(html.includes("2tr+"), false);
+    assert.equal(html.includes("500k+"), false);
     assert.match(html, /rel="sponsored noopener noreferrer"/);
     assert.match(html, /target="_blank"/);
     const disclosureAt = html.indexOf("DaDiary có thể nhận hoa hồng");
