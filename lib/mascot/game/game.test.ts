@@ -717,7 +717,7 @@ describe("game layout", () => {
     assert.match(css, /\.beda-cabinet\s*\{[^}]*left:\s*22\.5%/);
     assert.match(css, /\.beda-cabinet\s*\{[^}]*bottom:\s*41\.6%/);
     assert.match(css, /\.beda-cabinet\s*\{[^}]*width:\s*12%/);
-    assert.match(css, /\.beda-cabinet\s*\{[^}]*z-index:\s*2/);
+    assert.match(css, /\.beda-cabinet\s*\{[^}]*z-index:\s*42/);
     assert.match(css, /min-width:\s*768px[\s\S]*\.beda-hero-wrap\s*\{[^}]*clamp\(220px,\s*26vw,\s*300px\)/);
     assert.match(css, /\.beda-lobby-world\s*\{[^}]*width:\s*max\(130%,\s*130vh\)/);
     assert.match(css, /\.beda-lobby-world\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/);

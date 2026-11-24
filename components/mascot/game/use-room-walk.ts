@@ -5,10 +5,8 @@ import { useEffect, useRef } from "react";
 import { gestureKind } from "@/lib/game/core/input";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import {
-  findRoute,
   gridFromMask,
   gridSize,
-  isWalkable,
   nearestWalkable,
   type WalkGrid,
   type WalkPoint,
@@ -18,9 +16,16 @@ import {
   ROOM_SPAWN,
   ROOM_WALK_MASK,
   ROOM_WORLD,
+  blockRoomRect,
+  roomDepthScale,
+  roomNudge,
   roomRoute,
+  roomPropCovers,
+  roomSortIndex,
+  roomStepTo,
   roomWalkGrid,
   roomWanderGoal,
+  type RoomDir,
 } from "@/lib/mascot/game/room-walk";
 import { createWalker, lobbyWorldSpeed, stepWalker, walkPose, type Walker } from "@/lib/mascot/game/walk";
 
@@ -45,6 +50,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     let grid: WalkGrid | null = null;
     let walker: Walker = createWalker(ROOM_SPAWN);
     let route: WalkPoint[] = [];
+    let held: RoomDir | null = null;
     let idleFor = 0;
     let last = performance.now();
     let raf = 0;
@@ -55,31 +61,163 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduced = media.matches;
 
+    const overlaps = (
+      a: { left: number; right: number; top: number; bottom: number },
+      b: { left: number; right: number; top: number; bottom: number },
+    ) => a.left < b.right - 4 && a.right > b.left + 4 && a.top < b.bottom - 4 && a.bottom > b.top + 4;
+
+    const placeBubble = (el: HTMLElement) => {
+      const bubble = el.querySelector<HTMLElement>(".beda-bubble");
+      if (!bubble) return;
+      const pad = 8;
+      const padEl = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      const place = (side: "above" | "below", dx: number) => {
+        el.dataset.bubbleSide = side;
+        el.style.setProperty("--bubble-x", `${dx}px`);
+      };
+      const frameBox = frame.getBoundingClientRect();
+      place("above", 0);
+      el.style.setProperty("--bubble-y", "0px");
+      const box = bubble.getBoundingClientRect();
+      const side = box.top < frameBox.top + pad ? "below" : "above";
+      place(side, 0);
+      el.style.setProperty("--bubble-y", "0px");
+      const base = bubble.getBoundingClientRect();
+      const props = [...frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")].map(
+        (item) => item.getBoundingClientRect(),
+      );
+      const figure = el.querySelector(".bd-figure")?.getBoundingClientRect() ?? null;
+      const label = el.querySelector(".beda-pretty")?.getBoundingClientRect() ?? null;
+      const padBox = padEl?.getBoundingClientRect() ?? null;
+      const shifted = (dx: number, dy: number) => ({
+        left: base.left + dx,
+        right: base.right + dx,
+        top: base.top + dy,
+        bottom: base.bottom + dy,
+      });
+      const onScreen = (rect: { left: number; right: number; top: number; bottom: number }) =>
+        rect.left >= frameBox.left + pad &&
+        rect.right <= frameBox.right - pad &&
+        rect.top >= frameBox.top + pad &&
+        rect.bottom <= frameBox.bottom - pad;
+      const hitsFurniture = (rect: { left: number; right: number; top: number; bottom: number }) =>
+        props.some((item) => overlaps(rect, item)) ||
+        (padBox != null && overlaps(rect, padBox)) ||
+        (figure != null && overlaps(rect, figure)) ||
+        (label != null && overlaps(rect, label));
+      let best: { dx: number; dy: number; score: number } | null = null;
+      for (const dy of [0, -36, -72, 64, 108, -108, 148]) {
+        for (const dx of [0, 48, -48, 96, -96, 144, -144, 192, -192]) {
+          const rect = shifted(dx, dy);
+          if (!onScreen(rect) || hitsFurniture(rect)) continue;
+          const score = Math.abs(dx) + Math.abs(dy);
+          if (!best || score < best.score) best = { dx, dy, score };
+        }
+      }
+      place(side, best?.dx ?? 0);
+      el.style.setProperty("--bubble-y", `${best?.dy ?? 0}px`);
+    };
+
     const paint = (moving: boolean) => {
       const el = heroRef.current;
       if (!el) return;
       const pose = walkPose(walker.phase, moving && !reduced);
+      const depth = roomDepthScale(walker.y);
+      // Room-only: the lobby bob is a few pixels. On this larger figure a
+      // stronger lift and lean is what reads as a step and a turn.
+      const sort = String(roomSortIndex(walker.y));
       el.style.setProperty("--rx", walker.x.toFixed(4));
       el.style.setProperty("--ry", walker.y.toFixed(4));
-      el.style.setProperty("--bob", pose.bob.toFixed(2));
-      el.style.setProperty("--sway", pose.sway.toFixed(2));
-      el.style.setProperty("--tilt", pose.tilt.toFixed(2));
+      el.style.setProperty("--bob", (pose.bob * 2.4).toFixed(2));
+      el.style.setProperty("--sway", (pose.sway * 1.6).toFixed(2));
+      el.style.setProperty("--tilt", (pose.tilt * 1.8).toFixed(2));
       el.style.setProperty("--squash", pose.squash.toFixed(3));
       el.style.setProperty("--face", walker.face < 0 ? "-1" : "1");
       el.style.setProperty("--shadow-x", pose.shadowX.toFixed(3));
       el.style.setProperty("--shadow-y", pose.shadowY.toFixed(3));
+      el.style.setProperty("--depth", depth.toFixed(3));
+      el.style.zIndex = sort;
       el.dataset.nx = walker.x.toFixed(4);
       el.dataset.ny = walker.y.toFixed(4);
-      el.dataset.stepping = moving && !reduced ? "1" : "0";
+      const stepping = moving && !reduced;
+      el.dataset.stepping = stepping ? "1" : "0";
+      el.dataset.face = walker.face < 0 ? "left" : "right";
+      el.dataset.depth = depth.toFixed(3);
+      placeBubble(el);
+      placeCaption(el, stepping);
+      placeDepth(el);
+    };
+
+    const placeCaption = (el: HTMLElement, moving: boolean) => {
+      const pretty = el.querySelector<HTMLElement>(".beda-pretty");
+      if (!pretty) return;
+      if (moving) {
+        pretty.style.opacity = "0";
+        pretty.style.visibility = "hidden";
+        return;
+      }
+      pretty.style.visibility = "visible";
+      pretty.style.opacity = "1";
+    };
+
+    const placeDepth = (el: HTMLElement) => {
+      const feet = el.getBoundingClientRect().bottom;
+      const host = frame.querySelector<HTMLElement>(".beda-pixi-host");
+      if (host) host.style.zIndex = "42";
+      for (const item of frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")) {
+        const base = item.getBoundingClientRect().bottom;
+        item.style.zIndex = roomPropCovers(feet, base) ? "48" : "36";
+      }
+    };
+
+    const sealPad = () => {
+      if (!grid) return;
+      const scene = frame.getBoundingClientRect();
+      if (scene.width < 1 || scene.height < 1) return;
+      const pretty = frame.querySelector<HTMLElement>(".beda-pretty");
+      const labelW = pretty?.offsetWidth || 160;
+      const labelH = pretty?.offsetHeight || 20;
+      const gap = 8;
+      const below = 26;
+      const half = labelW / 2 + gap;
+      blockRoomRect(grid, { x0: 0, y0: 0, x1: half / scene.width, y1: 1 });
+      blockRoomRect(grid, { x0: (scene.width - half) / scene.width, y0: 0, x1: 1, y1: 1 });
+      const nav = frame.querySelector<HTMLElement>(".beda-nav");
+      if (nav) {
+        const maxFeet = nav.getBoundingClientRect().top - gap - below - labelH;
+        blockRoomRect(grid, { x0: 0, y0: (maxFeet - scene.top) / scene.height, x1: 1, y1: 1 });
+      }
+      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      if (!pad) return;
+      const box = pad.getBoundingClientRect();
+      blockRoomRect(grid, {
+        x0: (box.left - gap - labelW / 2 - scene.left) / scene.width,
+        y0: (box.top - below - labelH - scene.top) / scene.height,
+        x1: (box.right + gap + labelW / 2 - scene.left) / scene.width,
+        y1: (box.bottom - below + gap - scene.top) / scene.height,
+      });
+      blockRoomRect(grid, {
+        x0: (box.left - 10 - scene.left) / scene.width,
+        y0: (box.top - 10 - scene.top) / scene.height,
+        x1: (box.right + 10 - scene.left) / scene.width,
+        y1: (box.bottom + 10 - scene.top) / scene.height,
+      });
+    };
+
+    const ripple = (x: number, y: number) => {
+      const mark = frame.querySelector<HTMLElement>(".beda-tap");
+      if (!mark) return;
+      mark.style.left = `${x * 100}%`;
+      mark.style.top = `${y * 100}%`;
+      mark.classList.remove("is-on");
+      void mark.offsetWidth;
+      mark.classList.add("is-on");
     };
 
     const aim = (x: number, y: number) => {
       if (!grid || holdRef.current) return;
-      if (!isWalkable(grid, walker.x, walker.y)) {
-        const stand = nearestWalkable(grid, walker.x, walker.y);
-        walker.x = stand.x;
-        walker.y = stand.y;
-      }
+      sealPad();
+      ripple(x, y);
       route = roomRoute(grid, walker, { x, y });
       walker.goal = route.shift() ?? null;
       idleFor = 0;
@@ -92,41 +230,40 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       last = now;
       if (grid && !holdRef.current) {
         const width = frame.clientWidth || 390;
-        if (reduced && (walker.goal || route.length > 0)) {
-          const lastPoint = route.length > 0 ? route[route.length - 1]! : walker.goal!;
-          walker.x = lastPoint.x;
-          walker.y = lastPoint.y;
-          walker.vx = 0;
-          walker.vy = 0;
-          walker.goal = null;
+        if (held) {
+          const next = roomNudge(grid, walker, held);
           route = [];
-        } else {
-          walker = stepWalker(walker, dt, null, ROOM_BOUNDS, reduced, lobbyWorldSpeed(width), true);
-          if (!walker.goal && route.length > 0) walker.goal = route.shift() ?? null;
+          walker.goal = next;
+          if (held === "left") walker.face = -1;
+          if (held === "right") walker.face = 1;
+          idleFor = 0;
         }
-        if (!walker.goal && route.length === 0) {
+        const before = { x: walker.x, y: walker.y };
+        walker = stepWalker(walker, dt, null, ROOM_BOUNDS, false, lobbyWorldSpeed(width), true);
+        if (!walker.goal && route.length > 0) walker.goal = route.shift() ?? null;
+        const stepped = roomStepTo(grid, before, walker);
+        if (Math.hypot(stepped.x - walker.x, stepped.y - walker.y) > 0.0001) {
+          walker = { ...walker, x: stepped.x, y: stepped.y, vx: 0, vy: 0, goal: null };
+          route = [];
+        }
+        if (!held && !walker.goal && route.length === 0) {
           idleFor += dt;
           if (!reduced && idleFor > WANDER_AFTER_S) {
             idleFor = 0;
             const goal = roomWanderGoal(grid, walker);
             if (goal) {
-              route = findRoute(grid, walker, goal);
+              route = roomRoute(grid, walker, goal);
               walker.goal = route.shift() ?? null;
             }
           }
         } else {
           idleFor = 0;
         }
-        if (!walker.goal && !isWalkable(grid, walker.x, walker.y)) {
-          const stand = nearestWalkable(grid, walker.x, walker.y);
-          walker.x = stand.x;
-          walker.y = stand.y;
-        }
       }
       const moving = Boolean(walker.goal) || route.length > 0;
       paint(moving);
       if (dead) return;
-      if (moving && !holdRef.current) raf = requestAnimationFrame(tick);
+      if ((moving || held) && !holdRef.current) raf = requestAnimationFrame(tick);
       else timer = window.setTimeout(() => {
         raf = requestAnimationFrame(tick);
       }, 250);
@@ -149,7 +286,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       pointers += 1;
       if (event.button !== 0 || holdRef.current) return;
       const target = event.target;
-      if (target instanceof Element && target.closest("button, a, input, textarea, select")) return;
+      if (target instanceof Element && target.closest("button, a, input, textarea, select, .beda-pad")) return;
       start = { x: event.clientX, y: event.clientY, t: performance.now(), id: event.pointerId };
     };
     const onUp = (event: PointerEvent) => {
@@ -167,6 +304,49 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     frame.addEventListener("pointerup", onUp);
     frame.addEventListener("pointercancel", onUp);
 
+    const padButtons = [...frame.querySelectorAll<HTMLButtonElement>("[data-room-dir]")];
+    const onPadDown = (event: PointerEvent) => {
+      if (holdRef.current || event.button !== 0) return;
+      const button = event.currentTarget;
+      if (!(button instanceof HTMLButtonElement)) return;
+      const dir = button.dataset.roomDir;
+      if (dir !== "up" && dir !== "down" && dir !== "left" && dir !== "right") return;
+      held = dir;
+      button.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      event.stopPropagation();
+      kick();
+    };
+    const onPadUp = (event: PointerEvent) => {
+      const button = event.currentTarget;
+      if (button instanceof HTMLButtonElement && button.hasPointerCapture(event.pointerId)) {
+        button.releasePointerCapture(event.pointerId);
+      }
+      held = null;
+    };
+    for (const button of padButtons) {
+      button.addEventListener("pointerdown", onPadDown);
+      button.addEventListener("pointerup", onPadUp);
+      button.addEventListener("pointercancel", onPadUp);
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (holdRef.current) return;
+      if ((event.target as HTMLElement | null)?.closest("input, textarea")) return;
+      const dir =
+        event.key === "ArrowUp" ? "up" : event.key === "ArrowDown" ? "down" : event.key === "ArrowLeft" ? "left" : event.key === "ArrowRight" ? "right" : null;
+      if (!dir || event.repeat) return;
+      held = dir;
+      event.preventDefault();
+      kick();
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      const dir =
+        event.key === "ArrowUp" ? "up" : event.key === "ArrowDown" ? "down" : event.key === "ArrowLeft" ? "left" : event.key === "ArrowRight" ? "right" : null;
+      if (dir && held === dir) held = null;
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
     const image = new Image();
     image.src = mascotAssetUrl(ROOM_WALK_MASK);
     void image
@@ -182,6 +362,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const size = gridSize(ROOM_WORLD, ROOM_WORLD);
         grid = gridFromMask(imageData.data, canvas.width, canvas.height, size.cols, size.rows);
+        sealPad();
         const stand = nearestWalkable(grid, walker.x, walker.y);
         walker.x = stand.x;
         walker.y = stand.y;
@@ -190,6 +371,7 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       .catch(() => {
         if (dead) return;
         grid = roomWalkGrid();
+        sealPad();
       });
 
     paint(false);
@@ -203,6 +385,13 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       frame.removeEventListener("pointerdown", onDown);
       frame.removeEventListener("pointerup", onUp);
       frame.removeEventListener("pointercancel", onUp);
+      for (const button of padButtons) {
+        button.removeEventListener("pointerdown", onPadDown);
+        button.removeEventListener("pointerup", onPadUp);
+        button.removeEventListener("pointercancel", onPadUp);
+      }
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
     };
   }, [enabled]);
 

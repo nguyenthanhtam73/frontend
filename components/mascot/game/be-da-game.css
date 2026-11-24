@@ -123,8 +123,8 @@ html.dark .beda-draw-wait {
 }
 
 .beda-scene.is-pixi .beda-cabinet {
-  /* Above Bé Da so a walk that passes the closet still hits the button. */
-  z-index: 7;
+  /* Same depth as the other props. The canvas does not take taps, so the button still hits. */
+  z-index: 42;
 }
 
 .beda-game:has(.beda-lobby[data-engine="pixi"]),
@@ -251,8 +251,8 @@ html.dark .beda-draw-wait {
 
 .beda-window {
   position: absolute;
-  left: 5%;
-  top: 240px;
+  left: 16px;
+  top: 272px;
   width: min(30vw, 132px);
   height: min(24vw, 88px);
   border-radius: 70px 70px 12px 12px;
@@ -263,8 +263,8 @@ html.dark .beda-draw-wait {
 
 .beda-window-bar {
   position: absolute;
-  left: 3%;
-  top: 226px;
+  left: 12px;
+  top: 258px;
   width: min(34vw, 156px);
   height: 12px;
   border-radius: 8px;
@@ -363,8 +363,8 @@ html.dark .beda-draw-wait {
 
 .beda-bed {
   position: absolute;
-  z-index: 1;
-  left: 8px;
+  z-index: 42;
+  left: 16px;
   bottom: 41.6%;
   width: clamp(74px, 16vw, 148px);
   height: 118px;
@@ -431,7 +431,7 @@ html.dark .beda-draw-wait {
 
 .beda-sink {
   position: absolute;
-  z-index: 2;
+  z-index: 42;
   right: 5%;
   bottom: 41.6%;
   width: min(18vw, 86px);
@@ -441,6 +441,7 @@ html.dark .beda-draw-wait {
 
 .beda-plant {
   position: absolute;
+  z-index: 42;
   right: 27%;
   bottom: 42%;
   width: 54px;
@@ -468,10 +469,10 @@ html.dark .beda-draw-wait {
 }
 
 /* Private room only. About 1.4× the v2 closet, on the floor just right of the bed.
-   Under Bé Da and her rug, over the wall. */
+   She sorts in front of it when she walks down. */
 .beda-cabinet {
   position: absolute;
-  z-index: 2;
+  z-index: 42;
   left: 22.5%;
   bottom: 41.6%;
   width: 12%;
@@ -543,7 +544,7 @@ html.dark .beda-draw-wait {
   bottom: auto;
   left: calc(var(--rx, 0.48) * 100%);
   top: calc(var(--ry, 0.76) * 100%);
-  width: clamp(168px, 44vw, 220px);
+  width: calc(clamp(168px, 44vw, 220px) * var(--depth, 1));
   transform: translate(-50%, -100%);
 }
 
@@ -575,8 +576,8 @@ html.dark .beda-draw-wait {
 }
 
 .beda-hero-wrap.is-floor {
-  /* Above the closet so the sentence is not hidden behind it. Clicks pass through. */
-  z-index: 8;
+  /* JS sets this from her feet. The fallback stays under the task card and the nav. */
+  z-index: 40;
 }
 
 .beda-hero-wrap.is-floor .beda-bubble {
@@ -587,24 +588,130 @@ html.dark .beda-draw-wait {
   width: min(210px, calc(100vw - 40px));
   max-width: calc(100vw - 24px);
   margin: 0;
-  transform: translateX(-50%);
+  transform: translate(calc(-50% + var(--bubble-x, 0px)), var(--bubble-y, 0px));
   white-space: normal;
   overflow-wrap: break-word;
   pointer-events: none;
+}
+
+.beda-hero-wrap.is-floor[data-bubble-side="below"] .beda-bubble {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.beda-hero-wrap.is-floor[data-bubble-side="below"] .beda-bubble::after {
+  bottom: auto;
+  top: -10px;
+  border-top: 0;
+  border-bottom: 10px solid #fff;
+}
+
+/* Bottom-right floor, just above the nav. Each key is a 44px target. */
+.beda-pad {
+  position: absolute;
+  z-index: 72;
+  right: 8px;
+  bottom: calc(var(--beda-nav-reserve) + 10px);
+  display: grid;
+  grid-template-columns: 44px 44px 44px;
+  grid-template-rows: 44px 44px;
+  gap: 6px;
+  width: 144px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.beda-pad.is-hidden {
+  display: none;
+}
+
+.beda-pad-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 14px;
+  background: rgba(255, 250, 245, 0.94);
+  color: #3c2a30;
+  font-size: 16px;
+  line-height: 1;
+  box-shadow: 0 3px 0 #e7cfc6;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.beda-pad-btn.is-up { grid-column: 2; grid-row: 1; }
+.beda-pad-btn.is-left { grid-column: 1; grid-row: 2; }
+.beda-pad-btn.is-down { grid-column: 2; grid-row: 2; }
+.beda-pad-btn.is-right { grid-column: 3; grid-row: 2; }
+
+.beda-pad-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #e7cfc6;
+}
+
+html.dark .beda-pad-btn {
+  background: rgba(28, 22, 27, 0.92);
+  color: #f8efe9;
+  border-color: #5c4450;
+  box-shadow: 0 3px 0 #3a2a32;
 }
 
 .beda-hero-wrap.is-floor .beda-pretty {
   position: absolute;
   top: calc(100% + 26px);
   left: 50%;
-  width: min(220px, 64vw);
+  width: max-content;
+  max-width: calc(100vw - 16px);
   margin: 0;
   transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 1;
+}
+
+.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"],
+.beda-hero-wrap.is-floor[data-stepping="1"] .beda-pretty {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@media (max-width: 400px) {
+  .beda-hero-wrap.is-floor .beda-pretty {
+    font-size: 12px;
+  }
 }
 
 .beda-hero-wrap.is-floor .bd-breathe {
   transform-origin: 50% 83.2%;
   animation-name: beda-room-breath;
+}
+
+.beda-tap {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: rgba(255, 186, 204, 0.45);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.beda-tap.is-on {
+  animation: beda-tap 480ms ease-out;
+}
+
+@keyframes beda-tap {
+  0% { transform: scale(0.2); opacity: 0.95; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 
 .beda-hero-wrap.is-floor[data-stepping="1"] .bd-breathe {
@@ -685,14 +792,32 @@ html.dark .beda-draw-wait {
   box-shadow: 0 6px 0 #e7cfc6, 0 16px 30px rgba(0, 0, 0, 0.12);
 }
 
-.beda-quest {
+.beda-private-bar {
   position: absolute;
-  z-index: 6;
+  z-index: 60;
   top: calc(86px + env(safe-area-inset-top));
   left: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.beda-private-bar > * {
+  pointer-events: auto;
+}
+
+.beda-quest {
+  position: relative;
   box-sizing: border-box;
-  width: min(248px, calc(100vw - 132px));
+  flex: 1 1 auto;
+  width: auto;
   min-width: 0;
+  max-width: calc(100% - 152px);
   padding: 12px 12px 10px;
 }
 
@@ -736,6 +861,33 @@ html.dark .beda-draw-wait {
 .beda-quest-steps {
   max-height: min(46vh, 320px);
   overflow: auto;
+}
+
+.beda-quest-empty {
+  margin: 8px 0 0;
+  color: #7a3a52;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.beda-quest-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #2b8c86;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 3px 0 #1d6e62;
 }
 
 .beda-quest-row {
@@ -892,16 +1044,24 @@ html.dark .beda-draw-wait {
 }
 
 .beda-door {
-  position: absolute;
-  z-index: 6;
-  top: calc(86px + env(safe-area-inset-top));
-  right: 12px;
+  position: relative;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  align-self: flex-start;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 44px;
+  max-width: 148px;
+  padding: 6px 10px;
   color: inherit;
   text-decoration: none;
+}
+
+.beda-door svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
 }
 
 .beda-door {
@@ -913,7 +1073,8 @@ html.dark .beda-draw-wait {
 .beda-door strong {
   display: block;
   color: #3c2a30;
-  font-size: 14px;
+  font-size: 12px;
+  line-height: 1.15;
 }
 
 .beda-door-count {
@@ -1005,7 +1166,7 @@ html.dark .beda-draw-wait {
 
 .beda-nav {
   position: absolute;
-  z-index: 8;
+  z-index: 80;
   left: 0;
   right: 0;
   bottom: 0;
@@ -2592,7 +2753,7 @@ html.dark .beda-draw-wait {
   }
 
   .beda-hero-wrap.is-floor {
-    width: clamp(180px, 20vw, 240px);
+    width: calc(clamp(180px, 20vw, 240px) * var(--depth, 1));
   }
 
   .beda-hero-wrap.is-floor .beda-bubble {
@@ -2609,15 +2770,14 @@ html.dark .beda-draw-wait {
     font-size: 18px;
   }
 
-  .beda-quest {
-    width: min(320px, 36vw);
+  .beda-private-bar {
     left: 28px;
+    right: 28px;
     top: calc(108px + env(safe-area-inset-top));
   }
 
-  .beda-door {
-    right: 28px;
-    top: calc(108px + env(safe-area-inset-top));
+  .beda-quest {
+    max-width: min(320px, calc(100% - 180px));
   }
 
   .beda-window {
@@ -2701,6 +2861,28 @@ html.dark .beda-draw-wait {
 
   .beda-chest-art {
     width: min(280px, 28vw);
+  }
+}
+
+@media (max-width: 370px) {
+  .beda-quest h2 {
+    flex-wrap: wrap;
+  }
+
+  .beda-quest-title {
+    flex: 1 1 100%;
+  }
+
+  .beda-gift-pill {
+    margin-left: 0;
+  }
+
+  .beda-window {
+    top: 308px;
+  }
+
+  .beda-window-bar {
+    top: 294px;
   }
 }
 

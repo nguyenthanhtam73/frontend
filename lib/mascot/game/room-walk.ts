@@ -7,33 +7,64 @@
  */
 
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
-import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
+import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, segmentStaysWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
+import { clamp } from "@/lib/mascot/game/walk";
 
-export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=866dc5866a");
+export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=d9934e9706");
 export const ROOM_MASK_PX = 256;
 /** Logical room used only to size the path grid (~20px cells). */
 export const ROOM_WORLD = 1000;
 
-export const ROOM_SPAWN: WalkPoint = { x: 0.48, y: 0.76 };
+/**
+ * Feet stay on the planks. The floor painting starts at 58% and the nav
+ * covers the bottom strip, so y runs from just in front of the baseboard
+ * to a step above the nav. x keeps her body on a 390px phone and an iPad.
+ */
+export const ROOM_BOUNDS = { minX: 0.14, maxX: 0.88, minY: 0.64, maxY: 0.82 } as const;
 
-/** Feet stay on the planks, clear of the nav. */
-export const ROOM_BOUNDS = { minX: 0.06, maxX: 0.94, minY: 0.64, maxY: 0.82 } as const;
+/** She stays on this layer. Each prop moves above or below it from its own base. */
+export const ROOM_PROP_Z = 42;
+
+/** A prop paints over her only while her feet are above that prop's own base. */
+export function roomPropCovers(feetY: number, baseY: number): boolean {
+  return feetY < baseY;
+}
+
+export const ROOM_SPAWN: WalkPoint = { x: 0.5, y: 0.72 };
 
 /**
- * Normalized blocks, half-open. Furniture pads cover the base of each prop
- * across phone and iPad widths, plus a step of floor in front so she does
- * not stand inside the bed or the closet.
+ * Normalized blocks, half-open. The wall is everything above the planks.
+ * Furniture rects are the bed, wardrobe, plant, and sink footprints, with a
+ * short pad of floor in front so she stops at the edge instead of standing
+ * on them. The strip beside the sink stays open so she can walk behind it.
  */
 export const ROOM_BLOCKS: readonly { x0: number; y0: number; x1: number; y1: number; name: string }[] = [
   { name: "wall", x0: 0, y0: 0, x1: 1, y1: 0.64 },
-  { name: "nav", x0: 0, y0: 0.82, x1: 1, y1: 1 },
-  { name: "left", x0: 0, y0: 0, x1: 0.06, y1: 1 },
-  { name: "right", x0: 0.94, y0: 0, x1: 1, y1: 1 },
-  { name: "bed", x0: 0, y0: 0.58, x1: 0.24, y1: 0.72 },
-  { name: "closet", x0: 0.18, y0: 0.58, x1: 0.4, y1: 0.74 },
-  { name: "plant", x0: 0.56, y0: 0.58, x1: 0.76, y1: 0.7 },
-  { name: "sink", x0: 0.74, y0: 0.58, x1: 1, y1: 0.72 },
+  { name: "nav", x0: 0, y0: 0.83, x1: 1, y1: 1 },
+  { name: "left", x0: 0, y0: 0, x1: 0.14, y1: 1 },
+  { name: "right", x0: 0.88, y0: 0, x1: 1, y1: 1 },
+  { name: "bed", x0: 0, y0: 0.56, x1: 0.28, y1: 0.68 },
+  // The wardrobe art ends near x=0.35. The extra pad used to reach 0.40, which
+  // met the name-label block on a 360px phone and sealed the floor beside the pad.
+  { name: "closet", x0: 0.2, y0: 0.56, x1: 0.36, y1: 0.68 },
+  { name: "plant", x0: 0.55, y0: 0.56, x1: 0.72, y1: 0.66 },
+  // The sink art starts near x=0.77. A short pad keeps her feet off the cabinet.
+  { name: "sink", x0: 0.74, y0: 0.56, x1: 1, y1: 0.68 },
 ];
+
+/** Mark cells whose centers sit inside a normalized rectangle. */
+export function blockRoomRect(
+  grid: WalkGrid,
+  rect: { x0: number; y0: number; x1: number; y1: number },
+): void {
+  for (let r = 0; r < grid.rows; r += 1) {
+    for (let c = 0; c < grid.cols; c += 1) {
+      const x = (c + 0.5) / grid.cols;
+      const y = (r + 0.5) / grid.rows;
+      if (x >= rect.x0 && x < rect.x1 && y >= rect.y0 && y < rect.y1) grid.walk[r * grid.cols + c] = 0;
+    }
+  }
+}
 
 export function roomBlocked(x: number, y: number): boolean {
   for (const block of ROOM_BLOCKS) {
@@ -68,9 +99,74 @@ export function roomWalkGrid(pixels?: Uint8Array, width = ROOM_MASK_PX, height =
   return gridFromMask(mask, width, height, size.cols, size.rows, 1);
 }
 
+/**
+ * The furthest point on the segment that stays on the floor.
+ * A blocked step returns the last open point, never a jump to another cell.
+ */
+export function roomStepTo(grid: WalkGrid, from: WalkPoint, to: WalkPoint): WalkPoint {
+  if (isWalkable(grid, to.x, to.y) && segmentStaysWalkable(grid, from, to)) return to;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 8; i += 1) {
+    const mid = (lo + hi) / 2;
+    const point = { x: from.x + (to.x - from.x) * mid, y: from.y + (to.y - from.y) * mid };
+    if (isWalkable(grid, point.x, point.y) && segmentStaysWalkable(grid, from, point)) lo = mid;
+    else hi = mid;
+  }
+  if (lo <= 0) return from;
+  return { x: from.x + (to.x - from.x) * lo, y: from.y + (to.y - from.y) * lo };
+}
+
 /** Tap anywhere. Furniture and the wall become the nearest open floor cell. */
 export function roomRoute(grid: WalkGrid, from: WalkPoint, to: WalkPoint): WalkPoint[] {
-  return findRoute(grid, from, nearestWalkable(grid, to.x, to.y));
+  const route = findRoute(grid, from, nearestWalkable(grid, to.x, to.y));
+  const safe: WalkPoint[] = [];
+  let prev = from;
+  for (const point of route) {
+    if (!isWalkable(grid, point.x, point.y) || !segmentStaysWalkable(grid, prev, point)) break;
+    safe.push(point);
+    prev = point;
+  }
+  return safe;
+}
+
+export type RoomDir = "up" | "down" | "left" | "right";
+
+const ROOM_DIR: Record<RoomDir, WalkPoint> = {
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
+
+/** One step on the pad. Null when the next cells are furniture, wall, or nav. */
+export function roomNudge(grid: WalkGrid, from: WalkPoint, dir: RoomDir): WalkPoint | null {
+  const delta = ROOM_DIR[dir];
+  for (const step of [0.06, 0.035, 0.02]) {
+    const next = { x: from.x + delta.x * step, y: from.y + delta.y * step };
+    if (next.x <= 0 || next.y <= 0 || next.x >= 1 || next.y >= 1) continue;
+    if (!isWalkable(grid, next.x, next.y)) continue;
+    if (!segmentStaysWalkable(grid, from, next)) continue;
+    return next;
+  }
+  return null;
+}
+
+/** Lower on the screen (larger y) draws a little larger. Same idea as the lobby. */
+export function roomDepthScale(y: number): number {
+  const span = ROOM_BOUNDS.maxY - ROOM_BOUNDS.minY;
+  const t = clamp((y - ROOM_BOUNDS.minY) / span, 0, 1);
+  return 0.9 + t * 0.18;
+}
+
+/**
+ * Her layer. Props compare their own base to her feet and step above or below
+ * this, so one piece can cover her while another stays behind. Stays under
+ * the task card (60) and the nav (80).
+ */
+export function roomSortIndex(y: number): number {
+  void y;
+  return ROOM_PROP_Z;
 }
 
 /** A short stroll while she has been still. Null when the roll stays on furniture. */
