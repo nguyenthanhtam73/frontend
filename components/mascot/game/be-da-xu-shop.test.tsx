@@ -106,8 +106,14 @@ describe("xu shop screen", () => {
     const pink = stickers.split('data-testid="beda-xu-card-shop_bubble_kem_hong"').length - 1;
     assert.equal(pink, 1);
     assert.equal((stickers.match(/beda-shop-piece-name" title="Bóng kem hồng"/g) ?? []).length, 1);
+    assert.match(stickers, /data-testid="beda-xu-stage-bubble"/);
+    assert.match(stickers, /data-bubble="kem_hong"/);
     assert.match(stickers, /Chào nha/);
     assert.match(stickers, /title="Bóng kem hồng"/);
+    const hoa = shopHtml({ shelf: "stickers", tryingId: "shop_sticker_hoa" });
+    assert.match(hoa, /data-testid="beda-xu-decor"/);
+    assert.match(hoa, /daily_hoa\.svg/);
+    assert.equal(hoa.includes('data-testid="beda-xu-stage-bubble"'), false);
     assert.match(stickers, /Đồ trang trí/);
     assert.match(stickers, /Không mặc lên người/);
     assert.equal(stickers.includes("Đang thử"), false);

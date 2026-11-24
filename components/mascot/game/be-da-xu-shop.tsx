@@ -386,8 +386,10 @@ export function BeDaXuShop({
   const wornOnBody = wearsOnBody(selected);
   const layer = wornOnBody && wearArt ? shopLayerSrc(wearArt) : "";
   const speech = shopSpeech(t, dialog);
-  // A worn piece is only the layer on her body. The shelf icon stays off the stage.
-  const thumb = !layer && trying && selected?.src ? selected.src : "";
+  const stageSticker = Boolean(selected && !wornOnBody && (selected.kind === "colour" || STICKER_LAYERS.has(selected.layer)));
+  const stageColour = stageSticker ? bubbleColour(selected?.artId) ?? bubbleColour(selected?.id) : null;
+  // Worn clothes stay on her body. Stickers sit beside her head. Seeds keep the side icon.
+  const thumb = !layer && trying && selected?.src && !stageSticker ? selected.src : "";
   const shown = player ? { ...player, gender: who } : null;
   const wearing = selected ? wornPiece(player, selected, who) : false;
   const missing = selected ? cardShort(catalog.balance, selected) : 0;
@@ -490,6 +492,17 @@ export function BeDaXuShop({
               >
                 {speech.text}
               </p>
+            ) : stageSticker && stageColour ? (
+              <p
+                className="beda-shop-stage-bubble"
+                style={bubbleFrameStyle(stageColour.id)}
+                data-testid="beda-xu-stage-bubble"
+                data-bubble={stageColour.id}
+              >
+                {t("game.shop.bubbleHello")}
+              </p>
+            ) : stageSticker && selected?.src ? (
+              <img className="beda-shop-stage-thumb" src={mascotAssetUrl(selected.src)} alt="" data-testid="beda-xu-decor" />
             ) : null}
           </div>
         </div>

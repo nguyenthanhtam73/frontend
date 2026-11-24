@@ -141,10 +141,11 @@ function pieceFrom(id: string | null): ShopTry {
 }
 
 function popupTrying(scene: string, item: string | null): ShopTry | null {
+  if (scene === "closed") return null;
+  if (item && PIECES[item]) return PIECES[item];
   if (scene === "short") return STICKER;
   if (scene === "owned") return ROBE;
-  if (scene === "open" || scene === "closed") return null;
-  if (scene === "try" || scene === "success" || scene === "before" || scene === "after") return pieceFrom(item);
+  if (scene === "open") return null;
   return pieceFrom(item);
 }
 
