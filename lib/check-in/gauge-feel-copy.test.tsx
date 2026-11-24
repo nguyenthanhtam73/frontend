@@ -53,7 +53,7 @@ describe("low feel display copy", () => {
         <ProgressSummaryCard summary={summary} sparklinePoints={[]} />
       </NextIntlClientProvider>,
     );
-    assert.match(journal, /Hơi mệt/);
+    assert.match(journal, /Da hơi mệt/);
     assert.equal(journal.includes("Hơi kém"), false);
     assert.match(month, /Hơi mệt/);
     assert.equal(month.includes("Hơi kém"), false);
