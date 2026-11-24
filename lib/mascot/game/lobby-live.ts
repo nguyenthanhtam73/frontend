@@ -13,6 +13,7 @@ import {
   lobbyShownSamples,
   lobbySpawnForId,
   screenBoxesOverlap,
+  spreadLobbyArrivals,
   SAMPLE_LOBBY_FRIENDS,
   type SampleLobbyFriend,
 } from "@/lib/mascot/game/lobby";
@@ -534,14 +535,17 @@ export function lobbyActors(input: {
 }): LobbyActor[] {
   const real: LobbyActor[] = [];
   if (input.live) {
+    // Seats include you, so a neighbour is not given your spot. You are drawn from local feet.
+    const seats = spreadLobbyArrivals(input.people);
     for (const person of input.people) {
       if (person.id === input.selfId) continue;
       if (input.hidden.has(person.id)) continue;
+      const seat = seats.get(person.id) ?? clampLobbyPoint(person.x, person.y);
       real.push({
         id: person.id,
         nickname: person.nickname,
-        x: clampLobbyPoint(person.x, person.y).x,
-        y: clampLobbyPoint(person.x, person.y).y,
+        x: seat.x,
+        y: seat.y,
         facing: person.facing,
         pose: input.poses[person.id] ?? lobbyPose(person.action),
         walking: person.action === "walk",

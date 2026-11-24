@@ -59,7 +59,7 @@ export function lobbyMinScale(viewW: number, viewH: number, worldW: number, worl
   return LOBBY_WORLD.minCover * Math.max(viewW / Math.max(1, worldW), viewH / Math.max(1, worldH));
 }
 
-/** Center of the arrival box. The live player uses `lobbySpawn` instead. */
+/** Center of the arrival box. A live player still standing here is given a seat from their session id. */
 export const LOBBY_PLAYER_SPOT = { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y };
 
 export type ScreenBox = { left: number; top: number; right: number; bottom: number };
@@ -650,6 +650,145 @@ export function lobbySpawnForId(
     }
   }
   return best;
+}
+
+const ARRIVAL_NICK = "Bé Da 0000";
+
+/**
+ * Seats on the walkable floor, spaced for a default name pill at the 390px lobby.
+ * The first `LOBBY_ARRIVAL_CLEAR` seats miss the sample visitors. The rest are
+ * only used when those seats are taken.
+ */
+export const LOBBY_ARRIVAL_CLEAR = 24;
+export const LOBBY_ARRIVAL_SLOTS: readonly { x: number; y: number }[] = [
+  { x: 0.34, y: 0.08 },
+  { x: 0.45, y: 0.08 },
+  { x: 0.56, y: 0.08 },
+  { x: 0.67, y: 0.09 },
+  { x: 0.78, y: 0.14 },
+  { x: 0.18, y: 0.18 },
+  { x: 0.43, y: 0.22 },
+  { x: 0.56, y: 0.22 },
+  { x: 0.87, y: 0.28 },
+  { x: 0.09, y: 0.32 },
+  { x: 0.48, y: 0.36 },
+  { x: 0.59, y: 0.38 },
+  { x: 0.9, y: 0.42 },
+  { x: 0.08, y: 0.47 },
+  { x: 0.19, y: 0.48 },
+  { x: 0.41, y: 0.51 },
+  { x: 0.9, y: 0.57 },
+  { x: 0.59, y: 0.58 },
+  { x: 0.08, y: 0.62 },
+  { x: 0.85, y: 0.73 },
+  { x: 0.14, y: 0.78 },
+  { x: 0.28, y: 0.89 },
+  { x: 0.39, y: 0.92 },
+  { x: 0.55, y: 0.92 },
+  { x: 0.7, y: 0.28 },
+  { x: 0.3, y: 0.48 },
+  { x: 0.7, y: 0.48 },
+  { x: 0.3, y: 0.67 },
+  { x: 0.7, y: 0.68 },
+  { x: 0.73, y: 0.85 },
+];
+
+/** True when these feet are still the shared arrival point. */
+export function isDefaultLobbySpawn(x: number, y: number): boolean {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+  const { spawn } = LOBBY_WORLD;
+  return Math.abs(x - spawn.x) < 5e-5 && Math.abs(y - spawn.y) < 5e-5;
+}
+
+function arrivalHash(id: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < id.length; i += 1) hash = Math.imul(hash ^ id.charCodeAt(i), 16777619);
+  return hash >>> 0;
+}
+
+function arrivalCrowded(
+  spot: { x: number; y: number; nickname?: string },
+  other: { x: number; y: number; nickname?: string },
+  worldW: number,
+  worldH: number,
+): boolean {
+  return screenBoxesOverlap(
+    lobbyFigureBox(spot.x, spot.y, spot.nickname ?? ARRIVAL_NICK, worldW, worldH),
+    lobbyFigureBox(other.x, other.y, other.nickname ?? ARRIVAL_NICK, worldW, worldH),
+    LOBBY_FIGURE_GAP,
+  );
+}
+
+/**
+ * People still standing on the default spawn get a seat from their id.
+ * The same crowd always produces the same seats, on every client.
+ * A position the server already moved is kept.
+ */
+export function spreadLobbyArrivals(
+  people: readonly { id: string; x: number; y: number; nickname?: string }[],
+): Map<string, { x: number; y: number }> {
+  const { worldW, worldH } = lobbyWorldSize(390, 844);
+  const out = new Map<string, { x: number; y: number }>();
+  const pending: { id: string; x: number; y: number; nickname?: string }[] = [];
+  const fixed: { x: number; y: number; nickname?: string }[] = [];
+  for (const person of people) {
+    if (!person.id || out.has(person.id)) continue;
+    if (isDefaultLobbySpawn(person.x, person.y)) {
+      pending.push(person);
+      continue;
+    }
+    const feet = clampLobbyPoint(person.x, person.y);
+    out.set(person.id, feet);
+    fixed.push({ ...feet, nickname: person.nickname });
+  }
+  pending.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const slots = LOBBY_ARRIVAL_SLOTS;
+  const clearCount = Math.min(LOBBY_ARRIVAL_CLEAR, slots.length);
+  const blocked = new Set<number>();
+  for (let index = 0; index < slots.length; index += 1) {
+    const slot = slots[index]!;
+    if (fixed.some((other) => arrivalCrowded(slot, other, worldW, worldH))) blocked.add(index);
+  }
+  const used = new Set<number>();
+  const take = (start: number, from: number, until: number, respectBlocked: boolean): number => {
+    const span = until - from;
+    if (span <= 0) return -1;
+    for (let step = 0; step < span; step += 1) {
+      const index = from + ((start + step) % span);
+      if (used.has(index)) continue;
+      if (respectBlocked && blocked.has(index)) continue;
+      return index;
+    }
+    return -1;
+  };
+  for (const person of pending) {
+    const hash = arrivalHash(person.id);
+    let chosen = take(hash % clearCount, 0, clearCount, true);
+    if (chosen < 0) chosen = take(hash % Math.max(1, slots.length - clearCount), clearCount, slots.length, true);
+    if (chosen < 0) chosen = take(hash % slots.length, 0, slots.length, false);
+    if (chosen < 0) chosen = hash % slots.length;
+    used.add(chosen);
+    const slot = slots[chosen] ?? LOBBY_PLAYER_SPOT;
+    out.set(person.id, clampLobbyPoint(slot.x, slot.y));
+  }
+  return out;
+}
+
+/**
+ * Where the local player stands on hello.
+ * A server position that has already left the spawn wins. Otherwise, if we
+ * are still on the spawn, take the same seat every other client computes.
+ */
+export function lobbyYouArrival(
+  sessionId: string | null,
+  you: { x: number; y: number },
+  people: readonly { id: string; x: number; y: number; nickname?: string }[],
+): { x: number; y: number } {
+  if (!sessionId || !isDefaultLobbySpawn(you.x, you.y)) return { x: you.x, y: you.y };
+  const self = people.find((person) => person.id === sessionId);
+  if (self && !isDefaultLobbySpawn(self.x, self.y)) return clampLobbyPoint(self.x, self.y);
+  const crowd = self ? people : [...people, { id: sessionId, x: you.x, y: you.y }];
+  return spreadLobbyArrivals(crowd).get(sessionId) ?? { x: you.x, y: you.y };
 }
 
 /** True when some point in the arrival box is within the old point clearance of these feet. */

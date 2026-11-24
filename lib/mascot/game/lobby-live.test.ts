@@ -1,7 +1,21 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { LOBBY_FIGURE_GAP, LOBBY_SAMPLE_CAP, LOBBY_WORLD, lobbyFigureBox, lobbyShownSamples, lobbyWorldSize, screenBoxesOverlap } from "@/lib/mascot/game/lobby";
+import {
+  LOBBY_ARRIVAL_CLEAR,
+  LOBBY_ARRIVAL_SLOTS,
+  LOBBY_FIGURE_GAP,
+  LOBBY_SAMPLE_CAP,
+  LOBBY_WORLD,
+  isDefaultLobbySpawn,
+  lobbyFigureBox,
+  lobbyShownSamples,
+  lobbyWorldSize,
+  lobbyYouArrival,
+  screenBoxesOverlap,
+  spreadLobbyArrivals,
+} from "@/lib/mascot/game/lobby";
+import { ellipseContains, LOBBY_FOUNTAIN, snapOutsideFountain } from "@/lib/mascot/game/walk";
 import { LobbyConnection, type LobbySocketLike } from "@/lib/mascot/game/lobby-socket";
 import {
   LOBBY_ACCESS_COOKIE,
@@ -212,6 +226,142 @@ describe("lobby crowd", () => {
         );
       }
     }
+  });
+});
+
+const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
+
+function crowdId(index: number): string {
+  let n = index + 1;
+  let out = "";
+  for (let i = 0; i < 12; i += 1) {
+    out += ALPHABET[(n + i * 3) % ALPHABET.length]!;
+    n = (n * 5 + 11) % 997;
+  }
+  return out;
+}
+
+function stackedPeople(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    ...person(crowdId(index), LOBBY_WORLD.spawn.x),
+    y: LOBBY_WORLD.spawn.y,
+    nickname: "Bé Da 0000",
+  }));
+}
+
+function seatsApart(spots: readonly { id: string; x: number; y: number; nickname: string }[]) {
+  const { walk } = LOBBY_WORLD;
+  const { worldW, worldH } = lobbyWorldSize(390, 844);
+  const seen = new Set<string>();
+  for (let i = 0; i < spots.length; i += 1) {
+    const a = spots[i]!;
+    assert.equal(seen.has(`${a.x},${a.y}`), false, a.id);
+    seen.add(`${a.x},${a.y}`);
+    assert.equal(isDefaultLobbySpawn(a.x, a.y), false, a.id);
+    assert.ok(a.x >= walk.minX && a.x <= walk.maxX, a.id);
+    assert.ok(a.y >= walk.minY && a.y <= walk.maxY, a.id);
+    assert.equal(ellipseContains({ x: a.x, y: a.y }, LOBBY_FOUNTAIN), false, a.id);
+    const snapped = snapOutsideFountain({ x: a.x, y: a.y });
+    assert.equal(snapped.x, a.x, a.id);
+    assert.equal(snapped.y, a.y, a.id);
+    for (let j = i + 1; j < spots.length; j += 1) {
+      const b = spots[j]!;
+      assert.equal(
+        screenBoxesOverlap(
+          lobbyFigureBox(a.x, a.y, a.nickname, worldW, worldH),
+          lobbyFigureBox(b.x, b.y, b.nickname, worldW, worldH),
+          LOBBY_FIGURE_GAP,
+        ),
+        false,
+        `${a.id} ${b.id}`,
+      );
+    }
+  }
+}
+
+describe("lobby arrival seats", () => {
+  it("spreads 4 and 28 people off the shared spawn, and keeps the same seat for an id", () => {
+    assert.ok(LOBBY_ARRIVAL_SLOTS.length >= 28);
+    assert.ok(LOBBY_ARRIVAL_CLEAR >= 1);
+    const ids = Array.from({ length: 28 }, (_, index) => crowdId(index));
+    assert.equal(new Set(ids).size, 28);
+
+    for (const count of [4, 28]) {
+      const people = stackedPeople(count);
+      const once = spreadLobbyArrivals(people);
+      const again = spreadLobbyArrivals([...people].reverse());
+      const spots = people.map((item) => ({ ...once.get(item.id)!, id: item.id, nickname: item.nickname }));
+      assert.equal(spots.length, count);
+      seatsApart(spots);
+      for (const item of people) assert.deepEqual(once.get(item.id), again.get(item.id), item.id);
+    }
+
+    const lone = ids[3]!;
+    const first = spreadLobbyArrivals([{ id: lone, x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y }]).get(lone);
+    const second = spreadLobbyArrivals([{ id: lone, x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y }]).get(lone);
+    assert.deepEqual(first, second);
+    assert.equal(isDefaultLobbySpawn(first!.x, first!.y), false);
+  });
+
+  it("keeps a server position that is not the default spawn and does not jump after one person publishes", () => {
+    const people = stackedPeople(4);
+    const walked = { ...people[0]!, x: 0.22, y: 0.4 };
+    const mixed = [walked, ...people.slice(1)];
+    const seats = spreadLobbyArrivals(mixed);
+    assert.deepEqual(seats.get(walked.id), { x: 0.22, y: 0.4 });
+    assert.equal(isDefaultLobbySpawn(seats.get(people[1]!.id)!.x, seats.get(people[1]!.id)!.y), false);
+
+    const allStacked = spreadLobbyArrivals(people);
+    const published = people.map((item) =>
+      item.id === people[0]!.id ? { ...item, ...allStacked.get(item.id)! } : item,
+    );
+    const after = spreadLobbyArrivals(published);
+    for (const item of people) assert.deepEqual(after.get(item.id), allStacked.get(item.id), item.id);
+
+    const actors = lobbyActors({
+      live: true,
+      people: mixed,
+      selfId: null,
+      hidden: new Set(),
+      poses: {},
+    });
+    const kept = actors.find((actor) => actor.id === walked.id);
+    assert.equal(kept?.x, 0.22);
+    assert.equal(kept?.y, 0.4);
+    const moved = actors.find((actor) => actor.id === people[1]!.id);
+    assert.equal(isDefaultLobbySpawn(moved?.x ?? 0, moved?.y ?? 0), false);
+  });
+
+  it("puts a small crowd off the sample visitors and uses the server seat for you", () => {
+    const people = stackedPeople(4);
+    const seats = spreadLobbyArrivals(people);
+    const { worldW, worldH } = lobbyWorldSize(390, 844);
+    const samples = lobbyShownSamples();
+    for (const item of people) {
+      const seat = seats.get(item.id)!;
+      for (const friend of samples) {
+        assert.equal(
+          screenBoxesOverlap(
+            lobbyFigureBox(seat.x, seat.y, item.nickname, worldW, worldH),
+            lobbyFigureBox(friend.x, friend.y, friend.nickname, worldW, worldH),
+            LOBBY_FIGURE_GAP,
+          ),
+          false,
+          `${item.id} ${friend.id}`,
+        );
+      }
+    }
+
+    const id = people[0]!.id;
+    assert.deepEqual(lobbyYouArrival(id, { x: 0.33, y: 0.5 }, []), { x: 0.33, y: 0.5 });
+    assert.deepEqual(
+      lobbyYouArrival(id, { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y }, [
+        { id, x: 0.33, y: 0.44, nickname: "Bé Da 0000" },
+      ]),
+      { x: 0.33, y: 0.44 },
+    );
+    const arrived = lobbyYouArrival(id, { x: LOBBY_WORLD.spawn.x, y: LOBBY_WORLD.spawn.y }, people);
+    assert.deepEqual(arrived, seats.get(id));
   });
 });
 

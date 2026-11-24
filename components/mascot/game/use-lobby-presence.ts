@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiBaseUrl } from "@/lib/api";
 import { ensureFreshAccessToken, getAccessToken } from "@/lib/auth-token";
-import { clampLobbyPoint, lobbySpawn } from "@/lib/mascot/game/lobby";
+import { clampLobbyPoint, LOBBY_PLAYER_SPOT, lobbyYouArrival } from "@/lib/mascot/game/lobby";
 import type { GameLook, GamePose } from "@/lib/mascot/game/look";
 import {
   LOBBY_NICKNAME_KEY,
@@ -63,10 +63,13 @@ export function useLobbyPresence(options: {
   const [nicknameError, setNicknameError] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [poses, setPoses] = useState<Record<string, GamePose | null>>({});
-  const [you, setYou] = useState<LobbyYou>(() => {
-    const spot = lobbySpawn();
-    return { x: spot.x, y: spot.y, facing: "right", pose: null, nickname };
-  });
+  const [you, setYou] = useState<LobbyYou>(() => ({
+    x: LOBBY_PLAYER_SPOT.x,
+    y: LOBBY_PLAYER_SPOT.y,
+    facing: "right",
+    pose: null,
+    nickname,
+  }));
 
   const lookRef = useRef(look);
   const genderRef = useRef(gender);
@@ -158,6 +161,25 @@ export function useLobbyPresence(options: {
         sessionRef.current = message.sessionId;
         lobbyRef.current = message.lobby;
         setNicknameError(false);
+        const here = youRef.current;
+        const feet = lobbyYouArrival(message.sessionId, here, message.people);
+        if (feet.x !== here.x || feet.y !== here.y) {
+          const next = { ...here, x: feet.x, y: feet.y };
+          youRef.current = next;
+          setYou(next);
+          const self = message.people.find((person) => person.id === message.sessionId);
+          const already =
+            self != null && Math.abs(self.x - feet.x) < 5e-5 && Math.abs(self.y - feet.y) < 5e-5;
+          if (!already) {
+            connRef.current?.send({
+              op: "move-to",
+              x: feet.x,
+              y: feet.y,
+              facing: here.facing,
+              action: "idle",
+            });
+          }
+        }
       }
       if (message.op === "bye" || message.op === "replaced") {
         sessionRef.current = null;
