@@ -7,6 +7,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { BeDaGameView } from "@/components/mascot/game/be-da-game-view";
 import { BeDaGameWait } from "@/components/mascot/game/be-da-game-gate";
 import { BeDaPixiStage } from "@/components/mascot/game/be-da-pixi-stage";
+import { formatGameCoins } from "@/lib/mascot/game/coins";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 import type { ShellSnapshot } from "@/lib/game/core/types";
@@ -15,6 +16,7 @@ import vi from "../../../messages/vi.json";
 import "@/components/mascot/game/be-da-game.css";
 
 const client = new QueryClient();
+const NO_CLIPS: string[] = [];
 
 /** Local screenshots. The dev layout answers 404 in production. */
 export function BlankShot() {
@@ -44,8 +46,65 @@ export function BlankShot() {
         {scene === "load" ? <BeDaGameWait /> : null}
         {scene === "draw" ? <ForcedRoom sky={sky} gender={gender} hold /> : null}
         {scene === "room" || scene === "card" ? <ForcedRoom sky={sky} gender={gender} /> : null}
+        {scene === "chest" ? <ChestShot sky={sky} gender={gender} /> : null}
       </NextIntlClientProvider>
     </QueryClientProvider>
+  );
+}
+
+function ChestShot({ sky, gender = "female" }: { sky: "morning" | "night"; gender?: "female" | "male" }) {
+  const [open, setOpen] = useState(true);
+  const player = resolveBeDaView({
+    snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy", gender },
+    missedDays: 0,
+    sessionHappy: false,
+    locale: "vi",
+  });
+  return (
+    <BeDaGameView
+      locale="vi"
+      tab="quests"
+      sky={sky}
+      coinsLabel={formatGameCoins(1250, "vi")}
+      coinsValue={1250}
+      streakLabel="7"
+      soundOn
+      quests={[
+        { id: "wash", done: true },
+        { id: "spf", done: true },
+        { id: "wave", done: true },
+      ]}
+      bubbleKind="done"
+      progress={null}
+      showPrettyLine={false}
+      chestOpen={open}
+      chestReady={open}
+      friendCount={4}
+      selectedFriendId=""
+      toast={null}
+      wavingId={null}
+      look={DEFAULT_GAME_LOOK}
+      wornIds={[]}
+      hearts={3}
+      streakKept
+      giftTaken={!open}
+      ownedClipIds={NO_CLIPS}
+      player={player}
+      burst={0}
+      homeHref="/check-in"
+      onTab={() => undefined}
+      onToggleSound={() => undefined}
+      onSelectFriend={() => undefined}
+      onFriendAction={() => undefined}
+      onClaim={() =>
+        new Promise((resolve) => {
+          window.setTimeout(() => resolve({ coins: 18, balance: 1268, item: null }), 120);
+        })
+      }
+      onChestClose={() => setOpen(false)}
+      onLook={() => true}
+      plainRoom
+    />
   );
 }
 
