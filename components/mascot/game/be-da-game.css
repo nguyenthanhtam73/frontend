@@ -2338,11 +2338,31 @@ html.dark .beda-draw-wait {
   overscroll-behavior: contain;
 }
 
+/* Phone bottom sheet: the list scrolls inside the sheet. The Mặc bar stays pinned
+   over the bottom, and the list pad matches that bar so the last tile can clear it. */
+@media (max-width: 767px) {
+  .beda-game[data-tab="wardrobe"] .beda-sheet {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .beda-wardrobe-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .beda-wear-bar {
   margin-top: 8px;
 }
 
-.beda-game[data-tab="wardrobe"] .beda-wear-bar {
+.beda-game[data-tab="wardrobe"] .beda-sheet > .beda-wear-bar {
   position: sticky;
   bottom: 0;
   z-index: 1;
@@ -2351,9 +2371,44 @@ html.dark .beda-draw-wait {
   padding-top: 8px;
 }
 
+.beda-wardrobe-scroll-pad {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.beda-wardrobe-scroll-pad .beda-wear-bar {
+  position: static;
+  margin-top: 4px;
+  padding-top: 8px;
+  background: transparent;
+}
+
+@media (max-width: 767px) {
+  .beda-game[data-tab="wardrobe"] .beda-sheet > .beda-wear-bar {
+    position: absolute;
+    z-index: 2;
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
+    margin-top: 0;
+  }
+
+  .beda-wardrobe-scroll-pad {
+    height: auto;
+    overflow: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
 .beda-wear {
   display: block;
+  box-sizing: border-box;
   width: 100%;
+  /* Floor is 44px. The line and padding are taller, and a smaller min-height
+     collapses this button in Chrome. */
+  min-height: max(44px, calc(1.5em + 24px + 6px));
   border: 3px solid #fff;
   border-radius: 999px;
   background: #f6b8c8;
