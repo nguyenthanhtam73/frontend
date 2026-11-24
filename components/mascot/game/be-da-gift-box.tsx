@@ -20,6 +20,7 @@ import {
   type GiftRateCard,
 } from "@/lib/mascot/game/gift-box";
 import { wearGiftPieces } from "@/lib/mascot/game/mascot-wear";
+import { XU_SHOP_QUERY_KEY } from "@/lib/mascot/game/xu-shop";
 import { giftLoiTrigger, pushLoiEvent } from "@/lib/mascot/loi-noi";
 import type { RoomTree } from "@/lib/mascot/game/room-tree";
 
@@ -90,6 +91,7 @@ export function TreeGiftBox({ tree, locale }: { tree: RoomTree; locale: string }
                 setMode("result");
                 setBoxId("");
                 void queryClient.invalidateQueries({ queryKey: mascotQueryKey });
+                void queryClient.invalidateQueries({ queryKey: XU_SHOP_QUERY_KEY });
               })
               .catch(() => {
                 setError(t("game.gift.failed"));

@@ -83,8 +83,43 @@ const STICKER: ShopTry = {
   layer: "sticker",
 };
 
-function popupShelf(scene: string): ShopShelf {
+const BUBBLE: ShopTry = {
+  id: "shop_bubble_kem_hong",
+  artId: "kem_hong",
+  name: "Bóng kem hồng",
+  price: 400,
+  setName: "",
+  layer: "bubble",
+};
+
+const SEED: ShopTry = {
+  id: "seed_cherry",
+  artId: "cherry",
+  name: "Hoa anh đào",
+  price: 5000,
+  setName: "",
+  layer: "seed",
+};
+
+const GLASSES: ShopTry = {
+  id: "acc_kinh_tim",
+  artId: "acc_kinh_tim",
+  name: "Kính tim",
+  price: 3500,
+  setName: "",
+  layer: "glasses",
+};
+
+function popupShelf(scene: string, requested: string | null): ShopShelf {
+  if (requested === "clothes" || requested === "accessories" || requested === "stickers" || requested === "seeds") return requested;
   return scene === "short" ? "stickers" : "clothes";
+}
+
+function shelfTry(shelf: ShopShelf): ShopTry {
+  if (shelf === "stickers") return BUBBLE;
+  if (shelf === "seeds") return SEED;
+  if (shelf === "accessories") return GLASSES;
+  return TRY;
 }
 
 const PIECES: Record<string, ShopTry> = {
@@ -94,6 +129,10 @@ const PIECES: Record<string, ShopTry> = {
   lohoi_04: { id: "lohoi_04", artId: "lohoi_04", name: "Giày búp lá", price: 5000, setName: "Vườn Lô Hội", layer: "shoes" },
   spa_02: { id: "spa_02", artId: "spa_02", name: "Khăn quấn tóc tai thỏ", price: 6500, setName: "Spa Sáng Sớm", layer: "hat" },
   nang_01: { id: "nang_01", artId: "nang_01", name: "Áo khoác chống nắng", price: 9000, setName: "Nắng Hè Xinh", layer: "outfit" },
+  shop_bubble_kem_hong: BUBBLE,
+  shop_sticker_hoa: STICKER,
+  acc_kinh_tim: GLASSES,
+  seed_cherry: SEED,
 };
 
 function pieceFrom(id: string | null): ShopTry {
@@ -118,16 +157,17 @@ export function XuShopShot() {
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [gender, setGender] = useState<BeDaGender>("female");
-  const [itemId, setItemId] = useState<string | null>(null);
   const [trying, setTrying] = useState<ShopTry | null>(null);
   const [dialog, setDialog] = useState<ShopDialog>(null);
   const [balance, setBalance] = useState(5240);
+  const [shelf, setShelf] = useState<ShopShelf>("clothes");
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const nextPopup = params.get("popup") === "1";
     const nextLive = params.get("live") === "1";
     const nextScene = params.get("scene") || (nextPopup ? "open" : "full");
     const nextItem = params.get("item");
+    const nextShelf = popupShelf(nextScene, params.get("shelf"));
     const nextGender: BeDaGender = params.get("gender") === "male" ? "male" : "female";
     const nextBalance = params.has("balance") ? Number(params.get("balance")) : nextScene === "zero" ? 0 : nextPopup && nextScene === "short" ? 296 : nextScene === "short" ? 4120 : 5240;
     setPopup(nextPopup);
@@ -135,9 +175,11 @@ export function XuShopShot() {
     setOpen(nextPopup && !nextLive && nextScene !== "closed");
     setTheme(params.get("theme") === "dark" ? "dark" : "light");
     setGender(nextGender);
-    setItemId(nextItem);
+    setShelf(nextShelf);
     setBalance(Number.isFinite(nextBalance) ? nextBalance : 5240);
-    const picked = nextPopup ? popupTrying(nextScene, nextItem) : tryingFor(nextScene);
+    const picked = nextPopup
+      ? popupTrying(nextScene, nextItem) ?? (params.get("shelf") ? shelfTry(nextShelf) : null)
+      : tryingFor(nextScene);
     setTrying(picked);
     if (nextScene === "success" || nextScene === "after") {
       const piece = picked ?? pieceFrom(nextItem);
@@ -163,10 +205,10 @@ export function XuShopShot() {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
-  const shelf = sampleShopCatalog(balance);
+  const sample = sampleShopCatalog(balance);
   const bought = scene === "success" || scene === "after" || dialog?.kind === "success";
   const catalog = bought
-    ? applyShopReceipt(shelf, {
+    ? applyShopReceipt(sample, {
         already: false,
         itemId: trying?.id || "spa_03",
         treeType: "",
@@ -175,7 +217,7 @@ export function XuShopShot() {
         granted: [{ id: trying?.id || "spa_03", name: trying?.name || "Dép lông", layer: trying?.layer || "shoes" }],
         bonusGranted: [],
       })
-    : shelf;
+    : sample;
   const player = resolveBeDaView({
     snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy", gender },
     missedDays: 0,
@@ -183,6 +225,9 @@ export function XuShopShot() {
     locale: "vi",
   });
   const bubbleId = scene.startsWith("bubble-") ? scene.slice("bubble-".length) : "";
+  if (!ready) {
+    return <div className="beda-game" data-ready="0" data-testid="beda-shop-shot" />;
+  }
   if (bubbleColour(bubbleId)) {
     return (
       <div className="beda-shop" data-theme={theme} data-testid="bubble-shot" style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
@@ -207,7 +252,7 @@ export function XuShopShot() {
       player={player}
       theme={theme}
       popup={popup}
-      shelf={popup ? (itemId && (PIECES[itemId]?.layer === "outfit" || PIECES[itemId]?.layer === "shoes" || PIECES[itemId]?.layer === "hat") ? "clothes" : popupShelf(scene)) : undefined}
+      shelf={popup ? shelf : undefined}
       onClose={() => setOpen(false)}
       onTry={(next) => {
         setTrying(next);

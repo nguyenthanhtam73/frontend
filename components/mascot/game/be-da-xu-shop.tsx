@@ -11,7 +11,7 @@ import { DEFAULT_GAME_LOOK, gameDress, genderLook } from "@/lib/mascot/game/look
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api-client";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
-import { BUBBLE_COLOURS, bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
+import { bubbleColour, bubbleFrameStyle } from "@/lib/mascot/game/bubble-colour";
 import { pushLoiEvent } from "@/lib/mascot/loi-noi";
 import { formatGameCoins } from "@/lib/mascot/game/coins";
 import { wearShopPiece } from "@/lib/mascot/game/mascot-wear";
@@ -25,6 +25,8 @@ import {
   shopArtId,
   shopIconSrc,
   shopLayerSrc,
+  shopThumb,
+  SHOP_SEED_ART,
   shopNextStep,
   shopRetrySameKey,
   shopTryPiece,
@@ -77,12 +79,6 @@ export type ShopShelf = "clothes" | "accessories" | "stickers" | "seeds";
 
 const SHELVES: readonly ShopShelf[] = ["clothes", "accessories", "stickers", "seeds"];
 
-const SEED_ART: Record<string, string> = {
-  cherry: "/mascot/seeds/petal_anh_dao.svg",
-  aloe: "/mascot/seeds/petal_lo_hoi.svg",
-  sunflower: "/mascot/seeds/petal_huong_duong.svg",
-};
-
 type ShelfCard = {
   id: string;
   itemId: string;
@@ -116,13 +112,14 @@ function xu(locale: string, amount: number): string {
 
 function cardFromPiece(piece: ShopPiece, setName = ""): ShelfCard {
   const artId = shopArtId(piece.id, piece.artId);
+  const thumb = shopThumb(piece.id, piece.artId);
   return {
     id: piece.id,
     itemId: piece.id,
     treeType: "",
     name: piece.name,
     artId,
-    src: shopIconSrc(artId),
+    src: thumb.kind === "image" ? thumb.src : "",
     layer: piece.layer,
     price: piece.price,
     charge: piece.charge,
@@ -163,26 +160,6 @@ function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
     const card = cardFromPiece(piece);
     shelves[shelfFor(card)].push(card);
   }
-  for (const colour of BUBBLE_COLOURS) {
-    shelves.stickers.push({
-      id: colour.id,
-      itemId: colour.id,
-      treeType: "",
-      name: colour.name,
-      artId: colour.id,
-      src: "",
-      layer: "bubble",
-      price: 0,
-      charge: 0,
-      owned: false,
-      locked: false,
-      purchasable: false,
-      streak: null,
-      streakRequired: null,
-      setName: "",
-      kind: "colour" as const,
-    });
-  }
   for (const tree of catalog.seeds.trees) {
     shelves.seeds.push({
     id: `seed_${tree.key}`,
@@ -190,7 +167,7 @@ function shelfCards(catalog: ShopCatalog): Record<ShopShelf, ShelfCard[]> {
     treeType: tree.key,
     name: tree.name,
     artId: tree.key,
-    src: SEED_ART[tree.key] ?? "",
+    src: SHOP_SEED_ART[tree.key] ?? "",
     layer: "seed",
     price: tree.price,
     charge: tree.purchasable && catalog.seeds.purchasable ? tree.price : 0,
@@ -225,17 +202,13 @@ function wearsOnBody(card: ShelfCard | null): boolean {
   return card != null && card.kind === "piece" && WORN_LAYERS.has(card.layer);
 }
 
-/** Line beside Bé Da. Purchase wins, then a coloured chat bubble, then a try-on. */
+/** Line beside Bé Da after a purchase. Trying something on stays quiet. */
 function shopSpeech(
-  t: (key: "game.shop.successWarm" | "game.shop.successAlready" | "game.shop.bubbleHello" | "game.shop.trySay") => string,
-  trying: ShopTry | null,
+  t: (key: "game.shop.successWarm" | "game.shop.successAlready") => string,
   dialog: ShopDialog,
-  colour: boolean,
 ): { text: string; bubbleId: string } | null {
   if (dialog?.kind === "success") return { text: t("game.shop.successWarm"), bubbleId: "" };
   if (dialog?.kind === "owned") return { text: t("game.shop.successAlready"), bubbleId: "" };
-  if (trying && colour) return { text: t("game.shop.bubbleHello"), bubbleId: trying.id };
-  if (trying) return { text: t("game.shop.trySay"), bubbleId: "" };
   return null;
 }
 
@@ -412,7 +385,7 @@ export function BeDaXuShop({
   const wearArt = trying ? shopWearId(trying.artId, who) : "";
   const wornOnBody = wearsOnBody(selected);
   const layer = wornOnBody && wearArt ? shopLayerSrc(wearArt) : "";
-  const speech = shopSpeech(t, trying, dialog, Boolean(trying && bubbleColour(trying.id)));
+  const speech = shopSpeech(t, dialog);
   // A worn piece is only the layer on her body. The shelf icon stays off the stage.
   const thumb = !layer && trying && selected?.src ? selected.src : "";
   const shown = player ? { ...player, gender: who } : null;
@@ -629,7 +602,7 @@ function ShelfButton({
   onChoose: () => void;
 }) {
   const t = useTranslations("mascot");
-  const colour = card.kind === "colour" ? bubbleColour(card.id) : null;
+  const colour = bubbleColour(card.artId) ?? (card.kind === "colour" ? bubbleColour(card.id) : null);
   const missing = cardShort(balance, card);
   const faded = card.locked || missing > 0;
   return (
@@ -641,6 +614,7 @@ function ShelfButton({
       data-testid={card.kind === "colour" ? `beda-xu-colour-${card.id}` : `beda-xu-card-${card.id}`}
       data-short={missing > 0 ? "1" : "0"}
       aria-pressed={picked}
+      title={card.name}
       onClick={onChoose}
     >
       {colour ? (
@@ -652,7 +626,7 @@ function ShelfButton({
       ) : (
         <span className="beda-shop-art beda-shop-art-empty" aria-hidden />
       )}
-      <span className="beda-shop-piece-name">{card.name}</span>
+      <span className="beda-shop-piece-name" title={card.name}>{card.name}</span>
       {card.price > 0 ? <span className="beda-shop-price">{xu(locale, card.price)}</span> : null}
       {wearing ? <span className="beda-shop-owned">{t("game.shop.wearing")}</span> : null}
       {card.owned && !wearing ? <span className="beda-shop-owned">{t("game.shop.owned")}</span> : null}
@@ -863,7 +837,12 @@ export function XuShopScreen({
       const receipt = await buyShopItem(itemId, treeType, next.key);
       attempt.current = null;
       receiptBalance.current = receipt.balance;
-      setCatalog((current) => (current ? applyShopReceipt(current, receipt) : current));
+      setCatalog((current) => {
+        if (!current) return current;
+        const next = applyShopReceipt(current, receipt);
+        queryClient.setQueryData(XU_SHOP_QUERY_KEY, next);
+        return next;
+      });
       void queryClient.invalidateQueries({ queryKey: XU_SHOP_QUERY_KEY });
       const piece = shopTryPiece(receipt);
       const bonus = receipt.bonusGranted[0]?.name ?? "";

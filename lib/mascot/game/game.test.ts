@@ -8,7 +8,7 @@ import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { mascotStack } from "@/lib/mascot/layers";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 
-import { formatGameCoins, gameCoinCount, countRoutineTicks } from "./coins";
+import { formatGameCoins, gameCoinCount, countRoutineTicks, walletXu } from "./coins";
 import { gameRoomView } from "./room-view";
 import {
   DEFAULT_GAME_LOOK,
@@ -120,6 +120,14 @@ describe("game coins", () => {
       2,
     );
     assert.equal(countRoutineTicks([], [], { amDone: 1, pmDone: 2 }), 3);
+  });
+
+  it("reads the coin wallet and leaves glow points out of it", () => {
+    assert.equal(walletXu(6), 6);
+    assert.equal(walletXu(0), 0);
+    assert.equal(walletXu(null), null);
+    assert.equal(walletXu(undefined), null);
+    assert.notEqual(walletXu(0), gameCoinCount({ glowPoints: 6, routineTicks: 0, checkedInToday: false }));
   });
 
   it("formats xu for Vietnamese grouping and English grouping", () => {
