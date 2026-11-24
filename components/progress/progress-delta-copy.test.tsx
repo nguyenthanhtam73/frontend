@@ -40,9 +40,8 @@ describe("progress comparison copy", () => {
     const down = renderCard("vi", -0.05);
     assert.match(down, /Da hơi mệt hơn/);
     assert.equal(down.includes("kém"), false);
-    assert.match(down, /lucide-heart/);
-    const feelAt = down.indexOf("Dễ chịu");
-    assert.equal(down.slice(Math.max(0, feelAt - 500), feelAt).includes("trending-down"), false);
+    assert.match(renderCard("en", -0.05), /Skin feels a bit more tired/);
+    assert.equal(renderCard("en", -0.05).includes("worse"), false);
   });
 
   it("talks about this month without a score or mình", () => {
