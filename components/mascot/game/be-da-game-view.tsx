@@ -1228,6 +1228,7 @@ function Wardrobe({
         </button>
       </div>
       </div>
+      <div className="beda-wardrobe-scroll">
       <p>{t("game.wearing")}</p>
       <ul className="beda-worn">
         {outfits.some((item) => item.id === preview.outfit) ? <li>{t(`game.look.${preview.outfit}`)}</li> : null}
@@ -1308,6 +1309,12 @@ function Wardrobe({
       />
       <GiftClosetSection />
       <p className="beda-note">{t("game.tryNote")}</p>
+      <div className="beda-wardrobe-scroll-pad" aria-hidden="true">
+        <div className="beda-wear-bar">
+          <span className="beda-wear">{wearingSaved ? t("game.wearing") : t("game.wear")}</span>
+        </div>
+      </div>
+      </div>
       <div className="beda-wear-bar">
         <button
           type="button"
