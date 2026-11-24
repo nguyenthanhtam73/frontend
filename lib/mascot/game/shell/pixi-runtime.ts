@@ -769,57 +769,20 @@ export async function startPixiShell(options: {
       }
     }
   };
-  let roomBusy = false;
+  // The private room walks the DOM figure so the feet can step with the
+  // distance. A spritesheet on top would hide that and only flip left/right.
   const placeRoomHero = () => {
-    const hero = options.labels.current?.querySelector<HTMLElement>('[data-testid="beda-hero"]');
     const scene = options.canvas.parentElement?.parentElement;
-    if (!hero || hero.dataset.floor !== "on") {
-      const old = figures.get("room-you");
-      if (old) {
-        destroyFigure(old);
-        figures.delete("room-you");
-      }
-      if (scene instanceof HTMLElement) delete scene.dataset.actors;
-      return null;
+    const old = figures.get("room-you");
+    if (old) {
+      destroyFigure(old);
+      figures.delete("room-you");
     }
-    const art = (hero.dataset.art ?? "").split(/\s+/).filter(Boolean);
-    const look = actorLookFromArt(art);
-    const have = figures.get("room-you");
-    if (!have?.nodes || !have.sheet || have.key !== look.key) {
-      if (!roomBusy) {
-        roomBusy = true;
-        void ensureActor("room-you", art).finally(() => {
-          roomBusy = false;
-        });
-      }
-      return null;
+    if (scene instanceof HTMLElement) {
+      delete scene.dataset.actors;
+      delete scene.dataset.depth;
     }
-    const host = options.canvas.parentElement;
-    if (!host || !(scene instanceof HTMLElement)) return null;
-    const hostBox = host.getBoundingClientRect();
-    const scale = hostBox.width / (host.clientWidth || 1) || 1;
-    const fig = hero.querySelector<HTMLElement>(".bd-figure");
-    const heroBox = hero.getBoundingClientRect();
-    const moving = hero.dataset.stepping === "1";
-    setActorClip(have.nodes, have.sheet, actorClip(moving, null));
-    // Layout height ignores the walk transform, so a tilt cannot stretch the sheet.
-    const layoutH = fig?.offsetHeight || hero.offsetHeight || heroBox.height;
-    layoutActor(have.nodes, layoutH / scale);
-    const face = Number(hero.style.getPropertyValue("--face") || "1");
-    const sign = face < 0 ? -1 : 1;
-    // Mirror to face left or right. The sheet already swings the short arms;
-    // rotating or scaling the whole body here lengthens them and lifts the shoes.
-    have.nodes.anim.roundPixels = false;
-    have.root.scale.set(sign, 1);
-    have.root.rotation = 0;
-    have.root.position.set(
-      pixelSnap((heroBox.left + heroBox.width / 2 - hostBox.left) / scale),
-      pixelSnap((heroBox.bottom - hostBox.top) / scale),
-    );
-    have.root.zIndex = depthRank(Number(hero.dataset.ny) || 0.76);
-    scene.dataset.actors = "pixi";
-    scene.dataset.depth = Number(hero.dataset.ny) >= 0.66 ? "front" : "back";
-    return have.nodes;
+    return null;
   };
   app.ticker.add((ticker) => {
     onTick(ticker);

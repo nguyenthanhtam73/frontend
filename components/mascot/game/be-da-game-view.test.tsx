@@ -111,12 +111,10 @@ describe("Bé Da game screen", () => {
     assert.match(html, /data-testid="beda-streak"/);
     assert.match(html, /7/);
     assert.match(html, /chuỗi ngày/);
-    assert.match(html, /data-testid="beda-walk-pad"/);
-    assert.match(html, /data-room-dir="up"/);
-    assert.match(html, /data-room-dir="down"/);
-    assert.match(html, /data-room-dir="left"/);
-    assert.match(html, /data-room-dir="right"/);
-    assert.match(html, /aria-label="Đi lên"/);
+    assert.equal(html.includes('data-testid="beda-walk-pad"'), false);
+    assert.equal(html.includes("data-room-dir"), false);
+    assert.equal(html.includes("▲"), false);
+    assert.match(html, /beda-stride/);
     assert.equal(html.includes("room_moon"), false);
     assert.equal(html.includes("/mascot/glow/"), false);
     assert.match(html, /data-testid="beda-hero"/);

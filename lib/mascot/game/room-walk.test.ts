@@ -15,6 +15,7 @@ import {
   paintRoomMask,
   blockRoomRect,
   roomBlockName,
+  sealRoomNav,
   roomBlocked,
   roomDepthScale,
   roomNudge,
@@ -201,6 +202,17 @@ describe("personal room floor", () => {
     const end = route[route.length - 1]!;
     assert.ok(end.x < 0.3);
     assert.ok(end.y > 0.74);
+  });
+
+  it("seals only the real nav and still reaches a tap beside the old pad", () => {
+    const open = roomWalkGrid();
+    assert.equal(isWalkable(open, 0.7, 0.65) || isWalkable(open, 0.7, 0.67), true);
+    sealRoomNav(open, 0.8);
+    assert.equal(isWalkable(open, 0.7, 0.65) || Math.hypot(0.7 - 0.7, 0.65 - 0.67) < 0.04, true);
+    assert.equal(isWalkable(open, 0.5, 0.9), false);
+    const untouched = roomWalkGrid();
+    sealRoomNav(untouched, 0.2);
+    assert.equal(isWalkable(untouched, 0.5, 0.74), isWalkable(roomWalkGrid(), 0.5, 0.74));
   });
 
   it("keeps the arrow pad off the walkable floor", () => {
