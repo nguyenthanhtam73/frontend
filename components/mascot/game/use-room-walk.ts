@@ -60,10 +60,14 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduced = media.matches;
 
+    const overlaps = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right - 4 && a.right > b.left + 4 && a.top < b.bottom - 4 && a.bottom > b.top + 4;
+
     const placeBubble = (el: HTMLElement) => {
       const bubble = el.querySelector<HTMLElement>(".beda-bubble");
       if (!bubble) return;
       const pad = 8;
+      const padEl = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
       const place = (side: "above" | "below", dx: number) => {
         el.dataset.bubbleSide = side;
         el.style.setProperty("--bubble-x", `${dx}px`);
@@ -78,6 +82,22 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       if (box.left < frameBox.left + pad) dx += frameBox.left + pad - box.left;
       if (box.right > frameBox.right - pad) dx -= box.right - (frameBox.right - pad);
       place(side, Math.round(dx));
+      if (!padEl) return;
+      box = bubble.getBoundingClientRect();
+      const padBox = padEl.getBoundingClientRect();
+      if (overlaps(box, padBox)) {
+        dx += padBox.left - 8 - box.right;
+        place(side, Math.round(dx));
+      }
+    };
+
+    const placeCaption = (el: HTMLElement, moving: boolean) => {
+      const pretty = el.querySelector<HTMLElement>(".beda-pretty");
+      if (!pretty) return;
+      const padEl = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      const covered =
+        moving || (padEl ? overlaps(pretty.getBoundingClientRect(), padEl.getBoundingClientRect()) : false);
+      pretty.dataset.covered = covered ? "1" : "0";
     };
 
     const paint = (moving: boolean) => {
@@ -85,12 +105,14 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       if (!el) return;
       const pose = walkPose(walker.phase, moving && !reduced);
       const depth = roomDepthScale(walker.y);
+      // Room-only: the lobby bob is a few pixels. On this larger figure a
+      // stronger lift and lean is what reads as a step and a turn.
       const sort = String(roomSortIndex(walker.y));
       el.style.setProperty("--rx", walker.x.toFixed(4));
       el.style.setProperty("--ry", walker.y.toFixed(4));
-      el.style.setProperty("--bob", pose.bob.toFixed(2));
-      el.style.setProperty("--sway", pose.sway.toFixed(2));
-      el.style.setProperty("--tilt", pose.tilt.toFixed(2));
+      el.style.setProperty("--bob", (pose.bob * 2.4).toFixed(2));
+      el.style.setProperty("--sway", (pose.sway * 1.6).toFixed(2));
+      el.style.setProperty("--tilt", (pose.tilt * 1.8).toFixed(2));
       el.style.setProperty("--squash", pose.squash.toFixed(3));
       el.style.setProperty("--face", walker.face < 0 ? "-1" : "1");
       el.style.setProperty("--shadow-x", pose.shadowX.toFixed(3));
@@ -102,8 +124,10 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       el.dataset.nx = walker.x.toFixed(4);
       el.dataset.ny = walker.y.toFixed(4);
       el.dataset.stepping = moving && !reduced ? "1" : "0";
+      el.dataset.face = walker.face < 0 ? "left" : "right";
       el.dataset.depth = depth.toFixed(3);
       placeBubble(el);
+      placeCaption(el, moving && !reduced);
     };
 
     const aim = (x: number, y: number) => {

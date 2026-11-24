@@ -543,7 +543,11 @@ describe("Bé Da game screen", () => {
     assert.equal(html.includes("/mascot/props/pot.svg"), false);
     assert.equal(html.includes("/mascot/props/room_"), false);
     assert.equal(html.includes("Tôi đã bị bỏ rơi ở đây"), false);
-    assert.match(html, /Ra Sảnh/);
+    assert.match(html, /người đang chơi/);
+    assert.equal(html.includes("0/0"), false);
+    assert.match(html, /data-testid="beda-routine-create"/);
+    assert.match(html, /Chưa có bước nào · Tạo routine/);
+    assert.match(html, /href="\/routine"/);
     assert.match(html, /data-testid="beda-cabinet"/);
     assert.match(html, /aria-label="Tủ đồ"/);
     assert.match(html, /\/mascot\/props\/wardrobe\.svg/);

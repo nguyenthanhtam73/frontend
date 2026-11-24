@@ -40,6 +40,7 @@ import { sessionGate } from "@/lib/routine/session-window";
 import { useRoomWalk } from "@/components/mascot/game/use-room-walk";
 import { lookArt, playerActorArt } from "@/lib/game/core/art";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
+import { localePath } from "@/lib/mascot/game/path";
 import { ROOM_SPAWN, ROOM_WALK_MASK } from "@/lib/mascot/game/room-walk";
 import type { ShellSnapshot } from "@/lib/game/core/types";
 import type { SkyPeriod } from "@/lib/mascot/game/sky";
@@ -953,29 +954,39 @@ function Room({
                 {giftTaken ? t("game.giftTaken") : t("game.gift.label")}
               </span>
             </h2>
-            {(["morning", "evening"] as const).map((section) => {
-              const stats = summary[section];
-              return (
-                <button
-                  key={section}
-                  type="button"
-                  className="beda-quest-row"
-                  data-testid="beda-mission-summary"
-                  data-section={section}
-                  data-done={stats.done}
-                  data-total={stats.total}
-                  onClick={onOpenMissions}
-                >
-                  {t(section === "morning" ? "game.morningCount" : "game.eveningCount", stats)}
-                </button>
-              );
-            })}
+            {summary.morning.total + summary.evening.total === 0 ? (
+              <a
+                className="beda-quest-create"
+                data-testid="beda-routine-create"
+                href={localePath(locale, "/routine")}
+              >
+                {t("game.noSteps")}
+              </a>
+            ) : (
+              (["morning", "evening"] as const).map((section) => {
+                const stats = summary[section];
+                if (stats.total === 0) return null;
+                return (
+                  <button
+                    key={section}
+                    type="button"
+                    className="beda-quest-row"
+                    data-testid="beda-mission-summary"
+                    data-section={section}
+                    data-done={stats.done}
+                    data-total={stats.total}
+                    onClick={onOpenMissions}
+                  >
+                    {t(section === "morning" ? "game.morningCount" : "game.eveningCount", stats)}
+                  </button>
+                );
+              })
+            )}
           </section>
           <button type="button" className="beda-card beda-door" onClick={onOpenLobby}>
             <GameIcon name="door" />
             <span>
-              <strong>{t("game.door")}</strong>
-              <span className="beda-door-count">{doorCountLabel}</span>
+              <strong>{doorCountLabel}</strong>
             </span>
           </button>
         </>

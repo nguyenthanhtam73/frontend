@@ -670,6 +670,10 @@ html.dark .beda-pad-btn {
   transform: translateX(-50%);
 }
 
+.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"] {
+  visibility: hidden;
+}
+
 .beda-hero-wrap.is-floor .bd-breathe {
   transform-origin: 50% 83.2%;
   animation-name: beda-room-breath;
@@ -804,6 +808,24 @@ html.dark .beda-pad-btn {
 .beda-quest-steps {
   max-height: min(46vh, 320px);
   overflow: auto;
+}
+
+.beda-quest-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff;
+  color: #7a3a52;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
 }
 
 .beda-quest-row {

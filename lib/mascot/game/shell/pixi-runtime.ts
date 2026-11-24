@@ -804,13 +804,21 @@ export async function startPixiShell(options: {
     const moving = hero.dataset.stepping === "1";
     setActorClip(have.nodes, have.sheet, actorClip(moving, null));
     layoutActor(have.nodes, (figBox?.height || heroBox.height) / scale);
-    // The wrap's bottom edge is the floor anchor. Shoes sit there; the caption hangs below.
+    const cssNum = (name: string) => Number(hero.style.getPropertyValue(name) || "0");
+    const face = Number(hero.style.getPropertyValue("--face") || "1");
+    const sign = face < 0 ? -1 : 1;
+    // Same turn the lobby paints with scaleX: mirror the sheet, then lean and
+    // bob with the walk cycle so left/right and up/down are not a flat slide.
+    have.nodes.anim.roundPixels = false;
+    have.root.scale.x = sign;
+    // A steady lean into the walk, plus the step tilt, so left and right
+    // do not both read as a front-facing stand.
+    const lead = moving ? sign * -0.28 : 0;
+    have.root.rotation = lead + (cssNum("--tilt") * Math.PI) / 180;
     have.root.position.set(
       pixelSnap((heroBox.left + heroBox.width / 2 - hostBox.left) / scale),
-      pixelSnap((heroBox.bottom - hostBox.top) / scale),
+      pixelSnap((heroBox.bottom - hostBox.top) / scale + cssNum("--bob")),
     );
-    const face = Number(hero.style.getPropertyValue("--face") || "1");
-    have.root.scale.x = face < 0 ? -1 : 1;
     have.root.zIndex = depthRank(Number(hero.dataset.ny) || 0.76);
     scene.dataset.actors = "pixi";
     scene.dataset.depth = Number(hero.dataset.ny) > 0.72 ? "front" : "back";
