@@ -10,6 +10,7 @@ import { mascotQueryKey } from "@/lib/api/mascot";
 import { DEFAULT_GAME_LOOK } from "@/lib/mascot/game/look";
 import type { RoomTree, TreeReward } from "@/lib/mascot/game/room-tree";
 import { sampleSpaGuests, type SpaBoardRow, type SpaGuest } from "@/lib/mascot/game/spa-room";
+import type { RoomTogether } from "@/components/mascot/game/use-room-shared";
 import type { GameClipId, GameHairId, GameOutfitId } from "@/lib/mascot/game/look";
 import { defaultSnapshot, resolveBeDaView } from "@/lib/mascot/model";
 import "@/components/mascot/game/be-da-game.css";
@@ -206,6 +207,28 @@ function ClosetShot() {
   );
 }
 
+const barTogether: RoomTogether = {
+  visible: true,
+  loading: false,
+  quest: null,
+  grace: false,
+  expired: false,
+  message: null,
+  chests: [],
+  coins: null,
+  gain: null,
+  popDays: null,
+  claiming: null,
+  today: [],
+  todayMessage: null,
+  selfId: null,
+  nudged: [],
+  nudging: null,
+  onClaim: () => undefined,
+  onNudge: () => undefined,
+  applyBalance: () => undefined,
+};
+
 const BOARD_2: SpaBoardRow[] = [
   { nickname: "Mây Hồng", careStreak: 12 },
   { nickname: "Lan", careStreak: 7 },
@@ -262,6 +285,7 @@ export function TreeShot() {
   const [daysLeft, setDaysLeft] = useState<number | null>(6);
   const [board, setBoard] = useState<"" | "2" | "8">("");
   const [spread, setSpread] = useState<"" | "tight" | "near" | "apart">("");
+  const [solo, setSolo] = useState(false);
   const [tap, setTap] = useState("");
   const [hold, setHold] = useState(false);
   useEffect(() => {
@@ -278,6 +302,7 @@ export function TreeShot() {
     );
     setTap(params.get("tap") || "");
     setHold(params.get("hold") === "1");
+    setSolo(params.get("solo") === "1");
     setScene(params.get("scene") || "stage1");
     const board = params.get("board");
     setBoard(board === "2" || board === "8" ? board : "");
@@ -321,7 +346,7 @@ export function TreeShot() {
   return (
     <div className="beda-game is-spa" data-testid="beda-tree-shot">
       <BeDaSpaRoom
-        key={`${board}-${scene}-${daysLeft ?? ""}-${spread}-${tap}`}
+        key={`${board}-${scene}-${daysLeft ?? ""}-${spread}-${tap}-${solo ? "solo" : "crowd"}`}
         locale="vi"
         player={player}
         look={DEFAULT_GAME_LOOK}
@@ -330,16 +355,18 @@ export function TreeShot() {
         youPose={null}
         room={{
           code: "DA7K2M",
-          count: spread ? 4 : 3,
+          count: solo ? 1 : spread ? 4 : 3,
           cap: 8,
-          guests: spread
-            ? crowd
-            : boardRows
-              ? BOARD_GUESTS
-              : sampleSpaGuests(new Set()).map((guest) =>
-                  guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
-                ),
-          you: spread ? { x: youX, y: 0.64 } : { x: 0.4, y: 0.66 },
+          guests: solo
+            ? []
+            : spread
+              ? crowd
+              : boardRows
+                ? BOARD_GUESTS
+                : sampleSpaGuests(new Set()).map((guest) =>
+                    guest.id === "may-hong" ? { ...guest, seat: null, x: 0.62, y: 0.64 } : guest,
+                  ),
+          you: solo ? { x: 0.5, y: 0.62 } : spread ? { x: youX, y: 0.64 } : { x: 0.4, y: 0.66 },
           youNickname: boardRows ? "Lan" : "",
           notice: null,
           daysLeft,
@@ -360,6 +387,7 @@ export function TreeShot() {
         boardInitiallyOpen={boardRows != null}
         previewBoard={boardRows}
         showActors={false}
+        together={barTogether}
       />
     </div>
   );

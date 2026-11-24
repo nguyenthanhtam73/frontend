@@ -7,6 +7,7 @@ import {
   BOB_PX,
   createTravel,
   directionFromKeys,
+  blendFeet,
   footPose,
   paceFactor,
   queueTap,
@@ -86,7 +87,7 @@ describe("room stride", () => {
     const moving = footPose(Math.PI / 2, true, false, right, 1);
     assert.ok(moving.bob <= 0 && moving.bob >= -BOB_PX);
     assert.ok(moving.ly < 0 || moving.ry < 0);
-    assert.ok(Math.abs(moving.arm) <= 5);
+    assert.ok(Math.abs(moving.arm) <= 12);
     const planted = footPose(0, true, false, right, 1);
     assert.equal(planted.bob, 0);
     assert.equal(planted.ly, 0);
@@ -142,5 +143,31 @@ describe("room stride", () => {
     assert.ok(Math.hypot(travel.x - tap.x, travel.y - tap.y) < 0.04, `${travel.x},${travel.y}`);
     assert.ok(travel.x > 0.6);
     assert.equal(footPose(travel.phase, false, false, null, 1).bob, 0);
+  });
+
+  it("locks the planted shoe to the floor and swings the opposite arm", () => {
+    const dir = { x: 1, y: 0 };
+    let locked = 0;
+    for (let px = 0; px < STEP_PX; px += 1) {
+      const pose = footPose(phaseForPixels(px), true, false, dir, 1);
+      const world = px + pose.lx;
+      if (px === 0) locked = world;
+      assert.ok(Math.abs(world - locked) < 0.05, `planted shoe slid to ${world} at ${px}px`);
+      assert.equal(pose.ly, 0);
+      if (px > 0 && px < STEP_PX) assert.ok(pose.ry < 0, "the other shoe is in the air");
+    }
+    const leftForward = footPose(0, true, false, dir, 1);
+    assert.ok(leftForward.lx > leftForward.rx);
+    assert.ok(leftForward.arm <= -8 && leftForward.arm >= -12);
+    const rightForward = footPose(phaseForPixels(STEP_PX), true, false, dir, 1);
+    assert.ok(rightForward.rx > rightForward.lx);
+    assert.ok(rightForward.arm >= 8 && rightForward.arm <= 12);
+    const stood = blendFeet(leftForward, 1);
+    assert.equal(stood.lx, 0);
+    assert.equal(stood.arm, 0);
+    assert.equal(stood.bob, 0);
+    const mid = blendFeet(leftForward, 0.5);
+    assert.ok(Math.abs(mid.lx) < Math.abs(leftForward.lx));
+    assert.ok(Math.abs(mid.arm) < Math.abs(leftForward.arm));
   });
 });

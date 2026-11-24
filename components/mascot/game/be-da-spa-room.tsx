@@ -225,6 +225,25 @@ export function BeDaSpaRoom({
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [barOverflow, setBarOverflow] = useState(false);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const check = () => {
+      // The 16px end pad is room after the last pill, not a sign that another pill is hidden.
+      const hidden = el.scrollWidth - el.clientWidth - el.scrollLeft;
+      setBarOverflow(hidden > 18);
+    };
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    el.addEventListener("scroll", check, { passive: true });
+    return () => {
+      observer.disconnect();
+      el.removeEventListener("scroll", check);
+    };
+  }, [together?.visible, room.entry, room.landscape]);
   const placed = room.guests.filter(
     (guest): guest is SpaGuest & { x: number; y: number } => guest.x != null && guest.y != null,
   );
@@ -515,7 +534,12 @@ export function BeDaSpaRoom({
         </button>
       </div>
 
-      <div className="beda-room-bar" data-testid="beda-room-bar">
+      <div
+        ref={barRef}
+        className={barOverflow ? "beda-room-bar is-overflow" : "beda-room-bar"}
+        data-testid="beda-room-bar"
+        data-overflow={barOverflow ? "1" : "0"}
+      >
         <button type="button" className={boardOpen ? "beda-spa-board is-on" : "beda-spa-board"} data-testid="beda-streak-board" onClick={() => void openBoard()}>
           {t("game.spaBoard")}
         </button>

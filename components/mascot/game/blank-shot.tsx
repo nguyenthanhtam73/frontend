@@ -20,10 +20,13 @@ const client = new QueryClient();
 export function BlankShot() {
   const [scene, setScene] = useState("load");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [gender, setGender] = useState<"female" | "male">("female");
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setScene(params.get("scene") || "load");
     setTheme(params.get("theme") === "dark" ? "dark" : "light");
+    const who = params.get("gender");
+    setGender(who === "nam" || who === "male" ? "male" : "female");
   }, []);
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -39,17 +42,25 @@ export function BlankShot() {
       <NextIntlClientProvider locale="vi" messages={vi} timeZone="Asia/Ho_Chi_Minh">
         {scene === "retry" ? <BeDaGameWait initialRetry /> : null}
         {scene === "load" ? <BeDaGameWait /> : null}
-        {scene === "draw" ? <ForcedRoom sky={sky} hold /> : null}
-        {scene === "room" || scene === "card" ? <ForcedRoom sky={sky} /> : null}
+        {scene === "draw" ? <ForcedRoom sky={sky} gender={gender} hold /> : null}
+        {scene === "room" || scene === "card" ? <ForcedRoom sky={sky} gender={gender} /> : null}
       </NextIntlClientProvider>
     </QueryClientProvider>
   );
 }
 
-function ForcedRoom({ sky, hold = false }: { sky: "morning" | "night"; hold?: boolean }) {
+function ForcedRoom({
+  sky,
+  gender = "female",
+  hold = false,
+}: {
+  sky: "morning" | "night";
+  gender?: "female" | "male";
+  hold?: boolean;
+}) {
   const [fell, setFell] = useState(false);
   const player = resolveBeDaView({
-    snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy" },
+    snapshot: { ...defaultSnapshot(), isDefault: false, mood: "happy", gender },
     missedDays: 0,
     sessionHappy: false,
     locale: "vi",

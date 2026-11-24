@@ -199,6 +199,14 @@ export function boardMedals(rows: readonly { careStreak: number }[]): BoardMedal
   return rows.map((row) => (row.careStreak > 0 ? byValue.get(row.careStreak) ?? null : null));
 }
 
+/** Pixels «★ Mày» drops when she is the only Bé Da, so the pill hugs the hair. */
+export const SOLO_NAME_HUG_PX = 10;
+
+/** Extra downward shift for the self label. 0 once anyone else is in the room. */
+export function soloNameHug(people: number): number {
+  return people <= 1 ? SOLO_NAME_HUG_PX : 0;
+}
+
 /** How far to push a name tag so it sits under the watering pill. 0 when they do not meet. */
 export function nameTagDrop(
   tag: { top: number; bottom: number; left: number; right: number },
