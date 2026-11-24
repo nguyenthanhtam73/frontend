@@ -71,7 +71,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Dầu không phải nhân đang chờ moi",
               paragraphs: [
-                "T-zone bóng trên nắng ẩm là bình thường. Chà cho ‘sạch bóng’ làm hàng rào yếu, hạt dễ thành đỏ. Thấm dầu giữa giờ, đừng rửa rồi bỏ trống — rồi mới nghĩ tới một hoạt chất.",
+                "T-zone bóng trên nắng ẩm là bình thường. Chà cho ‘sạch bóng’ làm lớp ngoài da yếu, hạt dễ thành đỏ. Thấm dầu giữa giờ, đừng rửa rồi bỏ trống — rồi mới nghĩ tới một hoạt chất.",
               ],
             },
           ],
@@ -153,7 +153,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           question: "Mụn ẩn có cần tẩy da chết mạnh không?",
           answer:
-            "Không. Tẩy mạnh làm hàng rào yếu, hạt dễ thành mụn viêm. BHA nhẹ vài buổi tối, hoặc chỉ rửa + dưỡng + SPF đến khi da chịu được.",
+            "Không. Tẩy mạnh làm lớp ngoài da yếu, hạt dễ thành mụn viêm. BHA nhẹ vài buổi tối, hoặc chỉ rửa + dưỡng + SPF đến khi da chịu được.",
         },
         {
           question: "BHA dùng mỗi ngày được không?",

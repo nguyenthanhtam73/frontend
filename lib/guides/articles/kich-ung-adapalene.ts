@@ -50,7 +50,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
       title: "Kích ứng sau adapalene hoặc BHA: dừng kích, dịu da",
       description:
         "Da rát, bong, đỏ sau adapalene hoặc BHA? Dừng chất kích, dưỡng mỏng, SPF — biết dấu hiệu cần bác sĩ. DaDiary Beta: không chẩn bệnh — chụp ảnh khi da đang êm.",
-      kicker: "Kích ứng hàng rào",
+      kicker: "Kích ứng lớp ngoài da",
       lede:
         "Mình không bảo bạn ‘cố chịu cho quen’. Adapalene và BHA trên kệ không phải đơn thuốc, và da đang rát cả ngày cũng không phải lúc chồng thêm acid. Việc ít hại: bớt kích, dịu da, biết khi nào gặp bác sĩ. DaDiary đang Beta: gợi ý, không chẩn bệnh.",
       heroFigure: hero,
@@ -93,7 +93,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
             {
               heading: "Giữ ba việc ít hại",
               paragraphs: [
-                "Rửa dịu, không sạch bóng. Dưỡng mỏng khi da hơi ẩm. SPF mỗi sáng — kể cả khi ở nhà gần cửa sổ. Bỏ nắng vì da đang đỏ thường làm thâm đậm hơn, không làm hàng rào khỏe hơn.",
+                "Rửa dịu, không sạch bóng. Dưỡng mỏng khi da hơi ẩm. SPF mỗi sáng — kể cả khi ở nhà gần cửa sổ. Bỏ nắng vì da đang đỏ thường làm thâm đậm hơn, không làm lớp ngoài da khỏe hơn.",
                 "Da dễ đỏ sẵn: khung tối giản ở [da nhạy cảm](/guides/da-nhay-cam). Nền 3 bước ở [routine người mới](/guides/routine-cham-da).",
               ],
             },
@@ -125,7 +125,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           checklist: [
             "Không acid, không hạt, không mask đất mỗi ngày.",
             "Rửa dịu sáng tối; thêm lần chỉ khi mồ hôi nhiều.",
-            "Dưỡng mỏng sau rửa. Da dầu đang rát vẫn cần hàng rào.",
+            "Dưỡng mỏng sau rửa. Da dầu đang rát vẫn cần dưỡng để lớp ngoài da đỡ khô rát.",
             "SPF mỗi sáng, kết cấu chịu được — xem [kem chống nắng](/guides/kem-chong-nang).",
             "Một ảnh cùng cửa sổ. Không zoom một điểm dưới đèn flash.",
             "Sưng, mủ, ban lan, mắt sưng: đi khám — đừng tự tăng chai.",
@@ -134,7 +134,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           heading: "Khi nào gặp bác sĩ",
           paragraphs: [
-            "DaDiary không kê đơn, không bảo bạn ngưng thuốc, không đo ‘bao nhiêu phần trăm hàng rào’. Khám sớm hơn tip mới nếu da đang tổn.",
+            "DaDiary không kê đơn, không bảo bạn ngưng thuốc, không đo ‘lớp ngoài da khỏe đến đâu’. Khám sớm hơn tip mới nếu da đang tổn.",
           ],
           figure: flags,
           checklist: [
@@ -160,7 +160,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           question: "Có được dùng BHA cùng đêm với adapalene không?",
           answer:
-            "Người mới: không. Mỗi thứ đã có thể khô. Chồng hai cái khi da đang đỏ là cách hay gặp để hàng rào kêu. Êm rồi vẫn chỉ một thay đổi mỗi lần.",
+            "Người mới: không. Mỗi thứ đã có thể khô. Chồng hai cái khi da đang đỏ là cách hay gặp khiến da khô rát, đỏ hơn. Êm rồi vẫn chỉ một thay đổi mỗi lần.",
         },
         {
           question: "Bao lâu thì được thoa lại?",

@@ -1489,7 +1489,7 @@
     "summary": {
       "sectionLabel": "Tóm tắt tháng này",
       "headlineUp": "Tháng này cảm nhận da dễ chịu hơn tháng trước — đẹp lắm!",
-      "headlineDown": "Tháng này cảm nhận da hơi kém hơn tháng trước — không sao, mình quay lại nhịp dịu nhé.",
+      "headlineDown": "Tháng này da hơi mệt hơn tháng trước, không sao, từ từ chăm lại nha mày.",
       "headlineFlat": "Tháng này cảm nhận da đi ngang — kiên trì rồi sẽ thấy thay đổi.",
       "noComparisonYet": "Chưa đủ dữ liệu để so sánh — cứ ghi nhật ký đều đặn nhé.",
       "checksThisMonth": "{n} lần ghi nhật ký tháng này",
@@ -1505,7 +1505,10 @@
       "gaugeBarrier": "Lớp bảo vệ da",
       "gaugeFeelLow": "Hơi kém",
       "gaugeFeelMid": "Ổn",
-      "gaugeFeelOk": "Dễ chịu"
+      "gaugeFeelOk": "Dễ chịu",
+      "deltaUp": "Da khá lên so với lần trước",
+      "deltaFlat": "Da giữ ổn",
+      "deltaDown": "Da hơi mệt hơn"
     },
     "streak": {
       "ariaLabel": "Chuỗi ngày check-in",
@@ -2524,7 +2527,9 @@
       "today": "Hôm nay",
       "yesterday": "Hôm qua",
       "daysAgo": "{n} ngày trước",
-      "overall": "Tổng {pct}%",
+      "feelOk": "Da ổn",
+      "feelMid": "Da tạm ổn",
+      "feelLow": "Da hơi mệt",
       "emptyTitle": "Chưa có nhật ký nào",
       "emptyHint": "Thêm 1 ảnh + vài cảm nhận để gợi ý chăm da bám sát da bạn hôm nay.",
       "emptyCta": "Bắt đầu ghi nhật ký",

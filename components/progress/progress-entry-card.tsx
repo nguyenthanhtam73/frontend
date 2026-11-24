@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { showsAnalysisMaintenance } from "@/lib/check-in/analysis-maintenance";
 import { toPublicCopy } from "@/lib/check-in/public-copy";
-import { softGaugeFeelKey } from "@/lib/check-in/soft-gauge-feel";
+import { softGaugeFeel } from "@/lib/check-in/soft-gauge-feel";
 import { canShowReanalyzeCta } from "@/lib/progress/reanalyze";
 import type { ProgressEntryDTO } from "@/lib/types/progress";
 import { cn } from "@/lib/utils";
@@ -33,11 +33,13 @@ export function ProgressEntryCard({
   onEntryChange: (next: ProgressEntryDTO) => void;
 }) {
   const t = useTranslations("progress.entry");
-  const tFeel = useTranslations("progress.summary");
+  const tJournal = useTranslations("routine.checkInContext");
   const thumb = entry.image_urls?.[0];
   const photoCount = entry.image_urls?.length ?? 0;
   const overall = entry.gauges?.overall;
   const snippet = entry.snippet ? toPublicCopy(entry.snippet).trim() : "";
+  const feel = overall == null ? null : softGaugeFeel(overall);
+  const feelKey = feel === "low" ? "feelLow" : feel === "mid" ? "feelMid" : feel === "ok" ? "feelOk" : null;
   const { inFlight, run } = useProgressReanalyze(entry, onEntryChange);
   const maintenance = showsAnalysisMaintenance({
     analysisPending: entry.analysis_pending,
@@ -73,9 +75,9 @@ export function ProgressEntryCard({
               {t("photoCount", { n: photoCount })}
             </span>
           ) : null}
-          {overall != null ? (
+          {feelKey ? (
             <span className="absolute right-1 top-1 rounded-full bg-background/85 px-1.5 py-0.5 text-[9px] font-semibold text-foreground shadow-sm backdrop-blur">
-              {tFeel(softGaugeFeelKey(overall))}
+              {tJournal(feelKey)}
             </span>
           ) : null}
         </div>

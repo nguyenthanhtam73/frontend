@@ -1489,7 +1489,7 @@
     "summary": {
       "sectionLabel": "This month",
       "headlineUp": "This month skin feels better than last month — keep going!",
-      "headlineDown": "This month skin feels a bit off vs last month — ease back into a gentler rhythm.",
+      "headlineDown": "This month skin feels a bit more tired than last month. That's okay — ease back in.",
       "headlineFlat": "This month's feel is steady — consistency adds up.",
       "noComparisonYet": "Not enough data yet — keep checking in.",
       "checksThisMonth": "{n} check-ins this month",
@@ -1505,7 +1505,10 @@
       "gaugeBarrier": "Barrier",
       "gaugeFeelLow": "A bit off",
       "gaugeFeelMid": "Okay",
-      "gaugeFeelOk": "Comfortable"
+      "gaugeFeelOk": "Comfortable",
+      "deltaUp": "Skin feels better than last time",
+      "deltaFlat": "Skin is holding steady",
+      "deltaDown": "Skin feels a bit more tired"
     },
     "streak": {
       "ariaLabel": "Check-in streak",
@@ -2524,7 +2527,9 @@
       "today": "Today",
       "yesterday": "Yesterday",
       "daysAgo": "{n} days ago",
-      "overall": "Overall {pct}%",
+      "feelOk": "Skin feels okay",
+      "feelMid": "Skin feels so-so",
+      "feelLow": "Skin feels a bit tired",
       "emptyTitle": "No check-in yet",
       "emptyHint": "Add a quick photo + a few skin tags so the suggestions match how your skin actually feels today.",
       "emptyCta": "Start check-in",
