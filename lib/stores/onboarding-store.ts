@@ -435,10 +435,10 @@ export function buildStarterPackBullets(s: OnboardingState): string[] {
     lines.push("Nền an toàn: sữa rửa mặt dịu + kem dưỡng ẩm + SPF buổi sáng (kể cả ở nhà gần cửa sổ).");
     lines.push("Một hoạt chất mới / tuần — patch test trước khi full face.");
   } else if (s.skillMode === "intermediate") {
-    lines.push("Xen kẽ hoạt chất (VD: BHA/PHA tối) — luôn kẹp cấp ẩm + phục hồi khi da căng.");
+    lines.push("Xen kẽ hoạt chất (VD: tẩy da chết nhẹ buổi tối) — luôn kẹp cấp ẩm và làm dịu khi da căng.");
     lines.push("Ghi routine 5–7 ngày để nhìn pattern da, không đổi cùng lúc nhiều sản phẩm.");
   } else if (s.skillMode === "advanced") {
-    lines.push("Thoa từng lớp có lý do; nhớ thứ tự khi dùng acid hoặc retinol, và da chịu được không.");
+    lines.push("Thoa từng lớp có lý do; nhớ thứ tự khi dùng chất tẩy da chết hoặc chất làm mới da, và da chịu được không.");
     lines.push("So ảnh cùng ánh sáng/góc trước khi kết luận “tiến triển”.");
   }
   if (s.goal && s.goal !== "unsure") {

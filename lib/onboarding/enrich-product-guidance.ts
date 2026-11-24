@@ -84,6 +84,12 @@ export function plainifyGuidanceText(text: string, en: boolean): string {
         ["Không phải kê đơn", "Đây không phải đơn thuốc"],
         ["không stack", "không dùng chung"],
         ["stack", "dùng chung"],
+        ["ít làm mỏng hàng rào da", "ít làm da khô rát, dễ bị kích ứng"],
+        ["làm mỏng hàng rào da", "làm da khô rát, dễ bị kích ứng"],
+        ["hàng rào da", "da"],
+        ["hàng rào", "da"],
+        ["ceramides", "chất giữ nước trong da"],
+        ["ceramide", "chất giữ nước trong da"],
       ] as const);
   for (const [from, to] of pairs) {
     if (out.includes(from)) out = out.split(from).join(to);

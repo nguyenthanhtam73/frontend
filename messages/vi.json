@@ -176,7 +176,7 @@
     "fieldBodyConcerns": "Vùng cơ thể khác bạn muốn để ý (không bắt buộc)",
     "placeholderBodyConcerns": "VD: mụn lưng, da tay khô — phân tách bằng dấu phẩy",
     "fieldCurrentRoutine": "Bạn đang chăm da thế nào? (không bắt buộc)",
-    "placeholderCurrentRoutine": "VD: sáng: rửa mặt + kem dưỡng + kem chống nắng; tối: tẩy trang + serum + retinol 2 lần/tuần"
+    "placeholderCurrentRoutine": "VD: sáng: rửa mặt + kem dưỡng + kem chống nắng; tối: tẩy trang + tinh chất, chất làm mới da 2 lần/tuần"
   },
   "common": {
     "mainNavAria": "Điều hướng chính",
@@ -662,7 +662,7 @@
     "modeLinkRoutine": "Tạo chăm da khởi đầu",
     "modeHint": "Chưa chọn? Mặc định nhịp chậm, nhiều khích lệ + 1–2 gợi ý cụ thể (Người mới).",
     "fieldTitle": "Tiêu đề (không bắt buộc)",
-    "placeholderTitle": "VD: Tuần 3 dùng BHA, Hà Nội mùa khô",
+    "placeholderTitle": "VD: Tuần 3 dùng chất tẩy da chết nhẹ, Hà Nội mùa khô",
     "fieldUserNote": "Ghi chú của bạn",
     "placeholderUserNote": "Các bước sáng/tối, sản phẩm mới, cảm giác da…",
     "fieldEnv": "Hoàn cảnh hôm nay",
@@ -2223,11 +2223,11 @@
     "packLines": {
       "skillBeginner0": "Nền an toàn: sữa rửa mặt dịu + kem dưỡng ẩm + kem chống nắng buổi sáng (kể cả khi ở nhà gần cửa sổ).",
       "skillBeginner1": "Mỗi tuần thử thêm tối đa 1 thành phần mới — và nhớ thử trước trên một vùng da nhỏ.",
-      "skillIntermediate0": "Xen kẽ thành phần (VD: BHA/PHA buổi tối) — luôn đi kèm cấp ẩm + làm dịu khi da căng.",
+      "skillIntermediate0": "Xen kẽ thành phần (VD: chất tẩy da chết nhẹ buổi tối) — luôn đi kèm cấp ẩm và làm dịu khi da căng.",
       "skillIntermediate1": "Ghi nhật ký 5–7 ngày để nhìn được thói quen của da, đừng đổi nhiều sản phẩm cùng lúc.",
-      "skillAdvanced0": "Thoa từng lớp có lý do; nhớ thứ tự khi dùng acid hoặc retinol, và da chịu được không.",
+      "skillAdvanced0": "Thoa từng lớp có lý do; nhớ thứ tự khi dùng chất tẩy da chết hoặc chất làm mới da, và da chịu được không.",
       "skillAdvanced1": "So ảnh cùng ánh sáng/góc trước khi kết luận “tiến triển”.",
-      "budgetEntry": "Ưu tiên drugstore đủ công thức: sữa rửa mặt pH ~5–6, ceramide, kem chống nắng bền hơn là serum đắt.",
+      "budgetEntry": "Ưu tiên đồ dễ mua: sữa rửa mặt dịu, kem dưỡng giữ nước, kem chống nắng bền — hơn là tinh chất đắt.",
       "budgetMid": "Đầu tư 1 serum hoạt chất + 1 kem dưỡng/làm dịu tốt; phần còn lại giữ tối giản.",
       "budgetFlexible": "Có thể dồn ngân sách vào serum/kem chống nắng chất lượng + dụng cụ tối giản."
     },
@@ -2255,7 +2255,7 @@
       "tip3": "Thử tối đa 1 sản phẩm mới mỗi tuần — da cần thời gian để phản ứng rõ ràng.",
       "tip4": "Tẩy trang kỹ buổi tối giúp da hấp thụ serum và kem dưỡng hiệu quả hơn.",
       "tip5": "Chụp ảnh da cùng ánh sáng và góc mỗi tuần giúp bạn thấy tiến triển rõ hơn.",
-      "tip6": "Patch test trên vùng da nhỏ trước khi dùng sản phẩm mạnh như acid hoặc retinol.",
+      "tip6": "Thử trên một vùng da nhỏ trước khi dùng sản phẩm mạnh như chất tẩy da chết hoặc chất làm mới da.",
       "goalTip_glow": "Mục tiêu sáng khoẻ: cấp ẩm đều + kem chống nắng hàng ngày là nền tảng quan trọng nhất.",
       "goalTip_clear_acne": "Mục tiêu giảm mụn: làm sạch dịu + không bỏ qua dưỡng ẩm — da khô dễ kích thích hơn.",
       "goalTip_barrier": "Mục tiêu làm dịu: ưu tiên da hết căng/dễ đỏ và giữ ẩm trước khi thêm hoạt chất mạnh.",
@@ -2687,7 +2687,7 @@
     "addReasonCta": "Thêm lý do (không bắt buộc)",
     "reasonLabelPos": "Bạn thích phần nào nhất? (không bắt buộc)",
     "reasonLabelNeg": "Phần nào chưa hợp với bạn? (không bắt buộc)",
-    "reasonPlaceholder": "Ví dụ: tone hơi nghiêm, hoặc gợi ý BHA mạnh quá với da em…",
+    "reasonPlaceholder": "Ví dụ: giọng hơi nghiêm, hoặc gợi ý chất tẩy da chết mạnh quá…",
     "reasonSend": "Gửi lý do",
     "reasonThanks": "Đã ghi nhận — DaDiary sẽ điều chỉnh dần theo bạn.",
     "thanks": "Đã ghi nhận góp ý — cảm ơn bạn nhé.",

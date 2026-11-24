@@ -56,19 +56,19 @@ function catalogFitNote(productId: string | undefined, en: boolean): string {
   const notes: Record<string, { en: string; vi: string }> = {
     "cerave-foaming-cleanser": {
       en: "Has ceramides to cleanse without stripping the barrier.",
-      vi: "Có ceramides: sạch nhẹ, ít làm mỏng hàng rào da.",
+      vi: "Có chất giữ nước trong da: sạch nhẹ, ít làm da khô rát, dễ bị kích ứng.",
     },
     "cerave-hydrating-cleanser": {
       en: "Creamy cleanse with ceramides — gentler when skin feels tight.",
-      vi: "Dạng kem + ceramides — dịu hơn khi da dễ khô căng.",
+      vi: "Dạng kem, có chất giữ nước trong da — dịu hơn khi da dễ khô căng.",
     },
     "lrp-cicaplast-b5": {
       en: "Panthenol + madecassoside help calm red, irritated spots.",
-      vi: "Panthenol + madecassoside: dịu đỏ, hỗ trợ chỗ đang kích ứng.",
+      vi: "Chất làm dịu: đỡ đỏ, hỗ trợ chỗ đang kích ứng.",
     },
     "neutrogena-hydro-boost": {
       en: "Light hyaluronic gel — comfort without a heavy feel.",
-      vi: "Gel HA nhẹ: cấp ẩm, ít bí da.",
+      vi: "Gel cấp ẩm nhẹ: da đỡ khô, ít bí.",
     },
     "biore-uv-aqua-rich": {
       en: "Light SPF50 gel — daily protection that suits oilier/combo skin.",
@@ -179,7 +179,7 @@ export function buildPersonalizedStepHelp(
         return calm
           ? en
             ? "Helps: soothe overnight and keep the barrier calm this week."
-            : "Giúp ích: dịu da qua đêm và giữ hàng rào ổn định tuần này."
+            : "Giúp ích: dịu da qua đêm, tuần này da đỡ khô rát."
           : en
             ? "Helps: overnight comfort while skin recovers."
             : "Giúp ích: giữ da êm qua đêm trong lúc phục hồi.";
@@ -190,7 +190,7 @@ export function buildPersonalizedStepHelp(
           : "Giúp ích: dịu đỏ và giảm khô căng trong ngày/qua đêm."
         : en
           ? "Helps: keep the barrier comfortable around treatment."
-          : "Giúp ích: giữ hàng rào da êm quanh bước trị.";
+          : "Giúp ích: giữ da êm quanh bước trị.";
     case "spf":
       return en
         ? "Helps: daily UV protection and fewer new post-acne dark marks."
