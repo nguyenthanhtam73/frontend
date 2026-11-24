@@ -16,7 +16,9 @@
     "shoes": "shoes"
   },
   "alias": {
-    "tree_clip_la_xanh": "acc_kep_toc_la_xanh"
+    "tree_clip_la_xanh": "acc_kep_toc_la_xanh",
+    "top_ao_cau_bong_anh_sao": "top_ao_cau_bong_anh_sao_v2",
+    "top_ao_choang_bong_may": "top_ao_choang_bong_may_v2"
   },
   "icon": "/mascot/gift/icon/{id}.svg",
   "legs": "/mascot/gift/legs/{id}.svg",
