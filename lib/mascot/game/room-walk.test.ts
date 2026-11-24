@@ -105,7 +105,7 @@ describe("personal room floor", () => {
     assert.equal(roomBlocked(ROOM_SPAWN.x, ROOM_SPAWN.y), false);
     assert.equal(isWalkable(grid, ROOM_SPAWN.x, ROOM_SPAWN.y), true);
     assert.equal(roomBlockName(0.18, 0.64), "bed");
-    assert.equal(roomBlockName(0.3, 0.62), "closet");
+    assert.equal(roomBlockName(0.3, 0.65), "closet");
     assert.equal(roomBlockName(0.5, 0.4), "wall");
     assert.equal(roomBlockName(0.85, 0.64), "sink");
     assert.equal(roomBlockName(0.64, 0.64), "plant");
@@ -160,7 +160,7 @@ describe("personal room floor", () => {
     for (const point of [up, down, left, right]) {
       assert.equal(roomBlocked(point!.x, point!.y), false);
     }
-    assert.equal(roomNudge(grid, { x: 0.5, y: 0.63 }, "up"), null);
+    assert.equal(roomNudge(grid, { x: 0.5, y: 0.65 }, "up"), null);
     assert.ok(roomDepthScale(0.76) > roomDepthScale(0.62));
     assert.ok(roomSortIndex(0.76) > 42);
     assert.ok(roomSortIndex(0.62) < 42);

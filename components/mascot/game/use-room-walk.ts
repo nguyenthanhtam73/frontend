@@ -109,14 +109,56 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       el.style.setProperty("--shadow-y", pose.shadowY.toFixed(3));
       el.style.setProperty("--depth", depth.toFixed(3));
       el.style.zIndex = sort;
-      const host = frame.querySelector<HTMLElement>(".beda-pixi-host");
-      if (host) host.style.zIndex = sort;
       el.dataset.nx = walker.x.toFixed(4);
       el.dataset.ny = walker.y.toFixed(4);
-      el.dataset.stepping = moving && !reduced ? "1" : "0";
+      const stepping = moving && !reduced;
+      el.dataset.stepping = stepping ? "1" : "0";
       el.dataset.face = walker.face < 0 ? "left" : "right";
       el.dataset.depth = depth.toFixed(3);
       placeBubble(el);
+      placeCaption(el, stepping);
+      placeDepth(el);
+    };
+
+    const placeCaption = (el: HTMLElement, moving: boolean) => {
+      const pretty = el.querySelector<HTMLElement>(".beda-pretty");
+      if (!pretty) return;
+      if (moving) {
+        pretty.style.opacity = "0";
+        pretty.style.visibility = "hidden";
+        return;
+      }
+      pretty.style.visibility = "visible";
+      pretty.style.opacity = "1";
+      const scene = frame.getBoundingClientRect();
+      const hero = el.getBoundingClientRect();
+      const width = pretty.offsetWidth || 160;
+      const center = hero.left + hero.width / 2;
+      const half = width / 2;
+      let minCenter = scene.left + 8 + half;
+      let maxCenter = scene.right - 8 - half;
+      const pad = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
+      if (pad) {
+        const padBox = pad.getBoundingClientRect();
+        const labelTop = hero.bottom + 8;
+        const labelBottom = labelTop + (pretty.offsetHeight || 24);
+        const overlapsPad = labelBottom > padBox.top && labelTop < padBox.bottom;
+        if (overlapsPad) maxCenter = Math.min(maxCenter, padBox.left - 8 - half);
+      }
+      const clamped = Math.max(minCenter, Math.min(center, maxCenter));
+      pretty.style.setProperty("--pretty-x", `${Math.round(clamped - center)}px`);
+    };
+
+    const placeDepth = (el: HTMLElement) => {
+      const feet = el.getBoundingClientRect().bottom;
+      const host = frame.querySelector<HTMLElement>(".beda-pixi-host");
+      if (host) host.style.zIndex = "42";
+      for (const item of frame.querySelectorAll<HTMLElement>(".beda-bed, .beda-cabinet, .beda-plant, .beda-sink")) {
+        const box = item.getBoundingClientRect();
+        // The box sits on the back of the floor. Its front edge is further down the planks.
+        const base = box.bottom + 80;
+        item.style.zIndex = feet < base ? "48" : "36";
+      }
     };
 
     const ripple = (x: number, y: number) => {

@@ -364,7 +364,7 @@ html.dark .beda-draw-wait {
 .beda-bed {
   position: absolute;
   z-index: 42;
-  left: 8px;
+  left: 16px;
   bottom: 41.6%;
   width: clamp(74px, 16vw, 148px);
   height: 118px;
@@ -667,20 +667,19 @@ html.dark .beda-pad-btn {
   left: 50%;
   width: min(220px, 64vw);
   margin: 0;
-  transform: translateX(-50%);
+  transform: translateX(calc(-50% + var(--pretty-x, 0px)));
+  opacity: 1;
 }
 
-.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"] {
+.beda-hero-wrap.is-floor .beda-pretty[data-covered="1"],
+.beda-hero-wrap.is-floor[data-stepping="1"] .beda-pretty {
+  opacity: 0;
   visibility: hidden;
 }
 
 .beda-hero-wrap.is-floor .bd-breathe {
   transform-origin: 50% 83.2%;
   animation-name: beda-room-breath;
-}
-
-.beda-hero-wrap.is-floor[data-stepping="1"] .beda-pretty {
-  visibility: hidden;
 }
 
 .beda-tap {

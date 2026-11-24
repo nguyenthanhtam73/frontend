@@ -799,25 +799,22 @@ export async function startPixiShell(options: {
     const hostBox = host.getBoundingClientRect();
     const scale = hostBox.width / (host.clientWidth || 1) || 1;
     const fig = hero.querySelector<HTMLElement>(".bd-figure");
-    const figBox = fig?.getBoundingClientRect();
     const heroBox = hero.getBoundingClientRect();
     const moving = hero.dataset.stepping === "1";
     setActorClip(have.nodes, have.sheet, actorClip(moving, null));
-    layoutActor(have.nodes, (figBox?.height || heroBox.height) / scale);
-    const cssNum = (name: string) => Number(hero.style.getPropertyValue(name) || "0");
+    // Layout height ignores the walk transform, so a tilt cannot stretch the sheet.
+    const layoutH = fig?.offsetHeight || hero.offsetHeight || heroBox.height;
+    layoutActor(have.nodes, layoutH / scale);
     const face = Number(hero.style.getPropertyValue("--face") || "1");
     const sign = face < 0 ? -1 : 1;
-    // Same turn the lobby paints with scaleX: mirror the sheet, then lean and
-    // bob with the walk cycle so left/right and up/down are not a flat slide.
+    // Mirror to face left or right. The sheet already swings the short arms;
+    // rotating or scaling the whole body here lengthens them and lifts the shoes.
     have.nodes.anim.roundPixels = false;
-    have.root.scale.x = sign;
-    // A steady lean into the walk, plus the step tilt, so left and right
-    // do not both read as a front-facing stand.
-    const lead = moving ? sign * -0.28 : 0;
-    have.root.rotation = lead + (cssNum("--tilt") * Math.PI) / 180;
+    have.root.scale.set(sign, 1);
+    have.root.rotation = 0;
     have.root.position.set(
       pixelSnap((heroBox.left + heroBox.width / 2 - hostBox.left) / scale),
-      pixelSnap((heroBox.bottom - hostBox.top) / scale + cssNum("--bob")),
+      pixelSnap((heroBox.bottom - hostBox.top) / scale),
     );
     have.root.zIndex = depthRank(Number(hero.dataset.ny) || 0.76);
     scene.dataset.actors = "pixi";

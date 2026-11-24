@@ -10,7 +10,7 @@ import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import { findRoute, gridFromMask, gridSize, isWalkable, nearestWalkable, segmentStaysWalkable, type WalkGrid, type WalkPoint } from "@/lib/mascot/game/lobby-walk";
 import { clamp } from "@/lib/mascot/game/walk";
 
-export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=627c25d80e");
+export const ROOM_WALK_MASK = mascotAssetUrl("/mascot/room/walk-mask.png?v=5a7ea152cc");
 export const ROOM_MASK_PX = 256;
 /** Logical room used only to size the path grid (~20px cells). */
 export const ROOM_WORLD = 1000;
@@ -20,7 +20,7 @@ export const ROOM_WORLD = 1000;
  * covers the bottom strip, so y runs from just in front of the baseboard
  * to a step above the nav. x keeps her body on a 390px phone and an iPad.
  */
-export const ROOM_BOUNDS = { minX: 0.14, maxX: 0.88, minY: 0.62, maxY: 0.82 } as const;
+export const ROOM_BOUNDS = { minX: 0.14, maxX: 0.88, minY: 0.64, maxY: 0.82 } as const;
 
 /** Feet at or above this line are behind the furniture (the props paint over her). */
 export const ROOM_BEHIND_Y = 0.66;
@@ -37,7 +37,7 @@ export const ROOM_SPAWN: WalkPoint = { x: 0.5, y: 0.72 };
  * on them. The strip beside the sink stays open so she can walk behind it.
  */
 export const ROOM_BLOCKS: readonly { x0: number; y0: number; x1: number; y1: number; name: string }[] = [
-  { name: "wall", x0: 0, y0: 0, x1: 1, y1: 0.62 },
+  { name: "wall", x0: 0, y0: 0, x1: 1, y1: 0.64 },
   { name: "nav", x0: 0, y0: 0.83, x1: 1, y1: 1 },
   { name: "left", x0: 0, y0: 0, x1: 0.14, y1: 1 },
   { name: "right", x0: 0.88, y0: 0, x1: 1, y1: 1 },
