@@ -3,28 +3,38 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 
-const ROOT = path.resolve(import.meta.dirname, "../..");
+const GUIDES = path.resolve(import.meta.dirname);
 
-const FILES = [
-  "lib/guides/articles/da-kho.ts",
-  "lib/guides/articles/da-nhay-cam.ts",
-  "lib/guides/articles/kich-ung-adapalene.ts",
-];
+function filesUnder(dir: string): string[] {
+  const out: string[] = [];
+  for (const name of fs.readdirSync(dir)) {
+    const full = path.join(dir, name);
+    if (fs.statSync(full).isDirectory()) out.push(...filesUnder(full));
+    else out.push(full);
+  }
+  return out;
+}
 
 describe("guide barrier wording", () => {
-  it("says lớp ngoài da in the three Vietnamese guides", () => {
-    const joined = FILES.map((rel) => fs.readFileSync(path.join(ROOT, rel), "utf8")).join("\n");
-    const vi = [...joined.matchAll(/vi:\s*\{[\s\S]*?\n\s{6}en:/g)].map((m) => m[0]).join("\n");
-    const source = vi || joined;
-    assert.equal(source.includes("hàng rào"), false);
-    assert.match(joined, /Thường là lớp ngoài da đang khô/);
-    assert.match(joined, /làm lớp ngoài da dễ nứt hơn/);
-    assert.match(joined, /Hay gặp khi lớp ngoài da yếu/);
-    assert.match(joined, /chỉ là lớp ngoài da đang khô/);
-    assert.match(joined, /Kích ứng lớp ngoài da/);
-    assert.match(joined, /không làm lớp ngoài da khỏe hơn/);
-    assert.match(joined, /vẫn cần lớp ngoài da/);
-    assert.match(joined, /không đo ‘lớp ngoài da khỏe đến đâu’/);
-    assert.match(joined, /để lớp ngoài da kêu/);
+  it("has no hàng rào anywhere under lib/guides", () => {
+    const hits: string[] = [];
+    for (const file of filesUnder(GUIDES)) {
+      if (file.endsWith("plain-barrier-copy.test.ts")) continue;
+      const text = fs.readFileSync(file, "utf8");
+      if (/hàng rào/iu.test(text)) hits.push(path.relative(GUIDES, file));
+    }
+    assert.deepEqual(hits, []);
+  });
+
+  it("keeps the rewritten sentences readable", () => {
+    const read = (rel: string) => fs.readFileSync(path.join(GUIDES, rel), "utf8");
+    const adapalene = read("articles/kich-ung-adapalene.ts");
+    assert.match(adapalene, /Da dầu đang rát vẫn cần dưỡng để lớp ngoài da đỡ khô rát/);
+    assert.match(adapalene, /khiến da khô rát, đỏ hơn/);
+    assert.equal(adapalene.includes("lớp ngoài da kêu"), false);
+    assert.match(read("hub.ts"), /khi da đang khô rát, đỏ hơn/);
+    assert.equal(read("hub.ts").includes("kêu"), false);
+    assert.match(read("articles/mun.ts"), /Da mụn vẫn cần dưỡng để lớp ngoài da đỡ khô rát/);
+    assert.match(read("articles/da-kho.ts"), /Thường là lớp ngoài da đang khô/);
   });
 });

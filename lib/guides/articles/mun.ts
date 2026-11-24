@@ -145,7 +145,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           checklist: [
             "Không nặn. Không tự ‘lấy nhân’ nếu da trông như đang nhiễm — hỏi bác sĩ khi không chắc.",
             "Rửa dịu sáng tối; thêm lần chỉ khi mồ hôi nhiều.",
-            "Dưỡng mỏng sau rửa. Da mụn vẫn cần hàng rào.",
+            "Dưỡng mỏng sau rửa. Da mụn vẫn cần dưỡng để lớp ngoài da đỡ khô rát.",
             "SPF mỗi sáng, kể cả gần cửa sổ.",
             "Một chai mới mỗi lần, không cùng tuần.",
             "Đau, mủ, lan nhanh: đi khám.",
@@ -188,7 +188,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           question: "Mụn ẩn có cần tẩy da chết mạnh không?",
           answer:
-            "Không. Tẩy mạnh làm hàng rào yếu, mụn viêm dễ tăng. BHA nhẹ vài buổi tối, hoặc chỉ rửa + dưỡng + SPF đến khi da chịu được.",
+            "Không. Tẩy mạnh làm lớp ngoài da yếu, mụn viêm dễ tăng. BHA nhẹ vài buổi tối, hoặc chỉ rửa + dưỡng + SPF đến khi da chịu được.",
         },
         {
           question: "Có nên ngưng hết sản phẩm khi nổi mụn?",

@@ -41,6 +41,21 @@ describe("progress comparison copy", () => {
     assert.match(down, /Da hơi kém hơn/);
   });
 
+  it("talks about this month without a score or mình", () => {
+    assert.equal(
+      vi.progress.summary.headlineDown,
+      "Tháng này da hơi mệt hơn tháng trước, không sao, từ từ chăm lại nha mày.",
+    );
+    assert.equal(vi.progress.summary.headlineDown.includes("mình"), false);
+    assert.equal(vi.progress.summary.headlineUp.includes("mình"), false);
+    assert.equal(vi.progress.summary.headlineFlat.includes("mình"), false);
+    assert.equal(vi.progress.summary.sparklineLabel, "Xu hướng tháng này");
+    assert.equal(en.progress.summary.sparklineLabel, "This month's trend");
+    assert.equal(vi.routine.checkInContext.feelOk, "Da ổn");
+    assert.equal(vi.routine.checkInContext.feelLow, "Da hơi mệt");
+    assert.equal(JSON.stringify(vi.routine.checkInContext).includes("%"), false);
+  });
+
   it("keeps the same idea in English", () => {
     const html = renderCard("en", 0.06);
     assert.match(html, /Skin feels better than last time/);

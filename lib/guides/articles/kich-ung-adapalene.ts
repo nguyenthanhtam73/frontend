@@ -125,7 +125,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
           checklist: [
             "Không acid, không hạt, không mask đất mỗi ngày.",
             "Rửa dịu sáng tối; thêm lần chỉ khi mồ hôi nhiều.",
-            "Dưỡng mỏng sau rửa. Da dầu đang rát vẫn cần lớp ngoài da.",
+            "Dưỡng mỏng sau rửa. Da dầu đang rát vẫn cần dưỡng để lớp ngoài da đỡ khô rát.",
             "SPF mỗi sáng, kết cấu chịu được — xem [kem chống nắng](/guides/kem-chong-nang).",
             "Một ảnh cùng cửa sổ. Không zoom một điểm dưới đèn flash.",
             "Sưng, mủ, ban lan, mắt sưng: đi khám — đừng tự tăng chai.",
@@ -160,7 +160,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
         {
           question: "Có được dùng BHA cùng đêm với adapalene không?",
           answer:
-            "Người mới: không. Mỗi thứ đã có thể khô. Chồng hai cái khi da đang đỏ là cách hay gặp để lớp ngoài da kêu. Êm rồi vẫn chỉ một thay đổi mỗi lần.",
+            "Người mới: không. Mỗi thứ đã có thể khô. Chồng hai cái khi da đang đỏ là cách hay gặp khiến da khô rát, đỏ hơn. Êm rồi vẫn chỉ một thay đổi mỗi lần.",
         },
         {
           question: "Bao lâu thì được thoa lại?",
