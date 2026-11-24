@@ -866,6 +866,7 @@ function Room({
       data-testid="beda-room"
       data-walk-mask={ROOM_WALK_MASK}
     >
+      <span className="beda-tap" data-testid="beda-tap" aria-hidden />
       {pixi ? (
         <BeDaPixiStage
           scene="room"
@@ -955,13 +956,16 @@ function Room({
               </span>
             </h2>
             {summary.morning.total + summary.evening.total === 0 ? (
-              <a
-                className="beda-quest-create"
-                data-testid="beda-routine-create"
-                href={localePath(locale, "/routine")}
-              >
-                {t("game.noSteps")}
-              </a>
+              <>
+                <p className="beda-quest-empty">{t("game.noSteps")}</p>
+                <a
+                  className="beda-quest-create"
+                  data-testid="beda-routine-create"
+                  href={localePath(locale, "/routine")}
+                >
+                  {t("game.createCare")}
+                </a>
+              </>
             ) : (
               (["morning", "evening"] as const).map((section) => {
                 const stats = summary[section];

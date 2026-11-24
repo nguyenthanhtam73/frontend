@@ -5,10 +5,8 @@ import { useEffect, useRef } from "react";
 import { gestureKind } from "@/lib/game/core/input";
 import { mascotAssetUrl } from "@/lib/mascot/asset-url";
 import {
-  findRoute,
   gridFromMask,
   gridSize,
-  isWalkable,
   nearestWalkable,
   type WalkGrid,
   type WalkPoint,
@@ -22,6 +20,7 @@ import {
   roomNudge,
   roomRoute,
   roomSortIndex,
+  roomStepTo,
   roomWalkGrid,
   roomWanderGoal,
   type RoomDir,
@@ -91,15 +90,6 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       }
     };
 
-    const placeCaption = (el: HTMLElement, moving: boolean) => {
-      const pretty = el.querySelector<HTMLElement>(".beda-pretty");
-      if (!pretty) return;
-      const padEl = frame.querySelector<HTMLElement>(".beda-pad:not(.is-hidden)");
-      const covered =
-        moving || (padEl ? overlaps(pretty.getBoundingClientRect(), padEl.getBoundingClientRect()) : false);
-      pretty.dataset.covered = covered ? "1" : "0";
-    };
-
     const paint = (moving: boolean) => {
       const el = heroRef.current;
       if (!el) return;
@@ -127,16 +117,21 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
       el.dataset.face = walker.face < 0 ? "left" : "right";
       el.dataset.depth = depth.toFixed(3);
       placeBubble(el);
-      placeCaption(el, moving && !reduced);
+    };
+
+    const ripple = (x: number, y: number) => {
+      const mark = frame.querySelector<HTMLElement>(".beda-tap");
+      if (!mark) return;
+      mark.style.left = `${x * 100}%`;
+      mark.style.top = `${y * 100}%`;
+      mark.classList.remove("is-on");
+      void mark.offsetWidth;
+      mark.classList.add("is-on");
     };
 
     const aim = (x: number, y: number) => {
       if (!grid || holdRef.current) return;
-      if (!isWalkable(grid, walker.x, walker.y)) {
-        const stand = nearestWalkable(grid, walker.x, walker.y);
-        walker.x = stand.x;
-        walker.y = stand.y;
-      }
+      ripple(x, y);
       route = roomRoute(grid, walker, { x, y });
       walker.goal = route.shift() ?? null;
       idleFor = 0;
@@ -157,17 +152,13 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
           if (held === "right") walker.face = 1;
           idleFor = 0;
         }
-        if (reduced && (walker.goal || route.length > 0)) {
-          const lastPoint = route.length > 0 ? route[route.length - 1]! : walker.goal!;
-          walker.x = lastPoint.x;
-          walker.y = lastPoint.y;
-          walker.vx = 0;
-          walker.vy = 0;
-          walker.goal = null;
+        const before = { x: walker.x, y: walker.y };
+        walker = stepWalker(walker, dt, null, ROOM_BOUNDS, false, lobbyWorldSpeed(width), true);
+        if (!walker.goal && route.length > 0) walker.goal = route.shift() ?? null;
+        const stepped = roomStepTo(grid, before, walker);
+        if (Math.hypot(stepped.x - walker.x, stepped.y - walker.y) > 0.0001) {
+          walker = { ...walker, x: stepped.x, y: stepped.y, vx: 0, vy: 0, goal: null };
           route = [];
-        } else {
-          walker = stepWalker(walker, dt, null, ROOM_BOUNDS, reduced, lobbyWorldSpeed(width), true);
-          if (!walker.goal && route.length > 0) walker.goal = route.shift() ?? null;
         }
         if (!held && !walker.goal && route.length === 0) {
           idleFor += dt;
@@ -175,17 +166,12 @@ export function useRoomWalk(enabled: boolean, hold: boolean) {
             idleFor = 0;
             const goal = roomWanderGoal(grid, walker);
             if (goal) {
-              route = findRoute(grid, walker, goal);
+              route = roomRoute(grid, walker, goal);
               walker.goal = route.shift() ?? null;
             }
           }
         } else {
           idleFor = 0;
-        }
-        if (!walker.goal && !isWalkable(grid, walker.x, walker.y)) {
-          const stand = nearestWalkable(grid, walker.x, walker.y);
-          walker.x = stand.x;
-          walker.y = stand.y;
         }
       }
       const moving = Boolean(walker.goal) || route.length > 0;

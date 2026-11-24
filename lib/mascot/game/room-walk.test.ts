@@ -19,6 +19,7 @@ import {
   roomNudge,
   roomRoute,
   roomSortIndex,
+  roomStepTo,
   roomWalkGrid,
   roomWanderGoal,
 } from "@/lib/mascot/game/room-walk";
@@ -103,19 +104,18 @@ describe("personal room floor", () => {
   it("stands on open floor and keeps the bed, closet, wall, and sink blocked", () => {
     assert.equal(roomBlocked(ROOM_SPAWN.x, ROOM_SPAWN.y), false);
     assert.equal(isWalkable(grid, ROOM_SPAWN.x, ROOM_SPAWN.y), true);
-    assert.equal(roomBlockName(0.1, 0.66), "bed");
+    assert.equal(roomBlockName(0.18, 0.64), "bed");
     assert.equal(roomBlockName(0.3, 0.62), "closet");
     assert.equal(roomBlockName(0.5, 0.4), "wall");
-    assert.equal(roomBlockName(0.85, 0.66), "sink");
+    assert.equal(roomBlockName(0.85, 0.64), "sink");
     assert.equal(roomBlockName(0.64, 0.64), "plant");
-    assert.equal(roomBlockName(0.45, 0.62), "quest");
-    assert.equal(roomBlockName(0.5, 0.85), "nav");
-    assert.equal(isWalkable(grid, 0.1, 0.66), false);
+    assert.equal(roomBlockName(0.5, 0.9), "nav");
+    assert.equal(isWalkable(grid, 0.12, 0.64), false);
     assert.equal(isWalkable(grid, 0.3, 0.62), false);
     assert.equal(isWalkable(grid, 0.5, 0.4), false);
     assert.equal(isWalkable(grid, ROOM_SPAWN.x, ROOM_SPAWN.y - 0.08), true);
     assert.equal(isWalkable(grid, 0.2, 0.74), true);
-    assert.equal(isWalkable(grid, 0.86, 0.74), true);
+    assert.equal(isWalkable(grid, 0.84, 0.74), true);
   });
 
   it("walks a tap on the bed to the nearest floor and stays off the furniture", () => {
@@ -140,7 +140,7 @@ describe("personal room floor", () => {
   });
 
   it("crosses the open floor without cutting the closet", () => {
-    const route = roomRoute(grid, { x: 0.2, y: 0.74 }, { x: 0.86, y: 0.74 });
+    const route = roomRoute(grid, { x: 0.2, y: 0.74 }, { x: 0.84, y: 0.74 });
     assert.ok(route.length > 0);
     for (const point of route) {
       assert.equal(roomBlockName(point.x, point.y), null);
@@ -160,10 +160,28 @@ describe("personal room floor", () => {
     for (const point of [up, down, left, right]) {
       assert.equal(roomBlocked(point!.x, point!.y), false);
     }
-    assert.equal(roomNudge(grid, { x: 0.5, y: 0.605 }, "up"), null);
+    assert.equal(roomNudge(grid, { x: 0.5, y: 0.63 }, "up"), null);
     assert.ok(roomDepthScale(0.76) > roomDepthScale(0.62));
     assert.ok(roomSortIndex(0.76) > 42);
-    assert.ok(roomSortIndex(0.6) < 42);
+    assert.ok(roomSortIndex(0.62) < 42);
+    const intoBed = roomStepTo(grid, ROOM_SPAWN, { x: 0.18, y: 0.62 });
+    assert.equal(roomBlocked(intoBed.x, intoBed.y), false);
+    let walker = createWalker(ROOM_SPAWN);
+    walker.goal = { x: 0.5, y: 0.4 };
+    let prev = { x: walker.x, y: walker.y };
+    for (let i = 0; i < 180; i += 1) {
+      const next = stepWalker(walker, 1 / 30, null, ROOM_BOUNDS, false, 0.35, true);
+      const stepped = roomStepTo(grid, prev, next);
+      assert.equal(roomBlocked(stepped.x, stepped.y), false);
+      assert.ok(Math.hypot(stepped.x - prev.x, stepped.y - prev.y) < 0.05);
+      const stopped = Math.hypot(stepped.x - next.x, stepped.y - next.y) > 0.0001;
+      walker = { ...next, x: stepped.x, y: stepped.y, goal: stopped ? null : next.goal };
+      prev = { x: walker.x, y: walker.y };
+      if (!walker.goal) break;
+    }
+    assert.equal(walker.goal, null);
+    assert.ok(walker.y >= 0.6);
+    assert.equal(roomBlockName(walker.x, walker.y), null);
   });
 
   it("wanders only onto a walkable cell", () => {

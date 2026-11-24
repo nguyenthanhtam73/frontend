@@ -40,8 +40,8 @@ describe("mascot asset urls", () => {
     const once = mascotAssetUrl("/mascot/body/body_chibi.svg");
     assert.equal(mascotAssetUrl(once), once);
     assert.equal(
-      mascotAssetUrl("/mascot/room/walk-mask.png?v=b8b3891a73"),
-      "/mascot/room/walk-mask.png?v=5&h=b8b3891a73",
+      mascotAssetUrl("/mascot/room/walk-mask.png?v=627c25d80e"),
+      "/mascot/room/walk-mask.png?v=5&h=627c25d80e",
     );
     assert.equal(
       mascotAssetUrl('url("/mascot/rooms/spa-room.webp")'),

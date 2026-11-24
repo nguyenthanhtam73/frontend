@@ -821,7 +821,7 @@ export async function startPixiShell(options: {
     );
     have.root.zIndex = depthRank(Number(hero.dataset.ny) || 0.76);
     scene.dataset.actors = "pixi";
-    scene.dataset.depth = Number(hero.dataset.ny) > 0.72 ? "front" : "back";
+    scene.dataset.depth = Number(hero.dataset.ny) >= 0.66 ? "front" : "back";
     return have.nodes;
   };
   app.ticker.add((ticker) => {

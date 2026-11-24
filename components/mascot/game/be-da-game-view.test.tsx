@@ -546,7 +546,10 @@ describe("Bé Da game screen", () => {
     assert.match(html, /người đang chơi/);
     assert.equal(html.includes("0/0"), false);
     assert.match(html, /data-testid="beda-routine-create"/);
-    assert.match(html, /Chưa có bước nào · Tạo routine/);
+    assert.match(html, /Chưa có bước nào/);
+    assert.match(html, /Tạo lịch chăm da/);
+    assert.equal(html.includes("Tạo routine"), false);
+    assert.equal(html.includes("Create a routine"), false);
     assert.match(html, /href="\/routine"/);
     assert.match(html, /data-testid="beda-cabinet"/);
     assert.match(html, /aria-label="Tủ đồ"/);
