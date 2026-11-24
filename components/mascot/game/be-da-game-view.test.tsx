@@ -662,4 +662,22 @@ describe("Bé Da game screen", () => {
     assert.match(html, /beda-room-retry/);
     assert.equal(text.includes("Trà Sữa"), false);
   });
+
+  it("keeps the streak unit and lobby tab on one line at phone width", () => {
+    const html = renderGame();
+    assert.match(html, /class="beda-nav-label"/);
+    assert.match(html, /beda-nav-label">Sảnh chung</);
+    const css = readFileSync(new URL("./be-da-game.css", import.meta.url), "utf8");
+    const narrow = css.slice(css.indexOf("@media (max-width: 390px)"));
+    assert.notEqual(narrow.length, css.length);
+    assert.match(css, /\.beda-nav-label\s*\{[^}]*white-space:\s*nowrap/);
+    assert.match(narrow, /\.beda-chip\s*\{[^}]*font-size:\s*14px/);
+    assert.match(narrow, /\.beda-chip\s*\{[^}]*white-space:\s*nowrap/);
+    assert.match(narrow, /\.beda-chip small\s*\{[^}]*font-size:\s*12px/);
+    assert.match(narrow, /\.beda-chip small\s*\{[^}]*white-space:\s*nowrap/);
+    assert.match(narrow, /\.beda-nav-btn\s*\{[^}]*min-width:\s*44px/);
+    assert.match(narrow, /\.beda-nav-btn\s*\{[^}]*min-height:\s*44px/);
+    assert.match(narrow, /\.beda-nav-label\s*\{[^}]*font-size:\s*12px/);
+    assert.match(narrow, /\.beda-nav-label\s*\{[^}]*letter-spacing:\s*-0\.04em/);
+  });
 });

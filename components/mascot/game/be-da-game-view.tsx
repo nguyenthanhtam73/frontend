@@ -766,7 +766,7 @@ export function BeDaGameView({
                 <GameIcon name={item.icon} />
               </span>
               {item.id === "quests" && openSteps > 0 ? <span className="beda-badge">{openSteps}</span> : null}
-              {t(`game.${item.label}`)}
+              <span className="beda-nav-label">{t(`game.${item.label}`)}</span>
             </button>
           );
         })}
