@@ -7,7 +7,7 @@ function copy(locale: GuideLocale): GuideArticleCopy {
     {
       vi: {
         alt: "Hai biểu tượng mặt: bên trái da căng sau rửa mạnh, bên phải da êm sau dưỡng khi còn ẩm.",
-        caption: "Căng sau rửa chưa chắc ‘da sạch’. Thường là lớp ngoài da đang khô.",
+        caption: "Căng sau rửa chưa chắc là da sạch. Thường là lớp ngoài da đang khô.",
       },
       en: {
         alt: "Two face icons: tight skin after a harsh wash on the left, calmer skin after moisturizing on damp skin on the right.",

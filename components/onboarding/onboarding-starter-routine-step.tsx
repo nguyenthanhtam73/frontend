@@ -31,6 +31,7 @@ import {
   routineStepIcon,
 } from "@/lib/onboarding/parse-routine-step";
 import { buildRoutineRationale } from "@/lib/onboarding/routine-rationale";
+import { routineStepHint } from "@/lib/onboarding/routine-step-hint";
 import { useOnboardingRoutineStepTips } from "@/lib/onboarding/use-onboarding-routine-step-tips";
 import { isAiFallbackManual, useOnboardingStore } from "@/lib/stores/onboarding-store";
 import { cn } from "@/lib/utils";
@@ -533,6 +534,7 @@ export function OnboardingRoutinePeriodSection({
 }) {
   const t = useTranslations("onboarding");
   const tWelcome = useTranslations("coachWelcome");
+  const locale = useLocale();
   const ob = useOnboardingStore();
   const isMorning = period === "morning";
   const morningKeys = useMemo(() => {
@@ -596,12 +598,10 @@ export function OnboardingRoutinePeriodSection({
                 emphasize ? "text-sm leading-relaxed sm:text-base" : "text-xs",
               )}
             >
-              {emphasize
-                ? isMorning
-                  ? tWelcome("periodMorningHint")
-                  : tWelcome(welcomeEveningHintKey(carePhase))
-                : isMorning
-                  ? t("step2.morningHint")
+              {isMorning
+                ? routineStepHint(steps, locale)
+                : emphasize
+                  ? tWelcome(welcomeEveningHintKey(carePhase))
                   : t(eveningHintKey(carePhase))}
             </p>
           ) : null}
