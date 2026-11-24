@@ -7,7 +7,7 @@ import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaIntroReset } from "@/components/mascot/intro/be-da-intro-reset";
 import { BeDaLobby } from "@/components/mascot/game/be-da-lobby";
 import { BeDaDrawWait, BeDaPixiStage, useDrawRetry } from "@/components/mascot/game/be-da-pixi-stage";
-import { noteBedaReady } from "@/lib/mascot/beda-ready";
+import { clearBedaReady, noteBedaReady } from "@/lib/mascot/beda-ready";
 import { BeDaSpaRoom, type SpaRoomState } from "@/components/mascot/game/be-da-spa-room";
 import { TreeClosetSection } from "@/components/mascot/game/be-da-room-tree";
 import { GiftClosetSection } from "@/components/mascot/game/be-da-gift-box";
@@ -812,6 +812,11 @@ function Room({
   useEffect(() => {
     if (plainRoom) tell("dom");
   }, [plainRoom]);
+  useEffect(() => {
+    return () => {
+      clearBedaReady(document.body);
+    };
+  }, []);
   const roomArt = lookArt(player, look, false);
   const snapRef = useRef<ShellSnapshot>({ scene: "room", sky, sprites: [] });
   snapRef.current = {

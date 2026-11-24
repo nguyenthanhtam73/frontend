@@ -31,3 +31,8 @@ export function noteBedaReady(
   readBedaBridge(scope)?.postMessage?.(bedaReadyMessage(engine));
   return true;
 }
+
+/** Drop the attribute when the room or lobby unmounts so the other screen starts clean. */
+export function clearBedaReady(body: { dataset: { bedaReady?: string } }): void {
+  delete body.dataset.bedaReady;
+}

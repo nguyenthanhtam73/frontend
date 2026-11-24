@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { bedaReadyMessage, noteBedaReady } from "@/lib/mascot/beda-ready";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { bedaReadyMessage, clearBedaReady, noteBedaReady } from "@/lib/mascot/beda-ready";
 
 describe("Bé Da ready signal", () => {
   it("posts the pixi engine once and sets the body attribute", () => {
@@ -38,6 +42,27 @@ describe("Bé Da ready signal", () => {
     }
     assert.equal(bedaReadyMessage("pixi"), '{"type":"beda_ready","engine":"pixi"}');
     assert.equal(bedaReadyMessage("dom"), '{"type":"beda_ready","engine":"dom"}');
+  });
+
+  it("clears the ready attribute on unmount so room and lobby do not keep a stale engine", () => {
+    const sent: string[] = [];
+    const body = { dataset: {} as { bedaReady?: string } };
+    const scope = { DaDiarySession: { postMessage: (message: string) => sent.push(message) } };
+    noteBedaReady("pixi", scope, body, { current: false });
+    assert.equal(body.dataset.bedaReady, "pixi");
+    clearBedaReady(body);
+    assert.equal("bedaReady" in body.dataset, false);
+    noteBedaReady("dom", scope, body, { current: false });
+    assert.equal(body.dataset.bedaReady, "dom");
+    assert.deepEqual(sent, [
+      '{"type":"beda_ready","engine":"pixi"}',
+      '{"type":"beda_ready","engine":"dom"}',
+    ]);
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../components/mascot/game");
+    for (const file of ["be-da-game-view.tsx", "be-da-lobby.tsx"]) {
+      const source = readFileSync(path.join(root, file), "utf8");
+      assert.match(source, /return \(\) => \{\s*clearBedaReady\(document\.body\);\s*\};/);
+    }
   });
 
   it("posts the dom engine when the plain room is showing, and skips a missing bridge", () => {

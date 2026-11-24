@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { BeDaFigure } from "@/components/mascot/be-da-figure";
 import { BeDaDrawWait, BeDaPixiStage, useDrawRetry } from "@/components/mascot/game/be-da-pixi-stage";
-import { noteBedaReady } from "@/lib/mascot/beda-ready";
+import { clearBedaReady, noteBedaReady } from "@/lib/mascot/beda-ready";
 import { SpaProblemLine } from "@/components/mascot/game/be-da-spa-room";
 import { GameIcon } from "@/components/mascot/game/icons";
 import { gameDress, type GameLook } from "@/lib/mascot/game/look";
@@ -132,6 +132,11 @@ export function BeDaLobby({
   function tell(engine: "pixi" | "dom") {
     noteBedaReady(engine, window, document.body, told);
   }
+  useEffect(() => {
+    return () => {
+      clearBedaReady(document.body);
+    };
+  }, []);
   const [roomNote, setRoomNote] = useState(false);
   const snapRef = useRef<ShellSnapshot>({ scene: "lobby", sky, sprites: [] });
   const [showHint, setShowHint] = useState(true);
