@@ -36,8 +36,10 @@ export function stripRepeatedContextPrefix(why: string, en: boolean): string {
   return trimmed;
 }
 
+type ExplainState = { ceramide: boolean };
+
 /** Soften skincare jargon so Step 2 copy stays readable for beginners. */
-export function plainifyGuidanceText(text: string, en: boolean): string {
+export function plainifyGuidanceText(text: string, en: boolean, state?: ExplainState): string {
   let out = text.trim();
   if (!out) return out;
   const pairs = en
@@ -88,14 +90,17 @@ export function plainifyGuidanceText(text: string, en: boolean): string {
   for (const [from, to] of pairs) {
     if (out.includes(from)) out = out.split(from).join(to);
   }
-  if (!en) out = explainVietnameseGuidance(out);
+  if (!en) out = explainVietnameseGuidance(out, state ?? { ceramide: false });
   return out.replace(/\s{2,}/g, " ").trim();
 }
 
 const CERAMIDE_GLOSS = "giúp lớp ngoài da giữ nước, đỡ khô rát";
-/** ceramide, ceramides, and ceramide NP/AP/EOP are one name. */
-const CERAMIDE_NAME =
-  /(?<![\p{L}\p{N}_])ceramides?(?:\s+NP\s*\/\s*AP\s*\/\s*EOP)?(?![\p{L}\p{N}_])/giu;
+const CERAMIDE_SUBTYPE = "NP|AP|EOP|NS|AS";
+/** ceramide(s) plus NP/AP/EOP/NS/AS, alone or as a slash or comma list, is one name. */
+const CERAMIDE_NAME = new RegExp(
+  String.raw`(?<![\p{L}\p{N}_])ceramides?(?:\s+(?:${CERAMIDE_SUBTYPE})(?:\s*(?:\/|,|và)\s*(?:${CERAMIDE_SUBTYPE}))*)?(?![\p{L}\p{N}_])`,
+  "giu",
+);
 
 function capLike(sample: string, replacement: string): string {
   const first = sample.charAt(0);
@@ -121,21 +126,24 @@ function insideParentheses(text: string, index: number): boolean {
  * A name already inside parentheses is left alone, and so is a name that
  * already says giúp or giữ. A colon is not an explanation.
  */
-function explainFirstCeramide(text: string): string {
-  let explained = false;
+function explainFirstCeramide(text: string, state: ExplainState): string {
   return text.replace(CERAMIDE_NAME, (match: string, offset: number, whole: string) => {
-    if (explained) return match;
+    if (state.ceramide) return match;
     if (insideParentheses(whole, offset)) return match;
     const after = whole.slice(offset + match.length);
     if (/^\s*(?:giúp|giữ)(?![\p{L}\p{N}_])/iu.test(after)) {
-      explained = true;
+      state.ceramide = true;
+      return match;
+    }
+    if (/^\s*[—–]\s/.test(after)) {
+      state.ceramide = true;
       return match;
     }
     if (/^\s*\(/.test(after)) {
-      explained = true;
+      state.ceramide = true;
       return match;
     }
-    explained = true;
+    state.ceramide = true;
     return `${match} (${CERAMIDE_GLOSS})`;
   });
 }
@@ -144,7 +152,7 @@ function explainFirstCeramide(text: string): string {
  * «hàng rào da» in any case, including «hàng rào bảo vệ da», becomes
  * plain «lớp ngoài da» — no parentheses.
  */
-function explainVietnameseGuidance(text: string): string {
+function explainVietnameseGuidance(text: string, state: ExplainState): string {
   let out = text.replace(/ít làm mỏng hàng rào da/giu, (match) =>
     capLike(match, "ít làm da khô rát, dễ bị kích ứng"),
   );
@@ -152,7 +160,10 @@ function explainVietnameseGuidance(text: string): string {
     capLike(match, "làm da khô rát, dễ bị kích ứng"),
   );
   out = out.replace(/hàng rào(?:\s+bảo vệ)?(?:\s+da)?/giu, (match) => capLike(match, "lớp ngoài da"));
-  out = explainFirstCeramide(out);
+  out = out.replace(/lớp ngoài da\s*\(lớp ngoài cùng\)/giu, (match) =>
+    match.startsWith("L") ? "Lớp ngoài da" : "lớp ngoài da",
+  );
+  out = explainFirstCeramide(out, state);
   return out;
 }
 
@@ -165,13 +176,15 @@ export function enrichProductGuidanceItems(
   const en = isEn(ctx.locale);
   const phase = String(ctx.phase || "").toLowerCase() || "calm_first";
   return items.map((item) => {
+    const explained: ExplainState = { ceramide: false };
     const rawWhy = item.why?.trim() || "";
     const why = plainifyGuidanceText(
       rawWhy ? stripRepeatedContextPrefix(rawWhy, en) : defaultWhy(item.step, phase, en),
       en,
+      explained,
     );
     let benefits = (item.benefits ?? [])
-      .map((b) => plainifyGuidanceText(b, en))
+      .map((b) => plainifyGuidanceText(b, en, explained))
       .filter(Boolean);
     if (benefits.length < 2) {
       benefits = mergeBenefits(benefits, defaultBenefits(item.step, phase, en));
@@ -179,10 +192,12 @@ export function enrichProductGuidanceItems(
     const how_to_use = plainifyGuidanceText(
       item.how_to_use?.trim() || defaultHow(item.step, en),
       en,
+      explained,
     );
     const caution = plainifyGuidanceText(
       item.caution?.trim() || defaultCaution(item.step, phase, en),
       en,
+      explained,
     );
     return {
       ...item,
